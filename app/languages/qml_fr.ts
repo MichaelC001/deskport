@@ -1620,7 +1620,7 @@
         <translation>Partager le presse-papiers texte pendant une session</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
         <translation>Activez sur les deux appareils associés, puis reconnectez-vous. Nouvelles copies uniquement, jusqu’à 1 Mio. Images et fichiers exclus.</translation>
     </message>
     <message>

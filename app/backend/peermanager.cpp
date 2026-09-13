@@ -58,8 +58,9 @@ struct PeerManager::Link : QObject {
     QString expectedFingerprint;
     QJsonObject expectedPeer;
     bool clipboardControl = false;
-    QString clipboardText;
-    bool clipboardSupported = false;
+    QString clipboardText, clipboardEncoded;
+    int clipboardMaxText = DeskPortClipboard::LegacyMaxText;
+    bool clipboardSupported = false, clipboardIsText = false, clipboardDirty = true;
     int clipboardRevision = 0, clipboardSequence = 0;
     qint64 lastClipboardRequest = 0;
     bool displayControl = false;
@@ -108,7 +109,7 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
     });
     connect(watchdog, &QTimer::timeout, this, [this] {
         if (m_ClipboardLink && (!m_Host->running() || !QSettings().value("sharedClipboard", true).toBool() ||
-            QDateTime::currentMSecsSinceEpoch() - m_ClipboardLink->lastClipboardRequest > 10000))
+            QDateTime::currentMSecsSinceEpoch() - m_ClipboardLink->lastClipboardRequest > 150000))
             fail(m_ClipboardLink, tr("Clipboard session ended"));
     });
     watchdog->start(2000);
@@ -293,15 +294,17 @@ void PeerManager::attach(Link* link) {
 }
 void PeerManager::drain(Link* link) {
         if (link->ended || !link->socket->isEncrypted()) return;
+        const int previousSize = link->buffer.size();
         link->buffer += link->socket->readAll();
         if (link->buffer.size() > (link->clipboardControl ? DeskPortClipboard::MaxFrame : MaxFrame)) { fail(link, tr("Binding message too large")); return; }
-        while (!link->ended && link->buffer.contains('\n')) {
-            const int end = link->buffer.indexOf('\n');
+        int end = link->buffer.indexOf('\n', previousSize);
+        while (!link->ended && end >= 0) {
             QJsonParseError error;
             const auto doc = QJsonDocument::fromJson(link->buffer.left(end), &error);
             link->buffer.remove(0, end + 1);
             if (error.error != QJsonParseError::NoError || !doc.isObject()) { fail(link, tr("Invalid binding message")); return; }
             receive(link, doc.object());
+            end = link->buffer.indexOf('\n');
         }
 }
 void PeerManager::request(const QString& value) {
@@ -423,19 +426,34 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
             fail(link, tr("Clipboard sharing requires an enabled host and an approved exclusive session")); return;
         }
         auto clipboard = QGuiApplication::clipboard();
-        auto mime = clipboard->mimeData(QClipboard::Clipboard);
-        QString encoded;
-        const bool supported = mime && mime->hasText() && !mime->hasUrls() &&
-            DeskPortClipboard::encode(mime->text(), encoded);
-        const QString current = supported ? mime->text() : QString();
+        if (type == "clipboard-start")
+            link->clipboardMaxText = DeskPortClipboard::negotiatedLimit(message["maxText"]);
+        bool isText = link->clipboardIsText;
+        QString current = link->clipboardText;
+        if (link->clipboardDirty) {
+            auto mime = clipboard->mimeData(QClipboard::Clipboard);
+            isText = mime && mime->hasText() && !mime->hasUrls();
+            current = isText ? mime->text() : QString();
+            link->clipboardDirty = false;
+        }
+        // Keep a bounded encoded snapshot. Polls must not re-encode a multi-MiB
+        // clipboard four times per second when its contents have not changed.
+        QString encoded = link->clipboardEncoded;
+        bool supported = link->clipboardSupported;
+        if (type == "clipboard-start" || current != link->clipboardText || isText != link->clipboardIsText) {
+            encoded.clear();
+            supported = isText && DeskPortClipboard::encode(current, encoded, link->clipboardMaxText);
+        }
+        link->clipboardIsText = isText;
         if (type == "clipboard-start") {
             if (link->clipboardControl) { fail(link, tr("Clipboard session already started")); return; }
             link->clipboardControl = true; m_ClipboardLink = link;
+            connect(clipboard, &QClipboard::dataChanged, link, [link] { link->clipboardDirty = true; });
             if (m_Link == link) m_Link = nullptr;
             link->socket->setReadBufferSize(DeskPortClipboard::MaxFrame + 1);
-            link->clipboardText = current; link->clipboardSupported = supported;
+            link->clipboardText = current; link->clipboardSupported = supported; link->clipboardEncoded = encoded;
             link->lastClipboardRequest = QDateTime::currentMSecsSinceEpoch();
-            send(link, {{"type", "clipboard-ready"}}); emit changed(); return;
+            send(link, {{"type", "clipboard-ready"}, {"maxText", link->clipboardMaxText}}); emit changed(); return;
         }
         if (!link->clipboardControl || message["seq"].toInt() != link->clipboardSequence + 1 ||
             message["rev"].toInt(-1) < 0 || message["rev"].toInt() > link->clipboardRevision) {
@@ -444,20 +462,21 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         link->lastClipboardRequest = QDateTime::currentMSecsSinceEpoch();
         ++link->clipboardSequence;
         if (current != link->clipboardText || supported != link->clipboardSupported) {
-            link->clipboardText = current; link->clipboardSupported = supported; ++link->clipboardRevision;
+            link->clipboardText = current; link->clipboardSupported = supported; link->clipboardEncoded = encoded; ++link->clipboardRevision;
         }
         QJsonObject reply{{"type", "clipboard-result"}, {"seq", link->clipboardSequence}};
         // Host revision is authoritative: an intervening host copy wins a concurrent copy.
         if (message["rev"].toInt() != link->clipboardRevision) {
             if (supported) reply["text"] = encoded;
-            else reply["error"] = "Clipboard content is unsupported or exceeds the 1 MiB text limit.";
+            else reply["error"] = QStringLiteral("Clipboard content is unsupported or exceeds the negotiated %1 MiB text limit.").arg(link->clipboardMaxText / (1024 * 1024));
         } else if (message.contains("text")) {
             QString text;
-            if (!DeskPortClipboard::decode(message["text"], text)) {
+            if (!DeskPortClipboard::decode(message["text"], text, link->clipboardMaxText)) {
                 fail(link, tr("Invalid or oversized clipboard text")); return;
             }
             clipboard->setText(text, QClipboard::Clipboard);
-            link->clipboardText = text; link->clipboardSupported = true; ++link->clipboardRevision;
+            link->clipboardText = text; link->clipboardEncoded = message["text"].toString();
+            link->clipboardSupported = true; link->clipboardIsText = true; ++link->clipboardRevision;
         }
         reply["rev"] = link->clipboardRevision;
         send(link, reply); return;

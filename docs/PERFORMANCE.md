@@ -64,3 +64,24 @@ queue drops and resize median/P95, not just averages. Run 30 alternating resizes
 20 reconnects and a two-hour mixed session; test hide/recall, cross-display scale,
 input release and recovery. A sub-two-second P95 is a target, not an achieved
 result. Keep the previous release available for rollback without deleting pairing.
+
+### 0.2.2 resize follow-up
+
+A five-minute 0.2.1 observation found eleven completed resize sequences including
+its prelude: 3.097–3.632 seconds from the last sampled size change to first render
+submission (median 3.321 seconds). This is not physical presentation latency or a
+controlled old/new CPU comparison. Mode readiness itself took 202–431 ms.
+
+The continuation unnecessarily enabled GUI controller navigation while replacing
+the stream page, then performed another temporary unmapped-controller probe.
+0.2.2 skips these two discovery passes during resize only. The real streaming
+input handler still initializes devices and handles hotplug. `input-init-begin`
+and `input-init-end` expose its remaining cost. Initial launches still warn about
+unmapped controllers. First-render submission now snapshots dimensions before
+renderers can consume the AVFrame reference.
+
+The prior observation showed three controller database loads per resize. Expect
+one after this change; measure the time saved on the target desktop after upgrade.
+The full network resume and encoder probing remain; this is not video-only
+reconfiguration. Retest audio, input, rapid size changes, cancellation and returning
+to the control center before claiming native acceptance.

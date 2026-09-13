@@ -12,6 +12,7 @@ public:
     ClipboardChannel(QString address, quint16 port, QSslCertificate peer, QByteArray cert, QByteArray key);
     ~ClipboardChannel();
     bool ready();
+    int maxText();
     bool submit(const QJsonObject& request);
     bool take(QJsonObject& reply);
     QString error();
@@ -24,4 +25,5 @@ private:
     QMutex m_Mutex;
     QJsonObject m_Request, m_Reply;
     bool m_Ready = false, m_Busy = false;
+    int m_MaxText = 1024 * 1024;
 };

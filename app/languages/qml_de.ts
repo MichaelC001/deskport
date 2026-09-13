@@ -1620,8 +1620,8 @@
         <translation>Textzwischenablage während einer Sitzung teilen</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
-        <translation>Auf beiden gekoppelten Geräten aktivieren und neu verbinden. Nur neue Kopien, bis 1 MiB. Bilder und Dateien werden nicht geteilt.</translation>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+        <translation>Auf beiden gekoppelten Geräten aktivieren und neu verbinden. Nur neue Kopien, bis 128 MiB. Bilder und Dateien werden nicht geteilt.</translation>
     </message>
     <message>
         <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>

@@ -142,7 +142,7 @@ private slots:
         qmlRegisterType<TestSession>("Session",1,0,"Session");
         qmlRegisterType<TestDesktopApps>("AppModel",1,0,"AppModel");
         qmlRegisterSingletonType<QObject>("SdlGamepadKeyNavigation",1,0,"SdlGamepadKeyNavigation",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { function enable() {} function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property int enables: 0; function enable() { enables++ } function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("ComputerManager",1,0,"ComputerManager",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
             QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} }",QUrl()); return c.create();
@@ -185,14 +185,17 @@ TestPreferences {
         QQmlComponent harness(&engine);
         harness.setData(R"(import QtQuick 2.9
 import QtQuick.Controls 2.2
+import SdlGamepadKeyNavigation 1.0
 ApplicationWindow {
  id: window; width: 800; height: 600
+ property int navigationEnables: SdlGamepadKeyNavigation.enables
  StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
  function start() { stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {session: testSession, appName: "Test"}, StackView.Immediate) }
 })",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/nested-harness.qml"));
         QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"start"));
         QTRY_COMPARE(next.executions,1);
+        QCOMPARE(root->property("navigationEnables").toInt(), 0);
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }
     void continuationAfterDeferredCleanup() {
@@ -213,14 +216,17 @@ ApplicationWindow {
         QQmlComponent harness(&engine);
         harness.setData(R"(import QtQuick 2.9
 import QtQuick.Controls 2.2
+import SdlGamepadKeyNavigation 1.0
 ApplicationWindow {
  id: window; width: 800; height: 600
+ property int navigationEnables: SdlGamepadKeyNavigation.enables
  StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
  function start() { stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {session: testSession, appName: "Test"}, StackView.Immediate) }
 })",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/deferred-harness.qml"));
         QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"start"));
         QTRY_COMPARE(next.executions,1);
+        QCOMPARE(root->property("navigationEnables").toInt(), 0);
         QCOMPARE(next.receivedWindow, qobject_cast<QQuickWindow*>(root.data()));
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }

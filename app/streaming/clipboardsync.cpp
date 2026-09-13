@@ -11,9 +11,12 @@ void ClipboardSync::tick() {
     if (!m_Channel->ready()) return;
     // SDL owns the native clipboard connection while the streaming loop owns the
     // main thread. Never access the Qt clipboard from the network worker.
-    char* raw = SDL_GetClipboardText();
-    if (!raw) { m_Status = QStringLiteral("Unable to read the local clipboard."); return; }
-    QString current = QString::fromUtf8(raw); SDL_free(raw);
+    QString current = m_Observed;
+    if (!m_Initialized || m_Changed) {
+        char* raw = SDL_GetClipboardText();
+        if (!raw) { m_Status = QStringLiteral("Unable to read the local clipboard."); return; }
+        current = QString::fromUtf8(raw); SDL_free(raw);
+    }
     if (!m_Initialized) { m_Observed = current; m_Initialized = true; m_Changed = false; }
     if (current != m_Observed) { m_Observed = current; m_Dirty = true; ++m_LocalGeneration; }
     if (m_Changed && !SDL_HasClipboardText()) {
@@ -32,6 +35,10 @@ void ClipboardSync::tick() {
         m_Revision = reply["rev"].toInt();
         if (reply.contains("error")) m_Status = reply["error"].toString();
         if (reply.contains("text")) {
+            char* raw = SDL_GetClipboardText();
+            if (!raw) { m_Status = QStringLiteral("Unable to read the local clipboard."); return; }
+            current = QString::fromUtf8(raw); SDL_free(raw);
+            if (current != m_Observed) { m_Observed = current; m_Dirty = true; ++m_LocalGeneration; }
             QString remote;
             if (!DeskPortClipboard::decode(reply["text"], remote)) {
                 m_Status = QStringLiteral("Invalid remote clipboard text.");
@@ -48,8 +55,8 @@ void ClipboardSync::tick() {
     QJsonObject request{{"type", "clipboard-poll"}, {"seq", m_Sequence + 1}, {"rev", m_Revision}};
     if (m_Dirty) {
         QString encoded;
-        if (!DeskPortClipboard::encode(current, encoded))
-            m_Status = QStringLiteral("Clipboard text exceeds 1 MiB or contains unsupported NUL characters.");
+        if (!DeskPortClipboard::encode(current, encoded, m_Channel->maxText()))
+            m_Status = QStringLiteral("Clipboard text exceeds the negotiated %1 MiB limit or contains unsupported NUL characters. Update both devices for larger copies.").arg(m_Channel->maxText() / (1024 * 1024));
         else if (!SDL_HasClipboardText())
             m_Status = QStringLiteral("Only plain text clipboard sharing is supported; images and files are not sent.");
         else { request["text"] = encoded; m_Status.clear(); }

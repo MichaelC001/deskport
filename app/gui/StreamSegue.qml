@@ -14,6 +14,7 @@ Item {
                                            qsTr("Starting %1...").arg(appName)
     property bool isResume : false
     property bool quitAfter : false
+    property bool adaptiveReplacing: false
 
     function stageStarting(stage)
     {
@@ -124,6 +125,7 @@ Item {
         if (session.adaptiveRestartPending()) {
             var next = session.adaptiveContinuation()
             var properties = {"session": next, "appName": appName, "isResume": true, "quitAfter": quitAfter}
+            adaptiveReplacing = true
             session = null
             // A page created from this context loses its scope (including the
             // root window) and its pending Loader when replace() destroys us.
@@ -138,8 +140,9 @@ Item {
     }
 
     StackView.onDeactivating: {
-        // Enable GUI gamepad usage now
-        SdlGamepadKeyNavigation.enable()
+        // A resize immediately starts another stream; GUI controller discovery
+        // here would enumerate devices only to tear them down again.
+        if (!adaptiveReplacing) SdlGamepadKeyNavigation.enable()
     }
 
     property bool sessionHooked: false

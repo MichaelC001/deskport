@@ -1401,8 +1401,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         emitLaunchWarning(tr("Failed to open audio device. Audio will be unavailable during this session."));
     }
 
-    // Check for unmapped gamepads
-    if (!SdlInputHandler::getUnmappedGamepads().isEmpty()) {
+    // Initial launches warn about missing mappings. Resize continuations still
+    // initialize the real input handler (including hotplug) below; repeating this
+    // throwaway controller discovery only delays every resize.
+    if (!m_AdaptiveResume && !SdlInputHandler::getUnmappedGamepads().isEmpty()) {
         emitLaunchWarning(tr("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this."));
     }
 
@@ -2042,7 +2044,9 @@ void Session::execInternal()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
+    if (m_AdaptiveResume) deskportResizeStage("input-init-begin");
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    if (m_AdaptiveResume) deskportResizeStage("input-init-end");
 
     AsyncConnectionStartThread asyncConnThread(this);
     if (!m_ThreadedExec || m_TransitionWindow) {

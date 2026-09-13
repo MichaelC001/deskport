@@ -22,6 +22,10 @@ private slots:
         const QString sample = QString::fromUtf8("你好 👩🏽‍💻\r\nsecond line\t日本語");
         QVERIFY(DeskPortClipboard::encode(sample, encoded));
         QVERIFY(DeskPortClipboard::decode(encoded, text)); QCOMPARE(text, sample);
+        QCOMPARE(DeskPortClipboard::negotiatedLimit(QJsonValue()), DeskPortClipboard::LegacyMaxText);
+        QCOMPARE(DeskPortClipboard::negotiatedLimit(-1), DeskPortClipboard::LegacyMaxText);
+        QCOMPARE(DeskPortClipboard::negotiatedLimit(256 * 1024 * 1024), DeskPortClipboard::MaxText);
+        QVERIFY(!DeskPortClipboard::encode(QString(2 * 1024 * 1024, 'a'), encoded, DeskPortClipboard::LegacyMaxText));
         QVERIFY(DeskPortClipboard::encode(QString(DeskPortClipboard::MaxText, 'a'), encoded));
         QVERIFY(DeskPortClipboard::decode(encoded, text)); QCOMPARE(text.size(), DeskPortClipboard::MaxText);
         QVERIFY(!DeskPortClipboard::encode(QString(DeskPortClipboard::MaxText + 1, 'a'), encoded));
@@ -70,7 +74,7 @@ private slots:
             request["type"] = "clipboard-poll"; request["seq"] = ++seq; request["rev"] = rev;
             if (!channel->submit(request)) return QJsonObject();
             QJsonObject reply; QElapsedTimer wait; wait.start();
-            while (!channel->take(reply) && wait.elapsed() < 6000) QTest::qWait(5);
+            while (!channel->take(reply) && wait.elapsed() < 120000) QTest::qWait(5);
             rev = reply["rev"].toInt(); return reply;
         };
         const auto initial = exchange({}); QVERIFY(!initial.contains("text")); QCOMPARE(rev, 0);
@@ -101,6 +105,17 @@ private slots:
         QVERIFY(DeskPortClipboard::encode(QString(DeskPortClipboard::MaxText, 'x'), encoded));
         QVERIFY(!exchange({{"text", encoded}}).contains("error"));
         QCOMPARE(clipboard->text().size(), DeskPortClipboard::MaxText);
+        QCOMPARE(channel->maxText(), DeskPortClipboard::MaxText);
+        clipboard->setText(QString(DeskPortClipboard::MaxText, 'y'));
+        QVERIFY(DeskPortClipboard::decode(exchange({})["text"], decoded));
+        QCOMPARE(decoded, clipboard->text());
+        const QString largeUnicode = QString::fromUtf8("中文👋\n").repeated(200000);
+        QVERIFY(largeUnicode.toUtf8().size() > DeskPortClipboard::LegacyMaxText);
+        QVERIFY(DeskPortClipboard::encode(largeUnicode, encoded));
+        QVERIFY(!exchange({{"text", encoded}}).isEmpty());
+        QCOMPARE(clipboard->text(), largeUnicode);
+        clipboard->setText(QString(DeskPortClipboard::MaxText, 'x'));
+        QVERIFY(DeskPortClipboard::decode(exchange({})["text"], decoded));
         QVERIFY(channel->submit({{"type", "clipboard-poll"}, {"seq", seq + 1}, {"rev", rev}, {"text", "invalid!"}}));
         QTRY_VERIFY_WITH_TIMEOUT(!channel->error().isEmpty(), 6000);
         QCOMPARE(clipboard->text().size(), DeskPortClipboard::MaxText);
@@ -137,6 +152,7 @@ private slots:
             for (int i = 0; i < 5; ++i) {
                 const auto fromClient = QString::fromUtf8("SDL 客户端 👋\n%1").arg(i);
                 SDL_SetClipboardText(fromClient.toUtf8().constData());
+                sync.clipboardChanged();
                 QVERIFY(pump([&] { return clipboard->text() == fromClient; }));
                 const auto fromHost = QString::fromUtf8("Qt 主机 🌏\n%1").arg(i);
                 clipboard->setText(fromHost);

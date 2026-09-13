@@ -1628,8 +1628,8 @@
         <translation>連線期間共享純文字剪貼簿</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
-        <translation>在已綁定的兩台裝置上開啟後重新連線。僅同步新複製的內容，上限 1 MiB；不共享圖片和檔案。</translation>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+        <translation>在已綁定的兩台裝置上開啟後重新連線。僅同步新複製的內容，上限 128 MiB；不共享圖片和檔案。</translation>
     </message>
     <message>
         <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>

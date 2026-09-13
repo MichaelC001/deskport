@@ -887,3 +887,17 @@ Validation update: both native builds, macOS 21 binding / 15 UI / 8 service /
 startup, Apple notarization/Gatekeeper, and GitHub CI passed. Both consumer
 system configurations built. Deployment and controlled live acceptance remain
 pending; the initial CPU observation had uncontrolled content/build contention.
+
+### 2026-09-13 — 0.2.2 follow-up
+
+- Raise the text clipboard bound to 128 MiB UTF-8 with legacy 1 MiB negotiation;
+  invalidate native snapshots on clipboard changes and avoid repeated Base64 work
+  or rescanning accumulated network frames. See `CLIPBOARD.md` for memory limits.
+- Remove two throwaway controller discovery passes from adaptive continuation;
+  retain real input initialization and hotplug, and correct first-submit dimensions.
+  See `PERFORMANCE.md`; native post-upgrade timing remains an acceptance checkpoint.
+- Deployment: keep rollback applications in `.noindex`, migrate indexed backups,
+  and unregister only their LaunchServices entries. Preserve two rollback copies.
+- This prerelease remains macOS arm64 plus the NixOS x86_64 flake only. Deferred
+  queue/static-frame work, video-only reconfiguration and helper merging remain
+  P2/P3/P4 and require further measurement.

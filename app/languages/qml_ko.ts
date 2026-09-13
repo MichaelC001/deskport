@@ -1620,8 +1620,8 @@
         <translation>세션 중 일반 텍스트 클립보드 공유</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
-        <translation>페어링된 두 기기에서 켠 후 다시 연결하세요. 새로 복사한 텍스트만 최대 1 MiB까지 공유합니다. 이미지와 파일은 공유하지 않습니다.</translation>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+        <translation>페어링된 두 기기에서 켠 후 다시 연결하세요. 새로 복사한 텍스트만 최대 128 MiB까지 공유합니다. 이미지와 파일은 공유하지 않습니다.</translation>
     </message>
     <message>
         <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>

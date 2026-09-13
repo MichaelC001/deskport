@@ -1620,8 +1620,8 @@
         <translation>セッション中にテキストのクリップボードを共有</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
-        <translation>ペアリング済みの両端末で有効にして再接続してください。新しくコピーしたテキストのみ、上限 1 MiB。画像とファイルは共有されません。</translation>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+        <translation>ペアリング済みの両端末で有効にして再接続してください。新しくコピーしたテキストのみ、上限 128 MiB。画像とファイルは共有されません。</translation>
     </message>
     <message>
         <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>

@@ -1620,8 +1620,8 @@
         <translation>Compartir el portapapeles de texto durante una sesión</translation>
     </message>
     <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 1 MiB. Images and files are not shared.</source>
-        <translation>Actívalo en ambos dispositivos vinculados y vuelve a conectar. Solo copias nuevas, hasta 1 MiB. No se comparten imágenes ni archivos.</translation>
+        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+        <translation>Actívalo en ambos dispositivos vinculados y vuelve a conectar. Solo copias nuevas, hasta 128 MiB. No se comparten imágenes ni archivos.</translation>
     </message>
     <message>
         <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>

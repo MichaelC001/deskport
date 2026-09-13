@@ -10,6 +10,7 @@ ClipboardChannel::ClipboardChannel(QString address, quint16 port, QSslCertificat
     : m_Address(address), m_Port(port), m_Peer(peer), m_Cert(cert), m_Key(key) { start(); }
 ClipboardChannel::~ClipboardChannel() { requestInterruption(); wait(); }
 bool ClipboardChannel::ready() { QMutexLocker lock(&m_Mutex); return m_Ready; }
+int ClipboardChannel::maxText() { QMutexLocker lock(&m_Mutex); return m_MaxText; }
 QString ClipboardChannel::error() { QMutexLocker lock(&m_Mutex); return m_Error; }
 bool ClipboardChannel::submit(const QJsonObject& request) {
     QMutexLocker lock(&m_Mutex);
@@ -37,12 +38,14 @@ void ClipboardChannel::run() {
             socket.ignoreSslErrors(errors);
         }, Qt::DirectConnection);
     QByteArray buffer;
-    auto receive = [&]() -> QJsonObject {
+    auto receive = [&](int timeoutMs = 5000) -> QJsonObject {
+        int searchFrom = 0;
         QElapsedTimer timeout; timeout.start();
-        while (!isInterruptionRequested() && timeout.elapsed() < 5000 && socket.state() == QAbstractSocket::ConnectedState) {
+        while (!isInterruptionRequested() && timeout.elapsed() < timeoutMs && socket.state() == QAbstractSocket::ConnectedState) {
             buffer += socket.readAll();
             if (buffer.size() > DeskPortClipboard::MaxFrame) return {};
-            const int end = buffer.indexOf('\n');
+            const int end = buffer.indexOf('\n', searchFrom);
+            searchFrom = buffer.size();
             if (end >= 0) {
                 const auto reply = QJsonDocument::fromJson(buffer.left(end)).object();
                 buffer.remove(0, end + 1); return reply;
@@ -61,10 +64,10 @@ void ClipboardChannel::run() {
         ok = hello["type"] == "hello" && hello["meta"].toObject()["clipboard"].toInt() == 1;
     }
     if (ok) {
-        send({{"type", "clipboard-start"}});
+        send({{"type", "clipboard-start"}, {"maxText", DeskPortClipboard::MaxText}});
         const auto reply = receive();
         ok = reply["type"] == "clipboard-ready";
-        QMutexLocker lock(&m_Mutex); m_Ready = ok;
+        QMutexLocker lock(&m_Mutex); m_MaxText = DeskPortClipboard::negotiatedLimit(reply["maxText"]); m_Ready = ok;
     }
     while (ok && !isInterruptionRequested()) {
         QJsonObject request;
@@ -75,7 +78,7 @@ void ClipboardChannel::run() {
             continue;
         }
         send(request);
-        const auto reply = receive();
+        const auto reply = receive(120000);
         ok = reply["type"] == "clipboard-result" && reply["seq"] == request["seq"];
         if (ok) { QMutexLocker lock(&m_Mutex); m_Reply = reply; }
     }

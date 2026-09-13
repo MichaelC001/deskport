@@ -338,10 +338,11 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
 
     // Render it
+    const int submittedWidth = frame->width, submittedHeight = frame->height;
     m_VsyncRenderer->renderFrame(frame);
     if (m_FirstPresentation) {
         // Renderer submission is observable here; physical scanout is not.
-        deskportResizeStage("first-render-submit", frame->width, frame->height);
+        deskportResizeStage("first-render-submit", submittedWidth, submittedHeight);
         m_FirstPresentation = false;
     }
     Uint32 afterRender = SDL_GetTicks();
