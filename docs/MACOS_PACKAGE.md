@@ -2,6 +2,15 @@
 
 ## Developer ID distribution
 
+Verified 2026-09-13: the 0.1.14 distribution candidate passed Developer ID checks
+for 126 Mach-O files and 35 code bundles, with secure timestamps and hardened
+runtime. Apple accepted both the application archive and DMG without application
+notarization issues. App/DMG ticket validation, Gatekeeper assessment, extracted-ZIP
+checks and `syspolicy_check distribution` passed. The public assets have a
+`-notarized` suffix; the original development artifacts retain their names/hashes.
+No installed app or privacy permissions were changed. A fresh-machine browser
+download and real permission/streaming acceptance remain separate checks.
+
 `scripts/package-macos.sh` still produces the existing local-development build.
 To prepare public distribution, pass that verified application to the separate
 release workflow. It preserves its Bundle ID, copies it into a new output

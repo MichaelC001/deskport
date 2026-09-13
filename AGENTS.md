@@ -23,3 +23,8 @@
   signing preflight in the same execution session as packaging. A successful
   manual helper signature does not prove automation can access the private key.
   Record the verified deployment route and rollback path after installing.
+- Public macOS downloads must pass `scripts/release-macos.sh`: Developer ID
+  signatures for every embedded code object, Apple notarization, stapled app/DMG
+  tickets and Gatekeeper verification after ZIP extraction. Local development
+  signatures are not sufficient. Preserve existing release assets and their hashes;
+  use distinct asset names when adding notarized builds to a published version.

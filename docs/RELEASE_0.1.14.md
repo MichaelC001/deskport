@@ -24,6 +24,13 @@ display-control channel), 15 UI cases, seven translation catalogs, Linux Nix bui
 and CLI smoke, and a stable signed macOS ZIP/DMG with verified dependency closure.
 Compilation and isolated tests
 do not replace real headless restart, sleep/wake, or live stream acceptance.
-The macOS package keeps the existing Apple Development identity; it is not a
-notarized Developer ID distribution. Running installations are not changed by
-publishing this release.
+The original macOS assets keep the existing Apple Development identity and hashes.
+For new installations, download the [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.1.14/DeskPort-0.1.14-macos-arm64-notarized.dmg)
+or [notarized ZIP](https://github.com/keithxc/deskport/releases/download/v0.1.14/DeskPort-0.1.14-macos-arm64-notarized.zip).
+The added packages use Developer ID signatures for all 126 Mach-O files and 35
+code bundles. Apple accepted the app and DMG; stapled tickets, Gatekeeper checks
+and the macOS pre-distribution assessment passed, including ZIP extraction.
+These packages target Apple Silicon and macOS 26 or later. Drag the application
+into Applications and open it; enabling hosting requires user privacy permissions.
+Moving from the old development identity may require granting those permissions
+again. Publishing these assets does not update running installations.

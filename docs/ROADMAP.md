@@ -832,8 +832,11 @@ signs all embedded code with Developer ID plus secure timestamps/hardened runtim
 and provides resumable notarization, app/DMG stapling and extracted-ZIP Gatekeeper
 checks. Existing local-update packaging and installed services remain independent.
 
-Next checkpoint: complete Apple notarization with a configured Keychain profile,
-validate the final artifacts, then test browser-download installation and first-use
-permissions. Do not mark notarization or fresh-machine installation accepted from
-signing alone. Future Apple store/Android client planning is in the separate private
+Apple notarization completed on 2026-09-13 for the app and DMG. All 126 Mach-O
+files and 35 code bundles passed distribution signing checks. Stapled-ticket
+validation, Gatekeeper checks after ZIP extraction and macOS pre-distribution
+assessment passed. New downloads use distinct `-notarized` assets; existing
+development asset hashes and running installations are preserved.
+Next checkpoint: fresh-machine browser-download installation and first-use
+permissions. Future Apple store/Android client planning is in the separate private
 `deskport-client` repository; no mobile implementation is part of this task.
