@@ -26,11 +26,13 @@ public:
     bool busy() const;
     int port() const { return m_Server->serverPort(); }
     QVariantList peers() const;
+    Q_INVOKABLE bool setConnectionPort(int port);
     Q_INVOKABLE void request(const QString& address);
     Q_INVOKABLE void approve(const QString& transaction);
     Q_INVOKABLE void reject(const QString& transaction);
     Q_INVOKABLE void cancel();
     Q_INVOKABLE void restoreHosts();
+    Q_INVOKABLE void refreshEndpoints();
     Q_INVOKABLE void revoke(const QString& fingerprint);
     Q_INVOKABLE bool editPeer(const QString& fingerprint, const QString& name,
                               const QString& address, int hostPort, int bindingPort);
@@ -41,6 +43,7 @@ signals:
 private:
     struct Link;
     void attach(Link* link);
+    QTcpServer* createListener();
     void drain(Link* link);
     void receive(Link* link, const QJsonObject& message);
     void send(Link* link, const QJsonObject& message);
@@ -53,13 +56,19 @@ private:
     bool save();
     HostManager* m_Host;
     QTcpServer* m_Server;
+    QList<QTcpServer*> m_PreviousServers;
+    QHostAddress m_ListenAddress;
+    bool m_Persistent;
     QSslCertificate m_Certificate;
     QSslKey m_Key;
     QString m_Path, m_Status, m_Revoking;
     QJsonObject m_Peers;
     Link* m_Link = nullptr;
+    Link* m_RefreshLink = nullptr;
+    int m_RefreshCursor = 0;
     Link* m_DisplayLink = nullptr;
     Link* m_ClipboardLink = nullptr;
     bool m_Healthy = false;
+    bool m_IdentityHealthy = false;
     bool m_TrustInFlight = false;
 };

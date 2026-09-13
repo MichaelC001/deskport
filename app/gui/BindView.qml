@@ -77,10 +77,11 @@ UiPage {
             Label { text: qsTr("Domain name or IP address") }
             TextField { id: deviceAddress; objectName: "editPeerAddress"; Layout.fillWidth: true; placeholderText: qsTr("Computer name or IP, without port") }
             Label { text: qsTr("A domain name is saved as entered and resolved again when connecting."); wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: qsTr("Host port") }
-            SpinBox { id: hostPort; from: 1024; to: 65514; editable: true; Layout.fillWidth: true }
-            Label { text: qsTr("Binding port") }
-            SpinBox { id: bindingPort; from: 1; to: 65535; editable: true; Layout.fillWidth: true }
+            CheckBox { id: advancedPorts; text: qsTr("Advanced port overrides"); checked: false }
+            Label { text: qsTr("Host port"); visible: advancedPorts.checked }
+            SpinBox { id: hostPort; visible: advancedPorts.checked; from: 1024; to: 65514; editable: true; Layout.fillWidth: true }
+            Label { text: qsTr("Binding port"); visible: advancedPorts.checked }
+            SpinBox { id: bindingPort; visible: advancedPorts.checked; from: 1; to: 65535; editable: true; Layout.fillWidth: true }
             Label { id: editError; textFormat: Text.PlainText; color: ui.warning; visible: text.length > 0; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             RowLayout {
                 Layout.fillWidth: true

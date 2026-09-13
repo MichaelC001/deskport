@@ -1715,6 +1715,18 @@
         <source>Show streaming statistics</source>
         <translation>스트리밍 통계 표시</translation>
     </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>장치 연결 포트</translation>
+    </message>
+    <message>
+        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+        <translation>일반적으로 두 컴퓨터 모두 48991을 사용합니다. 영상과 음성 포트는 자동으로 관리되며 저장된 장치를 위한 이전 연결 포트도 유지됩니다。</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>적용</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2076,6 +2088,10 @@
     <message><source>Host port</source><translation>호스트 포트</translation></message>
     <message><source>Binding port</source><translation>연결 승인 포트</translation></message>
     <message><source>Save</source><translation>저장</translation></message>
+    <message>
+        <source>Advanced port overrides</source>
+        <translation>고급 포트 설정</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>

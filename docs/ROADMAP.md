@@ -1,3 +1,29 @@
+## Automatic connection ports (0.1.14, 2026-09-13)
+
+Reason: a headless host selected a different streaming port group, while its
+approved client kept polling the old port and displayed the device as offline.
+Do not require local access, removal of trust, or closing an active remote desktop
+to recover a remembered endpoint.
+
+Implemented: production clients retry one saved peer every ten seconds (first
+attempt after one second) over the existing binding endpoint. A five-second TLS
+probe pins the binding certificate and verifies the saved streaming certificate
+and host ID before atomically updating a changed streaming port. Existing device
+polling then discovers the new endpoint. Local aliases, trust and active media /
+clipboard channels are preserved; unresponsive peers do not replace UI status.
+Concurrent local edits or revocation invalidate an in-flight reply.
+
+Checkpoint: isolated changed-port / wrong-identity / revoked-peer tests and Linux
+Nix build. Live two-sided upgrade, changed-port recovery while an opposite-direction
+session is active, and headless restart acceptance remain separate deployment checks.
+Settings exposes one connection port, default 48991, also used when adding a
+name without a port. Changing it binds the new listener before persisting it,
+retains up to eight previous listeners across restarts, and advertises the new
+entry port to approved peers. An occupied port leaves the existing listener intact.
+Video/audio port groups remain automatic; manual overrides are advanced controls.
+Both peers must support endpoint refresh. Previous ports must remain reachable
+through any firewall. Legacy Sunshine entries still require explicit updates.
+
 ## Native macOS idle capture (0.1.13, 2026-09-12)
 
 Reason: static-frame suppression still scanned entire pixel buffers on the CPU.

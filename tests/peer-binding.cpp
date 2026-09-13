@@ -20,6 +20,96 @@ static QByteArray credential(const char* name) {
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void automaticEndpointRefresh_data() {
+        QTest::addColumn<int>("failure");
+        QTest::newRow("changed-port") << 0;
+        QTest::newRow("wrong-stream-identity") << 1;
+        QTest::newRow("wrong-tls-pin") << 2;
+        QTest::newRow("revoked-at-server") << 3;
+        QTest::newRow("wrong-stream-certificate") << 4;
+        QTest::newRow("concurrent-local-edit") << 5;
+        QTest::newRow("changed-entry-port") << 6;
+    }
+    void automaticEndpointRefresh() {
+        QFETCH(int, failure);
+        QTemporaryDir dir;
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        auto digest = [](const QByteArray& cert) {
+            return QString::fromLatin1(QSslCertificate(cert).digest(QCryptographicHash::Sha256).toHex());
+        };
+        QDir().mkpath(dir.path()+"/bb"); QDir().mkpath(dir.path()+"/ab");
+        QVERIFY(PeerStore::write(dir.path()+"/bb/peers.json", {{"version",1}, {"peers",QJsonObject{
+            {digest(aCert),QJsonObject{{"ready",true},{"granted",failure != 3}}}}}}));
+        HostManager bh(nullptr,dir.path()+"/bh");
+        PeerManager b(&bh,bCert,credential("TEST_KEY_B"),dir.path()+"/bb",0,QHostAddress::LocalHost);
+        auto peer=bh.identity();
+        const int actualPort=bh.basePort();
+        peer["hostPort"]=actualPort+100;
+        peer["bindingPort"]=b.port(); peer["address"]="127.0.0.1";
+        peer["name"]="My saved desktop"; peer["customName"]=true;
+        peer["ready"]=true; peer["granted"]=true;
+        peer["requestedAddress"]=QString("127.0.0.1:%1").arg(b.port());
+        peer["clientCert"]=QString::fromUtf8(bCert);
+        if (failure==1) peer["hostId"]=QUuid::createUuid().toString();
+        if (failure==4) peer["hostCert"]=QString::fromUtf8(credential("TEST_CERT_C"));
+        const auto fp=digest(failure==2 ? credential("TEST_CERT_C") : bCert);
+        const QJsonObject before{{"version",1},{"peers",QJsonObject{{fp,peer}}}};
+        QVERIFY(PeerStore::write(dir.path()+"/ab/peers.json",before));
+        HostManager ah(nullptr,dir.path()+"/ah");
+        PeerManager a(&ah,aCert,credential("TEST_KEY_A"),dir.path()+"/ab",0,QHostAddress::LocalHost);
+        QSignalSpy updated(&a,&PeerManager::peerBound), approval(&b,&PeerManager::incomingRequest);
+        const auto status=a.status();
+        if (failure==6) {
+            QTcpServer reservation; QVERIFY(reservation.listen(QHostAddress::LocalHost,0));
+            const int next=reservation.serverPort(); reservation.close();
+            QVERIFY(b.setConnectionPort(next));
+        }
+        a.refreshEndpoints();
+        QVERIFY(!a.busy());
+        QJsonObject edited;
+        if (failure==5) {
+            QVERIFY(a.editPeer(fp,"Updated locally","127.0.0.1",actualPort+200,b.port()));
+            updated.clear();
+            edited=PeerStore::read(dir.path()+"/ab/peers.json");
+        }
+        if (!failure || failure==6) {
+            QTRY_COMPARE_WITH_TIMEOUT(updated.size(),1,5000);
+            const auto after=PeerStore::read(dir.path()+"/ab/peers.json")["peers"].toObject()[fp].toObject();
+            auto expected=peer; expected["hostPort"]=actualPort;
+            expected["resolvedAddress"]="127.0.0.1";
+            if (failure==6) {
+                expected["bindingPort"]=b.port();
+                expected["requestedAddress"]=QString("127.0.0.1:%1").arg(b.port());
+            }
+            QCOMPARE(after,expected);
+            QTest::qWait(100); a.refreshEndpoints(); QTest::qWait(200);
+            QCOMPARE(updated.size(),1);
+        } else {
+            QTest::qWait(600);
+            QCOMPARE(updated.size(),0);
+            QCOMPARE(PeerStore::read(dir.path()+"/ab/peers.json"),failure==5 ? edited : before);
+        }
+        QCOMPARE(approval.size(),0);
+        if (failure!=5) QCOMPARE(a.status(),status);
+        QTRY_VERIFY(!b.busy());
+        QVERIFY(!ah.running()); QVERIFY(!bh.running());
+    }
+
+    void connectionPortKeepsOldListenerAndRejectsOccupiedPort() {
+        QTemporaryDir dir;
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager manager(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),dir.path()+"/binding",0,QHostAddress::LocalHost);
+        const int original=manager.port();
+        QTcpServer occupied; QVERIFY(occupied.listen(QHostAddress::LocalHost,0));
+        QVERIFY(!manager.setConnectionPort(occupied.serverPort()));
+        QVERIFY(!manager.setConnectionPort(0)); QCOMPARE(manager.port(),original);
+        const int next=occupied.serverPort(); occupied.close();
+        QVERIFY(manager.setConnectionPort(next)); QCOMPARE(manager.port(),next);
+        QTcpServer oldProbe; QVERIFY(!oldProbe.listen(QHostAddress::LocalHost,original));
+        QVERIFY(manager.setConnectionPort(original)); QCOMPARE(manager.port(),original);
+        QTcpServer newProbe; QVERIFY(!newProbe.listen(QHostAddress::LocalHost,next));
+    }
+
     void editedEndpointSurvivesRestartAndRejectsInvalidInput() {
         QTemporaryDir dir;
         const QString path = dir.path()+"/binding";
@@ -93,13 +183,20 @@ private slots:
             AdaptiveDisplay channel("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
             QVERIFY(resize(channel, QSize(1920, 1080)));
             QCOMPARE(resized.size(), 1); QVERIFY(host.running()); QVERIFY(!server.busy());
+            QTcpServer newEntry; QVERIFY(newEntry.listen(QHostAddress::LocalHost,0));
+            const int nextEntry=newEntry.serverPort(); newEntry.close();
+            QVERIFY(server.setConnectionPort(nextEntry));
+            // The existing authenticated display-control channel survives a port change.
+            QVERIFY(resize(channel, QSize(2560, 1440)));
+            QCOMPARE(resized.size(), 2); QVERIFY(host.running());
+
             {
                 AdaptiveDisplay competing("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
                 QVERIFY(!resize(competing, QSize(2560, 1440)));
             }
             QTRY_VERIFY(!server.busy());
             QVERIFY(resize(channel, QSize(1600, 1000)));
-            QCOMPARE(resized.size(), 2);
+            QCOMPARE(resized.size(), 3);
             QVERIFY(!host.resizeDisplay(99999, 1000, 2, 99));
             QVERIFY(!host.resizeDisplay(1600, 1000, 9, 99));
             QCOMPARE(approval.size(), 0);
@@ -108,7 +205,7 @@ private slots:
         QTest::qWait(100);
         AdaptiveDisplay next("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
         QVERIFY(resize(next, QSize(2560, 1440)));
-        QCOMPARE(resized.size(), 3);
+        QCOMPARE(resized.size(), 4);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
     void workspaceUsesClientSystemScale() {

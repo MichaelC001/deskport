@@ -562,8 +562,10 @@ ApplicationWindow {
     void commonLanguagesRetranslateSettings() {
         QTemporaryDir directory;
         HostManager host(nullptr, directory.path());
+        PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
         QQmlEngine engine;
         engine.rootContext()->setContextProperty("hostManager", &host);
+        engine.rootContext()->setContextProperty("peerManager", &peers);
         const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
         QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
         QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);

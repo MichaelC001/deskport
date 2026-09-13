@@ -227,6 +227,14 @@ UiPage {
             Label { text: qsTr("Connections"); color: ui.text; font.pixelSize: 20; font.weight: Font.DemiBold }
             Switch { text: qsTr("Discover nearby devices"); checked: StreamingPreferences.enableMdns; onClicked: { StreamingPreferences.enableMdns=checked; save() } }
             Switch { text: qsTr("Keep this computer awake while connected"); checked: StreamingPreferences.keepAwake; onClicked: { StreamingPreferences.keepAwake=checked; save() } }
+            Label { text: qsTr("Device connection port"); color: ui.text }
+            Label { text: qsTr("Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            RowLayout {
+                Layout.fillWidth: true
+                SpinBox { id: connectionPort; objectName: "connectionPort"; from: 1024; to: 65535; value: peerManager.port; editable: true; Layout.fillWidth: true }
+                UiButton { text: qsTr("Apply"); onClicked: peerManager.setConnectionPort(connectionPort.value) }
+            }
+            Label { text: peerManager.status; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             UiButton { text: qsTr("Manage saved access"); onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
         }
     }

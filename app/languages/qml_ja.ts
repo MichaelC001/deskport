@@ -1715,6 +1715,18 @@
         <source>Show streaming statistics</source>
         <translation>ストリーミング統計を表示</translation>
     </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>デバイス接続ポート</translation>
+    </message>
+    <message>
+        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+        <translation>通常は両方のコンピューターで 48991 のままにします。映像と音声のポートは自動管理されます。保存済みデバイスには以前の接続ポートも維持されます。</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>適用</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2076,6 +2088,10 @@
     <message><source>Host port</source><translation>ホストポート</translation></message>
     <message><source>Binding port</source><translation>バインドポート</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
+    <message>
+        <source>Advanced port overrides</source>
+        <translation>ポートの詳細設定</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>

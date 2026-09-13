@@ -1723,6 +1723,18 @@
         <source>Show streaming statistics</source>
         <translation>显示串流统计</translation>
     </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>设备连接端口</translation>
+    </message>
+    <message>
+        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+        <translation>通常两台电脑都保持 48991。视频和音频端口自动管理，旧入口仍保留供已保存设备连接。</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>应用</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2084,6 +2096,10 @@
     <message><source>Host port</source><translation>主机端口</translation></message>
     <message><source>Binding port</source><translation>绑定端口</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
+    <message>
+        <source>Advanced port overrides</source>
+        <translation>高级端口覆盖</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>

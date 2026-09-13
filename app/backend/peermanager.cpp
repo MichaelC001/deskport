@@ -54,6 +54,9 @@ struct PeerManager::Link : QObject {
     QJsonObject peer;
     QString transaction, fingerprint, requestedAddress;
     bool incoming = false, requested = false, accepted = false;
+    bool endpointRefresh = false;
+    QString expectedFingerprint;
+    QJsonObject expectedPeer;
     bool clipboardControl = false;
     QString clipboardText;
     bool clipboardSupported = false;
@@ -66,7 +69,7 @@ struct PeerManager::Link : QObject {
 };
 PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                          const QString& directory, quint16 port, const QHostAddress& listenAddress)
-    : m_Host(host), m_Server(new Listener(this)), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
+    : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
     const QString path = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding" : directory;
     m_Path = path + "/peers.json";
     QDir().mkpath(path);
@@ -109,7 +112,40 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
             fail(m_ClipboardLink, tr("Clipboard session ended"));
     });
     watchdog->start(2000);
-    auto server = static_cast<Listener*>(m_Server);
+    // Isolated managers are driven explicitly by tests; production retries one
+    // remembered peer per tick without blocking the UI or active media sessions.
+    if (directory.isEmpty()) {
+        auto refresh = new QTimer(this);
+        connect(refresh, &QTimer::timeout, this, &PeerManager::refreshEndpoints);
+        refresh->start(10000);
+        QTimer::singleShot(1000, this, &PeerManager::refreshEndpoints);
+    }
+    m_IdentityHealthy = m_Healthy;
+    auto server = createListener();
+    m_Server = server;
+    if (m_Persistent) {
+        const int configured = QSettings().value("binding/port", int(port)).toInt();
+        if (configured >= 1024 && configured <= 65535) port = quint16(configured);
+    }
+    if (!m_Healthy) m_Status = tr("Binding identity could not be loaded. Check host state and close other DeskPort instances.");
+    else if (!server->listen(listenAddress, port)) {
+        m_Healthy = false; m_Status = tr("Binding port is occupied. Existing services were left unchanged.");
+    } else {
+        m_Status = tr("Ready for binding requests");
+        if (m_Persistent) {
+            const auto previous = QSettings().value("binding/previousPorts").toStringList();
+            for (const auto& value : previous.mid(0, 8)) {
+                const int oldPort = value.toInt();
+                if (oldPort < 1024 || oldPort > 65535 || oldPort == port) continue;
+                auto alias = createListener();
+                if (alias->listen(m_ListenAddress, quint16(oldPort))) m_PreviousServers.append(alias);
+                else { qWarning() << "Previous connection port could not be restored:" << oldPort; alias->deleteLater(); }
+            }
+        }
+    }
+}
+QTcpServer* PeerManager::createListener() {
+    auto server = new Listener(this);
     server->setProxy(QNetworkProxy::NoProxy);
     server->incoming = [this](qintptr fd) {
         auto socket = new QSslSocket;
@@ -122,10 +158,53 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         socket->startServerEncryption();
         emit changed();
     };
-    if (!m_Healthy) m_Status = tr("Binding identity could not be loaded. Check host state and close other DeskPort instances.");
-    else if (!server->listen(listenAddress, port)) {
-        m_Healthy = false; m_Status = tr("Binding port is occupied. Existing services were left unchanged.");
-    } else m_Status = tr("Ready for binding requests");
+    return server;
+}
+bool PeerManager::setConnectionPort(int value) {
+    if (!m_IdentityHealthy) return false;
+    if (value < 1024 || value > 65535) {
+        m_Status = tr("Enter a connection port between 1024 and 65535."); emit changed(); return false;
+    }
+    if (value == port()) return true;
+    QTcpServer* replacement = nullptr;
+    for (auto server : m_PreviousServers) {
+        if (server->serverPort() == value) { replacement = server; break; }
+    }
+    const bool reused = replacement != nullptr;
+    if (!reused) {
+        // Keep a bounded durable set of old rendezvous ports for offline peers.
+        if (m_PreviousServers.size() >= 8) {
+            m_Status = tr("Previous connection ports are still reserved. Reuse an earlier port."); emit changed(); return false;
+        }
+        replacement = createListener();
+        if (!replacement->listen(m_ListenAddress, quint16(value))) {
+            replacement->deleteLater();
+            m_Status = tr("Connection port is unavailable. The current port is unchanged."); emit changed(); return false;
+        }
+    }
+    QStringList previous;
+    for (auto server : m_PreviousServers)
+        if (server != replacement) previous.append(QString::number(server->serverPort()));
+    if (m_Server->isListening()) previous.append(QString::number(port()));
+    if (m_Persistent) {
+        QSettings settings;
+        const auto oldPort = settings.value("binding/port", 48991);
+        const auto oldPrevious = settings.value("binding/previousPorts");
+        settings.setValue("binding/port", value); settings.setValue("binding/previousPorts", previous);
+        settings.sync();
+        if (settings.status() != QSettings::NoError) {
+            settings.setValue("binding/port", oldPort); settings.setValue("binding/previousPorts", oldPrevious);
+            if (!reused) { replacement->close(); replacement->deleteLater(); }
+            m_Status = tr("Could not save the connection port. The current port is unchanged."); emit changed(); return false;
+        }
+    }
+    m_PreviousServers.removeAll(replacement);
+    if (m_Server->isListening()) m_PreviousServers.append(m_Server);
+    else m_Server->deleteLater();
+    m_Server = replacement;
+    m_Healthy = m_IdentityHealthy;
+    m_Status = tr("Connection port saved. Existing connections and previous entry ports remain available.");
+    emit changed(); return true;
 }
 PeerManager::~PeerManager() { m_Server->close(); }
 bool PeerManager::busy() const { return m_Link || m_TrustInFlight || !m_Revoking.isEmpty(); }
@@ -150,6 +229,7 @@ QJsonObject PeerManager::metadata() const {
     meta["name"] = QHostInfo::localHostName().left(64);
     meta["dnsName"] = dnsName(QHostInfo::localHostName());
     meta["version"] = 1;
+    meta["endpointRefresh"] = 1;
     meta["clipboard"] = 1;
     meta["adaptiveDisplay"] = m_Host->adaptiveDisplayAvailable() ? 1 : 0;
     meta["bindingPort"] = int(m_Server->serverPort());
@@ -178,6 +258,9 @@ void PeerManager::attach(Link* link) {
         const auto cert = link->socket->peerCertificate();
         if (cert.isNull() || cert == m_Certificate) { fail(link, tr("Invalid or local device identity")); return; }
         link->fingerprint = fingerprint(cert);
+        if (link->endpointRefresh && link->fingerprint != link->expectedFingerprint) {
+            fail(link, tr("Endpoint refresh identity mismatch")); return;
+        }
         const auto address = link->socket->peerAddress().toString();
         for (auto it = m_Peers.begin(); it != m_Peers.end(); ++it) {
             const auto peer = it.value().toObject();
@@ -189,7 +272,7 @@ void PeerManager::attach(Link* link) {
             }
         }
         if (link->incoming) send(link, {{"type", "hello"}, {"meta", metadata()}});
-        else send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
+        else if (!link->endpointRefresh) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
         drain(link);
     });
     connect(socket, &QSslSocket::readyRead, link, [this, link] {
@@ -226,7 +309,7 @@ void PeerManager::request(const QString& value) {
     // This dialog uses the binding endpoint, not the video port.
     const auto url = QUrl::fromUserInput("https://" + value.trimmed());
     if (url.host().isEmpty() || !url.userInfo().isEmpty() || url.path().size() > 1 || url.hasQuery() || url.hasFragment() ||
-            url.port(48991) <= 0 || url.port(48991) > 65535) {
+            url.port(port()) <= 0 || url.port(port()) > 65535) {
         m_Status = tr("Enter an IP address or domain, optionally followed by the binding port."); emit changed(); return;
     }
     auto link = new Link(this); link->socket = new QSslSocket(link); m_Link = link;
@@ -234,7 +317,7 @@ void PeerManager::request(const QString& value) {
     link->requestedAddress = value.trimmed();
     m_Status = tr("Connecting to the other computer…");
     attach(link);
-    link->socket->connectToHostEncrypted(url.host(), quint16(url.port(48991)));
+    link->socket->connectToHostEncrypted(url.host(), quint16(url.port(port())));
     emit changed();
 }
 bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
@@ -279,6 +362,58 @@ void PeerManager::send(Link* link, const QJsonObject& message) {
 }
 void PeerManager::receive(Link* link, const QJsonObject& message) {
     const QString type = message["type"].toString();
+    if (link->endpointRefresh) {
+        if (type == "hello") {
+            if (message["meta"].toObject()["endpointRefresh"].toInt() != 1) {
+                fail(link, tr("Peer does not support automatic endpoint refresh")); return;
+            }
+            send(link, {{"type", "endpoint-query"}}); return;
+        }
+        const auto current = m_Peers.value(link->expectedFingerprint).toObject();
+        const auto meta = message["meta"].toObject();
+        const int port = meta["hostPort"].toInt();
+        const int entryPort = meta["bindingPort"].toInt();
+        // Pin BOTH TLS client identity and the streaming identity. An in-flight
+        // reply must not resurrect revoked access or overwrite a local edit.
+        if (type != "endpoint-result" || current != link->expectedPeer ||
+            !current["ready"].toBool() || !current["granted"].toBool() ||
+            meta["version"].toInt() != 1 || port < 1024 || port > 65514 || entryPort < 1 || entryPort > 65535 ||
+            meta["hostId"] != current["hostId"] ||
+            QSslCertificate(meta["hostCert"].toString().toUtf8()).isNull() ||
+            QSslCertificate(meta["hostCert"].toString().toUtf8()) !=
+                QSslCertificate(current["hostCert"].toString().toUtf8())) {
+            fail(link, tr("Endpoint refresh rejected")); return;
+        }
+        if (port != current["hostPort"].toInt() || entryPort != current["bindingPort"].toInt()) {
+            auto updated = current; updated["hostPort"] = port;
+            updated["bindingPort"] = entryPort;
+            if (entryPort != current["bindingPort"].toInt()) {
+                const auto address = current["address"].toString();
+                updated["requestedAddress"] = (address.contains(':') ? "[" + address + "]" : address) + ":" + QString::number(entryPort);
+            }
+            m_Peers[link->expectedFingerprint] = updated;
+            if (!save()) {
+                m_Peers[link->expectedFingerprint] = current;
+                fail(link, tr("Could not save refreshed endpoint")); return;
+            }
+            emit peerBound(updated.toVariantMap()); emit changed();
+        }
+        link->ended = true; m_RefreshLink = nullptr;
+        link->socket->disconnectFromHost();
+        QTimer::singleShot(2000, link, &QObject::deleteLater); return;
+    }
+    if (type == "endpoint-query") {
+        const auto peer = m_Peers.value(link->fingerprint).toObject();
+        if (!link->incoming || link->requested || link->displayControl || link->clipboardControl ||
+            !peer["ready"].toBool() || !peer["granted"].toBool()) {
+            fail(link, tr("Endpoint refresh requires an approved device")); return;
+        }
+        send(link, {{"type", "endpoint-result"}, {"meta", metadata()}});
+        link->ended = true;
+        if (m_Link == link) m_Link = nullptr;
+        link->socket->disconnectFromHost();
+        QTimer::singleShot(2000, link, &QObject::deleteLater); return;
+    }
     if (!type.startsWith("clipboard-")) qInfo() << "Binding: received" << type;
     if (type == "clipboard-start" || type == "clipboard-poll") {
         const auto peer = m_Peers[link->fingerprint].toObject();
@@ -428,8 +563,13 @@ void PeerManager::finish(Link* link) {
 }
 void PeerManager::fail(Link* link, const QString& message) {
     if (link->ended) return;
-    qWarning() << "Binding:" << message;
+    if (!link->endpointRefresh) qWarning() << "Binding:" << message;
     link->ended = true;
+    if (m_RefreshLink == link) {
+        m_RefreshLink = nullptr;
+        link->socket->abort(); link->deleteLater();
+        return; // Background reachability failures must not replace UI status.
+    }
     if (m_ClipboardLink == link) m_ClipboardLink = nullptr;
     if (m_DisplayLink == link) { m_DisplayLink = nullptr; m_Host->restoreDisplay(); }
     if (m_Link == link) m_Link = nullptr;
@@ -438,6 +578,25 @@ void PeerManager::fail(Link* link, const QString& message) {
     QTimer::singleShot(2000, link, &QObject::deleteLater); emit changed();
 }
 void PeerManager::cancel() { if (m_Link) fail(m_Link, tr("Binding cancelled. Review saved access if approval had already completed.")); }
+void PeerManager::refreshEndpoints() {
+    if (!m_Healthy || busy() || m_RefreshLink || m_Peers.isEmpty()) return;
+    const auto keys = m_Peers.keys();
+    const auto fp = keys.at(m_RefreshCursor++ % keys.size());
+    if (m_RefreshCursor >= keys.size()) m_RefreshCursor = 0;
+    const auto peer = m_Peers.value(fp).toObject();
+    const auto address = peer["address"].toString();
+    const int port = peer["bindingPort"].toInt(48991);
+    if (!peer["ready"].toBool() || !peer["granted"].toBool() ||
+        address.isEmpty() || port < 1 || port > 65535) return;
+    auto link = new Link(this); link->socket = new QSslSocket(link);
+    link->endpointRefresh = true; link->expectedFingerprint = fp;
+    link->expectedPeer = peer; m_RefreshLink = link;
+    attach(link);
+    link->socket->connectToHostEncrypted(address, quint16(port));
+    QTimer::singleShot(5000, link, [this, link] {
+        if (!link->ended) fail(link, tr("Endpoint refresh timed out"));
+    });
+}
 void PeerManager::restoreHosts() {
     for (const auto& peer : m_Peers) if (peer.toObject()["ready"].toBool()) emit peerBound(peer.toObject().toVariantMap());
 }

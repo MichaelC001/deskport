@@ -80,3 +80,30 @@ reusing the IP returned during binding. Older bindings recover the hostname from
 continue to use the observed peer IP; a remote display name is not a DNS name.
 Pinned certificates and host identities still govern authentication. DNS must
 still provide a working route; retaining a name does not bypass a broken proxy.
+
+## Automatic streaming endpoint refresh (2026-09-13)
+
+Approved peers negotiate `endpointRefresh: 1` in the existing TLS hello, then use
+`endpoint-query` / `endpoint-result` to recover the current streaming base port.
+The server requires an already ready and granted client certificate. The client
+pins the saved binding certificate and accepts only the existing host UUID and
+streaming certificate; it preserves the local address, alias and trust flags.
+A reply cannot overwrite a concurrent local edit or resurrect revoked access.
+
+One remembered peer is checked every ten seconds, with a five-second deadline.
+The probe does not request pairing, restart sharing, or reuse an active clipboard
+or display-control channel. A changed port is persisted and passed to ordinary
+host polling; unchanged results do not rewrite settings. Older peers keep their
+existing behavior until upgraded. The binding port remains the stable rendezvous;
+custom entry-port changes now retain the old listeners and advertise the new port.
+Broken DNS/routing still requires recovery outside this protocol. No unauthenticated
+port scan is performed.
+
+Settings → Connections exposes the primary connection port (default 48991). The
+local choice is also the default for a newly entered device name; use name:port
+when a remote device differs. Changing the primary port leaves accepted sessions
+and up to eight previous entry listeners intact. Previous ports are persisted for
+offline devices; further changes must reuse an earlier port once the limit is
+reached. Port conflicts never stop the currently working listener. Custom ports
+and retained entry ports must be reachable through the host firewall. The default
+Nix firewall already covers the default entry and all supported stream groups.

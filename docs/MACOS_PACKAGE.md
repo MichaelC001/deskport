@@ -49,8 +49,10 @@ DeskPort initially uses base port 48989. Before creating a display it reserves t
 whole TCP/UDP group; if any member is busy, it tries another DeskPort group at
 100-port intervals (49089 through 50889). It remembers the last started group's
 base port and tries it first next time. The UI, generated host configuration and
-local pairing API all follow the selected group. If it changes, update manually
-entered client addresses; Bonjour discovery uses the advertised port.
+local pairing API all follow the selected group. Approved DeskPort peers on
+0.1.14 or later automatically refresh changed ports through the fixed connection
+entry, without re-pairing. Legacy manually entered Sunshine hosts still require
+address updates; Bonjour discovery uses the advertised port.
 
 The native Sunshine default group is never a candidate. A DeskPort instance lock
 also prevents another DeskPort using the same state directory from starting a

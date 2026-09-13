@@ -1715,6 +1715,18 @@
         <source>Show streaming statistics</source>
         <translation>Mostrar estadísticas del streaming</translation>
     </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>Puerto de conexión del dispositivo</translation>
+    </message>
+    <message>
+        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+        <translation>Normalmente, mantenga 48991 en ambos equipos. Los puertos de vídeo y audio se gestionan automáticamente. Los puertos anteriores siguen disponibles para los dispositivos guardados.</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>Aplicar</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2076,6 +2088,10 @@
     <message><source>Host port</source><translation>Puerto del anfitrión</translation></message>
     <message><source>Binding port</source><translation>Puerto de vinculación</translation></message>
     <message><source>Save</source><translation>Guardar</translation></message>
+    <message>
+        <source>Advanced port overrides</source>
+        <translation>Ajustes avanzados de puertos</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
