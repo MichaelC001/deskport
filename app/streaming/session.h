@@ -1,3 +1,4 @@
+#include <QMap>
 #pragma once
 #include "clipboardsync.h"
 #include "sessionlifetime.h"
@@ -215,7 +216,16 @@ private:
         Hardware
     };
 
-    static
+    struct DecoderProbe {
+        DecoderAvailability availability = DecoderAvailability::None;
+        int capabilities = 0, colorSpace = 0, colorRange = 0;
+        bool fullScreen = false;
+    };
+    // Scoped to one initialize() and its hidden window. Never reuse across
+    // dimensions, displays, drivers, sessions, or changed decoder preferences.
+    QMap<QString, DecoderProbe> m_DecoderProbes;
+    DecoderProbe probeDecoder(SDL_Window* window, StreamingPreferences::VideoDecoderSelection vds,
+                              int videoFormat, int width, int height, int frameRate);
     DecoderAvailability getDecoderAvailability(SDL_Window* window,
                                                StreamingPreferences::VideoDecoderSelection vds,
                                                int videoFormat, int width, int height, int frameRate);

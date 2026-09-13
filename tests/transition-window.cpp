@@ -48,6 +48,10 @@ int main(int argc, char** argv) {
         assert(width == expectedWidth && height == expectedHeight);
         SDL_Event click {}; click.type = SDL_MOUSEBUTTONDOWN; SDL_PushEvent(&click);
         transition.pump();
+        assert(transition.window() == window);
+        const auto paints = transition.presentedFrames();
+        transition.pump();
+        assert(transition.presentedFrames() == paints); // No duplicate same-tick full-frame paint.
         if (cycle == 0) {
             const QImage before = transition.frame().copy();
             SDL_Delay(110); transition.pump();

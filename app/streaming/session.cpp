@@ -1,3 +1,4 @@
+#include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
 #ifdef Q_OS_MACOS
@@ -339,6 +340,7 @@ int Session::drSetup(int videoFormat, int width, int height, int frameRate, void
     s_ActiveSession->m_ActiveVideoWidth = width;
     s_ActiveSession->m_ActiveVideoHeight = height;
     s_ActiveSession->m_ActiveVideoFrameRate = frameRate;
+    if (s_ActiveSession->m_AdaptiveResume) deskportResizeStage("decoder-setup", width, height);
 
     // Defer decoder setup until we've started streaming so we
     // don't have to hide and show the SDL window (which seems to
@@ -474,39 +476,39 @@ void Session::getDecoderInfo(SDL_Window* window,
                  "Failed to find ANY working H.264 or HEVC decoder!");
 }
 
-Session::DecoderAvailability
-Session::getDecoderAvailability(SDL_Window* window,
-                                StreamingPreferences::VideoDecoderSelection vds,
-                                int videoFormat, int width, int height, int frameRate)
+Session::DecoderProbe Session::probeDecoder(SDL_Window* window,
+    StreamingPreferences::VideoDecoderSelection vds, int videoFormat, int width, int height, int frameRate)
 {
-    IVideoDecoder* decoder;
-
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, false, false, true, decoder)) {
-        return DecoderAvailability::None;
+    const QString key = QString("%1/%2/%3/%4/%5/%6/%7").arg(quintptr(window)).arg(SDL_GetWindowDisplayIndex(window))
+        .arg(int(vds)).arg(videoFormat).arg(width).arg(height).arg(frameRate);
+    auto found = m_DecoderProbes.constFind(key);
+    if (found != m_DecoderProbes.cend()) return found.value();
+    DecoderProbe result;
+    IVideoDecoder* decoder = nullptr;
+    if (chooseDecoder(vds, window, videoFormat, width, height, frameRate, false, false, true, decoder)) {
+        result.availability = decoder->isHardwareAccelerated() ? DecoderAvailability::Hardware : DecoderAvailability::Software;
+        result.capabilities = decoder->getDecoderCapabilities();
+        result.colorSpace = decoder->getDecoderColorspace();
+        result.colorRange = decoder->getDecoderColorRange();
+        result.fullScreen = decoder->isAlwaysFullScreen();
+        delete decoder;
+        m_DecoderProbes.insert(key, result);
     }
-
-    bool hw = decoder->isHardwareAccelerated();
-
-    delete decoder;
-
-    return hw ? DecoderAvailability::Hardware : DecoderAvailability::Software;
+    return result; // Transient failures are retried, not cached.
+}
+Session::DecoderAvailability Session::getDecoderAvailability(SDL_Window* window,
+    StreamingPreferences::VideoDecoderSelection vds, int videoFormat, int width, int height, int frameRate)
+{
+    return probeDecoder(window, vds, videoFormat, width, height, frameRate).availability;
 }
 
 bool Session::populateDecoderProperties(SDL_Window* window)
 {
-    IVideoDecoder* decoder;
-
-    if (!chooseDecoder(m_Preferences->videoDecoderSelection,
-                       window,
-                       m_SupportedVideoFormats.first(),
-                       m_StreamConfig.width,
-                       m_StreamConfig.height,
-                       m_StreamConfig.fps,
-                       false, false, true, decoder)) {
-        return false;
-    }
-
-    m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
+    const auto probe = probeDecoder(window, m_Preferences->videoDecoderSelection,
+                                    m_SupportedVideoFormats.first(), m_StreamConfig.width,
+                                    m_StreamConfig.height, m_StreamConfig.fps);
+    if (probe.availability == DecoderAvailability::None) return false;
+    m_VideoCallbacks.capabilities = probe.capabilities;
     if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
         // It is an error to pass a push callback when in pull mode
         m_VideoCallbacks.submitDecodeUnit = nullptr;
@@ -525,7 +527,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                         m_StreamConfig.colorSpace);
         }
         else {
-            m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+            m_StreamConfig.colorSpace = probe.colorSpace;
         }
 
         m_StreamConfig.colorRange = qEnvironmentVariableIntValue("COLOR_RANGE_OVERRIDE", &ok);
@@ -535,15 +537,14 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                         m_StreamConfig.colorRange);
         }
         else {
-            m_StreamConfig.colorRange = decoder->getDecoderColorRange();
+            m_StreamConfig.colorRange = probe.colorRange;
         }
     }
 
-    if (decoder->isAlwaysFullScreen()) {
+    if (probe.fullScreen) {
         m_IsFullScreen = true;
     }
 
-    delete decoder;
 
     return true;
 }
@@ -635,6 +636,7 @@ Session* Session::adaptiveContinuation() {
     next->m_AdaptiveMaximized = m_AdaptiveMaximized;
     next->m_IsFullScreen = m_IsFullScreen;
     next->m_AdaptiveResume = true;
+    deskportResizeStage("continuation");
     return next;
 }
 void Session::endForSystemSleep() {
@@ -680,19 +682,38 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         }
     }
     if (!m_AdaptiveDisplay) return;
+    // The retained native window has received any intervening drag events.
+    // Read its newest size once before committing the next host request.
+    if (m_AdaptiveResume && m_TransitionWindow) {
+        m_TransitionWindow->pump();
+        auto retained = m_TransitionWindow->window();
+        if (desktopWindowVisible(retained)) {
+            const auto latest = workspaceForWindow(retained);
+            if (latest.pixels.isValid()) {
+                m_AdaptiveNextSize = latest.pixels; m_AdaptiveScale = latest.scale;
+                int x, y, w, h; SDL_GetWindowPosition(retained, &x, &y); SDL_GetWindowSize(retained, &w, &h);
+                m_IsFullScreen = (SDL_GetWindowFlags(retained) & SDL_WINDOW_FULLSCREEN) != 0;
+                m_AdaptiveMaximized = (SDL_GetWindowFlags(retained) & SDL_WINDOW_MAXIMIZED) != 0;
+                if (!m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, w, h);
+            }
+        }
+    }
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = workspace.scale;
     const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize :
         (m_RestoredWindow ? m_InitialAdaptiveSize : workspace.pixels);
     m_AdaptiveNextSize = {};
+    deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_TransitionWindow) m_TransitionWindow->pump();
         })) {
         m_StreamConfig.width = target.width(); m_StreamConfig.height = target.height();
+        deskportResizeStage("mode-ready", target.width(), target.height());
         qInfo() << "Adaptive display negotiated:" << target << "scale" << m_AdaptiveScale;
     } else {
         // Older/unavailable hosts retain normal fixed-resolution streaming.
         // Disable adaptation for this session to avoid reconnect loops.
+        deskportResizeStage("mode-failed");
         m_AdaptiveDisplay.reset();
         qWarning() << "Using fixed-resolution streaming; adaptive display negotiation was unavailable";
     }
@@ -705,13 +726,14 @@ bool Session::checkAdaptiveResize() {
     if (!size.isValid()) return false;
     if (size != m_AdaptiveObservedSize || scale != m_AdaptiveObservedScale) {
         m_AdaptiveObservedSize = size; m_AdaptiveObservedScale = scale;
-        m_AdaptiveChangedAt = SDL_GetTicks(); return false;
+        m_AdaptiveChangedAt = SDL_GetTicks();
+        deskportResizeStage("observed", size.width(), size.height()); return false;
     }
     if (size == QSize(m_StreamConfig.width, m_StreamConfig.height) && scale == m_AdaptiveScale) {
-        if (SDL_GetTicks() - m_AdaptiveChangedAt >= 900) rememberAdaptiveWindow();
+        if (SDL_GetTicks() - m_AdaptiveChangedAt >= 300) rememberAdaptiveWindow();
         return false;
     }
-    if (SDL_GetTicks() - m_AdaptiveChangedAt < 900 || SDL_GetMouseState(nullptr, nullptr) != 0 ||
+    if (SDL_GetTicks() - m_AdaptiveChangedAt < 300 || SDL_GetMouseState(nullptr, nullptr) != 0 ||
         SDL_HasEvent(SDL_QUIT) || SDL_HasEvents(SDL_KEYDOWN, SDL_KEYUP)) return false;
     // Finish the old stream before changing the capture mode. Preserve desktop
     // apps and the authenticated display lease across the new resume request.
@@ -722,6 +744,7 @@ bool Session::checkAdaptiveResize() {
     m_AdaptiveMaximized = (flags & SDL_WINDOW_MAXIMIZED) != 0;
     if (!m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, width, height);
     m_AdaptiveNextSize = size; m_AdaptiveScale = scale;
+    deskportResizeStage("stop-begin", size.width(), size.height());
     qInfo() << "Adaptive display restarting stream for" << size;
     return true;
 }
@@ -778,6 +801,7 @@ void Session::rememberAdaptiveWindow()
 
 bool Session::initialize()
 {
+    m_DecoderProbes.clear();
 #ifdef Q_OS_DARWIN
     if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
         // If we have a notch and the user specified one of the two native display modes
@@ -856,6 +880,7 @@ bool Session::initialize()
     if (!m_AdaptiveGeometry.isValid()) m_AdaptiveGeometry = QRect(x, y, width, height);
     initializeAdaptiveDisplay(testWindow);
 
+    if (m_AdaptiveResume) deskportResizeStage("probe-begin");
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
@@ -1111,6 +1136,7 @@ bool Session::initialize()
     bool ret = validateLaunch(testWindow);
     if (negotiatedSize != QSize(m_StreamConfig.width, m_StreamConfig.height)) m_AdaptiveDisplay.reset();
 
+    if (m_AdaptiveResume) deskportResizeStage("probe-end");
     if (ret) {
         // Video format is now locked in
         m_StreamConfig.supportedVideoFormats = m_SupportedVideoFormats.front();
@@ -1467,6 +1493,7 @@ private:
 
         // Finish cleanup of the connection state
         LiStopConnection();
+        if (m_Session->adaptiveRestartPending()) deskportResizeStage("stop-end");
         if (!m_Session->adaptiveRestartPending()) m_Session->m_AdaptiveDisplay.reset();
 
         // Perform a best-effort app quit
@@ -1786,6 +1813,7 @@ bool Session::startConnectionAsync()
 
     try {
         NvHTTP http(m_Computer);
+        if (m_AdaptiveResume) deskportResizeStage("resume-request");
         http.startApp((m_AdaptiveResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
@@ -1795,6 +1823,7 @@ bool Session::startConnectionAsync()
                       !m_Preferences->multiController,
                       rtspSessionUrl,
                       m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0);
+        if (m_AdaptiveResume) deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
         return false;

@@ -64,6 +64,11 @@ void TransitionWindow::pump() {
 #else
     SDL_GetWindowSize(m_Window, &w, &h);
 #endif
+    // Input/window events above must always be drained, but the 80 ms spinner
+    // does not need a full CPU image repaint for every 20 ms progress callback.
+    const auto now = SDL_GetTicks();
+    if (m_PresentedFrames && m_Frame.size() == QSize(w, h) && now - m_LastPaint < 80) return;
+    m_LastPaint = now;
     if (m_Frame.size() != QSize(w, h)) m_Frame = QImage(w, h, QImage::Format_ARGB32);
     m_Frame.fill(QColor(24, 27, 33));
     QPainter painter(&m_Frame); painter.setRenderHint(QPainter::Antialiasing);

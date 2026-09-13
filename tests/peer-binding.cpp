@@ -183,12 +183,17 @@ private slots:
             AdaptiveDisplay channel("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
             QVERIFY(resize(channel, QSize(1920, 1080)));
             QCOMPARE(resized.size(), 1); QVERIFY(host.running()); QVERIFY(!server.busy());
+            // Let the worker enter its long condition wait before submitting again.
+            QTest::qWait(150);
+            QElapsedTimer wakeLatency; wakeLatency.start();
             QTcpServer newEntry; QVERIFY(newEntry.listen(QHostAddress::LocalHost,0));
             const int nextEntry=newEntry.serverPort(); newEntry.close();
             QVERIFY(server.setConnectionPort(nextEntry));
             // The existing authenticated display-control channel survives a port change.
             QVERIFY(resize(channel, QSize(2560, 1440)));
             QCOMPARE(resized.size(), 2); QVERIFY(host.running());
+            QVERIFY(wakeLatency.elapsed() < 2000); // Must wake on work, not the 5 s heartbeat.
+            QTest::qWait(5200); // Idle heartbeats must preserve the display lease.
 
             {
                 AdaptiveDisplay competing("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));

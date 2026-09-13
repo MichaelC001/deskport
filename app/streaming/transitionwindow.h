@@ -25,6 +25,7 @@ public:
     TransitionWindow(SDL_Window* window, const QString& text);
     ~TransitionWindow();
     void pump();
+    SDL_Window* window() const { return m_Window; }
     bool cancelled() const { return m_Cancelled; }
     SDL_Window* takeWindow();
     bool rendering() const { return bool(m_Renderer) || (m_Wayland && m_Wayland->valid()); }
@@ -39,4 +40,5 @@ private:
     QImage m_Frame;
     bool m_Cancelled = false;
     unsigned m_PresentedFrames = 0;
+    Uint32 m_LastPaint = 0;
 };

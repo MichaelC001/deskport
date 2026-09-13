@@ -869,3 +869,14 @@ development asset hashes and running installations are preserved.
 Next checkpoint: fresh-machine browser-download installation and first-use
 permissions. Future Apple store/Android client planning is in the separate private
 `deskport-client` repository; no mobile implementation is part of this task.
+
+
+## 0.2.1 prerelease: CPU and resize P0/P1 (2026-09-13)
+
+Instrument stage timings and provide a read-only CPU sampler. Reduce settling and
+mode-confirmation waits, coalesce to the retained window before resuming, reuse
+successful probes within one initialization, and remove control polling/redundant
+transition paints. Retain separate host/helper processes and stop/resume.
+See [measurement and acceptance](PERFORMANCE.md). Controlled CPU improvements,
+physical presentation latency and live input acceptance await both machines
+switching; P2/P3/P4 remain deferred.

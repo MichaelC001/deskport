@@ -33,6 +33,8 @@ static int requestSequence;
 static NSInteger requestedScale = 1;
 static NSInteger lastWidth, lastHeight, lastScale = 1;
 static BOOL rollingBack;
+static CFAbsoluteTime requestStarted;
+static unsigned readyGeneration;
 static NSArray *displayModes(NSInteger width, NSInteger height, NSInteger scale) {
     return @[[[CGVirtualDisplayMode alloc] initWithWidth:(unsigned)width / scale
         height:(unsigned)height / scale refreshRate:60.0]];
@@ -45,6 +47,7 @@ static void applyMode(NSInteger width, NSInteger height, NSInteger scale) {
 }
 static void respond(NSDictionary *value) {
     NSMutableDictionary *response = [value mutableCopy];
+    if (requestStarted) response[@"modeElapsedMs"] = @((long)((CFAbsoluteTimeGetCurrent() - requestStarted) * 1000));
     if (requestSequence) response[@"seq"] = @(requestSequence);
     NSData *json = [NSJSONSerialization dataWithJSONObject:response options:0 error:nil];
     fwrite(json.bytes, 1, json.length, stdout); fputc('\n', stdout); fflush(stdout);
@@ -91,6 +94,15 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             CFRelease(modes);
         }
     }
+    if (ready && readyGeneration != token) {
+        // Confirm on another run-loop turn: mode/mirror changes are asynchronous.
+        readyGeneration = token;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+            waitForMode(width, height, token, attempt + 1);
+        });
+        return;
+    }
+    if (!ready) readyGeneration = 0;
     if (ready) {
         lastWidth = width; lastHeight = height; lastScale = requestedScale;
         if (rollingBack) {
@@ -119,8 +131,18 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
 }
 static void configure(NSInteger width, NSInteger height, NSInteger scale, int sequence) {
     requestSequence = sequence; requestedScale = scale; rollingBack = NO;
+    requestStarted = CFAbsoluteTimeGetCurrent();
     if (width < 640 || height < 360 || width > 7680 || height > 4320 || width % 2 || height % 2 || (scale != 1 && scale != 2)) {
         respond(@{@"error": @"Use an even pixel size between 640x360 and 7680x4320"}); return;
+    }
+    // Repeated requests still verify the actual OS mode; cached dimensions alone
+    // are not proof that a display remains active, independent, and correctly scaled.
+    if (display && CGDisplayIsActive(display.displayID) && !CGDisplayMirrorsDisplay(display.displayID)) {
+        CGDisplayModeRef mode = CGDisplayCopyDisplayMode(display.displayID);
+        BOOL same = mode && CGDisplayModeGetPixelWidth(mode) == width && CGDisplayModeGetPixelHeight(mode) == height &&
+            CGDisplayModeGetWidth(mode) == width / scale && CGDisplayModeGetHeight(mode) == height / scale;
+        if (mode) CFRelease(mode);
+        if (same) { waitForMode(width, height, ++generation, 0); return; }
     }
     if (!display) {
         if (!NSClassFromString(@"CGVirtualDisplay")) {
@@ -154,9 +176,8 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         respond(@{@"error": @"macOS rejected the virtual display mode"}); return;
     }
     const unsigned token = ++generation;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 500 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-        waitForMode(width, height, token, 0);
-    });
+    // Check immediately, then retain the bounded 100 ms verification retries.
+    waitForMode(width, height, token, 0);
 }
 int main(int argc, const char *argv[]) {
     @autoreleasepool {

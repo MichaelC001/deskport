@@ -1,3 +1,4 @@
+#include "../../../resizetrace.h"
 #include "pacer.h"
 #include "streaming/streamutils.h"
 
@@ -338,6 +339,11 @@ void Pacer::renderFrame(AVFrame* frame)
 
     // Render it
     m_VsyncRenderer->renderFrame(frame);
+    if (m_FirstPresentation) {
+        // Renderer submission is observable here; physical scanout is not.
+        deskportResizeStage("first-render-submit", frame->width, frame->height);
+        m_FirstPresentation = false;
+    }
     Uint32 afterRender = SDL_GetTicks();
 
     m_VideoStats->totalRenderTime += afterRender - beforeRender;

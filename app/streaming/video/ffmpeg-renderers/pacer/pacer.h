@@ -61,6 +61,7 @@ private:
     SDL_Thread* m_RenderThread;
     SDL_Thread* m_VsyncThread;
     bool m_Stopping;
+    bool m_FirstPresentation = true;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;

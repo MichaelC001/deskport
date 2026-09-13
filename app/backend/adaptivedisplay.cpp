@@ -12,7 +12,11 @@
 AdaptiveDisplay::AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
                                  QByteArray certificate, QByteArray key)
     : m_Address(address), m_Port(port), m_Peer(peer), m_Certificate(certificate), m_Key(key) { start(); }
-AdaptiveDisplay::~AdaptiveDisplay() { requestInterruption(); wait(); }
+AdaptiveDisplay::~AdaptiveDisplay() {
+    requestInterruption();
+    { QMutexLocker lock(&m_Mutex); m_Wake.wakeAll(); }
+    wait();
+}
 QSize AdaptiveDisplay::boundedSize(QSize pixels) {
     if (pixels.width() <= 0 || pixels.height() <= 0) return {};
     const double factor = qMin(1.0, qMin(double(DeskPortDisplay::MaxWidth) / pixels.width(), double(DeskPortDisplay::MaxHeight) / pixels.height()));
@@ -24,6 +28,7 @@ bool AdaptiveDisplay::resize(const QSize& pixels, int scale, const std::function
     QMutexLocker lock(&m_Mutex);
     if (m_Failed || m_Pending || pixels != boundedSize(pixels) || (scale != 1 && scale != 2)) return false;
     m_Size = pixels; m_Scale = scale; m_Pending = true; m_Complete = false;
+    m_Wake.wakeAll();
     QElapsedTimer timer; timer.start();
     while (!m_Complete && !m_Failed && timer.elapsed() < 10000) {
         m_Wake.wait(&m_Mutex, progress ? 20 : 100);
@@ -84,12 +89,15 @@ void AdaptiveDisplay::run() {
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
             { QMutexLocker lock(&m_Mutex); m_Result = connected; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();
-        } else if (heartbeat.elapsed() > 5000) {
+        } else if (heartbeat.elapsed() >= 5000) {
             send({{"type", "display-ping"}});
             connected = receive()["type"].toString() == "display-pong";
             heartbeat.restart();
         } else {
-            msleep(50);
+            // Wait atomically with the pending predicate: no lost request wakeup.
+            QMutexLocker lock(&m_Mutex);
+            if (!m_Pending && !isInterruptionRequested())
+                m_Wake.wait(&m_Mutex, qMax<qint64>(1, 5000 - heartbeat.elapsed()));
             connected = socket.state() == QAbstractSocket::ConnectedState;
         }
     }
