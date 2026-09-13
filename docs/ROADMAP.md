@@ -880,3 +880,10 @@ transition paints. Retain separate host/helper processes and stop/resume.
 See [measurement and acceptance](PERFORMANCE.md). Controlled CPU improvements,
 physical presentation latency and live input acceptance await both machines
 switching; P2/P3/P4 remain deferred.
+
+Validation update: both native builds, macOS 21 binding / 15 UI / 8 service /
+26 lifecycle cases and 30 transition cycles, Linux CLI / 15 UI / 8 service and
+30 transition cycles passed. Four Linux distribution install checks, AppImage
+startup, Apple notarization/Gatekeeper, and GitHub CI passed. Both consumer
+system configurations built. Deployment and controlled live acceptance remain
+pending; the initial CPU observation had uncontrolled content/build contention.
