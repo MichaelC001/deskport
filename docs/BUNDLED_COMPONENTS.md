@@ -40,9 +40,13 @@ SDL, FFmpeg, OpenSSL, Opus and other Moonlight dependencies retain upstream noti
 and versions from the pinned Moonlight dependency tree. See README.upstream.md,
 LICENSE and the relevant submodule licenses in the source distribution.
 
-This is a local development preview signed locally using the configured identity. It has no
-Developer ID distribution signing or notarization. Public release packaging must
-include corresponding sources, exact dependency versions and license notices.
+Development builds use the configured local identity. Developer ID distribution
+uses `scripts/release-macos.sh` to re-sign all bundled executable code under the
+distributor's team, without borrowing an upstream publisher's identity. A valid
+signature alone does not establish notarization: release artifacts must also pass
+Apple notarization, stapled-ticket validation and Gatekeeper assessment. Public
+release packaging must include corresponding sources, exact dependency versions
+and license notices.
 
 ## ScreenCaptureKit overlay (0.1.13)
 

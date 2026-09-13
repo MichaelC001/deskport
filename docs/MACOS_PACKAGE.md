@@ -1,5 +1,72 @@
 # macOS all-in-one preview
 
+## Developer ID distribution
+
+`scripts/package-macos.sh` still produces the existing local-development build.
+To prepare public distribution, pass that verified application to the separate
+release workflow. It preserves its Bundle ID, copies it into a new output
+directory, then signs every Mach-O file, nested code bundle and the outer app
+with one explicitly selected Developer ID Application identity. This includes
+the Moonlight-derived viewer, Qt/QML plugins, media libraries, patched Sunshine
+and virtual-display helper. Upstream notices remain included; no upstream private
+key or certificate request is needed. The Developer ID team can differ from the
+old local development team, so test privacy-permission migration before installing
+on an unattended Mac. Do not change the installed remote-access application as
+part of preparing distribution artifacts.
+
+Select the intended identity with `security find-identity -v -p codesigning`.
+Use its exact SHA-1 to disambiguate duplicate display names. Keep the team and
+Bundle IDs stable across updates; renew certificates when needed rather than
+treating their fingerprints as permanent application identity. Store private
+keys only in a protected keychain/backup, never in this repository.
+
+```sh
+export DESKPORT_SIGN_IDENTITY='DEVELOPER_ID_CERTIFICATE_SHA1'
+export DESKPORT_SIGN_TEAM='APPLE_TEAM_ID'
+nix develop -c bash scripts/release-macos.sh prepare \
+  "$PWD/dist.noindex/nix/DeskPort.app" "$PWD/dist.noindex/developer-id-candidate"
+```
+
+The same-session signing preflight must pass before copying/signing the candidate.
+`prepare` deliberately refuses an existing output directory. It creates a signed
+application and `submission.zip`, not a completed public release. The script uses
+secure timestamps and hardened runtime, and validates each embedded signature.
+It does not rebuild or alter the original binary's functionality.
+
+Configure the Apple notary credential once in an interactive terminal (a remote
+SSH terminal with a TTY is sufficient if the keychain is accessible). This command
+prompts for the Apple account and app-specific password; never send passwords to
+chat or put them in shell arguments, files, source control or logs:
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcrun notarytool store-credentials deskport-notary --team-id APPLE_TEAM_ID
+```
+
+Create an app-specific password in the Apple account's Sign-In and Security page
+if needed. An existing authorized App Store Connect API key is another supported
+credential method; Xcode/Transporter login is not itself a notarytool profile.
+
+```sh
+export DESKPORT_NOTARY_PROFILE=deskport-notary
+nix develop -c bash scripts/release-macos.sh notarize \
+  "$PWD/dist.noindex/developer-id-candidate"
+```
+
+The workflow saves submission IDs and polls them, allowing interrupted runs to
+resume. Apple must accept the app archive before its ticket is stapled. The DMG
+then contains the stapled app and an Applications shortcut; the DMG is separately
+signed, notarized and stapled. Finally, the ZIP is created from the stapled app and
+tested after Info-ZIP extraction, including ticket validation and Gatekeeper.
+Publish only when `STATUS.txt` says `NOTARIZED`, with the generated `SHA256SUMS`
+and matching source/version notices. Keep submission logs private. Do not modify
+the candidate between prepare, submit and resume; create a new candidate if any
+content changes. A fresh Mac/browser-download test remains the final user-facing
+installation check. Signing never pre-authorizes Screen Recording or Accessibility.
+
+References: [Apple notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution),
+[custom workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+
 The package contains one `DeskPort.app` with three components:
 
 - The Moonlight-derived Qt viewer and its device list.

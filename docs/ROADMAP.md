@@ -823,3 +823,17 @@ release; closing a window must not remove an unattended machine's remote access.
   and restarted; macOS 0.1.1 reports sharing enabled and the bound Linux peer online, and Linux
   remains active under its user service. See the installation follow-up in
   `docs/INPUT_SERVICE_ACCEPTANCE.md`.
+# Developer ID distribution work (2026-09-13)
+
+The user requested straightforward macOS installation for downloaded packages,
+including signatures for all bundled open-source components. The separate
+`release-macos.sh` workflow prepares an isolated candidate from a verified build,
+signs all embedded code with Developer ID plus secure timestamps/hardened runtime,
+and provides resumable notarization, app/DMG stapling and extracted-ZIP Gatekeeper
+checks. Existing local-update packaging and installed services remain independent.
+
+Next checkpoint: complete Apple notarization with a configured Keychain profile,
+validate the final artifacts, then test browser-download installation and first-use
+permissions. Do not mark notarization or fresh-machine installation accepted from
+signing alone. Future Apple store/Android client planning is in the separate private
+`deskport-client` repository; no mobile implementation is part of this task.
