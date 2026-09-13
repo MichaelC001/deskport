@@ -1,3 +1,25 @@
+## Installable desktop release (0.2.0, 2026-09-13)
+
+Reason: distribute packages that other users can install without a development
+checkout. Ship Developer ID signed and Apple-notarized macOS ZIP/DMG, plus Linux
+x86_64 DEB, RPM, pacman, AppImage and client-only Flatpak bundles. Keep the Nix
+package and independent upstream settings/services.
+
+Packaging includes a private Qt/media runtime and separately bundled Sunshine.
+AppImage login startup retains the original executable path. Flatpak uses its
+session-bus name for single-instance activation so sandbox PID reuse after a crash
+does not block reopening. Linux device permissions still require host setup.
+
+Checkpoint: notarization/stapling/Gatekeeper, clean distribution installs, isolated
+packaged QML/CLI/host checks, Flatpak activation/crash recovery and the Linux Nix
+build. Hardware decoding, live desktop input and long-session acceptance remain
+separate. See RELEASE_0.2.0.md and LINUX_PACKAGES.md for the tested matrix.
+
+Deferred by request: source integration of Sunshine and related components,
+mobile/store client implementation and official repository/Flathub submission.
+Next action: validate fresh-user installation and a real streaming session on a
+second Mac and the supported Linux desktops, recording permission/setup failures.
+
 ## Automatic connection ports (0.1.14, 2026-09-13)
 
 Reason: a headless host selected a different streaming port group, while its
@@ -824,6 +846,13 @@ release; closing a window must not remove an unattended machine's remote access.
   remains active under its user service. See the installation follow-up in
   `docs/INPUT_SERVICE_ACCEPTANCE.md`.
 # Developer ID distribution work (2026-09-13)
+
+Deferred by explicit user instruction on 2026-09-13: evaluate deeper source
+integration and unified builds for Sunshine and related components. Inventory
+existing Moonlight-derived code, host/input helpers and media dependencies first;
+preserve upstream licenses, pinned revisions and maintainable patch boundaries.
+Validate one source-built component against the existing release before expanding.
+This is a future backlog item, not part of the 0.2.0 packaging release.
 
 The user requested straightforward macOS installation for downloaded packages,
 including signatures for all bundled open-source components. The separate

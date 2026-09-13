@@ -556,7 +556,8 @@ void HostManager::setLoginStart(bool enabled) {
     }
     if (enabled) {
         QDir().mkpath(QFileInfo(path).absolutePath());
-        const QString executable = QCoreApplication::applicationDirPath() + "/deskport";
+        const QString executable = DeskPortService::persistentExecutable(
+            QCoreApplication::applicationDirPath() + "/deskport", QString::fromLocal8Bit(qgetenv("APPIMAGE")));
         const QString unitPath = DeskPortService::unitPath();
         QDir().mkpath(QFileInfo(unitPath).absolutePath());
         QSaveFile unit(unitPath);

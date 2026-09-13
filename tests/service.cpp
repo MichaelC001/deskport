@@ -8,6 +8,21 @@
 class ServiceTests : public QObject {
     Q_OBJECT
 private slots:
+    void appImageLoginUsesThePersistentDownload() {
+        QTemporaryDir dir;
+        const QString native = "/tmp/.mount_example/usr/bin/deskport";
+        const QString image = dir.path() + "/DeskPort with spaces.AppImage";
+        QFile file(image); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("#!/bin/sh\nexit 0\n"); file.close();
+        QCOMPARE(DeskPortService::persistentExecutable(native, image), native);
+        QVERIFY(file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner));
+        QCOMPARE(DeskPortService::persistentExecutable(native, image), image);
+        QCOMPARE(DeskPortService::persistentExecutable(native, QString()), native);
+        QCOMPARE(DeskPortService::persistentExecutable(native, "relative.AppImage"), native);
+        QCOMPARE(DeskPortService::persistentExecutable(native, dir.path()), native);
+        QVERIFY(QFile::remove(image));
+        QCOMPARE(DeskPortService::persistentExecutable(native, image), native);
+    }
     void startupSupervisesTheRealProcess() {
         const auto plist = DeskPortService::launchAgent();
         QXmlStreamReader reader(plist); while (!reader.atEnd()) reader.readNext();

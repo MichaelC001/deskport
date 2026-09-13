@@ -1,13 +1,14 @@
-# macOS all-in-one preview
+# macOS all-in-one package
 
 ## Developer ID distribution
 
-Verified 2026-09-13: the 0.1.14 distribution candidate passed Developer ID checks
+Verified 2026-09-13: the 0.2.0 distribution passed Developer ID checks
 for 126 Mach-O files and 35 code bundles, with secure timestamps and hardened
 runtime. Apple accepted both the application archive and DMG without application
 notarization issues. App/DMG ticket validation, Gatekeeper assessment, extracted-ZIP
-checks and `syspolicy_check distribution` passed. The public assets have a
-`-notarized` suffix; the original development artifacts retain their names/hashes.
+checks passed. Download the [0.2.0 DMG](https://github.com/keithxc/deskport/releases/download/v0.2.0/DeskPort-0.2.0-macos-arm64.dmg)
+and drag DeskPort into Applications. The earlier 0.1.14 notarized additions use a
+`-notarized` suffix; all existing 0.1.14 assets retain their names/hashes.
 No installed app or privacy permissions were changed. A fresh-machine browser
 download and real permission/streaming acceptance remain separate checks.
 

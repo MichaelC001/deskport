@@ -4,6 +4,12 @@
 #include <QStandardPaths>
 
 namespace DeskPortService {
+inline QString persistentExecutable(const QString& native, const QString& appImage) {
+    const QFileInfo portable(appImage);
+    // AppImage mount paths disappear on exit; login must launch the original file.
+    return !appImage.isEmpty() && portable.isAbsolute() && portable.isFile() && portable.isExecutable()
+        ? portable.absoluteFilePath() : native;
+}
 #ifdef Q_OS_LINUX
 inline QString autostartPath() {
     return QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/autostart/io.github.keithxc.DeskPort.desktop";

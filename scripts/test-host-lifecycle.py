@@ -74,6 +74,7 @@ while True: time.sleep(1)
     suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"
     project.write_text(f'''QT += core gui widgets network testlib qml quick quickcontrols2
+linux: QT += dbus
 CONFIG += console c++17 testcase
 CONFIG -= app_bundle
 TARGET = host-lifecycle-tests

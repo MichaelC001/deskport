@@ -5,22 +5,27 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Version: 0.1.14 — automatic connection ports.** DeskPort combines a viewer and optional host
+**Version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission
 controls. The macOS package includes Sunshine and a native virtual display;
-the Linux Nix package includes a Sunshine host for the existing desktop.
+the Linux native packages and AppImage include a Sunshine host for the existing
+desktop. Flatpak provides the client only; Nix remains supported.
 
 The dedicated macOS workspace follows the client window's drawable pixel size.
 Clients at 150% scale or above request a 2× HiDPI workspace for sharp text.
 Resizing briefly reconnects video while retaining the client window and showing
 a loading animation. It is not seamless encoder reconfiguration.
 
-**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.1.14/DeskPort-0.1.14-macos-arm64-notarized.dmg)
+**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.2.0/DeskPort-0.2.0-macos-arm64.dmg)
 for Apple Silicon running macOS 26 or later. Open the DMG, drag DeskPort into
 Applications, then open it. Host features require first-use Screen Recording and
 Accessibility authorization. No separate Sunshine, Qt, Nix or Homebrew is needed.
 
-See the [release notes](docs/RELEASE_0.1.14.md),
+**Linux downloads:** [DEB, RPM, Arch, AppImage and Flatpak](https://github.com/keithxc/deskport/releases/tag/v0.2.0).
+See the [Linux installation guide](docs/LINUX_PACKAGES.md) for supported systems
+and first-use setup. Native packages require x86_64 and glibc 2.39 or newer.
+
+See the [release notes](docs/RELEASE_0.2.0.md),
 [architecture](docs/ARCHITECTURE.md) and
 [macOS installation guide](docs/MACOS_PACKAGE.md).
 Persistent hide/show is implemented; native long-session acceptance remains open.
@@ -84,7 +89,7 @@ list or cards. Appearance follows the system, with light and dark overrides.
 
 | Platform | Current scope |
 | --- | --- |
-| Linux x86-64 | Initial build and CLI smoke-check target; KDE Wayland / AMD is the first live-use target |
+| Linux x86-64 | DEB / RPM / Arch / AppImage / Flatpak / Nix; KDE Wayland / AMD is the first live-use target |
 | Linux ARM64 | Nix package definition only; native build and runtime not yet verified |
 | macOS | Apple Silicon / macOS 26 all-in-one package; native viewer, host and virtual display |
 | Windows | Inherited native source; DeskPort build and packaging not yet verified |
@@ -118,7 +123,7 @@ Qt platform. It does not pair with a host, start a stream or inject input.
 DeskPort is an independent derivative of [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt),
 initially based on v6.1.0. It is not an official Moonlight or Sunshine release.
 Moonlight provides the streaming foundation; [Sunshine](https://github.com/LizardByte/Sunshine)
-is bundled in the macOS package and supplied by the Linux Nix package.
+is bundled in the macOS and portable Linux host packages and supplied by the Linux Nix package.
 Separately installed Sunshine services are kept independent.
 
 GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and each

@@ -34,6 +34,21 @@ The Linux Nix package references Sunshine 2026.516.143833 from the locked nixpkg
 revision as a separate runtime dependency. Upstream source:
 https://github.com/LizardByte/Sunshine/tree/v2026.516.143833
 
+The 0.2.0 portable Linux AppImage, DEB, RPM and pacman packages instead include
+the checksum-pinned upstream Sunshine 2026.906.222525 x86_64 AppImage contents in
+a separate `usr/libexec/sunshine` tree. The upstream binary, resources and notices
+are preserved. DeskPort's launcher supplies its private configuration and the
+host's own library path without invoking upstream installation/service commands.
+Source: https://github.com/LizardByte/Sunshine/tree/cb72dffa3233c5815cd5ba88f09f049dd679ba75
+Artifact URL and SHA-256 are in `scripts/linux-tools.json`.
+
+Portable viewer Qt 6, SDL2, FFmpeg and supporting libraries come from the Ubuntu
+24.04 build environment. The build emits `build-packages.txt` with exact package
+versions, and linuxdeploy retains available distribution copyright files.
+The Flatpak reuses the portable viewer inside Freedesktop Platform 25.08 and
+does not include or escape the sandbox to launch Sunshine. Its host features
+and desktop login service integration are outside this package's scope.
+
 Qt is deployed as dynamically linked frameworks from the build environment. Qt
 source and licensing: https://www.qt.io/licensing/open-source-lgpl-obligations
 SDL, FFmpeg, OpenSSL, Opus and other Moonlight dependencies retain upstream notices
