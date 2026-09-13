@@ -28,3 +28,7 @@
   tickets and Gatekeeper verification after ZIP extraction. Local development
   signatures are not sufficient. Preserve existing release assets and their hashes;
   use distinct asset names when adding notarized builds to a published version.
+
+- Performance/test prereleases target only mm4 (macOS arm64 signed/notarized package)
+  and pk4 (NixOS x86_64 flake build). Do not build or upload other platform or
+  distribution formats for these prereleases unless the user explicitly requests them.
