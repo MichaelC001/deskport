@@ -203,7 +203,12 @@ Item {
                 // StackView pages can be detached from the visual window
                 // during deferred loading. Use the root window context,
                 // as the other session lifecycle callbacks do.
-                if (session) session.exec(window)
+                if (session) {
+                    // Devices may have activated since Loader.onLoaded.
+                    // Hand off SDL immediately before acquiring session ownership.
+                    SdlGamepadKeyNavigation.disable()
+                    session.exec(window)
+                }
             })
         }
 
