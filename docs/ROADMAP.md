@@ -999,3 +999,16 @@ See [SESSION_SETTINGS.md](SESSION_SETTINGS.md) for the inventory and compatibili
 Next action: validate sound on/off, view-only, per-device video settings and ten
 reconnects on isolated test hosts after an explicitly chosen build is activated.
 No release, mynix update or deployed-service change is included in this slice.
+
+### Connection and resize flow protection — 2026-09-14
+
+- Keep the device list responsive during transport setup; opening it does not
+  transfer SDL event ownership or hide it when the connection completes.
+- Reject duplicate session execution and retain exclusive SDL ownership until
+  execution and asynchronous cleanup both finish. Delay deletion/continuation
+  notification until that same boundary.
+- Coalesce stale queued size events, wait 500 ms after the last size/scale or
+  drag activity, and recheck settling on the retained window before changing
+  the virtual display. Only one display request is in flight.
+- Validate with isolated lifecycle/UI/resize checks and both target builds.
+  Real tray-during-connect and continuous-resize acceptance follows manual activation.

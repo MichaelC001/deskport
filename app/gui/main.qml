@@ -81,12 +81,13 @@ ApplicationWindow {
   
     readonly property var activeStreamPage: {
         var count = stackView.depth
-        return stackView.find(function(item) { return item.session !== undefined && item.session !== null })
+        return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
     readonly property string activeHostId: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
     readonly property string activeHostName: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
     function showDevices() {
         if (activeStreamPage) {
+            if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
             stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
         } else stackView.pop(null)

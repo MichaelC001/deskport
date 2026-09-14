@@ -2,6 +2,7 @@
 #pragma once
 #include "clipboardsync.h"
 #include "sessionlifetime.h"
+#include "resizesettler.h"
 
 #include <QSemaphore>
 #include <QWindow>
@@ -161,9 +162,12 @@ signals:
 
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
+    void transportCleanupFinished();
 
 private:
-    SessionLifetime m_Lifetime{this};
+    ResizeSettler m_ResizeSettler;
+    bool m_ExecRequested = false;
+    SessionLifetime m_Lifetime{this, [this] { emit readyForDeletion(); }};
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
@@ -175,7 +179,6 @@ private:
     bool m_RestoredWindow = false;
     QRect m_AdaptiveGeometry;
     int m_AdaptiveScale = 1, m_AdaptiveObservedScale = 1;
-    Uint32 m_AdaptiveChangedAt = 0;
     bool m_ManualReconnect = false, m_ManualResume = false;
     bool m_AdaptiveResume = false, m_AdaptiveMaximized = false;
     struct ClientScreen { QString name; QPoint origin; QSize logicalSize; qreal scale; };

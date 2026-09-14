@@ -915,12 +915,14 @@ int main(int argc, char *argv[])
     }
     QQmlApplicationEngine engine;
     auto showDevices = [&engine, &pendingActivation] {
-        if (Session::get()) {
+        // Present Qt immediately, including while the transport is connecting.
+        // Only the SDL owner handles hiding/releasing the remote window.
+        if (SessionLifetime::busy()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortShowDevices;
             SDL_PushEvent(&event);
-            return;
         }
         if (engine.rootObjects().isEmpty()) { pendingActivation = true; return; }
+        QMetaObject::invokeMethod(engine.rootObjects().first(), "showDevices");
         if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) {
             if (window->windowState() == Qt::WindowMinimized) window->showNormal();
             else window->show();

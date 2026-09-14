@@ -304,6 +304,10 @@ ApplicationWindow {
         QTRY_COMPARE(session.executions,1);
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
         QCOMPARE(session.receivedWindow, qobject_cast<QQuickWindow*>(root.data()));
+        root->setProperty("visible", true);
+        emit session.connectionStarted();
+        QVERIFY(root->property("visible").toBool());
+        QCOMPARE(session.executions, 1);
         QCOMPARE(root->property("depth").toInt(),3);
         QVERIFY(root->property("currentPage").value<QObject*>()->property("controlCenterForActiveSession").toBool());
         emit session.sessionFinished(0);
@@ -316,11 +320,11 @@ ApplicationWindow {
     }
     void desktopShortcut_data() {
         QTest::addColumn<QString>("state");
-        for (const auto& value : {"ready", "waiting", "missing", "busy", "cancel"}) QTest::newRow(value) << QString(value);
+        for (const auto& value : {"ready", "waiting", "background", "missing", "busy", "cancel"}) QTest::newRow(value) << QString(value);
     }
     void desktopShortcut() {
         QFETCH(QString, state);
-        desktopTestState = state == "cancel" ? "waiting" : state; desktopCreateCalls = 0;
+        desktopTestState = (state == "cancel" || state == "background") ? "waiting" : state; desktopCreateCalls = 0;
         QQmlEngine engine;
         TestSession session; desktopTestSession = &session;
         QQmlEngine::setObjectOwnership(&session, QQmlEngine::CppOwnership);
@@ -334,6 +338,8 @@ ApplicationWindow {
  QtObject { id: streamSegueErrorDialog; property string text: ""; property bool quitAfter: false; function open() {} }
  StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
  function start() { stackView.push(Qt.resolvedUrl("DesktopSegue.qml"), {computerIndex: 0}, StackView.Immediate) }
+ function showDevices() { stackView.push(controlPage, StackView.Immediate) }
+ Component { id: controlPage; Item { property bool controlCenterForActiveSession: true } }
  function back() { stackView.pop(StackView.Immediate) }
 })",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/desktop-harness.qml"));
         QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
@@ -346,7 +352,8 @@ ApplicationWindow {
             QCOMPARE(root->property("depth").toInt(),1);
             return;
         }
-        if (state == "waiting") {
+        if (state == "background") QVERIFY(QMetaObject::invokeMethod(root.data(), "showDevices"));
+        if (state == "waiting" || state == "background") {
             QTest::qWait(250);
             QCOMPARE(desktopCreateCalls,0);
             desktopTestState = "ready";
@@ -360,7 +367,7 @@ ApplicationWindow {
         }
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(desktopCreateCalls,1);
-        QCOMPARE(root->property("depth").toInt(),2);
+        QCOMPARE(root->property("depth").toInt(), state == "background" ? 3 : 2);
         emit session.sessionFinished(0);
         QTRY_COMPARE(root->property("depth").toInt(),1);
         QTest::qWait(250);

@@ -41,7 +41,7 @@ Item {
         hintText.visible = false
 
         // Hide the window now that streaming has begun
-        window.visible = false
+        if (stackView.currentItem === streamPage) window.visible = false
     }
 
     function displayLaunchError(text)
@@ -137,12 +137,6 @@ Item {
         // and asynchronous transport cleanup have finished.
         session = null
         gc()
-    }
-
-    StackView.onDeactivating: {
-        // A resize immediately starts another stream; GUI controller discovery
-        // here would enumerate devices only to tear them down again.
-        if (!adaptiveReplacing) SdlGamepadKeyNavigation.enable()
     }
 
     property bool sessionHooked: false

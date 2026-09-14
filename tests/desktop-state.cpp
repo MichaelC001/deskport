@@ -3,6 +3,7 @@
 #include <QJSEngine>
 #include <QPointer>
 #include "streaming/sessionlifetime.h"
+#include "streaming/resizesettler.h"
 #include "backend/sessionwindowstate.h"
 #include "settings/streamingpreferences.h"
 namespace WMUtils { bool isRunningWayland() { return false; } }
@@ -34,6 +35,46 @@ private slots:
         else lifetime.cleanupFinished();
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QVERIFY(session.isNull());
+    }
+
+    void sessionExcludesReentryUntilBothOwnersFinish() {
+        QPointer<QObject> first = new QObject, second = new QObject;
+        SessionLifetime a(first), b(second);
+        QVERIFY(a.beginExec());
+        QVERIFY(!a.beginExec());
+        QVERIFY(!b.beginExec());
+        a.endExec();
+        QVERIFY(SessionLifetime::busy());
+        QVERIFY(!b.beginExec());
+        a.cleanupFinished();
+        QVERIFY(!SessionLifetime::busy());
+        QVERIFY(b.beginExec());
+        b.cleanupFinished();
+        QVERIFY(SessionLifetime::busy());
+        b.endExec();
+        QVERIFY(!SessionLifetime::busy());
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QVERIFY(first.isNull()); QVERIFY(second.isNull());
+    }
+
+    void resizeWaitsForFinalSizeAndDragRelease() {
+        ResizeSettler settle;
+        QVERIFY(!settle.update({1280, 720}, 1, 0, false));
+        QVERIFY(!settle.update({1400, 800}, 1, 450, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 900, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 1399, false));
+        QVERIFY(settle.update({1600, 900}, 1, 1400, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 1500, true));
+        QVERIFY(!settle.update({1600, 900}, 1, 1999, false));
+        QVERIFY(settle.update({1600, 900}, 1, 2000, false));
+        QVERIFY(!settle.update({1600, 900}, 2, 2100, false));
+        QVERIFY(!settle.update({}, 2, 2600, false));
+        QVERIFY(!settle.update({1600, 900}, 2, 2700, false));
+        QVERIFY(settle.update({1600, 900}, 2, 3200, false));
+        ResizeSettler wrap;
+        QVERIFY(!wrap.update({1280, 720}, 1, 0xffffff00u, false));
+        QVERIFY(!wrap.update({1280, 720}, 1, 243, false));
+        QVERIFY(wrap.update({1280, 720}, 1, 244, false));
     }
 
     void defaultsAndExplicitInputChoicesPersist() {
