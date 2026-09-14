@@ -44,3 +44,23 @@
 不同，不能据此宣称严格的性能提升比例。
 
 下一步：用户决定继续时，先完成同场景对照，再根据数据选择改动；本轮不继续优化。
+
+
+## Client-controlled session settings — 2026-09-14 (deferred)
+
+- [ ] Make the client the single place to configure all streaming/session-related
+  server parameters, including video encoding, audio capture/playback and input
+  control. When the user clicks Connect, send the client's selected settings to
+  the bound server and apply them before starting the session. Do not require
+  users to configure the same settings manually on both devices.
+
+The server's required setup should be limited to granting operating-system
+permissions and approving client binding. All remaining streaming/session details
+should be configurable from the client. Settings unrelated to transport or the
+remote session, such as UI language, remain independent local preferences on
+both devices and are not overwritten by connection settings.
+
+Status: record only; do not implement until the user explicitly resumes this item.
+Future checkpoint: configure encoding, audio and input on the client, connect,
+and verify the server applies those settings without manual configuration there,
+while each device retains its own language and other local-only preferences.
