@@ -849,6 +849,9 @@ int main(int argc, char *argv[])
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);
+    QObject::connect(&hostManager, &HostManager::reconnectRequested, &app, [] {
+        if (Session::get()) Session::get()->requestReconnect();
+    });
     QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [] {
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;

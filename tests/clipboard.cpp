@@ -124,14 +124,15 @@ private slots:
         channel = create(a, credential("TEST_KEY_A"), b);
         QTRY_VERIFY_WITH_TIMEOUT(channel->ready(), 6000); seq = rev = 0;
         QVERIFY(!exchange({}).contains("text")); QCOMPARE(clipboard->text(), QString("offline copy"));
+        // A host's outgoing-client preference must not override the requesting
+        // client's authenticated clipboard choice.
         QSettings().setValue("sharedClipboard", false);
-        QTRY_VERIFY_WITH_TIMEOUT(!channel->error().isEmpty(), 12000);
-        channel.reset();
-        auto disabled = create(a, credential("TEST_KEY_A"), b);
-        QTRY_VERIFY_WITH_TIMEOUT(!disabled->error().isEmpty(), 6000);
+        QVERIFY(!exchange({}).isEmpty()); QVERIFY(channel->error().isEmpty());
+        channel.reset(); QTest::qWait(100);
+        channel = create(a, credential("TEST_KEY_A"), b);
+        QTRY_VERIFY_WITH_TIMEOUT(channel->ready(), 6000);
         QCOMPARE(clipboard->text(), QString("offline copy"));
-        disabled.reset(); QTest::qWait(100);
-        QSettings().setValue("sharedClipboard", true);
+        channel.reset(); QTest::qWait(100);
         qputenv("SDL_VIDEODRIVER", "dummy");
         QVERIFY(SDL_Init(SDL_INIT_VIDEO) == 0);
         auto localText = [] {

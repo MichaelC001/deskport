@@ -153,6 +153,7 @@ private slots:
             c.setData(R"(import QtQuick 2.9
 import TestPreferences 1.0
 TestPreferences {
+ property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
  property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property int language: 1; property int retranslations: 0
  function retranslate() { retranslations++; return true }

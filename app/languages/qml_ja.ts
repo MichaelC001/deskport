@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>オーディオキャプチャーデバイスがありません。GeForce Experienceを再インストールすることでこのエラーが解決されます。</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>このホストはセッションごとの音声取得や閲覧専用モードに対応していません。DeskPort ホストを更新して再接続してください。</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -420,6 +424,10 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>%1 とのセッションが開いています。他のコンピューターに接続する前にトレイメニューから切断してください。</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>デバイス設定</translation>
     </message>
 </context>
 <context>
@@ -1266,6 +1274,14 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>ブロックされた接続を自動的に検出 (推奨)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>詳細設定</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>再接続すると適用されます。このコンピューターの言語や検出設定は変更されません。</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1727,6 +1743,38 @@
         <source>Apply</source>
         <translation>適用</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 の設定</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>保存しました。再接続すると適用されます。</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>このデバイスの音声を受信</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2004,6 +2052,10 @@
     <message>
         <source>Saved · restart sharing to apply changes.</source>
         <translation>保存済み · 変更を適用するには共有を再起動してください。</translation>
+    </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>映像・音声・入力は接続するデバイスで設定します。再接続後に適用されます。</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2348,10 @@
     <message>
         <source> Retrying automatically in %1 seconds.</source>
         <translation> %1 秒後に自動で再試行します。</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>再接続</translation>
     </message>
 </context>
 <context>

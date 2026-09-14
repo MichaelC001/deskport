@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>Falta el dispositivo de captura de audio. La reinstalación de GeForce Experience debería resolver este error.</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>Este servidor no admite audio por sesión ni modo de solo lectura. Actualiza el servidor DeskPort y vuelve a conectar.</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -420,6 +424,10 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>Hay una sesión abierta con %1. Desconéctala desde el menú de la bandeja antes de conectar a otro equipo.</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>Ajustes del dispositivo</translation>
     </message>
 </context>
 <context>
@@ -1266,6 +1274,14 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Detectar automáticamente las conexiones bloqueadas (recomendado)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>Ajustes avanzados</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>Vuelve a conectar para aplicar. El idioma y la detección de este ordenador no cambian.</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1727,6 +1743,38 @@
         <source>Apply</source>
         <translation>Aplicar</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>Ajustes de %1</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>Estos ajustes solo se aplican a este dispositivo. Vuelve a conectar para aplicarlos.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>Ajustes predeterminados para nuevos dispositivos. Personaliza una conexión desde el menú del dispositivo.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>Guardado · vuelve a conectar para aplicar.</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>Permitir teclado, puntero y mandos</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>Desactiva para una conexión de solo lectura. Los atajos locales de DeskPort siguen disponibles.</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>Vuelve a conectar para compartir nuevas copias con este dispositivo vinculado. Solo texto de hasta 128 MiB; sin imágenes ni archivos.</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>Recibir sonido de este dispositivo</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2004,6 +2052,10 @@
     <message>
         <source>Saved · restart sharing to apply changes.</source>
         <translation>Guardado · reinicia el uso compartido para aplicar los cambios.</translation>
+    </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>La imagen, el sonido y la entrada se configuran en el dispositivo cliente. Los cambios se aplican al volver a conectar.</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2348,10 @@
     <message>
         <source> Retrying automatically in %1 seconds.</source>
         <translation> Se reintentará automáticamente en %1 segundos.</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>Volver a conectar</translation>
     </message>
 </context>
 <context>

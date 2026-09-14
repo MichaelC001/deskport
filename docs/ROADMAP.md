@@ -917,3 +917,17 @@ Validation: 26 isolated binding cases (including client-only approve/reject,
 pre-approval disconnect/ack, invalid host claims and revoke), 15 UI cases and
 seven translated UI catalogs passed. Physical mobile video/input acceptance is
 separate from these protocol and interface tests.
+
+
+## Client-controlled device settings — 2026-09-14
+
+Reason: user resumed the deferred settings item and requested an isolated development
+branch. Device profiles now collect normal/advanced streaming preferences, take a
+connection snapshot, and send authenticated audio/input choices to the host.
+The tray has a separate Reconnect action, preserving remote applications and
+loading the latest saved profile. Sharing no longer duplicates session switches.
+See [SESSION_SETTINGS.md](SESSION_SETTINGS.md) for the inventory and compatibility.
+
+Next action: validate sound on/off, view-only, per-device video settings and ten
+reconnects on isolated test hosts after an explicitly chosen build is activated.
+No release, mynix update or deployed-service change is included in this slice.

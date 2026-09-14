@@ -200,7 +200,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     s_ActiveSession->m_AudioSampleCount++;
 
     // If audio is muted, don't decode or play the audio
-    if (s_ActiveSession->m_AudioMuted) {
+    if (!s_ActiveSession->m_Preferences->remoteAudio || s_ActiveSession->m_AudioMuted) {
         return;
     }
 

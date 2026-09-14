@@ -117,10 +117,11 @@ public:
     QString hostId() const;
     QString hostName() const;
     Q_INVOKABLE void exec(QWindow* qtWindow);
-    Q_INVOKABLE bool adaptiveRestartPending() const { return m_AdaptiveNextSize.isValid(); }
+    Q_INVOKABLE bool adaptiveRestartPending() const { return m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
     Q_INVOKABLE Session* adaptiveContinuation();
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
+    void requestReconnect();
 
     static
     void getDecoderInfo(SDL_Window* window,
@@ -171,6 +172,7 @@ private:
     QRect m_AdaptiveGeometry;
     int m_AdaptiveScale = 1, m_AdaptiveObservedScale = 1;
     Uint32 m_AdaptiveChangedAt = 0;
+    bool m_ManualReconnect = false, m_ManualResume = false;
     bool m_AdaptiveResume = false, m_AdaptiveMaximized = false;
     struct ClientScreen { QString name; QPoint origin; QSize logicalSize; qreal scale; };
     QVector<ClientScreen> m_ClientScreens;

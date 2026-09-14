@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>오디오 캡처 장치가 없습니다. GeForce Experience를 다시 설치하면 이 오류가 해결됩니다.</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>이 호스트는 세션별 오디오 캡처나 보기 전용 모드를 지원하지 않습니다. DeskPort 호스트를 업데이트한 후 다시 연결하세요.</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -420,6 +424,10 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>%1 세션이 열려 있습니다. 다른 컴퓨터에 연결하기 전에 트레이 메뉴에서 연결을 끊으세요.</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>기기 설정</translation>
     </message>
 </context>
 <context>
@@ -1266,6 +1274,14 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>차단된 연결 자동 감지 (권장)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>고급 설정</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>다시 연결하면 적용됩니다. 이 컴퓨터의 언어와 검색 설정은 변경되지 않습니다.</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1727,6 +1743,38 @@
         <source>Apply</source>
         <translation>적용</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 설정</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>이 설정은 이 기기에만 적용됩니다. 변경 후 다시 연결하세요.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>새 기기의 기본 설정입니다. 기기 메뉴의 기기 설정에서 개별 연결을 변경하세요.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>저장됨 · 다시 연결하면 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>끄면 보기 전용으로 연결됩니다. 로컬 DeskPort 단축키는 계속 사용할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>다시 연결하면 새로 복사한 내용을 이 연결된 기기와 공유합니다. 일반 텍스트 최대 128 MiB이며 이미지와 파일은 공유하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>이 기기의 소리 수신</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2004,6 +2052,10 @@
     <message>
         <source>Saved · restart sharing to apply changes.</source>
         <translation>저장됨 · 변경 사항을 적용하려면 공유를 다시 시작하세요.</translation>
+    </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>화면, 오디오 및 입력은 연결하는 기기에서 설정합니다. 다시 연결하면 적용됩니다.</translation>
     </message>
 </context>
 <context>
@@ -2296,6 +2348,10 @@
     <message>
         <source> Retrying automatically in %1 seconds.</source>
         <translation> %1초 후 자동으로 다시 시도합니다.</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>다시 연결</translation>
     </message>
 </context>
 <context>

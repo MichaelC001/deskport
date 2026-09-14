@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>缺少音訊擷取裝置。重新安裝 GeForce Experience 可以解決此錯誤。</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>此主機不支援工作階段音訊擷取或僅觀看模式。請更新 DeskPort 主機後重新連線。</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -428,6 +432,10 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>與 %1 的工作階段仍在執行。連線其他電腦前，請從系統匣選單中斷目前連線。</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>裝置設定</translation>
     </message>
 </context>
 <context>
@@ -1274,6 +1282,14 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自動偵測被封鎖的連線 (建議)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>進階設定</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>重新連線後生效。裝置設定不會更改本機語言或裝置探索偏好。</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1735,6 +1751,38 @@
         <source>Apply</source>
         <translation>套用</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 的設定</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>這些設定僅用於此裝置，重新連線後生效。</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>新裝置的預設設定。可在裝置選單中選擇「裝置設定」個別調整連線。</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>已儲存 · 重新連線後生效。</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>允許鍵盤、指標及控制器輸入</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>關閉後僅可觀看。本機 DeskPort 快速鍵仍可使用。</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>重新連線後，與此綁定裝置共享新複製的內容。僅限不超過 128 MiB 的純文字，不共享圖片和檔案。</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>接收此裝置的聲音</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2012,6 +2060,10 @@
     <message>
         <source>Saved · restart sharing to apply changes.</source>
         <translation>已儲存 · 重新啟動共享以套用變更。</translation>
+    </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>畫面、音訊和輸入由連線端裝置設定，重新連線後生效。</translation>
     </message>
 </context>
 <context>
@@ -2312,6 +2364,10 @@
     <message>
         <source> Retrying automatically in %1 seconds.</source>
         <translation> 將在 %1 秒後自動重試。</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>重新連線</translation>
     </message>
 </context>
 <context>

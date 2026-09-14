@@ -174,6 +174,14 @@ CenteredGridView {
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
+                    objectName: "deviceSettings-" + model.hostId
+                    text: qsTr("Device settings")
+                    onTriggered: stackView.push(Qt.resolvedUrl("SettingsHome.qml"), {
+                        "preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name
+                    })
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
                     text: qsTr("Applications")
                     onTriggered: {
                         var component = Qt.createComponent("AppView.qml")

@@ -17,6 +17,15 @@ public:
     Q_INVOKABLE void save();
 
     void reload();
+    Q_INVOKABLE StreamingPreferences* forDevice(const QString& hostId);
+    StreamingPreferences* snapshot(const QString& hostId, QObject* owner, bool copyCurrent = false) const;
+    Q_PROPERTY(QString deviceId READ deviceId CONSTANT)
+    QString deviceId() const { return m_DeviceId; }
+    Q_PROPERTY(bool remoteAudio MEMBER remoteAudio NOTIFY remoteAudioChanged)
+    bool remoteAudio = true;
+    Q_PROPERTY(bool remoteInput MEMBER remoteInput NOTIFY remoteInputChanged)
+    bool remoteInput = true;
+
 
     enum AudioConfig
     {
@@ -194,6 +203,8 @@ public:
     CaptureSysKeysMode captureSysKeysMode;
 
 signals:
+    void remoteAudioChanged();
+    void remoteInputChanged();
     void displayModeChanged();
     void bitrateChanged();
     void unlockBitrateChanged();
@@ -235,7 +246,8 @@ signals:
     void languageChanged();
 
 private:
-    explicit StreamingPreferences(QQmlEngine *qmlEngine);
+    explicit StreamingPreferences(QQmlEngine *qmlEngine, const QString& deviceId = QString());
+    QString m_DeviceId;
 
     QString getSuffixFromLanguage(Language lang);
 

@@ -70,6 +70,41 @@ private slots:
         QCOMPARE(prefs->captureSysKeysMode, StreamingPreferences::CSK_ALWAYS);
         QVERIFY(prefs->showLocalCursor);
     }
+    void deviceProfilesAndSnapshotsAreIsolated() {
+        QTemporaryDir directory;
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        QSettings().clear();
+        auto defaults = StreamingPreferences::get(); defaults->reload();
+        defaults->width = 1920; defaults->language = StreamingPreferences::LANG_EN;
+        defaults->save();
+        QScopedPointer<StreamingPreferences> a(defaults->forDevice("device-a"));
+        QScopedPointer<StreamingPreferences> b(defaults->forDevice("device-b"));
+        QCOMPARE(a->width, 1920); QCOMPARE(b->width, 1920);
+        a->width = 2560; a->remoteAudio = false; a->remoteInput = false;
+        a->captureSysKeysMode = StreamingPreferences::CSK_OFF;
+        a->language = StreamingPreferences::LANG_ZH_CN; a->save();
+        b->reload(); QCOMPARE(b->width, 1920); QVERIFY(b->remoteAudio); QVERIFY(b->remoteInput);
+        defaults->reload(); QCOMPARE(defaults->width, 1920);
+        QCOMPARE(defaults->language, StreamingPreferences::LANG_EN);
+        QScopedPointer<StreamingPreferences> active(defaults->snapshot("DEVICE-A", nullptr));
+        QCOMPARE(active->width, 2560); QVERIFY(!active->remoteAudio); QVERIFY(!active->remoteInput);
+        QCOMPARE(active->captureSysKeysMode, StreamingPreferences::CSK_OFF);
+        a->width = 3840; a->remoteAudio = true; a->save();
+        QCOMPARE(active->width, 2560); QVERIFY(!active->remoteAudio);
+        QScopedPointer<StreamingPreferences> resized(active->snapshot("device-a", nullptr));
+        QCOMPARE(resized->width, 2560); QVERIFY(!resized->remoteAudio);
+        QScopedPointer<StreamingPreferences> reconnected(defaults->snapshot("device-a", nullptr));
+        QCOMPARE(reconnected->width, 3840); QVERIFY(reconnected->remoteAudio);
+        QCOMPARE(reconnected->language, StreamingPreferences::LANG_EN);
+        defaults->width = 1280; defaults->save(); a->reload();
+        QCOMPARE(a->width, 3840);
+        defaults->width = 1600; // CLI overrides are intentionally not persisted.
+        QScopedPointer<StreamingPreferences> cli(defaults->snapshot("device-a", nullptr, true));
+        QCOMPARE(cli->width, 1600);
+        defaults->reload();
+    }
+
     void savedWorkspaceIsHostAndDisplaySpecific() {
         QTemporaryDir dir;
         const auto path = dir.path() + "/window.ini";

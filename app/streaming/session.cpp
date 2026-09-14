@@ -550,7 +550,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 }
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
-    : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
+    : m_Preferences((preferences ? preferences : StreamingPreferences::get())->snapshot(computer->uuid, this, preferences != nullptr)),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
@@ -623,6 +623,15 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
 }
 Session* Session::adaptiveContinuation() {
     if (!adaptiveRestartPending()) return nullptr;
+    if (m_ManualReconnect) {
+        // Read the saved device profile only after the old transport is stopped.
+        auto next = new Session(m_Computer, m_App);
+        next->m_ManualResume = true;
+        if (next->m_Preferences->adaptiveResolution) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
+        else m_AdaptiveDisplay.reset();
+        SDL_FlushEvents(SDL_USEREVENT, SDL_LASTEVENT);
+        return next;
+    }
     auto next = new Session(m_Computer, m_App, m_Preferences);
     if (m_TransitionTimer) m_TransitionTimer->stop();
     // The old transport has stopped; discard its queued decoder/rumble callbacks.
@@ -639,6 +648,11 @@ Session* Session::adaptiveContinuation() {
     deskportResizeStage("continuation");
     return next;
 }
+void Session::requestReconnect() {
+    // SDL owns session state on Linux; marshal tray requests to that thread.
+    SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortReconnect;
+    SDL_PushEvent(&event);
+}
 void Session::endForSystemSleep() {
     // Not a user disconnect: never honor "quit app after streaming".
     m_UnexpectedTermination = true;
@@ -646,7 +660,7 @@ void Session::endForSystemSleep() {
     SDL_PushEvent(&event);
 }
 void Session::initializeClipboard() {
-    if (!m_Preferences->sharedClipboard) return;
+    if (!m_Preferences->sharedClipboard || !m_Preferences->remoteInput) return;
     const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
     for (const auto& value : peers) {
         const auto peer = value.toObject();
@@ -1816,7 +1830,7 @@ bool Session::startConnectionAsync()
     try {
         NvHTTP http(m_Computer);
         if (m_AdaptiveResume) deskportResizeStage("resume-request");
-        http.startApp((m_AdaptiveResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
+        http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
                       enableGameOptimizations,
@@ -1824,7 +1838,8 @@ bool Session::startConnectionAsync()
                       m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
                       rtspSessionUrl,
-                      m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0);
+                      m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
+                      m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
         if (m_AdaptiveResume) deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -2358,6 +2373,11 @@ void Session::execInternal()
 
         case SDL_USEREVENT:
             switch (event.user.code) {
+            case DeskPortReconnect:
+                if (m_UnexpectedTermination || adaptiveRestartPending()) break;
+                rememberAdaptiveWindow();
+                m_ManualReconnect = true;
+                goto DispatchDeferredCleanup;
             case DeskPortEndSession:
                 goto DispatchDeferredCleanup;
             case DeskPortHideWindow:
@@ -2745,7 +2765,7 @@ DispatchDeferredCleanup:
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
-    if (adaptiveRestartPending()) {
+    if (adaptiveRestartPending() && !m_ManualReconnect) {
         m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Adjusting resolution…"));
         qInfo() << "Adaptive display keeping client window:" << SDL_GetWindowID(m_Window);
     }

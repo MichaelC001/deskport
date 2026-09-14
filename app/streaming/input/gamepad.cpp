@@ -964,6 +964,7 @@ QString SdlInputHandler::getUnmappedGamepads()
 
 int SdlInputHandler::getAttachedGamepadMask()
 {
+    if (!m_RemoteInputEnabled) return 0;
     int count;
     int mask;
 

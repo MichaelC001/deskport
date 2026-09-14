@@ -132,6 +132,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     });
     m_Menu = new QMenu;
     connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested);
+    connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested);
     connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested);
     // Restarting from the tray is how a remote viewer picks up a version that a
     // package upgrade already wrote to disk: the running process keeps the old
@@ -305,22 +306,13 @@ void HostManager::start(int width, int height) {
         if (m_Starting && m_Generation == generation) { beginStop(tr("Host startup timed out; see logs")); }
     });
 }
-bool HostManager::smartHost() const { return QSettings().value("host.smartStreaming", true).toBool(); }
-void HostManager::setSmartHost(bool enabled) { QSettings().setValue("host.smartStreaming", enabled); emit changed(); }
-bool HostManager::streamAudio() const {
-    return QSettings().value("host.streamAudio", false).toBool();
-}
-void HostManager::setStreamAudio(bool enabled) {
-    QSettings().setValue("host.streamAudio", enabled);
-    emit changed();
-}
 void HostManager::startServer(int displayId) {
     m_ServerRequested = true;
     QSaveFile config(m_Directory + "/sunshine.conf");
     if (!config.open(QIODevice::WriteOnly)) { beginStop(tr("Cannot write host configuration")); return; }
     config.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
     config.write(QString("file_apps = %1/apps.json\nfile_state = %1/state.json\npkey = %1/credentials/key.pem\ncert = %1/credentials/cert.pem\ncredentials_file = %1/control.json\nlog_path = %1/sunshine.log\n").arg(m_Directory).toUtf8());
-    config.write(streamAudio() ? "stream_audio = enabled\n" : "stream_audio = disabled\n");
+    config.write("stream_audio = enabled\n");
     QString deviceName = QHostInfo::localHostName().left(64);
     deviceName.replace('\n', ' '); deviceName.replace('\r', ' ');
     if (deviceName.trimmed().isEmpty()) deviceName = "DeskPort";
@@ -329,7 +321,7 @@ void HostManager::startServer(int displayId) {
     config.write(QString("output_name = %1\n").arg(displayId).toUtf8());
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_CAPTURE_DISPLAY", QString::number(displayId));
-    hostEnvironment.insert("DESKPORT_SMART_STREAMING", smartHost() ? "1" : "0");
+    hostEnvironment.insert("DESKPORT_SMART_STREAMING", "1");
     m_Server.setProcessEnvironment(hostEnvironment);
     m_Credentials.setProcessEnvironment(hostEnvironment);
 #else

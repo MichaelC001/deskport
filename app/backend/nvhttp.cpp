@@ -196,8 +196,21 @@ NvHTTP::startApp(QString verb,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
                  QString& rtspSessionUrl,
-                 int timeoutMs)
+                 int timeoutMs, bool remoteAudio, bool remoteInput, bool smart)
 {
+    if (httpsPort() == 0) getServerInfo(NVLL_NONE);
+    // Capability decisions must come from the pinned endpoint, never the
+    // discovery path's unauthenticated HTTP fallback.
+    const auto info = openConnectionToString(m_BaseUrlHttps, "serverinfo", QString(), REQUEST_TIMEOUT_MS, NVLL_NONE);
+    verifyResponseStatus(info);
+    const bool sessionSettings = getXmlString(info, "DeskPortSessionSettings") == "1";
+    if (!sessionSettings && (!remoteAudio || !remoteInput)) {
+        throw GfeHttpResponseException(400, tr("This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect."));
+    }
+    const QString options = sessionSettings ?
+        "&deskportAudio=" + QString::number(remoteAudio ? 1 : 0) +
+        "&deskportInput=" + QString::number(remoteInput ? 1 : 0) +
+        "&deskportSmart=" + QString::number(smart ? 1 : 0) : QString();
     int riKeyId;
 
     memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
@@ -225,7 +238,7 @@ NvHTTP::startApp(QString verb,
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask)+
                                    "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
-                                   LiGetLaunchUrlQueryParameters(),
+                                   options + LiGetLaunchUrlQueryParameters(),
                                    timeoutMs ? timeoutMs : LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;

@@ -29,8 +29,6 @@ class HostManager : public QObject {
     Q_PROPERTY(bool running READ running NOTIFY changed)
     Q_PROPERTY(int basePort READ basePort NOTIFY changed)
     Q_PROPERTY(bool canPair READ canPair NOTIFY changed)
-    Q_PROPERTY(bool smartHost READ smartHost WRITE setSmartHost NOTIFY changed)
-    Q_PROPERTY(bool streamAudio READ streamAudio WRITE setStreamAudio NOTIFY changed)
     Q_PROPERTY(bool loginStart READ loginStart NOTIFY changed)
     Q_PROPERTY(bool loginStartManaged READ loginStartManaged NOTIFY changed)
     Q_PROPERTY(QString readiness READ readiness NOTIFY permissionsChanged)
@@ -61,10 +59,6 @@ public:
     bool running() const;
     bool canPair() const;
     int basePort() const { return m_BasePort; }
-    bool smartHost() const;
-    void setSmartHost(bool enabled);
-    bool streamAudio() const;
-    void setStreamAudio(bool enabled);
     bool loginStart() const;
     bool loginStartManaged() const;
     Q_INVOKABLE void setLoginStart(bool enabled);
@@ -90,6 +84,7 @@ signals:
     void hideRequested();
     void exitRequested();
     void disconnectRequested();
+    void reconnectRequested();
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);

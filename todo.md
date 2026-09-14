@@ -46,21 +46,17 @@
 下一步：用户决定继续时，先完成同场景对照，再根据数据选择改动；本轮不继续优化。
 
 
-## Client-controlled session settings — 2026-09-14 (deferred)
+## Client-controlled session settings — 2026-09-14
 
-- [ ] Make the client the single place to configure all streaming/session-related
-  server parameters, including video encoding, audio capture/playback and input
-  control. When the user clicks Connect, send the client's selected settings to
-  the bound server and apply them before starting the session. Do not require
-  users to configure the same settings manually on both devices.
+Reason: user resumed this item and requested development-branch-only delivery.
 
-The server's required setup should be limited to granting operating-system
-permissions and approving client binding. All remaining streaming/session details
-should be configurable from the client. Settings unrelated to transport or the
-remote session, such as UI language, remain independent local preferences on
-both devices and are not overwritten by connection settings.
+- [x] Per-device client profiles covering normal and advanced stream settings.
+- [x] Immutable connection snapshots; edits take effect after reconnecting.
+- [x] Authenticated per-session host audio/input options and old-host detection.
+- [x] Client-controlled clipboard and macOS smart encoder policy; simplify Sharing.
+- [x] Separate tray Reconnect action; preserve remote apps and release held input.
+- [x] Inventory scattered options and keep language/appearance/startup local.
+- [ ] Live two-device audio/input/video and ten-reconnect acceptance after the user
+  chooses to activate a build. Main and deployed services remain unchanged.
 
-Status: record only; do not implement until the user explicitly resumes this item.
-Future checkpoint: configure encoding, audio and input on the client, connect,
-and verify the server applies those settings without manual configuration there,
-while each device retains its own language and other local-only preferences.
+See [session settings](docs/SESSION_SETTINGS.md) for protocol, migration and limits.

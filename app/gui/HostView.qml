@@ -45,10 +45,10 @@ UiPage {
                     RowLayout {
                         Layout.fillWidth: true
                         Label { text: modelData.title; color: ui.text; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-                        Label { text: modelData.state === "allowed" ? qsTr("Allowed") : modelData.state === "onShare" ? qsTr("Verify when sharing") : modelData.key === "microphone" && !hostManager.streamAudio ? qsTr("Optional · audio is off") : qsTr("Needs attention"); color: modelData.state === "allowed" ? ui.accent : ui.warning; font.pixelSize: ui.small }
+                        Label { text: modelData.state === "allowed" ? qsTr("Allowed") : modelData.state === "onShare" ? qsTr("Verify when sharing") : modelData.key === "microphone" ? qsTr("Verify when sharing") : qsTr("Needs attention"); color: modelData.state === "allowed" ? ui.accent : ui.warning; font.pixelSize: ui.small }
                     }
                     UiButton {
-                        visible: modelData.state !== "allowed" && modelData.state !== "onShare" && (modelData.key !== "microphone" || hostManager.streamAudio)
+                        visible: modelData.state !== "allowed" && modelData.state !== "onShare"
                         text: Qt.platform.os === "osx" ? qsTr("Open system settings") : qsTr("Permission guide")
                         onClicked: Qt.platform.os === "osx" ? hostManager.permission(modelData.key) : navigateTo("qrc:/gui/SetupView.qml", "SetupView")
                     }
@@ -76,20 +76,7 @@ UiPage {
             Label { visible: Qt.platform.os === "osx"; text: qsTr("Virtual display size"); color: ui.muted }
             ComboBox { id: size; currentIndex: Math.max(0, [2560,2880,3840].indexOf(hostManager.sharingWidth)); visible: Qt.platform.os === "osx"; model: ["2560 × 1440", "2880 × 1800", "3840 × 2160"]; enabled: !hostManager.running && !hostManager.changing; Layout.preferredWidth: 250 }
             Label { visible: Qt.platform.os === "osx"; text: qsTr("Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Switch {
-                visible: Qt.platform.os === "osx"
-                text: qsTr("Save bandwidth on static screens"); checked: hostManager.smartHost
-                onClicked: { hostManager.smartHost = checked; sharingNotice.visible = true }
-            }
-            Label {
-                visible: Qt.platform.os === "osx"; text: qsTr("Skips unchanged frames and reduces frame rate during repeated packet loss. Applies when sharing restarts.")
-                color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
-            }
-            Switch {
-                text: qsTr("Share this computer's sound"); checked: hostManager.streamAudio
-                onClicked: { hostManager.streamAudio = checked; sharingNotice.visible = true }
-            }
-            Label { id: sharingNotice; visible: false; text: qsTr("Saved · restart sharing to apply changes."); color: ui.accent; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch { text: qsTr("Start sharing when I log in"); enabled: hostManager.available && !hostManager.loginStartManaged; checked: hostManager.loginStart; onClicked: hostManager.setLoginStart(checked) }
             Label { visible: hostManager.loginStartManaged; text: qsTr("Login startup is installed by this computer's system configuration. Change it there, not here."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
