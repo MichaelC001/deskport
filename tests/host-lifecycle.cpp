@@ -138,7 +138,8 @@ private slots:
         QVERIFY(config.open(QIODevice::ReadOnly));
         const auto contents = config.readAll();
         QVERIFY(contents.contains(QString("port = %1\n").arg(host.basePort()).toUtf8()));
-        QVERIFY(contents.contains("stream_audio = disabled\n"));
+        // Audio availability is host-wide; each client selects whether to receive it.
+        QVERIFY(contents.contains("stream_audio = enabled\n"));
         QVERIFY(contents.contains("upnp = disabled\n"));
         QVERIFY(contents.contains("system_tray = disabled\n"));
         host.stop();
