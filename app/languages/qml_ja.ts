@@ -2092,6 +2092,10 @@
         <source>Advanced port overrides</source>
         <translation>ポートの詳細設定</translation>
     </message>
+    <message>
+        <source>Client access</source>
+        <translation>クライアントアクセス</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2189,6 +2193,10 @@
     <message>
         <source>Allow this device and this computer to view and control each other? DeskPort sharing will start on both computers; existing DeskPort sessions may briefly disconnect. Accept only a request you are expecting.</source>
         <translation>このデバイスと相互に画面表示・操作を許可しますか？両方で共有を開始し、既存の DeskPort 接続が一時切断される場合があります。心当たりのあるリクエストのみ承認してください。</translation>
+    </message>
+    <message>
+        <source>Allow this device to view and control this computer? Sharing will start here; existing DeskPort sessions may briefly disconnect. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
+        <translation>このデバイスによる、このコンピュータの表示と操作を許可しますか？共有を開始し、既存の DeskPort セッションが一時的に切断される場合があります。リクエスト元へのアクセスは許可されません。心当たりのあるリクエストのみ承認してください。</translation>
     </message>
 </context>
 <context>

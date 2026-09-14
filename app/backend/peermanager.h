@@ -10,6 +10,7 @@
 class PeerManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString status READ status NOTIFY changed)
+    Q_PROPERTY(bool pendingClientOnly READ pendingClientOnly NOTIFY changed)
     Q_PROPERTY(QString pendingName READ pendingName NOTIFY changed)
     Q_PROPERTY(QString requestId READ requestId NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
@@ -22,6 +23,7 @@ public:
     ~PeerManager();
     QString status() const { return m_Status; }
     QString pendingName() const;
+    bool pendingClientOnly() const;
     QString requestId() const;
     bool busy() const;
     int port() const { return m_Server->serverPort(); }

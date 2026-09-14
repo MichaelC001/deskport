@@ -20,6 +20,62 @@ static QByteArray credential(const char* name) {
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void clientOnlyBinding_data() {
+        QTest::addColumn<int>("mode");
+        QTest::newRow("approved") << 0;
+        QTest::newRow("declined") << 1;
+        QTest::newRow("disconnect-before-approval") << 2;
+        QTest::newRow("invalid-host-claim") << 3;
+        QTest::newRow("ack-before-approval") << 4;
+    }
+    void clientOnlyBinding() {
+        QFETCH(int, mode);
+        QTemporaryDir dir;
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager manager(&host,credential("TEST_CERT_B"),credential("TEST_KEY_B"),dir.path()+"/binding",0,QHostAddress::LocalHost);
+        QSignalSpy imported(&manager,&PeerManager::peerBound);
+        QSslSocket socket;
+        socket.setLocalCertificate(QSslCertificate(credential("TEST_CERT_A")));
+        socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"),QSsl::Rsa));
+        connect(&socket,qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors),&socket,[&](const QList<QSslError>& e){socket.ignoreSslErrors(e);});
+        socket.connectToHostEncrypted("127.0.0.1",quint16(manager.port()));
+        QTRY_VERIFY_WITH_TIMEOUT(socket.isEncrypted(),5000);
+        const auto tx=QUuid::createUuid().toString(QUuid::WithoutBraces);
+        auto send=[&](QJsonObject msg){socket.write(QJsonDocument(msg).toJson(QJsonDocument::Compact)+'\n');};
+        QJsonObject meta{{"version",1},{"clientBinding",1},{"role","client"},{"name","Test tablet"},{"ready",true},{"granted",true}};
+        if(mode==3) meta["hostPort"]=48989;
+        send({{"type","request"},{"tx",tx},{"meta",meta}});
+        if(mode!=3) {
+            QTRY_COMPARE(manager.requestId(),tx);
+            QVERIFY(manager.pendingClientOnly());
+            QVERIFY(manager.peers().isEmpty());
+            if(mode==1) manager.reject(tx);
+            else if(mode==2) socket.abort();
+            else if(mode==4) send({{"type","client-ready"},{"tx",tx}});
+            else {
+                manager.approve(tx);
+                QTRY_VERIFY(!manager.peers().isEmpty() && manager.peers().first().toMap()["granted"].toBool());
+                QVERIFY(!manager.peers().first().toMap()["ready"].toBool());
+                send({{"type","client-ready"},{"tx",tx}});
+            }
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!manager.busy(),5000);
+        QCOMPARE(imported.size(),0);
+        const auto devices=PeerStore::read(dir.path()+"/host/state.json")["root"].toObject()["named_devices"].toArray();
+        QCOMPARE(devices.size(),mode==0 ? 1 : 0);
+        if(mode==0) {
+            const auto peer=manager.peers().first().toMap();
+            QVERIFY(peer["ready"].toBool()); QVERIFY(!peer.contains("hostPort"));
+            manager.restoreHosts(); manager.refreshEndpoints();
+            QCOMPARE(imported.size(),0); QVERIFY(!manager.busy());
+            QVERIFY(!manager.editPeer(peer["fingerprint"].toString(),"Tablet","127.0.0.1",48989,48991));
+            manager.revoke(peer["fingerprint"].toString());
+            QTRY_VERIFY(!manager.busy()); QVERIFY(manager.peers().isEmpty());
+            QCOMPARE(PeerStore::read(dir.path()+"/host/state.json")["root"].toObject()["named_devices"].toArray().size(),0);
+        } else QVERIFY(manager.peers().isEmpty());
+        host.stop();
+    }
+
     void automaticEndpointRefresh_data() {
         QTest::addColumn<int>("failure");
         QTest::newRow("changed-port") << 0;

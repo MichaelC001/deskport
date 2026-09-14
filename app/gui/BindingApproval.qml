@@ -8,6 +8,7 @@ Dialog {
     property var appWindow
     property string transaction: ""
     property string peerText: ""
+    property bool clientOnly: false
     title: qsTr("Bind with this device?")
     modal: true
     anchors.centerIn: parent
@@ -21,13 +22,14 @@ Dialog {
     onRejected: manager.reject(transaction)
     contentItem: Label {
         textFormat: Text.PlainText
-        text: bindingApproval.peerText + "\n\n" + qsTr("Allow this device and this computer to view and control each other? DeskPort sharing will start on both computers; existing DeskPort sessions may briefly disconnect. Accept only a request you are expecting.")
+        text: bindingApproval.peerText + "\n\n" + (clientOnly ? qsTr("Allow this device to view and control this computer? Sharing will start here; existing DeskPort sessions may briefly disconnect. This does not grant access to the requesting device. Accept only a request you are expecting.") : qsTr("Allow this device and this computer to view and control each other? DeskPort sharing will start on both computers; existing DeskPort sessions may briefly disconnect. Accept only a request you are expecting."))
         wrapMode: Text.WordWrap
     }
     Connections {
         target: bindingApproval.manager
         function onIncomingRequest() {
             bindingApproval.transaction = bindingApproval.manager.requestId
+            bindingApproval.clientOnly = bindingApproval.manager.pendingClientOnly
             bindingApproval.peerText = bindingApproval.manager.pendingName
             bindingApproval.open()
             console.info("Binding: approval dialog opened:", bindingApproval.visible)

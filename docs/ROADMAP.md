@@ -901,3 +901,19 @@ pending; the initial CPU observation had uncontrolled content/build contention.
 - This prerelease remains macOS arm64 plus the NixOS x86_64 flake only. Deferred
   queue/static-frame work, video-only reconfiguration and helper merging remain
   P2/P3/P4 and require further measurement.
+
+### 2026-09-14 — one-way mobile approval
+
+Add the explicit `clientBinding: 1` capability to the v1 binding hello. Incoming
+`role: "client"` requests carry no host identity or endpoint; local approval grants
+only the TLS client's access to this host. The `client-ready` / `bound` exchange
+completes persistence without inventing a reverse host. Saved client access is
+removable and is never imported into the desktop list or endpoint refresh loop.
+The approval popup states the one-way permission and retains foreground activation.
+The Apple client integration lives in the separate private client repository.
+Android approval and custom mobile binding entry selection remain follow-ups.
+
+Validation: 26 isolated binding cases (including client-only approve/reject,
+pre-approval disconnect/ack, invalid host claims and revoke), 15 UI cases and
+seven translated UI catalogs passed. Physical mobile video/input acceptance is
+separate from these protocol and interface tests.

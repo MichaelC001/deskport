@@ -36,11 +36,11 @@ UiPage {
                 RowLayout {
                     Layout.fillWidth: true
                     Label { text: modelData.name; textFormat: Text.PlainText; color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
-                    Label { text: modelData.ready ? qsTr("Bound both ways") : qsTr("Incomplete"); color: modelData.ready ? ui.accent : ui.warning }
+                    Label { text: modelData.ready ? (modelData.role === "client" ? qsTr("Client access") : qsTr("Bound both ways")) : qsTr("Incomplete"); color: modelData.ready ? ui.accent : ui.warning }
                 }
                 Label { text: modelData.address; textFormat: Text.PlainText; color: ui.muted }
                 UiButton {
-                    text: qsTr("Edit device"); enabled: !peerManager.busy
+                    text: qsTr("Edit device"); visible: modelData.role !== "client"; enabled: !peerManager.busy
                     onClicked: {
                         editDialog.fingerprint = modelData.fingerprint
                         deviceName.text = modelData.name

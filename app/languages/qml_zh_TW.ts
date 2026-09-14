@@ -2100,6 +2100,10 @@
         <source>Advanced port overrides</source>
         <translation>進階連接埠覆寫</translation>
     </message>
+    <message>
+        <source>Client access</source>
+        <translation>用戶端存取</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2197,6 +2201,10 @@
     <message>
         <source>Allow this device and this computer to view and control each other? DeskPort sharing will start on both computers; existing DeskPort sessions may briefly disconnect. Accept only a request you are expecting.</source>
         <translation>允許此裝置與這台電腦互相檢視與控制嗎？兩台電腦都會開啟 DeskPort 共享，既有 DeskPort 工作階段可能短暫中斷。只接受你預期中的請求。</translation>
+    </message>
+    <message>
+        <source>Allow this device to view and control this computer? Sharing will start here; existing DeskPort sessions may briefly disconnect. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
+        <translation>允許此裝置查看和控制這台電腦？本機將啟動共享，現有 DeskPort 工作階段可能短暫中斷。這不會授予存取請求裝置的權限。請僅接受你預期的請求。</translation>
     </message>
 </context>
 <context>

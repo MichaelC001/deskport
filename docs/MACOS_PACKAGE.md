@@ -94,10 +94,13 @@ Open the DMG and drag DeskPort into Applications. Open DeskPort, then select
 permission buttons to grant the host's screen-recording and accessibility access
 in macOS. System authorization remains a one-time user step for a new code identity.
 
-On another client, add the Mac's reachable address with the port shown on the
-sharing page (initially `48989`, for example `your-computer:48989`). Keep one incoming pairing dialog open, then enter that client's four-digit PIN
-in DeskPort's sharing page. Pairing stays saved. This preview pairs each direction separately; unified
-mutual pairing is not implemented yet.
+On the updated DeskPort iPhone/iPad client, select this computer's DeskPort
+service (initially `48989`) and approve the incoming popup on the Mac. This grants
+one-way client access, without a PIN or a host running on the mobile device.
+Desktop-to-desktop DeskPort requests retain mutual binding. Legacy Moonlight,
+Android and standalone Sunshine workflows still use their PIN pairing UI;
+DeskPort exposes it under Sharing → Compatibility & diagnostics → Legacy PIN pairing.
+Saved access persists across launches. Granting access restarts the embedded host.
 
 Starting authentication and stopping sharing run asynchronously. If either host
 component exits, DeskPort cleans up its own child processes and allows retry.
