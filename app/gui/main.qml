@@ -81,6 +81,7 @@ ApplicationWindow {
   
     readonly property var activeStreamPage: {
         var count = stackView.depth
+        var top = stackView.currentItem // Replacements can preserve depth.
         return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
     readonly property string activeHostId: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
