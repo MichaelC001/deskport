@@ -429,6 +429,10 @@
         <source>Device settings</source>
         <translation>デバイス設定</translation>
     </message>
+    <message>
+        <source>Nearby discovery is off</source>
+        <translation>近くのデバイスの検出はオフです</translation>
+    </message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1282,6 +1286,10 @@
         <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
         <translation>再接続すると適用されます。このコンピューターの言語や検出設定は変更されません。</translation>
     </message>
+    <message>
+        <source>Session behavior</source>
+        <translation>セッション動作</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1457,6 +1465,38 @@
     <message>
         <source>Sharing service on</source>
         <translation>共有サービス有効</translation>
+    </message>
+    <message>
+        <source>Current connection</source>
+        <translation>現在の接続</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>接続済み</translation>
+    </message>
+    <message>
+        <source>Return</source>
+        <translation>デスクトップへ</translation>
+    </message>
+    <message>
+        <source>Session data</source>
+        <translation>今回の通信量</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>詳細</translation>
+    </message>
+    <message>
+        <source>Received: %1</source>
+        <translation>受信：%1</translation>
+    </message>
+    <message>
+        <source>Sent: %1</source>
+        <translation>送信：%1</translation>
+    </message>
+    <message>
+        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+        <translation>一時的な再接続を含む映像・音声、制御、クリップボードの通信量です。IP/VPN、クリップボードのTLS、デバイス検出、本機の共有通信は含みません。通信会社の請求額とは異なります。</translation>
     </message>
 </context>
 <context>
@@ -1775,6 +1815,38 @@
         <source>Receive sound from this device</source>
         <translation>このデバイスの音声を受信</translation>
     </message>
+    <message>
+        <source>Appearance and preferences for this computer only.</source>
+        <translation>このコンピュータの外観と設定です。</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>テーマ</translation>
+    </message>
+    <message>
+        <source>Accent color</source>
+        <translation>アクセントカラー</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>ブルー</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>グリーン</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>パープル</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>オレンジ</translation>
+    </message>
+    <message>
+        <source>Show data usage in the sidebar</source>
+        <translation>サイドバーに通信量を表示</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -1845,6 +1917,14 @@
     <message>
         <source>Checking availability</source>
         <translation>利用可能か確認中</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>デバイス設定</translation>
+    </message>
+    <message>
+        <source>Computer</source>
+        <translation>コンピュータ</translation>
     </message>
 </context>
 <context>
@@ -2057,6 +2137,14 @@
         <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
         <translation>映像・音声・入力は接続するデバイスで設定します。再接続後に適用されます。</translation>
     </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>デバイス接続ポート</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>適用</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2147,6 +2235,10 @@
     <message>
         <source>Client access</source>
         <translation>クライアントアクセス</translation>
+    </message>
+    <message>
+        <source>Discover nearby devices</source>
+        <translation>近くのデバイスを検出</translation>
     </message>
 </context>
 <context>
@@ -2363,5 +2455,307 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>デスクトップの読み込みがタイムアウトしました。デバイス一覧から再試行してください。</translation></message>
 <message><source>Connecting to desktop…</source><translation>デスクトップに接続中…</translation></message>
 <message><source>Back to devices</source><translation>デバイス一覧に戻る</translation></message>
+</context>
+<context>
+    <name>DeviceSettings</name>
+    <message>
+        <source>Device settings</source>
+        <translation>デバイス設定</translation>
+    </message>
+    <message>
+        <source>Saved only for this device. Changes apply on the next connection.</source>
+        <translation>このデバイス専用の設定です。次回の接続時に適用されます。</translation>
+    </message>
+    <message>
+        <source>Picture mode</source>
+        <translation>画質モード</translation>
+    </message>
+    <message>
+        <source>Automatic (recommended)</source>
+        <translation>自動（推奨）</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>鮮明さ優先</translation>
+    </message>
+    <message>
+        <source>Smooth</source>
+        <translation>滑らかさ優先</translation>
+    </message>
+    <message>
+        <source>Save data</source>
+        <translation>データ節約</translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation>カスタム</translation>
+    </message>
+    <message>
+        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
+        <translation>自動は解像度に応じた帯域上限を使用します。データ節約は30 fps、映像上限5 Mbpsです。</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>クライアントのウィンドウ解像度に合わせる</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>このデバイスの音声を受信</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>セッション中にテキストのクリップボードを共有</translation>
+    </message>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>配信の詳細設定</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>保存しました。再接続すると適用されます。</translation>
+    </message>
+</context>
+<context>
+    <name>DeviceAdvanced</name>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>配信の詳細設定</translation>
+    </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 の設定</translation>
+    </message>
+    <message>
+        <source>Make DeskPort your own.</source>
+        <translation>DeskPort を自分好みに。</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>保存しました。再接続すると適用されます。</translation>
+    </message>
+    <message>
+        <source>Connecting to remote computers</source>
+        <translation>リモートコンピューターへの接続</translation>
+    </message>
+    <message>
+        <source>Picture</source>
+        <translation>映像</translation>
+    </message>
+    <message>
+        <source>Input</source>
+        <translation>入力</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>サウンド</translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation>詳細</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>クライアントのウィンドウ解像度に合わせる</translation>
+    </message>
+    <message>
+        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+        <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
+    </message>
+    <message>
+        <source>Smart streaming</source>
+        <translation>スマートストリーミング</translation>
+    </message>
+    <message>
+        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+        <translation>解像度に応じた帯域上限と滑らかなフレーム表示を使用します。手動設定を使うにはオフにしてください。</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>画質プリセット</translation>
+    </message>
+    <message>
+        <source>Choose a preset…</source>
+        <translation>プリセットを選択…</translation>
+    </message>
+    <message>
+        <source>Office · 30 fps / 10 Mbps</source>
+        <translation>オフィス · 30 fps / 10 Mbps</translation>
+    </message>
+    <message>
+        <source>Clear · 60 fps / 40 Mbps</source>
+        <translation>鮮明 · 60 fps / 40 Mbps</translation>
+    </message>
+    <message>
+        <source>Smooth · 60 fps / 15 Mbps</source>
+        <translation>スムーズ · 60 fps / 15 Mbps</translation>
+    </message>
+    <message>
+        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+        <translation>プリセットはフレームレートと帯域幅のみ変更します。下でネットワークに合わせて調整できます。</translation>
+    </message>
+    <message>
+        <source>Picture adjustments</source>
+        <translation>映像の調整</translation>
+    </message>
+    <message>
+        <source>Fallback resolution</source>
+        <translation>代替解像度</translation>
+    </message>
+    <message>
+        <source>Resolution</source>
+        <translation>解像度</translation>
+    </message>
+    <message>
+        <source>Connection window</source>
+        <translation>接続ウィンドウ</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>全画面</translation>
+    </message>
+    <message>
+        <source>Borderless full screen</source>
+        <translation>ボーダーレス全画面</translation>
+    </message>
+    <message>
+        <source>Window</source>
+        <translation>ウィンドウ</translation>
+    </message>
+    <message>
+        <source>Frame rate</source>
+        <translation>フレームレート</translation>
+    </message>
+    <message>
+        <source>Bandwidth · %1 Mbps</source>
+        <translation>帯域幅 · %1 Mbps</translation>
+    </message>
+    <message>
+        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+        <translation>値を上げると画質と帯域使用量が増えます。スライダーを動かさない限り、既存の詳細設定値を維持します。</translation>
+    </message>
+    <message>
+        <source>Smooth frame pacing</source>
+        <translation>フレーム表示を平滑化</translation>
+    </message>
+    <message>
+        <source>Show streaming statistics</source>
+        <translation>ストリーミング統計を表示</translation>
+    </message>
+    <message>
+        <source>Synchronize frames to this display</source>
+        <translation>このディスプレイにフレームを同期</translation>
+    </message>
+    <message>
+        <source>Keyboard &amp; pointer</source>
+        <translation>キーボードとポインター</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
+    </message>
+    <message>
+        <source>Use a desktop-style pointer</source>
+        <translation>デスクトップ用ポインターを使う</translation>
+    </message>
+    <message>
+        <source>Always show a local pointer in desktop mode</source>
+        <translation>デスクトップモードでローカルポインターを常に表示</translation>
+    </message>
+    <message>
+        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+        <translation>ホストがカーソルを隠してもポインターを表示します。2つ表示される場合はオフにしてください。</translation>
+    </message>
+    <message>
+        <source>Reverse scrolling direction</source>
+        <translation>スクロール方向を反転</translation>
+    </message>
+    <message>
+        <source>Send system shortcuts to the remote computer</source>
+        <translation>システムのショートカットをリモートに送信</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>しない</translation>
+    </message>
+    <message>
+        <source>Only in full screen</source>
+        <translation>全画面のみ</translation>
+    </message>
+    <message>
+        <source>Always</source>
+        <translation>常に</translation>
+    </message>
+    <message>
+        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+        <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>セッション中にテキストのクリップボードを共有</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
+    </message>
+    <message>
+        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+        <translation>フォーカス中の映像内ではキーボードがポインターに従います。外に出るとキーとボタンを解放します。クリックでフォーカスし、システム予約キーはローカルに残る場合があります。</translation>
+    </message>
+    <message>
+        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+        <translation>Ctrl + Alt + Shift + Z でリモート入力を解除します。</translation>
+    </message>
+    <message>
+        <source>Sound from the remote computer</source>
+        <translation>リモートコンピューターの音声</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>このデバイスの音声を受信</translation>
+    </message>
+    <message>
+        <source>Mute when DeskPort loses focus</source>
+        <translation>DeskPort が非アクティブのとき消音</translation>
+    </message>
+    <message>
+        <source>Also play audio on the host</source>
+        <translation>ホストでも音声を再生</translation>
+    </message>
+    <message>
+        <source>Advanced &amp; support</source>
+        <translation>詳細設定とサポート</translation>
+    </message>
+    <message>
+        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+        <translation>カスタム解像度、コーデック、HDR、サラウンド、コントローラーは詳細設定で変更できます。</translation>
+    </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>詳細設定</translation>
+    </message>
+    <message>
+        <source>Permission guide</source>
+        <translation>権限ガイド</translation>
+    </message>
+    <message>
+        <source>Report a problem</source>
+        <translation>問題を報告</translation>
+    </message>
 </context>
 </TS>

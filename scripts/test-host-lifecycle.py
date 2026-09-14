@@ -57,7 +57,7 @@ while True: time.sleep(1)
         linux_host.parent.mkdir(parents=True)
         linux_host.write_text(host.read_text())
         linux_host.chmod(0o700)
-    icons = ["baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
+    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
     if "--ui" in sys.argv:

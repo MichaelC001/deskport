@@ -129,6 +129,8 @@ public:
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool sharedClipboard MEMBER sharedClipboard NOTIFY sharedClipboardChanged)
     Q_PROPERTY(int uiTheme MEMBER uiTheme NOTIFY uiThemeChanged)
+    Q_PROPERTY(int uiAccent MEMBER uiAccent NOTIFY uiAccentChanged)
+    Q_PROPERTY(bool showTraffic MEMBER showTraffic NOTIFY showTrafficChanged)
     Q_PROPERTY(bool compactDevices MEMBER compactDevices NOTIFY compactDevicesChanged)
     Q_PROPERTY(bool showLocalCursor MEMBER showLocalCursor NOTIFY showLocalCursorChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
@@ -174,6 +176,8 @@ public:
     bool absoluteMouseMode;
     bool sharedClipboard;
     int uiTheme;
+    int uiAccent;
+    bool showTraffic;
     bool compactDevices;
     bool showLocalCursor;
     bool absoluteTouchMode;
@@ -219,6 +223,8 @@ signals:
     void absoluteMouseModeChanged();
     void sharedClipboardChanged();
     void uiThemeChanged();
+    void uiAccentChanged();
+    void showTrafficChanged();
     void compactDevicesChanged();
     void showLocalCursorChanged();
     void absoluteTouchModeChanged();

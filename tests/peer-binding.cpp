@@ -1,3 +1,4 @@
+#include <QSysInfo>
 #include <QtTest>
 #include <future>
 #include "adaptivedisplay.h"
@@ -389,6 +390,7 @@ private slots:
             b.approve(b.requestId());
             QTRY_COMPARE_WITH_TIMEOUT(aDone.size(),1,7000);
             QTRY_COMPARE_WITH_TIMEOUT(bDone.size(),1,7000);
+            QCOMPARE(a.peers().first().toMap()["os"].toString(), QSysInfo::prettyProductName());
             QCOMPARE(a.peers().first().toMap()["address"].toString(), QString("localhost"));
             QCOMPARE(b.peers().first().toMap()["address"].toString(), QHostInfo::localHostName());
             QVERIFY(a.peers().first().toMap()["ready"].toBool()); QVERIFY(b.peers().first().toMap()["ready"].toBool());

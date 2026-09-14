@@ -55,6 +55,10 @@ edit('nvhttp.cpp', lambda s: once(once(s,
     launch_session->deskport_input = get_arg(args, "deskportInput", "1") == "1";
     launch_session->deskport_smart = get_arg(args, "deskportSmart", "1") == "1";'''),
     '    tree.put("root.MaxLumaPixelsHEVC",', '    tree.put("root.DeskPortSessionSettings", "1");\n    tree.put("root.MaxLumaPixelsHEVC",'))
+# Advertise the launcher's OS label so saved hosts gain icons without rebinding.
+edit('nvhttp.cpp', lambda s: '#include <cstdlib>\n' + once(s,
+    '    tree.put("root.hostname", config::nvhttp.sunshine_name);', '''    tree.put("root.hostname", config::nvhttp.sunshine_name);
+    if (const char* os = std::getenv("DESKPORT_HOST_OS")) tree.put("root.DeskPortOS", os);'''))
 edit('audio.h', lambda s: append_config(s, 'bool deskport_audio = true;'))
 edit('audio.cpp', lambda s: once(s, 'if (!config::audio.stream)', 'if (!config::audio.stream || !config.deskport_audio)'))
 edit('stream.h', lambda s: append_config(s, 'bool deskport_input = true;'))

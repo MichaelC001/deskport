@@ -179,6 +179,8 @@ void StreamingPreferences::reload()
     absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, true).toBool();
     sharedClipboard = settings.value("sharedClipboard", true).toBool();
     uiTheme = settings.value("ui/uiTheme", 0).toInt();
+    uiAccent = qBound(0, settings.value("ui/accent", 0).toInt(), 4);
+    showTraffic = settings.value("ui/showTraffic", false).toBool();
     compactDevices = settings.value("ui/compactDevices", true).toBool();
     showLocalCursor = settings.value("showLocalCursor", true).toBool();
     absoluteTouchMode = settings.value(SER_ABSTOUCHMODE, true).toBool();
@@ -392,6 +394,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
     settings.setValue("sharedClipboard", sharedClipboard);
     settings.setValue("ui/uiTheme", uiTheme);
+    settings.setValue("ui/accent", uiAccent);
+    settings.setValue("ui/showTraffic", showTraffic);
     settings.setValue("ui/compactDevices", compactDevices);
     settings.setValue("showLocalCursor", showLocalCursor);
     settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);

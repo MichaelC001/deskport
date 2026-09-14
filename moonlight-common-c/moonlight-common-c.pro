@@ -94,3 +94,7 @@ CONFIG(debug, debug|release) {
 *-g++|*-clang* {
     QMAKE_CFLAGS_WARN_ON += -Wno-unused-parameter
 }
+
+# Instrument only this transport library, including ENet, without patching submodules.
+SOURCES += $$PWD/traffic.c
+unix: QMAKE_CFLAGS += -include $$PWD/traffic.h

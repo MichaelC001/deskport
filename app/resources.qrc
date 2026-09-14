@@ -1,5 +1,18 @@
 <RCC>
     <qresource prefix="/">
+        <file>res/os/LICENSE.txt</file>
+        <file>res/os/apple.svg</file>
+        <file>res/os/arch.svg</file>
+        <file>res/os/computer.svg</file>
+        <file>res/os/debian.svg</file>
+        <file>res/os/fedora.svg</file>
+        <file>res/os/linux.svg</file>
+        <file>res/os/nixos.svg</file>
+        <file>res/os/ubuntu.svg</file>
+        <file>res/os/windows.svg</file>
+
+        <file>gui/DeviceSettings.qml</file>
+        <file>gui/DeviceAdvanced.qml</file>
         <file>gui/HostView.qml</file>
 <file>gui/UiTheme.qml</file>
 <file>gui/UiPage.qml</file>

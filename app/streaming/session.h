@@ -116,6 +116,10 @@ public:
 
     QString hostId() const;
     QString hostName() const;
+    Q_INVOKABLE QVariantMap traffic() const;
+private:
+    quint64 m_TrafficReceivedBase = 0, m_TrafficSentBase = 0;
+public:
     Q_INVOKABLE void exec(QWindow* qtWindow);
     Q_INVOKABLE bool adaptiveRestartPending() const { return m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
     Q_INVOKABLE Session* adaptiveContinuation();

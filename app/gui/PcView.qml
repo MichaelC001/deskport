@@ -16,14 +16,14 @@ CenteredGridView {
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    readonly property bool compact: StreamingPreferences.compactDevices || width < 660
+    readonly property bool compact: false
     readonly property string sessionHostId: typeof window !== "undefined" ? window.activeHostId : ""
     readonly property string sessionHostName: typeof window !== "undefined" ? window.activeHostName : ""
     minMargin: 0
     topMargin: 16
     bottomMargin: 5
-    cellWidth: compact ? Math.max(280, width) : Math.max(280, width / Math.max(1, Math.floor(width / 310)))
-    cellHeight: compact ? 102 : 186
+    cellWidth: width / Math.max(1, Math.floor(width / 235))
+    cellHeight: 268
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
@@ -100,7 +100,7 @@ CenteredGridView {
         Label { width: parent.width; text: qsTr("Connect your first device."); color: ui.text; font.pixelSize: 28; font.weight: Font.DemiBold; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap }
         Label { width: parent.width; text: qsTr("Add a device by IP address or name. Confirm once on the other computer, then connect in either direction."); color: ui.muted; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap }
         UiButton { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("Add a device"); highlighted: true; onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
-        Label { width: parent.width; text: StreamingPreferences.enableMdns ? qsTr("Nearby devices appear here automatically") : qsTr("Nearby discovery is off in Settings"); color: ui.muted; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter }
+        Label { width: parent.width; text: StreamingPreferences.enableMdns ? qsTr("Nearby devices appear here automatically") : qsTr("Nearby discovery is off"); color: ui.muted; font.pixelSize: 12; horizontalAlignment: Text.AlignHCenter }
     }
 
     header: Item {
@@ -109,29 +109,8 @@ CenteredGridView {
         height: controls.implicitHeight + 24
         ColumnLayout {
             id: controls; width: parent.width; spacing: ui.gap
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: sessionRow.implicitHeight + 24
-                visible: pcGrid.controlCenterForActiveSession
-                radius: ui.radius; color: ui.raised; border.color: ui.accent
-                RowLayout {
-                    id: sessionRow; anchors.fill: parent; anchors.margins: 12; spacing: 12
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        Label { text: pcGrid.sessionHostName; textFormat: Text.PlainText; color: ui.text; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
-                        Label { text: qsTr("Connected · workspace stays open"); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-                    }
-                    UiButton { text: qsTr("Return to desktop"); highlighted: true; onClicked: recallRemoteSession() }
-                }
-            }
-            RowLayout {
-                Layout.fillWidth: true
-                Label { text: qsTr("Your computers"); font.pixelSize: ui.title; font.bold: true; color: ui.text; Layout.fillWidth: true }
-                UiButton {
-                    visible: pcGrid.width >= 660; text: pcGrid.compact ? qsTr("Card view") : qsTr("List view")
-                    onClicked: { StreamingPreferences.compactDevices = !StreamingPreferences.compactDevices; StreamingPreferences.save() }
-                }
-            }
+            Label { text: qsTr("Your computers"); font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true }
+
         }
     }
 
@@ -148,7 +127,9 @@ CenteredGridView {
 
         contentItem: DeviceCard {
             deviceName: model.name; address: model.address
-            compact: pcGrid.compact; favorite: model.favorite
+            favorite: model.favorite
+            operatingSystem: model.operatingSystem
+            onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name})
             activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
             onActivateRequested: parent.clicked()
@@ -176,7 +157,7 @@ CenteredGridView {
                     parentMenu: pcContextMenu
                     objectName: "deviceSettings-" + model.hostId
                     text: qsTr("Device settings")
-                    onTriggered: stackView.push(Qt.resolvedUrl("SettingsHome.qml"), {
+                    onTriggered: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {
                         "preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name
                     })
                 }

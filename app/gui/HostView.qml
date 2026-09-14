@@ -95,6 +95,12 @@ UiPage {
                     UiButton { text: qsTr("Allow"); enabled: hostManager.canPair && /^\d{4}$/.test(pin.text) && peer.text.trim().length > 0; onClicked: { hostManager.pair(pin.text, peer.text); pin.clear() } }
                 }
                 Label { text: qsTr("Host port: %1  ·  Binding port: %2").arg(hostManager.basePort).arg(peerManager.port); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                Label { text: qsTr("Device connection port"); color: ui.text }
+                RowLayout {
+                    Layout.fillWidth: true
+                    SpinBox { id: connectionPort; from: 1024; to: 65535; value: peerManager.port; editable: true; Layout.fillWidth: true }
+                    UiButton { text: qsTr("Apply"); onClicked: peerManager.setConnectionPort(connectionPort.value) }
+                }
                 UiButton { text: qsTr("Open host logs"); onClicked: hostManager.openLogs() }
             }
         }

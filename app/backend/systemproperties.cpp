@@ -1,3 +1,7 @@
+#include <QGuiApplication>
+#include <QStyleHints>
+#include <QPalette>
+#include <QEvent>
 #include "systemproperties.h"
 #include "utils.h"
 #include "version.h"
@@ -15,6 +19,11 @@
 
 SystemProperties::SystemProperties()
 {
+    qApp->installEventFilter(this);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &SystemProperties::appearanceChanged);
+#endif
+
     versionString = QString(VERSION_STR);
     hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
@@ -248,4 +257,24 @@ void SystemProperties::refreshDisplaysInternal()
     }
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+bool SystemProperties::systemDark() const {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    const auto scheme = QGuiApplication::styleHints()->colorScheme();
+    if (scheme != Qt::ColorScheme::Unknown) return scheme == Qt::ColorScheme::Dark;
+#endif
+    return QGuiApplication::palette().color(QPalette::Window).lightnessF() < 0.5;
+}
+QColor SystemProperties::systemAccent() const {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    return QGuiApplication::palette().color(QPalette::Accent);
+#else
+    return QGuiApplication::palette().color(QPalette::Highlight);
+#endif
+}
+bool SystemProperties::eventFilter(QObject* watched, QEvent* event) {
+    if (event->type() == QEvent::ApplicationPaletteChange || event->type() == QEvent::ThemeChange)
+        emit appearanceChanged();
+    return QObject::eventFilter(watched, event);
 }

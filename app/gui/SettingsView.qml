@@ -110,7 +110,7 @@ Flickable {
             id: basicSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Basic Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Basic Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -835,7 +835,7 @@ Flickable {
             id: audioSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Audio Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Audio Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -928,7 +928,7 @@ Flickable {
             id: hostSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Host Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Host Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -968,236 +968,12 @@ Flickable {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("UI Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Session behavior") + "</font>"
             font.pointSize: 12
 
             Column {
                 anchors.fill: parent
                 spacing: 5
-
-                Label {
-                    width: parent.width
-                    id: languageTitle
-                    enabled: !settingsPage.deviceSettings
-                    text: qsTr("Language")
-                    font.pointSize: 12
-                    wrapMode: Text.Wrap
-                }
-
-                AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        var saved_language = preferences.language
-                        currentIndex = 0
-                        for (var i = 0; i < languageListModel.count; i++) {
-                            var el_language = languageListModel.get(i).val;
-                            if (saved_language === el_language) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-
-                        activated(currentIndex)
-                    }
-
-                    id: languageComboBox
-                    enabled: !settingsPage.deviceSettings
-                    textRole: "text"
-                    model: ListModel {
-                        id: languageListModel
-                        ListElement {
-                            text: qsTr("Automatic")
-                            val: StreamingPreferences.LANG_AUTO
-                        }
-                        ListElement {
-                            text: "Deutsch" // German
-                            val: StreamingPreferences.LANG_DE
-                        }
-                        ListElement {
-                            text: "English"
-                            val: StreamingPreferences.LANG_EN
-                        }
-                        ListElement {
-                            text: "Français" // French
-                            val: StreamingPreferences.LANG_FR
-                        }
-                        ListElement {
-                            text: "简体中文" // Simplified Chinese
-                            val: StreamingPreferences.LANG_ZH_CN
-                        }
-                        ListElement {
-                            text: "Norwegian Bokmål"
-                            val: StreamingPreferences.LANG_NB_NO
-                        }
-                        ListElement {
-                            text: "русский" // Russian
-                            val: StreamingPreferences.LANG_RU
-                        }
-                        ListElement {
-                            text: "Español" // Spanish
-                            val: StreamingPreferences.LANG_ES
-                        }
-                        ListElement {
-                            text: "日本語" // Japanese
-                            val: StreamingPreferences.LANG_JA
-                        }
-                        ListElement {
-                            text: "Tiếng Việt" // Vietnamese
-                            val: StreamingPreferences.LANG_VI
-                        }
-                        ListElement {
-                            text: "ภาษาไทย" // Thai
-                            val: StreamingPreferences.LANG_TH
-                        }
-                        ListElement {
-                            text: "한국어" // Korean
-                            val: StreamingPreferences.LANG_KO
-                        }
-                        ListElement {
-                            text: "Magyar" // Hungarian
-                            val: StreamingPreferences.LANG_HU
-                        }
-                        ListElement {
-                            text: "Nederlands" // Dutch
-                            val: StreamingPreferences.LANG_NL
-                        }
-                        ListElement {
-                            text: "Svenska" // Swedish
-                            val: StreamingPreferences.LANG_SV
-                        }
-                        ListElement {
-                            text: "Türkçe" // Turkish
-                            val: StreamingPreferences.LANG_TR
-                        }
-                        /* ListElement {
-                            text: "Українська" // Ukrainian
-                            val: StreamingPreferences.LANG_UK
-                        } */
-                        ListElement {
-                            text: "繁體中文" // Traditional Chinese
-                            val: StreamingPreferences.LANG_ZH_TW
-                        }
-                        ListElement {
-                            text: "Português" // Portuguese
-                            val: StreamingPreferences.LANG_PT
-                        }
-                        /* ListElement {
-                            text: "Português do Brasil" // Brazilian Portuguese
-                            val: StreamingPreferences.LANG_PT_BR
-                        } */
-                        ListElement {
-                            text: "Ελληνικά" // Greek
-                            val: StreamingPreferences.LANG_EL
-                        }
-                        ListElement {
-                            text: "Italiano" // Italian
-                            val: StreamingPreferences.LANG_IT
-                        }
-                        /* ListElement {
-                            text: "हिन्दी, हिंदी" // Hindi
-                            val: StreamingPreferences.LANG_HI
-                        } */
-                        ListElement {
-                            text: "Język polski" // Polish
-                            val: StreamingPreferences.LANG_PL
-                        }
-                        ListElement {
-                            text: "Čeština" // Czech
-                            val: StreamingPreferences.LANG_CS
-                        }
-                        /* ListElement {
-                            text: "עִבְרִית" // Hebrew
-                            val: StreamingPreferences.LANG_HE
-                        } */
-                        /* ListElement {
-                            text: "کرمانجیی خواروو" // Central Kurdish
-                            val: StreamingPreferences.LANG_CKB
-                        } */
-                        /* ListElement {
-                            text: "Lietuvių kalba" // Lithuanian
-                            val: StreamingPreferences.LANG_LT
-                        } */
-                        /* ListElement {
-                            text: "Eesti" // Estonian
-                            val: StreamingPreferences.LANG_ET
-                        } */
-                    }
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        // Retranslating is expensive, so only do it if the language actually changed
-                        var new_language = languageListModel.get(currentIndex).val
-                        if (preferences.language !== new_language) {
-                            preferences.language = languageListModel.get(currentIndex).val
-                            if (!preferences.retranslate()) {
-                                ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
-                            }
-                            else {
-                                // Force the back operation to pop any AppView pages that exist.
-                                // The AppView stops working after retranslate() for some reason.
-                                window.clearOnBack = true
-
-                                // Signal other controls to adjust their text
-                                languageChanged()
-                            }
-                        }
-                    }
-                }
-
-                Label {
-                    width: parent.width
-                    id: uiDisplayModeTitle
-                    enabled: !settingsPage.deviceSettings
-                    text: qsTr("GUI display mode")
-                    font.pointSize: 12
-                    wrapMode: Text.Wrap
-                    visible: SystemProperties.hasDesktopEnvironment
-                }
-
-                AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        if (!visible) {
-                            // Do nothing if the control won't even be visible
-                            return
-                        }
-
-                        var saved_uidisplaymode = preferences.uiDisplayMode
-                        currentIndex = 0
-                        for (var i = 0; i < uiDisplayModeListModel.count; i++) {
-                            var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
-                            if (saved_uidisplaymode === el_uidisplaymode) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-
-                        activated(currentIndex)
-                    }
-
-                    id: uiDisplayModeComboBox
-                    enabled: !settingsPage.deviceSettings
-                    visible: SystemProperties.hasDesktopEnvironment
-                    textRole: "text"
-                    model: ListModel {
-                        id: uiDisplayModeListModel
-                        ListElement {
-                            text: qsTr("Windowed")
-                            val: StreamingPreferences.UI_WINDOWED
-                        }
-                        ListElement {
-                            text: qsTr("Maximized")
-                            val: StreamingPreferences.UI_MAXIMIZED
-                        }   
-                        ListElement {
-                            text: qsTr("Fullscreen")
-                            val: StreamingPreferences.UI_FULLSCREEN
-                        }
-                    }
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        preferences.uiDisplayMode = uiDisplayModeListModel.get(currentIndex).val
-                    }
-                }
 
                 CheckBox {
                     id: connectionWarningsCheck
@@ -1258,7 +1034,7 @@ Flickable {
             id: inputSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Input Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Input Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -1406,7 +1182,7 @@ Flickable {
             id: gamepadSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Gamepad Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Gamepad Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -1481,7 +1257,7 @@ Flickable {
             id: advancedSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"#a6e3c7\">" + qsTr("Advanced Settings") + "</font>"
+            title: "<font color=\"" + ui.accent + "\">" + qsTr("Advanced Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -1665,6 +1441,7 @@ Flickable {
 
                 CheckBox {
                     id: enableMdns
+                    visible: false
                     enabled: !settingsPage.deviceSettings
                     width: parent.width
                     text: qsTr("Automatically find PCs on the local network (Recommended)")

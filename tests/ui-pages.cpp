@@ -1,3 +1,4 @@
+#include <cmath>
 #include <QtTest>
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -27,6 +28,7 @@ public:
     Q_PROPERTY(QString hostName READ hostName CONSTANT)
     QString hostId() const { return "device-a"; }
     QString hostName() const { return "Studio"; }
+    Q_INVOKABLE QVariantMap traffic() const { return {{"received",862000000.0},{"sent",18000000.0}}; }
     int executions = 0;
     QQuickWindow* receivedWindow = nullptr;
     TestSession* next = nullptr;
@@ -55,7 +57,7 @@ public:
         return {{Qt::UserRole,"name"},{Qt::UserRole+1,"hostId"},{Qt::UserRole+2,"online"},
         {Qt::UserRole+3,"paired"},{Qt::UserRole+4,"statusUnknown"},{Qt::UserRole+5,"address"},
         {Qt::UserRole+6,"favorite"},{Qt::UserRole+7,"sourceIndex"},{Qt::UserRole+8,"details"},
-        {Qt::UserRole+9,"serverSupported"},{Qt::UserRole+10,"wakeable"}};
+        {Qt::UserRole+11,"operatingSystem"},{Qt::UserRole+9,"serverSupported"},{Qt::UserRole+10,"wakeable"}};
     }
     QVariant data(const QModelIndex& index,int role) const override {
         const bool first = index.row() == 0;
@@ -68,6 +70,7 @@ public:
         case 6: return first;
         case 7: return first ? 1 : 0;
         case 8: return "Synthetic device details";
+        case 11: return first ? "macOS" : "NixOS";
         default: return {};
         }
     }
@@ -154,7 +157,7 @@ private slots:
 import TestPreferences 1.0
 TestPreferences {
  property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
- property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
+ property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property int language: 1; property int retranslations: 0
  function retranslate() { retranslations++; return true }
  property int width: 2048; property int height: 1152; property int fps: 75; property int bitrateKbps: 125000
@@ -162,11 +165,12 @@ TestPreferences {
  property bool smartStreaming: true; property bool framePacing: false; property bool showPerformanceOverlay: false
  property bool sharedClipboard: false; property bool showLocalCursor: true; property bool adaptiveResolution: true; property bool enableVsync: true; property bool absoluteMouseMode: true; property bool reverseScrollDirection: false
  property bool muteOnFocusLoss: true; property bool playAudioOnHost: false; property bool enableMdns: true; property bool keepAwake: true
+ function forDevice(id) { deviceId = id; return this }
  function save() { saves++ }
 })",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("SystemProperties",1,0,"SystemProperties",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property bool hasBrowser: false; property bool hasDesktopEnvironment: true; property bool isWow64: false; property bool hasHardwareAcceleration: true; property bool isRunningXWayland: false; property string unmappedGamepads: \"\"; property string friendlyNativeArchName: \"test\"; property string versionString: \"test\" }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property bool systemDark: false; property color systemAccent: \"#3269d7\"; property bool hasBrowser: false; property bool hasDesktopEnvironment: true; property bool isWow64: false; property bool hasHardwareAcceleration: true; property bool isRunningXWayland: false; property string unmappedGamepads: \"\"; property string friendlyNativeArchName: \"test\"; property string versionString: \"test\" }",QUrl()); return c.create();
         });
     }
     void continuationDuringNestedEventLoop() {
@@ -394,58 +398,80 @@ ApplicationWindow {
             QCOMPARE(prefs->property("bitrateKbps").toInt(),125000);
             QCOMPARE(prefs->property("saves").toInt(),0);
             if(QString(name)=="SettingsHome") {
-                QObject* choice=page->findChild<QObject*>("resolutionChoice"); QVERIFY(choice);
-                QVERIFY(QMetaObject::invokeMethod(choice,"activated",Q_ARG(int,1)));
-                QCOMPARE(prefs->property("width").toInt(),2560);
-                QCOMPARE(prefs->property("height").toInt(),1440);
-                QCOMPARE(prefs->property("saves").toInt(),1);
-                QObject* sections=page->findChild<QObject*>("settingsSections"); QVERIFY(sections);
-                for(int section=1; section<5; ++section) {
-                    QVERIFY(sections->setProperty("currentIndex",section)); QTest::qWait(20);
-                    QCOMPARE(prefs->property("saves").toInt(),1);
-                    QVERIFY(page->property("contentHeight").toReal() > 0);
-                }
-                QObject* languages=page->findChild<QObject*>("languageChoice"); QVERIFY(languages);
-                QCOMPARE(languages->property("currentIndex").toInt(),1);
-                QVERIFY(QMetaObject::invokeMethod(languages,"activated",Q_ARG(int,1)));
-                QCOMPARE(prefs->property("saves").toInt(),1);
-                QVERIFY(QMetaObject::invokeMethod(languages,"activated",Q_ARG(int,2)));
-                QCOMPARE(prefs->property("language").toInt(),3);
-                QCOMPARE(prefs->property("saves").toInt(),2);
-                QCOMPARE(prefs->property("retranslations").toInt(),1);
-                QObject* cursor=page->findChild<QObject*>("localCursorSwitch"); QVERIFY(cursor);
-                QVERIFY(cursor->setProperty("checked",false));
-                QVERIFY(QMetaObject::invokeMethod(cursor,"clicked"));
-                QVERIFY(!prefs->property("showLocalCursor").toBool());
-                QCOMPARE(prefs->property("saves").toInt(),3);
-                QObject* shared=page->findChild<QObject*>("sharedClipboardSwitch"); QVERIFY(shared);
-                shared->setProperty("checked",true);
-                QVERIFY(QMetaObject::invokeMethod(shared,"clicked"));
-                QVERIFY(prefs->property("sharedClipboard").toBool());
-                QObject* keys=page->findChild<QObject*>("systemKeysChoice"); QVERIFY(keys);
-                QVERIFY(QMetaObject::invokeMethod(keys,"activated",Q_ARG(int,2)));
-                QCOMPARE(prefs->property("captureSysKeysMode").toInt(),2);
-                QCOMPARE(prefs->property("saves").toInt(),5);
-                auto preset=page->findChild<QObject*>("qualityPreset"); QVERIFY(preset);
-                for(int index=1;index<=3;++index) {
-                    QVERIFY(QMetaObject::invokeMethod(preset,"activated",Q_ARG(int,index)));
-                    QCOMPARE(prefs->property("fps").toInt(),index==1 ? 30 : 60);
-                    QCOMPARE(prefs->property("bitrateKbps").toInt(),index==1 ? 10000 : index==2 ? 40000 : 15000);
-                    QCOMPARE(prefs->property("width").toInt(),2560);
-                    QVERIFY(prefs->property("adaptiveResolution").toBool());
-                }
-                auto smart=page->findChild<QObject*>("smartStreamingSwitch"); QVERIFY(smart);
-                smart->setProperty("checked", false);
-                QVERIFY(QMetaObject::invokeMethod(smart,"clicked"));
-                QVERIFY(!prefs->property("smartStreaming").toBool());
+                QVERIFY(!page->findChild<QObject*>("resolutionChoice"));
+                QVERIFY(!page->findChild<QObject*>("settingsSections"));
                 auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
                 QVERIFY(QMetaObject::invokeMethod(themeChoice,"activated",Q_ARG(int,2)));
                 QCOMPARE(prefs->property("uiTheme").toInt(),2);
-                QCOMPARE(prefs->property("saves").toInt(),10);
+                auto accent=page->findChild<QObject*>("accentChoice"); QVERIFY(accent);
+                QVERIFY(QMetaObject::invokeMethod(accent,"activated",Q_ARG(int,3)));
+                QCOMPARE(prefs->property("uiAccent").toInt(),3);
+                auto traffic=page->findChild<QObject*>("showTrafficSwitch"); QVERIFY(traffic);
+                traffic->setProperty("checked",false);
+                QVERIFY(QMetaObject::invokeMethod(traffic,"clicked"));
+                QVERIFY(!prefs->property("showTraffic").toBool());
+                QCOMPARE(prefs->property("bitrateKbps").toInt(),125000);
+                QObject* languages=page->findChild<QObject*>("languageChoice"); QVERIFY(languages);
+                QVERIFY(QMetaObject::invokeMethod(languages,"activated",Q_ARG(int,2)));
+                QCOMPARE(prefs->property("language").toInt(),3);
+                QCOMPARE(prefs->property("retranslations").toInt(),1);
+
             }
         }
         const auto bad=warnings.filter(QRegularExpression("ReferenceError|TypeError|binding loop|Binding loop|Cannot assign|Unable to assign|Missing parent|Component is not ready"));
         QVERIFY2(bad.isEmpty(),qPrintable(bad.join('\n')));
+    }
+    void themeFollowsSystemAndAllowsIndependentOverrides() {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(component.create()); QVERIFY(theme);
+        theme->setProperty("systemDark",true); QVERIFY(theme->property("dark").toBool());
+        theme->setProperty("mode",1); QVERIFY(!theme->property("dark").toBool());
+        theme->setProperty("mode",2); theme->setProperty("systemDark",false); QVERIFY(theme->property("dark").toBool());
+        theme->setProperty("mode",0); QVERIFY(!theme->property("dark").toBool());
+        theme->setProperty("systemAccent",QColor("#8055bf"));
+        QCOMPARE(theme->property("baseAccent").value<QColor>(),QColor("#8055bf"));
+        theme->setProperty("accentMode",1);
+        auto fixed=theme->property("baseAccent");
+        theme->setProperty("systemAccent",QColor("#23754f")); QCOMPARE(theme->property("baseAccent"),fixed);
+        for(int mode=1;mode<=2;++mode) for(int accent=0;accent<=4;++accent) {
+            theme->setProperty("mode",mode); theme->setProperty("accentMode",accent);
+            auto color=theme->property("accent").value<QColor>();
+            auto text=theme->property("accentText").value<QColor>();
+            auto luminance=[](QColor c) {
+                auto f=[](double v){ return v<=0.04045 ? v/12.92 : std::pow((v+0.055)/1.055,2.4); };
+                return 0.2126*f(c.redF())+0.7152*f(c.greenF())+0.0722*f(c.blueF());
+            };
+            double a=luminance(color),b=luminance(text);
+            QVERIFY((qMax(a,b)+0.05)/(qMin(a,b)+0.05)>=4.5);
+        }
+    }
+    void deviceSettingsAreSeparate() {
+        QQmlEngine engine;
+        const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        engine.rootContext()->setContextProperty("ui",theme.data());
+        QQmlComponent accessComponent(&engine);
+        accessComponent.setData("import QtQuick 2.9; import StreamingPreferences 1.0; QtObject { property var prefs: StreamingPreferences }",QUrl());
+        QScopedPointer<QObject> access(accessComponent.create());
+        auto prefs=access->property("prefs").value<QObject*>(); QVERIFY(prefs);
+        prefs->setProperty("deviceId","synthetic-device");
+        engine.rootContext()->setContextProperty("testPrefs",prefs);
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.9; DeviceSettings { preferences: testPrefs; deviceName: \"Studio\" }",QUrl::fromLocalFile(gui+"/device-test.qml"));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
+        QVERIFY(!page->findChild<QObject*>("themeChoice"));
+        auto mode=page->findChild<QObject*>("devicePictureMode"); QVERIFY(mode);
+        QCOMPARE(prefs->property("saves").toInt(),0);
+        QVERIFY(QMetaObject::invokeMethod(mode,"activated",Q_ARG(int,3)));
+        QCOMPARE(prefs->property("fps").toInt(),30);
+        QCOMPARE(prefs->property("bitrateKbps").toInt(),5000);
+        QVERIFY(!prefs->property("smartStreaming").toBool());
+        QVERIFY(QMetaObject::invokeMethod(mode,"activated",Q_ARG(int,0)));
+        QVERIFY(prefs->property("smartStreaming").toBool());
+        QCOMPARE(prefs->property("uiTheme").toInt(),0);
+        QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }
     void navigationAndDeviceIdentity() {
         QTemporaryDir directory;
@@ -467,6 +493,7 @@ ApplicationWindow {
  function testSettings() { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
  function testSharing() { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
  function testGrid() { return stackView.currentItem }
+ function testDevice() { stackView.push("qrc:/gui/DeviceSettings.qml", {preferences: StreamingPreferences.forDevice("device-a"), deviceName: "Studio"}, StackView.Immediate) }
  function testCards() { StreamingPreferences.compactDevices = false }
  function testSameSettings() { navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
  property alias testDepth: stackView.depth
@@ -474,7 +501,7 @@ ApplicationWindow {
 )");
         QStringList warnings;
         connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
-        QQmlComponent component(&engine); component.setData(qml,QUrl("qrc:/gui/main-test.qml"));
+        QQmlComponent component(&engine); component.setData(qml,QUrl("qrc:/gui/main.qml"));
         QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
         auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
         window->resize(800,620); window->show(); QTest::qWait(100);
@@ -540,8 +567,8 @@ ApplicationWindow {
             auto choice=settings->findChild<QObject*>("themeChoice"); QVERIFY(choice);
             QVERIFY(QMetaObject::invokeMethod(choice,"activated",Q_ARG(int,2)));
             QTest::qWait(100); QVERIFY(window->grabWindow().save(shots+"/settings-dark.png"));
-            auto sections=settings->findChild<QObject*>("settingsSections"); QVERIFY(sections);
-            sections->setProperty("currentIndex",5);
+            auto accent=settings->findChild<QObject*>("accentChoice"); QVERIFY(accent);
+            QVERIFY(QMetaObject::invokeMethod(accent,"activated",Q_ARG(int,3)));
             QTest::qWait(100); QVERIFY(window->grabWindow().save(shots+"/appearance-dark.png"));
             QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
             window->resize(1120,760); QTest::qWait(100);
@@ -552,11 +579,18 @@ ApplicationWindow {
             QVERIFY(!current->property("compact").toBool());
             QVERIFY(window->grabWindow().save(shots+"/cards-dark.png"));
             window->resize(640,620); QTest::qWait(100);
-            QVERIFY(current->property("compact").toBool());
+            QVERIFY(!current->property("compact").toBool());
             QTranslator chinese;
             QVERIFY(chinese.load(qEnvironmentVariable("TEST_GUI_DIR")+"/../languages/qml_zh_CN.qm"));
             QVERIFY(QCoreApplication::installTranslator(&chinese)); engine.retranslate();
             QTest::qWait(100); QVERIFY(window->grabWindow().save(shots+"/devices-chinese-narrow.png"));
+            QVERIFY(QMetaObject::invokeMethod(root.data(),"testDevice"));
+            QTest::qWait(150); QVERIFY(window->grabWindow().save(shots+"/device-settings-chinese.png"));
+            auto devicePage=root->property("testCurrentPage").value<QObject*>(); QVERIFY(devicePage);
+            auto advanced=devicePage->findChild<QObject*>("deviceAdvancedButton"); QVERIFY(advanced);
+            QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
+            QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/device-advanced-chinese.png"));
+
             QCoreApplication::removeTranslator(&chinese); engine.retranslate();
         }
         emit session.sessionFinished(0);
@@ -581,19 +615,15 @@ ApplicationWindow {
         QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
         const QString english=page->property("heading").toString();
         QCOMPARE(english,QString("Make DeskPort your own."));
-        auto windowMode=page->findChild<QObject*>("windowModeChoice"); QVERIFY(windowMode);
-        auto systemKeys=page->findChild<QObject*>("systemKeysChoice"); QVERIFY(systemKeys);
-        auto sections=page->findChild<QObject*>("settingsSections"); QVERIFY(sections);
-        sections->setProperty("currentIndex",4);
+        auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
+        QVERIFY(!page->findChild<QObject*>("windowModeChoice"));
         for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es"}) {
             QTranslator translator;
             QVERIFY(translator.load(gui+"/../languages/qml_"+language+".qm"));
             QVERIFY(QCoreApplication::installTranslator(&translator));
             engine.retranslate();
             QVERIFY(page->property("heading").toString()!=english);
-            QCOMPARE(windowMode->property("currentIndex").toInt(),2);
-            QCOMPARE(systemKeys->property("currentIndex").toInt(),1);
-            QCOMPARE(sections->property("currentIndex").toInt(),4);
+            QCOMPARE(themeChoice->property("currentIndex").toInt(),0);
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Match the client window resolution").isEmpty());
             QVERIFY(!translator.translate("HostView","Built-in virtual display").isEmpty());

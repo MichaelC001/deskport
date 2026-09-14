@@ -1,6 +1,9 @@
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
+#define DP_TRAFFIC_IMPLEMENTATION
+#include "../../moonlight-common-c/traffic.h"
+#include "backend/clipboardtraffic.h"
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
 #endif
@@ -570,6 +573,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
+    m_TrafficReceivedBase = DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed);
+    m_TrafficSentBase = DpTrafficSent() + DeskPortTraffic::clipboardSent().load(std::memory_order_relaxed);
     connect(this, &Session::readyForDeletion, this, [this] {
         m_Lifetime.cleanupFinished();
     }, Qt::QueuedConnection);
@@ -626,6 +631,8 @@ Session* Session::adaptiveContinuation() {
     if (m_ManualReconnect) {
         // Read the saved device profile only after the old transport is stopped.
         auto next = new Session(m_Computer, m_App);
+        next->m_TrafficReceivedBase = m_TrafficReceivedBase;
+        next->m_TrafficSentBase = m_TrafficSentBase;
         next->m_ManualResume = true;
         if (next->m_Preferences->adaptiveResolution) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
         else m_AdaptiveDisplay.reset();
@@ -644,6 +651,8 @@ Session* Session::adaptiveContinuation() {
     next->m_AdaptiveScale = m_AdaptiveScale;
     next->m_AdaptiveMaximized = m_AdaptiveMaximized;
     next->m_IsFullScreen = m_IsFullScreen;
+    next->m_TrafficReceivedBase = m_TrafficReceivedBase;
+    next->m_TrafficSentBase = m_TrafficSentBase;
     next->m_AdaptiveResume = true;
     deskportResizeStage("continuation");
     return next;
@@ -2792,3 +2801,8 @@ DispatchDeferredCleanup:
 
 QString Session::hostId() const { QReadLocker lock(&m_Computer->lock); return m_Computer->uuid; }
 QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return m_Computer->name; }
+
+QVariantMap Session::traffic() const {
+    return {{"received", double(DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed) - m_TrafficReceivedBase)},
+            {"sent", double(DpTrafficSent() + DeskPortTraffic::clipboardSent().load(std::memory_order_relaxed) - m_TrafficSentBase)}};
+}

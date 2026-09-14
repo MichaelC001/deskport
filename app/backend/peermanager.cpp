@@ -1,4 +1,5 @@
 #include "peermanager.h"
+#include <QSysInfo>
 #include "peerstore.h"
 #include "clipboardprotocol.h"
 #ifdef Q_OS_MACOS
@@ -245,6 +246,7 @@ QJsonObject PeerManager::metadata() const {
     auto meta = m_Host->identity();
     meta["name"] = QHostInfo::localHostName().left(64);
     meta["dnsName"] = dnsName(QHostInfo::localHostName());
+    meta["os"] = QSysInfo::prettyProductName();
     meta["version"] = 1;
     meta["clientBinding"] = 1;
     meta["endpointRefresh"] = 1;

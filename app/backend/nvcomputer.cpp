@@ -26,6 +26,7 @@
 NvComputer::NvComputer(QSettings& settings)
 {
     this->name = settings.value(SER_NAME).toString();
+    this->operatingSystem = settings.value("operatingSystem").toString();
     this->uuid = settings.value(SER_UUID).toString();
     this->hasCustomName = settings.value(SER_CUSTOMNAME).toBool();
     this->macAddress = settings.value(SER_MAC).toByteArray();
@@ -79,6 +80,7 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     QReadLocker lock(&this->lock);
 
     settings.setValue(SER_NAME, name);
+    settings.setValue("operatingSystem", operatingSystem);
     settings.setValue(SER_CUSTOMNAME, hasCustomName);
     settings.setValue(SER_UUID, uuid);
     settings.setValue(SER_MAC, macAddress);
@@ -107,7 +109,7 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
 
 bool NvComputer::isEqualSerialized(const NvComputer &that) const
 {
-    return this->name == that.name &&
+    return this->operatingSystem == that.operatingSystem && this->name == that.name &&
            this->hasCustomName == that.hasCustomName &&
            this->uuid == that.uuid &&
            this->macAddress == that.macAddress &&
@@ -130,6 +132,7 @@ void NvComputer::sortAppList()
 NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
 {
     this->serverCert = http.serverCert();
+    this->operatingSystem = NvHTTP::getXmlString(serverInfo, "DeskPortOS").left(80);
 
     this->hasCustomName = false;
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
@@ -547,6 +550,7 @@ bool NvComputer::update(const NvComputer& that)
         // Only overwrite the name if it's not custom
         ASSIGN_IF_CHANGED(name);
     }
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(operatingSystem);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
     ASSIGN_IF_CHANGED_AND_NONNULL(localAddress);
     ASSIGN_IF_CHANGED_AND_NONNULL(remoteAddress);

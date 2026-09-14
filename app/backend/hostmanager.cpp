@@ -1,3 +1,4 @@
+#include <QSysInfo>
 #include "hostmanager.h"
 #include "workspaceresolution.h"
 #include "peerstore.h"
@@ -322,10 +323,15 @@ void HostManager::startServer(int displayId) {
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_CAPTURE_DISPLAY", QString::number(displayId));
     hostEnvironment.insert("DESKPORT_SMART_STREAMING", "1");
+    hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
     m_Server.setProcessEnvironment(hostEnvironment);
     m_Credentials.setProcessEnvironment(hostEnvironment);
 #else
     Q_UNUSED(displayId);
+    auto hostEnvironment = QProcessEnvironment::systemEnvironment();
+    hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
+    m_Server.setProcessEnvironment(hostEnvironment);
+    m_Credentials.setProcessEnvironment(hostEnvironment);
 #endif
 #ifdef Q_OS_LINUX
     // Capture the existing desktop; Linux virtual displays are a separate milestone.

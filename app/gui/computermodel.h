@@ -21,6 +21,7 @@ class ComputerModel : public QAbstractListModel
         HostIdRole,
         FavoriteRole,
         SourceIndexRole,
+        OperatingSystemRole,
         DetailsRole
     };
 

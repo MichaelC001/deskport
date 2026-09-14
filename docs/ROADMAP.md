@@ -1,3 +1,24 @@
+## Device-first desktop UI (0.2.7, 2026-09-14)
+
+Reason: make connecting the primary action and remove connection parameters from
+application preferences. Devices use cards with bundled OS marks. Each device
+owns its basic picture/audio/input controls and deeper streaming settings.
+Application settings contain appearance, language and the optional usage display.
+System color scheme and accent are followed independently, with manual light/dark
+and blue/green/purple/orange overrides. Accent contrast is adjusted for legibility.
+
+The sidebar keeps navigation, the current session, optional measured transfer
+usage and local sharing/settings. Counters cover client media/control socket I/O
+and clipboard payloads, not carrier billing or all host-process traffic. Adaptive
+and manual continuations preserve the session baseline. OS metadata is advertised
+by the bundled host so saved devices gain marks after upgrading and polling,
+without pairing again; unsupported hosts retain a generic computer mark.
+
+Checkpoint: isolated QML navigation/screenshots, theme and setting isolation,
+loopback socket accounting, clipboard/binding regression, macOS distribution and
+Linux x86_64 Nix build. Next action: user activation and real cross-platform theme,
+connection and hotspot-usage acceptance. See RELEASE_0.2.7.md.
+
 ## Background Mac clipboard observation (0.2.6, 2026-09-14)
 
 Reason: Qt Cocoa clipboard dataChanged only observes external copies on app

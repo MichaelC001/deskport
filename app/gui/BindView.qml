@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import StreamingPreferences 1.0
 
 UiPage {
     id: page
@@ -60,6 +61,7 @@ UiPage {
             anchors.fill: parent; spacing: 10
             Label { text: qsTr("Connecting another way?"); color: ui.text; font.pixelSize: 17; font.weight: Font.DemiBold }
             Label { text: qsTr("For a custom binding port, enter address:port. Moonlight and independent Sunshine hosts use legacy pairing instead."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Switch { text: qsTr("Discover nearby devices"); checked: StreamingPreferences.enableMdns; onClicked: { StreamingPreferences.enableMdns = checked; StreamingPreferences.save() } }
             UiButton { text: qsTr("Add a legacy host"); onClicked: addPcDialog.open() }
         }
     }

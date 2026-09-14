@@ -108,6 +108,7 @@ public:
     NvAddress manualAddress;
     QByteArray macAddress;
     QString name;
+    QString operatingSystem;
     bool hasCustomName;
     QString uuid;
     QSslCertificate serverCert;
