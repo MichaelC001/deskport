@@ -1016,3 +1016,9 @@ No release, mynix update or deployed-service change is included in this slice.
 ## 2026-09-14 — 0.3.0 stable release
 
 User requested merging the session-settings branch into main and publishing the full existing Mac/Linux package matrix. Release verification is recorded in docs/RELEASE_0.3.0.md and the release verification asset; physical streaming acceptance remains separate.
+
+## 2026-09-15 — disposable macOS VM verification
+
+Create one disk-budgeted macOS 26 guest for release package/GUI smoke checks.
+See [MACOS_VM_TESTING.md](MACOS_VM_TESTING.md). Physical streaming acceptance
+remains separate; no host installation or service changes are implied.
