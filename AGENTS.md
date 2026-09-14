@@ -32,3 +32,17 @@
 - Performance/test prereleases target only mm4 (macOS arm64 signed/notarized package)
   and pk4 (NixOS x86_64 flake build). Do not build or upload other platform or
   distribution formats for these prereleases unless the user explicitly requests them.
+
+## DeskPort release and activation workflow — 2026-09-14
+
+- Required order: build and verify DeskPort, publish a GitHub prerelease, then
+  update and push mynix with the release URL/version/hash and pinned source.
+- The user manually runs `rebuild switch` to activate the update. Wait for the
+  user to confirm activation before checking the deployed version or live behavior.
+- Never directly replace `/Applications/DeskPort.app`, use administrator prompts
+  to install it, run `rebuild switch`, or stop/restart deployed DeskPort services
+  as part of a release. A request to develop, test, publish or update mynix does
+  not authorize those deployment actions.
+- macOS arm64 and NixOS x86_64 are the prerelease targets unless explicitly changed.
+- Explicit installation of the mobile client to the user's iPad is separate from
+  the desktop host release/activation flow and does not authorize a host update.

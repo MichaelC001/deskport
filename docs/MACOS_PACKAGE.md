@@ -1,5 +1,15 @@
 # macOS all-in-one package
 
+## Required activation workflow (2026-09-14)
+
+Build and verify, publish a GitHub prerelease, then update and push the consuming
+mynix release URL/hash and source pin. The user runs `rebuild switch` manually.
+Do not replace the installed application, request administrator installation,
+run switch or restart deployed services as part of publishing an update. The
+manual installation/recovery examples below are historical or for a separately
+authorized recovery; they do not override this workflow. Verify live behavior
+after the user confirms activation.
+
 ## Developer ID distribution
 
 Verified 2026-09-13: the 0.2.0 distribution passed Developer ID checks
