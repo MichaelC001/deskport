@@ -28,3 +28,9 @@ large-transfer native clipboard performance from loopback tests alone.
 Qt/SDL clipboards and pinned loopback TLS. It covers Unicode, the maximum boundary
 in both directions, overflow rejection, legacy negotiation defaults, ordering,
 exclusive access and authentication failures. It never reads the user's clipboard.
+
+Unsupported native offers are skipped without closing the text channel. Content
+notices expire after five seconds; a native read failure must not prevent reply
+processing or host polling. A later remote text copy can replace an unchanged
+non-text offer; a newer local copy still protects against stale in-flight replies.
+Transport/authentication failures remain errors and are not hidden as content skips.

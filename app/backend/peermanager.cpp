@@ -479,7 +479,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         // Host revision is authoritative: an intervening host copy wins a concurrent copy.
         if (message["rev"].toInt() != link->clipboardRevision) {
             if (supported) reply["text"] = encoded;
-            else reply["error"] = QStringLiteral("Clipboard content is unsupported or exceeds the negotiated %1 MiB text limit.").arg(link->clipboardMaxText / (1024 * 1024));
+            else reply["error"] = QStringLiteral("This remote copy is not supported text or exceeds the %1 MiB limit and was skipped. Text sharing remains active.").arg(link->clipboardMaxText / (1024 * 1024));
         } else if (message.contains("text")) {
             QString text;
             if (!DeskPortClipboard::decode(message["text"], text, link->clipboardMaxText)) {

@@ -1,3 +1,16 @@
+## Clipboard content skip recovery (0.2.5, 2026-09-14)
+
+Reason: unsupported clipboard notices could remain indefinitely, while native
+clipboard read failures returned before processing replies or polling the host.
+Skip the affected copy without starving the authenticated channel. Expire content
+notices after five seconds; later text copies continue in both directions.
+Do not treat transport/authentication failures as successful sharing.
+
+Checkpoint: isolated SDL/Qt clipboard recovery after non-text, image and file
+offers, notice expiry, bidirectional text, plus existing Unicode/size/order tests.
+Next action: user activation followed by native image/file-to-text copying on
+both desktops. The visual workspace sizing from 0.2.4 is unchanged.
+
 ## Fractional-scale workspace preview (0.2.4, 2026-09-14)
 
 Reason: a 150% client received a pixel-matched 2x Mac desktop, making remote UI

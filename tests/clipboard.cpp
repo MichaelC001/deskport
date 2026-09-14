@@ -144,7 +144,7 @@ private slots:
             ClipboardSync sync(create(a, credential("TEST_KEY_A"), b));
             auto pump = [&](const std::function<bool()>& done) {
                 QElapsedTimer wait; wait.start();
-                do { sync.tick(); QTest::qWait(10); } while (!done() && wait.elapsed() < 5000);
+                do { sync.tick(); QTest::qWait(10); } while (!done() && wait.elapsed() < 7000);
                 return done();
             };
             QElapsedTimer baseline; baseline.start();
@@ -160,6 +160,38 @@ private slots:
                 QVERIFY(pump([&] { return localText() == fromHost; }));
             }
             QVERIFY(sync.status().isEmpty());
+            // SDL dummy exposes non-text/empty offers as no text. The notice
+            // must expire while the same authenticated channel keeps polling.
+            const auto previous = localText();
+            SDL_SetClipboardText(""); sync.clipboardChanged();
+            QVERIFY(pump([&] { return !sync.status().isEmpty(); }));
+            QVERIFY(sync.status().contains("remains active"));
+            QCOMPARE(clipboard->text(), previous); // Never clear remote text.
+            QVERIFY(pump([&] { return sync.status().isEmpty(); }));
+            SDL_SetClipboardText(previous.toUtf8().constData()); sync.clipboardChanged();
+            QElapsedTimer settle; settle.start();
+            QVERIFY(pump([&] { return settle.elapsed() > 1000; }));
+            QCOMPARE(localText(), previous); QVERIFY(sync.status().isEmpty());
+            SDL_SetClipboardText(""); sync.clipboardChanged();
+            QVERIFY(pump([&] { return !sync.status().isEmpty(); }));
+            settle.restart(); QVERIFY(pump([&] { return settle.elapsed() > 1000; }));
+            clipboard->setText("host text after local non-text");
+            QVERIFY(pump([&] { return localText() == "host text after local non-text" && sync.status().isEmpty(); }));
+            // Real host MIME offers cover both unsupported images and files.
+            // Following text copies must work in both directions without reconnect.
+            for (bool file : {false, true}) {
+                auto unsupported = new QMimeData;
+                if (file) unsupported->setUrls({QUrl("file:///synthetic-not-read.txt")});
+                else unsupported->setData("image/png", "synthetic image");
+                clipboard->setMimeData(unsupported);
+                QVERIFY(pump([&] { return !sync.status().isEmpty(); }));
+                const QString remote = file ? "text after host file" : "text after host image";
+                clipboard->setText(remote);
+                QVERIFY(pump([&] { return localText() == remote && sync.status().isEmpty(); }));
+                const QString local = remote + " back to host";
+                SDL_SetClipboardText(local.toUtf8().constData()); sync.clipboardChanged();
+                QVERIFY(pump([&] { return clipboard->text() == local; }));
+            }
         }
         SDL_Quit();
     }
