@@ -1012,3 +1012,7 @@ No release, mynix update or deployed-service change is included in this slice.
   the virtual display. Only one display request is in flight.
 - Validate with isolated lifecycle/UI/resize checks and both target builds.
   Real tray-during-connect and continuous-resize acceptance follows manual activation.
+
+## 2026-09-14 — 0.3.0 stable release
+
+User requested merging the session-settings branch into main and publishing the full existing Mac/Linux package matrix. Release verification is recorded in docs/RELEASE_0.3.0.md and the release verification asset; physical streaming acceptance remains separate.
