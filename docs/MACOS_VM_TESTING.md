@@ -55,7 +55,10 @@ image by digest, configures CPU/RAM and removes the private image cache. Interru
 image downloads can be resumed by rerunning bootstrap. A file lock rejects concurrent bootstraps/VM starts.
 
 `start` is deliberately foreground and supervised. It disables host audio and
-clipboard sharing and uses host-only networking. Only `input` (read-only) and
+clipboard sharing. Boot uses Tart's default NAT; the guest test disables Ethernet
+before starting DeskPort. The `--net-host` option in Tart 2.37.0 requires the
+additional Softnet helper, so this lab does not use it or install a privileged
+network helper. Only `input` (read-only) and
 `results` (writable) are mounted. Never share the user's home, SSH keys, signing
 keychain, work repositories or personal clipboard with this guest.
 
@@ -93,14 +96,14 @@ python3 scripts/macos-vm.py stop
 
 The guest script refuses to run unless `kern.hv_vmm_present` is 1 and the
 dedicated VirtioFS share/marker exists.
-It tests a fresh installation, Developer ID identity, CLI version/help, three GUI
+It tests a fresh installation, Developer ID identity, offline Gatekeeper assessment, CLI version/help, three GUI
 starts, visible window geometry, duplicate activation and forced-exit recovery. It writes `latest.log`,
 `version.txt`, `help.txt`, `STATUS.txt` and, if guest permissions permit,
 `desktop.png` and three `window-*.json` reports to the results share. A process being alive alone does not prove the
 window rendered correctly: inspect the screenshot separately. Screenshot failure
 is reported explicitly and is not silently counted as visual acceptance.
 
-The first smoke script is pinned to DeskPort 0.3.0. Update its expected version and
+The initial test lock is pinned to DeskPort 0.3.0. Update its expected version and
 input checksum in `macos-vm-lock.json` deliberately when validating another release. Installation tests do
 not authorize modifying the development host's application or running services.
 
@@ -121,6 +124,32 @@ change the host login keychain or grant broad local-network exemptions.
 
 ## Verification record
 
-2026-09-15: environment creation in progress. Final measured disk usage and guest
-results will be added after the first complete run. A downloaded image or successful
-boot is not by itself a passed package/UI test.
+2026-09-15: the pinned image booted successfully as macOS 26.6.2 (25G83),
+VirtualMac2,1, ARM64. The VM has 4 vCPUs, 8 GiB RAM and a 50,000,000,000-byte
+logical disk. The downloaded OCI cache was pruned to zero. After boot, APFS trim
+reduced the complete lab to about 30.03 GiB, leaving 143.65 GiB free on the host.
+The guest is stopped, its cache is empty and the test installation has been removed.
+Local reports are under `~/Library/DeskPortVM.noindex/results`; the overall status
+is `BLOCKED_GATEKEEPER_POLICY`, not PASS.
+
+- CI [34870681467](https://github.com/keithxc/deskport/actions/runs/34870681467)
+  passed the Nix build, CLI identity, streaming/translation checks and disk-guard tests.
+- The guest installed the checksum-matched 0.3.0 ZIP and passed Developer ID
+  signature, CLI version/help, three visible-window starts, direct duplicate
+  executable handoff and forced-exit/restart checks.
+- Screenshot inspection found the first-run Local Network permission prompt.
+  A visible application underneath a modal is not full interactive UI acceptance.
+- The base image initially had Gatekeeper disabled. That initial assessment was
+  discarded as security evidence. Enabling assessments revealed an **App Store
+  only** source policy: the notarized package is correctly rejected under that
+  policy, both offline and online. This is not evidence of a signature failure.
+- Standard third-party package validation requires Gatekeeper enabled with
+  **App Store and identified developers** allowed. Confirm this guest-only
+  initialization setting before proceeding; do not disable Gatekeeper to pass.
+  The development host's security policy was not changed.
+
+The storage guard refused an oversized synthetic writer and prevented starting
+a child under simulated low-space conditions. The guest-only marker check was
+corrected to accept Apple's actual `AppleVirtIOFS` filesystem label. Stop waits
+for the runner's lock to be released, and successful tests must explicitly remove
+the test installation before writing PASS.

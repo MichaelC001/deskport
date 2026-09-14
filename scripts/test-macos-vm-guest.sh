@@ -6,7 +6,7 @@ results='/Volumes/My Shared Files/results'
 [[ -f "$input/DESKPORT_VM_TEST_ONLY" ]] || { echo 'Missing guest-only marker'; exit 1; }
 # A hypervisor and VirtioFS shared marker are required: refuse the development host.
 [[ $(/usr/sbin/sysctl -n kern.hv_vmm_present) == 1 ]]
-/sbin/mount | /usr/bin/grep -F ' on /Volumes/My Shared Files ' | /usr/bin/grep -q virtiofs
+/sbin/mount | /usr/bin/grep -F ' on /Volumes/My Shared Files ' | /usr/bin/grep -iq virtiofs
 /bin/rm -f "$results/STATUS.txt" "$results/desktop.png"
 exec > >(tee "$results/latest.log") 2>&1
 printf 'Guest OS: '; sw_vers -productVersion
@@ -39,6 +39,10 @@ export XDG_CACHE_HOME="$HOME/deskport-vm-test/cache"
 /usr/bin/codesign --verify --deep --strict "$app"
 /usr/bin/codesign --verify --strict -R '=identifier "io.github.keithxc.DeskPort" and anchor apple generic and certificate leaf[subject.OU] = "NP7DKCZ56N"' "$app"
 echo 'PASS: clean guest installation and Developer ID signature'
+sudo -n /usr/sbin/spctl --global-enable
+[[ $(/usr/sbin/spctl --status) == "assessments enabled" ]]
+/usr/sbin/spctl --assess --type execute --verbose=2 "$app" > "$results/gatekeeper.txt" 2>&1
+echo 'PASS: offline guest Gatekeeper assessment'
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
 expected=$(cat "$input/expected-version.txt")
 [[ "$version" == "$expected" ]]
@@ -85,4 +89,8 @@ for cycle in 1 2 3; do
 done
 echo 'PASS: three cold GUI starts, duplicate activations and crash/restart cycles'
 echo 'Not tested: live streaming, GPU codec performance, capture/input permissions or physical devices.'
+cleanup
+trap - EXIT
+[[ ! -e "$app" ]]
+echo 'PASS: test installation removed'
 printf 'PASS\n' > "$results/STATUS.txt"

@@ -129,7 +129,16 @@ def main():
     if args.action == 'test':
         package_test(args.arguments); return
     if args.action == 'stop':
-        tart('stop', NAME); return
+        tart('stop', NAME)
+        # Wait for the supervised runner to release its operation lock.
+        with (LAB / 'operation.lock').open('a') as handle:
+            for attempt in range(30):
+                try:
+                    fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    return
+                except BlockingIOError:
+                    time.sleep(1)
+        raise RuntimeError('VM stopped but its runner has not released the lock')
     # One storage-mutating operation at a time. Stop/exec/status remain available.
     lockfile = None
     if args.action in ('bootstrap', 'start', 'prune'):
@@ -165,11 +174,15 @@ def main():
         guard()
         print(json.dumps(status(), indent=2))
     elif args.action == 'start':
+        disk = LAB / 'tart/vms' / NAME / 'disk.img'
+        if not disk.is_file() or disk.stat().st_size > LOCK['virtual_disk_bytes']:
+            raise RuntimeError('Missing VM disk or disk enlarged beyond the locked 50 GB limit')
         for directory in ('input', 'results'):
             (LAB / directory).mkdir(exist_ok=True)
-        # Host-only network; only public test inputs and an empty results directory shared.
+        # Boot uses Tart's NAT; the guest test disables Ethernet before app launch.
         # No host microphone, clipboard, home directory or credentials exposed.
-        supervised(['run', NAME, '--no-graphics', '--no-audio', '--no-clipboard', '--net-host',
+        graphics = [] if '--graphics' in args.arguments else ['--no-graphics']
+        supervised(['run', NAME, *graphics, '--no-audio', '--no-clipboard',
                     '--dir', 'input:' + str(LAB / 'input') + ':ro',
                     '--dir', 'results:' + str(LAB / 'results')])
     elif args.action == 'exec':
