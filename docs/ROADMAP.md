@@ -1,3 +1,18 @@
+## Background Mac clipboard observation (0.2.6, 2026-09-14)
+
+Reason: Qt Cocoa clipboard dataChanged only observes external copies on app
+activation. A background host cached its previous snapshot, so client-to-host
+worked while host-to-client copies were missed. Poll NSPasteboard changeCount
+on authenticated clipboard requests and refresh Qt MIME data only when changed.
+The counter does not fetch contents; idle text is not repeatedly encoded.
+
+Checkpoint: native external-process writes to a unique named pasteboard without
+activation; authenticated clipboard integration with Qt notifications suppressed,
+including image/file-to-text recovery. Existing tests had only in-process Qt
+copies and did not establish native background correctness.
+Next action: manual two-sided activation and reverse copy from ordinary Mac apps
+while DeskPort stays in the background. Media/HiDPI behavior is unchanged.
+
 ## Clipboard content skip recovery (0.2.5, 2026-09-14)
 
 Reason: unsupported clipboard notices could remain indefinitely, while native

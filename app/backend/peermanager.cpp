@@ -1,6 +1,9 @@
 #include "peermanager.h"
 #include "peerstore.h"
 #include "clipboardprotocol.h"
+#ifdef Q_OS_MACOS
+#include "macclipboard.h"
+#endif
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QMimeData>
@@ -61,6 +64,7 @@ struct PeerManager::Link : QObject {
     QString clipboardText, clipboardEncoded;
     int clipboardMaxText = DeskPortClipboard::LegacyMaxText;
     bool clipboardSupported = false, clipboardIsText = false, clipboardDirty = true;
+    qint64 clipboardNativeRevision = -1;
     int clipboardRevision = 0, clipboardSequence = 0;
     qint64 lastClipboardRequest = 0;
     bool displayControl = false;
@@ -68,6 +72,15 @@ struct PeerManager::Link : QObject {
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
 };
+qint64 PeerManager::nativeClipboardRevision() const {
+#ifdef Q_OS_MACOS
+    // Offscreen tests must never touch the user's native clipboard.
+    if (QGuiApplication::platformName() == QStringLiteral("cocoa"))
+        return deskPortClipboardChangeCount();
+#endif
+    return -1;
+}
+
 PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                          const QString& directory, quint16 port, const QHostAddress& listenAddress)
     : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
@@ -439,6 +452,13 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         auto clipboard = QGuiApplication::clipboard();
         if (type == "clipboard-start")
             link->clipboardMaxText = DeskPortClipboard::negotiatedLimit(message["maxText"]);
+        // Cocoa dataChanged is activation-dependent. Poll only the cheap native
+        // generation while sharing, then let Qt synchronize MIME data on change.
+        const auto nativeRevision = nativeClipboardRevision();
+        if (nativeRevision >= 0 && nativeRevision != link->clipboardNativeRevision) {
+            link->clipboardNativeRevision = nativeRevision;
+            link->clipboardDirty = true;
+        }
         bool isText = link->clipboardIsText;
         QString current = link->clipboardText;
         if (link->clipboardDirty) {

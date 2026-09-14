@@ -14,6 +14,13 @@
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
 }
+class RevisionPeerManager : public PeerManager {
+public:
+    using PeerManager::PeerManager;
+    qint64 nativeRevision = 0;
+protected:
+    qint64 nativeClipboardRevision() const override { return nativeRevision; }
+};
 class ClipboardTests : public QObject {
     Q_OBJECT
 private slots:
@@ -50,7 +57,7 @@ private slots:
         QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json", {{"version", 1}, {"peers", QJsonObject{
             {fp, QJsonObject{{"ready", true}, {"granted", true}}}}}}));
         HostManager host(nullptr, dir.path()+"/host");
-        PeerManager server(&host, b, credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        RevisionPeerManager server(&host, b, credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
         host.start(1280, 720); QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
         auto create = [&](const QByteArray& cert, const QByteArray& key, const QByteArray& pin) {
             return std::unique_ptr<ClipboardChannel>(new ClipboardChannel("127.0.0.1", server.port(), QSslCertificate(pin), cert, key));
@@ -78,6 +85,17 @@ private slots:
             rev = reply["rev"].toInt(); return reply;
         };
         const auto initial = exchange({}); QVERIFY(!initial.contains("text")); QCOMPARE(rev, 0);
+        // Model an external Cocoa copy while the host stays inactive: no Qt
+        // dataChanged signal. Only the native counter invalidates the snapshot.
+        {
+            QSignalBlocker blocker(clipboard);
+            clipboard->setText("external background copy");
+            ++server.nativeRevision;
+        }
+        QString backgroundText;
+        QVERIFY(DeskPortClipboard::decode(exchange({})["text"], backgroundText));
+        QCOMPARE(backgroundText, QString("external background copy"));
+        QVERIFY(!exchange({}).contains("text")); // Counter is stable; no echo.
         {
             auto second = create(a, credential("TEST_KEY_A"), b);
             QTRY_VERIFY_WITH_TIMEOUT(!second->error().isEmpty(), 6000);
@@ -183,10 +201,10 @@ private slots:
                 auto unsupported = new QMimeData;
                 if (file) unsupported->setUrls({QUrl("file:///synthetic-not-read.txt")});
                 else unsupported->setData("image/png", "synthetic image");
-                clipboard->setMimeData(unsupported);
+                { QSignalBlocker blocker(clipboard); clipboard->setMimeData(unsupported); ++server.nativeRevision; }
                 QVERIFY(pump([&] { return !sync.status().isEmpty(); }));
                 const QString remote = file ? "text after host file" : "text after host image";
-                clipboard->setText(remote);
+                { QSignalBlocker blocker(clipboard); clipboard->setText(remote); ++server.nativeRevision; }
                 QVERIFY(pump([&] { return localText() == remote && sync.status().isEmpty(); }));
                 const QString local = remote + " back to host";
                 SDL_SetClipboardText(local.toUtf8().constData()); sync.clipboardChanged();
