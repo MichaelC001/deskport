@@ -41,7 +41,7 @@ Item {
         hintText.visible = false
 
         // Hide the window now that streaming has begun
-        window.visible = false
+        if (stackView.currentItem === streamPage) window.visible = false
     }
 
     function displayLaunchError(text)
@@ -139,12 +139,6 @@ Item {
         gc()
     }
 
-    StackView.onDeactivating: {
-        // A resize immediately starts another stream; GUI controller discovery
-        // here would enumerate devices only to tear them down again.
-        if (!adaptiveReplacing) SdlGamepadKeyNavigation.enable()
-    }
-
     property bool sessionHooked: false
 
     StackView.onActivated: {
@@ -209,7 +203,12 @@ Item {
                 // StackView pages can be detached from the visual window
                 // during deferred loading. Use the root window context,
                 // as the other session lifecycle callbacks do.
-                if (session) session.exec(window)
+                if (session) {
+                    // Devices may have activated since Loader.onLoaded.
+                    // Hand off SDL immediately before acquiring session ownership.
+                    SdlGamepadKeyNavigation.disable()
+                    session.exec(window)
+                }
             })
         }
 

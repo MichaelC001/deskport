@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>缺少音频捕获设备。重新安装 GeForce Experience 可以解决此错误。</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>此服务端不支持会话音频采集或仅观看模式。请更新 DeskPort 服务端后重新连接。</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -428,6 +432,14 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>与 %1 的会话仍在运行。连接其他电脑前，请从托盘菜单断开当前会话。</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>设备设置</translation>
+    </message>
+    <message>
+        <source>Nearby discovery is off</source>
+        <translation>附近设备发现已关闭</translation>
     </message>
 </context>
 <context>
@@ -1274,6 +1286,18 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自动检测被阻止的连接 (推荐)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>高级设置</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>重新连接后生效。设备设置不会更改本机语言或设备发现偏好。</translation>
+    </message>
+    <message>
+        <source>Session behavior</source>
+        <translation>会话行为</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1449,6 +1473,38 @@
     <message>
         <source>Sharing service on</source>
         <translation>共享服务已开启</translation>
+    </message>
+    <message>
+        <source>Current connection</source>
+        <translation>当前连接</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>已连接</translation>
+    </message>
+    <message>
+        <source>Return</source>
+        <translation>返回桌面</translation>
+    </message>
+    <message>
+        <source>Session data</source>
+        <translation>本次流量</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>详情</translation>
+    </message>
+    <message>
+        <source>Received: %1</source>
+        <translation>接收：%1</translation>
+    </message>
+    <message>
+        <source>Sent: %1</source>
+        <translation>发送：%1</translation>
+    </message>
+    <message>
+        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+        <translation>统计本次会话的音视频、控制和剪贴板传输字节，短暂重连不清零。不包含 IP/VPN 开销、剪贴板 TLS 开销、设备发现和本机对外共享流量。数值不代表运营商账单。</translation>
     </message>
 </context>
 <context>
@@ -1735,6 +1791,70 @@
         <source>Apply</source>
         <translation>应用</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 的设置</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>这些设置仅用于此设备，重新连接后生效。</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>新设备的默认设置。可在设备菜单中选择“设备设置”单独调整连接。</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>已保存 · 重新连接后生效。</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>允许键盘、指针和手柄输入</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>关闭后仅可观看。本机 DeskPort 快捷键仍可使用。</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>重新连接后，与此绑定设备共享新复制的内容。仅限不超过 128 MiB 的纯文本，不共享图片和文件。</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>接收此设备的声音</translation>
+    </message>
+    <message>
+        <source>Appearance and preferences for this computer only.</source>
+        <translation>仅设置此电脑的外观与本机偏好。</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>主题</translation>
+    </message>
+    <message>
+        <source>Accent color</source>
+        <translation>强调色</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>蓝色</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>绿色</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>紫色</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>橙色</translation>
+    </message>
+    <message>
+        <source>Show data usage in the sidebar</source>
+        <translation>在侧栏显示流量用量</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -1805,6 +1925,14 @@
     <message>
         <source>Checking availability</source>
         <translation>正在检查可用状态</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>设备设置</translation>
+    </message>
+    <message>
+        <source>Computer</source>
+        <translation>电脑</translation>
     </message>
 </context>
 <context>
@@ -2013,6 +2141,18 @@
         <source>Saved · restart sharing to apply changes.</source>
         <translation>已保存 · 重新启动共享以应用更改。</translation>
     </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>画面、音频和输入由连接端设备设置，重新连接后生效。</translation>
+    </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>设备连接端口</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>应用</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2103,6 +2243,10 @@
     <message>
         <source>Client access</source>
         <translation>客户端访问</translation>
+    </message>
+    <message>
+        <source>Discover nearby devices</source>
+        <translation>发现附近设备</translation>
     </message>
 </context>
 <context>
@@ -2313,6 +2457,10 @@
         <source> Retrying automatically in %1 seconds.</source>
         <translation> 将在 %1 秒后自动重试。</translation>
     </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>重新连接</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2323,5 +2471,307 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>加载桌面超时。请返回设备列表重试。</translation></message>
 <message><source>Connecting to desktop…</source><translation>正在连接桌面…</translation></message>
 <message><source>Back to devices</source><translation>返回设备列表</translation></message>
+</context>
+<context>
+    <name>DeviceSettings</name>
+    <message>
+        <source>Device settings</source>
+        <translation>设备设置</translation>
+    </message>
+    <message>
+        <source>Saved only for this device. Changes apply on the next connection.</source>
+        <translation>仅为此设备保存，下次连接时生效。</translation>
+    </message>
+    <message>
+        <source>Picture mode</source>
+        <translation>画面模式</translation>
+    </message>
+    <message>
+        <source>Automatic (recommended)</source>
+        <translation>自动（推荐）</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>清晰优先</translation>
+    </message>
+    <message>
+        <source>Smooth</source>
+        <translation>流畅优先</translation>
+    </message>
+    <message>
+        <source>Save data</source>
+        <translation>节省流量</translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation>自定义</translation>
+    </message>
+    <message>
+        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
+        <translation>自动模式按分辨率选择带宽上限。节省流量模式使用 30 fps，视频上限为 5 Mbps。</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>跟随客户端窗口分辨率</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>接收此设备的声音</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>允许键盘、指针和手柄输入</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>会话期间共享纯文本剪贴板</translation>
+    </message>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>高级串流设置</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>已保存 · 重新连接后生效。</translation>
+    </message>
+</context>
+<context>
+    <name>DeviceAdvanced</name>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>高级串流设置</translation>
+    </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 的设置</translation>
+    </message>
+    <message>
+        <source>Make DeskPort your own.</source>
+        <translation>按你的习惯设置 DeskPort。</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>这些设置仅用于此设备，重新连接后生效。</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>新设备的默认设置。可在设备菜单中选择“设备设置”单独调整连接。</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>已保存 · 重新连接后生效。</translation>
+    </message>
+    <message>
+        <source>Connecting to remote computers</source>
+        <translation>连接远程电脑</translation>
+    </message>
+    <message>
+        <source>Picture</source>
+        <translation>画面</translation>
+    </message>
+    <message>
+        <source>Input</source>
+        <translation>输入</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>声音</translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation>高级</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>跟随客户端窗口分辨率</translation>
+    </message>
+    <message>
+        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+        <translation>使用已绑定 Mac 的内置虚拟屏幕。调整窗口后画面会短暂重连，远端应用保持打开。其他主机使用下方分辨率。</translation>
+    </message>
+    <message>
+        <source>Smart streaming</source>
+        <translation>智能串流</translation>
+    </message>
+    <message>
+        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+        <translation>根据分辨率控制带宽上限并平滑显示帧。关闭后使用手动带宽与帧平滑设置。</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>画质预设</translation>
+    </message>
+    <message>
+        <source>Choose a preset…</source>
+        <translation>选择预设…</translation>
+    </message>
+    <message>
+        <source>Office · 30 fps / 10 Mbps</source>
+        <translation>办公 · 30 fps / 10 Mbps</translation>
+    </message>
+    <message>
+        <source>Clear · 60 fps / 40 Mbps</source>
+        <translation>清晰 · 60 fps / 40 Mbps</translation>
+    </message>
+    <message>
+        <source>Smooth · 60 fps / 15 Mbps</source>
+        <translation>流畅 · 60 fps / 15 Mbps</translation>
+    </message>
+    <message>
+        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+        <translation>预设仅调整帧率和带宽，可在下方按网络情况微调。</translation>
+    </message>
+    <message>
+        <source>Picture adjustments</source>
+        <translation>画面微调</translation>
+    </message>
+    <message>
+        <source>Fallback resolution</source>
+        <translation>备用分辨率</translation>
+    </message>
+    <message>
+        <source>Resolution</source>
+        <translation>分辨率</translation>
+    </message>
+    <message>
+        <source>Connection window</source>
+        <translation>连接窗口</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>全屏</translation>
+    </message>
+    <message>
+        <source>Borderless full screen</source>
+        <translation>无边框全屏</translation>
+    </message>
+    <message>
+        <source>Window</source>
+        <translation>窗口</translation>
+    </message>
+    <message>
+        <source>Frame rate</source>
+        <translation>帧率</translation>
+    </message>
+    <message>
+        <source>Bandwidth · %1 Mbps</source>
+        <translation>带宽 · %1 Mbps</translation>
+    </message>
+    <message>
+        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+        <translation>数值越高，画面越细腻，带宽消耗也越大。不移动此滑块会保留已有高级设置值。</translation>
+    </message>
+    <message>
+        <source>Smooth frame pacing</source>
+        <translation>帧平滑</translation>
+    </message>
+    <message>
+        <source>Show streaming statistics</source>
+        <translation>显示串流统计</translation>
+    </message>
+    <message>
+        <source>Synchronize frames to this display</source>
+        <translation>与此显示器同步画面</translation>
+    </message>
+    <message>
+        <source>Keyboard &amp; pointer</source>
+        <translation>键盘与指针</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>允许键盘、指针和手柄输入</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>关闭后仅可观看。本机 DeskPort 快捷键仍可使用。</translation>
+    </message>
+    <message>
+        <source>Use a desktop-style pointer</source>
+        <translation>使用桌面式指针</translation>
+    </message>
+    <message>
+        <source>Always show a local pointer in desktop mode</source>
+        <translation>桌面模式始终显示本地光标</translation>
+    </message>
+    <message>
+        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+        <translation>主机隐藏鼠标时仍显示光标。如果出现两个光标，可关闭此选项。</translation>
+    </message>
+    <message>
+        <source>Reverse scrolling direction</source>
+        <translation>反转滚动方向</translation>
+    </message>
+    <message>
+        <source>Send system shortcuts to the remote computer</source>
+        <translation>将系统快捷键发送到远程电脑</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>从不</translation>
+    </message>
+    <message>
+        <source>Only in full screen</source>
+        <translation>仅在全屏时</translation>
+    </message>
+    <message>
+        <source>Always</source>
+        <translation>始终</translation>
+    </message>
+    <message>
+        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+        <translation>连接 Mac 时，Super / Windows 对应 Command，Alt 对应 Option。选择“始终”可在窗口中转发 Super + 空格。更改在下次连接时生效。</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>会话期间共享纯文本剪贴板</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>重新连接后，与此绑定设备共享新复制的内容。仅限不超过 128 MiB 的纯文本，不共享图片和文件。</translation>
+    </message>
+    <message>
+        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+        <translation>鼠标位于已聚焦的远端画面内时接管键盘，离开即释放按键和鼠标按钮。点击画面获取焦点；系统保留快捷键可能仍在本地处理。</translation>
+    </message>
+    <message>
+        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+        <translation>按 Ctrl + Alt + Shift + Z 释放远程输入。</translation>
+    </message>
+    <message>
+        <source>Sound from the remote computer</source>
+        <translation>远程电脑的声音</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>接收此设备的声音</translation>
+    </message>
+    <message>
+        <source>Mute when DeskPort loses focus</source>
+        <translation>DeskPort 失去焦点时静音</translation>
+    </message>
+    <message>
+        <source>Also play audio on the host</source>
+        <translation>同时在主机播放声音</translation>
+    </message>
+    <message>
+        <source>Advanced &amp; support</source>
+        <translation>高级与支持</translation>
+    </message>
+    <message>
+        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+        <translation>自定义分辨率、编解码器、HDR、环绕声和手柄选项仍可在高级设置中调整。</translation>
+    </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>高级设置</translation>
+    </message>
+    <message>
+        <source>Permission guide</source>
+        <translation>权限引导</translation>
+    </message>
+    <message>
+        <source>Report a problem</source>
+        <translation>报告问题</translation>
+    </message>
 </context>
 </TS>

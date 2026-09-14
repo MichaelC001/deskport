@@ -10,6 +10,12 @@
       packageFor = system:
         let
           pkgs = import nixpkgs { inherit system; };
+          sessionHost = pkgs.sunshine.overrideAttrs (old: {
+            nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
+            postPatch = (old.postPatch or "") + ''
+              python3 ${./scripts/patch-host-session-settings.py} .
+            '';
+          });
           # Supply the exact upstream gitlink contents even when the flake was
           # fetched without Git submodules. Application code comes from self.
           upstream = pkgs.fetchFromGitHub {
@@ -21,7 +27,7 @@
           };
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
-          version = "0.2.2";
+          version = "0.3.0";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation and CI edits do not change the client binary.
@@ -44,7 +50,7 @@
           '';
           postInstall = (old.postInstall or "") + ''
             mkdir -p "$out/libexec"
-            ln -s ${pkgs.sunshine}/bin/sunshine "$out/libexec/deskport-host"
+            ln -s ${sessionHost}/bin/sunshine "$out/libexec/deskport-host"
           '';
           meta = old.meta // {
             description = "Experimental remote desktop development client based on Moonlight";

@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>Audioaufnahmegerät fehlt. Eine Neuinstallation von GeForce Experience sollte diesen Fehler beheben.</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>Dieser Host unterstützt keine sitzungsbezogene Audioaufnahme oder reine Ansicht. DeskPort-Host aktualisieren und erneut verbinden.</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -420,6 +424,14 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>Eine Sitzung mit %1 ist offen. Vor einer anderen Verbindung die Sitzung im Infobereich trennen.</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>Geräteeinstellungen</translation>
+    </message>
+    <message>
+        <source>Nearby discovery is off</source>
+        <translation>Gerätesuche in der Nähe ist aus</translation>
     </message>
 </context>
 <context>
@@ -1266,6 +1278,18 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Erkenne automatisch geblockte Verbindungen (empfohlen)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>Erweiterte Einstellungen</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>Zum Anwenden erneut verbinden. Sprache und Gerätesuche dieses Computers bleiben unverändert.</translation>
+    </message>
+    <message>
+        <source>Session behavior</source>
+        <translation>Sitzungsverhalten</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1441,6 +1465,38 @@
     <message>
         <source>Sharing service on</source>
         <translation>Freigabedienst aktiv</translation>
+    </message>
+    <message>
+        <source>Current connection</source>
+        <translation>Aktuelle Verbindung</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>Verbunden</translation>
+    </message>
+    <message>
+        <source>Return</source>
+        <translation>Zurück</translation>
+    </message>
+    <message>
+        <source>Session data</source>
+        <translation>Sitzungsdaten</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>Details</translation>
+    </message>
+    <message>
+        <source>Received: %1</source>
+        <translation>Empfangen: %1</translation>
+    </message>
+    <message>
+        <source>Sent: %1</source>
+        <translation>Gesendet: %1</translation>
+    </message>
+    <message>
+        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+        <translation>Zählt Medien-, Steuerungs- und Zwischenablagedaten einschließlich kurzer Neuverbindungen. Ohne IP/VPN-, Zwischenablage-TLS-, Geräteerkennungs- und Host-Freigabeverkehr. Kein Abrechnungswert des Anbieters.</translation>
     </message>
 </context>
 <context>
@@ -1727,6 +1783,70 @@
         <source>Apply</source>
         <translation>Anwenden</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>Einstellungen für %1</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>Diese Einstellungen gelten nur für dieses Gerät. Zum Anwenden erneut verbinden.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>Standardeinstellungen für neue Geräte. Einzelne Verbindungen lassen sich im Gerätemenü anpassen.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>Gespeichert · zum Anwenden erneut verbinden.</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>Tastatur-, Zeiger- und Controller-Eingaben erlauben</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>Für eine reine Ansicht deaktivieren. Lokale DeskPort-Tastenkürzel bleiben verfügbar.</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>Nach erneutem Verbinden neue Kopien mit diesem gekoppelten Gerät teilen. Nur Klartext bis 128 MiB; keine Bilder oder Dateien.</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>Ton von diesem Gerät empfangen</translation>
+    </message>
+    <message>
+        <source>Appearance and preferences for this computer only.</source>
+        <translation>Darstellung und Einstellungen nur für diesen Computer.</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>Design</translation>
+    </message>
+    <message>
+        <source>Accent color</source>
+        <translation>Akzentfarbe</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>Blau</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>Grün</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>Violett</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>Orange</translation>
+    </message>
+    <message>
+        <source>Show data usage in the sidebar</source>
+        <translation>Datenverbrauch in der Seitenleiste anzeigen</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -1797,6 +1917,14 @@
     <message>
         <source>Checking availability</source>
         <translation>Verfügbarkeit wird geprüft</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>Geräteeinstellungen</translation>
+    </message>
+    <message>
+        <source>Computer</source>
+        <translation>Computer</translation>
     </message>
 </context>
 <context>
@@ -2005,6 +2133,18 @@
         <source>Saved · restart sharing to apply changes.</source>
         <translation>Gespeichert · Freigabe neu starten, um Änderungen anzuwenden.</translation>
     </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>Bild, Ton und Eingabe werden am verbindenden Gerät gewählt. Änderungen gelten nach erneutem Verbinden.</translation>
+    </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>Geräteverbindungsport</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>Anwenden</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2095,6 +2235,10 @@
     <message>
         <source>Client access</source>
         <translation>Client-Zugriff</translation>
+    </message>
+    <message>
+        <source>Discover nearby devices</source>
+        <translation>Geräte in der Nähe erkennen</translation>
     </message>
 </context>
 <context>
@@ -2297,6 +2441,10 @@
         <source> Retrying automatically in %1 seconds.</source>
         <translation> Automatischer Wiederholungsversuch in %1 Sekunden.</translation>
     </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>Erneut verbinden</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2307,5 +2455,307 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>Zeitüberschreitung beim Laden des Desktops. Versuchen Sie es über die Geräteliste erneut.</translation></message>
 <message><source>Connecting to desktop…</source><translation>Verbindung zum Desktop…</translation></message>
 <message><source>Back to devices</source><translation>Zurück zu den Geräten</translation></message>
+</context>
+<context>
+    <name>DeviceSettings</name>
+    <message>
+        <source>Device settings</source>
+        <translation>Geräteeinstellungen</translation>
+    </message>
+    <message>
+        <source>Saved only for this device. Changes apply on the next connection.</source>
+        <translation>Nur für dieses Gerät gespeichert. Änderungen gelten ab der nächsten Verbindung.</translation>
+    </message>
+    <message>
+        <source>Picture mode</source>
+        <translation>Bildmodus</translation>
+    </message>
+    <message>
+        <source>Automatic (recommended)</source>
+        <translation>Automatisch (empfohlen)</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Scharf</translation>
+    </message>
+    <message>
+        <source>Smooth</source>
+        <translation>Flüssig</translation>
+    </message>
+    <message>
+        <source>Save data</source>
+        <translation>Daten sparen</translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation>Eigene</translation>
+    </message>
+    <message>
+        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
+        <translation>Automatisch begrenzt die Bandbreite je nach Auflösung. Daten sparen nutzt 30 fps und höchstens 5 Mbps für Video.</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>Auflösung an das Clientfenster anpassen</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>Ton von diesem Gerät empfangen</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>Tastatur-, Zeiger- und Controller-Eingaben erlauben</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+    </message>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>Erweiterte Streaming-Einstellungen</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>Gespeichert · zum Anwenden erneut verbinden.</translation>
+    </message>
+</context>
+<context>
+    <name>DeviceAdvanced</name>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>Erweiterte Streaming-Einstellungen</translation>
+    </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>Einstellungen für %1</translation>
+    </message>
+    <message>
+        <source>Make DeskPort your own.</source>
+        <translation>DeskPort nach Ihren Wünschen.</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>Diese Einstellungen gelten nur für dieses Gerät. Zum Anwenden erneut verbinden.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>Standardeinstellungen für neue Geräte. Einzelne Verbindungen lassen sich im Gerätemenü anpassen.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>Gespeichert · zum Anwenden erneut verbinden.</translation>
+    </message>
+    <message>
+        <source>Connecting to remote computers</source>
+        <translation>Mit entfernten Computern verbinden</translation>
+    </message>
+    <message>
+        <source>Picture</source>
+        <translation>Bild</translation>
+    </message>
+    <message>
+        <source>Input</source>
+        <translation>Eingabe</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>Ton</translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation>Erweitert</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>Auflösung an das Clientfenster anpassen</translation>
+    </message>
+    <message>
+        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+        <translation>Verwendet das integrierte virtuelle Display eines verbundenen Mac. Größenänderungen verbinden das Bild kurz neu; Ihre Apps bleiben geöffnet. Andere Hosts verwenden die Auflösung unten.</translation>
+    </message>
+    <message>
+        <source>Smart streaming</source>
+        <translation>Intelligentes Streaming</translation>
+    </message>
+    <message>
+        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+        <translation>Verwendet eine Auflösungsabhängige Bandbreitengrenze und gleichmäßige Bildausgabe. Für manuelle Einstellungen ausschalten.</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>Qualitätsvorgabe</translation>
+    </message>
+    <message>
+        <source>Choose a preset…</source>
+        <translation>Vorgabe wählen…</translation>
+    </message>
+    <message>
+        <source>Office · 30 fps / 10 Mbps</source>
+        <translation>Büro · 30 fps / 10 Mbps</translation>
+    </message>
+    <message>
+        <source>Clear · 60 fps / 40 Mbps</source>
+        <translation>Scharf · 60 fps / 40 Mbps</translation>
+    </message>
+    <message>
+        <source>Smooth · 60 fps / 15 Mbps</source>
+        <translation>Flüssig · 60 fps / 15 Mbps</translation>
+    </message>
+    <message>
+        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+        <translation>Vorgaben ändern nur Bildrate und Bandbreite. Unten an das Netzwerk anpassen.</translation>
+    </message>
+    <message>
+        <source>Picture adjustments</source>
+        <translation>Bildanpassungen</translation>
+    </message>
+    <message>
+        <source>Fallback resolution</source>
+        <translation>Ersatzauflösung</translation>
+    </message>
+    <message>
+        <source>Resolution</source>
+        <translation>Auflösung</translation>
+    </message>
+    <message>
+        <source>Connection window</source>
+        <translation>Verbindungsfenster</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>Vollbild</translation>
+    </message>
+    <message>
+        <source>Borderless full screen</source>
+        <translation>Randloses Vollbild</translation>
+    </message>
+    <message>
+        <source>Window</source>
+        <translation>Fenster</translation>
+    </message>
+    <message>
+        <source>Frame rate</source>
+        <translation>Bildrate</translation>
+    </message>
+    <message>
+        <source>Bandwidth · %1 Mbps</source>
+        <translation>Bandbreite · %1 Mbps</translation>
+    </message>
+    <message>
+        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+        <translation>Höhere Werte verbessern Details und benötigen mehr Bandbreite. Bestehende erweiterte Werte bleiben erhalten, solange Sie den Regler nicht bewegen.</translation>
+    </message>
+    <message>
+        <source>Smooth frame pacing</source>
+        <translation>Gleichmäßige Bildausgabe</translation>
+    </message>
+    <message>
+        <source>Show streaming statistics</source>
+        <translation>Streaming-Statistik anzeigen</translation>
+    </message>
+    <message>
+        <source>Synchronize frames to this display</source>
+        <translation>Bilder mit diesem Display synchronisieren</translation>
+    </message>
+    <message>
+        <source>Keyboard &amp; pointer</source>
+        <translation>Tastatur und Zeiger</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>Tastatur-, Zeiger- und Controller-Eingaben erlauben</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>Für eine reine Ansicht deaktivieren. Lokale DeskPort-Tastenkürzel bleiben verfügbar.</translation>
+    </message>
+    <message>
+        <source>Use a desktop-style pointer</source>
+        <translation>Desktop-Zeigermodus verwenden</translation>
+    </message>
+    <message>
+        <source>Always show a local pointer in desktop mode</source>
+        <translation>Im Desktopmodus immer einen lokalen Mauszeiger anzeigen</translation>
+    </message>
+    <message>
+        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+        <translation>Der Mauszeiger bleibt sichtbar, wenn der Host seinen Cursor ausblendet. Bei zwei Mauszeigern diese Option ausschalten.</translation>
+    </message>
+    <message>
+        <source>Reverse scrolling direction</source>
+        <translation>Scrollrichtung umkehren</translation>
+    </message>
+    <message>
+        <source>Send system shortcuts to the remote computer</source>
+        <translation>Systemtastenkürzel an den entfernten Computer senden</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>Nie</translation>
+    </message>
+    <message>
+        <source>Only in full screen</source>
+        <translation>Nur im Vollbild</translation>
+    </message>
+    <message>
+        <source>Always</source>
+        <translation>Immer</translation>
+    </message>
+    <message>
+        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+        <translation>Auf einem Mac entspricht Super / Windows der Command-Taste und Alt der Option-Taste. Wählen Sie Immer, um Super + Leertaste im Fenster weiterzuleiten. Änderungen gelten ab der nächsten Verbindung.</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>Nach erneutem Verbinden neue Kopien mit diesem gekoppelten Gerät teilen. Nur Klartext bis 128 MiB; keine Bilder oder Dateien.</translation>
+    </message>
+    <message>
+        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+        <translation>Die Tastatur folgt dem Zeiger im fokussierten Bild. Beim Verlassen werden Tasten losgelassen. Zum Fokussieren klicken; reservierte Systemkürzel können lokal bleiben.</translation>
+    </message>
+    <message>
+        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+        <translation>Mit Ctrl + Alt + Shift + Z die Remote-Eingabe freigeben.</translation>
+    </message>
+    <message>
+        <source>Sound from the remote computer</source>
+        <translation>Audio des entfernten Computers</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>Ton von diesem Gerät empfangen</translation>
+    </message>
+    <message>
+        <source>Mute when DeskPort loses focus</source>
+        <translation>Bei Fokusverlust stummschalten</translation>
+    </message>
+    <message>
+        <source>Also play audio on the host</source>
+        <translation>Ton auch auf dem Host abspielen</translation>
+    </message>
+    <message>
+        <source>Advanced &amp; support</source>
+        <translation>Erweitert und Hilfe</translation>
+    </message>
+    <message>
+        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+        <translation>Eigene Auflösungen, Codecs, HDR, Surround-Sound und Controller-Optionen finden Sie in den erweiterten Einstellungen.</translation>
+    </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>Erweiterte Einstellungen</translation>
+    </message>
+    <message>
+        <source>Permission guide</source>
+        <translation>Berechtigungshilfe</translation>
+    </message>
+    <message>
+        <source>Report a problem</source>
+        <translation>Problem melden</translation>
+    </message>
 </context>
 </TS>

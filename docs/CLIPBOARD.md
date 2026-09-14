@@ -28,3 +28,20 @@ large-transfer native clipboard performance from loopback tests alone.
 Qt/SDL clipboards and pinned loopback TLS. It covers Unicode, the maximum boundary
 in both directions, overflow rejection, legacy negotiation defaults, ordering,
 exclusive access and authentication failures. It never reads the user's clipboard.
+
+Unsupported native offers are skipped without closing the text channel. Content
+notices expire after five seconds; a native read failure must not prevent reply
+processing or host polling. A later remote text copy can replace an unchanged
+non-text offer; a newer local copy still protects against stale in-flight replies.
+Transport/authentication failures remain errors and are not hidden as content skips.
+
+On macOS, Qt clipboard signals alone miss external copies while the app is
+inactive. The host checks NSPasteboard.changeCount on each authenticated poll,
+then calls Qt mimeData (which synchronizes Cocoa's pasteboard) only when the
+counter changes. Offscreen tests do not access the general pasteboard.
+`scripts/test-mac-clipboard.py` uses a unique named native pasteboard and a
+separate writer process; the TLS suite suppresses Qt signals to test this path.
+
+References: [Qt dataChanged](https://doc.qt.io/qt-6/qclipboard.html#dataChanged),
+[Apple changeCount](https://developer.apple.com/documentation/appkit/nspasteboard/changecount),
+[Qt Cocoa MIME synchronization](https://github.com/qt/qtbase/blob/v6.11.1/src/plugins/platforms/cocoa/qcocoaclipboard.mm).

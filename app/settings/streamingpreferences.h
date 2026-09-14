@@ -17,6 +17,15 @@ public:
     Q_INVOKABLE void save();
 
     void reload();
+    Q_INVOKABLE StreamingPreferences* forDevice(const QString& hostId);
+    StreamingPreferences* snapshot(const QString& hostId, QObject* owner, bool copyCurrent = false) const;
+    Q_PROPERTY(QString deviceId READ deviceId CONSTANT)
+    QString deviceId() const { return m_DeviceId; }
+    Q_PROPERTY(bool remoteAudio MEMBER remoteAudio NOTIFY remoteAudioChanged)
+    bool remoteAudio = true;
+    Q_PROPERTY(bool remoteInput MEMBER remoteInput NOTIFY remoteInputChanged)
+    bool remoteInput = true;
+
 
     enum AudioConfig
     {
@@ -120,6 +129,8 @@ public:
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool sharedClipboard MEMBER sharedClipboard NOTIFY sharedClipboardChanged)
     Q_PROPERTY(int uiTheme MEMBER uiTheme NOTIFY uiThemeChanged)
+    Q_PROPERTY(int uiAccent MEMBER uiAccent NOTIFY uiAccentChanged)
+    Q_PROPERTY(bool showTraffic MEMBER showTraffic NOTIFY showTrafficChanged)
     Q_PROPERTY(bool compactDevices MEMBER compactDevices NOTIFY compactDevicesChanged)
     Q_PROPERTY(bool showLocalCursor MEMBER showLocalCursor NOTIFY showLocalCursorChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
@@ -165,6 +176,8 @@ public:
     bool absoluteMouseMode;
     bool sharedClipboard;
     int uiTheme;
+    int uiAccent;
+    bool showTraffic;
     bool compactDevices;
     bool showLocalCursor;
     bool absoluteTouchMode;
@@ -194,6 +207,8 @@ public:
     CaptureSysKeysMode captureSysKeysMode;
 
 signals:
+    void remoteAudioChanged();
+    void remoteInputChanged();
     void displayModeChanged();
     void bitrateChanged();
     void unlockBitrateChanged();
@@ -208,6 +223,8 @@ signals:
     void absoluteMouseModeChanged();
     void sharedClipboardChanged();
     void uiThemeChanged();
+    void uiAccentChanged();
+    void showTrafficChanged();
     void compactDevicesChanged();
     void showLocalCursorChanged();
     void absoluteTouchModeChanged();
@@ -235,7 +252,8 @@ signals:
     void languageChanged();
 
 private:
-    explicit StreamingPreferences(QQmlEngine *qmlEngine);
+    explicit StreamingPreferences(QQmlEngine *qmlEngine, const QString& deviceId = QString());
+    QString m_DeviceId;
 
     QString getSuffixFromLanguage(Language lang);
 

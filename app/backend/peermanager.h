@@ -42,6 +42,8 @@ signals:
     void changed();
     void incomingRequest();
     void peerBound(QVariantMap peer);
+protected:
+    virtual qint64 nativeClipboardRevision() const;
 private:
     struct Link;
     void attach(Link* link);

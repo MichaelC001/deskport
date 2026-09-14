@@ -29,7 +29,7 @@ ApplicationWindow {
     minimumWidth: 640
     minimumHeight: 560
     font.pixelSize: 14
-    UiTheme { id: ui; mode: StreamingPreferences.uiTheme }
+    UiTheme { id: ui; mode: StreamingPreferences.uiTheme; accentMode: StreamingPreferences.uiAccent; systemDark: SystemProperties.systemDark; systemAccent: SystemProperties.systemAccent }
     Material.theme: ui.dark ? Material.Dark : Material.Light
     Material.accent: ui.accent
     Material.primary: ui.surface
@@ -81,12 +81,14 @@ ApplicationWindow {
   
     readonly property var activeStreamPage: {
         var count = stackView.depth
-        return stackView.find(function(item) { return item.session !== undefined && item.session !== null })
+        var top = stackView.currentItem // Replacements can preserve depth.
+        return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
     readonly property string activeHostId: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
     readonly property string activeHostName: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
     function showDevices() {
         if (activeStreamPage) {
+            if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
             stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
         } else stackView.pop(null)
@@ -260,37 +262,73 @@ ApplicationWindow {
     Rectangle {
         id: navigation
         visible: navigationVisible
-        width: window.width < 780 ? 140 : 184
+        width: window.width < 780 ? 168 : 184
         anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
         color: ui.surface
         Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: ui.line }
-        ColumnLayout {
-            anchors.fill: parent; anchors.margins: 12; spacing: 8
+        ScrollView {
+            id: sidebarScroll; anchors.fill: parent; clip: true
+            contentWidth: availableWidth
+            ColumnLayout {
+            width: sidebarScroll.availableWidth - 24
+            x: 12
+            height: Math.max(implicitHeight, sidebarScroll.availableHeight - 24)
+            y: 12; spacing: 8
             RowLayout {
-                Layout.topMargin: 12; Layout.bottomMargin: 30
-                Image { source: "qrc:/res/deskport.svg"; Layout.preferredWidth: 30; Layout.preferredHeight: 30 }
+                Layout.topMargin: 12; Layout.bottomMargin: 24
+                Image { source: "qrc:/res/deskport.svg"; Layout.preferredWidth: 30; Layout.preferredHeight: 30; fillMode: Image.PreserveAspectFit }
                 Label { text: "DeskPort"; font.pixelSize: 18; font.weight: Font.DemiBold; color: ui.text }
             }
-            Repeater {
-                model: [qsTr("Devices"), qsTr("Sharing"), qsTr("Settings")]
-                Button {
-                    Layout.fillWidth: true; implicitHeight: 46
-                    text: modelData; flat: true
-                    highlighted: index === 0 ? qmltypeof(stackView.currentItem, "PcView") || qmltypeof(stackView.currentItem, "AppView") || qmltypeof(stackView.currentItem, "BindView") : index === 1 ? qmltypeof(stackView.currentItem, "HostView") : qmltypeof(stackView.currentItem, "SettingsHome") || qmltypeof(stackView.currentItem, "SettingsView")
-                    background: Rectangle { radius: 9; color: parent.highlighted ? ui.raised : parent.hovered ? ui.raised : "transparent"; border.color: parent.highlighted ? ui.line : "transparent" }
-                    onClicked: {
-                        showDevices()
-                        if (index === 1) navigateTo("qrc:/gui/HostView.qml", "HostView")
-                        if (index === 2) navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome")
-                    }
+            UiButton {
+                text: qsTr("Devices"); Layout.fillWidth: true; flat: true
+                highlighted: qmltypeof(stackView.currentItem, "PcView") || qmltypeof(stackView.currentItem, "DeviceSettings") || qmltypeof(stackView.currentItem, "DeviceAdvanced") || qmltypeof(stackView.currentItem, "SettingsView")
+                onClicked: showDevices()
+            }
+            Label { visible: activeHostId.length > 0; text: qsTr("Current connection"); color: ui.muted; font.pixelSize: ui.small; Layout.topMargin: 22 }
+            Rectangle {
+                visible: activeHostId.length > 0; Layout.fillWidth: true
+                implicitHeight: currentConnection.implicitHeight + 24; radius: 10; color: ui.raised
+                ColumnLayout {
+                    id: currentConnection; anchors.fill: parent; anchors.margins: 12; spacing: 8
+                    Label { text: activeHostName; textFormat: Text.PlainText; color: ui.text; Layout.fillWidth: true; elide: Text.ElideRight }
+                    Label { text: qsTr("Connected"); color: ui.accent; font.pixelSize: ui.small }
+                    UiButton { text: qsTr("Return"); Layout.fillWidth: true; onClicked: recallRemoteSession() }
                 }
             }
+            ColumnLayout {
+                id: trafficSummary; objectName: "trafficSummary"
+                visible: StreamingPreferences.showTraffic && activeHostId.length > 0 && Qt.platform.os !== "windows"
+                Layout.fillWidth: true; Layout.topMargin: 12; spacing: 4
+                property real received: 0
+                property real sent: 0
+                property real downRate: 0
+                property real upRate: 0
+                property real sampledAt: 0
+                property string sampledHost: ""
+                function amount(n) { return n >= 1000000000 ? (n / 1000000000).toFixed(2) + " GB" : n >= 1000000 ? (n / 1000000).toFixed(1) + " MB" : (n / 1000).toFixed(1) + " KB" }
+                function sample() {
+                    if (!activeStreamPage || !activeStreamPage.session) return
+                    var sample = activeStreamPage.session.traffic(), now = Date.now()
+                    var elapsed = (now - sampledAt) / 1000
+                    downRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.received - received) / elapsed : 0
+                    upRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.sent - sent) / elapsed : 0
+                    received = sample.received; sent = sample.sent; sampledAt = now; sampledHost = activeHostId
+                }
+                onVisibleChanged: { sampledAt = 0; if (visible) sample() }
+                Label { text: qsTr("Session data"); color: ui.muted; font.pixelSize: ui.small }
+                Label { text: trafficSummary.amount(trafficSummary.received + trafficSummary.sent); color: ui.text; font.pixelSize: 20 }
+                Label { text: "↓ " + trafficSummary.amount(trafficSummary.downRate) + "/s"; color: ui.muted; font.pixelSize: ui.small }
+                Label { text: "↑ " + trafficSummary.amount(trafficSummary.upRate) + "/s"; color: ui.muted; font.pixelSize: ui.small }
+                UiButton { text: qsTr("Details"); flat: true; font.pixelSize: ui.small; onClicked: trafficDetails.open() }
+                Timer { interval: 1000; repeat: true; running: trafficSummary.visible && window.visible; onTriggered: trafficSummary.sample() }
+            }
             Item { Layout.fillHeight: true }
-            Button { text: qsTr("Getting started"); font.pixelSize: ui.small; leftPadding: 4; rightPadding: 4; flat: true; Layout.fillWidth: true; onClicked: navigateTo("qrc:/gui/SetupView.qml", "SetupView") }
             Rectangle { Layout.fillWidth: true; height: 1; color: ui.line }
-            Label { text: hostManager.deviceName; textFormat: Text.PlainText; color: ui.text; Layout.fillWidth: true; elide: Text.ElideRight; Layout.topMargin: 12 }
-            Label { text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on"); color: hostManager.running ? ui.accent : ui.muted; font.pixelSize: 12 }
-            Label { text: "DeskPort " + SystemProperties.versionString; color: ui.muted; font.pixelSize: 11; Layout.bottomMargin: 6 }
+            Label { text: hostManager.deviceName; textFormat: Text.PlainText; color: ui.text; Layout.fillWidth: true; elide: Text.ElideRight; Layout.topMargin: 8 }
+            Label { text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on"); color: ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; elide: Text.ElideRight }
+            UiButton { text: qsTr("Sharing"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "HostView"); onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") } }
+            UiButton { text: qsTr("Settings"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "SettingsHome"); onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") } }
+        }
         }
     }
     Rectangle {
@@ -303,6 +341,17 @@ ApplicationWindow {
             Button { visible: stackView.depth > 1; text: "←"; Accessible.name: qsTr("Back"); flat: true; onClicked: goBack() }
             Label { text: stackView.currentItem ? stackView.currentItem.objectName : "DeskPort"; color: ui.text; font.pixelSize: 16; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
             UiButton { text: qsTr("Add a device"); visible: qmltypeof(stackView.currentItem, "PcView"); highlighted: true; onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
+        }
+    }
+    Dialog {
+        id: trafficDetails; title: qsTr("Session data"); modal: true
+        width: Math.min(window.width - 40, 460); anchors.centerIn: parent
+        standardButtons: Dialog.Ok
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label { text: qsTr("Received: %1").arg(trafficSummary.amount(trafficSummary.received)); color: ui.text }
+            Label { text: qsTr("Sent: %1").arg(trafficSummary.amount(trafficSummary.sent)); color: ui.text }
+            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     Shortcut { enabled: navigationVisible; sequences: [StandardKey.New]; onActivated: navigateTo("qrc:/gui/BindView.qml", "BindView") }

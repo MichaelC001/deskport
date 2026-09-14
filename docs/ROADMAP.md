@@ -1,3 +1,71 @@
+## Device-first desktop UI (0.2.7, 2026-09-14)
+
+Reason: make connecting the primary action and remove connection parameters from
+application preferences. Devices use cards with bundled OS marks. Each device
+owns its basic picture/audio/input controls and deeper streaming settings.
+Application settings contain appearance, language and the optional usage display.
+System color scheme and accent are followed independently, with manual light/dark
+and blue/green/purple/orange overrides. Accent contrast is adjusted for legibility.
+
+The sidebar keeps navigation, the current session, optional measured transfer
+usage and local sharing/settings. Counters cover client media/control socket I/O
+and clipboard payloads, not carrier billing or all host-process traffic. Adaptive
+and manual continuations preserve the session baseline. OS metadata is advertised
+by the bundled host so saved devices gain marks after upgrading and polling,
+without pairing again; unsupported hosts retain a generic computer mark.
+
+Checkpoint: isolated QML navigation/screenshots, theme and setting isolation,
+loopback socket accounting, clipboard/binding regression, macOS distribution and
+Linux x86_64 Nix build. Next action: user activation and real cross-platform theme,
+connection and hotspot-usage acceptance. See RELEASE_0.2.7.md.
+
+## Background Mac clipboard observation (0.2.6, 2026-09-14)
+
+Reason: Qt Cocoa clipboard dataChanged only observes external copies on app
+activation. A background host cached its previous snapshot, so client-to-host
+worked while host-to-client copies were missed. Poll NSPasteboard changeCount
+on authenticated clipboard requests and refresh Qt MIME data only when changed.
+The counter does not fetch contents; idle text is not repeatedly encoded.
+
+Checkpoint: native external-process writes to a unique named pasteboard without
+activation; authenticated clipboard integration with Qt notifications suppressed,
+including image/file-to-text recovery. Existing tests had only in-process Qt
+copies and did not establish native background correctness.
+Next action: manual two-sided activation and reverse copy from ordinary Mac apps
+while DeskPort stays in the background. Media/HiDPI behavior is unchanged.
+
+## Clipboard content skip recovery (0.2.5, 2026-09-14)
+
+Reason: unsupported clipboard notices could remain indefinitely, while native
+clipboard read failures returned before processing replies or polling the host.
+Skip the affected copy without starving the authenticated channel. Expire content
+notices after five seconds; later text copies continue in both directions.
+Do not treat transport/authentication failures as successful sharing.
+
+Checkpoint: isolated SDL/Qt clipboard recovery after non-text, image and file
+offers, notice expiry, bidirectional text, plus existing Unicode/size/order tests.
+Next action: user activation followed by native image/file-to-text copying on
+both desktops. The visual workspace sizing from 0.2.4 is unchanged.
+
+## Fractional-scale workspace preview (0.2.4, 2026-09-14)
+
+Reason: a 150% client received a pixel-matched 2x Mac desktop, making remote UI
+one third larger than the equivalent local logical geometry. Match logical size
+by transmitting a supersampled 2x desktop on clients between 1x and 2x. Keep the
+full capture raster through encoding; do not introduce host-side downscaling.
+Recompute the negotiated size when restoring saved window geometry.
+
+Checkpoint: fractional UI-size/detail invariants, isolated binding/resize and
+window-state checks, macOS signing/notarization and NixOS x86_64 build. User
+activation on both ends precedes live small-text, resize/reconnect and input
+acceptance. Full pixel alignment at 1x/2x is preserved; fractional downsampling
+is not pixel-identical and needs visual acceptance. Existing maximum dimensions
+and minimum logical desktop still apply. Above 2x, preserve raster detail.
+
+Next action: compare small text at 150% after manual activation. Deferred:
+physical-size heuristics, user text-size preference, live output-metadata refresh
+and host-side resampling/transport-size separation. See RELEASE_0.2.4.md.
+
 ## Installable desktop release (0.2.0, 2026-09-13)
 
 Reason: distribute packages that other users can install without a development
@@ -917,3 +985,34 @@ Validation: 26 isolated binding cases (including client-only approve/reject,
 pre-approval disconnect/ack, invalid host claims and revoke), 15 UI cases and
 seven translated UI catalogs passed. Physical mobile video/input acceptance is
 separate from these protocol and interface tests.
+
+
+## Client-controlled device settings — 2026-09-14
+
+Reason: user resumed the deferred settings item and requested an isolated development
+branch. Device profiles now collect normal/advanced streaming preferences, take a
+connection snapshot, and send authenticated audio/input choices to the host.
+The tray has a separate Reconnect action, preserving remote applications and
+loading the latest saved profile. Sharing no longer duplicates session switches.
+See [SESSION_SETTINGS.md](SESSION_SETTINGS.md) for the inventory and compatibility.
+
+Next action: validate sound on/off, view-only, per-device video settings and ten
+reconnects on isolated test hosts after an explicitly chosen build is activated.
+No release, mynix update or deployed-service change is included in this slice.
+
+### Connection and resize flow protection — 2026-09-14
+
+- Keep the device list responsive during transport setup; opening it does not
+  transfer SDL event ownership or hide it when the connection completes.
+- Reject duplicate session execution and retain exclusive SDL ownership until
+  execution and asynchronous cleanup both finish. Delay deletion/continuation
+  notification until that same boundary.
+- Coalesce stale queued size events, wait 500 ms after the last size/scale or
+  drag activity, and recheck settling on the retained window before changing
+  the virtual display. Only one display request is in flight.
+- Validate with isolated lifecycle/UI/resize checks and both target builds.
+  Real tray-during-connect and continuous-resize acceptance follows manual activation.
+
+## 2026-09-14 — 0.3.0 stable release
+
+User requested merging the session-settings branch into main and publishing the full existing Mac/Linux package matrix. Release verification is recorded in docs/RELEASE_0.3.0.md and the release verification asset; physical streaming acceptance remains separate.

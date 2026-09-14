@@ -207,6 +207,10 @@
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>오디오 캡처 장치가 없습니다. GeForce Experience를 다시 설치하면 이 오류가 해결됩니다.</translation>
     </message>
+    <message>
+        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+        <translation>이 호스트는 세션별 오디오 캡처나 보기 전용 모드를 지원하지 않습니다. DeskPort 호스트를 업데이트한 후 다시 연결하세요.</translation>
+    </message>
 </context>
 <context>
     <name>PcView</name>
@@ -420,6 +424,14 @@
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
         <translation>%1 세션이 열려 있습니다. 다른 컴퓨터에 연결하기 전에 트레이 메뉴에서 연결을 끊으세요.</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>기기 설정</translation>
+    </message>
+    <message>
+        <source>Nearby discovery is off</source>
+        <translation>주변 기기 검색이 꺼져 있습니다</translation>
     </message>
 </context>
 <context>
@@ -1266,6 +1278,18 @@
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>차단된 연결 자동 감지 (권장)</translation>
     </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>고급 설정</translation>
+    </message>
+    <message>
+        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+        <translation>다시 연결하면 적용됩니다. 이 컴퓨터의 언어와 검색 설정은 변경되지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Session behavior</source>
+        <translation>세션 동작</translation>
+    </message>
 </context>
 <context>
     <name>StreamSegue</name>
@@ -1441,6 +1465,38 @@
     <message>
         <source>Sharing service on</source>
         <translation>공유 서비스 켜짐</translation>
+    </message>
+    <message>
+        <source>Current connection</source>
+        <translation>현재 연결</translation>
+    </message>
+    <message>
+        <source>Connected</source>
+        <translation>연결됨</translation>
+    </message>
+    <message>
+        <source>Return</source>
+        <translation>데스크톱으로</translation>
+    </message>
+    <message>
+        <source>Session data</source>
+        <translation>이번 세션 데이터</translation>
+    </message>
+    <message>
+        <source>Details</source>
+        <translation>자세히</translation>
+    </message>
+    <message>
+        <source>Received: %1</source>
+        <translation>수신: %1</translation>
+    </message>
+    <message>
+        <source>Sent: %1</source>
+        <translation>송신: %1</translation>
+    </message>
+    <message>
+        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+        <translation>일시 재연결을 포함한 미디어, 제어 및 클립보드 전송량입니다. IP/VPN, 클립보드 TLS, 기기 검색 및 호스트 공유 트래픽은 제외됩니다. 통신사 청구량과 다릅니다.</translation>
     </message>
 </context>
 <context>
@@ -1727,6 +1783,70 @@
         <source>Apply</source>
         <translation>적용</translation>
     </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 설정</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>이 설정은 이 기기에만 적용됩니다. 변경 후 다시 연결하세요.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>새 기기의 기본 설정입니다. 기기 메뉴의 기기 설정에서 개별 연결을 변경하세요.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>저장됨 · 다시 연결하면 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>끄면 보기 전용으로 연결됩니다. 로컬 DeskPort 단축키는 계속 사용할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>다시 연결하면 새로 복사한 내용을 이 연결된 기기와 공유합니다. 일반 텍스트 최대 128 MiB이며 이미지와 파일은 공유하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>이 기기의 소리 수신</translation>
+    </message>
+    <message>
+        <source>Appearance and preferences for this computer only.</source>
+        <translation>이 컴퓨터의 모양과 환경설정입니다.</translation>
+    </message>
+    <message>
+        <source>Theme</source>
+        <translation>테마</translation>
+    </message>
+    <message>
+        <source>Accent color</source>
+        <translation>강조 색상</translation>
+    </message>
+    <message>
+        <source>Blue</source>
+        <translation>파란색</translation>
+    </message>
+    <message>
+        <source>Green</source>
+        <translation>초록색</translation>
+    </message>
+    <message>
+        <source>Purple</source>
+        <translation>보라색</translation>
+    </message>
+    <message>
+        <source>Orange</source>
+        <translation>주황색</translation>
+    </message>
+    <message>
+        <source>Show data usage in the sidebar</source>
+        <translation>사이드바에 데이터 사용량 표시</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -1797,6 +1917,14 @@
     <message>
         <source>Checking availability</source>
         <translation>사용 가능 여부 확인 중</translation>
+    </message>
+    <message>
+        <source>Device settings</source>
+        <translation>기기 설정</translation>
+    </message>
+    <message>
+        <source>Computer</source>
+        <translation>컴퓨터</translation>
     </message>
 </context>
 <context>
@@ -2005,6 +2133,18 @@
         <source>Saved · restart sharing to apply changes.</source>
         <translation>저장됨 · 변경 사항을 적용하려면 공유를 다시 시작하세요.</translation>
     </message>
+    <message>
+        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+        <translation>화면, 오디오 및 입력은 연결하는 기기에서 설정합니다. 다시 연결하면 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Device connection port</source>
+        <translation>장치 연결 포트</translation>
+    </message>
+    <message>
+        <source>Apply</source>
+        <translation>적용</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2095,6 +2235,10 @@
     <message>
         <source>Client access</source>
         <translation>클라이언트 접근</translation>
+    </message>
+    <message>
+        <source>Discover nearby devices</source>
+        <translation>주변 기기 검색</translation>
     </message>
 </context>
 <context>
@@ -2297,6 +2441,10 @@
         <source> Retrying automatically in %1 seconds.</source>
         <translation> %1초 후 자동으로 다시 시도합니다.</translation>
     </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>다시 연결</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2307,5 +2455,307 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>데스크톱 로딩 시간이 초과되었습니다. 기기 목록에서 다시 시도하세요.</translation></message>
 <message><source>Connecting to desktop…</source><translation>데스크톱에 연결 중…</translation></message>
 <message><source>Back to devices</source><translation>기기 목록으로 돌아가기</translation></message>
+</context>
+<context>
+    <name>DeviceSettings</name>
+    <message>
+        <source>Device settings</source>
+        <translation>기기 설정</translation>
+    </message>
+    <message>
+        <source>Saved only for this device. Changes apply on the next connection.</source>
+        <translation>이 기기에만 저장되며 다음 연결부터 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Picture mode</source>
+        <translation>화면 모드</translation>
+    </message>
+    <message>
+        <source>Automatic (recommended)</source>
+        <translation>자동(권장)</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>선명도 우선</translation>
+    </message>
+    <message>
+        <source>Smooth</source>
+        <translation>부드러움 우선</translation>
+    </message>
+    <message>
+        <source>Save data</source>
+        <translation>데이터 절약</translation>
+    </message>
+    <message>
+        <source>Custom</source>
+        <translation>사용자 정의</translation>
+    </message>
+    <message>
+        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
+        <translation>자동은 해상도에 따라 대역폭 상한을 선택합니다. 데이터 절약은 30 fps, 영상 상한 5 Mbps입니다.</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>클라이언트 창 해상도에 맞추기</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>이 기기의 소리 수신</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+    </message>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>고급 스트리밍 설정</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>저장됨 · 다시 연결하면 적용됩니다.</translation>
+    </message>
+</context>
+<context>
+    <name>DeviceAdvanced</name>
+    <message>
+        <source>Advanced streaming settings</source>
+        <translation>고급 스트리밍 설정</translation>
+    </message>
+    <message>
+        <source>Settings for %1</source>
+        <translation>%1 설정</translation>
+    </message>
+    <message>
+        <source>Make DeskPort your own.</source>
+        <translation>DeskPort를 원하는 대로 설정하세요.</translation>
+    </message>
+    <message>
+        <source>These settings apply only to this device. Reconnect to apply changes.</source>
+        <translation>이 설정은 이 기기에만 적용됩니다. 변경 후 다시 연결하세요.</translation>
+    </message>
+    <message>
+        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+        <translation>새 기기의 기본 설정입니다. 기기 메뉴의 기기 설정에서 개별 연결을 변경하세요.</translation>
+    </message>
+    <message>
+        <source>Saved · reconnect to apply changes.</source>
+        <translation>저장됨 · 다시 연결하면 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Connecting to remote computers</source>
+        <translation>원격 컴퓨터 연결</translation>
+    </message>
+    <message>
+        <source>Picture</source>
+        <translation>화면</translation>
+    </message>
+    <message>
+        <source>Input</source>
+        <translation>입력</translation>
+    </message>
+    <message>
+        <source>Sound</source>
+        <translation>소리</translation>
+    </message>
+    <message>
+        <source>Advanced</source>
+        <translation>고급</translation>
+    </message>
+    <message>
+        <source>Match the client window resolution</source>
+        <translation>클라이언트 창 해상도에 맞추기</translation>
+    </message>
+    <message>
+        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+        <translation>연결된 Mac의 내장 가상 디스플레이를 사용합니다. 창 크기를 변경하면 화면이 잠시 다시 연결되지만 앱은 열린 상태로 유지됩니다. 다른 호스트에는 아래 해상도가 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Smart streaming</source>
+        <translation>스마트 스트리밍</translation>
+    </message>
+    <message>
+        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+        <translation>해상도에 맞는 대역폭 상한과 부드러운 프레임 표시를 사용합니다. 수동 설정을 사용하려면 끄세요.</translation>
+    </message>
+    <message>
+        <source>Quality preset</source>
+        <translation>화질 프리셋</translation>
+    </message>
+    <message>
+        <source>Choose a preset…</source>
+        <translation>프리셋 선택…</translation>
+    </message>
+    <message>
+        <source>Office · 30 fps / 10 Mbps</source>
+        <translation>사무용 · 30 fps / 10 Mbps</translation>
+    </message>
+    <message>
+        <source>Clear · 60 fps / 40 Mbps</source>
+        <translation>선명하게 · 60 fps / 40 Mbps</translation>
+    </message>
+    <message>
+        <source>Smooth · 60 fps / 15 Mbps</source>
+        <translation>부드럽게 · 60 fps / 15 Mbps</translation>
+    </message>
+    <message>
+        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+        <translation>프리셋은 프레임 속도와 대역폭만 변경합니다. 아래에서 네트워크에 맞게 조정하세요.</translation>
+    </message>
+    <message>
+        <source>Picture adjustments</source>
+        <translation>화면 조정</translation>
+    </message>
+    <message>
+        <source>Fallback resolution</source>
+        <translation>대체 해상도</translation>
+    </message>
+    <message>
+        <source>Resolution</source>
+        <translation>해상도</translation>
+    </message>
+    <message>
+        <source>Connection window</source>
+        <translation>연결 창</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>전체 화면</translation>
+    </message>
+    <message>
+        <source>Borderless full screen</source>
+        <translation>테두리 없는 전체 화면</translation>
+    </message>
+    <message>
+        <source>Window</source>
+        <translation>창</translation>
+    </message>
+    <message>
+        <source>Frame rate</source>
+        <translation>프레임 속도</translation>
+    </message>
+    <message>
+        <source>Bandwidth · %1 Mbps</source>
+        <translation>대역폭 · %1 Mbps</translation>
+    </message>
+    <message>
+        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+        <translation>값이 높을수록 화질과 대역폭 사용량이 늘어납니다. 슬라이더를 움직이지 않으면 기존 고급 설정값을 유지합니다.</translation>
+    </message>
+    <message>
+        <source>Smooth frame pacing</source>
+        <translation>부드러운 프레임 표시</translation>
+    </message>
+    <message>
+        <source>Show streaming statistics</source>
+        <translation>스트리밍 통계 표시</translation>
+    </message>
+    <message>
+        <source>Synchronize frames to this display</source>
+        <translation>이 디스플레이에 프레임 동기화</translation>
+    </message>
+    <message>
+        <source>Keyboard &amp; pointer</source>
+        <translation>키보드 및 포인터</translation>
+    </message>
+    <message>
+        <source>Allow keyboard, pointer and controller input</source>
+        <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
+    </message>
+    <message>
+        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+        <translation>끄면 보기 전용으로 연결됩니다. 로컬 DeskPort 단축키는 계속 사용할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Use a desktop-style pointer</source>
+        <translation>데스크톱 방식 포인터 사용</translation>
+    </message>
+    <message>
+        <source>Always show a local pointer in desktop mode</source>
+        <translation>데스크톱 모드에서 로컬 포인터 항상 표시</translation>
+    </message>
+    <message>
+        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+        <translation>호스트가 커서를 숨겨도 포인터를 표시합니다. 포인터가 두 개 보이면 이 옵션을 끄세요.</translation>
+    </message>
+    <message>
+        <source>Reverse scrolling direction</source>
+        <translation>스크롤 방향 반전</translation>
+    </message>
+    <message>
+        <source>Send system shortcuts to the remote computer</source>
+        <translation>시스템 단축키를 원격 컴퓨터로 전송</translation>
+    </message>
+    <message>
+        <source>Never</source>
+        <translation>안 함</translation>
+    </message>
+    <message>
+        <source>Only in full screen</source>
+        <translation>전체 화면에서만</translation>
+    </message>
+    <message>
+        <source>Always</source>
+        <translation>항상</translation>
+    </message>
+    <message>
+        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+        <translation>Mac에서는 Super / Windows가 Command, Alt가 Option에 해당합니다. 창에서 Super + Space를 전달하려면 항상을 선택하세요. 변경 사항은 다음 연결부터 적용됩니다.</translation>
+    </message>
+    <message>
+        <source>Share plain text clipboard during a session</source>
+        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+    </message>
+    <message>
+        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+        <translation>다시 연결하면 새로 복사한 내용을 이 연결된 기기와 공유합니다. 일반 텍스트 최대 128 MiB이며 이미지와 파일은 공유하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+        <translation>포커스된 영상 안에서 포인터를 따라 키보드를 전달합니다. 벗어나면 키와 버튼을 놓습니다. 클릭하여 포커스하세요. 시스템 예약 단축키는 로컬에서 처리될 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+        <translation>Ctrl + Alt + Shift + Z로 원격 입력을 해제합니다.</translation>
+    </message>
+    <message>
+        <source>Sound from the remote computer</source>
+        <translation>원격 컴퓨터의 소리</translation>
+    </message>
+    <message>
+        <source>Receive sound from this device</source>
+        <translation>이 기기의 소리 수신</translation>
+    </message>
+    <message>
+        <source>Mute when DeskPort loses focus</source>
+        <translation>DeskPort가 포커스를 잃으면 음소거</translation>
+    </message>
+    <message>
+        <source>Also play audio on the host</source>
+        <translation>호스트에서도 소리 재생</translation>
+    </message>
+    <message>
+        <source>Advanced &amp; support</source>
+        <translation>고급 및 지원</translation>
+    </message>
+    <message>
+        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+        <translation>사용자 지정 해상도, 코덱, HDR, 서라운드 및 컨트롤러 옵션은 고급 설정에서 조정할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Advanced settings</source>
+        <translation>고급 설정</translation>
+    </message>
+    <message>
+        <source>Permission guide</source>
+        <translation>권한 안내</translation>
+    </message>
+    <message>
+        <source>Report a problem</source>
+        <translation>문제 신고</translation>
+    </message>
 </context>
 </TS>

@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QColor>
 
 class SystemProperties : public QObject
 {
@@ -12,6 +13,11 @@ class SystemProperties : public QObject
 
 public:
     SystemProperties();
+    Q_PROPERTY(bool systemDark READ systemDark NOTIFY appearanceChanged)
+    Q_PROPERTY(QColor systemAccent READ systemAccent NOTIFY appearanceChanged)
+    bool systemDark() const;
+    QColor systemAccent() const;
+    bool eventFilter(QObject* watched, QEvent* event) override;
 
     Q_PROPERTY(bool hasHardwareAcceleration MEMBER hasHardwareAcceleration CONSTANT)
     Q_PROPERTY(bool rendererAlwaysFullScreen MEMBER rendererAlwaysFullScreen CONSTANT)
@@ -34,6 +40,7 @@ public:
     Q_INVOKABLE int getRefreshRate(int displayIndex);
 
 signals:
+    void appearanceChanged();
     void unmappedGamepadsChanged();
 
 private:

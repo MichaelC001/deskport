@@ -2,6 +2,7 @@
 #pragma once
 #include "clipboardsync.h"
 #include "sessionlifetime.h"
+#include "resizesettler.h"
 
 #include <QSemaphore>
 #include <QWindow>
@@ -116,11 +117,16 @@ public:
 
     QString hostId() const;
     QString hostName() const;
+    Q_INVOKABLE QVariantMap traffic() const;
+private:
+    quint64 m_TrafficReceivedBase = 0, m_TrafficSentBase = 0;
+public:
     Q_INVOKABLE void exec(QWindow* qtWindow);
-    Q_INVOKABLE bool adaptiveRestartPending() const { return m_AdaptiveNextSize.isValid(); }
+    Q_INVOKABLE bool adaptiveRestartPending() const { return m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
     Q_INVOKABLE Session* adaptiveContinuation();
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
+    void requestReconnect();
 
     static
     void getDecoderInfo(SDL_Window* window,
@@ -156,21 +162,24 @@ signals:
 
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
+    void transportCleanupFinished();
 
 private:
-    SessionLifetime m_Lifetime{this};
+    ResizeSettler m_ResizeSettler;
+    bool m_ExecRequested = false;
+    SessionLifetime m_Lifetime{this, [this] { emit readyForDeletion(); }};
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
     std::shared_ptr<TransitionWindow> m_TransitionWindow;
     QTimer* m_TransitionTimer = nullptr;
-    QSize m_AdaptiveNextSize, m_AdaptiveObservedSize, m_InitialAdaptiveSize;
+    QSize m_AdaptiveNextSize, m_AdaptiveObservedSize;
     QByteArray m_WindowOutputs;
     QString m_LastWindowRecord;
     bool m_RestoredWindow = false;
     QRect m_AdaptiveGeometry;
     int m_AdaptiveScale = 1, m_AdaptiveObservedScale = 1;
-    Uint32 m_AdaptiveChangedAt = 0;
+    bool m_ManualReconnect = false, m_ManualResume = false;
     bool m_AdaptiveResume = false, m_AdaptiveMaximized = false;
     struct ClientScreen { QString name; QPoint origin; QSize logicalSize; qreal scale; };
     QVector<ClientScreen> m_ClientScreens;

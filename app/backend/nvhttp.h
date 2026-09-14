@@ -174,7 +174,7 @@ public:
              // Launching an app can take a host a long time. Resuming a desktop
              // that is already running for an adaptive resize cannot, and the
              // picture is gone while the client waits.
-             int timeoutMs = 0);
+             int timeoutMs = 0, bool remoteAudio = true, bool remoteInput = true, bool smart = true);
 
     QVector<NvApp>
     getAppList();

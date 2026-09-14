@@ -1,6 +1,9 @@
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
+#define DP_TRAFFIC_IMPLEMENTATION
+#include "../../moonlight-common-c/traffic.h"
+#include "backend/clipboardtraffic.h"
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
 #endif
@@ -550,7 +553,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 }
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
-    : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
+    : m_Preferences((preferences ? preferences : StreamingPreferences::get())->snapshot(computer->uuid, this, preferences != nullptr)),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
@@ -570,7 +573,9 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
-    connect(this, &Session::readyForDeletion, this, [this] {
+    m_TrafficReceivedBase = DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed);
+    m_TrafficSentBase = DpTrafficSent() + DeskPortTraffic::clipboardSent().load(std::memory_order_relaxed);
+    connect(this, &Session::transportCleanupFinished, this, [this] {
         m_Lifetime.cleanupFinished();
     }, Qt::QueuedConnection);
 }
@@ -623,6 +628,17 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
 }
 Session* Session::adaptiveContinuation() {
     if (!adaptiveRestartPending()) return nullptr;
+    if (m_ManualReconnect) {
+        // Read the saved device profile only after the old transport is stopped.
+        auto next = new Session(m_Computer, m_App);
+        next->m_TrafficReceivedBase = m_TrafficReceivedBase;
+        next->m_TrafficSentBase = m_TrafficSentBase;
+        next->m_ManualResume = true;
+        if (next->m_Preferences->adaptiveResolution) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
+        else m_AdaptiveDisplay.reset();
+        SDL_FlushEvents(SDL_USEREVENT, SDL_LASTEVENT);
+        return next;
+    }
     auto next = new Session(m_Computer, m_App, m_Preferences);
     if (m_TransitionTimer) m_TransitionTimer->stop();
     // The old transport has stopped; discard its queued decoder/rumble callbacks.
@@ -635,9 +651,16 @@ Session* Session::adaptiveContinuation() {
     next->m_AdaptiveScale = m_AdaptiveScale;
     next->m_AdaptiveMaximized = m_AdaptiveMaximized;
     next->m_IsFullScreen = m_IsFullScreen;
+    next->m_TrafficReceivedBase = m_TrafficReceivedBase;
+    next->m_TrafficSentBase = m_TrafficSentBase;
     next->m_AdaptiveResume = true;
     deskportResizeStage("continuation");
     return next;
+}
+void Session::requestReconnect() {
+    // SDL owns session state on Linux; marshal tray requests to that thread.
+    SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortReconnect;
+    SDL_PushEvent(&event);
 }
 void Session::endForSystemSleep() {
     // Not a user disconnect: never honor "quit app after streaming".
@@ -646,7 +669,7 @@ void Session::endForSystemSleep() {
     SDL_PushEvent(&event);
 }
 void Session::initializeClipboard() {
-    if (!m_Preferences->sharedClipboard) return;
+    if (!m_Preferences->sharedClipboard || !m_Preferences->remoteInput) return;
     const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
     for (const auto& value : peers) {
         const auto peer = value.toObject();
@@ -685,8 +708,17 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     // The retained native window has received any intervening drag events.
     // Read its newest size once before committing the next host request.
     if (m_AdaptiveResume && m_TransitionWindow) {
-        m_TransitionWindow->pump();
+        ResizeSettler settling;
         auto retained = m_TransitionWindow->window();
+        while (!m_TransitionWindow->cancelled() && desktopWindowVisible(retained)) {
+            m_TransitionWindow->pump();
+            const auto latest = workspaceForWindow(retained);
+            if (settling.update(latest.pixels, latest.scale, SDL_GetTicks(),
+                                (SDL_GetGlobalMouseState(nullptr, nullptr) | SDL_GetMouseState(nullptr, nullptr)) != 0)) break;
+            if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
+            SDL_Delay(20);
+        }
+        if (m_TransitionWindow->cancelled()) return;
         if (desktopWindowVisible(retained)) {
             const auto latest = workspaceForWindow(retained);
             if (latest.pixels.isValid()) {
@@ -700,12 +732,13 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = workspace.scale;
-    const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize :
-        (m_RestoredWindow ? m_InitialAdaptiveSize : workspace.pixels);
+    // Restore window geometry, not a stream size negotiated by an older policy.
+    const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_TransitionWindow) m_TransitionWindow->pump();
+            if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
         })) {
         m_StreamConfig.width = target.width(); m_StreamConfig.height = target.height();
         deskportResizeStage("mode-ready", target.width(), target.height());
@@ -724,16 +757,17 @@ bool Session::checkAdaptiveResize() {
     const auto size = workspace.pixels;
     const int scale = workspace.scale;
     if (!size.isValid()) return false;
+    const bool settled = m_ResizeSettler.update(size, scale, SDL_GetTicks(),
+        (SDL_GetGlobalMouseState(nullptr, nullptr) | SDL_GetMouseState(nullptr, nullptr)) != 0);
     if (size != m_AdaptiveObservedSize || scale != m_AdaptiveObservedScale) {
         m_AdaptiveObservedSize = size; m_AdaptiveObservedScale = scale;
-        m_AdaptiveChangedAt = SDL_GetTicks();
         deskportResizeStage("observed", size.width(), size.height()); return false;
     }
     if (size == QSize(m_StreamConfig.width, m_StreamConfig.height) && scale == m_AdaptiveScale) {
-        if (SDL_GetTicks() - m_AdaptiveChangedAt >= 300) rememberAdaptiveWindow();
+        if (settled) rememberAdaptiveWindow();
         return false;
     }
-    if (SDL_GetTicks() - m_AdaptiveChangedAt < 300 || SDL_GetMouseState(nullptr, nullptr) != 0 ||
+    if (!settled ||
         SDL_HasEvent(SDL_QUIT) || SDL_HasEvents(SDL_KEYDOWN, SDL_KEYUP)) return false;
     // Finish the old stream before changing the capture mode. Preserve desktop
     // apps and the authenticated display lease across the new resume request.
@@ -773,7 +807,6 @@ void Session::restoreAdaptiveWindow()
     m_AdaptiveGeometry = state.geometry;
     m_AdaptiveMaximized = state.maximized;
     m_IsFullScreen = state.fullscreen;
-    m_InitialAdaptiveSize = state.streamSize;
     m_RestoredWindow = true;
     qInfo() << "Restoring last client workspace:" << state.streamSize << "window:" << state.geometry.size();
 }
@@ -1177,7 +1210,7 @@ void Session::emitLaunchWarning(QString text)
 
         if (!m_ThreadedExec) {
             // Pump the UI loop while we wait if we're on the main thread
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             QCoreApplication::sendPostedEvents();
         }
     }
@@ -1469,7 +1502,7 @@ private:
         Session::s_ActiveSessionSemaphore.release();
 
         // Notify that the session is ready to be cleaned up
-        emit m_Session->readyForDeletion();
+        emit m_Session->transportCleanupFinished();
     }
 
     void run() override
@@ -1816,7 +1849,7 @@ bool Session::startConnectionAsync()
     try {
         NvHTTP http(m_Computer);
         if (m_AdaptiveResume) deskportResizeStage("resume-request");
-        http.startApp((m_AdaptiveResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
+        http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
                       enableGameOptimizations,
@@ -1824,7 +1857,8 @@ bool Session::startConnectionAsync()
                       m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
                       rtspSessionUrl,
-                      m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0);
+                      m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
+                      m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
         if (m_AdaptiveResume) deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -1967,7 +2001,14 @@ public:
 
 void Session::exec(QWindow* qtWindow)
 {
-    m_Lifetime.beginExec();
+    if (m_ExecRequested) return;
+    m_ExecRequested = true;
+    if (!m_Lifetime.beginExec()) {
+        emit displayLaunchError(tr("Another connection is still active. Wait for it to finish."));
+        emit sessionFinished(0);
+        emit transportCleanupFinished();
+        return;
+    }
     m_QtWindow = qtWindow;
     m_ClientScreens.clear();
     m_ClientWayland = QGuiApplication::platformName().startsWith("wayland");
@@ -1986,16 +2027,6 @@ void Session::exec(QWindow* qtWindow)
         // Run the streaming session on a separate thread for Linux/BSD
         ExecThread execThread(this);
         execThread.start();
-
-        // Until the SDL streaming window is created, we should continue
-        // to update the Qt UI to allow warning messages to display and
-        // make sure that the Qt window can hide itself.
-        while (!execThread.wait(10) && m_Window == nullptr) {
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-            QCoreApplication::sendPostedEvents();
-        }
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        QCoreApplication::sendPostedEvents();
 
         // Keep tray and local activation requests responsive while SDL owns
         // its window on the worker. Recall itself is queued to that owner.
@@ -2032,7 +2063,7 @@ void Session::execInternal()
         m_AdaptiveNextSize = {};
         m_AdaptiveDisplay.reset();
         emit sessionFinished(0);
-        emit readyForDeletion();
+        emit transportCleanupFinished();
         return;
     }
 
@@ -2058,7 +2089,7 @@ void Session::execInternal()
                 if (m_TransitionWindow->cancelled()) LiInterruptConnection();
             }
             if (!m_ThreadedExec) {
-                QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
                 QCoreApplication::sendPostedEvents();
             }
         }
@@ -2066,7 +2097,7 @@ void Session::execInternal()
         // Pump the event loop one last time to ensure we pick up any events from
         // the thread that happened while it was in the final successful QThread::wait().
         if (!m_ThreadedExec) {
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             QCoreApplication::sendPostedEvents();
         }
     }
@@ -2358,6 +2389,11 @@ void Session::execInternal()
 
         case SDL_USEREVENT:
             switch (event.user.code) {
+            case DeskPortReconnect:
+                if (m_UnexpectedTermination || adaptiveRestartPending()) break;
+                rememberAdaptiveWindow();
+                m_ManualReconnect = true;
+                goto DispatchDeferredCleanup;
             case DeskPortEndSession:
                 goto DispatchDeferredCleanup;
             case DeskPortHideWindow:
@@ -2490,6 +2526,14 @@ void Session::execInternal()
                             event.window.data1,
                             event.window.data2);
                 break;
+            }
+
+            // Older sizes in a queued drag burst no longer describe this window.
+            // Keep focus/close/display events intact; only skip stale size work.
+            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                int latestWidth, latestHeight;
+                SDL_GetWindowSize(m_Window, &latestWidth, &latestHeight);
+                if (event.window.data1 != latestWidth || event.window.data2 != latestHeight) break;
             }
 
             // Allow the renderer to handle the state change without being recreated
@@ -2745,7 +2789,7 @@ DispatchDeferredCleanup:
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
-    if (adaptiveRestartPending()) {
+    if (adaptiveRestartPending() && !m_ManualReconnect) {
         m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Adjusting resolution…"));
         qInfo() << "Adaptive display keeping client window:" << SDL_GetWindowID(m_Window);
     }
@@ -2773,3 +2817,8 @@ DispatchDeferredCleanup:
 
 QString Session::hostId() const { QReadLocker lock(&m_Computer->lock); return m_Computer->uuid; }
 QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return m_Computer->name; }
+
+QVariantMap Session::traffic() const {
+    return {{"received", double(DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed) - m_TrafficReceivedBase)},
+            {"sent", double(DpTrafficSent() + DeskPortTraffic::clipboardSent().load(std::memory_order_relaxed) - m_TrafficSentBase)}};
+}

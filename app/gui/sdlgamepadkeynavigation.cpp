@@ -1,4 +1,5 @@
 #include "sdlgamepadkeynavigation.h"
+#include "streaming/sessionlifetime.h"
 
 #include <QKeyEvent>
 #include <QGuiApplication>
@@ -26,6 +27,11 @@ SdlGamepadKeyNavigation::~SdlGamepadKeyNavigation()
 
 void SdlGamepadKeyNavigation::enable()
 {
+    if (SessionLifetime::busy()) {
+        // Retry only after both the SDL loop and transport cleanup finish.
+        m_PollingTimer->start(50);
+        return;
+    }
     if (m_Enabled) {
         return;
     }
@@ -74,6 +80,7 @@ void SdlGamepadKeyNavigation::enable()
 
 void SdlGamepadKeyNavigation::disable()
 {
+    m_PollingTimer->stop();
     if (!m_Enabled) {
         return;
     }
@@ -92,6 +99,10 @@ void SdlGamepadKeyNavigation::disable()
 
 void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
+    // SDL has one shared queue. The control center must never drain it while
+    // a session is initializing, streaming or tearing down.
+    if (SessionLifetime::busy()) return;
+    if (!m_Enabled) { enable(); return; }
     SDL_Event event;
 
     // Discard any pending button events on the first poll to avoid picking up
@@ -268,7 +279,7 @@ void SdlGamepadKeyNavigation::setUiNavMode(bool uiNavMode)
 
 int SdlGamepadKeyNavigation::getConnectedGamepads()
 {
-    Q_ASSERT(m_Enabled);
+    if (SessionLifetime::busy() || !m_Enabled) return 0;
 
     int count = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {

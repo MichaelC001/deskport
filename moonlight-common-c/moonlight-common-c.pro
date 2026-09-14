@@ -94,3 +94,10 @@ CONFIG(debug, debug|release) {
 *-g++|*-clang* {
     QMAKE_CFLAGS_WARN_ON += -Wno-unused-parameter
 }
+
+# Instrument only this transport library, including ENet, without patching submodules.
+SOURCES += $$PWD/traffic.c
+unix: QMAKE_CFLAGS += -include $$PWD/traffic.h
+
+# ENet needs GNU IPv6 declarations before the forced accounting header is read.
+linux: DEFINES += _GNU_SOURCE=1

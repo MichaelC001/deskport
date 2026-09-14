@@ -1,6 +1,10 @@
 #include "peermanager.h"
+#include <QSysInfo>
 #include "peerstore.h"
 #include "clipboardprotocol.h"
+#ifdef Q_OS_MACOS
+#include "macclipboard.h"
+#endif
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QMimeData>
@@ -61,6 +65,7 @@ struct PeerManager::Link : QObject {
     QString clipboardText, clipboardEncoded;
     int clipboardMaxText = DeskPortClipboard::LegacyMaxText;
     bool clipboardSupported = false, clipboardIsText = false, clipboardDirty = true;
+    qint64 clipboardNativeRevision = -1;
     int clipboardRevision = 0, clipboardSequence = 0;
     qint64 lastClipboardRequest = 0;
     bool displayControl = false;
@@ -68,6 +73,15 @@ struct PeerManager::Link : QObject {
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
 };
+qint64 PeerManager::nativeClipboardRevision() const {
+#ifdef Q_OS_MACOS
+    // Offscreen tests must never touch the user's native clipboard.
+    if (QGuiApplication::platformName() == QStringLiteral("cocoa"))
+        return deskPortClipboardChangeCount();
+#endif
+    return -1;
+}
+
 PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                          const QString& directory, quint16 port, const QHostAddress& listenAddress)
     : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
@@ -108,7 +122,7 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
             fail(m_DisplayLink, tr("Display controller disconnected"));
     });
     connect(watchdog, &QTimer::timeout, this, [this] {
-        if (m_ClipboardLink && (!m_Host->running() || !QSettings().value("sharedClipboard", true).toBool() ||
+        if (m_ClipboardLink && (!m_Host->running() ||
             QDateTime::currentMSecsSinceEpoch() - m_ClipboardLink->lastClipboardRequest > 150000))
             fail(m_ClipboardLink, tr("Clipboard session ended"));
     });
@@ -232,6 +246,7 @@ QJsonObject PeerManager::metadata() const {
     auto meta = m_Host->identity();
     meta["name"] = QHostInfo::localHostName().left(64);
     meta["dnsName"] = dnsName(QHostInfo::localHostName());
+    meta["os"] = QSysInfo::prettyProductName();
     meta["version"] = 1;
     meta["clientBinding"] = 1;
     meta["endpointRefresh"] = 1;
@@ -432,13 +447,20 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
     if (type == "clipboard-start" || type == "clipboard-poll") {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || link->displayControl || !peer["ready"].toBool() ||
-            !peer["granted"].toBool() || !m_Host->running() || !QSettings().value("sharedClipboard", true).toBool() ||
+            !peer["granted"].toBool() || !m_Host->running() ||
             (m_ClipboardLink && m_ClipboardLink != link)) {
             fail(link, tr("Clipboard sharing requires an enabled host and an approved exclusive session")); return;
         }
         auto clipboard = QGuiApplication::clipboard();
         if (type == "clipboard-start")
             link->clipboardMaxText = DeskPortClipboard::negotiatedLimit(message["maxText"]);
+        // Cocoa dataChanged is activation-dependent. Poll only the cheap native
+        // generation while sharing, then let Qt synchronize MIME data on change.
+        const auto nativeRevision = nativeClipboardRevision();
+        if (nativeRevision >= 0 && nativeRevision != link->clipboardNativeRevision) {
+            link->clipboardNativeRevision = nativeRevision;
+            link->clipboardDirty = true;
+        }
         bool isText = link->clipboardIsText;
         QString current = link->clipboardText;
         if (link->clipboardDirty) {
@@ -479,7 +501,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         // Host revision is authoritative: an intervening host copy wins a concurrent copy.
         if (message["rev"].toInt() != link->clipboardRevision) {
             if (supported) reply["text"] = encoded;
-            else reply["error"] = QStringLiteral("Clipboard content is unsupported or exceeds the negotiated %1 MiB text limit.").arg(link->clipboardMaxText / (1024 * 1024));
+            else reply["error"] = QStringLiteral("This remote copy is not supported text or exceeds the %1 MiB limit and was skipped. Text sharing remains active.").arg(link->clipboardMaxText / (1024 * 1024));
         } else if (message.contains("text")) {
             QString text;
             if (!DeskPortClipboard::decode(message["text"], text, link->clipboardMaxText)) {

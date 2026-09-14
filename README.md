@@ -5,7 +5,9 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
+**Development prerelease: [0.2.3](docs/RELEASE_0.2.3.md)** — per-device session settings and tray reconnect for macOS arm64 and NixOS x86_64.
+
+**Stable version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission
 controls. The macOS package includes Sunshine and a native virtual display;
 the Linux native packages and AppImage include a Sunshine host for the existing

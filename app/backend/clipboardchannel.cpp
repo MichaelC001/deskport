@@ -1,4 +1,5 @@
 #include "clipboardchannel.h"
+#include "clipboardtraffic.h"
 #include "clipboardprotocol.h"
 #include <QSslSocket>
 #include <QSslError>
@@ -25,6 +26,9 @@ bool ClipboardChannel::take(QJsonObject& reply) {
 void ClipboardChannel::run() {
     QSslSocket socket;
     socket.setProxy(QNetworkProxy::NoProxy);
+    QObject::connect(&socket, &QSslSocket::bytesWritten, &socket, [](qint64 n) {
+        if (n > 0) DeskPortTraffic::clipboardSent().fetch_add(n, std::memory_order_relaxed);
+    }, Qt::DirectConnection);
     socket.setReadBufferSize(DeskPortClipboard::MaxFrame + 1);
     socket.setLocalCertificate(QSslCertificate(m_Cert));
     socket.setPrivateKey(QSslKey(m_Key, QSsl::Rsa));
@@ -42,7 +46,9 @@ void ClipboardChannel::run() {
         int searchFrom = 0;
         QElapsedTimer timeout; timeout.start();
         while (!isInterruptionRequested() && timeout.elapsed() < timeoutMs && socket.state() == QAbstractSocket::ConnectedState) {
-            buffer += socket.readAll();
+            const auto chunk = socket.readAll();
+            DeskPortTraffic::clipboardReceived().fetch_add(chunk.size(), std::memory_order_relaxed);
+            buffer += chunk;
             if (buffer.size() > DeskPortClipboard::MaxFrame) return {};
             const int end = buffer.indexOf('\n', searchFrom);
             searchFrom = buffer.size();

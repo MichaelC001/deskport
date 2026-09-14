@@ -1041,6 +1041,8 @@ bool ComputerManager::addBoundHost(QVariantMap peer) {
             startPollingComputer(host);
         }
     }
+    { QWriteLocker hostLock(&host->lock);
+      if (!peer.value("os").toString().isEmpty()) host->operatingSystem = peer.value("os").toString().left(80); }
     saveHost(host);
     emit computerStateChanged(host);
     return true;

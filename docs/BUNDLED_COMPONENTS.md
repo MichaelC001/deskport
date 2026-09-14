@@ -71,3 +71,11 @@ patch and removes its CPU pixel comparison. `host/macos/screen-video.h` and
 retained-surface refresh. They are copied into the host's corresponding-source
 resources. P010 retains upstream AVFoundation capture without pixel comparison.
 ScreenCaptureKit and QuartzCore are operating-system frameworks.
+
+## Operating-system marks (0.2.7)
+
+The OS marks in `app/res/os` come from Simple Icons 11.15.0
+(https://github.com/simple-icons/simple-icons/tree/11.15.0), distributed under
+CC0-1.0; the license is bundled alongside them. Colors are adapted for the cards.
+The generic computer mark comes from the existing bundled Material icon set.
+The DeskPort application mark remains the existing project asset.

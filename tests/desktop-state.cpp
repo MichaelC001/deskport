@@ -3,6 +3,7 @@
 #include <QJSEngine>
 #include <QPointer>
 #include "streaming/sessionlifetime.h"
+#include "streaming/resizesettler.h"
 #include "backend/sessionwindowstate.h"
 #include "settings/streamingpreferences.h"
 namespace WMUtils { bool isRunningWayland() { return false; } }
@@ -34,6 +35,46 @@ private slots:
         else lifetime.cleanupFinished();
         QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
         QVERIFY(session.isNull());
+    }
+
+    void sessionExcludesReentryUntilBothOwnersFinish() {
+        QPointer<QObject> first = new QObject, second = new QObject;
+        SessionLifetime a(first), b(second);
+        QVERIFY(a.beginExec());
+        QVERIFY(!a.beginExec());
+        QVERIFY(!b.beginExec());
+        a.endExec();
+        QVERIFY(SessionLifetime::busy());
+        QVERIFY(!b.beginExec());
+        a.cleanupFinished();
+        QVERIFY(!SessionLifetime::busy());
+        QVERIFY(b.beginExec());
+        b.cleanupFinished();
+        QVERIFY(SessionLifetime::busy());
+        b.endExec();
+        QVERIFY(!SessionLifetime::busy());
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QVERIFY(first.isNull()); QVERIFY(second.isNull());
+    }
+
+    void resizeWaitsForFinalSizeAndDragRelease() {
+        ResizeSettler settle;
+        QVERIFY(!settle.update({1280, 720}, 1, 0, false));
+        QVERIFY(!settle.update({1400, 800}, 1, 450, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 900, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 1399, false));
+        QVERIFY(settle.update({1600, 900}, 1, 1400, false));
+        QVERIFY(!settle.update({1600, 900}, 1, 1500, true));
+        QVERIFY(!settle.update({1600, 900}, 1, 1999, false));
+        QVERIFY(settle.update({1600, 900}, 1, 2000, false));
+        QVERIFY(!settle.update({1600, 900}, 2, 2100, false));
+        QVERIFY(!settle.update({}, 2, 2600, false));
+        QVERIFY(!settle.update({1600, 900}, 2, 2700, false));
+        QVERIFY(settle.update({1600, 900}, 2, 3200, false));
+        ResizeSettler wrap;
+        QVERIFY(!wrap.update({1280, 720}, 1, 0xffffff00u, false));
+        QVERIFY(!wrap.update({1280, 720}, 1, 243, false));
+        QVERIFY(wrap.update({1280, 720}, 1, 244, false));
     }
 
     void defaultsAndExplicitInputChoicesPersist() {
@@ -70,6 +111,44 @@ private slots:
         QCOMPARE(prefs->captureSysKeysMode, StreamingPreferences::CSK_ALWAYS);
         QVERIFY(prefs->showLocalCursor);
     }
+    void deviceProfilesAndSnapshotsAreIsolated() {
+        QTemporaryDir directory;
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, directory.path());
+        QSettings().clear();
+        auto defaults = StreamingPreferences::get(); defaults->reload();
+        defaults->width = 1920; defaults->language = StreamingPreferences::LANG_EN;
+        defaults->uiAccent = 3; defaults->showTraffic = true; defaults->uiTheme = 2;
+        defaults->save();
+        QScopedPointer<StreamingPreferences> a(defaults->forDevice("device-a"));
+        QScopedPointer<StreamingPreferences> b(defaults->forDevice("device-b"));
+        QCOMPARE(a->width, 1920); QCOMPARE(b->width, 1920);
+        a->width = 2560; a->remoteAudio = false; a->remoteInput = false;
+        a->captureSysKeysMode = StreamingPreferences::CSK_OFF;
+        a->language = StreamingPreferences::LANG_ZH_CN;
+        a->uiAccent = 1; a->showTraffic = false; a->uiTheme = 1; a->save();
+        b->reload(); QCOMPARE(b->width, 1920); QVERIFY(b->remoteAudio); QVERIFY(b->remoteInput);
+        defaults->reload(); QCOMPARE(defaults->width, 1920);
+        QCOMPARE(defaults->language, StreamingPreferences::LANG_EN);
+        QCOMPARE(defaults->uiAccent, 3); QVERIFY(defaults->showTraffic); QCOMPARE(defaults->uiTheme, 2);
+        QScopedPointer<StreamingPreferences> active(defaults->snapshot("DEVICE-A", nullptr));
+        QCOMPARE(active->width, 2560); QVERIFY(!active->remoteAudio); QVERIFY(!active->remoteInput);
+        QCOMPARE(active->captureSysKeysMode, StreamingPreferences::CSK_OFF);
+        a->width = 3840; a->remoteAudio = true; a->save();
+        QCOMPARE(active->width, 2560); QVERIFY(!active->remoteAudio);
+        QScopedPointer<StreamingPreferences> resized(active->snapshot("device-a", nullptr));
+        QCOMPARE(resized->width, 2560); QVERIFY(!resized->remoteAudio);
+        QScopedPointer<StreamingPreferences> reconnected(defaults->snapshot("device-a", nullptr));
+        QCOMPARE(reconnected->width, 3840); QVERIFY(reconnected->remoteAudio);
+        QCOMPARE(reconnected->language, StreamingPreferences::LANG_EN);
+        defaults->width = 1280; defaults->save(); a->reload();
+        QCOMPARE(a->width, 3840);
+        defaults->width = 1600; // CLI overrides are intentionally not persisted.
+        QScopedPointer<StreamingPreferences> cli(defaults->snapshot("device-a", nullptr, true));
+        QCOMPARE(cli->width, 1600);
+        defaults->reload();
+    }
+
     void savedWorkspaceIsHostAndDisplaySpecific() {
         QTemporaryDir dir;
         const auto path = dir.path() + "/window.ini";

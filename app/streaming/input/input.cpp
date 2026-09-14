@@ -10,7 +10,8 @@
 #include <QGuiApplication>
 
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight)
-    : m_MultiController(prefs.multiController),
+    : m_RemoteInputEnabled(prefs.remoteInput),
+      m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
       m_ReverseScrollDirection(prefs.reverseScrollDirection),
@@ -328,6 +329,7 @@ void SdlInputHandler::notifyFocusGained()
 
 bool SdlInputHandler::isCaptureActive()
 {
+    if (!m_RemoteInputEnabled) return false;
     if (SDL_GetRelativeMouseMode()) {
         return true;
     }
@@ -396,6 +398,7 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 
 void SdlInputHandler::setCaptureActive(bool active)
 {
+    active = active && m_RemoteInputEnabled;
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {

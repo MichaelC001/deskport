@@ -6,6 +6,7 @@ import ComputerManager 1.0
 
 Item {
     id: page
+    readonly property bool connectionPending: true
     property int computerIndex
     property bool initialized: false
     property bool finished: false
@@ -42,9 +43,11 @@ Item {
         retry.stop()
         deadline.stop()
         // Replace the loading page so disconnect returns directly to Devices.
+        var keepDevicesVisible = stackView.currentItem !== page
         stackView.replace(page, Qt.resolvedUrl("StreamSegue.qml"), {
             "session": session, "appName": target.name, "isResume": target.resume
         }, StackView.Immediate)
+        if (keepDevicesVisible) window.showDevices()
     }
 
     StackView.onActivated: {
@@ -56,7 +59,9 @@ Item {
         Qt.callLater(page.tryConnect)
     }
 
-    StackView.onDeactivating: { finished = true; retry.stop(); deadline.stop() }
+    // Covering this page keeps discovery alive; popping it cancels even before
+    // deferred destruction and already-scheduled tryConnect callbacks run.
+    StackView.onRemoved: { finished = true; retry.stop(); deadline.stop() }
 
     Connections {
         target: apps

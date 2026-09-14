@@ -1,3 +1,4 @@
+#include <QSysInfo>
 #include <QtTest>
 #include <future>
 #include "adaptivedisplay.h"
@@ -271,19 +272,39 @@ private slots:
     }
     void workspaceUsesClientSystemScale() {
         const auto fractional = DeskPortDisplay::forClient(QSize(2880, 1620), 1.5);
-        QCOMPARE(fractional.pixels, QSize(2880, 1620)); QCOMPARE(fractional.scale, 2);
-        QCOMPARE(DeskPortDisplay::forClient(QSize(3828, 2040), 1.5).pixels, QSize(3828, 2040));
+        QCOMPARE(fractional.pixels, QSize(3840, 2160)); QCOMPARE(fractional.scale, 2);
+        QCOMPARE(DeskPortDisplay::forClient(QSize(2868, 1500), 1.5).pixels, QSize(3824, 2000));
+        QCOMPARE(DeskPortDisplay::forClient(QSize(3828, 2040), 1.5).pixels, QSize(5104, 2720));
         const auto retina = DeskPortDisplay::forClient(QSize(2880, 1800), 2.0);
         QCOMPARE(retina.pixels, QSize(2880, 1800)); QCOMPARE(retina.scale, 2);
         const auto standard = DeskPortDisplay::forClient(QSize(1920, 1080), 1.0);
         QCOMPARE(standard.pixels, QSize(1920, 1080)); QCOMPARE(standard.scale, 1);
         const auto slight = DeskPortDisplay::forClient(QSize(2400, 1350), 1.25);
-        QCOMPARE(slight.pixels, QSize(2400, 1352)); QCOMPARE(slight.scale, 1);
+        QCOMPARE(slight.pixels, QSize(3840, 2160)); QCOMPARE(slight.scale, 2);
         // The 2x logical desktop keeps the 960x540 minimum.
         QCOMPARE(DeskPortDisplay::forClient(QSize(800, 450), 2.0).pixels, QSize(1920, 1080));
         QCOMPARE(DeskPortDisplay::forClient(QSize(8000, 4500), 2.0).pixels, QSize(7680, 4320));
         QVERIFY(!DeskPortDisplay::forClient(QSize(), 1.5).pixels.isValid());
         QVERIFY(!DeskPortDisplay::forClient(QSize(1920,1080), 0).pixels.isValid());
+    }
+    void fractionalWorkspacePreservesDetailAndUiSize() {
+        // Compare the visible UI scale after fitting the stream to the window.
+        // Merely asserting a chosen resolution would miss the old oversized UI.
+        for (double scale : {1.0, 1.25, 1.5, 1.75, 2.0}) {
+            for (QSize drawable : {QSize(2868, 1500), QSize(2400, 1600), QSize(1920, 2400)}) {
+                const auto workspace = DeskPortDisplay::forClient(drawable, scale);
+                QVERIFY(workspace.pixels.width() >= drawable.width());
+                QVERIFY(workspace.pixels.height() >= drawable.height());
+                const double visibleScale = double(workspace.scale) * drawable.width() / workspace.pixels.width();
+                QVERIFY(std::abs(visibleScale - scale) < 0.005);
+                QCOMPARE(workspace.pixels.width() % 4, 0);
+                QCOMPARE(workspace.pixels.height() % 4, 0);
+            }
+        }
+        const auto dense = DeskPortDisplay::forClient(QSize(3840, 2160), 3.0);
+        QCOMPARE(dense.pixels, QSize(3840, 2160)); // No low-resolution upscaling above 2x.
+        const auto cappedPortrait = DeskPortDisplay::forClient(QSize(1620, 2880), 1.25);
+        QCOMPARE(cappedPortrait.pixels, QSize(2432, 4320));
     }
     void adaptiveSizeBounds() {
         QCOMPARE(AdaptiveDisplay::boundedSize(QSize(15360, 8640)), QSize(7680, 4320));
@@ -369,6 +390,7 @@ private slots:
             b.approve(b.requestId());
             QTRY_COMPARE_WITH_TIMEOUT(aDone.size(),1,7000);
             QTRY_COMPARE_WITH_TIMEOUT(bDone.size(),1,7000);
+            QCOMPARE(a.peers().first().toMap()["os"].toString(), QSysInfo::prettyProductName());
             QCOMPARE(a.peers().first().toMap()["address"].toString(), QString("localhost"));
             QCOMPARE(b.peers().first().toMap()["address"].toString(), QHostInfo::localHostName());
             QVERIFY(a.peers().first().toMap()["ready"].toBool()); QVERIFY(b.peers().first().toMap()["ready"].toBool());

@@ -2,6 +2,8 @@
 #include "utils.h"
 
 #include <QSettings>
+#include <QCryptographicHash>
+#include <QMetaProperty>
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QLocale>
@@ -55,8 +57,31 @@
 static StreamingPreferences* s_GlobalPrefs;
 static QReadWriteLock s_GlobalPrefsLock;
 
-StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine)
-    : m_QmlEngine(qmlEngine)
+namespace {
+// Application identity, discovery and presentation stay local. Everything else
+// serialized by StreamingPreferences is a connection preference.
+bool localSetting(const QString& key) {
+    return key == "language" || key.startsWith("ui/") || key == "uidisplaymode" ||
+        key == "startwindowed" || key == "mdns" || key == "defaultver";
+}
+class DeviceSettings : public QSettings {
+public:
+    explicit DeviceSettings(const QString& id) : prefix(id.isEmpty() ? QString() :
+        "devices/" + QString::fromLatin1(QCryptographicHash::hash(id.toLower().toUtf8(), QCryptographicHash::Sha256).toHex()) + "/") {}
+    QVariant value(const QString& key, const QVariant& fallback = QVariant()) const {
+        const auto inherited = QSettings::value(key, fallback);
+        return prefix.isEmpty() || localSetting(key) ? inherited : QSettings::value(prefix + key, inherited);
+    }
+    void setValue(const QString& key, const QVariant& value) {
+        if (!prefix.isEmpty() && localSetting(key)) return;
+        QSettings::setValue(prefix + key, value);
+    }
+private:
+    QString prefix;
+};
+}
+StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine, const QString& deviceId)
+    : m_DeviceId(deviceId), m_QmlEngine(qmlEngine)
 {
     reload();
 }
@@ -98,9 +123,29 @@ StreamingPreferences* StreamingPreferences::get(QQmlEngine *qmlEngine)
     }
 }
 
+StreamingPreferences* StreamingPreferences::forDevice(const QString& hostId) {
+    auto prefs = new StreamingPreferences(nullptr, hostId);
+    QQmlEngine::setObjectOwnership(prefs, QQmlEngine::JavaScriptOwnership);
+    return prefs;
+}
+StreamingPreferences* StreamingPreferences::snapshot(const QString& hostId, QObject* owner, bool copyCurrent) const {
+    auto prefs = new StreamingPreferences(nullptr, hostId);
+    // Explicit CLI preferences and adaptive continuations retain their exact
+    // values. Normal connections read the chosen device's saved profile.
+    if (copyCurrent || this != s_GlobalPrefs) {
+        for (int i = metaObject()->propertyOffset(); i < metaObject()->propertyCount(); ++i) {
+            const auto property = metaObject()->property(i);
+            if (property.isWritable()) property.write(prefs, property.read(this));
+        }
+        prefs->packetSize = packetSize;
+    }
+    prefs->setParent(owner);
+    return prefs;
+}
+
 void StreamingPreferences::reload()
 {
-    QSettings settings;
+    DeviceSettings settings(m_DeviceId);
 
     int defaultVer = settings.value(SER_DEFAULTVER, 0).toInt();
 
@@ -116,6 +161,8 @@ void StreamingPreferences::reload()
     }
 #endif
 
+    remoteInput = settings.value("remoteInput", true).toBool();
+    remoteAudio = settings.value("remoteAudio", true).toBool();
     width = settings.value(SER_WIDTH, 1280).toInt();
     height = settings.value(SER_HEIGHT, 720).toInt();
     fps = settings.value(SER_FPS, 60).toInt();
@@ -132,6 +179,8 @@ void StreamingPreferences::reload()
     absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, true).toBool();
     sharedClipboard = settings.value("sharedClipboard", true).toBool();
     uiTheme = settings.value("ui/uiTheme", 0).toInt();
+    uiAccent = qBound(0, settings.value("ui/accent", 0).toInt(), 4);
+    showTraffic = settings.value("ui/showTraffic", false).toBool();
     compactDevices = settings.value("ui/compactDevices", true).toBool();
     showLocalCursor = settings.value("showLocalCursor", true).toBool();
     absoluteTouchMode = settings.value(SER_ABSTOUCHMODE, true).toBool();
@@ -326,8 +375,10 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
 
 void StreamingPreferences::save()
 {
-    QSettings settings;
+    DeviceSettings settings(m_DeviceId);
 
+    settings.setValue("remoteInput", remoteInput);
+    settings.setValue("remoteAudio", remoteAudio);
     settings.setValue(SER_WIDTH, width);
     settings.setValue(SER_HEIGHT, height);
     settings.setValue(SER_FPS, fps);
@@ -343,6 +394,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
     settings.setValue("sharedClipboard", sharedClipboard);
     settings.setValue("ui/uiTheme", uiTheme);
+    settings.setValue("ui/accent", uiAccent);
+    settings.setValue("ui/showTraffic", showTraffic);
     settings.setValue("ui/compactDevices", compactDevices);
     settings.setValue("showLocalCursor", showLocalCursor);
     settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);

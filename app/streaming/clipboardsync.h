@@ -9,6 +9,7 @@ public:
     void clipboardChanged() { m_Changed = true; }
     QString status() const { return m_Status; }
 private:
+    void notice(const QString& text);
     std::unique_ptr<ClipboardChannel> m_Channel;
     QString m_Observed, m_SentSnapshot, m_Status;
     bool m_Changed = false;
@@ -16,4 +17,5 @@ private:
     bool m_Initialized = false, m_Dirty = false, m_InFlight = false;
     int m_Revision = 0, m_Sequence = 0;
     unsigned m_LastPoll = 0;
+    unsigned m_NoticeAt = 0;
 };

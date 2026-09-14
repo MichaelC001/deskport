@@ -602,8 +602,8 @@ INCLUDEPATH += $$OUT_PWD
 HEADERS += $$OUT_PWD/version.h
 
 macx {
-    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm
-    HEADERS += backend/macdock.h
+    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm backend/macclipboard.mm
+    HEADERS += backend/macdock.h backend/macclipboard.h
     LIBS += -framework AVFoundation -framework ApplicationServices -framework AppKit
 }
 
@@ -611,7 +611,7 @@ SOURCES += backend/adaptivedisplay.cpp
 HEADERS += backend/adaptivedisplay.h
 
 HEADERS += backend/streambudget.h
-HEADERS += backend/workspaceresolution.h backend/sessionwindowstate.h streaming/sessionlifetime.h
+HEADERS += backend/workspaceresolution.h backend/sessionwindowstate.h streaming/sessionlifetime.h streaming/resizesettler.h
 
 SOURCES += streaming/transitionwindow.cpp
 HEADERS += streaming/transitionwindow.h

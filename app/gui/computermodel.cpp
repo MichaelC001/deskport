@@ -34,6 +34,7 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     QReadLocker lock(&computer->lock);
 
     switch (role) {
+    case OperatingSystemRole: return computer->operatingSystem.isEmpty() && computer->isNvidiaServerSoftware ? QStringLiteral("Windows") : computer->operatingSystem;
     case HostIdRole: return computer->uuid;
     case FavoriteRole: return QSettings().value("ui/favorites").toStringList().contains(computer->uuid);
     case NameRole:
@@ -128,6 +129,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[ServerSupportedRole] = "serverSupported";
     names[AddressRole] = "address";
     names[HostAddressRole] = "hostAddress";
+    names[OperatingSystemRole] = "operatingSystem";
     names[DetailsRole] = "details";
 
     return names;
