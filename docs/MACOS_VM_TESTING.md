@@ -127,29 +127,35 @@ change the host login keychain or grant broad local-network exemptions.
 2026-09-15: the pinned image booted successfully as macOS 26.6.2 (25G83),
 VirtualMac2,1, ARM64. The VM has 4 vCPUs, 8 GiB RAM and a 50,000,000,000-byte
 logical disk. The downloaded OCI cache was pruned to zero. After boot, APFS trim
-reduced the complete lab to about 30.03 GiB, leaving 143.65 GiB free on the host.
+reduced the complete lab to about 30.13 GiB, leaving 155.57 GiB free on the host.
 The guest is stopped, its cache is empty and the test installation has been removed.
-Local reports are under `~/Library/DeskPortVM.noindex/results`; the overall status
-is `BLOCKED_GATEKEEPER_POLICY`, not PASS.
+Local reports are under `~/Library/DeskPortVM.noindex/results`. The final
+`macos-vm.py test` start/test/cleanup/shutdown cycle exited successfully with
+`STATUS.txt` set to `PASS`; screenshot limitations below remain separate.
 
 - CI [34870681467](https://github.com/keithxc/deskport/actions/runs/34870681467)
   passed the Nix build, CLI identity, streaming/translation checks and disk-guard tests.
-- The guest installed the checksum-matched 0.3.0 ZIP and passed Developer ID
-  signature, CLI version/help, three visible-window starts, direct duplicate
-  executable handoff and forced-exit/restart checks.
-- Screenshot inspection found the first-run Local Network permission prompt.
-  A visible application underneath a modal is not full interactive UI acceptance.
-- The base image initially had Gatekeeper disabled. That initial assessment was
-  discarded as security evidence. Enabling assessments revealed an **App Store
-  only** source policy: the notarized package is correctly rejected under that
-  policy, both offline and online. This is not evidence of a signature failure.
-- Standard third-party package validation requires Gatekeeper enabled with
-  **App Store and identified developers** allowed. Confirm this guest-only
-  initialization setting before proceeding; do not disable Gatekeeper to pass.
-  The development host's security policy was not changed.
+- After explicit user approval, the guest source policy was set in System Settings
+  to **App Store and Known Developers**. Gatekeeper remains enabled. The strict
+  offline assessment now accepts the package as **Notarized Developer ID**.
+- The checksum-matched 0.3.0 ZIP passed Developer ID signature, CLI version/help,
+  three visible-window starts, direct duplicate executable handoff and forced-exit
+  recovery. The test removes its installation before reporting PASS.
+- The first-run Local Network prompt was denied during graphical setup, but
+  returned on the automated fresh installation. The screenshot shows the rendered
+  devices page behind that prompt; unobstructed interactive UI acceptance remains
+  unverified. No local-network access was granted.
+- The base image initially had Gatekeeper disabled. Its initial assessment remains
+  discarded as security evidence; `initial-smoke.log` is historical smoke evidence only.
+- The development host's installation, services and security policy were not changed.
+
+For a new clone, initialize this guest-only source policy through System Settings
+before testing third-party packages. Use `start --graphics` for setup, then `stop`
+and `test` for the repeatable automated run. Do not disable Gatekeeper to pass.
 
 The storage guard refused an oversized synthetic writer and prevented starting
 a child under simulated low-space conditions. The guest-only marker check was
 corrected to accept Apple's actual `AppleVirtIOFS` filesystem label. Stop waits
 for the runner's lock to be released, and successful tests must explicitly remove
-the test installation before writing PASS.
+the test installation before writing PASS. A final guest `sync` flushes cleanup
+and reports before Tart powers off the VM.

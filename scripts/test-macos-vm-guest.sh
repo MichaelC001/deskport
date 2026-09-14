@@ -94,3 +94,5 @@ trap - EXIT
 [[ ! -e "$app" ]]
 echo 'PASS: test installation removed'
 printf 'PASS\n' > "$results/STATUS.txt"
+# Tart stop powers off the guest; persist cleanup and shared reports first.
+/bin/sync

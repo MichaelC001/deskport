@@ -1022,3 +1022,8 @@ User requested merging the session-settings branch into main and publishing the 
 Create one disk-budgeted macOS 26 guest for release package/GUI smoke checks.
 See [MACOS_VM_TESTING.md](MACOS_VM_TESTING.md). Physical streaming acceptance
 remains separate; no host installation or service changes are implied.
+
+The 0.3.0 package passed the complete automated VM cycle with Gatekeeper enabled
+and identified developers allowed after user approval. Guest cleanup is synced
+before power-off. The first-run local-network modal still limits screenshot/UI
+acceptance; streaming and physical-device checks remain outstanding.
