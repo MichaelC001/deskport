@@ -6,6 +6,10 @@
 #include <unistd.h>
 #include <sys/uio.h>
 #include <pthread.h>
+#ifdef __linux__
+#include <netinet/in.h>
+_Static_assert(sizeof(struct in6_pktinfo) > 0, "ENet IPv6 declarations must survive forced includes");
+#endif
 static void* transfer(void* unused) {
     (void)unused;
     int pair[2]; assert(socketpair(AF_UNIX, SOCK_DGRAM, 0, pair) == 0);

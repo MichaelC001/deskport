@@ -98,3 +98,6 @@ CONFIG(debug, debug|release) {
 # Instrument only this transport library, including ENet, without patching submodules.
 SOURCES += $$PWD/traffic.c
 unix: QMAKE_CFLAGS += -include $$PWD/traffic.h
+
+# ENet needs GNU IPv6 declarations before the forced accounting header is read.
+linux: DEFINES += _GNU_SOURCE=1
