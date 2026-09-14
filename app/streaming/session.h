@@ -165,7 +165,7 @@ private:
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
     std::shared_ptr<TransitionWindow> m_TransitionWindow;
     QTimer* m_TransitionTimer = nullptr;
-    QSize m_AdaptiveNextSize, m_AdaptiveObservedSize, m_InitialAdaptiveSize;
+    QSize m_AdaptiveNextSize, m_AdaptiveObservedSize;
     QByteArray m_WindowOutputs;
     QString m_LastWindowRecord;
     bool m_RestoredWindow = false;

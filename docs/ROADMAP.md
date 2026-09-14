@@ -1,3 +1,22 @@
+## Fractional-scale workspace preview (0.2.4, 2026-09-14)
+
+Reason: a 150% client received a pixel-matched 2x Mac desktop, making remote UI
+one third larger than the equivalent local logical geometry. Match logical size
+by transmitting a supersampled 2x desktop on clients between 1x and 2x. Keep the
+full capture raster through encoding; do not introduce host-side downscaling.
+Recompute the negotiated size when restoring saved window geometry.
+
+Checkpoint: fractional UI-size/detail invariants, isolated binding/resize and
+window-state checks, macOS signing/notarization and NixOS x86_64 build. User
+activation on both ends precedes live small-text, resize/reconnect and input
+acceptance. Full pixel alignment at 1x/2x is preserved; fractional downsampling
+is not pixel-identical and needs visual acceptance. Existing maximum dimensions
+and minimum logical desktop still apply. Above 2x, preserve raster detail.
+
+Next action: compare small text at 150% after manual activation. Deferred:
+physical-size heuristics, user text-size preference, live output-metadata refresh
+and host-side resampling/transport-size separation. See RELEASE_0.2.4.md.
+
 ## Installable desktop release (0.2.0, 2026-09-13)
 
 Reason: distribute packages that other users can install without a development

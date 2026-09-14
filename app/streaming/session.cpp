@@ -714,8 +714,8 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = workspace.scale;
-    const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize :
-        (m_RestoredWindow ? m_InitialAdaptiveSize : workspace.pixels);
+    // Restore window geometry, not a stream size negotiated by an older policy.
+    const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
@@ -787,7 +787,6 @@ void Session::restoreAdaptiveWindow()
     m_AdaptiveGeometry = state.geometry;
     m_AdaptiveMaximized = state.maximized;
     m_IsFullScreen = state.fullscreen;
-    m_InitialAdaptiveSize = state.streamSize;
     m_RestoredWindow = true;
     qInfo() << "Restoring last client workspace:" << state.streamSize << "window:" << state.geometry.size();
 }
