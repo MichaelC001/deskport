@@ -62,7 +62,7 @@ done
     make -j6
 )
 bash scripts/build-macos-host.sh
-xcrun clang -fobjc-arc -framework Foundation -framework CoreGraphics \
+xcrun clang -mmacosx-version-min=26.0 -fobjc-arc -framework Foundation -framework CoreGraphics -framework ApplicationServices -framework AppKit \
     host/macos/display-helper.m -o "$build_dir/deskport-display"
 stage=$(mktemp -d "$dist_dir/.package.XXXXXX")
 trap 'chmod -R u+w "$stage" 2>/dev/null || true; rm -rf "$stage"' EXIT

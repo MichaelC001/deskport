@@ -1033,3 +1033,12 @@ The 0.3.0 package passed the complete automated VM cycle with Gatekeeper enabled
 and identified developers allowed after user approval. Guest cleanup is synced
 before power-off. The first-run local-network modal still limits screenshot/UI
 acceptance; streaming and physical-device checks remain outstanding.
+
+### Session-primary mirroring implementation — 2026-09-15
+
+Implemented the requested virtual-main session topology with original-layout
+snapshot/restore, a crash recovery journal, and opt-in actual text-caret geometry
+for the Apple client. The 0.3.2-based development package passed isolated VM
+connection/disconnect/reconnect and three native portrait/landscape/idle cycles.
+The physical monitor and crash/hotplug acceptance gates above remain open.
+See ADAPTIVE_DISPLAY.md for the protocol and measured validation boundary.

@@ -79,3 +79,59 @@ acknowledgment was independently checked through CoreGraphics for physical pixel
 logical dimensions and an independent capture ID. The active physical main display
 retained its mode and the virtual display disappeared on helper exit. This does
 not substitute for end-to-end client window and input acceptance.
+
+## Session display ownership and text caret — 2026-09-15
+
+An authenticated resize now includes a local helper `session` flag. While a
+session owns the display, the virtual display becomes main and every other online
+display mirrors it. Enabling sharing alone keeps the original layout. The existing
+10-second controller-disconnect grace interval preserves fast reconnects; after
+that interval the helper restores the saved physical layout and idle resolution.
+Helper EOF and SIGTERM also restore the layout. A private, atomically written
+UUID-based journal permits recovery on the next helper start after a crash.
+
+The helper runs an AppKit event loop and subscribes to display reconfiguration.
+A Foundation-only run loop left CoreGraphics mode observations stale after mirror
+transactions; merely adding a delay did not solve repeated mode changes. Restore
+and idle-mode application are separated by a run-loop interval. Successful resize
+responses require both the requested backing/logical mode and the mirror layout.
+
+Clients may opt into `textCaret: true` on `display-resize`. Only that authenticated
+exclusive lease receives `text-caret` messages containing `caret.valid` and
+normalized `caret.x`/`caret.y` (the insertion point's bottom edge). The helper reads
+AXSelectedTextRange and AXBoundsForRange, never the text/value or selected text.
+Queries have bounded accessibility messaging timeouts and run at 5 Hz only during
+a session. Unsupported focus, unavailable accessibility access, or a caret outside
+the streamed display reports invalid geometry. Legacy clients receive no new
+messages. The iPad client expires stale geometry and falls back to its touch anchor.
+
+### Validation boundary
+
+A development bundle based on published 0.3.2 was built through the Nix macOS
+shell, Developer ID signed, and installed only in the isolated Tart guest.
+The native helper passed three portrait/landscape/idle cycles. Independent
+CoreGraphics observations during the real iPad test showed virtual-main + console
+mirror, restoration to the original console-main 1024x768 logical / 2048x1536
+backing mode, then a successful second virtual-main session at 960x1440 logical /
+1920x2880 backing. The real text-editor test observed caret geometry before and
+after newline input and the iPad kept the new caret above its keyboard.
+
+Host lifecycle tests: 26 passed. Binding tests: 27 passed, including a regression
+that unsolicited caret data never interrupts an old desktop client's heartbeat.
+This is VM/simulator evidence, not physical multi-monitor, hotplug, headless,
+unattended crash-recovery or remote IME-candidate acceptance. A display attached
+after acquisition is reconciled by the next resize request; continuous hotplug
+reconciliation is not yet implemented.
+
+Final helper revision also reapplies the physical layout after virtual-display
+removal, retaining the recovery journal across that removal. The final helper
+passed the same three cycles plus orderly EOF shutdown. The final installed
+bundle's caret-only live test passed after launching the disposable editor once
+the display had settled; a combined run had no valid text focus after reconnect
+and therefore failed the caret assertion, while its topology transitions passed.
+
+Known VM presentation issue: Tart's built-in console can retain the pre-mirror
+scanout while the iPad receives the live virtual screen. CoreGraphics reports the
+expected main/mirror topology, but this does not establish correct console scanout
+or physical-monitor mirroring. Window refresh attempts did not resolve it. Treat
+that visual acceptance as open rather than equating topology ACKs with pixel proof.

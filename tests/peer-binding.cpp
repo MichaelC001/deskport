@@ -250,6 +250,9 @@ private slots:
             QVERIFY(resize(channel, QSize(2560, 1440)));
             QCOMPARE(resized.size(), 2); QVERIFY(host.running());
             QVERIFY(wakeLatency.elapsed() < 2000); // Must wake on work, not the 5 s heartbeat.
+            // Geometry is opt-in. Legacy desktop leases must still receive a
+            // display-pong as their next message, never unsolicited caret data.
+            emit host.caretChanged({{"valid",true},{"x",0.25},{"y",0.75}});
             QTest::qWait(5200); // Idle heartbeats must preserve the display lease.
 
             {
