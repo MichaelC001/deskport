@@ -1,3 +1,11 @@
+## Stable desktop 0.3.5 (2026-09-15)
+
+Reason: consolidate all desktop development branches into main for a formal
+macOS and Linux release. Includes on-demand clipboard, opt-in unattended macOS
+recovery, sidebar version display, session display mirroring and caret geometry,
+and the isolated macOS VM validation tools. Package and automated checks do not
+replace physical-device streaming, clipboard or reconnect acceptance.
+
 ## On-demand clipboard (0.3.2 prerelease, 2026-09-15)
 
 Reason: retain immediate text sharing while avoiding speculative image/file
