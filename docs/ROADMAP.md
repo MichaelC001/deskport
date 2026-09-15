@@ -1,3 +1,9 @@
+## Sidebar version display (2026-09-15)
+
+Restore the application version below Settings in the desktop sidebar so users
+can identify the running build without opening Settings. Use the existing
+runtime version and theme colors. Packaging and release are deferred.
+
 ## Device-first desktop UI (0.2.7, 2026-09-14)
 
 Reason: make connecting the primary action and remove connection parameters from
