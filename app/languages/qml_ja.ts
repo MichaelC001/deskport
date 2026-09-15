@@ -1672,8 +1672,8 @@
         <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2579,8 +2579,8 @@
         <translation>キーボード・ポインター・コントローラー入力を許可</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2778,8 +2778,8 @@
         <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

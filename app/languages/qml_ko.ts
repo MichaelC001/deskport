@@ -1672,8 +1672,8 @@
         <translation>연결된 Mac의 내장 가상 디스플레이를 사용합니다. 창 크기를 변경하면 화면이 잠시 다시 연결되지만 앱은 열린 상태로 유지됩니다. 다른 호스트에는 아래 해상도가 적용됩니다.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2579,8 +2579,8 @@
         <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2778,8 +2778,8 @@
         <translation>Mac에서는 Super / Windows가 Command, Alt가 Option에 해당합니다. 창에서 Super + Space를 전달하려면 항상을 선택하세요. 변경 사항은 다음 연결부터 적용됩니다.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

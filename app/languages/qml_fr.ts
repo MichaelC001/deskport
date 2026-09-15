@@ -1672,8 +1672,8 @@
         <translation>Utilise l’écran virtuel intégré d’un Mac associé. Le redimensionnement reconnecte brièvement l’image et garde vos applications ouvertes. Les autres hôtes utilisent la résolution ci-dessous.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Partager le presse-papiers texte pendant une session</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Partager du texte, des images et des fichiers pendant une session</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2579,8 +2579,8 @@
         <translation>Autoriser le clavier, le pointeur et les manettes</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Partager le presse-papiers texte pendant une session</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Partager du texte, des images et des fichiers pendant une session</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2778,8 +2778,8 @@
         <translation>Sur Mac, Super / Windows correspond à Commande et Alt à Option. Choisissez Toujours pour transmettre Super + Espace en mode fenêtré. Les changements prennent effet à la prochaine connexion.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Partager le presse-papiers texte pendant une session</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Partager du texte, des images et des fichiers pendant une session</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

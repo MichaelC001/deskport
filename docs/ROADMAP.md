@@ -1,3 +1,17 @@
+## On-demand clipboard (0.3.2 prerelease, 2026-09-15)
+
+Reason: retain immediate text sharing while avoiding speculative image/file
+payload transfer. Native clipboard helpers support lazy images and file/folder
+URLs over the existing authenticated desktop session. Includes Wayland
+background data-control, AppKit item providers, chunked reads, temporary download
+limits, cancellation on new copies/disconnect, and old-peer text fallback.
+
+The previously deferred PNG and file-copy work is now implemented for desktop
+prerelease testing. Download starts on data access, which history tools can also
+trigger. Large-file native paste timeouts and real Finder/Dolphin/streaming UX
+remain manual acceptance after the user's pk4/mm4 activation. See
+[clipboard behavior, limits and checks](CLIPBOARD.md).
+
 ## 0.3.1 preview: unattended macOS recovery
 
 - Added an opt-in Sharing setting backed by Apple's SMAppService and a signed,

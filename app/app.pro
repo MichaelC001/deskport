@@ -1,3 +1,11 @@
+linux {
+    CONFIG += link_pkgconfig
+    PKGCONFIG += wayland-client
+    SOURCES += clipboard/waylandnative.cpp clipboard/ext-data-control.c
+}
+SOURCES += clipboard/agent.cpp clipboard/native.cpp
+HEADERS += clipboard/agent.h clipboard/native.h
+macx: OBJECTIVE_SOURCES += clipboard/macnative.mm
 SOURCES += streaming/clipboardsync.cpp
 HEADERS += streaming/clipboardsync.h
 SOURCES += backend/clipboardchannel.cpp

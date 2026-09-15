@@ -680,7 +680,7 @@ void Session::initializeClipboard() {
         if (cert.isNull() || port < 1 || port > 65535) break;
         auto identity = IdentityManager::get();
         m_Clipboard.reset(new ClipboardSync(std::unique_ptr<ClipboardChannel>(new ClipboardChannel(
-            m_Computer->activeAddress.address(), quint16(port), cert, identity->getCertificate(), identity->getPrivateKey()))));
+            m_Computer->activeAddress.address(), quint16(port), cert, identity->getCertificate(), identity->getPrivateKey(), true))));
         return;
     }
     m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate, "Clipboard sharing requires a DeskPort device binding.");

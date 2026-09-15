@@ -29,7 +29,7 @@ UiPage {
             Switch { text: qsTr("Match the client window resolution"); checked: preferences.adaptiveResolution; onClicked: { preferences.adaptiveResolution = checked; save() } }
             Switch { text: qsTr("Receive sound from this device"); checked: preferences.remoteAudio; onClicked: { preferences.remoteAudio = checked; save() } }
             Switch { text: qsTr("Allow keyboard, pointer and controller input"); checked: preferences.remoteInput; onClicked: { preferences.remoteInput = checked; save() } }
-            Switch { text: qsTr("Share plain text clipboard during a session"); checked: preferences.sharedClipboard; enabled: preferences.remoteInput; onClicked: { preferences.sharedClipboard = checked; save() } }
+            Switch { text: qsTr("Share text, images and files during a session"); checked: preferences.sharedClipboard; enabled: preferences.remoteInput; onClicked: { preferences.sharedClipboard = checked; save() } }
         }
     }
     UiCard {

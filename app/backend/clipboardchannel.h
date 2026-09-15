@@ -9,9 +9,11 @@
 // snapshots with it; only one request can be outstanding and nothing is persisted.
 class ClipboardChannel : private QThread {
 public:
-    ClipboardChannel(QString address, quint16 port, QSslCertificate peer, QByteArray cert, QByteArray key);
+    ClipboardChannel(QString address, quint16 port, QSslCertificate peer, QByteArray cert, QByteArray key, bool nativeSharing = false);
     ~ClipboardChannel();
     bool ready();
+    bool nativeSharing();
+    QString notice();
     int maxText();
     bool submit(const QJsonObject& request);
     bool take(QJsonObject& reply);
@@ -24,6 +26,8 @@ private:
     QByteArray m_Cert, m_Key;
     QMutex m_Mutex;
     QJsonObject m_Request, m_Reply;
+    bool m_NativeRequested = false, m_NativeActive = false;
+    QString m_Notice;
     bool m_Ready = false, m_Busy = false;
     int m_MaxText = 1024 * 1024;
 };

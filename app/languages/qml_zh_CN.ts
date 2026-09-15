@@ -1680,8 +1680,8 @@
         <translation>使用已绑定 Mac 的内置虚拟屏幕。调整窗口后画面会短暂重连，远端应用保持打开。其他主机使用下方分辨率。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>会话期间共享纯文本剪贴板</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>会话期间共享文本、图片和文件</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2595,8 +2595,8 @@
         <translation>允许键盘、指针和手柄输入</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>会话期间共享纯文本剪贴板</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>会话期间共享文本、图片和文件</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2794,8 +2794,8 @@
         <translation>连接 Mac 时，Super / Windows 对应 Command，Alt 对应 Option。选择“始终”可在窗口中转发 Super + 空格。更改在下次连接时生效。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>会话期间共享纯文本剪贴板</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>会话期间共享文本、图片和文件</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

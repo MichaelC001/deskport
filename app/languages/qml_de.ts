@@ -1672,8 +1672,8 @@
         <translation>Verwendet das integrierte virtuelle Display eines verbundenen Mac. Größenänderungen verbinden das Bild kurz neu; Ihre Apps bleiben geöffnet. Andere Hosts verwenden die Auflösung unten.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2579,8 +2579,8 @@
         <translation>Tastatur-, Zeiger- und Controller-Eingaben erlauben</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2778,8 +2778,8 @@
         <translation>Auf einem Mac entspricht Super / Windows der Command-Taste und Alt der Option-Taste. Wählen Sie Immer, um Super + Leertaste im Fenster weiterzuleiten. Änderungen gelten ab der nächsten Verbindung.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

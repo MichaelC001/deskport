@@ -1672,8 +1672,8 @@
         <translation>Utiliza la pantalla virtual integrada de un Mac vinculado. Al cambiar el tamaño, la imagen se reconecta brevemente y las aplicaciones siguen abiertas. Los demás equipos usan la resolución de abajo.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Compartir el portapapeles de texto durante una sesión</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Compartir texto, imágenes y archivos durante una sesión</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2579,8 +2579,8 @@
         <translation>Permitir teclado, puntero y mandos</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Compartir el portapapeles de texto durante una sesión</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Compartir texto, imágenes y archivos durante una sesión</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2778,8 +2778,8 @@
         <translation>En Mac, Super / Windows corresponde a Comando y Alt a Opción. Elige Siempre para enviar Super + Espacio en una ventana. Los cambios se aplican en la próxima conexión.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Compartir el portapapeles de texto durante una sesión</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Compartir texto, imágenes y archivos durante una sesión</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
