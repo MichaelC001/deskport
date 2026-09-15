@@ -62,7 +62,7 @@ done
     make -j6
 )
 bash scripts/build-macos-host.sh
-xcrun clang -fobjc-arc -framework Foundation -framework CoreGraphics \
+xcrun clang -mmacosx-version-min=26.0 -fobjc-arc -framework Foundation -framework CoreGraphics -framework ApplicationServices -framework AppKit \
     host/macos/display-helper.m -o "$build_dir/deskport-display"
 xcrun clang++ -std=c++17 -Wall -Wextra -Werror host/macos/recovery-helper.cpp -o "$build_dir/deskport-recovery"
 stage=$(mktemp -d "$dist_dir/.package.XXXXXX")

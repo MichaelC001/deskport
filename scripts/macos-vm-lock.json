@@ -1,0 +1,11 @@
+{
+  "tart_version": "2.37.0",
+  "tart_url": "https://github.com/openai/tart/releases/download/2.37.0/tart.tar.gz",
+  "tart_sha256": "d531752c4dad5d4214ac7ff540cefc2647df1fca2338d413d3c01754f54b356b",
+  "image": "ghcr.io/cirruslabs/macos-tahoe-base@sha256:1b093499716409d29e8b5336844528e1cae375db97d2ad8e5aeff78cf0da201e",
+  "compressed_bytes": 27312483923,
+  "virtual_disk_bytes": 50000000000,
+  "vm_name": "deskport-macos26",
+  "package_version": "0.3.0",
+  "package_sha256": "42dc64f5dbf5eabc7f2cfd3f32c3a22ee6fb10d658b5e458f110eaaf8025983d"
+}

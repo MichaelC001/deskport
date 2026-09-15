@@ -2,7 +2,12 @@
 // Runtime declarations for the private CoreGraphics virtual-display API.
 // No framebuffer capture or input injection is performed by this helper.
 #import <Foundation/Foundation.h>
+#import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import "session-topology.h"
+#import <ApplicationServices/ApplicationServices.h>
+#import <signal.h>
+#import "text-caret.h"
 
 @interface CGVirtualDisplayMode : NSObject
 - (instancetype)initWithWidth:(unsigned int)width height:(unsigned int)height refreshRate:(double)rate;
@@ -33,6 +38,7 @@ static int requestSequence;
 static NSInteger requestedScale = 1;
 static NSInteger lastWidth, lastHeight, lastScale = 1;
 static BOOL rollingBack;
+static BOOL sessionActive;
 static CFAbsoluteTime requestStarted;
 static unsigned readyGeneration;
 static NSArray *displayModes(NSInteger width, NSInteger height, NSInteger scale) {
@@ -46,6 +52,7 @@ static void applyMode(NSInteger width, NSInteger height, NSInteger scale) {
     [display applySettings:settings];
 }
 static void respond(NSDictionary *value) {
+    fprintf(stderr,"DeskPort display seq=%d session=%d result=%s\n",requestSequence,sessionActive,[value description].UTF8String);
     NSMutableDictionary *response = [value mutableCopy];
     if (requestStarted) response[@"modeElapsedMs"] = @((long)((CFAbsoluteTimeGetCurrent() - requestStarted) * 1000));
     if (requestSequence) response[@"seq"] = @(requestSequence);
@@ -78,6 +85,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
     BOOL ready = current && CGDisplayIsActive(capture) &&
         CGDisplayModeGetPixelWidth(current) == width && CGDisplayModeGetPixelHeight(current) == height &&
         CGDisplayModeGetWidth(current) == width / requestedScale && CGDisplayModeGetHeight(current) == height / requestedScale;
+    if (attempt==0 || attempt==30) fprintf(stderr,"DeskPort mode attempt=%u requested=%ldx%ld@%ld actual=%zux%zu/%zux%zu main=%u\n",attempt,(long)width,(long)height,(long)requestedScale,current?CGDisplayModeGetWidth(current):0,current?CGDisplayModeGetHeight(current):0,current?CGDisplayModeGetPixelWidth(current):0,current?CGDisplayModeGetPixelHeight(current):0,CGMainDisplayID());
     if (current) CFRelease(current);
     if (!ready && !source) {
         CFArrayRef modes = CGDisplayCopyAllDisplayModes(display.displayID,
@@ -93,6 +101,14 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             }
             CFRelease(modes);
         }
+    }
+    if (ready && sessionActive && !sessionTopologyReady(display.displayID)) {
+        if (attempt >= 30 || !applySessionTopology(display.displayID)) {
+            restoreTopology(display.displayID);
+            sessionActive=NO;
+            respond(@{@"error": @"Could not make the virtual display primary and mirror other displays"}); return;
+        }
+        ready=NO;
     }
     if (ready && readyGeneration != token) {
         // Confirm on another run-loop turn: mode/mirror changes are asynchronous.
@@ -110,7 +126,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             respond(@{@"error": @"Requested mode was rejected; the previous display mode was restored"}); return;
         }
         respond(@{@"displayId": @(capture), @"virtualDisplayId": @(display.displayID),
-            @"mirrored": @(source != 0), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)});
+            @"mirrored": @(sessionActive && sessionTopologyReady(capture)), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)});
     } else if (attempt < 30) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
             waitForMode(width, height, token, attempt + 1);
@@ -129,12 +145,31 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             @"Virtual display did not reach the requested HiDPI mode"});
     }
 }
-static void configure(NSInteger width, NSInteger height, NSInteger scale, int sequence) {
+static void configure(NSInteger width, NSInteger height, NSInteger scale, int sequence, BOOL session) {
+    fprintf(stderr,"DeskPort configure seq=%d session=%d %ldx%ld@%ld\n",sequence,session,(long)width,(long)height,(long)scale);
     requestSequence = sequence; requestedScale = scale; rollingBack = NO;
     requestStarted = CFAbsoluteTimeGetCurrent();
     if (width < 640 || height < 360 || width > 7680 || height > 4320 || width % 2 || height % 2 || (scale != 1 && scale != 2)) {
         respond(@{@"error": @"Use an even pixel size between 640x360 and 7680x4320"}); return;
     }
+    BOOL restoring=!session && savedTopology!=nil;
+    if (!session && !restoreTopology(display.displayID)) {
+        respond(@{@"error": @"Could not restore the original display layout"}); return;
+    }
+    if (restoring) {
+        sessionActive=NO;
+        // WindowServer detaches mirrors asynchronously. Applying the idle mode
+        // in the same transaction turn leaves the virtual mode list stale.
+        const unsigned token=++generation;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
+            if (token==generation) configure(width,height,scale,sequence,NO);
+        });
+        return;
+    }
+    if (session && !snapshotTopology(display.displayID)) {
+        respond(@{@"error": @"Could not save the original display layout"}); return;
+    }
+    sessionActive=session;
     // Repeated requests still verify the actual OS mode; cached dimensions alone
     // are not proof that a display remains active, independent, and correctly scaled.
     if (display && CGDisplayIsActive(display.displayID) && !CGDisplayMirrorsDisplay(display.displayID)) {
@@ -156,9 +191,8 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         descriptor.vendorID = 0x4450; descriptor.productID = 1; descriptor.serialNum = 1;
         display = [[CGVirtualDisplay alloc] initWithDescriptor:descriptor];
     }
-    // This dedicated display must be its own capture source. Detach only our
-    // virtual sink if macOS remembered membership in a third-party mirror set.
-    // Never resize or reconfigure BetterDisplay's source or a physical display.
+    // The virtual display must be the source, not a sink in an old mirror set.
+    // Physical displays join it only after the requested mode has settled.
     if (display && CGDisplayMirrorsDisplay(display.displayID)) {
         CGDisplayConfigRef config;
         if (CGBeginDisplayConfiguration(&config) != kCGErrorSuccess) {
@@ -179,13 +213,51 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     // Check immediately, then retain the bounded 100 ms verification retries.
     waitForMode(width, height, token, 0);
 }
+static void finishHelper(void) {
+    static BOOL stopping;
+    if (stopping) return;
+    stopping=YES; sessionActive=NO; ++generation;
+    snapshotTopology(display.displayID);
+    preserveTopologyJournal=YES;
+    restoreTopology(display.displayID);
+    // Removing the virtual source can itself reset the fallback monitor's mode.
+    // Keep the journal until removal is observed, then restore the physical mode.
+    display=nil;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW,500*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
+        preserveTopologyJournal=NO;
+        BOOL restored=restoreTopology(0);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{ exit(restored ? 0 : 1); });
+    });
+}
+static void displayReconfigured(CGDirectDisplayID ident, CGDisplayChangeSummaryFlags flags, void *context) {
+    // Subscribe to WindowServer changes so CoreGraphics refreshes its mode cache
+    // after mirror/layout transactions, including changes made by this process.
+}
 int main(int argc, const char *argv[]) {
     @autoreleasepool {
+        signal(SIGPIPE,SIG_IGN);
         if (argc == 2 && !strcmp(argv[1], "--probe")) {
             respond(@{@"available": @(NSClassFromString(@"CGVirtualDisplay") != nil)}); return 0;
         }
         if (argc != 3) return 2;
-        configure(atoi(argv[1]), atoi(argv[2]), 1, 0);
+        NSData *recovery=[NSData dataWithContentsOfFile:topologyPath()];
+        if (recovery) {
+            id entries=[NSJSONSerialization JSONObjectWithData:recovery options:0 error:nil];
+            if (![entries isKindOfClass:NSArray.class]) return 1;
+            if ([entries count]>64) return 1;
+            for (id entry in entries) {
+                if (![entry isKindOfClass:NSDictionary.class] || ![entry[@"uuid"] isKindOfClass:NSString.class] ||
+                    ![entry[@"mirror"] isKindOfClass:NSString.class]) return 1;
+                for (NSString *key in @[@"main",@"x",@"y",@"width",@"height",@"pixelsW",@"pixelsH",@"mode",@"hz"])
+                    if (![entry[key] isKindOfClass:NSNumber.class] || !isfinite([entry[key] doubleValue])) return 1;
+            }
+            savedTopology=entries;
+            if (!restoreTopology(0)) return 1;
+        }
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
+        CGDisplayRegisterReconfigurationCallback(displayReconfigured,NULL);
+        configure(atoi(argv[1]), atoi(argv[2]), 1, 0, NO);
         if (!display) return 1;
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             char *line = NULL; size_t length = 0;
@@ -196,12 +268,25 @@ int main(int argc, const char *argv[]) {
                     NSInteger width = [request[@"width"] integerValue], height = [request[@"height"] integerValue];
                     NSInteger scale = [request[@"scale"] integerValue];
                     int sequence = [request[@"seq"] intValue];
-                    dispatch_async(dispatch_get_main_queue(), ^{ configure(width, height, scale ?: 1, sequence); });
+                    dispatch_async(dispatch_get_main_queue(), ^{ configure(width, height, scale ?: 1, sequence, [request[@"session"] boolValue]); });
                 }
             }
-            free(line); exit(0);
+            free(line); dispatch_async(dispatch_get_main_queue(), ^{ finishHelper(); });
         });
-        [[NSRunLoop mainRunLoop] run];
+        dispatch_source_t caretTimer=dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_main_queue());
+        dispatch_source_set_timer(caretTimer,dispatch_time(DISPATCH_TIME_NOW,0),200*NSEC_PER_MSEC,40*NSEC_PER_MSEC);
+        dispatch_source_set_event_handler(caretTimer, ^{
+            if (!sessionActive) return;
+            // Send periodic geometry so clients can expire stale focus information.
+            NSData *data=[NSJSONSerialization dataWithJSONObject:@{@"caret":textCaret(display.displayID)} options:0 error:nil];
+            fwrite(data.bytes,1,data.length,stdout); fputc('\n',stdout); fflush(stdout);
+        }); dispatch_resume(caretTimer);
+        signal(SIGTERM,SIG_IGN); signal(SIGINT,SIG_IGN);
+        dispatch_source_t terminate=dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL,SIGTERM,0,dispatch_get_main_queue());
+        dispatch_source_set_event_handler(terminate, ^{ finishHelper(); }); dispatch_resume(terminate);
+        dispatch_source_t interrupt=dispatch_source_create(DISPATCH_SOURCE_TYPE_SIGNAL,SIGINT,0,dispatch_get_main_queue());
+        dispatch_source_set_event_handler(interrupt, ^{ finishHelper(); }); dispatch_resume(interrupt);
+        [NSApp run];
     }
     return 0;
 }

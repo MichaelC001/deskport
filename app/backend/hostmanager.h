@@ -97,6 +97,7 @@ signals:
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
+    void caretChanged(const QJsonObject& caret);
     void displayResized(int sequence, int width, int height, const QString& error);
 private:
     QString unattendedDirectory() const;

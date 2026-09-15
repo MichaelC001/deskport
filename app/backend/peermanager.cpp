@@ -71,6 +71,7 @@ struct PeerManager::Link : QObject {
     int clipboardRevision = 0, clipboardSequence = 0;
     qint64 lastClipboardRequest = 0;
     bool displayControl = false;
+    bool caretUpdates = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
@@ -109,6 +110,10 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
     }
     m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && m_Host->available() && !m_Certificate.isNull() && !m_Key.isNull() && m_Host->prepareIdentity(cert, key);
     connect(host, &HostManager::trustUpdated, this, &PeerManager::granted);
+    connect(host, &HostManager::caretChanged, this, [this](const QJsonObject& caret) {
+        if (m_DisplayLink && m_DisplayLink->displayControl && m_DisplayLink->caretUpdates)
+            send(m_DisplayLink, {{"type", "text-caret"}, {"caret", caret}});
+    });
     connect(host, &HostManager::displayResized, this, [this](int seq, int width, int height, const QString& error) {
         auto link = m_DisplayLink;
         if (!link || link->ended || seq != link->displaySequence) return;
@@ -570,7 +575,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq)) {
             send(link, {{"type", "display-result"}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
-        link->displayControl = true; link->displaySequence = seq;
+        link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
         m_DisplayLink = link;
         if (m_Link == link) m_Link = nullptr;

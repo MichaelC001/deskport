@@ -62,6 +62,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
             auto object = QJsonDocument::fromJson(m_Buffer.left(index)).object();
             m_Buffer.remove(0, index + 1);
             if (m_Stopping) continue;
+            if (object.contains("caret")) { emit caretChanged(object["caret"].toObject()); continue; }
             if (object.contains("seq")) {
                 if (object["seq"].toInt() == m_DisplayWireSequence && m_DisplaySequence != 0) {
                     const int sequence = m_DisplaySequence; m_DisplaySequence = 0;
@@ -772,7 +773,7 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence) 
     m_DisplaySequence = sequence;
     m_DisplayWireSequence = m_DisplayWireSequence == std::numeric_limits<int>::max() ? 1 : m_DisplayWireSequence + 1;
     const auto generation = ++m_DisplayGeneration;
-    m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}}).toJson(QJsonDocument::Compact) + '\n');
+    m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}}).toJson(QJsonDocument::Compact) + '\n');
     QTimer::singleShot(5000, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {
             const auto sequence = m_DisplaySequence; m_DisplaySequence = 0;

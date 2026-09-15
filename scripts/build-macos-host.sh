@@ -2,7 +2,7 @@
 # Build the pinned DeskPort host with virtual-display input routing.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-source_dir="$repo/build-macos.noindex/sunshine-source"
+source_dir="${DESKPORT_HOST_SOURCE_DIR:-$repo/build-macos.noindex/sunshine-source}"
 if [ "${DESKPORT_NIX_DEPS:-0}" = 1 ]; then
     build_root=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex/nix}
 else
