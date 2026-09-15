@@ -580,6 +580,9 @@ bool HostManager::unattendedMarker(const QString& name, bool present) {
 }
 bool HostManager::unattendedEnabled() const {
 #ifdef Q_OS_MACOS
+    // Staged builds and App Translocation must not resume the installed app's
+    // paused recovery or read its opt-in as their own.
+    if (!m_Isolated && QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../..") != "/Applications/DeskPort.app") return false;
     return QFileInfo(unattendedDirectory() + "/enabled").isFile();
 #else
     return false;
@@ -623,8 +626,8 @@ void HostManager::setUnattended(bool enabled) {
     if (m_Isolated) return;
     m_UnattendedError.clear();
     const auto bundle = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../..");
-    if (enabled && (bundle != "/Applications/DeskPort.app" ||
-        !QFile::exists(bundle + "/Contents/Helpers/deskport-recovery"))) {
+    if (bundle != "/Applications/DeskPort.app" ||
+        (enabled && !QFile::exists(bundle + "/Contents/Helpers/deskport-recovery"))) {
         m_UnattendedError = tr("Install DeskPort in Applications before enabling unattended operation.");
         emit changed(); return;
     }
