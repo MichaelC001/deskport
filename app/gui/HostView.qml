@@ -77,7 +77,11 @@ UiPage {
             ComboBox { id: size; currentIndex: Math.max(0, [2560,2880,3840].indexOf(hostManager.sharingWidth)); visible: Qt.platform.os === "osx"; model: ["2560 × 1440", "2880 × 1800", "3840 × 2160"]; enabled: !hostManager.running && !hostManager.changing; Layout.preferredWidth: 250 }
             Label { visible: Qt.platform.os === "osx"; text: qsTr("Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Switch { text: qsTr("Start sharing when I log in"); enabled: hostManager.available && !hostManager.loginStartManaged; checked: hostManager.loginStart; onClicked: hostManager.setLoginStart(checked) }
+            Switch { text: qsTr("Start sharing when I log in"); enabled: hostManager.available && !hostManager.loginStartManaged && !hostManager.unattendedEnabled; checked: hostManager.loginStart; onClicked: hostManager.setLoginStart(checked) }
+            Switch { visible: Qt.platform.os === "osx"; text: qsTr("Unattended operation"); checked: hostManager.unattendedEnabled; onClicked: hostManager.setUnattended(checked) }
+            Label { visible: Qt.platform.os === "osx"; text: qsTr("Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { visible: Qt.platform.os === "osx"; text: hostManager.unattendedStatus; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            UiButton { visible: Qt.platform.os === "osx" && hostManager.unattendedEnabled; text: qsTr("Open background permissions"); onClicked: hostManager.openUnattendedSettings() }
             Label { visible: hostManager.loginStartManaged; text: qsTr("Login startup is installed by this computer's system configuration. Change it there, not here."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }

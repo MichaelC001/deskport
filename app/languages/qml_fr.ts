@@ -2145,6 +2145,18 @@
         <source>Apply</source>
         <translation>Appliquer</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Fonctionnement sans surveillance</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>Démarre DeskPort automatiquement et le relance en cas d’arrêt. Nécessite une autorisation initiale dans les Réglages Système et une session de bureau ouverte. Ne déverrouille pas FileVault et n’active pas la connexion automatique.</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>Ouvrir les autorisations en arrière-plan</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2444,6 +2456,66 @@
     <message>
         <source>Reconnect</source>
         <translation>Reconnecter</translation>
+    </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Fonctionnement sans surveillance</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>Suspendre la récupération automatique et quitter ? Elle reprendra à la prochaine ouverture de DeskPort.</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>Suspendre et quitter</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>Désactivez le fonctionnement sans surveillance avant le démarrage à la connexion.</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>Impossible d’enregistrer les préférences de fonctionnement sans surveillance.</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Désactivé</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>En attente d’autorisation dans les Réglages Système</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>Le service de récupération doit être configuré. Désactivez-le puis réactivez-le.</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>Activé ; en attente du contrôle du service de récupération</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>Aucune réponse du service de récupération. Vérifiez les autorisations en arrière-plan.</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>Activé ; le service de récupération vérifie ce Mac</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>En attente d’une session de bureau ouverte</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>La récupération nécessite votre attention. Vérifiez le démarrage à la connexion et les autorisations en arrière-plan.</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>Installez DeskPort dans Applications avant d’activer le fonctionnement sans surveillance.</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>Impossible d’activer le démarrage à la connexion.</translation>
     </message>
 </context>
 <context>

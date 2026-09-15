@@ -2153,6 +2153,18 @@
         <source>Apply</source>
         <translation>套用</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人值守執行</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>自動啟動，並在 DeskPort 停止後恢復。需要在系統設定中完成一次授權，並已登入桌面。不會解鎖 FileVault 或開啟系統自動登入。</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>開啟背景執行權限</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2460,6 +2472,66 @@
     <message>
         <source>Reconnect</source>
         <translation>重新連線</translation>
+    </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人值守執行</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>暫停自動恢復並結束？下次開啟 DeskPort 時恢復執行。</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>暫停並結束</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>請先關閉無人值守執行，再關閉登入啟動。</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>無法儲存無人值守偏好設定。</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>已關閉</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>等待在系統設定中授權</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>恢復服務需要設定。請關閉後重新開啟。</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>已啟用；等待恢復服務首次檢查</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>未收到恢復服務的檢查結果。請檢查背景執行權限。</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>已啟用；恢復服務正在檢查此 Mac</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>等待登入桌面工作階段</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>恢復需要處理。請檢查登入啟動和背景執行權限。</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>請先將 DeskPort 安裝到「應用程式」，再開啟無人值守執行。</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>無法開啟登入啟動。</translation>
     </message>
 </context>
 <context>

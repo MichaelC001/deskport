@@ -27,7 +27,7 @@
           };
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
-          version = "0.3.0";
+          version = "0.3.1";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation and CI edits do not change the client binary.

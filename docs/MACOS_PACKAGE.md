@@ -97,6 +97,38 @@ The installed app does not require Nix, Homebrew, BetterDisplay or a separately
 installed Sunshine. The current build targets Apple Silicon and macOS 26 because
 the package currently sets that deployment target. Older macOS versions and Intel Macs are not qualified.
 
+## Unattended operation (0.3.1 preview)
+
+After installing in `/Applications/DeskPort.app`, open Sharing and turn on
+**Unattended operation**. DeskPort enables its normal login item and registers
+`io.github.keithxc.DeskPort.Recovery` using SMAppService. Approve DeskPort's
+background service in System Settings when prompted. The UI distinguishes the
+request from approval and reports whether the helper has checked in recently.
+
+The signed helper and launchd plist remain inside the application bundle. Every
+30 seconds, the system job identifies the console user, permanently drops root
+privileges, and checks that user's opt-in and pause markers. It starts only that
+user's missing DeskPort GUI agent. Existing processes, disabled login items and
+other applications are left alone. It does not accept client commands, arbitrary
+paths or configuration arguments. Settings and heartbeat are stored under
+`~/Library/Application Support/DeskPort/unattended/`, without pairing secrets.
+
+Choose **Pause and quit** to stop recovery until DeskPort next opens (including
+normal login startup). Turn off **Unattended operation** for a persistent opt-out;
+normal login startup remains a separate preference. Restart keeps recovery enabled.
+Stopping sharing remains off until explicitly started again. This process recovery
+does not diagnose a hung encoder, a disconnected network or missing capture access.
+
+A logged-in Aqua session is required. This can recover the app while post-update
+Setup Assistant delays automatic GUI launches, but it does not finish Setup
+Assistant, unlock FileVault, enable automatic login or bypass macOS permissions.
+See [Apple's SMAppService documentation](https://developer.apple.com/documentation/servicemanagement/smappservice)
+and [background task management](https://support.apple.com/en-au/guide/deployment/depdca572563/web).
+
+An older Nix-specific recovery job must be removed through its system configuration
+before enabling the app-owned service. Do not run both recovery managers. The
+0.3.1 consuming mynix update removes the earlier unpublished Nix-specific proposal.
+
 ## Install and use
 
 Open the DMG and drag DeskPort into Applications. Open DeskPort, then select

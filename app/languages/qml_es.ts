@@ -2145,6 +2145,18 @@
         <source>Apply</source>
         <translation>Aplicar</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Funcionamiento sin supervisión</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>Inicia DeskPort automáticamente y lo recupera si se detiene. Requiere una autorización inicial en Ajustes del Sistema y una sesión de escritorio iniciada. No desbloquea FileVault ni activa el inicio de sesión automático.</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>Abrir permisos en segundo plano</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2444,6 +2456,66 @@
     <message>
         <source>Reconnect</source>
         <translation>Volver a conectar</translation>
+    </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Funcionamiento sin supervisión</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>¿Pausar la recuperación automática y salir? Se reanudará la próxima vez que abra DeskPort.</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>Pausar y salir</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>Desactive el funcionamiento sin supervisión antes del inicio al iniciar sesión.</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>No se pudieron guardar las preferencias del funcionamiento sin supervisión.</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Desactivado</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>Esperando autorización en Ajustes del Sistema</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>Debe configurar el servicio de recuperación. Desactívelo y vuelva a activarlo.</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>Activado; esperando la comprobación del servicio de recuperación</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>El servicio de recuperación no ha respondido. Revise los permisos en segundo plano.</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>Activado; el servicio de recuperación está comprobando este Mac</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>Esperando una sesión de escritorio iniciada</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>La recuperación requiere atención. Revise el inicio al iniciar sesión y los permisos en segundo plano.</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>Instale DeskPort en Aplicaciones antes de activar el funcionamiento sin supervisión.</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>No se pudo activar el inicio al iniciar sesión.</translation>
     </message>
 </context>
 <context>

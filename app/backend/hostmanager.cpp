@@ -26,6 +26,10 @@
 #include <QDesktopServices>
 #include <QUuid>
 #include <QTimer>
+#include <QMessageBox>
+#include <QPushButton>
+#include <QDateTime>
+#include "../../host/macos/recovery-policy.h"
 #include <QSettings>
 #include <QHostInfo>
 #ifdef Q_OS_MACOS
@@ -33,6 +37,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include "macpermissions.h"
 #include "macdock.h"
+#include "macunattended.h"
 #endif
 
 HostManager::HostManager(QObject *parent, const QString &directory) : QObject(parent) {
@@ -159,6 +164,20 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     m_Tray.setToolTip("DeskPort");
     if (!m_Isolated) m_Tray.show();
     connect(qApp, &QCoreApplication::aboutToQuit, this, [this] { m_ShuttingDown = true; m_RecoveryTimer.stop(); beginStop(tr("Sharing is off")); });
+#ifdef Q_OS_MACOS
+    if (!m_Isolated) {
+        // A manual launch resumes a prior "Pause and quit"; the paused helper
+        // never launches us itself. A normal login still follows the login item.
+        if (unattendedEnabled()) unattendedMarker("paused", false);
+        refreshUnattended();
+        auto monitor = new QTimer(this);
+        connect(monitor, &QTimer::timeout, this, [this] {
+            if (unattendedEnabled()) refreshUnattended();
+        });
+        monitor->start(10000);
+        connect(qApp, &QGuiApplication::applicationStateChanged, this, [this] { refreshUnattended(); });
+    }
+#endif
     if (directory.isEmpty() && setupComplete() && !QSettings().contains("host/startAtLogin")) setLoginStart(true);
     if (directory.isEmpty() && loginStart()) setLoginStart(true); // Refresh installed paths and older startup entries.
     if (directory.isEmpty() && available() && ((loginStart() && !QSettings().value("host/sharingDisabled", false).toBool()) || QSettings().value("host/shareOnLaunch", false).toBool()) &&
@@ -192,6 +211,17 @@ void HostManager::updateTrayIcon() {
 }
 void HostManager::requestExit() {
     if (m_ExitRequested) return;
+#ifdef Q_OS_MACOS
+    if (!m_Isolated && unattendedEnabled() && !m_RestartRequested) {
+        QMessageBox question(QMessageBox::Question, tr("Unattended operation"),
+            tr("Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens."),
+            QMessageBox::Cancel);
+        auto pause = question.addButton(tr("Pause and quit"), QMessageBox::AcceptRole);
+        question.setDefaultButton(QMessageBox::Cancel);
+        question.exec();
+        if (question.clickedButton() != pause || !unattendedMarker("paused", true)) return;
+    }
+#endif
     m_ExitRequested = true;
     emit exitRequested();
 }
@@ -528,7 +558,101 @@ bool HostManager::loginStart() const {
 #endif
     return QSettings().value("host/startAtLogin", false).toBool();
 }
+QString HostManager::unattendedDirectory() const {
+    return m_Isolated ? m_Directory + "/unattended" : QDir::homePath() + QString::fromLatin1(DeskPortRecovery::Directory);
+}
+bool HostManager::unattendedMarker(const QString& name, bool present) {
+    const auto directory = unattendedDirectory();
+    const auto path = directory + "/" + name;
+    bool ok = true;
+    if (present) {
+        ok = QDir().mkpath(directory);
+        QSaveFile file(path);
+        ok = ok && file.open(QIODevice::WriteOnly);
+        if (ok) {
+            file.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+            ok = file.write("1\n") == 2 && file.commit();
+        }
+    } else ok = !QFile::exists(path) || QFile::remove(path);
+    if (!ok) m_UnattendedError = tr("Cannot save unattended preferences.");
+    emit changed();
+    return ok;
+}
+bool HostManager::unattendedEnabled() const {
+#ifdef Q_OS_MACOS
+    return QFileInfo(unattendedDirectory() + "/enabled").isFile();
+#else
+    return false;
+#endif
+}
+bool HostManager::unattendedNeedsApproval() const {
+    return unattendedEnabled() && m_UnattendedServiceStatus == 2;
+}
+QString HostManager::unattendedStatus() const {
+    if (!m_UnattendedError.isEmpty()) return m_UnattendedError;
+    if (!unattendedEnabled()) return tr("Off");
+    if (m_UnattendedServiceStatus == 2) return tr("Waiting for approval in System Settings");
+    if (m_UnattendedServiceStatus != 1) return tr("Recovery service needs setup. Turn it off and on to try again.");
+    const auto path = unattendedDirectory() + "/heartbeat";
+    QFile heartbeat(path);
+    if (!heartbeat.open(QIODevice::ReadOnly)) {
+        if (QFileInfo(unattendedDirectory() + "/enabled").lastModified().secsTo(QDateTime::currentDateTime()) <= 90)
+            return tr("Enabled; waiting for the recovery service to check in");
+        return tr("Recovery has not checked in. Review background permissions.");
+    }
+    if (QFileInfo(path).lastModified().secsTo(QDateTime::currentDateTime()) > 90)
+        return tr("Recovery has not checked in. Review background permissions.");
+    const auto result = heartbeat.read(64).trimmed();
+    if (result == "running") return tr("Enabled; recovery service is checking this Mac");
+    if (result == "waiting-session") return tr("Waiting for a logged-in desktop session");
+    return tr("Recovery needs attention. Check login startup and background permissions.");
+}
+void HostManager::refreshUnattended() {
+#ifdef Q_OS_MACOS
+    if (!m_Isolated) m_UnattendedServiceStatus = unattendedEnabled() ? deskPortUnattendedServiceStatus() : 0;
+#endif
+    emit changed();
+}
+void HostManager::openUnattendedSettings() {
+#ifdef Q_OS_MACOS
+    if (!m_Isolated) deskPortOpenBackgroundItems();
+#endif
+}
+void HostManager::setUnattended(bool enabled) {
+#ifdef Q_OS_MACOS
+    if (m_Isolated) return;
+    m_UnattendedError.clear();
+    const auto bundle = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../..");
+    if (enabled && (bundle != "/Applications/DeskPort.app" ||
+        !QFile::exists(bundle + "/Contents/Helpers/deskport-recovery"))) {
+        m_UnattendedError = tr("Install DeskPort in Applications before enabling unattended operation.");
+        emit changed(); return;
+    }
+    if (enabled) {
+        setLoginStart(true);
+        if (!loginStart() || !QFile::exists(QDir::homePath() + "/Library/LaunchAgents/io.github.keithxc.DeskPort.plist")) {
+            m_UnattendedError = tr("Cannot enable login startup."); emit changed(); return;
+        }
+        // Remove stale health evidence before requesting a fresh registration.
+        if (!unattendedMarker("paused", false) || !unattendedMarker("heartbeat", false) ||
+            !unattendedMarker("enabled", true)) return;
+        if (!deskPortSetUnattendedService(true, m_UnattendedError)) unattendedMarker("enabled", false);
+    } else {
+        // Stop this user's recovery first, even when unregister needs attention.
+        if (!unattendedMarker("enabled", false)) return;
+        unattendedMarker("paused", false);
+        deskPortSetUnattendedService(false, m_UnattendedError);
+    }
+    refreshUnattended();
+    if (unattendedNeedsApproval()) openUnattendedSettings();
+#else
+    Q_UNUSED(enabled);
+#endif
+}
 void HostManager::setLoginStart(bool enabled) {
+    if (!enabled && unattendedEnabled()) {
+        setStatus(tr("Turn off unattended operation before disabling login startup.")); emit changed(); return;
+    }
 #ifdef Q_OS_MACOS
     const QString bundle = QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../..");
     if (bundle != "/Applications/DeskPort.app") {

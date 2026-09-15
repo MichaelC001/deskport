@@ -49,6 +49,15 @@ private slots:
         QVERIFY(QFile::link(dir.path() + "/elsewhere", dir.path() + "/other.desktop"));
         QVERIFY(!DeskPortService::storeManaged(dir.path() + "/other.desktop"));
     }
+    void isolatedTestsNeverRegisterSystemServices() {
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.setUnattended(true);
+        QVERIFY(!host.unattendedEnabled());
+        QVERIFY(!QFile::exists(dir.path() + "/unattended/enabled"));
+        host.openUnattendedSettings(); // Must be a no-op in isolated tests.
+        host.refreshUnattended();
+        QVERIFY(!host.unattendedNeedsApproval());
+    }
     void ordinaryQuitHidesUntilExplicitExit() {
         QTemporaryDir dir; HostManager host(nullptr, dir.path());
         host.setResident(true);

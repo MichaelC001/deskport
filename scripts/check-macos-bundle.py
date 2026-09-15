@@ -11,6 +11,16 @@ with (root / 'Contents/Info.plist').open('rb') as stream:
     info = plistlib.load(stream)
 if not info.get('NSMicrophoneUsageDescription', '').strip():
     errors.append('Outer app is missing its microphone usage description')
+recovery = root / 'Contents/Library/LaunchDaemons/io.github.keithxc.DeskPort.Recovery.plist'
+try:
+    service = plistlib.loads(recovery.read_bytes())
+    assert service['Label'] == 'io.github.keithxc.DeskPort.Recovery'
+    assert service['BundleProgram'] == 'Contents/Helpers/deskport-recovery'
+    assert service['RunAtLoad'] is True and service['StartInterval'] == 30
+    assert 'Program' not in service and 'ProgramArguments' not in service
+    assert (root / service['BundleProgram']).is_file()
+except (OSError, KeyError, AssertionError, plistlib.InvalidFileException) as error:
+    errors.append(f'Invalid bundled unattended recovery service: {error}')
 entitlements = plistlib.loads(subprocess.check_output(
     ['/usr/bin/codesign', '-d', '--entitlements', ':-', str(root)],
     stderr=subprocess.DEVNULL))

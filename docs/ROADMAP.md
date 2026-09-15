@@ -1,3 +1,19 @@
+## 0.3.1 preview: unattended macOS recovery
+
+- Added an opt-in Sharing setting backed by Apple's SMAppService and a signed,
+  bundled recovery helper. Ordinary DMG installs can request approval in System
+  Settings without Nix or a separate installer.
+- The system job drops privileges to the console user before reading preferences
+  or starting the existing GUI agent. It checks every 30 seconds, respects disabled
+  login items, and leaves running/Finder-launched instances alone.
+- Show pending approval, missing setup, delayed heartbeat and recovery errors.
+  Explicit quit offers pause-and-quit; reopening resumes checks. Disabling the
+  setting removes recovery registration while retaining ordinary login startup.
+- Desktop login, FileVault unlock and automatic-login configuration remain macOS
+  responsibilities. A running process is not proof of working capture or input.
+- Release scope: macOS arm64 package and NixOS x86_64 client only. Administrator
+  approval, post-update Setup Assistant and unattended reboot acceptance are manual.
+
 ## Device-first desktop UI (0.2.7, 2026-09-14)
 
 Reason: make connecting the primary action and remove connection parameters from
