@@ -328,6 +328,13 @@ ApplicationWindow {
             Label { text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on"); color: ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; elide: Text.ElideRight }
             UiButton { text: qsTr("Sharing"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "HostView"); onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") } }
             UiButton { text: qsTr("Settings"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "SettingsHome"); onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") } }
+            Label {
+                text: "v" + SystemProperties.versionString
+                color: ui.muted; font.pixelSize: ui.small
+                Layout.fillWidth: true; Layout.topMargin: 8
+                horizontalAlignment: Text.AlignHCenter
+                elide: Text.ElideRight
+            }
         }
         }
     }
