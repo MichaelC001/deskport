@@ -62,6 +62,7 @@ ClipboardAgent::~ClipboardAgent() { stop(); }
 void ClipboardAgent::stop() {
     if (m_Stopped) return;
     m_Stopped = true; m_Timer.stop();
+    if (m_WaitLoop) m_WaitLoop->quit();
     if (!m_RemoteId.isEmpty() && m_Native->formats().contains(Marker)) m_Native->publish({}, [](const QString&) { return QByteArray(); });
     m_RemoteId.clear();
 }
@@ -198,7 +199,9 @@ void ClipboardAgent::receive(const QJsonObject& message) {
     if (type == "clipboard-v2-read") { m_Send(serve(message)); return; }
     if (type == "clipboard-v2-data") {
         const auto request = message["request"].toString();
-        if (request == QString::number(m_Request)) m_Replies.insert(request, message);
+        if (request == QString::number(m_Request)) {
+            m_Replies.insert(request, message); if (m_WaitLoop) m_WaitLoop->quit();
+        }
         return;
     }
     if (type != "clipboard-v2-offer") return;
@@ -224,7 +227,7 @@ void ClipboardAgent::receive(const QJsonObject& message) {
         }
         if (message["kind"] == "ack") return;
     }
-    if (m_Busy || m_Serving) { m_RemoteId.clear(); m_PendingOffer = ordered; return; }
+    if (m_Busy || m_Serving) { m_RemoteId.clear(); m_PendingOffer = ordered; if (m_WaitLoop) m_WaitLoop->quit(); return; }
     applyOffer(ordered);
 }
 void ClipboardAgent::applyOffer(const QJsonObject& message) {
@@ -253,11 +256,11 @@ void ClipboardAgent::applyOffer(const QJsonObject& message) {
 }
 QJsonObject ClipboardAgent::request(QJsonObject message) {
     const auto key = QString::number(++m_Request); message["type"] = "clipboard-v2-read"; message["request"] = key;
-    m_Send(message);
-    QElapsedTimer elapsed; elapsed.start();
-    while (!m_Stopped && !m_Replies.contains(key) && elapsed.elapsed() < 30000) {
-        QEventLoop loop; QTimer::singleShot(5, &loop, &QEventLoop::quit); loop.exec();
-    }
+    QEventLoop loop; QTimer deadline;
+    deadline.setSingleShot(true); connect(&deadline, &QTimer::timeout, &loop, &QEventLoop::quit);
+    m_WaitLoop = &loop; deadline.start(30000); m_Send(message);
+    if (!m_Stopped && !m_Replies.contains(key)) loop.exec();
+    m_WaitLoop = nullptr;
     return m_Replies.take(key);
 }
 QByteArray ClipboardAgent::materialize(const QString& id, const QString& mime) {

@@ -10,6 +10,10 @@
 #include "clipboardprotocol.h"
 #include "streaming/clipboardsync.h"
 #include <SDL.h>
+#include <QSocketNotifier>
+#include <QJsonDocument>
+#include <unistd.h>
+#include <fcntl.h>
 
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
@@ -41,6 +45,24 @@ private slots:
         QVERIFY(!DeskPortClipboard::decode(QStringLiteral("AA=="), text));
         QVERIFY(!DeskPortClipboard::decode(QJsonValue(42), text));
         QVERIFY(DeskPortClipboard::decode(QStringLiteral(""), text)); QVERIFY(text.isEmpty());
+    }
+    void nativeHelperTransport() {
+        QTemporaryDir dir;
+        const auto a = credential("TEST_CERT_A"), b = credential("TEST_CERT_B");
+        const auto fp = QString::fromLatin1(QSslCertificate(a).digest(QCryptographicHash::Sha256).toHex());
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json", {{"version", 1}, {"peers", QJsonObject{
+            {fp, QJsonObject{{"ready", true}, {"granted", true}}}}}}));
+        HostManager host(nullptr, dir.path()+"/host");
+        PeerManager server(&host, b, credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        host.start(1280, 720); QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
+        ClipboardChannel channel("127.0.0.1", server.port(), QSslCertificate(b), a, credential("TEST_KEY_A"), true);
+        QTRY_VERIFY_WITH_TIMEOUT(channel.ready() && channel.nativeSharing(), 6000);
+        QTRY_COMPARE_WITH_TIMEOUT(channel.notice(), QString("synthetic-native-transfer-ok"), 6000);
+        ClipboardChannel second("127.0.0.1", server.port(), QSslCertificate(b), a, credential("TEST_KEY_A"), true);
+        QTRY_VERIFY_WITH_TIMEOUT(!second.error().isEmpty(), 6000);
+        QVERIFY(!second.ready());
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!channel.error().isEmpty(), 6000);
     }
     void authenticatedSessionAndOrdering() {
         // Offscreen Qt owns an in-memory clipboard, never the user's clipboard.
@@ -214,5 +236,31 @@ private slots:
         SDL_Quit();
     }
 };
-QTEST_MAIN(ClipboardTests)
+int main(int argc, char** argv) {
+    QApplication app(argc, argv);
+    if (app.arguments().contains("--clipboard-helper")) {
+        // Synthetic pipe endpoint: exercise the real channel/host relay without
+        // touching native clipboards or requiring two desktops in this TLS test.
+        const bool host = app.arguments().contains("--clipboard-helper-host");
+        QFile output; if (!output.open(STDOUT_FILENO, QIODevice::WriteOnly)) return 2;
+        auto send = [&](const QJsonObject& message) { output.write(QJsonDocument(message).toJson(QJsonDocument::Compact)+'\n'); output.flush(); };
+        if (host) QTimer::singleShot(100, &app, [&] { send({{"type", "clipboard-v2-offer"}, {"id", "synthetic"}, {"kind", "image"}, {"mime", "image/png"}, {"rev", 1}}); });
+        fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
+        QByteArray buffer; QSocketNotifier input(STDIN_FILENO, QSocketNotifier::Read);
+        QObject::connect(&input, &QSocketNotifier::activated, &app, [&] {
+            char bytes[8192]; ssize_t n;
+            while ((n = ::read(STDIN_FILENO, bytes, sizeof(bytes))) > 0) buffer.append(bytes, n);
+            if (n == 0) { app.quit(); return; }
+            int end;
+            while ((end = buffer.indexOf('\n')) >= 0) {
+                const auto message = QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
+                if (host && message["type"] == "clipboard-v2-read") send({{"type", "clipboard-v2-data"}, {"request", "1"}, {"data", "c3ludGhldGlj"}});
+                else if (!host && message["type"] == "clipboard-v2-offer") send({{"type", "clipboard-v2-read"}, {"request", "1"}, {"id", "synthetic"}});
+                else if (!host && message["type"] == "clipboard-v2-data" && message["data"] == "c3ludGhldGlj") send({{"type", "clipboard-v2-status"}, {"message", "synthetic-native-transfer-ok"}});
+            }
+        });
+        return app.exec();
+    }
+    ClipboardTests tests; return QTest::qExec(&tests, argc, argv);
+}
 #include "clipboard.moc"

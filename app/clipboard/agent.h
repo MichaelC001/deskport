@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <QEventLoop>
 #include <memory>
 
 namespace ClipboardV2 {
@@ -47,6 +48,7 @@ private:
     QHash<QString, QJsonObject> m_Replies;
     std::unique_ptr<QTemporaryDir> m_Temporary;
     bool m_Stopped = false, m_Busy = false, m_Serving = false;
+    QEventLoop* m_WaitLoop = nullptr;
     int m_Request = 0;
     bool m_Authoritative = false, m_OfferInFlight = false, m_QueuedOffer = false;
     int m_Revision = 0;
