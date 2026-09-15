@@ -14,6 +14,11 @@ void ClipboardSync::tick() {
     if (!m_Status.isEmpty() && m_LastPoll - m_NoticeAt >= 5000) m_Status.clear();
     if (!m_Channel->error().isEmpty()) { m_Status = m_Channel->error(); return; }
     if (!m_Channel->ready()) return;
+    if (m_Channel->nativeSharing()) {
+        const auto message = m_Channel->notice();
+        if (message != m_LastNativeNotice) { m_LastNativeNotice = message; notice(message); }
+        return;
+    }
     // SDL owns the native clipboard connection while the streaming loop owns the
     // main thread. Never access the Qt clipboard from the network worker.
     QString current = m_Observed;

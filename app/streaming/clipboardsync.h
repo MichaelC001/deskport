@@ -11,6 +11,7 @@ public:
 private:
     void notice(const QString& text);
     std::unique_ptr<ClipboardChannel> m_Channel;
+    QString m_LastNativeNotice;
     QString m_Observed, m_SentSnapshot, m_Status;
     bool m_Changed = false;
     unsigned m_LocalGeneration = 0, m_SentGeneration = 0;

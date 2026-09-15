@@ -29,6 +29,9 @@ class HostManager : public QObject {
     Q_PROPERTY(bool running READ running NOTIFY changed)
     Q_PROPERTY(int basePort READ basePort NOTIFY changed)
     Q_PROPERTY(bool canPair READ canPair NOTIFY changed)
+    Q_PROPERTY(bool unattendedEnabled READ unattendedEnabled NOTIFY changed)
+    Q_PROPERTY(bool unattendedNeedsApproval READ unattendedNeedsApproval NOTIFY changed)
+    Q_PROPERTY(QString unattendedStatus READ unattendedStatus NOTIFY changed)
     Q_PROPERTY(bool loginStart READ loginStart NOTIFY changed)
     Q_PROPERTY(bool loginStartManaged READ loginStartManaged NOTIFY changed)
     Q_PROPERTY(QString readiness READ readiness NOTIFY permissionsChanged)
@@ -62,6 +65,12 @@ public:
     bool loginStart() const;
     bool loginStartManaged() const;
     Q_INVOKABLE void setLoginStart(bool enabled);
+    bool unattendedEnabled() const;
+    bool unattendedNeedsApproval() const;
+    QString unattendedStatus() const;
+    Q_INVOKABLE void setUnattended(bool enabled);
+    Q_INVOKABLE void openUnattendedSettings();
+    Q_INVOKABLE void refreshUnattended();
     QString readiness() const;
     QString status() const { return m_Status; }
     Q_INVOKABLE void start(int width, int height);
@@ -90,6 +99,10 @@ signals:
     void trustUpdated(bool success);
     void displayResized(int sequence, int width, int height, const QString& error);
 private:
+    QString unattendedDirectory() const;
+    bool unattendedMarker(const QString& name, bool present);
+    QString m_UnattendedError;
+    int m_UnattendedServiceStatus = 0;
     void updateTrayIcon();
 #ifdef Q_OS_MACOS
     void showTrayMenu();

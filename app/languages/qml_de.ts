@@ -1672,8 +1672,8 @@
         <translation>Verwendet das integrierte virtuelle Display eines verbundenen Mac. Größenänderungen verbinden das Bild kurz neu; Ihre Apps bleiben geöffnet. Andere Hosts verwenden die Auflösung unten.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2145,6 +2145,18 @@
         <source>Apply</source>
         <translation>Anwenden</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Unbeaufsichtigter Betrieb</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>DeskPort automatisch starten und nach einem Stopp wiederherstellen. Erfordert eine einmalige Freigabe in den Systemeinstellungen und eine angemeldete Desktopsitzung. Entsperrt FileVault nicht und aktiviert keine automatische Anmeldung.</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>Hintergrundberechtigungen öffnen</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2445,6 +2457,66 @@
         <source>Reconnect</source>
         <translation>Erneut verbinden</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>Unbeaufsichtigter Betrieb</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>Automatische Wiederherstellung pausieren und beenden? Sie wird beim nächsten Öffnen von DeskPort fortgesetzt.</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>Pausieren und beenden</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>Deaktivieren Sie zuerst den unbeaufsichtigten Betrieb, bevor Sie den Anmeldestart deaktivieren.</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>Einstellungen für unbeaufsichtigten Betrieb konnten nicht gespeichert werden.</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>Aus</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>Warten auf Freigabe in den Systemeinstellungen</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>Wiederherstellungsdienst muss eingerichtet werden. Aus- und wieder einschalten.</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>Aktiviert; Warten auf Prüfung durch den Wiederherstellungsdienst</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>Keine Rückmeldung vom Wiederherstellungsdienst. Hintergrundberechtigungen prüfen.</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>Aktiviert; Wiederherstellungsdienst prüft diesen Mac</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>Warten auf eine angemeldete Desktopsitzung</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>Wiederherstellung erfordert Aufmerksamkeit. Anmeldestart und Hintergrundberechtigungen prüfen.</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>Installieren Sie DeskPort vor dem Aktivieren des unbeaufsichtigten Betriebs unter Programme.</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>Anmeldestart konnte nicht aktiviert werden.</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2507,8 +2579,8 @@
         <translation>Tastatur-, Zeiger- und Controller-Eingaben erlauben</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2706,8 +2778,8 @@
         <translation>Auf einem Mac entspricht Super / Windows der Command-Taste und Alt der Option-Taste. Wählen Sie Immer, um Super + Leertaste im Fenster weiterzuleiten. Änderungen gelten ab der nächsten Verbindung.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>Textzwischenablage während einer Sitzung teilen</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>Text, Bilder und Dateien während einer Sitzung teilen</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

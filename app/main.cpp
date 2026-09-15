@@ -1,4 +1,5 @@
 #include <QApplication>
+#include "clipboard/agent.h"
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QNetworkReply>
@@ -365,6 +366,9 @@ static void relaunchAfterExit()
 
 int main(int argc, char *argv[])
 {
+    for (int i = 1; i < argc; ++i) {
+        if (QByteArray(argv[i]) == "--clipboard-helper") return runClipboardHelper(argc, argv);
+    }
     SDL_SetMainReady();
 
     // Set the app version for the QCommandLineParser's showVersion() command

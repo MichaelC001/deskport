@@ -1680,8 +1680,8 @@
         <translation>使用已綁定 Mac 的內建虛擬螢幕。調整視窗後畫面會短暫重新連線，遠端應用程式保持開啟。其他主機使用下方解析度。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>連線期間共享純文字剪貼簿</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>工作階段期間共享文字、圖片和檔案</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2153,6 +2153,18 @@
         <source>Apply</source>
         <translation>套用</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人值守執行</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>自動啟動，並在 DeskPort 停止後恢復。需要在系統設定中完成一次授權，並已登入桌面。不會解鎖 FileVault 或開啟系統自動登入。</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>開啟背景執行權限</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2461,6 +2473,66 @@
         <source>Reconnect</source>
         <translation>重新連線</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人值守執行</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>暫停自動恢復並結束？下次開啟 DeskPort 時恢復執行。</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>暫停並結束</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>請先關閉無人值守執行，再關閉登入啟動。</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>無法儲存無人值守偏好設定。</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>已關閉</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>等待在系統設定中授權</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>恢復服務需要設定。請關閉後重新開啟。</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>已啟用；等待恢復服務首次檢查</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>未收到恢復服務的檢查結果。請檢查背景執行權限。</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>已啟用；恢復服務正在檢查此 Mac</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>等待登入桌面工作階段</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>恢復需要處理。請檢查登入啟動和背景執行權限。</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>請先將 DeskPort 安裝到「應用程式」，再開啟無人值守執行。</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>無法開啟登入啟動。</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2523,8 +2595,8 @@
         <translation>允許鍵盤、指標及控制器輸入</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>連線期間共享純文字剪貼簿</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>工作階段期間共享文字、圖片和檔案</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2722,8 +2794,8 @@
         <translation>連線 Mac 時，Super / Windows 對應 Command，Alt 對應 Option。選擇「一律」可在視窗中轉送 Super + 空白鍵。變更於下次連線時生效。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>連線期間共享純文字剪貼簿</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>工作階段期間共享文字、圖片和檔案</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

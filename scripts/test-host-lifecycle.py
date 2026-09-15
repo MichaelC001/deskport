@@ -84,8 +84,8 @@ HEADERS += "{root}/app/backend/hostmanager.h" {extra_headers}
 INCLUDEPATH += "{root}/app/backend" "{root}/app"
 RESOURCES += "{work}/test-resources.qrc"
 macx {{
-    OBJECTIVE_SOURCES += "{root}/app/backend/macpermissions.mm" "{root}/app/backend/macdock.mm" "{root}/app/backend/macclipboard.mm"
-    LIBS += -framework CoreGraphics -framework AVFoundation -framework ApplicationServices -framework AppKit
+    OBJECTIVE_SOURCES += "{root}/app/backend/macpermissions.mm" "{root}/app/backend/macdock.mm" "{root}/app/backend/macclipboard.mm" "{root}/app/backend/macunattended.mm"
+    LIBS += -framework CoreGraphics -framework AVFoundation -framework ApplicationServices -framework AppKit -framework ServiceManagement
 }}
 ''')
     if "--clipboard" in sys.argv:

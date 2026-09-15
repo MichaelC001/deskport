@@ -64,6 +64,7 @@ done
 bash scripts/build-macos-host.sh
 xcrun clang -fobjc-arc -framework Foundation -framework CoreGraphics \
     host/macos/display-helper.m -o "$build_dir/deskport-display"
+xcrun clang++ -std=c++17 -Wall -Wextra -Werror host/macos/recovery-helper.cpp -o "$build_dir/deskport-recovery"
 stage=$(mktemp -d "$dist_dir/.package.XXXXXX")
 trap 'chmod -R u+w "$stage" 2>/dev/null || true; rm -rf "$stage"' EXIT
 app="$stage/DeskPort.app"
@@ -87,6 +88,9 @@ PY
 codesign --force --deep --sign - "$app"
 mkdir -p "$app/Contents/Helpers"
 cp "$build_dir/deskport-display" "$app/Contents/Helpers/deskport-display"
+cp "$build_dir/deskport-recovery" "$app/Contents/Helpers/deskport-recovery"
+mkdir -p "$app/Contents/Library/LaunchDaemons"
+cp app/deploy/macos/io.github.keithxc.DeskPort.Recovery.plist "$app/Contents/Library/LaunchDaemons/"
 dmg="$repo/build-macos/Sunshine-macOS-arm64.dmg"
 if [ ! -f "$dmg" ]; then
     curl -fL --retry 3 https://github.com/LizardByte/Sunshine/releases/download/v2026.906.222525/Sunshine-macOS-arm64.dmg -o "$dmg"
@@ -118,6 +122,7 @@ cp host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "
 cp scripts/build-macos-host.sh "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"
+codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime "$app/Contents/Helpers/deskport-recovery"
 cp LICENSE "$app/Contents/Resources/DeskPort-LICENSE"
 cp docs/BUNDLED_COMPONENTS.md "$app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none "$app/Contents/Helpers/deskport-display"

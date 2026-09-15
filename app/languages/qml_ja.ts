@@ -1672,8 +1672,8 @@
         <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2145,6 +2145,18 @@
         <source>Apply</source>
         <translation>適用</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人運用</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>DeskPort を自動起動し、停止した場合は復旧します。システム設定での初回承認と、デスクトップへのログインが必要です。FileVault のロック解除や自動ログインの設定は行いません。</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>バックグラウンド権限を開く</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2445,6 +2457,66 @@
         <source>Reconnect</source>
         <translation>再接続</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>無人運用</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>自動復旧を一時停止して終了しますか？次回 DeskPort を開くと再開します。</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>一時停止して終了</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>ログイン時の起動を無効にする前に、無人運用をオフにしてください。</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>無人運用の設定を保存できません。</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>オフ</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>システム設定での承認待ち</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>復旧サービスの設定が必要です。オフにしてからオンにしてください。</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>有効：復旧サービスの確認待ち</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>復旧サービスから応答がありません。バックグラウンド権限を確認してください。</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>有効：復旧サービスがこの Mac を確認しています</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>デスクトップへのログイン待ち</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>復旧に対応が必要です。ログイン時の起動とバックグラウンド権限を確認してください。</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>無人運用を有効にする前に DeskPort を「アプリケーション」にインストールしてください。</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>ログイン時の起動を有効にできません。</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2507,8 +2579,8 @@
         <translation>キーボード・ポインター・コントローラー入力を許可</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2706,8 +2778,8 @@
         <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>セッション中にテキストのクリップボードを共有</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

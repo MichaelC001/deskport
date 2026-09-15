@@ -2,6 +2,7 @@
 #include <QSysInfo>
 #include "peerstore.h"
 #include "clipboardprotocol.h"
+#include "clipboard/process.h"
 #ifdef Q_OS_MACOS
 #include "macclipboard.h"
 #endif
@@ -62,6 +63,7 @@ struct PeerManager::Link : QObject {
     QString expectedFingerprint;
     QJsonObject expectedPeer;
     bool clipboardControl = false;
+    ClipboardProcess* clipboardHelper = nullptr;
     QString clipboardText, clipboardEncoded;
     int clipboardMaxText = DeskPortClipboard::LegacyMaxText;
     bool clipboardSupported = false, clipboardIsText = false, clipboardDirty = true;
@@ -251,6 +253,9 @@ QJsonObject PeerManager::metadata() const {
     meta["clientBinding"] = 1;
     meta["endpointRefresh"] = 1;
     meta["clipboard"] = 1;
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+    meta["clipboardV2"] = 1;
+#endif
     meta["adaptiveDisplay"] = m_Host->adaptiveDisplayAvailable() ? 1 : 0;
     meta["bindingPort"] = int(m_Server->serverPort());
     return meta;
@@ -444,6 +449,41 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         QTimer::singleShot(2000, link, &QObject::deleteLater); return;
     }
     if (!type.startsWith("clipboard-")) qInfo() << "Binding: received" << type;
+    if (type == "clipboard-v2-start") {
+        const auto peer = m_Peers[link->fingerprint].toObject();
+        if (!link->incoming || link->requested || link->displayControl || link->clipboardControl ||
+            !peer["ready"].toBool() || !peer["granted"].toBool() || !m_Host->running() || m_ClipboardLink) {
+            fail(link, tr("Clipboard sharing requires an enabled host and an approved exclusive session")); return;
+        }
+        link->clipboardControl = true; m_ClipboardLink = link;
+        if (m_Link == link) m_Link = nullptr;
+        link->lastClipboardRequest = QDateTime::currentMSecsSinceEpoch();
+        link->socket->setReadBufferSize(DeskPortClipboard::MaxFrame + 1);
+        auto helper = new ClipboardProcess(link); link->clipboardHelper = helper;
+        helper->setArguments({"--clipboard-helper", "--clipboard-helper-host"});
+        connect(helper, &QProcess::readyReadStandardOutput, link, [this, link, helper] {
+            if (!helper->drain([this, link](const QJsonObject& message) {
+                if (message["type"] != "clipboard-v2-status") send(link, message);
+            })) fail(link, tr("Invalid clipboard helper response"));
+        });
+        connect(helper, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), link, [this, link] {
+            if (!link->ended) fail(link, tr("Native clipboard helper stopped"));
+        });
+        connect(helper, &QProcess::errorOccurred, link, [this, link](QProcess::ProcessError) {
+            if (!link->ended) fail(link, tr("Native clipboard helper unavailable"));
+        });
+        helper->start();
+        send(link, {{"type", "clipboard-v2-ready"}}); emit changed(); return;
+    }
+    if (link->clipboardHelper) {
+        link->lastClipboardRequest = QDateTime::currentMSecsSinceEpoch();
+        if (type == "clipboard-v2-ping") { send(link, {{"type", "clipboard-v2-pong"}}); return; }
+        if (type != "clipboard-v2-offer" && type != "clipboard-v2-read" && type != "clipboard-v2-data") {
+            fail(link, tr("Unexpected clipboard message")); return;
+        }
+        if (!link->clipboardHelper->put(message)) fail(link, tr("Clipboard helper is not consuming messages"));
+        return;
+    }
     if (type == "clipboard-start" || type == "clipboard-poll") {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || link->displayControl || !peer["ready"].toBool() ||
@@ -629,6 +669,7 @@ void PeerManager::fail(Link* link, const QString& message) {
         return; // Background reachability failures must not replace UI status.
     }
     if (m_ClipboardLink == link) m_ClipboardLink = nullptr;
+    if (link->clipboardHelper) link->clipboardHelper->closeWriteChannel();
     if (m_DisplayLink == link) { m_DisplayLink = nullptr; m_Host->restoreDisplay(); }
     if (m_Link == link) m_Link = nullptr;
     m_Status = message; connect(link->socket, &QSslSocket::disconnected, link, &QObject::deleteLater);

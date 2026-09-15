@@ -1,3 +1,38 @@
+## On-demand clipboard (0.3.2 prerelease, 2026-09-15)
+
+Reason: retain immediate text sharing while avoiding speculative image/file
+payload transfer. Native clipboard helpers support lazy images and file/folder
+URLs over the existing authenticated desktop session. Includes Wayland
+background data-control, AppKit item providers, chunked reads, temporary download
+limits, cancellation on new copies/disconnect, and old-peer text fallback.
+
+The previously deferred PNG and file-copy work is now implemented for desktop
+prerelease testing. Download starts on data access, which history tools can also
+trigger. Large-file native paste timeouts and real Finder/Dolphin/streaming UX
+remain manual acceptance after the user's pk4/mm4 activation. See
+[clipboard behavior, limits and checks](CLIPBOARD.md).
+
+## 0.3.1 preview: unattended macOS recovery
+
+- Added an opt-in Sharing setting backed by Apple's SMAppService and a signed,
+  bundled recovery helper. Ordinary DMG installs can request approval in System
+  Settings without Nix or a separate installer.
+- The system job drops privileges to the console user before reading preferences
+  or starting the existing GUI agent. It checks every 30 seconds, respects disabled
+  login items, and leaves running/Finder-launched instances alone.
+- Show pending approval, missing setup, delayed heartbeat and recovery errors.
+  Explicit quit offers pause-and-quit; reopening resumes checks. Disabling the
+  setting removes recovery registration while retaining ordinary login startup.
+- Desktop login, FileVault unlock and automatic-login configuration remain macOS
+  responsibilities. A running process is not proof of working capture or input.
+- Release scope: macOS arm64 package and NixOS x86_64 client only. Administrator
+  approval, post-update Setup Assistant and unattended reboot acceptance are manual.
+## Sidebar version display (2026-09-15)
+
+Restore the application version below Settings in the desktop sidebar so users
+can identify the running build without opening Settings. Use the existing
+runtime version and theme colors. Packaging and release are deferred.
+
 ## Device-first desktop UI (0.2.7, 2026-09-14)
 
 Reason: make connecting the primary action and remove connection parameters from

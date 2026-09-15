@@ -1672,8 +1672,8 @@
         <translation>연결된 Mac의 내장 가상 디스플레이를 사용합니다. 창 크기를 변경하면 화면이 잠시 다시 연결되지만 앱은 열린 상태로 유지됩니다. 다른 호스트에는 아래 해상도가 적용됩니다.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
@@ -2145,6 +2145,18 @@
         <source>Apply</source>
         <translation>적용</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>무인 실행</translation>
+    </message>
+    <message>
+        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+        <translation>DeskPort를 자동으로 시작하고 중지되면 복구합니다. 시스템 설정에서 한 번 승인하고 데스크톱에 로그인해야 합니다. FileVault 잠금을 해제하거나 자동 로그인을 켜지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Open background permissions</source>
+        <translation>백그라운드 권한 열기</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
@@ -2445,6 +2457,66 @@
         <source>Reconnect</source>
         <translation>다시 연결</translation>
     </message>
+    <message>
+        <source>Unattended operation</source>
+        <translation>무인 실행</translation>
+    </message>
+    <message>
+        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+        <translation>자동 복구를 일시 중지하고 종료할까요? 다음에 DeskPort를 열면 다시 시작됩니다.</translation>
+    </message>
+    <message>
+        <source>Pause and quit</source>
+        <translation>일시 중지 후 종료</translation>
+    </message>
+    <message>
+        <source>Turn off unattended operation before disabling login startup.</source>
+        <translation>로그인 시 시작을 끄기 전에 무인 실행을 끄세요.</translation>
+    </message>
+    <message>
+        <source>Cannot save unattended preferences.</source>
+        <translation>무인 실행 설정을 저장할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Off</source>
+        <translation>꺼짐</translation>
+    </message>
+    <message>
+        <source>Waiting for approval in System Settings</source>
+        <translation>시스템 설정에서 승인 대기 중</translation>
+    </message>
+    <message>
+        <source>Recovery service needs setup. Turn it off and on to try again.</source>
+        <translation>복구 서비스 설정이 필요합니다. 껐다가 다시 켜세요.</translation>
+    </message>
+    <message>
+        <source>Enabled; waiting for the recovery service to check in</source>
+        <translation>활성화됨: 복구 서비스 확인 대기 중</translation>
+    </message>
+    <message>
+        <source>Recovery has not checked in. Review background permissions.</source>
+        <translation>복구 서비스의 응답이 없습니다. 백그라운드 권한을 확인하세요.</translation>
+    </message>
+    <message>
+        <source>Enabled; recovery service is checking this Mac</source>
+        <translation>활성화됨: 복구 서비스가 이 Mac을 확인 중</translation>
+    </message>
+    <message>
+        <source>Waiting for a logged-in desktop session</source>
+        <translation>데스크톱 로그인 대기 중</translation>
+    </message>
+    <message>
+        <source>Recovery needs attention. Check login startup and background permissions.</source>
+        <translation>복구를 확인해야 합니다. 로그인 시 시작 및 백그라운드 권한을 확인하세요.</translation>
+    </message>
+    <message>
+        <source>Install DeskPort in Applications before enabling unattended operation.</source>
+        <translation>무인 실행을 켜기 전에 DeskPort를 응용 프로그램에 설치하세요.</translation>
+    </message>
+    <message>
+        <source>Cannot enable login startup.</source>
+        <translation>로그인 시 시작을 켤 수 없습니다.</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2507,8 +2579,8 @@
         <translation>키보드, 포인터 및 컨트롤러 입력 허용</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Advanced streaming settings</source>
@@ -2706,8 +2778,8 @@
         <translation>Mac에서는 Super / Windows가 Command, Alt가 Option에 해당합니다. 창에서 Super + Space를 전달하려면 항상을 선택하세요. 변경 사항은 다음 연결부터 적용됩니다.</translation>
     </message>
     <message>
-        <source>Share plain text clipboard during a session</source>
-        <translation>세션 중 일반 텍스트 클립보드 공유</translation>
+        <source>Share text, images and files during a session</source>
+        <translation>세션 중 텍스트, 이미지 및 파일 공유</translation>
     </message>
     <message>
         <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>

@@ -127,7 +127,7 @@ UiPage {
                 Layout.preferredWidth: 250
             }
             Label { text: qsTr("On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Switch { objectName: "sharedClipboardSwitch"; text: qsTr("Share plain text clipboard during a session"); enabled: preferences.remoteInput; checked: preferences.sharedClipboard; onClicked: { preferences.sharedClipboard=checked; save() } }
+            Switch { objectName: "sharedClipboardSwitch"; text: qsTr("Share text, images and files during a session"); enabled: preferences.remoteInput; checked: preferences.sharedClipboard; onClicked: { preferences.sharedClipboard=checked; save() } }
             Label { text: qsTr("Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Release remote input with Ctrl + Alt + Shift + Z."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
