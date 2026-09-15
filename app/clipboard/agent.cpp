@@ -63,7 +63,11 @@ void ClipboardAgent::stop() {
     if (m_Stopped) return;
     m_Stopped = true; m_Timer.stop();
     if (m_WaitLoop) m_WaitLoop->quit();
-    if (!m_RemoteId.isEmpty() && m_Native->formats().contains(Marker)) m_Native->publish({}, [](const QString&) { return QByteArray(); });
+    // A native provider callback can be waiting inside request(). Do not replace
+    // its pasteboard item from that nested event loop; let it unwind before the
+    // native backend is destroyed on helper exit.
+    if (!m_Busy && !m_Serving && !m_RemoteId.isEmpty() && m_Native->formats().contains(Marker))
+        m_Native->publish({}, [](const QString&) { return QByteArray(); });
     m_RemoteId.clear();
 }
 void ClipboardAgent::status(const QString& text) { m_Send({{"type", "clipboard-v2-status"}, {"message", text}}); }
