@@ -1106,3 +1106,13 @@ original order and replication sources after normal shutdown or helper death.
 GNOME retains adaptive extended displays; Mutter physical mirroring is still a
 backlog item. Next checkpoint: user activation and physical-screen/iPad mirror,
 portrait, scaling, input-position and shutdown-restore acceptance.
+
+
+## 2026-09-16 — Reconcile KWin's initial mode before capture
+
+Reason: deployed feedback showed sharing repeatedly failing because the first
+announced virtual mode differed from the creation request. Apply and verify the
+requested mode instead of treating the initial mismatch as fatal. Journal helper
+startup errors so remote diagnosis does not require opening the GUI. Added an
+isolated initial-size/scale mismatch fixture. Next checkpoint: activation on a
+physical GPU, successful host readiness and iPad mirror/input acceptance.

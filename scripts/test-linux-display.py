@@ -19,6 +19,19 @@ if '--inside' not in sys.argv:
         project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c"\n')
         subprocess.run(['qmake', str(project)], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(['make', '-j2'], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
+        if '--initial-mode-mismatch' in sys.argv:
+            # Fault injection: emulate a compositor choosing a different initial
+            # size/scale, while keeping the helper's requested target unchanged.
+            fixture = Path(tmp) / 'initial-mode-fixture'
+            shutil.copytree(source.parent.parent / 'host/linux', fixture)
+            cpp = fixture / 'display-helper.cpp'
+            text = cpp.read_text()
+            anchor = 'name.toUtf8().constData(), width, height, wl_fixed_from_int(1),'
+            assert text.count(anchor) == 1
+            cpp.write_text(text.replace(anchor, 'name.toUtf8().constData(), 1024, 768, wl_fixed_from_int(2),'))
+            subprocess.run(['qmake', str(fixture / 'linux.pro')], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
+            subprocess.run(['make', '-j4'], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
+            helper = str(fixture / 'deskport-display')
         env = dict(os.environ, XDG_RUNTIME_DIR=tmp, XDG_CONFIG_HOME=tmp + '/config',
                    XDG_DATA_HOME=tmp + '/data', XDG_CACHE_HOME=tmp + '/cache', XDG_DATA_DIRS=tmp + '/data:' + os.environ.get('XDG_DATA_DIRS', '/usr/share'),
                    WAYLAND_DISPLAY='deskport-test', QT_QPA_PLATFORM='offscreen',

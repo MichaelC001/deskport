@@ -77,7 +77,10 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                 }
                 continue;
             }
-            if (object.contains("error")) { beginStop(object["error"].toString()); return; }
+            if (object.contains("error")) {
+                qWarning() << "Virtual display startup failed:" << object["error"].toString();
+                beginStop(object["error"].toString()); return;
+            }
             if (object["displayId"].toInt() > 0 && m_Starting && !m_ServerRequested) {
                 m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                 m_DisplayScale = object["scale"].toInt(1);

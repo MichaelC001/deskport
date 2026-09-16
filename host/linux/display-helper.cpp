@@ -171,7 +171,13 @@ public:
         if (!wait([&] { return ready; }) || !sync() || !sync()) return false;
         for (auto& entry : outputs) if (!entry.second->removed && (entry.second->name == name || entry.second->name == "Virtual-" + name)) owned = entry.second.get();
         if (!owned) { error = "KWin did not announce the owned virtual output"; return false; }
-        if (!matches(width, height, 1)) { error = "KWin created a different virtual output mode"; return false; }
+        // The DRM backend may apply saved/default output configuration after
+        // creation (for example fractional scale on a rotated internal panel).
+        // Creation parameters are a request, not an acknowledgment of the mode.
+        if (!matches(width, height, 1)) {
+            fprintf(stderr, "KWin initial mode differs; reconciling to %dx%d at scale 1\n", width, height);
+            if (!resize(width, height, 1)) return false;
+        }
         return mirror();
     }
     bool mirror() {
