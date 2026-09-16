@@ -13,6 +13,11 @@ the PipeWire capture identity. Idle cleanup no longer replays stale physical
 settings after the user changes their local layout. Adaptive client resolution
 and video-only reconnects within an active display-control session are preserved.
 
+The KDE mirrored workspace is placed at logical origin (0, 0). Leaving it at
+the extended-layout offset makes absolute mouse coordinates disagree with the
+compositor workspace, affecting touch gestures translated into mouse input.
+Physical screen positions are restored from the snapshot after disconnect.
+
 This is a Linux Nix prerelease. macOS remains on 0.3.5; no mobile update is
 required. GNOME physical mirroring is still outside this preview. Individual
 application window placement and monitor hotplug during a session are not covered
@@ -20,5 +25,7 @@ by physical-layout restoration.
 
 Validation uses isolated KWin and Mutter sessions, including disabled-output
 preservation, repeated resizes, disconnect removal, reconnect capture, and
-EOF/SIGKILL recovery. Physical-device reconnect and local-layout acceptance
+EOF/SIGKILL recovery, and preserving local edits while idle. Host lifecycle
+(28), binding (27), and UI (18) checks passed, alongside the Nix build.
+Physical-device reconnect, finger input and local-layout acceptance
 remain user checks after activation.

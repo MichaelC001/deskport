@@ -115,6 +115,7 @@ try:
         current = devices()
         virtual = current.pop(owned)
         assert virtual['priority'] == 1 and not virtual['replication_source'], virtual
+        assert (virtual['x'], virtual['y']) == (0, 0), 'Absolute mouse input requires a workspace at the desktop origin'
         for name, expected in original_devices.items():
             actual = current[name]
             if expected['enabled']:

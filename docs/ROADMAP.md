@@ -1129,3 +1129,10 @@ Checkpoint: isolated disabled-panel, disconnect/reconnect capture and crash
 recovery coverage, followed by user activation and repeated physical-device
 connections with the internal panel disabled. GNOME physical mirroring and
 monitor hotplug during a remote session remain backlog items.
+
+Follow-up input report: finger gestures and Pencil use separate mouse and pen
+paths. The KDE mirror source retained a nonzero extended-layout origin, while
+absolute mouse injection addresses the workspace bounds. Place the sole logical
+mirrored workspace at (0, 0), verify that geometry, and restore physical positions
+after disconnect. Actual iPad finger interaction still requires activation and
+user acceptance; it is not inferred from Pencil input or capture tests.

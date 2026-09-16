@@ -261,6 +261,9 @@ public:
         if (!owned || owned->uuid.isEmpty()) { error = "Missing virtual output UUID"; return false; }
         auto config = kde_output_management_v2_create_configuration(management);
         kde_output_configuration_v2_set_priority(config, owned->proxy, 1);
+        // Absolute mouse injection addresses the whole logical desktop. With
+        // physical outputs mirrored, the sole logical output must start at zero.
+        kde_output_configuration_v2_position(config, owned->proxy, 0, 0);
         kde_output_configuration_v2_set_replication_source(config, owned->proxy, "");
         uint32_t priority = 2;
         for (const auto& saved : baseline) for (const auto& entry : outputs) {
@@ -291,7 +294,7 @@ public:
                 error = "KWin changed a physical output's enabled state"; return false;
             }
         }
-        if (owned->priority != 1) { error = "KWin did not make the virtual output primary"; return false; }
+        if (owned->priority != 1 || owned->x != 0 || owned->y != 0) { error = "KWin did not make the virtual output the primary workspace at the desktop origin"; return false; }
         return true;
     }
     bool matches(int width, int height, int scale) const {
