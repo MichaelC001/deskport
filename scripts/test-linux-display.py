@@ -16,7 +16,7 @@ if '--inside' not in sys.argv:
     with tempfile.TemporaryDirectory(prefix='deskport-display-test-') as tmp:
         project = Path(tmp) / 'probe.pro'
         source = Path(__file__).resolve().parents[1] / 'tests/linux-output-probe.cpp'
-        project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}"\n')
+        project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c"\n')
         subprocess.run(['qmake', str(project)], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(['make', '-j2'], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         env = dict(os.environ, XDG_RUNTIME_DIR=tmp, XDG_CONFIG_HOME=tmp + '/config',
@@ -60,7 +60,7 @@ children = []
 logs = []
 try:
     if not gnome: subprocess.run(['kbuildsycoca6', '--noincremental'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--width', '1280', '--height', '720',
+    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--output-count', '2', '--width', '1280', '--height', '720',
                                     '--socket', 'deskport-test', '--no-lockscreen', '--no-global-shortcuts', '--no-kactivities']
     for command in [['pipewire'], ['wireplumber'], compositor]:
         log = tempfile.TemporaryFile(mode='w+')
@@ -81,8 +81,26 @@ try:
             time.sleep(.1)
         assert ready.returncode == 0, ready.stderr
     def outputs():
-        return {o['name']: o for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE']], timeout=5))}
+        return {o['name']: {k:v for k,v in o.items() if k != 'id'} for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE']], timeout=5))}
+    def devices():
+        return {o['name']: o for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE'], '--devices'], timeout=5))}
     baseline = outputs()
+    original_devices = devices() if not gnome else {}
+    def restored():
+        return outputs() == baseline and (gnome or devices() == original_devices)
+    def verify_mirror(owned):
+        current = devices()
+        virtual = current.pop(owned)
+        assert virtual['priority'] == 1 and not virtual['replication_source'], virtual
+        for name, expected in original_devices.items():
+            actual = current[name]
+            if expected['enabled']:
+                assert actual['replication_source'] == virtual['uuid'], actual
+                assert actual['priority'] > 1, actual
+            for key in ['width', 'height', 'refresh', 'scale', 'transform', 'enabled', 'x', 'y']:
+                assert actual[key] == expected[key], (name, key, expected, actual)
+        assert set(outputs()) == {owned}, 'Physical outputs still expose an extended workspace'
+
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
     def receive():
@@ -130,32 +148,33 @@ try:
         print(f'PASS: {"GNOME" if gnome else "KWin"} real Sunshine capture/encoder probe at {width}x{height}@{scale}')
     capture(1280, 720, 1)
     owned = initial['outputName']
-    identity = outputs()[owned]['id']
+    if not gnome: verify_mirror(owned)
     for seq, (width, height, scale) in enumerate([(1920,1080,1), (2560,1600,2), (1668,2388,2), (1280,720,1)] * 3, 1):
         p.stdin.write(json.dumps(dict(seq=seq, width=width, height=height, scale=scale)) + '\n'); p.stdin.flush()
         result = receive()
         assert result == dict(seq=seq, width=width, height=height, scale=scale), result
         observed = outputs()
         actual = observed.pop(owned)
-        assert (actual['id'], actual['width'], actual['height'], actual['scale']) == (identity, width, height, scale), actual
-        assert observed == baseline, 'Other output modes, positions or scales changed'
+        assert (actual['width'], actual['height'], actual['scale']) == (width, height, scale), actual
+        if gnome: assert observed == baseline, 'Other output modes, positions or scales changed'
+        else: verify_mirror(owned)
         if seq == 3: capture(width, height, scale)
     p.stdin.close()
     assert p.wait(timeout=5) == 0
     for _ in range(50):
-        if outputs() == baseline: break
+        if restored(): break
         time.sleep(.05)
-    assert outputs() == baseline, 'Virtual output survived helper EOF'
+    assert restored(), 'Layout was not restored after helper EOF'
     capture(1280, 720, 1, missing=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
     receive()
     p.kill(); p.wait(timeout=5)
     for _ in range(50):
-        if outputs() == baseline: break
+        if restored(): break
         time.sleep(.05)
-    assert outputs() == baseline, 'Virtual output survived helper crash'
-    print(f'PASS: isolated {"GNOME" if gnome else "KWin"} creation, 12 observed resizes, unchanged other outputs, EOF/crash cleanup')
+    assert restored(), 'Layout was not restored after helper crash'
+    print(f'PASS: isolated {"GNOME" if gnome else "KWin"} creation, 12 observed resizes, mode/scale verification, mirror/primary checks on KWin, EOF/crash layout restoration')
 except Exception:
     for log in logs:
         log.seek(0); print(log.read()[-10000:], file=sys.stderr)

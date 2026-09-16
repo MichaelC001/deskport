@@ -1,9 +1,11 @@
 # Linux virtual display helper
 
 On KDE, DeskPort owns one virtual output through a dedicated Wayland connection. KDE
-Plasma 6.6 or newer is required for virtual custom modes. Only the UUID-named
-output created by this connection is configured. Physical display modes, scale,
-position and primary selection are untouched. Closing stdin, stopping the helper
+Plasma 6.6 or newer is required for virtual custom modes. The UUID-named virtual
+output becomes primary, and other enabled outputs mirror its viewport. Physical
+pixel modes, scale and rotation are preserved. An independent recovery process
+restores the original replication sources and output order when the owner exits,
+including SIGKILL. It is armed before the first layout change. Closing stdin, stopping the helper
 or losing its Wayland connection releases the virtual output.
 
 The helper retains the same output across stream reconnects and applies custom

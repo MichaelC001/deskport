@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// A connection-owned KWin virtual output. Never reconfigure a physical output.
+// A connection-owned KWin primary output with temporary physical-screen mirroring.
 #include "gnome-display.h"
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
+#include <QProcess>
 #include <QSize>
 #include <QUuid>
 #include <algorithm>
@@ -30,7 +32,9 @@ class Display {
     struct Mode { QSize size; int refresh = 0; bool removed = false; };
     struct Output {
         kde_output_device_v2* proxy = nullptr;
-        QString name;
+        QString name, uuid, replication;
+        uint32_t priority = 0;
+        bool enabled = false;
         std::map<kde_output_device_mode_v2*, Mode> modes;
         kde_output_device_mode_v2* current = nullptr;
         double scale = 1;
@@ -46,9 +50,16 @@ class Display {
     bool ready = false, broken = false;
     int applied = 0;
     QString error;
+    std::unique_ptr<QProcess> recovery;
 public:
     const QString name = "DeskPort-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     ~Display() {
+        // The separate process also sees EOF if this helper is SIGKILLed.
+        // Restore while the virtual output still exists, then release it.
+        if (recovery) {
+            recovery->closeWriteChannel();
+            if (!recovery->waitForFinished(3000)) fprintf(stderr, "KWin layout recovery did not finish promptly\n");
+        }
         if (stream) zkde_screencast_stream_unstable_v1_close(stream);
         if (display) { wl_display_flush(display); wl_display_disconnect(display); }
     }
@@ -83,7 +94,7 @@ public:
         wl_callback_destroy(callback);
         return ok;
     }
-    bool start(int width, int height) {
+    bool connectSession() {
         display = wl_display_connect(nullptr);
         if (!display) { error = "Cannot connect to the Wayland session"; return false; }
         registry = wl_display_get_registry(display);
@@ -94,9 +105,9 @@ public:
                     self->screencast = static_cast<zkde_screencast_unstable_v1*>(wl_registry_bind(registry, id, &zkde_screencast_unstable_v1_interface, std::min(version, 4u)));
                 } else if (!strcmp(interface, "kde_output_management_v2") && version >= 18) {
                     self->management = static_cast<kde_output_management_v2*>(wl_registry_bind(registry, id, &kde_output_management_v2_interface, 18));
-                } else if (!strcmp(interface, "kde_output_device_v2") && version >= 2) {
+                } else if (!strcmp(interface, "kde_output_device_v2") && version >= 18) {
                     auto out = std::make_unique<Output>();
-                    out->proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(registry, id, &kde_output_device_v2_interface, 2));
+                    out->proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(registry, id, &kde_output_device_v2_interface, 18));
                     wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(out->proxy), outputEvent, nullptr, out.get());
                     self->outputs.emplace(id, std::move(out));
                 }
@@ -118,6 +129,37 @@ public:
             error = "KWin 6.6+ virtual output protocols or DeskPort screencast permission are unavailable";
             return false;
         }
+        return true;
+    }
+    QJsonArray layout() const {
+        QJsonArray state;
+        for (const auto& entry : outputs) {
+            const auto& out = *entry.second;
+            if (!out.removed) state.append(QJsonObject{{"uuid", out.uuid}, {"replication", out.replication}, {"priority", double(out.priority)}});
+        }
+        return state;
+    }
+    bool restore(const QJsonArray& state) {
+        auto config = kde_output_management_v2_create_configuration(management);
+        for (const auto& saved : state) for (const auto& entry : outputs) {
+            const auto& out = *entry.second;
+            const auto value = saved.toObject();
+            if (out.removed || out.uuid != value["uuid"].toString()) continue;
+            kde_output_configuration_v2_set_replication_source(config, out.proxy, value["replication"].toString().toUtf8().constData());
+            kde_output_configuration_v2_set_priority(config, out.proxy, uint32_t(value["priority"].toDouble()));
+        }
+        return apply(config);
+    }
+    bool start(int width, int height) {
+        if (!connectSession()) return false;
+        recovery = std::make_unique<QProcess>();
+        recovery->setProcessChannelMode(QProcess::ForwardedErrorChannel);
+        recovery->start(QCoreApplication::applicationFilePath(), {"--restore-kwin"});
+        if (!recovery->waitForStarted(3000)) { error = "Cannot start display layout recovery"; return false; }
+        recovery->write(QJsonDocument(layout()).toJson(QJsonDocument::Compact) + '\n');
+        if (!recovery->waitForReadyRead(3000) || recovery->readLine() != "ready\n") {
+            error = "Display layout recovery is not ready"; return false;
+        }
         stream = zkde_screencast_unstable_v1_stream_virtual_output(screencast, name.toUtf8().constData(), width, height, wl_fixed_from_int(1), ZKDE_SCREENCAST_UNSTABLE_V1_POINTER_EMBEDDED);
         static const zkde_screencast_stream_unstable_v1_listener streamListener = {
             [](void* p, zkde_screencast_stream_unstable_v1*) { auto s = static_cast<Display*>(p); s->broken = true; s->error = "KWin closed the virtual output"; },
@@ -130,6 +172,28 @@ public:
         for (auto& entry : outputs) if (!entry.second->removed && (entry.second->name == name || entry.second->name == "Virtual-" + name)) owned = entry.second.get();
         if (!owned) { error = "KWin did not announce the owned virtual output"; return false; }
         if (!matches(width, height, 1)) { error = "KWin created a different virtual output mode"; return false; }
+        return mirror();
+    }
+    bool mirror() {
+        if (!owned || owned->uuid.isEmpty()) { error = "Missing virtual output UUID"; return false; }
+        auto config = kde_output_management_v2_create_configuration(management);
+        kde_output_configuration_v2_set_priority(config, owned->proxy, 1);
+        kde_output_configuration_v2_set_replication_source(config, owned->proxy, "");
+        uint32_t priority = 2;
+        for (const auto& entry : outputs) {
+            const auto& out = *entry.second;
+            if (&out == owned || out.removed || !out.enabled) continue;
+            kde_output_configuration_v2_set_replication_source(config, out.proxy, owned->uuid.toUtf8().constData());
+            kde_output_configuration_v2_set_priority(config, out.proxy, priority++);
+        }
+        if (!apply(config)) return false;
+        for (const auto& entry : outputs) {
+            const auto& out = *entry.second;
+            if (&out != owned && !out.removed && out.enabled && out.replication != owned->uuid) {
+                error = "KWin did not apply physical output mirroring"; return false;
+            }
+        }
+        if (owned->priority != 1) { error = "KWin did not make the virtual output primary"; return false; }
         return true;
     }
     bool matches(int width, int height, int scale) const {
@@ -201,6 +265,10 @@ private:
     static int outputEvent(const void*, void* target, uint32_t, const wl_message* message, wl_argument* args) {
         auto out = static_cast<Output*>(wl_proxy_get_user_data(static_cast<wl_proxy*>(target)));
         if (!strcmp(message->name, "name")) out->name = QString::fromUtf8(args[0].s);
+        else if (!strcmp(message->name, "uuid")) out->uuid = QString::fromUtf8(args[0].s);
+        else if (!strcmp(message->name, "replication_source")) out->replication = QString::fromUtf8(args[0].s);
+        else if (!strcmp(message->name, "priority")) out->priority = args[0].u;
+        else if (!strcmp(message->name, "enabled")) out->enabled = args[0].i;
         else if (!strcmp(message->name, "scale")) out->scale = wl_fixed_to_double(args[0].f);
         else if (!strcmp(message->name, "current_mode")) out->current = reinterpret_cast<kde_output_device_mode_v2*>(args[0].o);
         else if (!strcmp(message->name, "mode")) {
@@ -215,6 +283,29 @@ private:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     const auto args = app.arguments();
+    if (args.size() == 2 && args[1] == "--restore-kwin") {
+        // A private stdin pipe holds only the pre-sharing replication/order state.
+        // EOF, including owner death, triggers restoration on an independent connection.
+        QByteArray saved;
+        char byte;
+        while (read(STDIN_FILENO, &byte, 1) == 1 && byte != '\n') {
+            saved.append(byte); if (saved.size() > 65536) return 2;
+        }
+        QJsonParseError parse;
+        const auto document = QJsonDocument::fromJson(saved, &parse);
+        Display restore;
+        if (parse.error != QJsonParseError::NoError || !document.isArray() || !restore.connectSession()) return 1;
+        fputs("ready\n", stdout); fflush(stdout);
+        char discard[256];
+        while (true) {
+            const auto count = read(STDIN_FILENO, discard, sizeof(discard));
+            if (count < 0 && errno == EINTR) continue;
+            if (count <= 0) break;
+        }
+        const bool ok = restore.restore(document.array());
+        if (!ok) fprintf(stderr, "KWin layout recovery: %s\n", restore.lastError().toUtf8().constData());
+        return ok ? 0 : 1;
+    }
     if (args.size() != 3 || !Display::valid(args[1].toInt(), args[2].toInt(), 1)) {
         reply({{"error", "Expected width and height (640x360 through 7680x4320, aligned to four)"}}); return 2;
     }

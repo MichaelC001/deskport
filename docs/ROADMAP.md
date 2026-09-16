@@ -1095,3 +1095,14 @@ Next checkpoint: native Linux build and isolated compositor/capture regression,
 then user activation through mynix and iPad portrait/landscape, HiDPI, input and
 reconnect acceptance. Physical mirroring and unsupported compositor backends
 remain separate backlog items.
+
+
+## 2026-09-16 — KDE virtual-primary mirroring correction
+
+Reason: real-client feedback clarified that an extended workspace did not meet
+the intended workflow. KDE now makes the virtual output primary and mirrors the
+other enabled outputs from it. An independent recovery process restores the
+original order and replication sources after normal shutdown or helper death.
+GNOME retains adaptive extended displays; Mutter physical mirroring is still a
+backlog item. Next checkpoint: user activation and physical-screen/iPad mirror,
+portrait, scaling, input-position and shutdown-restore acceptance.

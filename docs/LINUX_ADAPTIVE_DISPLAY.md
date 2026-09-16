@@ -9,7 +9,11 @@ reconnects. Stopping sharing, helper failure or compositor loss releases it.
 
 - **KDE Plasma / KWin 6.6+:** KDE screencast virtual output plus output-management
   custom modes. The packaged desktop entry grants only the helper's screencast
-  protocol access. KWin permission checks remain enabled.
+  protocol access. KWin permission checks remain enabled. In 0.3.7 the virtual
+  output becomes primary and all other enabled outputs mirror it. Physical pixel
+  modes, scaling and rotation stay intact; output order and replication sources
+  are restored when sharing ends, including helper process death, by an independent
+  recovery process armed before layout changes.
 - **GNOME / Mutter:** Mutter ScreenCast `RecordVirtual`, with PipeWire format
   negotiation and temporary DisplayConfig scaling. The owned output is verified
   against the current monitor state. Sunshine attaches to that output's PipeWire
@@ -29,9 +33,15 @@ observed pixels and scale, not just successful API submission. Failed or timed-o
 requests are reported; a lost helper stops capture instead of falling back to a
 physical screen. Only one approved device can control the display.
 
-This is an **extended virtual display**. Existing physical output modes, position,
-scale and primary selection are preserved. It is not physical-display mirroring;
-move the applications you want to use onto the dedicated display. Video may
+**KDE uses virtual-primary mirroring while sharing is on.** The physical screens
+show the same workspace as the client; differing aspect ratios may add borders.
+Stopping sharing restores the pre-sharing output order and replication sources.
+This does not promise restoration of individual application window positions.
+Monitor hotplug or manual layout edits during sharing are not yet acceptance-tested.
+
+**GNOME still uses an extended virtual display.** Existing physical output settings
+remain unchanged; move applications onto the dedicated display. Arbitrary-client-mode
+physical mirroring on Mutter is not implemented by this preview. Video may
 briefly reconnect during mode changes. An active logged-in Wayland session,
 PipeWire and the existing Sunshine input permissions are required. This does not
 implement a GNOME login-screen service or automatic session login.
@@ -44,7 +54,9 @@ compositor tests with `nix develop -c python3 scripts/test-linux-display.py
 `DESKPORT_GNOME_SHELL` to its executable. Tests create isolated D-Bus, Wayland,
 PipeWire, configuration and data directories; they do not connect to personal
 hosts or inject input. An independent Wayland observer checks modes, output
-identity, unchanged other outputs, EOF cleanup and crash cleanup. Set
+identity, physical pixel modes, EOF cleanup and crash cleanup. KDE additionally
+checks two mirrored outputs, virtual-primary priority and exact replication/order
+restoration; GNOME checks unchanged other outputs. Set
 `DESKPORT_TEST_HOST=/path/to/deskport-host` to include real software-encoder
 capture at 1280×720@1× and 1668×2388@2×, plus refusal to capture another output
 after the owned display disappears.
