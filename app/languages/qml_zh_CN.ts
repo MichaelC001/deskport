@@ -214,6 +214,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Change address</source><translation>更改地址</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>

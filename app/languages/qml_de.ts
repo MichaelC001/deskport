@@ -214,6 +214,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Change address</source><translation>Adresse ändern</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
@@ -1929,6 +1930,7 @@
 </context>
 <context>
     <name>HostView</name>
+    <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>Beim Trennen wird der virtuelle Bildschirm entfernt und die Anordnung der physischen Bildschirme wiederhergestellt. Beim erneuten Verbinden wird ein neuer virtueller Bildschirm erstellt.</translation></message>
     <message>
         <source>Sharing</source>
         <translation>Freigabe</translation>

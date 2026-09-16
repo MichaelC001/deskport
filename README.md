@@ -5,7 +5,7 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Development prerelease: [0.3.9 Linux display lifecycle](docs/RELEASE_0.3.9_LINUX.md)** — KDE virtual-primary mirroring and GNOME adaptive extended displays, delivered through Nix.
+**Development prerelease: [0.3.10 Linux device address editor](docs/RELEASE_0.3.10_LINUX.md)** — KDE virtual-primary mirroring and GNOME adaptive extended displays, delivered through Nix.
 
 **Stable version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission

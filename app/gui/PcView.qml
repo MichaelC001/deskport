@@ -13,6 +13,15 @@ CenteredGridView {
     property ComputerModel computerModel : createModel()
     property bool controlCenterForActiveSession: false
 
+    function savedPeer(hostId) {
+        if (typeof peerManager === "undefined") return null
+        var peers = peerManager.peers
+        for (var i = 0; i < peers.length; ++i)
+            if (peers[i].hostId === hostId && peers[i].role !== "client") return peers[i]
+        return null
+    }
+    property Dialog addressEditor: PeerEditor { id: peerEditor }
+
     id: pcGrid
     focus: true
     activeFocusOnTab: true
@@ -129,7 +138,7 @@ CenteredGridView {
             deviceName: model.name; address: model.address
             favorite: model.favorite
             operatingSystem: model.operatingSystem
-            onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name})
+            onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId})
             activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
             onActivateRequested: parent.clicked()
@@ -158,8 +167,16 @@ CenteredGridView {
                     objectName: "deviceSettings-" + model.hostId
                     text: qsTr("Device settings")
                     onTriggered: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {
-                        "preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name
+                        "preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId
                     })
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    objectName: "changeAddress-" + model.hostId
+                    text: qsTr("Change address")
+                    visible: pcGrid.savedPeer(model.hostId) !== null
+                    enabled: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
+                    onTriggered: peerEditor.edit(pcGrid.savedPeer(model.hostId))
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu

@@ -1136,3 +1136,16 @@ absolute mouse injection addresses the workspace bounds. Place the sole logical
 mirrored workspace at (0, 0), verify that geometry, and restore physical positions
 after disconnect. Actual iPad finger interaction still requires activation and
 user acceptance; it is not inferred from Pencil input or capture tests.
+
+## 2026-09-16 — Desktop device address entry points (0.3.10)
+
+User requested IP/domain editing from the PC device view, matching the mobile
+workflow. Expose the existing bound-device editor directly in the card action
+menu and device settings, including offline devices; share the editor with Saved
+access to keep validation and identity preservation consistent. Current sessions
+must finish before editing. Legacy PIN host management is unchanged.
+
+Checkpoint: UI save/reopen and invalid-input regression, binding persistence,
+Linux build/release and user verification at a changed endpoint. Two-finger
+mobile wheel gestures were already implemented; the shared gesture/input tests
+passed on macOS. NixOS finger input still needs post-activation acceptance.

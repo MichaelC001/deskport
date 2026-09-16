@@ -6,10 +6,28 @@ UiPage {
     objectName: qsTr("Device settings")
     property var preferences: null
     property string deviceName: ""
+    property string deviceId: ""
+    readonly property var savedPeer: {
+        if (!deviceId || typeof peerManager === "undefined") return null
+        var peers = peerManager.peers
+        for (var i = 0; i < peers.length; ++i)
+            if (peers[i].hostId === deviceId && peers[i].role !== "client") return peers[i]
+        return null
+    }
+    property Dialog addressEditor: PeerEditor { id: peerEditor }
     property bool changed: false
     heading: deviceName
     description: qsTr("Saved only for this device. Changes apply on the next connection.")
     function save() { preferences.save(); changed = true }
+    UiCard {
+        visible: page.savedPeer !== null
+        ColumnLayout {
+            anchors.fill: parent; spacing: ui.gap
+            Label { text: qsTranslate("BindView", "Domain name or IP address"); color: ui.text; font.pixelSize: ui.title }
+            Label { objectName: "savedDeviceAddress"; text: page.savedPeer ? page.savedPeer.address : ""; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
+            UiButton { objectName: "changeDeviceAddress"; text: qsTranslate("PcView", "Change address"); Layout.fillWidth: true; enabled: typeof peerManager !== "undefined" && !peerManager.busy && !(typeof window !== "undefined" && window.activeHostId); onClicked: peerEditor.edit(page.savedPeer) }
+        }
+    }
     UiCard {
         ColumnLayout {
             anchors.fill: parent; spacing: ui.gap

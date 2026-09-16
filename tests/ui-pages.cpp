@@ -10,6 +10,7 @@
 #include <QAbstractListModel>
 #include <QDir>
 #include "peermanager.h"
+#include "peerstore.h"
 #include "singleinstance.h"
 
 static QQuickItem* findVisual(QQuickItem* item, const QString& name) {
@@ -452,6 +453,48 @@ ApplicationWindow {
             double a=luminance(color),b=luminance(text);
             QVERIFY((qMax(a,b)+0.05)/(qMin(a,b)+0.05)>=4.5);
         }
+    }
+    void savedDeviceAddressCanBeEditedFromSettings() {
+        QTemporaryDir dir;
+        const auto path = dir.path() + "/peers";
+        QVERIFY(QDir().mkpath(path));
+        QVERIFY(PeerStore::write(path + "/peers.json", {{"version", 1}, {"peers", QJsonObject{
+            {"saved", QJsonObject{{"hostId", "device-a"}, {"name", "Studio"}, {"address", "192.0.2.1"},
+                {"hostPort", 48989}, {"bindingPort", 48991}, {"hostCert", "pinned"}, {"ready", true}}}}}}));
+        HostManager host(nullptr, dir.path() + "/host");
+        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), path, 0, QHostAddress::LocalHost);
+        QQmlEngine engine;
+        const auto gui = qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine, QUrl::fromLocalFile(gui + "/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        engine.rootContext()->setContextProperty("ui", theme.data());
+        engine.rootContext()->setContextProperty("peerManager", &peers);
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.9; import StreamingPreferences 1.0; DeviceSettings { preferences: StreamingPreferences; deviceName: \"Studio\"; deviceId: \"device-a\" }", QUrl::fromLocalFile(gui + "/address-test.qml"));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page, qPrintable(component.errorString()));
+        QQuickWindow window; window.resize(800, 720);
+        auto item = qobject_cast<QQuickItem*>(page.data()); QVERIFY(item);
+        item->setParentItem(window.contentItem()); item->setSize({800, 720});
+        auto open = page->findChild<QObject*>("changeDeviceAddress"); QVERIFY(open);
+        QVERIFY(QMetaObject::invokeMethod(open, "clicked"));
+        auto address = page->findChild<QObject*>("editPeerAddress"); QVERIFY(address);
+        QCOMPARE(address->property("text").toString(), QString("192.0.2.1"));
+        auto save = page->findChild<QObject*>("savePeerAddress"); QVERIFY(save);
+        const auto original = PeerStore::read(path + "/peers.json");
+        address->setProperty("text", "https://bad.example/path");
+        QVERIFY(QMetaObject::invokeMethod(save, "clicked"));
+        QCOMPARE(PeerStore::read(path + "/peers.json"), original);
+        address->setProperty("text", "desktop.example");
+        QVERIFY(QMetaObject::invokeMethod(save, "clicked"));
+        const auto peer = peers.peers().first().toMap();
+        QCOMPARE(peer["address"].toString(), QString("desktop.example"));
+        QCOMPARE(peer["hostCert"].toString(), QString("pinned"));
+        QCOMPARE(peer["hostId"].toString(), QString("device-a"));
+        QCOMPARE(peer["hostPort"].toInt(), 48989);
+        auto label = page->findChild<QObject*>("savedDeviceAddress"); QVERIFY(label);
+        QCOMPARE(label->property("text").toString(), QString("desktop.example"));
+        QVERIFY(QMetaObject::invokeMethod(open, "clicked"));
+        QCOMPARE(address->property("text").toString(), QString("desktop.example"));
     }
     void deviceSettingsAreSeparate() {
         QQmlEngine engine;
