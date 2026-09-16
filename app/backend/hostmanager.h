@@ -122,6 +122,10 @@ private:
     std::unique_ptr<QLockFile> m_HostLock;
     int m_BasePort = DeskPortNetwork::DefaultBasePort;
     QByteArray m_Buffer;
+    QString m_LinuxOutputName;
+    quint32 m_LinuxPipewireNode = 0;
+    QString m_LinuxPipewireSerial;
+    bool saveLinuxDisplayState();
     int m_DisplayWireSequence = 0, m_DisplaySequence = 0, m_DisplayWidth = 0, m_DisplayHeight = 0;
     quint64 m_DisplayGeneration = 0;
     int m_DisplayScale = 1;

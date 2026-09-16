@@ -1,0 +1,9 @@
+QT = core dbus
+CONFIG += console c++17 link_pkgconfig
+CONFIG -= app_bundle
+TARGET = deskport-display
+PKGCONFIG += wayland-client libpipewire-0.3
+SOURCES += display-helper.cpp gnome-display.cpp zkde-screencast-unstable-v1.c kde-output-device-v2.c kde-output-management-v2.c
+headers.files =
+target.path = $$PREFIX/libexec
+INSTALLS += target

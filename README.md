@@ -5,7 +5,7 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Development prerelease: [0.2.3](docs/RELEASE_0.2.3.md)** — per-device session settings and tray reconnect for macOS arm64 and NixOS x86_64.
+**Development prerelease: [0.3.6 Linux adaptive workspace](docs/RELEASE_0.3.6_LINUX.md)** — dedicated virtual displays on KDE Plasma and GNOME Wayland, delivered through Nix.
 
 **Stable version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission

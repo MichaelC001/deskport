@@ -1079,3 +1079,19 @@ for the Apple client. The 0.3.2-based development package passed isolated VM
 connection/disconnect/reconnect and three native portrait/landscape/idle cycles.
 The physical monitor and crash/hotplug acceptance gates above remain open.
 See ADAPTIVE_DISPLAY.md for the protocol and measured validation boundary.
+
+## 2026-09-16 — Linux adaptive workspace
+
+Reason: Linux hosting could capture a desktop but did not implement the virtual
+display control advertised by capable macOS hosts. Implemented KWin 6.6+ and
+GNOME/Mutter backends behind the existing exclusive TLS display-controller
+protocol. Keep one output across resize/reconnect; verify pixels and scale before
+acknowledgment; preserve other output settings; close on helper/compositor loss.
+GNOME capture uses an owned PipeWire object serial instead of a separate portal
+selection, and KWin refuses physical-output fallback when its virtual screen is
+missing. See [Linux adaptive display](LINUX_ADAPTIVE_DISPLAY.md).
+
+Next checkpoint: native Linux build and isolated compositor/capture regression,
+then user activation through mynix and iPad portrait/landscape, HiDPI, input and
+reconnect acceptance. Physical mirroring and unsupported compositor backends
+remain separate backlog items.

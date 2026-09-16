@@ -31,6 +31,7 @@
 #include <QDateTime>
 #include "../../host/macos/recovery-policy.h"
 #include <QSettings>
+#include <QRegularExpression>
 #include <QHostInfo>
 #ifdef Q_OS_MACOS
 #include <CoreGraphics/CoreGraphics.h>
@@ -69,6 +70,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                     if (!object.contains("error")) {
                         m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                         m_DisplayScale = object["scale"].toInt(1);
+                        if (!saveLinuxDisplayState()) object["error"] = tr("Cannot save virtual display capture state");
                     }
                     emit displayResized(sequence, m_DisplayWidth, m_DisplayHeight, object["error"].toString());
                     emit changed();
@@ -79,6 +81,16 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
             if (object["displayId"].toInt() > 0 && m_Starting && !m_ServerRequested) {
                 m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                 m_DisplayScale = object["scale"].toInt(1);
+#ifdef Q_OS_LINUX
+                m_LinuxOutputName = object["outputName"].toString();
+                m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                m_LinuxPipewireSerial = object["pipewireSerial"].toString();
+                if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
+                    m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
+                    beginStop(tr("Invalid virtual display identity")); return;
+                }
+                if (!saveLinuxDisplayState()) { beginStop(tr("Cannot save virtual display capture state")); return; }
+#endif
                 startServer(object["displayId"].toInt());
             }
         }
@@ -259,7 +271,13 @@ HostManager::~HostManager() {
     }
     delete m_Menu;
 }
-QString HostManager::helperPath() const { return QCoreApplication::applicationDirPath() + "/../Helpers/deskport-display"; }
+QString HostManager::helperPath() const {
+#ifdef Q_OS_LINUX
+    return QCoreApplication::applicationDirPath() + "/../libexec/deskport-display";
+#else
+    return QCoreApplication::applicationDirPath() + "/../Helpers/deskport-display";
+#endif
+}
 QString HostManager::serverPath() const {
 #ifdef Q_OS_LINUX
     return QCoreApplication::applicationDirPath() + "/../libexec/deskport-host";
@@ -328,12 +346,18 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     m_Display.setStandardErrorFile(m_Directory + "/display.log", QIODevice::Append);
 #ifdef Q_OS_LINUX
-    setStatus(tr("Starting desktop sharing…"));
-    startServer(0);
-#else
-    m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
-    setStatus(tr("Creating a private virtual display…"));
+    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0;
+    QFile::remove(m_Directory + "/virtual-display.json");
+    const auto desktops = qgetenv("XDG_CURRENT_DESKTOP").split(':');
+    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME"))) {
+        setStatus(tr("Starting desktop sharing…"));
+        startServer(0);
+    } else
 #endif
+    {
+        m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
+        setStatus(tr("Creating a private virtual display…"));
+    }
     QTimer::singleShot(15000, this, [this, generation] {
         if (m_Starting && m_Generation == generation) { beginStop(tr("Host startup timed out; see logs")); }
     });
@@ -361,13 +385,16 @@ void HostManager::startServer(int displayId) {
     Q_UNUSED(displayId);
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
+#ifdef Q_OS_LINUX
+    if (m_LinuxPipewireNode) hostEnvironment.insert("DESKPORT_VIRTUAL_DISPLAY", m_Directory + "/virtual-display.json");
+    else hostEnvironment.remove("DESKPORT_VIRTUAL_DISPLAY");
+#endif
     m_Server.setProcessEnvironment(hostEnvironment);
     m_Credentials.setProcessEnvironment(hostEnvironment);
 #endif
 #ifdef Q_OS_LINUX
-    // Capture the existing desktop; Linux virtual displays are a separate milestone.
-    config.write("output_name = \n");
-    config.write(qgetenv("XDG_CURRENT_DESKTOP").contains("KDE") ? "capture = kwin\n" : "capture = portal\n");
+    config.write(QString("output_name = %1\n").arg(m_LinuxOutputName).toUtf8());
+    config.write(!m_LinuxOutputName.isEmpty() && !m_LinuxPipewireNode ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }
     m_Credentials.setWorkingDirectory(m_Directory);
@@ -425,6 +452,9 @@ void HostManager::finishStop() {
         if (!m_Stopping || generation != m_Generation) return;
         if (m_Credentials.state() != QProcess::NotRunning ||
             m_Server.state() != QProcess::NotRunning || m_Display.state() != QProcess::NotRunning) return;
+#ifdef Q_OS_LINUX
+        QFile::remove(m_Directory + "/virtual-display.json");
+#endif
         m_Ports.release();
         m_HostLock.reset();
         m_Stopping = false;
@@ -760,8 +790,19 @@ void HostManager::updatePeerTrust(const QString& id, const QString& name, const 
     timer->start(50);
 }
 
+bool HostManager::saveLinuxDisplayState() {
+#ifdef Q_OS_LINUX
+    if (m_LinuxPipewireNode) {
+        return PeerStore::write(m_Directory + "/virtual-display.json", {
+            {"node", double(m_LinuxPipewireNode)}, {"serial", m_LinuxPipewireSerial}, {"output", m_LinuxOutputName},
+            {"width", m_DisplayWidth}, {"height", m_DisplayHeight}, {"scale", m_DisplayScale}});
+    }
+#endif
+    return true;
+}
+
 bool HostManager::adaptiveDisplayAvailable() const {
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
     return running() && !changing() && m_Display.state() == QProcess::Running;
 #else
     return false;

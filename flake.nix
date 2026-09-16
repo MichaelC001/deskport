@@ -14,6 +14,7 @@
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
               python3 ${./scripts/patch-host-session-settings.py} .
+              python3 ${./scripts/patch-host-linux-display.py} .
             '';
           });
           # Supply the exact upstream gitlink contents even when the flake was
@@ -27,8 +28,8 @@
           };
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
-          buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland ];
-          version = "0.3.5";
+          buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
+          version = "0.3.6";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation and CI edits do not change the client binary.
@@ -52,6 +53,22 @@
           postInstall = (old.postInstall or "") + ''
             mkdir -p "$out/libexec"
             ln -s ${sessionHost}/bin/sunshine "$out/libexec/deskport-host"
+            cat > "$out/share/applications/io.github.keithxc.DeskPort.display.desktop" <<EOF
+            [Desktop Entry]
+            Type=Application
+            Name=DeskPort virtual display permission
+            Exec=$out/libexec/deskport-display
+            NoDisplay=true
+            X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
+            EOF
+          '';
+          postFixup = (old.postFixup or "") + ''
+            # NixOS KWin unwraps executable paths; upstream KWin uses /proc/pid/exe.
+            # Provide an exact entry for each, without disabling permission checks.
+            cp "$out/share/applications/io.github.keithxc.DeskPort.display.desktop" \
+              "$out/share/applications/io.github.keithxc.DeskPort.display-native.desktop"
+            substituteInPlace "$out/share/applications/io.github.keithxc.DeskPort.display-native.desktop" \
+              --replace-fail "$out/libexec/deskport-display" "$out/libexec/.deskport-display-wrapped"
           '';
           meta = old.meta // {
             description = "Experimental remote desktop development client based on Moonlight";
