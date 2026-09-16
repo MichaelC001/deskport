@@ -78,6 +78,7 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
         const auto path = dir.path() + "/virtual-display.json";
         QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(path), 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
         QFile log(dir.path() + "/host.log"); QVERIFY(log.open(QIODevice::WriteOnly | QIODevice::Append));
         log.write("Configuration UI available\n"); log.close();
         QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 5000);
