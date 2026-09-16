@@ -70,6 +70,21 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                     if (!object.contains("error")) {
                         m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                         m_DisplayScale = object["scale"].toInt(1);
+#ifdef Q_OS_LINUX
+                        if (object.contains("pipewireNode")) {
+                            const auto output = object["outputName"].toString();
+                            if (output.isEmpty() || output.size() > 128 || output.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
+                                beginStop(tr("Invalid virtual display identity")); return;
+                            }
+                            m_LinuxOutputName = output;
+                            m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                            m_LinuxPipewireSerial = object["pipewireSerial"].toString();
+                        }
+                        if (object.contains("active") && !object["active"].toBool()) {
+                            m_DisplayWidth = m_DisplayHeight = 0;
+                            QFile::remove(m_Directory + "/virtual-display.json");
+                        } else
+#endif
                         if (!saveLinuxDisplayState()) object["error"] = tr("Cannot save virtual display capture state");
                     }
                     emit displayResized(sequence, m_DisplayWidth, m_DisplayHeight, object["error"].toString());
@@ -103,6 +118,26 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         m_Starting = false;
         if (!m_Isolated) QSettings().setValue("host/port", m_BasePort);
         setStatus(tr("Sharing has started. Connect from an approved device to check picture, sound and control."));
+#ifdef Q_OS_LINUX
+        if (!m_LinuxOutputName.isEmpty()) {
+            // Sunshine probes encoders once at startup. Retire that temporary
+            // display once initialization completes unless a client has claimed it.
+            auto bootstrap = new QTimer(this);
+            const auto displayGeneration = m_DisplayGeneration;
+            connect(bootstrap, &QTimer::timeout, this, [this, bootstrap, displayGeneration, attempts = 0]() mutable {
+                if (m_Stopping || m_Server.state() != QProcess::Running || displayGeneration != m_DisplayGeneration || ++attempts > 120) {
+                    bootstrap->stop(); bootstrap->deleteLater(); return;
+                }
+                QFile log(m_Directory + "/host.log");
+                if (!log.open(QIODevice::ReadOnly)) return;
+                log.seek(m_LogOffset);
+                if (log.readAll().contains("Configuration UI available")) {
+                    bootstrap->stop(); bootstrap->deleteLater(); restoreDisplay();
+                }
+            });
+            bootstrap->start(250);
+        }
+#endif
         const auto generation = m_Generation;
         QTimer::singleShot(60000, this, [this, generation] {
             if (generation == m_Generation && m_Server.state() == QProcess::Running) m_RecoveryAttempt = 0;
@@ -830,7 +865,15 @@ void HostManager::restoreDisplay() {
     // Restore the chosen idle mode after the controller disconnects. A new
     // controller may claim the display during the grace interval.
     const auto generation = m_DisplayGeneration;
-    QTimer::singleShot(10000, this, [this, generation] {
-        if (generation == m_DisplayGeneration) resizeDisplay(sharingWidth(), sharingHeight(), 1, -1);
+#ifdef Q_OS_LINUX
+    constexpr int restoreGrace = 1500;
+#else
+    constexpr int restoreGrace = 10000;
+#endif
+    QTimer::singleShot(restoreGrace, this, [this, generation] {
+        if (generation != m_DisplayGeneration) return;
+        // A disconnect can race the last resize acknowledgment. Do not drop recovery.
+        if (m_DisplaySequence) { restoreDisplay(); return; }
+        resizeDisplay(sharingWidth(), sharingHeight(), 1, -1);
     });
 }

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <QCoreApplication>
+#include <QElapsedTimer>
+#include <poll.h>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -8,6 +10,8 @@
 #include <map>
 #include <wayland-client.h>
 #include "../host/linux/kde-output-device-v2.h"
+#include "../host/linux/kde-output-management-v2.h"
+static kde_output_management_v2* management = nullptr;
 struct Output { wl_output* proxy; QJsonObject state; bool removed = false; };
 struct Device {
     kde_output_device_v2* proxy;
@@ -42,11 +46,14 @@ int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     auto display = wl_display_connect(nullptr);
     if (!display) return 1;
-    if (app.arguments().contains("--devices")) {
+    if (app.arguments().contains("--devices") || (app.arguments().contains("--disable-last") || app.arguments().contains("--enable-last"))) {
         std::map<uint32_t, Device> devices;
         auto registry = wl_display_get_registry(display);
         static const wl_registry_listener listener = {
             [](void* p, wl_registry* registry, uint32_t id, const char* interface, uint32_t version) {
+                if (!strcmp(interface, "kde_output_management_v2")) {
+                    management = static_cast<kde_output_management_v2*>(wl_registry_bind(registry, id, &kde_output_management_v2_interface, std::min(version, 18u))); return;
+                }
                 if (strcmp(interface, "kde_output_device_v2") || version < 18) return;
                 auto& device = (*static_cast<std::map<uint32_t, Device>*>(p))[id];
                 device.proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(registry, id, &kde_output_device_v2_interface, 18));
@@ -55,6 +62,33 @@ int main(int argc, char** argv) {
         };
         wl_registry_add_listener(registry, &listener, &devices);
         for (int n = 0; n < 3; ++n) if (wl_display_roundtrip(display) < 0) return 1;
+        if ((app.arguments().contains("--disable-last") || app.arguments().contains("--enable-last"))) {
+            if (!management || devices.size() < 2) return 2;
+            int applied = 0;
+            auto config = kde_output_management_v2_create_configuration(management);
+            static const kde_output_configuration_v2_listener listener = {
+                [](void* p, kde_output_configuration_v2*) { *static_cast<int*>(p) = 1; },
+                [](void* p, kde_output_configuration_v2*) { *static_cast<int*>(p) = -1; },
+                [](void*, kde_output_configuration_v2*, const char* reason) { fprintf(stderr, "Fixture configuration failed: %s\n", reason); }
+            };
+            kde_output_configuration_v2_add_listener(config, &listener, &applied);
+            kde_output_configuration_v2_enable(config, devices.rbegin()->second.proxy, app.arguments().contains("--enable-last") ? 1 : 0);
+            // Exercise restoration of a rotated fractional-scale panel as well.
+            auto first = devices.begin()->second.proxy;
+            kde_output_configuration_v2_transform(config, first, 3);
+            kde_output_configuration_v2_scale(config, first, wl_fixed_from_double(1.75));
+            kde_output_configuration_v2_position(config, first, 100, 100);
+            kde_output_configuration_v2_apply(config);
+            QElapsedTimer timer; timer.start();
+            while (!applied && timer.elapsed() < 3000) {
+                if (wl_display_dispatch_pending(display) < 0) return 1;
+                wl_display_flush(display);
+                pollfd fd{wl_display_get_fd(display), POLLIN, 0};
+                if (poll(&fd, 1, 100) > 0 && wl_display_dispatch(display) < 0) return 1;
+            }
+            wl_display_disconnect(display);
+            return applied == 1 ? 0 : 1;
+        }
         QJsonArray result;
         for (auto& entry : devices) {
             auto& device = entry.second;

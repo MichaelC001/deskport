@@ -16,7 +16,7 @@ if '--inside' not in sys.argv:
     with tempfile.TemporaryDirectory(prefix='deskport-display-test-') as tmp:
         project = Path(tmp) / 'probe.pro'
         source = Path(__file__).resolve().parents[1] / 'tests/linux-output-probe.cpp'
-        project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c"\n')
+        project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c" "{source.parent.parent}/host/linux/kde-output-management-v2.c"\n')
         subprocess.run(['qmake', str(project)], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(['make', '-j2'], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         if '--initial-mode-mismatch' in sys.argv:
@@ -65,7 +65,11 @@ if '--inside' not in sys.argv:
         env['WIREPLUMBER_CONFIG_DIR'] = str(wp_config)
         env.pop('DISPLAY', None)
         env.pop('PIPEWIRE_REMOTE', None)
-        subprocess.run(['dbus-run-session', '--', sys.executable, __file__, helper, '--inside'] + (['--gnome'] if gnome else []),
+        # Do not autoactivate desktop services that can outlive the test and
+        # race removal of its isolated configuration/data directories.
+        bus_config = Path(tmp) / 'session-bus.conf'
+        bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
+        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []),
                        env=env, check=True, timeout=180)
     raise SystemExit(0)
 
@@ -73,7 +77,7 @@ children = []
 logs = []
 try:
     if not gnome: subprocess.run(['kbuildsycoca6', '--noincremental'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--output-count', '2', '--width', '1280', '--height', '720',
+    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--output-count', '3', '--width', '1280', '--height', '720',
                                     '--socket', 'deskport-test', '--no-lockscreen', '--no-global-shortcuts', '--no-kactivities']
     for command in [['pipewire'], ['wireplumber'], compositor]:
         log = tempfile.TemporaryFile(mode='w+')
@@ -97,6 +101,12 @@ try:
         return {o['name']: {k:v for k,v in o.items() if k != 'id'} for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE']], timeout=5))}
     def devices():
         return {o['name']: o for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE'], '--devices'], timeout=5))}
+    if '--disabled-output' in sys.argv:
+        assert not gnome
+        before = devices()
+        disabled = sorted(before)[-1]
+        subprocess.run([os.environ['DESKPORT_OUTPUT_PROBE'], '--disable-last'], check=True, timeout=5)
+        assert not devices()[disabled]['enabled'], 'Fixture did not disable the selected output'
     baseline = outputs()
     original_devices = devices() if not gnome else {}
     def restored():
@@ -161,17 +171,31 @@ try:
         print(f'PASS: {"GNOME" if gnome else "KWin"} real Sunshine capture/encoder probe at {width}x{height}@{scale}')
     capture(1280, 720, 1)
     owned = initial['outputName']
-    if not gnome: verify_mirror(owned)
+    if not gnome:
+        initial_devices = devices(); initial_devices.pop(owned)
+        assert initial_devices == original_devices, 'Sharing startup changed physical policy before a client connected'
     for seq, (width, height, scale) in enumerate([(1920,1080,1), (2560,1600,2), (1668,2388,2), (1280,720,1)] * 3, 1):
         p.stdin.write(json.dumps(dict(seq=seq, width=width, height=height, scale=scale)) + '\n'); p.stdin.flush()
         result = receive()
-        assert result == dict(seq=seq, width=width, height=height, scale=scale), result
+        assert {k:result[k] for k in ('seq','width','height','scale')} == dict(seq=seq, width=width, height=height, scale=scale), result
         observed = outputs()
         actual = observed.pop(owned)
         assert (actual['width'], actual['height'], actual['scale']) == (width, height, scale), actual
         if gnome: assert observed == baseline, 'Other output modes, positions or scales changed'
         else: verify_mirror(owned)
         if seq == 3: capture(width, height, scale)
+    # Session ends without stopping sharing: the output itself must disappear.
+    p.stdin.write(json.dumps(dict(seq=100, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
+    for _ in range(50):
+        if restored(): break
+        time.sleep(.05)
+    assert restored(), ('Disconnect did not remove virtual output and restore physical policy', outputs(), baseline)
+    # A later client recreates the workspace and can capture it again.
+    p.stdin.write(json.dumps(dict(seq=101, width=1920, height=1080, scale=1, session=True)) + '\n'); p.stdin.flush(); resumed = receive()
+    if gnome:
+        initial = resumed; owned = resumed['outputName']
+    else: verify_mirror(owned)
+    capture(1920, 1080, 1)
     p.stdin.close()
     assert p.wait(timeout=5) == 0
     for _ in range(50):
@@ -181,12 +205,30 @@ try:
     capture(1280, 720, 1, missing=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
-    receive()
+    initial = receive()
+    if not gnome:
+        owned = initial['outputName']
+        p.stdin.write(json.dumps(dict(seq=1, width=1920, height=1080, scale=1, session=True)) + '\n'); p.stdin.flush(); receive()
+        verify_mirror(owned)
     p.kill(); p.wait(timeout=5)
     for _ in range(50):
         if restored(): break
         time.sleep(.05)
     assert restored(), 'Layout was not restored after helper crash'
+    if not gnome and '--disabled-output' in sys.argv:
+        p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        children.append(p); receive()
+        p.stdin.write(json.dumps(dict(seq=1, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
+        assert restored()
+        subprocess.run([os.environ['DESKPORT_OUTPUT_PROBE'], '--enable-last'], check=True, timeout=5)
+        local_policy = devices()
+        assert local_policy != original_devices
+        p.stdin.write(json.dumps(dict(seq=2, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
+        assert devices() == local_policy, 'Repeated disconnect overwrote local layout edits'
+        p.kill(); p.wait(timeout=5)
+        time.sleep(.5)
+        assert devices() == local_policy, 'Idle recovery overwrote subsequent local layout edits'
+        print('PASS: idle helper death preserves subsequent local layout edits')
     print(f'PASS: isolated {"GNOME" if gnome else "KWin"} creation, 12 observed resizes, mode/scale verification, mirror/primary checks on KWin, EOF/crash layout restoration')
 except Exception:
     for log in logs:

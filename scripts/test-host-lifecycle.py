@@ -31,6 +31,9 @@ for line in sys.stdin:
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
     request["displayId"] = 123
+    if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display":
+        request["active"] = request.get("session", True)
+        if request["active"]: request.update(outputName="Meta-2", pipewireNode=43, pipewireSerial="143")
     print(json.dumps(request), flush=True)
 ''')
     host = helpers / "Sunshine.app/Contents/MacOS/Sunshine"

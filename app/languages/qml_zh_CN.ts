@@ -1938,6 +1938,10 @@
 <context>
     <name>HostView</name>
     <message>
+        <source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source>
+        <translation>断开连接后移除虚拟屏幕，并恢复原来的物理屏幕布局。重新连接时会创建新的虚拟屏幕。</translation>
+    </message>
+    <message>
         <source>Sharing</source>
         <translation>共享</translation>
     </message>

@@ -1116,3 +1116,16 @@ requested mode instead of treating the initial mismatch as fatal. Journal helper
 startup errors so remote diagnosis does not require opening the GUI. Added an
 isolated initial-size/scale mismatch fixture. Next checkpoint: activation on a
 physical GPU, successful host readiness and iPad mirror/input acceptance.
+
+## 2026-09-16 — Linux connection-scoped displays (0.3.9)
+
+User feedback confirmed adaptive client resolution works, but exposed disabled
+physical panels becoming mirrors and missing disconnect restoration. Preserve
+pre-connection enabled state and full physical layout; remove virtual outputs on
+full disconnect and recreate them for the next connection. Disarm idle recovery
+so later local edits survive app exit. GNOME capture follows the recreated node.
+
+Checkpoint: isolated disabled-panel, disconnect/reconnect capture and crash
+recovery coverage, followed by user activation and repeated physical-device
+connections with the internal panel disabled. GNOME physical mirroring and
+monitor hotplug during a remote session remain backlog items.

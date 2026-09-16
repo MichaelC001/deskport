@@ -10,6 +10,7 @@
 #include <QSize>
 #include <QSet>
 #include <atomic>
+#include <memory>
 #include <cstdio>
 #include <tuple>
 #include <unistd.h>
@@ -42,7 +43,7 @@ class GnomeDisplay : public QObject {
     QDBusConnection bus = QDBusConnection::sessionBus();
     QString session, streamPath, connector, error;
     uint node = 0;
-    bool closed = false;
+    bool closed = false, shuttingDown = false;
     pw_thread_loop* loop = nullptr;
     pw_context* context = nullptr;
     pw_core* core = nullptr;
@@ -138,6 +139,7 @@ class GnomeDisplay : public QObject {
     }
 public:
     ~GnomeDisplay() override {
+        shuttingDown = true;
         if (loop) pw_thread_loop_stop(loop);
         if (stream) pw_stream_destroy(stream);
         if (registry) pw_proxy_destroy(reinterpret_cast<pw_proxy*>(registry));
@@ -226,14 +228,14 @@ public:
     bool healthy() const { return !closed && !pwFailed; }
 private slots:
     void onNode(uint id) { fprintf(stderr, "Mutter node: %u\n", id); node = id; }
-    void onClosed() { closed = true; QCoreApplication::exit(1); }
+    void onClosed() { closed = true; if (!shuttingDown) QCoreApplication::exit(1); }
 };
 
 int runGnomeDisplay(int width, int height) {
     auto send = [](const QJsonObject& o) { auto bytes = QJsonDocument(o).toJson(QJsonDocument::Compact) + '\n'; fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout); fflush(stdout); };
-    GnomeDisplay display;
-    if (!display.start(width, height)) { send({{"error", display.lastError()}}); return 1; }
-    auto initial = display.identity(); initial["width"] = width; initial["height"] = height; initial["scale"] = 1; send(initial);
+    auto display = std::make_unique<GnomeDisplay>();
+    if (!display->start(width, height)) { send({{"error", display->lastError()}}); return 1; }
+    auto initial = display->identity(); initial["width"] = width; initial["height"] = height; initial["scale"] = 1; send(initial);
     QByteArray buffer;
     QSocketNotifier input(STDIN_FILENO, QSocketNotifier::Read);
     QObject::connect(&input, &QSocketNotifier::activated, &input, [&] {
@@ -247,8 +249,20 @@ int runGnomeDisplay(int width, int height) {
             const int seq = request["seq"].toInt(), w = request["width"].toInt(), h = request["height"].toInt(), scale = request["scale"].toInt();
             QJsonObject response{{"seq", seq}};
             if (!seq || w < 640 || w > 7680 || h < 360 || h > 4320 || w % 4 || h % 4 || (scale != 1 && scale != 2)) response["error"] = "Invalid virtual output request";
-            else if (!display.resize(w, h, scale)) { response["error"] = display.lastError(); send(response); QCoreApplication::exit(1); return; }
-            else { response["width"] = w; response["height"] = h; response["scale"] = scale; }
+            else if (!request["session"].toBool(true)) {
+                display.reset();
+                response["width"] = w; response["height"] = h; response["scale"] = scale; response["active"] = false;
+            } else {
+                bool recreated = false;
+                if (!display) {
+                    display = std::make_unique<GnomeDisplay>();
+                    if (!display->start(w, h)) { response["error"] = display->lastError(); send(response); QCoreApplication::exit(1); return; }
+                    recreated = true;
+                }
+                if (!display->resize(w, h, scale)) { response["error"] = display->lastError(); send(response); QCoreApplication::exit(1); return; }
+                if (recreated) { response = display->identity(); response["seq"] = seq; }
+                response["width"] = w; response["height"] = h; response["scale"] = scale; response["active"] = true;
+            }
             send(response);
         }
         input.setEnabled(true);

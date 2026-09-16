@@ -11,6 +11,7 @@
 #include <QUuid>
 #include <algorithm>
 #include <cerrno>
+#include <cmath>
 #include <cstdio>
 #include <cstring>
 #include <functional>
@@ -35,6 +36,7 @@ class Display {
         QString name, uuid, replication;
         uint32_t priority = 0;
         bool enabled = false;
+        int x = 0, y = 0, transform = 0;
         std::map<kde_output_device_mode_v2*, Mode> modes;
         kde_output_device_mode_v2* current = nullptr;
         double scale = 1;
@@ -51,17 +53,19 @@ class Display {
     int applied = 0;
     QString error;
     std::unique_ptr<QProcess> recovery;
+    QJsonArray baseline;
+    bool sessionActive = false;
 public:
     const QString name = "DeskPort-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     ~Display() {
-        // The separate process also sees EOF if this helper is SIGKILLed.
-        // Restore while the virtual output still exists, then release it.
+        // Remove our output before recovery: topology changes may otherwise
+        // overwrite the recovered policy and re-enable previously disabled screens.
+        if (stream) zkde_screencast_stream_unstable_v1_close(stream);
+        if (display) { wl_display_flush(display); wl_display_disconnect(display); display = nullptr; }
         if (recovery) {
             recovery->closeWriteChannel();
             if (!recovery->waitForFinished(3000)) fprintf(stderr, "KWin layout recovery did not finish promptly\n");
         }
-        if (stream) zkde_screencast_stream_unstable_v1_close(stream);
-        if (display) { wl_display_flush(display); wl_display_disconnect(display); }
     }
     static bool valid(int width, int height, int scale) {
         return width >= 640 && width <= 7680 && height >= 360 && height <= 4320 &&
@@ -135,34 +139,107 @@ public:
         QJsonArray state;
         for (const auto& entry : outputs) {
             const auto& out = *entry.second;
-            if (!out.removed) state.append(QJsonObject{{"uuid", out.uuid}, {"replication", out.replication}, {"priority", double(out.priority)}});
+            if (out.removed || &out == owned) continue;
+            QJsonObject saved{{"uuid", out.uuid}, {"replication", out.replication},
+                {"priority", double(out.priority)}, {"enabled", out.enabled},
+                {"x", out.x}, {"y", out.y}, {"transform", out.transform}, {"scale", out.scale}};
+            const auto mode = out.modes.find(out.current);
+            if (mode != out.modes.end()) {
+                saved["width"] = mode->second.size.width(); saved["height"] = mode->second.size.height();
+                saved["refresh"] = mode->second.refresh;
+            }
+            state.append(saved);
         }
         return state;
     }
+    bool saveRecovery(const QJsonArray& state) {
+        recovery->write(QJsonDocument(state).toJson(QJsonDocument::Compact) + '\n');
+        if (!recovery->waitForReadyRead(3000) || recovery->readLine() != "ready\n") {
+            error = "Display layout recovery is not ready"; return false;
+        }
+        return true;
+    }
     bool restore(const QJsonArray& state) {
+        if (!sync()) return false;
         auto config = kde_output_management_v2_create_configuration(management);
+        uint32_t lastPriority = 0;
+        int right = 0;
         for (const auto& saved : state) for (const auto& entry : outputs) {
             const auto& out = *entry.second;
             const auto value = saved.toObject();
             if (out.removed || out.uuid != value["uuid"].toString()) continue;
+            kde_output_configuration_v2_enable(config, out.proxy, value["enabled"].toBool());
             kde_output_configuration_v2_set_replication_source(config, out.proxy, value["replication"].toString().toUtf8().constData());
-            kde_output_configuration_v2_set_priority(config, out.proxy, uint32_t(value["priority"].toDouble()));
+            const uint32_t priority = uint32_t(value["priority"].toDouble());
+            kde_output_configuration_v2_set_priority(config, out.proxy, priority);
+            kde_output_configuration_v2_position(config, out.proxy, value["x"].toInt(), value["y"].toInt());
+            kde_output_configuration_v2_transform(config, out.proxy, value["transform"].toInt());
+            kde_output_configuration_v2_scale(config, out.proxy, wl_fixed_from_double(value["scale"].toDouble(1)));
+            for (const auto& mode : out.modes) {
+                if (!mode.second.removed && mode.second.size == QSize(value["width"].toInt(), value["height"].toInt()) && mode.second.refresh == value["refresh"].toInt()) {
+                    kde_output_configuration_v2_mode(config, out.proxy, mode.first); break;
+                }
+            }
+            if (value["enabled"].toBool()) {
+                lastPriority = std::max(lastPriority, priority);
+                const int pixels = value["transform"].toInt() % 2 ? value["height"].toInt() : value["width"].toInt();
+                right = std::max(right, value["x"].toInt() + int(std::ceil(pixels / value["scale"].toDouble(1))));
+            }
+        }
+        if (owned && !owned->removed) {
+            // Keep the remote workspace alive but no longer primary or mirrored.
+            kde_output_configuration_v2_set_priority(config, owned->proxy, lastPriority + 1);
+            kde_output_configuration_v2_position(config, owned->proxy, right, 0);
         }
         return apply(config);
     }
+    bool removeOutput() {
+        auto previous = owned;
+        owned = nullptr;
+        auto closing = stream; stream = nullptr;
+        if (closing) zkde_screencast_stream_unstable_v1_close(closing);
+        if (previous && !previous->removed && !wait([&] { return previous->removed; })) return false;
+        return sync();
+    }
+    bool restoreIdle() {
+        if (!owned && !stream) return true;
+        if (!removeOutput() || !restore(baseline)) return false;
+        sessionActive = false;
+        return saveRecovery({});
+    }
+    bool beginSession(int width, int height) {
+        if (sessionActive) return true;
+        if (!sync()) return false;
+        // Capture fresh policy on each connection, never capture our mirrored state.
+        baseline = layout();
+        if (!saveRecovery(baseline)) return false;
+        if (!owned && !createOutput(width, height)) return false;
+        sessionActive = true;
+        return true;
+    }
+    bool waitForRemoval(const QString& outputName) {
+        if (!sync()) return false;
+        return wait([&] {
+            for (const auto& entry : outputs) if (!entry.second->removed &&
+                (entry.second->name == outputName || entry.second->name == "Virtual-" + outputName)) return false;
+            return true;
+        }, 2000);
+    }
     bool start(int width, int height) {
         if (!connectSession()) return false;
+        baseline = layout();
         recovery = std::make_unique<QProcess>();
         recovery->setProcessChannelMode(QProcess::ForwardedErrorChannel);
-        recovery->start(QCoreApplication::applicationFilePath(), {"--restore-kwin"});
+        recovery->start(QCoreApplication::applicationFilePath(), {"--restore-kwin", name});
         if (!recovery->waitForStarted(3000)) { error = "Cannot start display layout recovery"; return false; }
-        recovery->write(QJsonDocument(layout()).toJson(QJsonDocument::Compact) + '\n');
-        if (!recovery->waitForReadyRead(3000) || recovery->readLine() != "ready\n") {
-            error = "Display layout recovery is not ready"; return false;
-        }
+        if (!saveRecovery(baseline)) return false;
+        return createOutput(width, height);
+    }
+    bool createOutput(int width, int height) {
+        ready = false;
         stream = zkde_screencast_unstable_v1_stream_virtual_output(screencast, name.toUtf8().constData(), width, height, wl_fixed_from_int(1), ZKDE_SCREENCAST_UNSTABLE_V1_POINTER_EMBEDDED);
         static const zkde_screencast_stream_unstable_v1_listener streamListener = {
-            [](void* p, zkde_screencast_stream_unstable_v1*) { auto s = static_cast<Display*>(p); s->broken = true; s->error = "KWin closed the virtual output"; },
+            [](void* p, zkde_screencast_stream_unstable_v1* stream) { auto s = static_cast<Display*>(p); if (s->stream != stream) return; s->broken = true; s->error = "KWin closed the virtual output"; },
             [](void* p, zkde_screencast_stream_unstable_v1*, uint32_t) { static_cast<Display*>(p)->ready = true; },
             [](void* p, zkde_screencast_stream_unstable_v1*, const char* error) { auto s = static_cast<Display*>(p); s->broken = true; s->error = QString::fromUtf8(error); },
             nullptr // Bound at version 4: serial is a version 6 event.
@@ -178,7 +255,7 @@ public:
             fprintf(stderr, "KWin initial mode differs; reconciling to %dx%d at scale 1\n", width, height);
             if (!resize(width, height, 1)) return false;
         }
-        return mirror();
+        return restore(baseline);
     }
     bool mirror() {
         if (!owned || owned->uuid.isEmpty()) { error = "Missing virtual output UUID"; return false; }
@@ -186,9 +263,17 @@ public:
         kde_output_configuration_v2_set_priority(config, owned->proxy, 1);
         kde_output_configuration_v2_set_replication_source(config, owned->proxy, "");
         uint32_t priority = 2;
-        for (const auto& entry : outputs) {
+        for (const auto& saved : baseline) for (const auto& entry : outputs) {
             const auto& out = *entry.second;
-            if (&out == owned || out.removed || !out.enabled) continue;
+            const auto value = saved.toObject();
+            if (&out == owned || out.removed || out.uuid != value["uuid"].toString()) continue;
+            // KWin may have re-enabled this screen during virtual-output creation.
+            // The pre-session snapshot, not its current state, owns this decision.
+            if (!value["enabled"].toBool()) {
+                kde_output_configuration_v2_enable(config, out.proxy, 0);
+                kde_output_configuration_v2_set_replication_source(config, out.proxy, value["replication"].toString().toUtf8().constData());
+                continue;
+            }
             kde_output_configuration_v2_set_replication_source(config, out.proxy, owned->uuid.toUtf8().constData());
             kde_output_configuration_v2_set_priority(config, out.proxy, priority++);
         }
@@ -197,6 +282,13 @@ public:
             const auto& out = *entry.second;
             if (&out != owned && !out.removed && out.enabled && out.replication != owned->uuid) {
                 error = "KWin did not apply physical output mirroring"; return false;
+            }
+        }
+        for (const auto& saved : baseline) for (const auto& entry : outputs) {
+            const auto& out = *entry.second;
+            const auto value = saved.toObject();
+            if (!out.removed && out.uuid == value["uuid"].toString() && out.enabled != value["enabled"].toBool()) {
+                error = "KWin changed a physical output's enabled state"; return false;
             }
         }
         if (owned->priority != 1) { error = "KWin did not make the virtual output primary"; return false; }
@@ -275,6 +367,7 @@ private:
         else if (!strcmp(message->name, "replication_source")) out->replication = QString::fromUtf8(args[0].s);
         else if (!strcmp(message->name, "priority")) out->priority = args[0].u;
         else if (!strcmp(message->name, "enabled")) out->enabled = args[0].i;
+        else if (!strcmp(message->name, "geometry")) { out->x = args[0].i; out->y = args[1].i; out->transform = args[7].i; }
         else if (!strcmp(message->name, "scale")) out->scale = wl_fixed_to_double(args[0].f);
         else if (!strcmp(message->name, "current_mode")) out->current = reinterpret_cast<kde_output_device_mode_v2*>(args[0].o);
         else if (!strcmp(message->name, "mode")) {
@@ -289,26 +382,25 @@ private:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     const auto args = app.arguments();
-    if (args.size() == 2 && args[1] == "--restore-kwin") {
-        // A private stdin pipe holds only the pre-sharing replication/order state.
-        // EOF, including owner death, triggers restoration on an independent connection.
-        QByteArray saved;
-        char byte;
-        while (read(STDIN_FILENO, &byte, 1) == 1 && byte != '\n') {
-            saved.append(byte); if (saved.size() > 65536) return 2;
-        }
-        QJsonParseError parse;
-        const auto document = QJsonDocument::fromJson(saved, &parse);
+    if (args.size() == 3 && args[1] == "--restore-kwin") {
         Display restore;
-        if (parse.error != QJsonParseError::NoError || !document.isArray() || !restore.connectSession()) return 1;
-        fputs("ready\n", stdout); fflush(stdout);
-        char discard[256];
+        if (!restore.connectSession()) return 1;
+        QJsonArray state;
+        QByteArray buffer;
+        char byte;
         while (true) {
-            const auto count = read(STDIN_FILENO, discard, sizeof(discard));
+            const auto count = read(STDIN_FILENO, &byte, 1);
             if (count < 0 && errno == EINTR) continue;
             if (count <= 0) break;
+            if (byte != '\n') { buffer.append(byte); if (buffer.size() > 65536) return 2; continue; }
+            QJsonParseError parse;
+            const auto document = QJsonDocument::fromJson(buffer, &parse); buffer.clear();
+            if (parse.error != QJsonParseError::NoError || !document.isArray()) return 2;
+            state = document.array();
+            fputs("ready\n", stdout); fflush(stdout);
         }
-        const bool ok = restore.restore(document.array());
+        if (state.isEmpty()) return 0;
+        const bool ok = restore.waitForRemoval(args[2]) && restore.restore(state);
         if (!ok) fprintf(stderr, "KWin layout recovery: %s\n", restore.lastError().toUtf8().constData());
         return ok ? 0 : 1;
     }
@@ -337,8 +429,10 @@ int main(int argc, char** argv) {
                 const int seq = request["seq"].toInt(), width = request["width"].toInt(), height = request["height"].toInt(), scale = request["scale"].toInt();
                 QJsonObject response{{"seq", seq}};
                 if (!seq || !Display::valid(width, height, scale)) response["error"] = "Invalid virtual output request";
-                else if (!display.resize(width, height, scale)) response["error"] = display.lastError();
-                else { response["width"] = width; response["height"] = height; response["scale"] = scale; }
+                else if (!(request["session"].toBool(true)
+                         ? display.beginSession(width, height) && display.resize(width, height, scale) && display.mirror()
+                         : display.restoreIdle())) response["error"] = display.lastError();
+                else { response["width"] = width; response["height"] = height; response["scale"] = scale; response["active"] = request["session"].toBool(true); }
                 reply(response);
                 if (!display.healthy()) return 1; // Never accept a late acknowledgment after a timeout.
             }
