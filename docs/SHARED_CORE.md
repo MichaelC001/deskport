@@ -41,3 +41,10 @@ needed, and a session-scoped input state machine only after a second consumer ne
 it. Do not move global Moonlight input wrappers, keyboard/safe-area policy or release
 tooling into the arithmetic core. No deployed service activation is part of a core
 update; the existing release and manual-activation workflow still applies.
+
+## Session policy update — 2026-09-17
+
+The next core pin adds the optional `displayPolicy` capability, three stable mode
+values, and malformed-policy fixtures. See [SESSION_DISPLAY.md](SESSION_DISPLAY.md).
+The base binding version remains 1; peers negotiate the optional field explicitly.
+Local core commits must be pushed before publishing consumer branches that pin them.

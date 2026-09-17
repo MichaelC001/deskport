@@ -39,6 +39,7 @@ static NSInteger requestedScale = 1;
 static NSInteger lastWidth, lastHeight, lastScale = 1;
 static BOOL rollingBack;
 static BOOL sessionActive;
+static unsigned restoreAttempt;
 static CFAbsoluteTime requestStarted;
 static unsigned readyGeneration;
 static NSArray *displayModes(NSInteger width, NSInteger height, NSInteger scale) {
@@ -106,7 +107,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
         if (attempt >= 30 || !applySessionTopology(display.displayID)) {
             restoreTopology(display.displayID);
             sessionActive=NO;
-            respond(@{@"error": @"Could not make the virtual display primary and mirror other displays"}); return;
+            respond(@{@"error": @"Could not apply the selected virtual screen mode"}); return;
         }
         ready=NO;
     }
@@ -126,7 +127,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             respond(@{@"error": @"Requested mode was rejected; the previous display mode was restored"}); return;
         }
         respond(@{@"displayId": @(capture), @"virtualDisplayId": @(display.displayID),
-            @"mirrored": @(sessionActive && sessionTopologyReady(capture)), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)});
+            @"mirrored": @(sessionActive && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_MIRROR && sessionTopologyReady(capture)), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)});
     } else if (attempt < 30) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
             waitForMode(width, height, token, attempt + 1);
@@ -152,10 +153,23 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     if (width < 640 || height < 360 || width > 7680 || height > 4320 || width % 2 || height % 2 || (scale != 1 && scale != 2)) {
         respond(@{@"error": @"Use an even pixel size between 640x360 and 7680x4320"}); return;
     }
+    if (session && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY && !enableDisplayFunction()) {
+        respond(@{@"error": @"Disabling other screens is unavailable on this macOS version"}); return;
+    }
     BOOL restoring=!session && savedTopology!=nil;
     if (!session && !restoreTopology(display.displayID)) {
-        respond(@{@"error": @"Could not restore the original display layout"}); return;
+        sessionActive=NO;
+        if (++restoreAttempt>=30) {
+            restoreAttempt=0;
+            respond(@{@"error": @"Could not restore the original display layout; recovery is retained"}); return;
+        }
+        const unsigned token=++generation;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
+            if (token==generation) configure(width,height,scale,sequence,NO);
+        });
+        return;
     }
+    restoreAttempt=0;
     if (restoring) {
         sessionActive=NO;
         // WindowServer detaches mirrors asynchronously. Applying the idle mode
@@ -165,6 +179,9 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
             if (token==generation) configure(width,height,scale,sequence,NO);
         });
         return;
+    }
+    if (session && savedTopology && !sessionActive) {
+        respond(@{@"error": @"The previous screen layout is still being restored"}); return;
     }
     if (session && !snapshotTopology(display.displayID)) {
         respond(@{@"error": @"Could not save the original display layout"}); return;
@@ -225,8 +242,8 @@ static void finishHelper(void) {
     display=nil;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW,500*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
         preserveTopologyJournal=NO;
-        BOOL restored=restoreTopology(0);
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{ exit(restored ? 0 : 1); });
+        restoreTopology(0);
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{ exit(restoreTopology(0) ? 0 : 1); });
     });
 }
 static void displayReconfigured(CGDirectDisplayID ident, CGDisplayChangeSummaryFlags flags, void *context) {
@@ -240,6 +257,9 @@ int main(int argc, const char *argv[]) {
             respond(@{@"available": @(NSClassFromString(@"CGVirtualDisplay") != nil)}); return 0;
         }
         if (argc != 3) return 2;
+        [NSApplication sharedApplication];
+        [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
+        CGDisplayRegisterReconfigurationCallback(displayReconfigured,NULL);
         NSData *recovery=[NSData dataWithContentsOfFile:topologyPath()];
         if (recovery) {
             id entries=[NSJSONSerialization JSONObjectWithData:recovery options:0 error:nil];
@@ -248,15 +268,18 @@ int main(int argc, const char *argv[]) {
             for (id entry in entries) {
                 if (![entry isKindOfClass:NSDictionary.class] || ![entry[@"uuid"] isKindOfClass:NSString.class] ||
                     ![entry[@"mirror"] isKindOfClass:NSString.class]) return 1;
+                if (entry[@"enabled"] && ![@[@YES,@NO] containsObject:entry[@"enabled"]]) return 1;
                 for (NSString *key in @[@"main",@"x",@"y",@"width",@"height",@"pixelsW",@"pixelsH",@"mode",@"hz"])
                     if (![entry[key] isKindOfClass:NSNumber.class] || !isfinite([entry[key] doubleValue])) return 1;
             }
             savedTopology=entries;
-            if (!restoreTopology(0)) return 1;
+            BOOL restored=NO;
+            for (unsigned attempt=0;attempt<30 && !restored;attempt++) {
+                restored=restoreTopology(0);
+                if (!restored) CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.1,false);
+            }
+            if (!restored) return 1;
         }
-        [NSApplication sharedApplication];
-        [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
-        CGDisplayRegisterReconfigurationCallback(displayReconfigured,NULL);
         configure(atoi(argv[1]), atoi(argv[2]), 1, 0, NO);
         if (!display) return 1;
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
@@ -268,7 +291,17 @@ int main(int argc, const char *argv[]) {
                     NSInteger width = [request[@"width"] integerValue], height = [request[@"height"] integerValue];
                     NSInteger scale = [request[@"scale"] integerValue];
                     int sequence = [request[@"seq"] intValue];
-                    dispatch_async(dispatch_get_main_queue(), ^{ configure(width, height, scale ?: 1, sequence, [request[@"session"] boolValue]); });
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        id value=request[@"displayPolicy"];
+                        int policy=[value isKindOfClass:NSNumber.class] ? [value intValue] : DP_DISPLAY_PRIMARY_MIRROR;
+                        BOOL session=[request[@"session"] boolValue];
+                        if ((value && (![value isKindOfClass:NSNumber.class] || ![@[@0,@1,@2] containsObject:value])) ||
+                            (session && sessionActive && policy!=sessionDisplayPolicy)) {
+                            requestSequence=sequence; respond(@{@"error":@"Invalid or changed session display policy"}); return;
+                        }
+                        if (session) sessionDisplayPolicy=policy;
+                        configure(width, height, scale ?: 1, sequence, session);
+                    });
                 }
             }
             free(line); dispatch_async(dispatch_get_main_queue(), ^{ finishHelper(); });
@@ -276,7 +309,10 @@ int main(int argc, const char *argv[]) {
         dispatch_source_t caretTimer=dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER,0,0,dispatch_get_main_queue());
         dispatch_source_set_timer(caretTimer,dispatch_time(DISPATCH_TIME_NOW,0),200*NSEC_PER_MSEC,40*NSEC_PER_MSEC);
         dispatch_source_set_event_handler(caretTimer, ^{
-            if (!sessionActive) return;
+            if (!sessionActive) {
+                if (savedTopology && !preserveTopologyJournal) restoreTopology(display.displayID);
+                return;
+            }
             // Send periodic geometry so clients can expire stale focus information.
             NSData *data=[NSJSONSerialization dataWithJSONObject:@{@"caret":textCaret(display.displayID)} options:0 error:nil];
             fwrite(data.bytes,1,data.length,stdout); fputc('\n',stdout); fflush(stdout);

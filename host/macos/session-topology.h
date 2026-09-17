@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Session-only display configuration. Journal UUIDs rather than transient IDs.
 #import <sys/stat.h>
+#import <dlfcn.h>
+#include "../../shared/deskport-core/include/deskport/protocol.h"
+static int sessionDisplayPolicy = DP_DISPLAY_PRIMARY_MIRROR;
+typedef CGError (*DPEnableDisplay)(CGDisplayConfigRef, CGDirectDisplayID, bool);
+static DPEnableDisplay enableDisplayFunction(void) {
+    if (!dlsym(RTLD_DEFAULT, "CGSGetDisplayList")) return NULL;
+    return (DPEnableDisplay)dlsym(RTLD_DEFAULT, "CGSConfigureDisplayEnabled");
+}
+static BOOL wasEnabled(NSDictionary *entry) { return !entry[@"enabled"] || [entry[@"enabled"] boolValue]; }
 #import <ApplicationServices/ApplicationServices.h>
 static NSArray<NSDictionary *> *savedTopology;
 static BOOL preserveTopologyJournal;
@@ -15,7 +24,10 @@ static NSString *displayUUID(CGDirectDisplayID ident) {
 }
 static NSArray<NSNumber *> *onlineDisplays(void) {
     CGDirectDisplayID ids[64]; uint32_t count=0;
-    if (CGGetOnlineDisplayList(64,ids,&count)!=kCGErrorSuccess) return @[];
+    typedef CGError (*DPDisplayList)(uint32_t, CGDirectDisplayID *, uint32_t *);
+    DPDisplayList list=(DPDisplayList)dlsym(RTLD_DEFAULT,"CGSGetDisplayList");
+    CGError error=list ? list(64,ids,&count) : CGGetOnlineDisplayList(64,ids,&count);
+    if (error!=kCGErrorSuccess || count>=64) return nil;
     NSMutableArray *result=[NSMutableArray new];
     for (uint32_t i=0;i<count;i++) [result addObject:@(ids[i])];
     return result;
@@ -26,17 +38,20 @@ static CGDirectDisplayID findDisplay(NSString *uuid) {
 }
 static BOOL snapshotTopology(CGDirectDisplayID own) {
     if (savedTopology) return YES;
+    NSArray *attached=onlineDisplays(); if (!attached) return NO;
     NSMutableArray *entries=[NSMutableArray new];
-    for (NSNumber *n in onlineDisplays()) {
+    for (NSNumber *n in attached) {
         CGDirectDisplayID ident=n.unsignedIntValue; if (ident==own) continue;
-        CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident); if (!mode) return NO;
+        BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
+        CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident); if (!mode && enabled) return NO;
+        if (!displayUUID(ident).length) { if (mode) CFRelease(mode); return NO; }
         CGRect bounds=CGDisplayBounds(ident);
-        [entries addObject:@{@"uuid":displayUUID(ident), @"main":@(CGDisplayIsMain(ident)),
+        [entries addObject:@{@"uuid":displayUUID(ident), @"main":@(CGDisplayIsMain(ident)), @"enabled":@(enabled),
             @"mirror":displayUUID(CGDisplayMirrorsDisplay(ident)), @"x":@(bounds.origin.x), @"y":@(bounds.origin.y),
-            @"width":@(CGDisplayModeGetWidth(mode)), @"height":@(CGDisplayModeGetHeight(mode)),
-            @"pixelsW":@(CGDisplayModeGetPixelWidth(mode)), @"pixelsH":@(CGDisplayModeGetPixelHeight(mode)),
-            @"mode":@(CGDisplayModeGetIODisplayModeID(mode)), @"hz":@(CGDisplayModeGetRefreshRate(mode))}];
-        CFRelease(mode);
+            @"width":@(mode ? CGDisplayModeGetWidth(mode) : 0), @"height":@(mode ? CGDisplayModeGetHeight(mode) : 0),
+            @"pixelsW":@(mode ? CGDisplayModeGetPixelWidth(mode) : 0), @"pixelsH":@(mode ? CGDisplayModeGetPixelHeight(mode) : 0),
+            @"mode":@(mode ? CGDisplayModeGetIODisplayModeID(mode) : 0), @"hz":@(mode ? CGDisplayModeGetRefreshRate(mode) : 0)}];
+        if (mode) CFRelease(mode);
     }
     NSString *path=topologyPath();
     if (![NSFileManager.defaultManager createDirectoryAtPath:path.stringByDeletingLastPathComponent withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:nil]) return NO;
@@ -52,7 +67,8 @@ static CGDisplayModeRef savedMode(CGDirectDisplayID ident, NSDictionary *entry) 
         if (CGDisplayModeGetWidth(mode)==[entry[@"width"] unsignedIntegerValue] &&
             CGDisplayModeGetHeight(mode)==[entry[@"height"] unsignedIntegerValue] &&
             CGDisplayModeGetPixelWidth(mode)==[entry[@"pixelsW"] unsignedIntegerValue] &&
-            CGDisplayModeGetPixelHeight(mode)==[entry[@"pixelsH"] unsignedIntegerValue]) {
+            CGDisplayModeGetPixelHeight(mode)==[entry[@"pixelsH"] unsignedIntegerValue] &&
+            fabs(CGDisplayModeGetRefreshRate(mode)-[entry[@"hz"] doubleValue])<0.5) {
             if (!result || CGDisplayModeGetIODisplayModeID(mode)==[entry[@"mode"] unsignedIntValue]) {
                 if (result) CFRelease(result); result=CGDisplayModeRetain(mode);
             }
@@ -60,13 +76,47 @@ static CGDisplayModeRef savedMode(CGDirectDisplayID ident, NSDictionary *entry) 
     }
     if (modes) CFRelease(modes); return result;
 }
+static BOOL restoredTopologyReady(void) {
+    if (!onlineDisplays()) return NO;
+    for (NSDictionary *entry in savedTopology) {
+        CGDirectDisplayID ident=findDisplay(entry[@"uuid"]); if (!ident) continue;
+        BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
+        if (enabled!=wasEnabled(entry)) return NO;
+        if (!enabled) continue;
+        CGDirectDisplayID source=findDisplay(entry[@"mirror"]);
+        if (CGDisplayMirrorsDisplay(ident)!=source) return NO;
+        if ([entry[@"main"] boolValue] && !CGDisplayIsMain(ident)) return NO;
+        CGRect bounds=CGDisplayBounds(ident);
+        if (!source && (bounds.origin.x!=[entry[@"x"] intValue] || bounds.origin.y!=[entry[@"y"] intValue])) return NO;
+        CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident);
+        BOOL same=mode && CGDisplayModeGetPixelWidth(mode)==[entry[@"pixelsW"] unsignedIntegerValue] &&
+            CGDisplayModeGetPixelHeight(mode)==[entry[@"pixelsH"] unsignedIntegerValue] &&
+            CGDisplayModeGetWidth(mode)==[entry[@"width"] unsignedIntegerValue] &&
+            CGDisplayModeGetHeight(mode)==[entry[@"height"] unsignedIntegerValue] &&
+            fabs(CGDisplayModeGetRefreshRate(mode)-[entry[@"hz"] doubleValue])<0.5;
+        if (mode) CFRelease(mode);
+        if (!same) return NO;
+    }
+    return YES;
+}
 static BOOL restoreTopology(CGDirectDisplayID own) {
     if (!savedTopology) return YES;
+    if (!onlineDisplays()) return NO;
+    if (restoredTopologyReady()) {
+        if (!preserveTopologyJournal) { savedTopology=nil; [NSFileManager.defaultManager removeItemAtPath:topologyPath() error:nil]; }
+        return YES;
+    }
     CGDisplayConfigRef config; if (CGBeginDisplayConfiguration(&config)!=kCGErrorSuccess) return NO;
     CGError error=kCGErrorSuccess; CGFloat right=0;
+    DPEnableDisplay enable=enableDisplayFunction();
     CGDirectDisplayID originalMain=0, fallback=0;
     for (NSDictionary *entry in savedTopology) {
         CGDirectDisplayID ident=findDisplay(entry[@"uuid"]); if (!ident) continue;
+        BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
+        if (enabled!=wasEnabled(entry)) {
+            if (error==kCGErrorSuccess) error=enable ? enable(config,ident,wasEnabled(entry)) : kCGErrorFailure;
+        }
+        if (!wasEnabled(entry)) continue;
         if (!fallback) fallback=ident;
         if ([entry[@"main"] boolValue]) originalMain=ident;
         if (error==kCGErrorSuccess) error=CGConfigureDisplayMirrorOfDisplay(config,ident,kCGNullDirectDisplay);
@@ -85,25 +135,50 @@ static BOOL restoreTopology(CGDirectDisplayID own) {
     if (error==kCGErrorSuccess) error=CGCompleteDisplayConfiguration(config,kCGConfigureForSession);
     else CGCancelDisplayConfiguration(config);
     if (error!=kCGErrorSuccess) return NO;
-    if (!preserveTopologyJournal) { savedTopology=nil; [NSFileManager.defaultManager removeItemAtPath:topologyPath() error:nil]; }
-    return YES;
+    // Keep the journal until a subsequent observation verifies the OS state.
+    return NO;
 }
 static BOOL sessionTopologyReady(CGDirectDisplayID own) {
-    if (!CGDisplayIsMain(own) || CGDisplayMirrorsDisplay(own)) return NO;
-    for (NSNumber *n in onlineDisplays()) if (n.unsignedIntValue!=own && CGDisplayMirrorsDisplay(n.unsignedIntValue)!=own) return NO;
+    if (!CGDisplayIsActive(own) || CGDisplayMirrorsDisplay(own)) return NO;
+    if (sessionDisplayPolicy==DP_DISPLAY_EXTEND) {
+        return restoredTopologyReady();
+    }
+    if (!CGDisplayIsMain(own)) return NO;
+    for (NSDictionary *entry in savedTopology) {
+        if (!wasEnabled(entry)) continue;
+        CGDirectDisplayID ident=findDisplay(entry[@"uuid"]); if (!ident || ident==own) continue;
+        if (sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY) {
+            if (CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident)) return NO;
+        } else if (CGDisplayMirrorsDisplay(ident)!=own) return NO;
+    }
     return YES;
 }
 static BOOL applySessionTopology(CGDirectDisplayID own) {
     if (!snapshotTopology(own)) return NO;
     if (sessionTopologyReady(own)) return YES;
+    DPEnableDisplay enable=enableDisplayFunction();
+    if (sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY && !enable) return NO;
     CGDisplayConfigRef config; if (CGBeginDisplayConfiguration(&config)!=kCGErrorSuccess) return NO;
-    CGError error=kCGErrorSuccess;
-    for (NSNumber *n in onlineDisplays()) {
-        if (error==kCGErrorSuccess) error=CGConfigureDisplayMirrorOfDisplay(config,n.unsignedIntValue,kCGNullDirectDisplay);
+    CGError error=CGConfigureDisplayMirrorOfDisplay(config,own,kCGNullDirectDisplay);
+    if (sessionDisplayPolicy==DP_DISPLAY_EXTEND) {
+        CGFloat right=0;
+        for (NSDictionary *entry in savedTopology) if (wasEnabled(entry))
+            right=MAX(right,[entry[@"x"] doubleValue]+[entry[@"width"] doubleValue]);
+        if (error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,own,(int)MAX(1,right),0);
+    } else {
+        for (NSDictionary *entry in savedTopology) {
+            CGDirectDisplayID ident=findDisplay(entry[@"uuid"]);
+            if (ident && wasEnabled(entry) && error==kCGErrorSuccess)
+                error=CGConfigureDisplayMirrorOfDisplay(config,ident,kCGNullDirectDisplay);
+        }
+        if (error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,own,0,0);
+        for (NSDictionary *entry in savedTopology) {
+            CGDirectDisplayID ident=findDisplay(entry[@"uuid"]);
+            if (!ident || !wasEnabled(entry) || error!=kCGErrorSuccess) continue;
+            error=sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY ? enable(config,ident,false) :
+                CGConfigureDisplayMirrorOfDisplay(config,ident,own);
+        }
     }
-    if (error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,own,0,0);
-    for (NSNumber *n in onlineDisplays()) if (n.unsignedIntValue!=own && error==kCGErrorSuccess)
-        error=CGConfigureDisplayMirrorOfDisplay(config,n.unsignedIntValue,own);
     if (error==kCGErrorSuccess) error=CGCompleteDisplayConfiguration(config,kCGConfigureForSession);
     else CGCancelDisplayConfiguration(config);
     return error==kCGErrorSuccess;

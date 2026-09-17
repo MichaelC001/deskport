@@ -122,6 +122,12 @@ private slots:
         defaults->save();
         QScopedPointer<StreamingPreferences> a(defaults->forDevice("device-a"));
         QScopedPointer<StreamingPreferences> b(defaults->forDevice("device-b"));
+        QCOMPARE(a->displayPolicy, 0); QCOMPARE(b->displayPolicy, 0);
+        a->displayPolicy = 2; a->save(); a->reload(); b->reload();
+        QCOMPARE(a->displayPolicy, 2); QCOMPARE(b->displayPolicy, 0);
+        QScopedPointer<StreamingPreferences> snapshot(a->snapshot("device-a", nullptr));
+        QCOMPARE(snapshot->displayPolicy, 2);
+        a->displayPolicy = 99; a->save(); a->reload(); QCOMPARE(a->displayPolicy, 0);
         QCOMPARE(a->width, 1920); QCOMPARE(b->width, 1920);
         a->width = 2560; a->remoteAudio = false; a->remoteInput = false;
         a->captureSysKeysMode = StreamingPreferences::CSK_OFF;

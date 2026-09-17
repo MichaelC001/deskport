@@ -767,13 +767,13 @@ bool HostManager::adaptiveDisplayAvailable() const {
     return false;
 #endif
 }
-bool HostManager::resizeDisplay(int width, int height, int scale, int sequence) {
-    if (!adaptiveDisplayAvailable() || m_DisplaySequence || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
+bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, int policy) {
+    if (policy < 0 || policy > 2 || !adaptiveDisplayAvailable() || m_DisplaySequence || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
         height < 360 || height > DeskPortDisplay::MaxHeight || width % 4 || height % 4 || (scale != 1 && scale != 2)) return false;
     m_DisplaySequence = sequence;
     m_DisplayWireSequence = m_DisplayWireSequence == std::numeric_limits<int>::max() ? 1 : m_DisplayWireSequence + 1;
     const auto generation = ++m_DisplayGeneration;
-    m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}}).toJson(QJsonDocument::Compact) + '\n');
+    m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}, {"displayPolicy", policy}}).toJson(QJsonDocument::Compact) + '\n');
     QTimer::singleShot(5000, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {
             const auto sequence = m_DisplaySequence; m_DisplaySequence = 0;
@@ -783,10 +783,12 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence) 
     return true;
 }
 void HostManager::restoreDisplay() {
-    // Restore the chosen idle mode after the controller disconnects. A new
-    // controller may claim the display during the grace interval.
+    // Video renegotiation retains the controller. Restore promptly on actual
+    // disconnect, while allowing an already pending helper request to settle.
     const auto generation = m_DisplayGeneration;
-    QTimer::singleShot(10000, this, [this, generation] {
-        if (generation == m_DisplayGeneration) resizeDisplay(sharingWidth(), sharingHeight(), 1, -1);
+    QTimer::singleShot(250, this, [this, generation] {
+        if (generation != m_DisplayGeneration) return;
+        if (m_DisplaySequence) { restoreDisplay(); return; }
+        resizeDisplay(sharingWidth(), sharingHeight(), 1, -1);
     });
 }

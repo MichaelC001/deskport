@@ -11,13 +11,14 @@
 #include <cmath>
 
 AdaptiveDisplay::AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
-                                 QByteArray certificate, QByteArray key)
-    : m_Address(address), m_Port(port), m_Peer(peer), m_Certificate(certificate), m_Key(key) { start(); }
+                                 QByteArray certificate, QByteArray key, int policy)
+    : m_Address(address), m_Port(port), m_Peer(peer), m_Certificate(certificate), m_Key(key), m_Policy(policy) { start(); }
 AdaptiveDisplay::~AdaptiveDisplay() {
     requestInterruption();
     { QMutexLocker lock(&m_Mutex); m_Wake.wakeAll(); }
     wait();
 }
+bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
 QSize AdaptiveDisplay::boundedSize(QSize pixels) {
     if (pixels.width() <= 0 || pixels.height() <= 0) return {};
     const double factor = qMin(1.0, qMin(double(DeskPortDisplay::MaxWidth) / pixels.width(), double(DeskPortDisplay::MaxHeight) / pixels.height()));
@@ -73,9 +74,13 @@ void AdaptiveDisplay::run() {
     };
     socket.connectToHostEncrypted(m_Address, m_Port);
     bool connected = socket.waitForEncrypted(4000) && socket.peerCertificate() == m_Peer;
+    bool policySupported = false;
     if (connected) {
         const auto hello = receive();
         connected = hello["type"].toString() == "hello" && hello["meta"].toObject()["adaptiveDisplay"].toInt() == 1;
+        policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
+        connected = connected && DPDisplayPolicyValid(m_Policy) && (policySupported || m_Policy == DP_DISPLAY_PRIMARY_MIRROR);
+        if (!connected) qWarning() << "The host does not support the selected virtual screen policy";
     }
     int sequence = 0;
     QElapsedTimer heartbeat; heartbeat.start();
@@ -83,7 +88,9 @@ void AdaptiveDisplay::run() {
         QSize size; int scale; bool pending;
         { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; }
         if (pending) {
-            send({{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}});
+            QJsonObject request{{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}};
+            if (policySupported) request["displayPolicy"] = m_Policy;
+            send(request);
             const auto reply = receive();
             connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&
                 reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");

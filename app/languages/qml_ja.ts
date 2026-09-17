@@ -755,6 +755,9 @@
         <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
         <translation>ホストが新しいサイズでデスクトップを再開できませんでした。再接続して作業を続けてください。</translation>
     </message>
+
+<message><source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source><translation>選択した仮想ディスプレイモードは使用できません。ホストを更新するか、別のモードを選んでください。</translation></message>
+<message><source>Virtual screen control ended. Reconnect to apply the selected mode.</source><translation>仮想ディスプレイの制御が終了しました。再接続して選択したモードを適用してください。</translation></message>
 </context>
 <context>
     <name>SettingsView</name>
@@ -2590,6 +2593,16 @@
         <source>Saved · reconnect to apply changes.</source>
         <translation>保存しました。再接続すると適用されます。</translation>
     </message>
+
+    <message><source>Virtual screen</source><translation>仮想ディスプレイ</translation></message>
+    <message><source>Primary screen and mirror others (default)</source><translation>メインにして他の画面をミラーリング（既定）</translation></message>
+    <message><source>Primary screen and turn off others</source><translation>メインにして他の画面を無効にする</translation></message>
+    <message><source>Use client as an extended screen</source><translation>クライアントを拡張ディスプレイにする</translation></message>
+    <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>セッション終了時に元の画面配置を自動で復元します。</translation></message>
+    <message><source>Domain name or IP address</source><translation>ドメイン名または IP アドレス</translation></message>
+    <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>既存のペアリングは保持されます。再接続すると保存したアドレスを使用します。</translation></message>
+    <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
+    <message><source>Save</source><translation>保存</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

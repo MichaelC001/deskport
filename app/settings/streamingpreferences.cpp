@@ -1,4 +1,5 @@
 #include "streamingpreferences.h"
+#include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "utils.h"
 
 #include <QSettings>
@@ -170,6 +171,8 @@ void StreamingPreferences::reload()
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     adaptiveResolution = settings.value("adaptiveResolution", true).toBool();
+    displayPolicy = settings.value("displayPolicy", 0).toInt();
+    if (!DPDisplayPolicyValid(displayPolicy)) displayPolicy = DP_DISPLAY_PRIMARY_MIRROR;
     enableVsync = settings.value(SER_VSYNC, true).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, false).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, true).toBool();
@@ -385,6 +388,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_BITRATE, bitrateKbps);
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue("adaptiveResolution", adaptiveResolution);
+    settings.setValue("displayPolicy", displayPolicy);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);

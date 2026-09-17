@@ -156,6 +156,7 @@ private slots:
             c.setData(R"(import QtQuick 2.9
 import TestPreferences 1.0
 TestPreferences {
+ property int displayPolicy: 0
  property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
  property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property int language: 1; property int retranslations: 0
@@ -454,7 +455,11 @@ ApplicationWindow {
         }
     }
     void deviceSettingsAreSeparate() {
+        QTemporaryDir directory;
+        PreviewHost host(nullptr,directory.path()+"/host");
+        PeerManager manager(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/binding",0,QHostAddress::LocalHost);
         QQmlEngine engine;
+        engine.rootContext()->setContextProperty("peerManager",&manager);
         const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
         QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
         QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
@@ -478,6 +483,12 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(mode,"activated",Q_ARG(int,0)));
         QVERIFY(prefs->property("smartStreaming").toBool());
         QCOMPARE(prefs->property("uiTheme").toInt(),0);
+        auto policy=page->findChild<QObject*>("deviceDisplayPolicy"); QVERIFY(policy);
+        QCOMPARE(policy->property("currentIndex").toInt(),0);
+        policy->setProperty("currentIndex",2);
+        QVERIFY(QMetaObject::invokeMethod(policy,"activated",Q_ARG(int,2)));
+        QCOMPARE(prefs->property("displayPolicy").toInt(),2);
+        QVERIFY(page->findChild<QObject*>("deviceAddress"));
         QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }
     void navigationAndDeviceIdentity() {

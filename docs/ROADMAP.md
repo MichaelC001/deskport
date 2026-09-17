@@ -1089,3 +1089,19 @@ See ADAPTIVE_DISPLAY.md for the protocol and measured validation boundary.
 - [ ] Consider a per-session input state machine only when desktop needs it.
 
 See [SHARED_CORE.md](SHARED_CORE.md) for ownership and update workflow.
+
+## Session display modes and device addresses — 2026-09-17
+
+Reason: the user requested three per-device screen policies, automatic restoration
+and address editing across clients.
+
+- [x] Add negotiated mirror-primary, primary-only and extension policies in core.
+- [x] Add Qt settings, per-device persistence and the authenticated policy adapter.
+- [x] Restore macOS enabled state and verify recovery before deleting its journal.
+- [x] Exclude newly attached displays from session takeover.
+- [x] Expose the existing identity-preserving address editor in Device settings.
+- [ ] Physical multi-monitor mode/scale/disable/restore and abrupt-disconnect acceptance.
+- [ ] Full Linux bundled-host package validation; current Sunshine build is blocked.
+- [ ] Integrate Linux host topology separately from its unmerged development branch.
+
+See [SESSION_DISPLAY.md](SESSION_DISPLAY.md) for behavior and platform boundaries.

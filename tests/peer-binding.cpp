@@ -65,6 +65,16 @@ private slots:
             socket.write("{\"type\":\"display-ping\"}\n");
             QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
             QCOMPARE(QJsonDocument::fromJson(socket.readLine()).object()["type"].toString(),QString("display-pong"));
+            auto changed=message;
+            changed["seq"]=2;
+            changed["displayPolicy"]=(message.value("displayPolicy").toInt()+1)%3;
+            socket.write(QJsonDocument(changed).toJson(QJsonDocument::Compact)+'\n');
+            QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+            QVERIFY(QJsonDocument::fromJson(socket.readLine()).object().contains("error"));
+            message["seq"]=3;
+            socket.write(QJsonDocument(message).toJson(QJsonDocument::Compact)+'\n');
+            QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+            QVERIFY(!QJsonDocument::fromJson(socket.readLine()).object().contains("error"));
         }
         socket.abort(); host.stop();
     }

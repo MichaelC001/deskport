@@ -763,6 +763,9 @@
         <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
         <translation>主機未能以新的尺寸恢復桌面。請重新連線以繼續工作。</translation>
     </message>
+
+<message><source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source><translation>所選虛擬螢幕模式無法使用，請更新主機或選擇其他模式。</translation></message>
+<message><source>Virtual screen control ended. Reconnect to apply the selected mode.</source><translation>虛擬螢幕控制已中斷，請重新連線以套用所選模式。</translation></message>
 </context>
 <context>
     <name>SettingsView</name>
@@ -2606,6 +2609,16 @@
         <source>Saved · reconnect to apply changes.</source>
         <translation>已儲存 · 重新連線後生效。</translation>
     </message>
+
+    <message><source>Virtual screen</source><translation>虛擬螢幕</translation></message>
+    <message><source>Primary screen and mirror others (default)</source><translation>設為主螢幕，其他螢幕鏡像（預設）</translation></message>
+    <message><source>Primary screen and turn off others</source><translation>設為主螢幕，關閉其他螢幕</translation></message>
+    <message><source>Use client as an extended screen</source><translation>將用戶端用作延伸螢幕</translation></message>
+    <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>連線結束後自動恢復先前的螢幕狀態。</translation></message>
+    <message><source>Domain name or IP address</source><translation>網域名稱或 IP 位址</translation></message>
+    <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>保留既有綁定，重新連線後使用新位址。</translation></message>
+    <message><source>Computer name or IP, without port</source><translation>電腦名稱或 IP，不含連接埠</translation></message>
+    <message><source>Save</source><translation>儲存</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

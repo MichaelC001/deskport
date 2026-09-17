@@ -688,7 +688,6 @@ void Session::initializeClipboard() {
 }
 
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {
-    if (!m_Preferences->adaptiveResolution) return;
     if (!m_AdaptiveDisplay) {
         const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
         for (const auto& value : peers) {
@@ -700,7 +699,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             if (certificate.isNull() || port < 1 || port > 65535) break;
             auto identity = IdentityManager::get();
             m_AdaptiveDisplay = std::make_shared<AdaptiveDisplay>(m_Computer->activeAddress.address(), quint16(port),
-                certificate, identity->getCertificate(), identity->getPrivateKey());
+                certificate, identity->getCertificate(), identity->getPrivateKey(), m_Preferences->displayPolicy);
             break;
         }
     }
@@ -731,9 +730,9 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         }
     }
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
-    if (!m_AdaptiveResume) m_AdaptiveScale = workspace.scale;
+    if (!m_AdaptiveResume) m_AdaptiveScale = m_Preferences->adaptiveResolution ? workspace.scale : 1;
     // Restore window geometry, not a stream size negotiated by an older policy.
-    const QSize target = m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
+    const QSize target = !m_Preferences->adaptiveResolution ? AdaptiveDisplay::boundedSize(QSize(m_StreamConfig.width,m_StreamConfig.height)) : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
@@ -752,7 +751,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
 }
 bool Session::checkAdaptiveResize() {
-    if (!m_AdaptiveDisplay || m_UnexpectedTermination || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) return false;
+    if (!m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) return false;
     const auto workspace = workspaceForWindow(m_Window);
     const auto size = workspace.pixels;
     const int scale = workspace.scale;
@@ -912,6 +911,11 @@ bool Session::initialize()
 
     if (!m_AdaptiveGeometry.isValid()) m_AdaptiveGeometry = QRect(x, y, width, height);
     initializeAdaptiveDisplay(testWindow);
+    if (m_Preferences->displayPolicy != 0 && !m_AdaptiveDisplay) {
+        emit displayLaunchError(tr("The selected virtual screen mode is unavailable. Update the host or choose another mode."));
+        SDL_DestroyWindow(testWindow); SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
 
     if (m_AdaptiveResume) deskportResizeStage("probe-begin");
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
@@ -2349,6 +2353,10 @@ void Session::execInternal()
                 m_OverlayManager.updateOverlayText(Overlay::OverlayStatusUpdate, clipboardStatus.toUtf8().constData());
                 m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, !clipboardStatus.isEmpty());
             }
+        }
+        if (m_Preferences->displayPolicy != 0 && m_AdaptiveDisplay && m_AdaptiveDisplay->failed()) {
+            emit displayLaunchError(tr("Virtual screen control ended. Reconnect to apply the selected mode."));
+            goto DispatchDeferredCleanup;
         }
         if (checkAdaptiveResize()) goto DispatchDeferredCleanup;
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)

@@ -23,6 +23,8 @@ public:
     QString deviceId() const { return m_DeviceId; }
     Q_PROPERTY(bool remoteAudio MEMBER remoteAudio NOTIFY remoteAudioChanged)
     bool remoteAudio = true;
+    Q_PROPERTY(int displayPolicy MEMBER displayPolicy NOTIFY displayPolicyChanged)
+    int displayPolicy = 0;
     Q_PROPERTY(bool remoteInput MEMBER remoteInput NOTIFY remoteInputChanged)
     bool remoteInput = true;
 
@@ -213,6 +215,7 @@ signals:
     void bitrateChanged();
     void unlockBitrateChanged();
     void adaptiveResolutionChanged();
+    void displayPolicyChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();

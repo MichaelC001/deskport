@@ -1,0 +1,73 @@
+# Per-device virtual screen policy
+
+2026-09-17: Add three session policies and make saved address editing available
+directly from Device settings. The policy is independent of automatic resolution;
+fixed-resolution sessions acquire the same display lease at their configured size.
+
+| Mode | During the connection |
+| --- | --- |
+| Primary screen and mirror others (default) | The client workspace becomes primary; originally active displays mirror it. |
+| Primary screen and turn off others | The client workspace becomes primary; originally active displays are disabled. |
+| Use client as an extended screen | The original primary and layout are preserved. |
+
+The protocol is defined in the pinned core's `protocol/SESSION_DISPLAY.md`.
+`hello.meta.displayPolicy=1` gates the optional request field. Legacy clients use
+the default mode. Unsupported non-default choices and policy changes within a
+lease are rejected. Trust, exclusive ownership, frame bounds and heartbeat expiry
+remain enforced by the existing control channel. Non-default modes stop or refuse
+video when display control fails, rather than continuing with the wrong topology.
+
+## Recovery
+
+The macOS helper journals stable display UUIDs, enabled/disabled state, primary,
+origin, mirror source, logical/backing mode and refresh rate before changing the
+session topology. Resize requests retain the original snapshot. Displays attached
+after the snapshot are excluded from mirror/disable operations.
+
+Actual controller disconnect schedules restore after 250 ms, waiting for any
+pending mode request. Video renegotiation keeps the controller and does not restore
+the desktop. Lost transport heartbeats expire after the existing 20-second lease
+timeout. Helper setup failures, EOF/signals and startup recovery also restore the
+snapshot. Missing displays are skipped; configuration failures retain the journal.
+The journal is cleared only after a later observation confirms the restored state.
+Recovery retries run on the helper event loop without prompting the user.
+
+Disabling screens uses a runtime-resolved private CoreGraphics operation, like the
+existing virtual-display implementation. It is rejected before topology mutation
+if either display enablement or disabled-display enumeration is unavailable.
+No permanent display preferences are written. Automatic restoration does not
+guarantee an invisible physical mode transition; hardware/compositor acceptance is
+separate. Rotation, color profiles, brightness and application window placement
+are not modified by this implementation.
+
+## Platform scope
+
+Qt desktop clients on supported desktop platforms and the Apple native client send
+the policy to the macOS host. The current Linux host still advertises no adaptive
+display capability; its unmerged development branch is not implicitly integrated.
+Android address editing is implemented in the native-client repository; Android's
+authenticated virtual-display transport is a separate missing adapter.
+
+## Verification
+
+`scripts/test-session-topology.py` runs the production macOS topology header against
+an isolated in-memory display service with ASan/UBSan. It covers all three modes,
+snapshot retention, initially disabled screens, hotplug, unavailable enablement,
+failed restoration and recovery from the persisted journal. It never configures
+the user's displays. Run the shared vectors, binding suite, desktop state suite and
+QML UI suite as described in `SHARED_CORE.md`.
+
+The full Linux ARM64 package attempt still failed in the unchanged Sunshine
+dependency (`cc1plus` killed). This does not establish an OOM cause or validate the
+complete Linux package. Native/client-only builds and physical acceptance are
+reported separately.
+
+Current local checks: 45 desktop binding/display cases (including rejection of a
+policy change within a lease), 9 desktop-state cases, 18 QML UI cases, macOS native
+desktop build and separately compiled display helper, ASan/UBSan topology tests,
+Apple parser/capability and 12 TLS cases, strict/default workspace lifecycle, Apple
+simulator build and Android Debug/address tests passed. iPad passed address editing
+and, after correcting fixed-size preview handling, all three policy/workspace/keyboard
+checks; iPhone passed those three plus address editing. These UI cases are offline.
+A Linux ARM64 client-only build passed with the bundled-host installation hook
+omitted; this is not full package or deployed behavior acceptance.

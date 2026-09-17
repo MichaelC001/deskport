@@ -14,10 +14,11 @@
 class AdaptiveDisplay : private QThread {
 public:
     AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
-                    QByteArray certificate, QByteArray key);
+                    QByteArray certificate, QByteArray key, int policy = 0);
     ~AdaptiveDisplay();
     bool resize(const QSize& pixels, int scale, const std::function<void()>& progress = {});
     static QSize boundedSize(QSize pixels);
+    bool failed();
 private:
     void run() override;
     QString m_Address;
@@ -28,5 +29,6 @@ private:
     QWaitCondition m_Wake;
     QSize m_Size;
     int m_Scale = 1;
+    int m_Policy = 0;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };

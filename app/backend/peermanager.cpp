@@ -63,6 +63,7 @@ struct PeerManager::Link : QObject {
     bool endpointRefresh = false;
     QString expectedFingerprint;
     QJsonObject expectedPeer;
+    int displayPolicy = -1;
     bool clipboardControl = false;
     ClipboardProcess* clipboardHelper = nullptr;
     QString clipboardText, clipboardEncoded;
@@ -263,6 +264,7 @@ QJsonObject PeerManager::metadata() const {
     meta["clipboardV2"] = 1;
 #endif
     meta["adaptiveDisplay"] = m_Host->adaptiveDisplayAvailable() ? 1 : 0;
+    if (m_Host->adaptiveDisplayAvailable()) meta["displayPolicy"] = DP_DISPLAY_POLICY_VERSION;
     meta["bindingPort"] = int(m_Server->serverPort());
     return meta;
 }
@@ -572,10 +574,15 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
             link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
             send(link, {{"type", DP_MESSAGE_DISPLAY_PONG}}); return;
         }
+        const int policy = message.contains("displayPolicy") ? message["displayPolicy"].toInt(-1) : DP_DISPLAY_PRIMARY_MIRROR;
         const int seq = message["seq"].toInt();
-        if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq)) {
+        if (!DPDisplayPolicyValid(policy) || (link->displayPolicy >= 0 && link->displayPolicy != policy)) {
+            send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Invalid or changed session display policy"}}); return;
+        }
+        if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq, policy)) {
             send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
+        link->displayPolicy = policy;
         link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
         m_DisplayLink = link;

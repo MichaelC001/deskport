@@ -57,7 +57,7 @@ public:
     QJsonObject identity() const;
     void updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove = false);
     bool adaptiveDisplayAvailable() const;
-    bool resizeDisplay(int width, int height, int scale, int sequence);
+    bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
     void restoreDisplay();
     bool running() const;
     bool canPair() const;
