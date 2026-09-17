@@ -23,3 +23,7 @@ CONFIG += debug_and_release
 load(configure)
 qtCompileTest(SL)
 qtCompileTest(EGL)
+
+linux {
+    SUBDIRS += host/linux
+}

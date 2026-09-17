@@ -4,6 +4,7 @@
 #include "hostmanager.h"
 #include "nvaddress.h"
 #include "localhostfilter.h"
+#include "peerstore.h"
 
 class HostLifecycle : public QObject {
     Q_OBJECT
@@ -28,6 +29,62 @@ private slots:
         QVERIFY(!result.first().last().toString().isEmpty());
         QVERIFY(host.running()); QVERIFY(!host.changing());
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void ownedLinuxCaptureTracksModeAndCleansUp() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux capture descriptor");
+#else
+        qputenv("DESKPORT_TEST_MODE", "gnome-display");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        const auto path = dir.path() + "/virtual-display.json";
+        const auto initial = PeerStore::read(path);
+        QCOMPARE(initial["node"].toInt(), 42);
+        QCOMPARE(initial["serial"].toString(), QString("142"));
+        QCOMPARE(initial["output"].toString(), QString("Meta-1"));
+        QSignalSpy results(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1668, 2388, 2, 7));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 5000);
+        const auto resized = PeerStore::read(path);
+        QCOMPARE(resized["node"].toInt(), 43);
+        QCOMPARE(resized["serial"].toString(), QString("143"));
+        QCOMPARE(resized["output"].toString(), QString("Meta-2"));
+        QCOMPARE(resized["width"].toInt(), 1668);
+        QCOMPARE(resized["height"].toInt(), 2388);
+        QCOMPARE(resized["scale"].toInt(), 2);
+        QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
+        const auto text = config.readAll();
+        QVERIFY(text.contains("capture = portal\n"));
+        QVERIFY(text.contains("output_name = Meta-1\n")); // GNOME capture reads the live descriptor.
+        host.restoreDisplay();
+        QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 4500);
+        QCOMPARE(host.displayWidth(), 0);
+        QVERIFY(host.adaptiveDisplayAvailable());
+        QVERIFY(host.resizeDisplay(1920, 1080, 1, 8));
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(path), 5000);
+        QCOMPARE(PeerStore::read(path)["node"].toInt(), 43);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+        QVERIFY(!QFile::exists(path));
+#endif
+    }
+    void idleLinuxStartupReleasesProbeDisplay() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux startup probe lifecycle");
+#else
+        qputenv("DESKPORT_TEST_MODE", "gnome-display");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
+        const auto path = dir.path() + "/virtual-display.json";
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(path), 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QFile log(dir.path() + "/host.log"); QVERIFY(log.open(QIODevice::WriteOnly | QIODevice::Append));
+        log.write("Configuration UI available\n"); log.close();
+        QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 5000);
+        QVERIFY(host.running()); QVERIFY(host.adaptiveDisplayAvailable());
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+#endif
     }
     void localHostsAreFilteredWithoutMatchingNamesOrSubnets() {
         const QList<QHostAddress> local{QHostAddress("192.0.2.10"), QHostAddress("2001:db8::10")};

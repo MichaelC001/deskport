@@ -7,8 +7,6 @@ import subprocess
 import sys
 import tempfile
 
-if sys.platform != "darwin" and "--ui" not in sys.argv and "--clipboard" not in sys.argv and "--service" not in sys.argv:
-    raise SystemExit("Full helper lifecycle tests require macOS; --ui, --clipboard and --service also support Linux.")
 root = Path(__file__).resolve().parents[1]
 qmake = os.environ.get("DESKPORT_QMAKE", "qmake")
 with tempfile.TemporaryDirectory(prefix="deskport-lifecycle-") as temporary:
@@ -22,7 +20,9 @@ with tempfile.TemporaryDirectory(prefix="deskport-lifecycle-") as temporary:
     display.write_text(f"#!{interpreter}\n" + '''import json, os, select, sys
 if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
-print(json.dumps({"displayId": 123}), flush=True)
+initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
+if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
+print(json.dumps(initial), flush=True)
 if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
     select.select([sys.stdin], [], [], 1.5)
     sys.exit(4)
@@ -31,6 +31,9 @@ for line in sys.stdin:
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
     request["displayId"] = 123
+    if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display":
+        request["active"] = request.get("session", True)
+        if request["active"]: request.update(outputName="Meta-2", pipewireNode=43, pipewireSerial="143")
     print(json.dumps(request), flush=True)
 ''')
     host = helpers / "Sunshine.app/Contents/MacOS/Sunshine"
@@ -57,6 +60,9 @@ while True: time.sleep(1)
         linux_host.parent.mkdir(parents=True)
         linux_host.write_text(host.read_text())
         linux_host.chmod(0o700)
+        linux_display = linux_host.parent / "deskport-display"
+        linux_display.write_text(display.read_text())
+        linux_display.chmod(0o700)
     icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
@@ -96,6 +102,9 @@ macx {{
             else:
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
     environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"))
+    if sys.platform != "darwin":
+        environment["XDG_CURRENT_DESKTOP"] = "KDE"
+        environment["WAYLAND_DISPLAY"] = "deskport-isolated-fake"
     if binding:
         environment["TEST_CORE_DISPLAY_CASES"] = str(root / "shared/deskport-core/protocol/display-cases.json")
         environment["TEST_GUI_DIR"] = str(root / "app/gui")

@@ -214,6 +214,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Change address</source><translation>アドレスを変更</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
@@ -1932,6 +1933,7 @@
 </context>
 <context>
     <name>HostView</name>
+    <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>切断すると仮想ディスプレイを削除し、物理画面の配置を復元します。再接続すると新しい仮想ディスプレイを作成します。</translation></message>
     <message>
         <source>Sharing</source>
         <translation>共有</translation>

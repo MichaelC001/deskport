@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
 languages = ("zh_CN", "zh_TW", "ja", "ko", "de", "fr", "es")
-pages = ("main", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "DeviceCard", "HostView", "BindView", "SetupView", "BindingApproval", "DesktopSegue")
+pages = ("main", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "DeviceCard", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue")
 for language in languages:
     tree = ET.parse(root / "app/languages" / f"qml_{language}.ts")
     contexts = {
@@ -18,8 +18,10 @@ for language in languages:
     }
     for page in pages:
         source = (root / "app/gui" / f"{page}.qml").read_text()
-        for text in re.findall(r'qsTr\("((?:[^"\\]|\\.)*)"\)', source):
-            translation = contexts.get(page, {}).get(text)
+        messages = [(page, text) for text in re.findall(r'qsTr\("((?:[^"\\]|\\.)*)"\)', source)]
+        messages += re.findall(r'qsTranslate\("([^"]+)",\s*"((?:[^"\\]|\\.)*)"', source)
+        for context, text in messages:
+            translation = contexts.get(context, {}).get(text)
             assert translation is not None, (language, page, text)
             assert translation.get("type") not in ("unfinished", "vanished", "obsolete"), (language, page, text)
             assert translation.text, (language, page, text)

@@ -1105,3 +1105,72 @@ and address editing across clients.
 - [ ] Integrate Linux host topology separately from its unmerged development branch.
 
 See [SESSION_DISPLAY.md](SESSION_DISPLAY.md) for behavior and platform boundaries.
+## 2026-09-16 — Linux adaptive workspace
+
+Reason: Linux hosting could capture a desktop but did not implement the virtual
+display control advertised by capable macOS hosts. Implemented KWin 6.6+ and
+GNOME/Mutter backends behind the existing exclusive TLS display-controller
+protocol. Keep one output across resize/reconnect; verify pixels and scale before
+acknowledgment; preserve other output settings; close on helper/compositor loss.
+GNOME capture uses an owned PipeWire object serial instead of a separate portal
+selection, and KWin refuses physical-output fallback when its virtual screen is
+missing. See [Linux adaptive display](LINUX_ADAPTIVE_DISPLAY.md).
+
+Next checkpoint: native Linux build and isolated compositor/capture regression,
+then user activation through mynix and iPad portrait/landscape, HiDPI, input and
+reconnect acceptance. Physical mirroring and unsupported compositor backends
+remain separate backlog items.
+
+
+## 2026-09-16 — KDE virtual-primary mirroring correction
+
+Reason: real-client feedback clarified that an extended workspace did not meet
+the intended workflow. KDE now makes the virtual output primary and mirrors the
+other enabled outputs from it. An independent recovery process restores the
+original order and replication sources after normal shutdown or helper death.
+GNOME retains adaptive extended displays; Mutter physical mirroring is still a
+backlog item. Next checkpoint: user activation and physical-screen/iPad mirror,
+portrait, scaling, input-position and shutdown-restore acceptance.
+
+
+## 2026-09-16 — Reconcile KWin's initial mode before capture
+
+Reason: deployed feedback showed sharing repeatedly failing because the first
+announced virtual mode differed from the creation request. Apply and verify the
+requested mode instead of treating the initial mismatch as fatal. Journal helper
+startup errors so remote diagnosis does not require opening the GUI. Added an
+isolated initial-size/scale mismatch fixture. Next checkpoint: activation on a
+physical GPU, successful host readiness and iPad mirror/input acceptance.
+
+## 2026-09-16 — Linux connection-scoped displays (0.3.9)
+
+User feedback confirmed adaptive client resolution works, but exposed disabled
+physical panels becoming mirrors and missing disconnect restoration. Preserve
+pre-connection enabled state and full physical layout; remove virtual outputs on
+full disconnect and recreate them for the next connection. Disarm idle recovery
+so later local edits survive app exit. GNOME capture follows the recreated node.
+
+Checkpoint: isolated disabled-panel, disconnect/reconnect capture and crash
+recovery coverage, followed by user activation and repeated physical-device
+connections with the internal panel disabled. GNOME physical mirroring and
+monitor hotplug during a remote session remain backlog items.
+
+Follow-up input report: finger gestures and Pencil use separate mouse and pen
+paths. The KDE mirror source retained a nonzero extended-layout origin, while
+absolute mouse injection addresses the workspace bounds. Place the sole logical
+mirrored workspace at (0, 0), verify that geometry, and restore physical positions
+after disconnect. Actual iPad finger interaction still requires activation and
+user acceptance; it is not inferred from Pencil input or capture tests.
+
+## 2026-09-16 — Desktop device address entry points (0.3.10)
+
+User requested IP/domain editing from the PC device view, matching the mobile
+workflow. Expose the existing bound-device editor directly in the card action
+menu and device settings, including offline devices; share the editor with Saved
+access to keep validation and identity preservation consistent. Current sessions
+must finish before editing. Legacy PIN host management is unchanged.
+
+Checkpoint: UI save/reopen and invalid-input regression, binding persistence,
+Linux build/release and user verification at a changed endpoint. Two-finger
+mobile wheel gestures were already implemented; the shared gesture/input tests
+passed on macOS. NixOS finger input still needs post-activation acceptance.

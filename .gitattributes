@@ -1,1 +1,7 @@
 *.patch whitespace=-blank-at-eol
+# Preserve upstream wayland-scanner output and license formatting.
+host/linux/kde-output-*.c whitespace=-blank-at-eof
+host/linux/kde-output-*.h whitespace=-blank-at-eol
+host/linux/zkde-screencast-*.c whitespace=-blank-at-eof
+host/linux/zkde-screencast-*.h whitespace=-blank-at-eol
+host/linux/COPYING.LIB whitespace=-blank-at-eof

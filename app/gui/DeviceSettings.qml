@@ -6,37 +6,26 @@ UiPage {
     objectName: qsTr("Device settings")
     property var preferences: null
     property string deviceName: ""
-    property bool changed: false
-    property var peer: {
-        if (!preferences) return null
-        var entries = peerManager.peers
-        for (var i = 0; i < entries.length; ++i)
-            if (entries[i].hostId && entries[i].hostId.toLowerCase() === preferences.deviceId.toLowerCase()) return entries[i]
+    property string deviceId: ""
+    readonly property var savedPeer: {
+        if (!deviceId || typeof peerManager === "undefined") return null
+        var peers = peerManager.peers
+        for (var i = 0; i < peers.length; ++i)
+            if (peers[i].hostId === deviceId && peers[i].role !== "client") return peers[i]
         return null
     }
+    property Dialog addressEditor: PeerEditor { id: peerEditor }
+    property bool changed: false
     heading: deviceName
     description: qsTr("Saved only for this device. Changes apply on the next connection.")
     function save() { preferences.save(); changed = true }
     UiCard {
-        visible: page.peer !== null
+        visible: page.savedPeer !== null
         ColumnLayout {
             anchors.fill: parent; spacing: ui.gap
-            Label { text: qsTr("Domain name or IP address"); color: ui.text }
-            TextField {
-                id: address; objectName: "deviceAddress"; Layout.fillWidth: true
-                text: page.peer ? page.peer.address : ""
-                placeholderText: qsTr("Computer name or IP, without port")
-            }
-            Label { text: qsTr("Your existing binding is kept. Reconnect to use the saved address."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            UiButton {
-                text: qsTr("Save"); enabled: page.peer !== null && !peerManager.busy
-                onClicked: {
-                    if (peerManager.editPeer(page.peer.fingerprint, page.peer.name, address.text, page.peer.hostPort, page.peer.bindingPort)) {
-                        addressError.text = ""; page.changed = true
-                    } else addressError.text = peerManager.status
-                }
-            }
-            Label { id: addressError; visible: text.length > 0; textFormat: Text.PlainText; color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTranslate("BindView", "Domain name or IP address"); color: ui.text; font.pixelSize: ui.title }
+            Label { objectName: "savedDeviceAddress"; text: page.savedPeer ? page.savedPeer.address : ""; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true }
+            UiButton { objectName: "changeDeviceAddress"; text: qsTranslate("PcView", "Change address"); Layout.fillWidth: true; enabled: typeof peerManager !== "undefined" && !peerManager.busy && !(typeof window !== "undefined" && window.activeHostId); onClicked: peerEditor.edit(page.savedPeer) }
         }
     }
     UiCard {
