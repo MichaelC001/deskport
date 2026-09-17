@@ -129,6 +129,7 @@ private:
     bool saveLinuxDisplayState();
     int m_DisplayWireSequence = 0, m_DisplaySequence = 0, m_DisplayWidth = 0, m_DisplayHeight = 0;
     quint64 m_DisplayGeneration = 0;
+    QJsonObject m_QueuedDisplayRequest;
     int m_DisplayScale = 1;
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;

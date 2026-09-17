@@ -327,7 +327,9 @@ private slots:
         QTest::qWait(100);
         AdaptiveDisplay next("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
         QVERIFY(resize(next, QSize(2560, 1440)));
-        QCOMPARE(resized.size(), 4);
+        int clientReplies = 0;
+        for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
+        QCOMPARE(clientReplies, 4);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
     void workspaceUsesClientSystemScale() {

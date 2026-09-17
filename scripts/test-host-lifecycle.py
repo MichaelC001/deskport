@@ -17,7 +17,7 @@ with tempfile.TemporaryDirectory(prefix="deskport-lifecycle-") as temporary:
     (helpers / "Sunshine.app/Contents/MacOS").mkdir(parents=True)
     interpreter = shutil.which("python3")
     display = helpers / "deskport-display"
-    display.write_text(f"#!{interpreter}\n" + '''import json, os, select, sys
+    display.write_text(f"#!{interpreter}\n" + '''import json, os, select, sys, time
 if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
@@ -28,6 +28,7 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
     sys.exit(4)
 for line in sys.stdin:
     request = json.loads(line)
+    if os.environ.get("DESKPORT_TEST_MODE") == "restore-slow" and not request.get("session", True): time.sleep(0.8)
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
     request["displayId"] = 123

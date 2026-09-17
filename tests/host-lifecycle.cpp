@@ -10,6 +10,35 @@ class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void reconnectWaitsForPendingRestore() {
+        qputenv("DESKPORT_TEST_MODE", "restore-slow");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QSignalSpy result(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1280, 720, 1, -1));
+        QVERIFY(host.resizeDisplay(1920, 1080, 2, 7, 1));
+        QVERIFY(!host.resizeDisplay(1920, 1080, 2, 8, 1));
+        QTRY_COMPARE_WITH_TIMEOUT(result.size(), 2, 4000);
+        QCOMPARE(result[0][0].toInt(), -1);
+        QCOMPARE(result[1][0].toInt(), 7);
+        QVERIFY(result[1][3].toString().isEmpty());
+        QCOMPARE(result[1][1].toInt(), 1920);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void disconnectedQueuedControllerNeverTakesOver() {
+        qputenv("DESKPORT_TEST_MODE", "restore-slow");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QSignalSpy result(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1280, 720, 1, -1));
+        QVERIFY(host.resizeDisplay(1920, 1080, 2, 7, 1));
+        host.restoreDisplay();
+        QTest::qWait(2000);
+        for (const auto& reply : result) QVERIFY(reply[0].toInt() < 0);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
     void resizeFailuresDoNotStopSharing_data() {
         QTest::addColumn<QByteArray>("mode");
         QTest::newRow("rejected") << QByteArray("resize-reject");

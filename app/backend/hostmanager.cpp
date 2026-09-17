@@ -53,6 +53,15 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         const int savedPort = QSettings().value("host/port", DeskPortNetwork::DefaultBasePort).toInt();
         if (DeskPortNetwork::isPrivateBase(savedPort)) m_BasePort = savedPort;
     }
+    connect(this, &HostManager::displayResized, this, [this](int sequence, int, int, const QString& error) {
+        if (sequence >= 0 || m_QueuedDisplayRequest.isEmpty()) return;
+        const auto pending = m_QueuedDisplayRequest; m_QueuedDisplayRequest = {};
+        if (!error.isEmpty() || !resizeDisplay(pending["width"].toInt(), pending["height"].toInt(),
+                pending["scale"].toInt(), pending["seq"].toInt(), pending["policy"].toInt())) {
+            emit displayResized(pending["seq"].toInt(), m_DisplayWidth, m_DisplayHeight,
+                                error.isEmpty() ? QStringLiteral("Display restoration did not complete") : error);
+        }
+    });
     m_Network.setProxy(QNetworkProxy::NoProxy);
     m_Directory = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/host" : directory;
     m_Status = available() ? tr("Sharing is off") : tr("Hosting is available in the macOS all-in-one package");
@@ -454,7 +463,7 @@ void HostManager::stop() {
     beginStop(available() ? tr("Sharing is off") : tr("Hosting is available in the macOS all-in-one package"));
 }
 void HostManager::beginStop(const QString &status) {
-    m_DisplaySequence = 0; ++m_DisplayGeneration;
+    m_DisplaySequence = 0; m_QueuedDisplayRequest = {}; ++m_DisplayGeneration;
     if (m_Stopping) return;
     m_Stopping = true;
     const auto generation = ++m_Generation;
@@ -854,8 +863,15 @@ bool HostManager::displayPoliciesAvailable() const {
 #endif
 }
 bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, int policy) {
-    if (policy < 0 || policy > 2 || !adaptiveDisplayAvailable() || m_DisplaySequence || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
+    if (policy < 0 || policy > 2 || !adaptiveDisplayAvailable() || !m_QueuedDisplayRequest.isEmpty() || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
         height < 360 || height > DeskPortDisplay::MaxHeight || width % 4 || height % 4 || (scale != 1 && scale != 2)) return false;
+    if (m_DisplaySequence) {
+        if (m_DisplaySequence > 0 || sequence < 0) return false;
+        // Finish the previous session's restoration before a new client takes over.
+        m_QueuedDisplayRequest = {{"width", width}, {"height", height}, {"scale", scale},
+                                  {"seq", sequence}, {"policy", policy}};
+        return true;
+    }
     m_DisplaySequence = sequence;
     m_DisplayWireSequence = m_DisplayWireSequence == std::numeric_limits<int>::max() ? 1 : m_DisplayWireSequence + 1;
     const auto generation = ++m_DisplayGeneration;
@@ -869,6 +885,7 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
     return true;
 }
 void HostManager::restoreDisplay() {
+    m_QueuedDisplayRequest = {}; // A disconnected queued controller must never take over later.
     // Video renegotiation retains the controller. Restore promptly on actual
     // disconnect, while allowing an already pending helper request to settle.
     const auto generation = m_DisplayGeneration;
