@@ -60,12 +60,12 @@ failed restoration and recovery from the persisted journal. It never configures
 the user's displays. Run the shared vectors, binding suite, desktop state suite and
 QML UI suite as described in `SHARED_CORE.md`.
 
-The full Linux ARM64 package attempt still failed in the unchanged Sunshine
+Before Linux branch integration, the full Linux ARM64 package attempt failed in the unchanged Sunshine
 dependency (`cc1plus` killed). This does not establish an OOM cause or validate the
 complete Linux package. Native/client-only builds and physical acceptance are
 reported separately.
 
-Current local checks: 45 desktop binding/display cases (including rejection of a
+Pre-integration local checks: 45 desktop binding/display cases (including rejection of a
 policy change within a lease), 9 desktop-state cases, 18 QML UI cases, macOS native
 desktop build and separately compiled display helper, ASan/UBSan topology tests,
 Apple parser/capability and 12 TLS cases, strict/default workspace lifecycle, Apple
@@ -74,3 +74,12 @@ and, after correcting fixed-size preview handling, all three policy/workspace/ke
 checks; iPhone passed those three plus address editing. These UI cases are offline.
 A Linux ARM64 client-only build passed with the bundled-host installation hook
 omitted; this is not full package or deployed behavior acceptance.
+
+## Released validation — 2026-09-17
+
+The 0.3.11 preview integrates KDE policy support and preserves GNOME extension.
+The complete NixOS x86_64 package and both pk4/wmn system configurations built
+on pk4. All three policies passed isolated KDE lifecycle checks; KDE/GNOME
+software capture passed. The final display CI, including delayed restoration
+and queued-controller cancellation, passed. The notarized Mac assets and mm4
+system build passed; activation and physical-device acceptance remain user-owned.
