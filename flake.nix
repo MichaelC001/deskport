@@ -31,7 +31,7 @@
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
-          version = "0.3.10";
+          version = "0.3.11";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation and CI edits do not change the client binary.
