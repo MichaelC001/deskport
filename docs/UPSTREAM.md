@@ -13,13 +13,19 @@ release. It connects to a separately installed Sunshine host.
 
 The inherited LICENSE is retained. DeskPort-specific code is distributed under
 GPL-3.0-or-later; original notices and component-specific licenses remain in
-place. Submodules retain their respective licenses. Include corresponding source,
-submodule revisions and build files when distributing binaries.
+place. Every vendored dependency keeps its own license file; see
+[VENDORED.md](VENDORED.md) for the full list with upstream URLs and commits.
+Include corresponding source and build files when distributing binaries — since
+0.4.1 the release source tarball is complete on its own.
 
-The Nix flake supplies submodule contents from the fixed-output upstream source;
-it builds the application from this repository. If updating gitlinks, update the
-dependency snapshot and hash together. No personal device configuration,
-credentials, employer code, SDKs or work logs belong in the public repository.
+Since 0.4.1 the third-party dependencies are vendored into this repository
+rather than tracked as gitlinks, so the Nix flake builds entirely from this
+repository and no longer refetches the upstream source to recover submodule
+contents. Only `shared/deskport-core`, this project's own shared code, is still
+a submodule.
+
+No personal device configuration, credentials, employer code, SDKs or work logs
+belong in the public repository.
 
 Some inherited UI wording and Windows/macOS artwork still refer to Moonlight.
 Native packaging scripts are upstream reference material until adapted and

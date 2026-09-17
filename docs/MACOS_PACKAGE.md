@@ -249,7 +249,9 @@ installed DeskPort also loses the stable identity's privacy grants.
 Build and staging apps are stored in `.noindex` directories, reached through the
 `build-macos` and `dist` convenience symlinks, to avoid duplicate application icons.
 
-Initialize the pinned upstream submodules, including `libs`, before native builds.
+The pinned upstream dependencies, `libs/mac` included, are vendored in this
+repository; only `git submodule update --init shared/deskport-core` is needed
+before native builds. See [VENDORED.md](VENDORED.md).
 The Apple Silicon macOS devShell manages Qt, CMake, pkg-config, Python, Git, Make,
 OpenSSL, Opus, miniupnpc, ICU, Boost and Node.js/npm with the project's locked nixpkgs revision.
 Xcode supplies Apple's compiler and SDK; Keychain/Aqua supplies code signing.

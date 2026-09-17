@@ -1,3 +1,25 @@
+## Vendored third-party sources 0.4.1 release (2026-09-17)
+
+Reason: `mynix` consumes this flake through a GitHub commit-archive tarball,
+which carries no submodules, so the flake had to refetch
+`moonlight-stream/moonlight-qt` with `fetchSubmodules` purely to recover gitlink
+contents. That made every build depend on six third-party repositories staying
+reachable. All of them are now vendored into this repository: the five code
+dependencies via `git subtree add --squash`, and `libs/mac` as ordinary files.
+`libs/windows` (252 MB) was dropped because only `win32:` project branches
+reference it. Upstream URLs, commits and licences are recorded in
+[VENDORED.md](VENDORED.md); `shared/deskport-core` stays a submodule because
+`deskport-client` shares it.
+
+Side effects: `git archive` now yields a build-complete tree, so
+`scripts/git-archive-all.sh` and its GNU tar/Bash 5 requirement are gone, and the
+GPL corresponding-source tarball no longer depends on chasing submodule
+revisions. Version declarations bumped to 0.4.1 in `app/version.txt` and
+`flake.nix`; see [release notes](RELEASE_0.4.1.md).
+
+Released for macOS arm64 and Nix/NixOS only. Client and host behaviour is
+unchanged from 0.4.0, so the 0.4.0 native Linux package matrix is not rebuilt.
+
 ## Stable desktop 0.4.0 release (2026-09-17)
 
 Reason: consolidate the adaptive-display core, per-device address editing, macOS

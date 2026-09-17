@@ -53,7 +53,8 @@ Qt is deployed as dynamically linked frameworks from the build environment. Qt
 source and licensing: https://www.qt.io/licensing/open-source-lgpl-obligations
 SDL, FFmpeg, OpenSSL, Opus and other Moonlight dependencies retain upstream notices
 and versions from the pinned Moonlight dependency tree. See README.upstream.md,
-LICENSE and the relevant submodule licenses in the source distribution.
+LICENSE and the vendored dependency licenses listed in VENDORED.md, all of which
+are present in the source distribution.
 
 Development builds use the configured local identity. Developer ID distribution
 uses `scripts/release-macos.sh` to re-sign all bundled executable code under the

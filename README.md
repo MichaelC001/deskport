@@ -5,7 +5,7 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Stable version: 0.4.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
+**Stable version: 0.4.1 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission
 controls. The macOS package includes Sunshine and a native virtual display;
 the Linux native packages and AppImage include a Sunshine host for the existing
@@ -16,16 +16,20 @@ Clients at 150% scale or above request a 2× HiDPI workspace for sharp text.
 Resizing briefly reconnects video while retaining the client window and showing
 a loading animation. It is not seamless encoder reconfiguration.
 
-**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.0/DeskPort-0.4.0-macos-arm64.dmg)
+**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)
 for Apple Silicon running macOS 26 or later. Open the DMG, drag DeskPort into
 Applications, then open it. Host features require first-use Screen Recording and
 Accessibility authorization. No separate Sunshine, Qt, Nix or Homebrew is needed.
 
-**Linux downloads:** [DEB, RPM, Arch, AppImage and Flatpak](https://github.com/keithxc/deskport/releases/tag/v0.4.0).
-See the [Linux installation guide](docs/LINUX_PACKAGES.md) for supported systems
-and first-use setup. Native packages require x86_64 and glibc 2.39 or newer.
+**Linux:** 0.4.1 ships for Nix and NixOS only — `nix run github:keithxc/deskport/v0.4.1`,
+or see [Build and run on Linux](#build-and-run-on-linux) below. It changes how the
+project vendors its dependencies, not the client itself, so the
+[0.4.0 DEB, RPM, Arch, AppImage and Flatpak packages](https://github.com/keithxc/deskport/releases/tag/v0.4.0)
+remain current for those formats; see the
+[Linux installation guide](docs/LINUX_PACKAGES.md) for supported systems and
+first-use setup. Native packages require x86_64 and glibc 2.39 or newer.
 
-See the [release notes](docs/RELEASE_0.4.0.md),
+See the [release notes](docs/RELEASE_0.4.1.md),
 [architecture](docs/ARCHITECTURE.md) and
 [macOS installation guide](docs/MACOS_PACKAGE.md).
 Persistent hide/show is implemented; native long-session acceptance remains open.
@@ -44,7 +48,8 @@ nix build
 ./result/bin/deskport
 ```
 
-The pinned Nix build supplies upstream submodule dependencies automatically.
+All third-party dependencies are vendored in this repository, so the Nix build
+needs no extra fetches; see [docs/VENDORED.md](docs/VENDORED.md).
 `nix run . -- --help` prints the inherited command-line interface. Start Sharing on the host and bind the devices before connecting. Legacy
 Sunshine PIN pairing is also available. No personal host or pairing
 credential is included or imported from Moonlight.
@@ -56,9 +61,7 @@ their own ports.
 For an editable native build:
 
 ```sh
-git submodule update --init --recursive app/SDL_GameControllerDB \
-  moonlight-common-c/moonlight-common-c qmdnsengine/qmdnsengine \
-  soundio/libsoundio h264bitstream/h264bitstream
+git submodule update --init shared/deskport-core
 nix develop
 mkdir -p build
 cd build
@@ -126,8 +129,8 @@ Moonlight provides the streaming foundation; [Sunshine](https://github.com/Lizar
 is bundled in the macOS and portable Linux host packages and supplied by the Linux Nix package.
 Separately installed Sunshine services are kept independent.
 
-GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and each
-submodule's license. Original documentation is preserved in
+GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and the
+license of each vendored dependency listed in [docs/VENDORED.md](docs/VENDORED.md). Original documentation is preserved in
 [README.upstream.md](README.upstream.md).
 
 

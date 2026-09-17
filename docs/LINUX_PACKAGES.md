@@ -72,7 +72,8 @@ configuration and port selection, independently of standalone Sunshine.
 
 ## Build and validate
 
-Initialize submodules with `git submodule update --init --recursive`, then run:
+Initialize the shared core with `git submodule update --init shared/deskport-core`
+(all third-party dependencies are vendored), then run:
 
 ```sh
 bash scripts/package-linux.sh
