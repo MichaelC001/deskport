@@ -1,3 +1,4 @@
+#include "smalltcptunnel.h"
 #include "nvcomputer.h"
 #include <Limelight.h>
 
@@ -515,32 +516,52 @@ NvHTTP::openConnection(QUrl baseUrl,
     QT_WARNING_POP
 #endif
 
-    QNetworkReply* reply = m_Nam.get(request);
-
-    // Run the request with a timeout if requested
-    QEventLoop loop;
-    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
-    if (timeoutMs) {
-        QTimer::singleShot(timeoutMs, &loop, &QEventLoop::quit);
-    }
-    if (logLevel >= NvLogLevel::NVLL_VERBOSE) {
-        qInfo() << "Executing request:" << url.toString();
-    }
-    loop.exec(QEventLoop::ExcludeUserInputEvents);
-
-    // Abort the request if it timed out
-    if (!reply->isFinished())
-    {
-        if (logLevel >= NvLogLevel::NVLL_ERROR) {
-            qWarning() << "Aborting timed out request for" << url.toString();
+    const auto pathKey = SmallTcp::pathKey(url.host(), quint16(url.port()));
+    bool small = url.scheme() == "https" && SmallTcp::cached(pathKey);
+    // Only these read-only operations may be replayed after an ambiguous timeout.
+    const bool retryable = command == "serverinfo" || command == "applist" || command == "appasset";
+    QNetworkReply* reply = nullptr;
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        std::unique_ptr<SmallTcp::Tunnel> tunnel;
+        m_Nam.setProxy(QNetworkProxy::NoProxy);
+        if (small) {
+            tunnel.reset(new SmallTcp::Tunnel(url.host(), quint16(url.port())));
+            if (!tunnel->isListening()) {
+                SmallTcp::forget(pathKey);
+                throw QtNetworkReplyException(QNetworkReply::ProxyConnectionRefusedError, "TCP compatibility tunnel unavailable");
+            }
+            m_Nam.setProxy(tunnel->proxy());
         }
-        reply->abort();
+        reply = m_Nam.get(request);
+        bool certificateRejected = false;
+        const auto sslObservation = connect(reply, &QNetworkReply::sslErrors, reply, [&](const QList<QSslError>& errors) {
+            for (const auto& error : errors)
+                if (m_ServerCert.isNull() || error.certificate() != m_ServerCert) certificateRejected = true;
+        });
+        QEventLoop loop;
+        QTimer deadline; deadline.setSingleShot(true);
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
+        bool timedOut = false;
+        connect(&deadline, &QTimer::timeout, &loop, [&] { timedOut = true; loop.quit(); });
+        if (timeoutMs) deadline.start(timeoutMs);
+        if (logLevel >= NvLogLevel::NVLL_VERBOSE) qInfo() << "Executing request:" << url.toString();
+        if (!reply->isFinished()) loop.exec(QEventLoop::ExcludeUserInputEvents);
+        if (!reply->isFinished()) reply->abort();
+        disconnect(sslObservation);
+        m_Nam.clearAccessCache();
+        m_Nam.setProxy(QNetworkProxy::NoProxy);
+        if (small && reply->error() == QNetworkReply::NoError) SmallTcp::remember(pathKey);
+        else if (small) SmallTcp::forget(pathKey);
+        if (!small && attempt == 0 && SmallTcp::supported() && url.scheme() == "https" &&
+            retryable && timedOut && !certificateRejected) {
+            delete reply; reply = nullptr;
+            small = true;
+            qInfo() << "Retrying read-only HTTPS request with reduced TCP segments";
+            continue;
+        }
+        break;
     }
-
-    // We must clear out cached authentication and connections or
-    // GFE will puke next time
-    m_Nam.clearAccessCache();
 
     // Handle error
     if (reply->error() != QNetworkReply::NoError)

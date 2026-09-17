@@ -1,3 +1,13 @@
+## 0.3.14 TCP path recovery (2026-09-17)
+
+Reason: TLS control connections can stall on paths that silently drop larger
+TCP segments even when plain HTTP and SSH remain reachable. Linux now retries
+pre-application TLS handshakes once with a 900-byte MSS, and read-only HTTPS
+requests through a fixed-destination local tunnel. See [TCP recovery](TCP_RECOVERY.md).
+Checkpoint: kernel MSS and TLS fixtures, IPv4/IPv6, pin rejection, no launch
+replay, host/binding/clipboard regressions, target builds and notarized prerelease.
+Deliver through mynix; user activation and real multi-device acceptance remain pending.
+
 ## 0.3.13 connection recovery (2026-09-17)
 
 Reason: prioritize verified remote workspace availability over failed local

@@ -1,3 +1,4 @@
+#include "smalltcp.h"
 #include "clipboardchannel.h"
 #include "clipboardtraffic.h"
 #include "clipboardprotocol.h"
@@ -68,8 +69,8 @@ void ClipboardChannel::run() {
     auto send = [&](const QJsonObject& object) {
         socket.write(QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n'); socket.flush();
     };
-    socket.connectToHostEncrypted(m_Address, m_Port);
-    bool ok = socket.waitForEncrypted(3000) && socket.peerCertificate() == m_Peer;
+    bool ok = SmallTcp::connectBlocking(socket, m_Address, m_Port, 3000) && socket.peerCertificate() == m_Peer;
+    if (ok) SmallTcp::accepted(socket, m_Address, m_Port);
     bool native = false;
     if (ok) {
         const auto hello = receive();

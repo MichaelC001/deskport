@@ -1,3 +1,4 @@
+#include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "adaptivedisplay.h"
 #include "workspaceresolution.h"
@@ -72,8 +73,8 @@ void AdaptiveDisplay::run() {
         }
         return {};
     };
-    socket.connectToHostEncrypted(m_Address, m_Port);
-    bool connected = socket.waitForEncrypted(4000) && socket.peerCertificate() == m_Peer;
+    bool connected = SmallTcp::connectBlocking(socket, m_Address, m_Port, 4000) && socket.peerCertificate() == m_Peer;
+    if (connected) SmallTcp::accepted(socket, m_Address, m_Port);
     bool policySupported = false;
     if (connected) {
         const auto hello = receive();

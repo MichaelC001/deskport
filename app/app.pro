@@ -1,3 +1,4 @@
+HEADERS += backend/smalltcp.h backend/smalltcptunnel.h
 linux {
     CONFIG += link_pkgconfig
     PKGCONFIG += wayland-client

@@ -1,3 +1,4 @@
+#include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
 #include <QSysInfo>
@@ -304,6 +305,8 @@ void PeerManager::attach(Link* link) {
                 fail(link, tr("This address has a different device key. Remove the old binding before replacing it.")); return;
             }
         }
+        if (!link->incoming) SmallTcp::accepted(*link->socket,
+            link->endpointRefresh ? link->expectedPeer["address"].toString() : requestedHost(link->requestedAddress), link->socket->peerPort());
         if (link->incoming) send(link, {{"type", "hello"}, {"meta", metadata()}});
         else if (!link->endpointRefresh) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
         drain(link);
@@ -352,7 +355,7 @@ void PeerManager::request(const QString& value) {
     link->requestedAddress = value.trimmed();
     m_Status = tr("Connecting to the other computer…");
     attach(link);
-    link->socket->connectToHostEncrypted(url.host(), quint16(url.port(port())));
+    SmallTcp::connectAsync(link->socket, url.host(), quint16(url.port(port())));
     emit changed();
 }
 bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
@@ -704,7 +707,7 @@ void PeerManager::refreshEndpoints() {
     link->endpointRefresh = true; link->expectedFingerprint = fp;
     link->expectedPeer = peer; m_RefreshLink = link;
     attach(link);
-    link->socket->connectToHostEncrypted(address, quint16(port));
+    SmallTcp::connectAsync(link->socket, address, quint16(port));
     QTimer::singleShot(5000, link, [this, link] {
         if (!link->ended) fail(link, tr("Endpoint refresh timed out"));
     });
