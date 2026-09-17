@@ -210,7 +210,7 @@ public:
         return sync();
     }
     bool restoreIdle() {
-        if (!owned && !stream) return true;
+        if (!owned && !stream && !sessionActive) return true;
         if (!removeOutput() || !restore(baseline)) return false;
         sessionActive = false; sessionPolicy = -1;
         return saveRecovery({});
