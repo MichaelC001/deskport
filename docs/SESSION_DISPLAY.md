@@ -42,9 +42,12 @@ are not modified by this implementation.
 
 ## Platform scope
 
-Qt desktop clients on supported desktop platforms and the Apple native client send
-the policy to the macOS host. The current Linux host still advertises no adaptive
-display capability; its unmerged development branch is not implicitly integrated.
+Qt desktop clients and the Apple native client send the policy to macOS and
+KDE hosts. The Linux adaptive-display branch is integrated in this development
+release. KDE snapshots enabled state, modes, scale, transform, position, priority
+and replication source; it verifies restoration before disarming its independent
+recovery process. GNOME preserves the existing extended display behavior and
+does not advertise the three-policy capability. Nondefault choices are refused.
 Android address editing is implemented in the native-client repository; Android's
 authenticated virtual-display transport is a separate missing adapter.
 

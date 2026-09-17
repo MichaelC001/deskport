@@ -1102,7 +1102,7 @@ and address editing across clients.
 - [x] Expose the existing identity-preserving address editor in Device settings.
 - [ ] Physical multi-monitor mode/scale/disable/restore and abrupt-disconnect acceptance.
 - [ ] Full Linux bundled-host package validation; current Sunshine build is blocked.
-- [ ] Integrate Linux host topology separately from its unmerged development branch.
+- [x] Integrate the Linux adaptive-display branch and KDE session policies for the three-host prerelease.
 
 See [SESSION_DISPLAY.md](SESSION_DISPLAY.md) for behavior and platform boundaries.
 ## 2026-09-16 — Linux adaptive workspace

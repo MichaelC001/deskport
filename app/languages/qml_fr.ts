@@ -2592,6 +2592,11 @@
         <source>Saved · reconnect to apply changes.</source>
         <translation>Enregistré · reconnectez-vous pour appliquer.</translation>
     </message>
+    <message><source>Virtual screen</source><translation>Écran virtuel</translation></message>
+    <message><source>Primary screen and mirror others (default)</source><translation>Écran principal et duplication des autres (par défaut)</translation></message>
+    <message><source>Primary screen and turn off others</source><translation>Écran principal et extinction des autres</translation></message>
+    <message><source>Use client as an extended screen</source><translation>Utiliser le client comme écran étendu</translation></message>
+    <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposition précédente des écrans est automatiquement restaurée à la fin de la session.</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
