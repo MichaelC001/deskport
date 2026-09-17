@@ -5,7 +5,7 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Development prerelease: [0.3.11 session display policies](docs/RELEASE_0.3.11.md)** — shared core, per-device virtual screen modes and saved address editing on desktop and Apple clients.
+**Development prerelease: [0.3.12 macOS adaptive display fix](docs/RELEASE_0.3.12.md)** — ignore disconnected display placeholders when saving the original screen layout so client resolution changes can proceed.
 
 **Stable version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission

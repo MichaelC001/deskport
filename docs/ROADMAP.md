@@ -1,3 +1,12 @@
+## 0.3.12 macOS adaptive resolution delivery (2026-09-17)
+
+Reason: client resolution requests reach the host but disconnected connector
+placeholders prevent saving the original layout. Package the existing topology
+fix for the macOS arm64 and NixOS x86_64 prerelease targets and update mynix.
+Checkpoint: isolated topology sanitizer regression, both target builds, notarized
+macOS assets and pinned mynix system builds. After user activation, verify client
+window resizing and original display restoration on disconnect.
+
 ## macOS offline investigation (2026-09-17)
 
 The display snapshot now skips disconnected, inactive WindowServer entries
