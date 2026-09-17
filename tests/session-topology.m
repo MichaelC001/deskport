@@ -18,7 +18,7 @@ static void *symbol(void *h,const char *name) {
     if (!strcmp(name,"CGSGetDisplayList")) return (void *)listScreens;
     return NULL;
 }
-static CFUUIDRef fakeUuid(unsigned i) { return CFUUIDCreateFromString(NULL,(__bridge CFStringRef)[NSString stringWithFormat:@"00000000-0000-0000-0000-%012u",i]); }
+static CFUUIDRef fakeUuid(unsigned i) { if ([screen(i)[@"noUuid"] boolValue]) return NULL; return CFUUIDCreateFromString(NULL,(__bridge CFStringRef)[NSString stringWithFormat:@"00000000-0000-0000-0000-%012u",i]); }
 static CGDisplayModeRef fakeMode(unsigned i) { return screen(i) ? (CGDisplayModeRef)CFBridgingRetain([screen(i) copy]) : NULL; }
 static NSDictionary *modeData(CGDisplayModeRef m) { return (__bridge NSDictionary *)m; }
 static CFArrayRef fakeModes(unsigned i, CFDictionaryRef opts) { return CFBridgingRetain(@[[screen(i) copy]]); }
@@ -47,6 +47,7 @@ static CGRect fakeBounds(unsigned i) { return CGRectMake([screen(i)[@"x"] intVal
 #define CGDisplayModeGetRefreshRate(m) 60.0
 #define CGDisplayModeRetain(m) ((CGDisplayModeRef)CFRetain(m))
 #define CGDisplayIsMain(i) [screen(i)[@"main"] boolValue]
+#define CGDisplayIsOnline(i) ([screen(i)[@"online"] boolValue] || [screen(i)[@"enabled"] boolValue])
 #define CGDisplayIsActive(i) [screen(i)[@"enabled"] boolValue]
 #define CGDisplayMirrorsDisplay(i) [screen(i)[@"mirror"] unsignedIntValue]
 #define CGDisplayBounds fakeBounds
@@ -82,6 +83,13 @@ int main(void) { @autoreleasepool {
         assert([screen(1)[@"main"] boolValue] && [screen(1)[@"enabled"] boolValue]);
         assert([screen(2)[@"enabled"] boolValue] && ![screen(3)[@"enabled"] boolValue]);
     }
+    reset(); screens[@5]=entry(NO,NO,0); screens[@5][@"noUuid"]=@YES;
+    assert(snapshotTopology(9)); assert(savedTopology.count==3);
+    assert(![screen(3)[@"enabled"] boolValue]); // Identifiable disabled panels stay in the snapshot.
+    reset(); screens[@1][@"noUuid"]=@YES;
+    assert(!snapshotTopology(9)); assert(!savedTopology);
+    reset(); screens[@3][@"noUuid"]=@YES; screens[@3][@"online"]=@YES;
+    assert(!snapshotTopology(9)); assert(!savedTopology);
     reset(); sessionDisplayPolicy=1; assert(snapshotTopology(9)); enableAvailable=NO;
     assert(!applySessionTopology(9)); assert([screen(1)[@"main"] boolValue]);
     enableAvailable=YES; assert(applySessionTopology(9)); rejectCommit=YES;

@@ -1,3 +1,15 @@
+## macOS offline investigation (2026-09-17)
+
+The display snapshot now skips disconnected, inactive WindowServer entries
+without UUIDs, while retaining identifiable disabled displays and rejecting
+unidentifiable online/active displays. Production-adapter sanitizer regressions
+and a read-only live snapshot passed. This fix is not in the 0.3.11 package.
+
+Open: a deployed host stopped its streaming child while its UI still reported
+sharing enabled. Repeated samples found AppKit status-button right-mouse tracking.
+Confirm the input/termination sequence and recovery behavior before claiming the
+offline problem resolved. No deployed process was restarted during diagnosis.
+
 ## Stable desktop 0.3.5 (2026-09-15)
 
 Reason: consolidate all desktop development branches into main for a formal

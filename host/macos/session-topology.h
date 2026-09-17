@@ -44,9 +44,16 @@ static BOOL snapshotTopology(CGDirectDisplayID own) {
         CGDirectDisplayID ident=n.unsignedIntValue; if (ident==own) continue;
         BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
         CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident); if (!mode && enabled) return NO;
-        if (!displayUUID(ident).length) { if (mode) CFRelease(mode); return NO; }
+        NSString *uuid=displayUUID(ident);
+        if (!uuid.length) {
+            if (mode) CFRelease(mode);
+            // WindowServer also enumerates disconnected connector placeholders.
+            // They have no stable identity or state that can be restored.
+            if (!enabled && !CGDisplayIsOnline(ident)) continue;
+            return NO;
+        }
         CGRect bounds=CGDisplayBounds(ident);
-        [entries addObject:@{@"uuid":displayUUID(ident), @"main":@(CGDisplayIsMain(ident)), @"enabled":@(enabled),
+        [entries addObject:@{@"uuid":uuid, @"main":@(CGDisplayIsMain(ident)), @"enabled":@(enabled),
             @"mirror":displayUUID(CGDisplayMirrorsDisplay(ident)), @"x":@(bounds.origin.x), @"y":@(bounds.origin.y),
             @"width":@(mode ? CGDisplayModeGetWidth(mode) : 0), @"height":@(mode ? CGDisplayModeGetHeight(mode) : 0),
             @"pixelsW":@(mode ? CGDisplayModeGetPixelWidth(mode) : 0), @"pixelsH":@(mode ? CGDisplayModeGetPixelHeight(mode) : 0),
