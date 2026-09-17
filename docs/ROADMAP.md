@@ -6,7 +6,35 @@ pre-application TLS handshakes once with a 900-byte MSS, and read-only HTTPS
 requests through a fixed-destination local tunnel. See [TCP recovery](TCP_RECOVERY.md).
 Checkpoint: kernel MSS and TLS fixtures, IPv4/IPv6, pin rejection, no launch
 replay, host/binding/clipboard regressions, target builds and notarized prerelease.
-Deliver through mynix; user activation and real multi-device acceptance remain pending.
+Delivered through mynix; the user confirmed all three desktop instances online.
+Log inspection found the open control-connection issue below; online status does
+not establish that every background endpoint refresh succeeds.
+
+### TODO: TLS fallback blocked by a pending inbound handshake (2026-09-17)
+
+- [ ] Separate bounded, unauthenticated TLS handshake candidates from the global
+  binding busy state, while retaining certificate checks, authorization and
+  authenticated-operation concurrency limits.
+- [ ] Add an integration regression where the original connection remains open
+  at the server while the client retries with smaller TCP segments. Verify the
+  retry completes endpoint refresh without waiting for the original timeout.
+- [ ] Log connection direction, handshake stage and admission rejection reason
+  so failed refreshes can be distinguished from successful fallback cleanup.
+
+Reason: the client retries after 1.5 seconds, but an unacknowledged original
+handshake can keep the server's `m_Link` occupied until its 10-second timeout.
+`createListener()` rejects the retry while `busy()` remains true. Live socket
+observations and an isolated production `PeerManager` test reproduced retry
+rejection followed by successful TLS after the original connection timed out.
+Periodic endpoint refresh can therefore fail even while existing streams and
+display heartbeats remain active. A remote-close warning followed by successful
+TLS and an endpoint response is a separate, successful fallback sequence.
+
+Next checkpoint: implement bounded handshake admission, run the integrated
+fallback regression and binding suite, then verify both connection directions
+after user activation. The network hop responsible for larger-segment loss is
+not identified. Merging 0.3.14 to main retains this known issue; no new release
+is requested for this merge.
 
 ## 0.3.13 connection recovery (2026-09-17)
 
