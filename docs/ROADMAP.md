@@ -1,3 +1,14 @@
+## Stable desktop 0.4.0 release preparation (2026-09-17)
+
+Reason: consolidate the adaptive-display core, per-device address editing, macOS
+mirror-mode/KDE lease recovery and the Linux TCP fallback prereleases (0.3.6–0.3.14)
+into main for a formal desktop release. Version declarations were bumped to 0.4.0
+in `app/version.txt` and `flake.nix`; see [release notes](RELEASE_0.4.0.md) for the
+established macOS arm64 and Linux x86_64 package matrix. Building, packaging,
+signing/notarization, publishing and test/verification runs have not been performed
+as part of this preparation step. The open TLS-fallback pending-handshake issue
+below is carried forward unresolved.
+
 ## 0.3.14 TCP path recovery (2026-09-17)
 
 Reason: TLS control connections can stall on paths that silently drop larger

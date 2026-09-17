@@ -5,9 +5,7 @@ A remote desktop workspace built on Moonlight and Sunshine.
 **Goal:** keep your remote desktop ready in the background, bring it onto your
 current workspace with one action, and tuck it away without reconnecting.
 
-**Development prerelease: [0.3.12 macOS adaptive display fix](docs/RELEASE_0.3.12.md)** — ignore disconnected display placeholders when saving the original screen layout so client resolution changes can proceed.
-
-**Stable version: 0.2.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
+**Stable version: 0.4.0 — ready-to-install desktop packages.** DeskPort combines a viewer and optional host
 in one application, with a shared device list, mutual binding and permission
 controls. The macOS package includes Sunshine and a native virtual display;
 the Linux native packages and AppImage include a Sunshine host for the existing
@@ -18,22 +16,22 @@ Clients at 150% scale or above request a 2× HiDPI workspace for sharp text.
 Resizing briefly reconnects video while retaining the client window and showing
 a loading animation. It is not seamless encoder reconfiguration.
 
-**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.2.0/DeskPort-0.2.0-macos-arm64.dmg)
+**Mac download:** [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.0/DeskPort-0.4.0-macos-arm64.dmg)
 for Apple Silicon running macOS 26 or later. Open the DMG, drag DeskPort into
 Applications, then open it. Host features require first-use Screen Recording and
 Accessibility authorization. No separate Sunshine, Qt, Nix or Homebrew is needed.
 
-**Linux downloads:** [DEB, RPM, Arch, AppImage and Flatpak](https://github.com/keithxc/deskport/releases/tag/v0.2.0).
+**Linux downloads:** [DEB, RPM, Arch, AppImage and Flatpak](https://github.com/keithxc/deskport/releases/tag/v0.4.0).
 See the [Linux installation guide](docs/LINUX_PACKAGES.md) for supported systems
 and first-use setup. Native packages require x86_64 and glibc 2.39 or newer.
 
-See the [release notes](docs/RELEASE_0.2.0.md),
+See the [release notes](docs/RELEASE_0.4.0.md),
 [architecture](docs/ARCHITECTURE.md) and
 [macOS installation guide](docs/MACOS_PACKAGE.md).
 Persistent hide/show is implemented; native long-session acceptance remains open.
-Automatic physical-display topology management, image clipboard sharing and
-Windows packaging remain unfinished.
-Bidirectional text sharing is available between opted-in bound DeskPort devices.
+Shared display policies support capable macOS and KDE hosts. Opted-in bound
+DeskPort devices share text immediately and fetch images/files on demand.
+Windows packaging remains unfinished. See the release notes for known limitations.
 
 ## Build and run on Linux
 
