@@ -19,40 +19,24 @@
               python3 ${./scripts/patch-host-linux-display.py} .
             '';
           });
-          # Supply the exact upstream gitlink contents even when the flake was
-          # fetched without Git submodules. Application code comes from self.
-          upstream = pkgs.fetchFromGitHub {
-            owner = "moonlight-stream";
-            repo = "moonlight-qt";
-            rev = "f786e94c7b2f943e24e65d7d74deb539b827fc84";
-            hash = "sha256-rWVNpfRDLrWsqELPFquA6rW6/AfWV+6DNLUCPqIhle0=";
-            fetchSubmodules = true;
-          };
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
-          version = "0.4.0";
+          version = "0.4.1";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
-            # Documentation and CI edits do not change the client binary.
+            # Documentation, CI edits and the vendored macOS prebuilts do not
+            # change the Linux client binary.
             filter = path: type: !(builtins.elem (baseNameOf path) [
               ".github" "docs" "AGENTS.md" "README.md" "README.upstream.md"
-              "flake.nix" "flake.lock"
+              "flake.nix" "flake.lock" "libs"
             ]);
           };
+          # Every third-party dependency is vendored in this repository; only the
+          # shared core is still a submodule, so it comes from its own input.
           postUnpack = ''
             mkdir -p "$sourceRoot/shared/deskport-core"
             cp -R --no-preserve=mode ${deskport-core}/. "$sourceRoot/shared/deskport-core/"
-            for dependency in \
-              app/SDL_GameControllerDB \
-              moonlight-common-c/moonlight-common-c \
-              qmdnsengine/qmdnsengine \
-              soundio/libsoundio \
-              h264bitstream/h264bitstream \
-              libs; do
-              mkdir -p "$sourceRoot/$dependency"
-              cp -R --no-preserve=mode ${upstream}/"$dependency"/. "$sourceRoot/$dependency/"
-            done
           '';
           nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 ];
           preBuild = (old.preBuild or "") + ''
