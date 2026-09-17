@@ -1,11 +1,12 @@
 #pragma once
 #include <QSize>
+#include "../../shared/deskport-core/include/deskport/workspace.h"
 #include <QtGlobal>
 #include <cmath>
 
 namespace DeskPortDisplay {
-constexpr int MaxWidth = 7680;
-constexpr int MaxHeight = 4320;
+constexpr int MaxWidth = DP_WORKSPACE_MAX_WIDTH;
+constexpr int MaxHeight = DP_WORKSPACE_MAX_HEIGHT;
 struct Workspace {
     QSize pixels;
     int scale = 1;
@@ -24,16 +25,7 @@ inline double scaleForOutput(QSize pixels, QSize logical, double fallback) {
 // undersampling text. The size cap remains the explicit exception.
 inline Workspace forClient(QSize drawablePixels, double clientScale) {
     if (drawablePixels.isEmpty() || !std::isfinite(clientScale) || clientScale < 0.5 || clientScale > 8.0) return {};
-    const int scale = clientScale > 1.0 ? 2 : 1;
-    const double width = drawablePixels.width();
-    const double height = drawablePixels.height();
-    // WindowServer advertises compact modes which it then rejects. Keep a usable
-    // minimum logical desktop, preserving aspect ratio, and bound backing-store memory.
-    const double minimum = qMax(qMax(1.0, scale / clientScale),
-                                qMax(960.0 * scale / width, 540.0 * scale / height));
-    const double maximum = qMin(double(MaxWidth) / width, double(MaxHeight) / height);
-    const double factor = qMin(minimum, maximum);
-    return {QSize(qMin(MaxWidth, int(std::ceil(width * factor / 4)) * 4),
-                  qMin(MaxHeight, int(std::ceil(height * factor / 4)) * 4)), scale};
+    const auto size = dp_workspace_from_pixels(drawablePixels.width(), drawablePixels.height(), clientScale);
+    return {QSize(size.width, size.height), size.scale};
 }
 }

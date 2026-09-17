@@ -1,0 +1,14 @@
+name: Display control contracts
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  display:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24
+      - run: nix develop -c python3 scripts/test-core.py
+      - run: nix develop -c python3 scripts/test-host-lifecycle.py --binding

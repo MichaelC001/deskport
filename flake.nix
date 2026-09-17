@@ -3,7 +3,9 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  outputs = { self, nixpkgs }:
+  inputs.deskport-core = { url = "github:keithxc/deskport-core"; flake = false; };
+
+  outputs = { self, nixpkgs, deskport-core }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
@@ -38,6 +40,8 @@
             ]);
           };
           postUnpack = ''
+            mkdir -p "$sourceRoot/shared/deskport-core"
+            cp -R --no-preserve=mode ${deskport-core}/. "$sourceRoot/shared/deskport-core/"
             for dependency in \
               app/SDL_GameControllerDB \
               moonlight-common-c/moonlight-common-c \
@@ -48,6 +52,10 @@
               mkdir -p "$sourceRoot/$dependency"
               cp -R --no-preserve=mode ${upstream}/"$dependency"/. "$sourceRoot/$dependency/"
             done
+          '';
+          nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 ];
+          preBuild = (old.preBuild or "") + ''
+            python3 shared/deskport-core/tests/test_workspace.py --qt-header app/backend/workspaceresolution.h
           '';
           postInstall = (old.postInstall or "") + ''
             mkdir -p "$out/libexec"

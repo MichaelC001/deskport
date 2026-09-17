@@ -1079,3 +1079,13 @@ for the Apple client. The 0.3.2-based development package passed isolated VM
 connection/disconnect/reconnect and three native portrait/landscape/idle cycles.
 The physical monitor and crash/hotplug acceptance gates above remain open.
 See ADAPTIVE_DISPLAY.md for the protocol and measured validation boundary.
+
+## Shared core — 2026-09-17
+
+- [x] Extract workspace arithmetic into pinned deskport-core; preserve native adapters.
+- [x] Add shared vectors and production display-protocol contract tests.
+- [x] Keep Git and Nix core pins checked together.
+- [ ] Extend binding fixtures and old-binary interoperability before changing negotiation.
+- [ ] Consider a per-session input state machine only when desktop needs it.
+
+See [SHARED_CORE.md](SHARED_CORE.md) for ownership and update workflow.

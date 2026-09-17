@@ -15,6 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
+      - name: Initialize shared core
+        run: git submodule update --init shared/deskport-core
+      - name: Shared core adapter contract
+        run: nix develop -c python3 scripts/test-core.py
       - name: Build
         run: nix build -L
       - name: CLI and desktop-entry smoke check

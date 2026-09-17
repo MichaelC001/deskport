@@ -1,3 +1,4 @@
+#include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "adaptivedisplay.h"
 #include "workspaceresolution.h"
 #include <QSslSocket>
@@ -82,16 +83,16 @@ void AdaptiveDisplay::run() {
         QSize size; int scale; bool pending;
         { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; }
         if (pending) {
-            send({{"type", "display-resize"}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}});
+            send({{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}});
             const auto reply = receive();
-            connected = reply["type"].toString() == "display-result" && reply["seq"].toInt() == sequence &&
+            connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&
                 reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
             { QMutexLocker lock(&m_Mutex); m_Result = connected; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();
         } else if (heartbeat.elapsed() >= 5000) {
-            send({{"type", "display-ping"}});
-            connected = receive()["type"].toString() == "display-pong";
+            send({{"type", DP_MESSAGE_DISPLAY_PING}});
+            connected = receive()["type"].toString() == DP_MESSAGE_DISPLAY_PONG;
             heartbeat.restart();
         } else {
             // Wait atomically with the pending predicate: no lost request wakeup.

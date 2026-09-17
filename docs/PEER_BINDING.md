@@ -1,5 +1,9 @@
 # Mutual binding preview
 
+For shared binding-role and display wire contracts, see the pinned
+[core specification](../shared/deskport-core/protocol/SPEC.md). This document
+describes the desktop workflow and operational trust model.
+
 Enter the other computer's IP/domain in **Bind device** and choose **Request
 binding**. The other computer accepts one prompt authorizing desktop viewing and
 control in both directions. Both applications save the remote device automatically;

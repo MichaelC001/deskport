@@ -1,3 +1,4 @@
+#include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
 #include <QSysInfo>
 #include "peerstore.h"
@@ -112,13 +113,13 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
     connect(host, &HostManager::trustUpdated, this, &PeerManager::granted);
     connect(host, &HostManager::caretChanged, this, [this](const QJsonObject& caret) {
         if (m_DisplayLink && m_DisplayLink->displayControl && m_DisplayLink->caretUpdates)
-            send(m_DisplayLink, {{"type", "text-caret"}, {"caret", caret}});
+            send(m_DisplayLink, {{"type", DP_MESSAGE_TEXT_CARET}, {"caret", caret}});
     });
     connect(host, &HostManager::displayResized, this, [this](int seq, int width, int height, const QString& error) {
         auto link = m_DisplayLink;
         if (!link || link->ended || seq != link->displaySequence) return;
         link->displaySequence = 0;
-        QJsonObject response{{"type", "display-result"}, {"seq", seq}, {"width", width}, {"height", height}};
+        QJsonObject response{{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"width", width}, {"height", height}};
         if (!error.isEmpty()) response["error"] = error;
         send(link, response);
     });
@@ -560,20 +561,20 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         send(link, reply); return;
     }
     if (link->clipboardControl) { fail(link, tr("Unexpected clipboard message")); return; }
-    if (type == "display-resize" || type == "display-ping") {
+    if (type == DP_MESSAGE_DISPLAY_RESIZE || type == DP_MESSAGE_DISPLAY_PING) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || !peer["ready"].toBool() || !peer["granted"].toBool() ||
             !m_Host->adaptiveDisplayAvailable() || (m_DisplayLink && m_DisplayLink != link)) {
             fail(link, tr("Virtual display control requires an available host and an approved, exclusive device")); return;
         }
-        if (type == "display-ping") {
+        if (type == DP_MESSAGE_DISPLAY_PING) {
             if (!link->displayControl) { fail(link, tr("Display control has not started")); return; }
             link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
-            send(link, {{"type", "display-pong"}}); return;
+            send(link, {{"type", DP_MESSAGE_DISPLAY_PONG}}); return;
         }
         const int seq = message["seq"].toInt();
         if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq)) {
-            send(link, {{"type", "display-result"}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
+            send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
         link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();

@@ -97,6 +97,7 @@ macx {{
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
     environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"))
     if binding:
+        environment["TEST_CORE_DISPLAY_CASES"] = str(root / "shared/deskport-core/protocol/display-cases.json")
         environment["TEST_GUI_DIR"] = str(root / "app/gui")
         environment["TEST_BINDING_QML"] = str(root / "app/gui/BindingApproval.qml")
         for name in ("A", "B", "C"):

@@ -1,5 +1,9 @@
 # Built-in adaptive workspace
 
+The shared wire contract and workspace policy now live in
+[`deskport-core`](../shared/deskport-core/protocol/SPEC.md); see
+[the integration guide](SHARED_CORE.md) for pinned dependency updates.
+
 DeskPort bundles its own macOS virtual-display process. Start Sharing to create
 it; no BetterDisplay installation is required. The Sharing page reports the
 current pixel size. The chosen sharing resolution is the idle mode, while
@@ -7,7 +11,7 @@ Settings → Picture → Match the client window resolution controls adaptation 
 this client. These preferences are saved independently on each computer.
 
 The client also remembers each host's last stable window geometry, maximized or
-fullscreen state and negotiated 1× dimensions. The next connection starts with
+fullscreen state and negotiated workspace dimensions and backing scale. The next connection starts with
 that workspace instead of negotiating the default window size first. A different
 display layout, scale or configured window mode invalidates this cache. Fixed
 resolution connections continue to use the selected picture settings.
@@ -20,7 +24,7 @@ sizes and sequences; late helper acknowledgments cannot complete newer requests.
 Revoking a device also closes its display controller. Older servers and legacy
 pairings retain fixed-resolution streaming.
 
-After the client window settles for 900 ms and all pointer buttons are released,
+After the client window settles and all pointer buttons are released,
 DeskPort releases remote input, stops video, adjusts the virtual display, and
 resumes the same remote application at the acknowledged pixel dimensions. It
 preserves the client window geometry and the controller connection across this
@@ -29,16 +33,13 @@ honors “quit app after streaming”; an actual disconnect still honors that se
 A failed resize disables further adaptation for that session and uses the saved
 fixed resolution, avoiding a reconnect loop.
 
-Pixel sizes are aligned to four and bounded to 640×360–7680×4320. As of
-2026-09-11, automatic adaptation streams the client's drawable pixels 1:1 so
-the viewer never upscales text. Clients at 150% system scale or more request a
-2× HiDPI host desktop whose logical size is half the pixel size; others use 1×.
-The logical desktop keeps a 960×540 minimum. For example, a 3828×2040 client
-window at 150% requests 3828×2040 pixels at 2× (a 1914×1020 logical desktop).
-Host interface elements then appear about 1.33× the client's own size at 150%
-and 1.1× at 180%. This encodes 2.25× the pixels of the earlier 1× policy
-(2026-09-10), which divided by client scale and produced visibly soft text.
-Cached window workspaces from the 1× policy are discarded.
+Pixel sizes are aligned to four and bounded to 640×360–7680×4320. The
+current shared policy uses 2× backing scale for any client density above 1×,
+otherwise 1×. It avoids undersampling and aims for a minimum 960×540 logical
+desktop while respecting the pixel cap. For example, 3828×2040 drawable pixels
+at 150% client density request 5104×2720 backing pixels at 2×. This policy and
+its fractional-scale/portrait/limit cases are defined and tested in the pinned
+core, rather than reimplemented by each client. Window cache policy remains local.
 
 Sharing startup and the idle-mode restore also use 1×. Existing saved idle pixel
 sizes are preserved. The protocol still accepts explicit 2× requests from older

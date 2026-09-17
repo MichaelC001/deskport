@@ -21,6 +21,53 @@ static QByteArray credential(const char* name) {
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void sharedDisplayContract_data() {
+        QTest::addColumn<QJsonObject>("message");
+        QTest::addColumn<bool>("accepted");
+        QFile f(qEnvironmentVariable("TEST_CORE_DISPLAY_CASES"));
+        QVERIFY(f.open(QIODevice::ReadOnly));
+        const auto cases=QJsonDocument::fromJson(f.readAll()).object()["requests"].toArray();
+        QVERIFY(!cases.isEmpty());
+        for (const auto& value : cases) {
+            const auto item=value.toObject();
+            QTest::newRow(qPrintable(item["name"].toString())) << item["message"].toObject() << item["accepted"].toBool();
+        }
+    }
+    void sharedDisplayContract() {
+        QFETCH(QJsonObject, message); QFETCH(bool, accepted);
+        QTemporaryDir dir;
+        const auto cert=credential("TEST_CERT_A");
+        const auto fp=QString::fromLatin1(QSslCertificate(cert).digest(QCryptographicHash::Sha256).toHex());
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json", {{"version",1},{"peers",QJsonObject{
+            {fp,QJsonObject{{"ready",true},{"granted",true}}}}}}));
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager server(&host,credential("TEST_CERT_B"),credential("TEST_KEY_B"),dir.path()+"/binding",0,QHostAddress::LocalHost);
+        host.start(2560,1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(),5000);
+        QSslSocket socket;
+        socket.setLocalCertificate(QSslCertificate(cert));
+        socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"),QSsl::Rsa));
+        connect(&socket,qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors),&socket,[&](const QList<QSslError>& errors){socket.ignoreSslErrors(errors);});
+        socket.connectToHostEncrypted("127.0.0.1",quint16(server.port()));
+        QTRY_VERIFY_WITH_TIMEOUT(socket.isEncrypted(),5000);
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+        QCOMPARE(QJsonDocument::fromJson(socket.readLine()).object()["type"].toString(),QString("hello"));
+        socket.write(QJsonDocument(message).toJson(QJsonDocument::Compact)+'\n');
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+        const auto reply=QJsonDocument::fromJson(socket.readLine()).object();
+        QCOMPARE(reply["type"].toString(),QString("display-result"));
+        QCOMPARE(reply["seq"].toInt(),message["seq"].toInt());
+        QCOMPARE(!reply.contains("error"),accepted);
+        if (accepted) {
+            QCOMPARE(reply["width"].toInt(),message["width"].toInt());
+            QCOMPARE(reply["height"].toInt(),message["height"].toInt());
+            socket.write("{\"type\":\"display-ping\"}\n");
+            QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+            QCOMPARE(QJsonDocument::fromJson(socket.readLine()).object()["type"].toString(),QString("display-pong"));
+        }
+        socket.abort(); host.stop();
+    }
     void clientOnlyBinding_data() {
         QTest::addColumn<int>("mode");
         QTest::newRow("approved") << 0;
