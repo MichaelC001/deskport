@@ -27,3 +27,10 @@ On GNOME, `gnome-display.cpp` owns a Mutter ScreenCast session and a PipeWire
 sizing stream. It verifies pixel modes and applies temporary virtual-output scale
 while preserving the other logical monitor configurations. See
 [Linux adaptive display](../../docs/LINUX_ADAPTIVE_DISPLAY.md).
+
+2026-09-17: Failed local restoration releases the old lease and retains its
+baseline for later recovery. Subsequent clients can recreate and verify an
+independent workspace. Physical-layout policy failures become recorded warnings
+when workspace pixels/scale are correct. Diagnostic layout snapshots are saved
+under `$XDG_DATA_HOME/DeskPort/display-layout-events.jsonl` (default
+`~/.local/share/DeskPort`). Wayland disconnects and unverified modes still fail.

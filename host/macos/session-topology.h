@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Session-only display configuration. Journal UUIDs rather than transient IDs.
 #import <sys/stat.h>
+#import <fcntl.h>
+#import <unistd.h>
 #import <dlfcn.h>
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 static int sessionDisplayPolicy = DP_DISPLAY_PRIMARY_MIRROR;
@@ -13,6 +15,7 @@ static BOOL wasEnabled(NSDictionary *entry) { return !entry[@"enabled"] || [entr
 #import <ApplicationServices/ApplicationServices.h>
 static NSArray<NSDictionary *> *savedTopology;
 static BOOL preserveTopologyJournal;
+static CGDirectDisplayID recoveryOwnedDisplay;
 static NSString *topologyPath(void) {
     return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/DeskPort/display-recovery.json"];
 }
@@ -36,35 +39,62 @@ static CGDirectDisplayID findDisplay(NSString *uuid) {
     for (NSNumber *n in onlineDisplays()) if ([displayUUID(n.unsignedIntValue) isEqual:uuid]) return n.unsignedIntValue;
     return 0;
 }
-static BOOL snapshotTopology(CGDirectDisplayID own) {
-    if (savedTopology) return YES;
-    NSArray *attached=onlineDisplays(); if (!attached) return NO;
+static NSArray *captureTopology(CGDirectDisplayID own) {
+    NSArray *attached=onlineDisplays(); if (!attached) return nil;
     NSMutableArray *entries=[NSMutableArray new];
     for (NSNumber *n in attached) {
         CGDirectDisplayID ident=n.unsignedIntValue; if (ident==own) continue;
         BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
-        CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident); if (!mode && enabled) return NO;
+        CGDisplayModeRef mode=CGDisplayCopyDisplayMode(ident); if (!mode && enabled) return nil;
         NSString *uuid=displayUUID(ident);
         if (!uuid.length) {
             if (mode) CFRelease(mode);
             // WindowServer also enumerates disconnected connector placeholders.
             // They have no stable identity or state that can be restored.
             if (!enabled && !CGDisplayIsOnline(ident)) continue;
-            return NO;
+            return nil;
         }
         CGRect bounds=CGDisplayBounds(ident);
         [entries addObject:@{@"uuid":uuid, @"main":@(CGDisplayIsMain(ident)), @"enabled":@(enabled),
-            @"mirror":displayUUID(CGDisplayMirrorsDisplay(ident)), @"x":@(bounds.origin.x), @"y":@(bounds.origin.y),
+            @"mirror":displayUUID(CGDisplayMirrorsDisplay(ident)==own ? 0 : CGDisplayMirrorsDisplay(ident)), @"x":@(bounds.origin.x), @"y":@(bounds.origin.y),
             @"width":@(mode ? CGDisplayModeGetWidth(mode) : 0), @"height":@(mode ? CGDisplayModeGetHeight(mode) : 0),
             @"pixelsW":@(mode ? CGDisplayModeGetPixelWidth(mode) : 0), @"pixelsH":@(mode ? CGDisplayModeGetPixelHeight(mode) : 0),
             @"mode":@(mode ? CGDisplayModeGetIODisplayModeID(mode) : 0), @"hz":@(mode ? CGDisplayModeGetRefreshRate(mode) : 0)}];
         if (mode) CFRelease(mode);
     }
+    return entries;
+}
+static BOOL snapshotTopology(CGDirectDisplayID own) {
+    if (savedTopology) return YES;
+    NSArray *entries=captureTopology(own); if (!entries) return NO;
     NSString *path=topologyPath();
     if (![NSFileManager.defaultManager createDirectoryAtPath:path.stringByDeletingLastPathComponent withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:nil]) return NO;
     NSData *data=[NSJSONSerialization dataWithJSONObject:entries options:0 error:nil];
     if (![data writeToFile:path options:NSDataWritingAtomic error:nil]) return NO;
     chmod(path.fileSystemRepresentation,0600); savedTopology=entries; return YES;
+}
+// Local diagnostics contain only display configuration, never screen contents.
+// Deduplicate unchanged failures and bound storage while preserving the journal.
+static void recordLayoutEvent(NSString *reason) {
+    NSDictionary *state=@{@"reason":reason, @"policy":@(sessionDisplayPolicy), @"original":savedTopology ?: @[],
+        @"observed":captureTopology(0) ?: @[]};
+    NSData *signature=[NSJSONSerialization dataWithJSONObject:state options:NSJSONWritingSortedKeys error:nil];
+    static NSData *previous;
+    if ([signature isEqual:previous]) return;
+    previous=signature;
+    NSMutableDictionary *event=[state mutableCopy];
+    event[@"time"]=[NSISO8601DateFormatter stringFromDate:NSDate.date timeZone:[NSTimeZone timeZoneForSecondsFromGMT:0] formatOptions:NSISO8601DateFormatWithInternetDateTime];
+    NSData *data=[NSJSONSerialization dataWithJSONObject:event options:NSJSONWritingSortedKeys error:nil];
+    NSString *path=[topologyPath().stringByDeletingLastPathComponent stringByAppendingPathComponent:@"display-layout-events.jsonl"];
+    NSFileManager *files=NSFileManager.defaultManager;
+    if ([[files attributesOfItemAtPath:path error:nil] fileSize]>1024*1024) {
+        NSString *old=[path stringByAppendingString:@".previous"];
+        [files removeItemAtPath:old error:nil]; [files moveItemAtPath:path toPath:old error:nil];
+    }
+    [files createDirectoryAtPath:path.stringByDeletingLastPathComponent withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:nil];
+    int fd=open(path.fileSystemRepresentation,O_WRONLY|O_CREAT|O_APPEND,0600);
+    if (fd>=0) { NSMutableData *line=[data mutableCopy]; [line appendBytes:"\n" length:1]; write(fd,line.bytes,line.length); close(fd); }
+    fprintf(stderr,"DeskPort local layout: %s; original and observed layouts recorded\n",reason.UTF8String);
 }
 static CGDisplayModeRef savedMode(CGDirectDisplayID ident, NSDictionary *entry) {
     CFArrayRef modes=CGDisplayCopyAllDisplayModes(ident,(__bridge CFDictionaryRef)@{(__bridge NSString *)kCGDisplayShowDuplicateLowResolutionModes:@YES});
@@ -83,6 +113,13 @@ static CGDisplayModeRef savedMode(CGDirectDisplayID ident, NSDictionary *entry) 
     }
     if (modes) CFRelease(modes); return result;
 }
+// A helper-owned workspace is not an original physical mirror source. Older
+// journals can contain this reference because WindowServer restored a mirror
+// association as soon as the virtual display was created.
+static CGDirectDisplayID restorationSource(NSDictionary *entry) {
+    CGDirectDisplayID source=findDisplay(entry[@"mirror"]);
+    return source==recoveryOwnedDisplay ? 0 : source;
+}
 static BOOL restoredTopologyReady(void) {
     if (!onlineDisplays()) return NO;
     for (NSDictionary *entry in savedTopology) {
@@ -90,7 +127,7 @@ static BOOL restoredTopologyReady(void) {
         BOOL enabled=CGDisplayIsActive(ident) || CGDisplayMirrorsDisplay(ident);
         if (enabled!=wasEnabled(entry)) return NO;
         if (!enabled) continue;
-        CGDirectDisplayID source=findDisplay(entry[@"mirror"]);
+        CGDirectDisplayID source=restorationSource(entry);
         if (CGDisplayMirrorsDisplay(ident)!=source) return NO;
         if ([entry[@"main"] boolValue] && !CGDisplayIsMain(ident)) return NO;
         CGRect bounds=CGDisplayBounds(ident);
@@ -107,14 +144,33 @@ static BOOL restoredTopologyReady(void) {
     return YES;
 }
 static BOOL restoreTopology(CGDirectDisplayID own) {
+    if (own) recoveryOwnedDisplay=own;
     if (!savedTopology) return YES;
     if (!onlineDisplays()) return NO;
     if (restoredTopologyReady()) {
-        if (!preserveTopologyJournal) { savedTopology=nil; [NSFileManager.defaultManager removeItemAtPath:topologyPath() error:nil]; }
+        if (!preserveTopologyJournal) { recordLayoutEvent(@"Local layout recovery verified; detached displays were skipped"); savedTopology=nil; [NSFileManager.defaultManager removeItemAtPath:topologyPath() error:nil]; }
         return YES;
     }
     CGDisplayConfigRef config; if (CGBeginDisplayConfiguration(&config)!=kCGErrorSuccess) return NO;
-    CGError error=kCGErrorSuccess; CGFloat right=0;
+    // Mirror sinks expose mirror-constrained mode lists. Detach in a separate
+    // transaction and let WindowServer publish native modes before selecting one.
+    BOOL detach=NO;
+    CGError detachError=kCGErrorSuccess;
+    for (NSDictionary *entry in savedTopology) {
+        CGDirectDisplayID ident=findDisplay(entry[@"uuid"]);
+        if (ident && CGDisplayMirrorsDisplay(ident)) {
+            detach=YES;
+            if (detachError==kCGErrorSuccess)
+                detachError=CGConfigureDisplayMirrorOfDisplay(config,ident,kCGNullDirectDisplay);
+        }
+    }
+    if (detach) {
+        if (detachError==kCGErrorSuccess) detachError=CGCompleteDisplayConfiguration(config,kCGConfigureForSession);
+        else CGCancelDisplayConfiguration(config);
+        if (detachError!=kCGErrorSuccess) recordLayoutEvent([NSString stringWithFormat:@"Mirror detach failed (%d); local recovery remains pending",detachError]);
+        return NO;
+    }
+    CGError error=kCGErrorSuccess; BOOL missingMode=NO; CGFloat right=0;
     DPEnableDisplay enable=enableDisplayFunction();
     CGDirectDisplayID originalMain=0, fallback=0;
     for (NSDictionary *entry in savedTopology) {
@@ -128,6 +184,12 @@ static BOOL restoreTopology(CGDirectDisplayID own) {
         if ([entry[@"main"] boolValue]) originalMain=ident;
         if (error==kCGErrorSuccess) error=CGConfigureDisplayMirrorOfDisplay(config,ident,kCGNullDirectDisplay);
         CGDisplayModeRef mode=savedMode(ident,entry);
+        if (!mode) {
+            // Never submit an incomplete restore and then poll an impossible mode.
+            // Keep the original journal for a later idle recovery attempt.
+            error=kCGErrorFailure; missingMode=YES;
+            recordLayoutEvent([NSString stringWithFormat:@"Display %u no longer offers its saved mode; local recovery remains pending",ident]);
+        }
         if (mode && error==kCGErrorSuccess) error=CGConfigureDisplayWithDisplayMode(config,ident,mode,NULL);
         if (mode) CFRelease(mode);
         if (error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,ident,[entry[@"x"] intValue],[entry[@"y"] intValue]);
@@ -136,12 +198,12 @@ static BOOL restoreTopology(CGDirectDisplayID own) {
     if (own && fallback && error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,own,(int)MAX(1,right),0);
     if (!originalMain && fallback && error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,fallback,0,0);
     for (NSDictionary *entry in savedTopology) {
-        CGDirectDisplayID ident=findDisplay(entry[@"uuid"]), source=findDisplay(entry[@"mirror"]);
+        CGDirectDisplayID ident=findDisplay(entry[@"uuid"]), source=restorationSource(entry);
         if (ident && source && error==kCGErrorSuccess) error=CGConfigureDisplayMirrorOfDisplay(config,ident,source);
     }
     if (error==kCGErrorSuccess) error=CGCompleteDisplayConfiguration(config,kCGConfigureForSession);
     else CGCancelDisplayConfiguration(config);
-    if (error!=kCGErrorSuccess) return NO;
+    if (error!=kCGErrorSuccess) { if (!missingMode) recordLayoutEvent([NSString stringWithFormat:@"Local restore transaction failed (%d); recovery remains pending",error]); return NO; }
     // Keep the journal until a subsequent observation verifies the OS state.
     return NO;
 }

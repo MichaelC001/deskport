@@ -2,11 +2,13 @@
 // Run the production topology adapter against an isolated in-memory WindowServer.
 #import <Foundation/Foundation.h>
 #import <ApplicationServices/ApplicationServices.h>
+#import <AppKit/AppKit.h>
 #import <dlfcn.h>
 #import <assert.h>
 static NSMutableDictionary *screens, *pending;
 static NSString *testHome;
 static BOOL rejectCommit, enableAvailable=YES;
+static unsigned modeWrites;
 static NSMutableDictionary *screen(unsigned i) { return screens[@(i)]; }
 static CGError listScreens(uint32_t max, CGDirectDisplayID *ids, uint32_t *count) {
     *count=0; for (NSNumber *n in [[screens allKeys] sortedArrayUsingSelector:@selector(compare:)]) if (*count<max) ids[(*count)++]=n.unsignedIntValue;
@@ -21,7 +23,11 @@ static void *symbol(void *h,const char *name) {
 static CFUUIDRef fakeUuid(unsigned i) { if ([screen(i)[@"noUuid"] boolValue]) return NULL; return CFUUIDCreateFromString(NULL,(__bridge CFStringRef)[NSString stringWithFormat:@"00000000-0000-0000-0000-%012u",i]); }
 static CGDisplayModeRef fakeMode(unsigned i) { return screen(i) ? (CGDisplayModeRef)CFBridgingRetain([screen(i) copy]) : NULL; }
 static NSDictionary *modeData(CGDisplayModeRef m) { return (__bridge NSDictionary *)m; }
-static CFArrayRef fakeModes(unsigned i, CFDictionaryRef opts) { return CFBridgingRetain(@[[screen(i) copy]]); }
+static CFArrayRef fakeModes(unsigned i, CFDictionaryRef opts) {
+    NSArray *modes=screen(i)[@"nativeModes"];
+    if ([screen(i)[@"mirror"] unsignedIntValue]) modes=nil;
+    return CFBridgingRetain(modes ?: @[[screen(i) copy]]);
+}
 static CGError begin(CGDisplayConfigRef *c) { pending=[NSMutableDictionary new]; for (NSNumber *n in screens) pending[n]=[screens[n] mutableCopy]; *c=(CGDisplayConfigRef)1; return 0; }
 static CGError mirror(CGDisplayConfigRef c,unsigned i,unsigned source) { pending[@(i)][@"mirror"]=@(source); return 0; }
 static CGError origin(CGDisplayConfigRef c,unsigned i,int x,int y) {
@@ -29,7 +35,16 @@ static CGError origin(CGDisplayConfigRef c,unsigned i,int x,int y) {
     if (!x && !y) for (NSNumber *n in pending) pending[n][@"main"]=@([n unsignedIntValue]==i);
     return 0;
 }
-static CGError setMode(CGDisplayConfigRef c,unsigned i,CGDisplayModeRef m,CFDictionaryRef opts) { return 0; }
+static CGError setMode(CGDisplayConfigRef c,unsigned i,CGDisplayModeRef m,CFDictionaryRef opts) {
+    modeWrites++;
+    for (NSString *key in @[@"width",@"height",@"pixelsW",@"pixelsH"]) {
+        if (modeData(m)[key]) pending[@(i)][key]=modeData(m)[key];
+        else [pending[@(i)] removeObjectForKey:key];
+    }
+    return 0;
+}
+static CGError selectMode(unsigned i,CGDisplayModeRef m,CFDictionaryRef opts) { return 0; }
+static unsigned mainDisplay(void) { for (NSNumber *n in screens) if ([screen(n.unsignedIntValue)[@"main"] boolValue]) return n.unsignedIntValue; return 0; }
 static CGError complete(CGDisplayConfigRef c,CGConfigureOption option) { if (rejectCommit) return kCGErrorFailure; screens=pending; pending=nil; return 0; }
 static CGError cancel(CGDisplayConfigRef c) { pending=nil; return 0; }
 static CGRect fakeBounds(unsigned i) { return CGRectMake([screen(i)[@"x"] intValue],[screen(i)[@"y"] intValue],1920,1080); }
@@ -41,8 +56,8 @@ static CGRect fakeBounds(unsigned i) { return CGRectMake([screen(i)[@"x"] intVal
 #define CGDisplayCopyAllDisplayModes fakeModes
 #define CGDisplayModeGetWidth(m) [modeData(m)[@"width"] unsignedIntegerValue]
 #define CGDisplayModeGetHeight(m) [modeData(m)[@"height"] unsignedIntegerValue]
-#define CGDisplayModeGetPixelWidth(m) [modeData(m)[@"width"] unsignedIntegerValue]
-#define CGDisplayModeGetPixelHeight(m) [modeData(m)[@"height"] unsignedIntegerValue]
+#define CGDisplayModeGetPixelWidth(m) [(modeData(m)[@"pixelsW"] ?: modeData(m)[@"width"]) unsignedIntegerValue]
+#define CGDisplayModeGetPixelHeight(m) [(modeData(m)[@"pixelsH"] ?: modeData(m)[@"height"]) unsignedIntegerValue]
 #define CGDisplayModeGetIODisplayModeID(m) 1
 #define CGDisplayModeGetRefreshRate(m) 60.0
 #define CGDisplayModeRetain(m) ((CGDisplayModeRef)CFRetain(m))
@@ -57,12 +72,48 @@ static CGRect fakeBounds(unsigned i) { return CGRectMake([screen(i)[@"x"] intVal
 #define CGConfigureDisplayWithDisplayMode setMode
 #define CGCompleteDisplayConfiguration complete
 #define CGCancelDisplayConfiguration cancel
-#include "../host/macos/session-topology.h"
+#define CGDisplaySetDisplayMode selectMode
+#define CGMainDisplayID mainDisplay
+#define CGVirtualDisplay DPTestVirtualDisplay
+#define CGVirtualDisplayMode DPTestVirtualDisplayMode
+#define CGVirtualDisplaySettings DPTestVirtualDisplaySettings
+#define CGVirtualDisplayDescriptor DPTestVirtualDisplayDescriptor
+#define main unusedDisplayHelperMain
+#include "../host/macos/display-helper.m"
+#undef main
+@interface DPTestVirtualDisplayMode ()
+@property unsigned testWidth, testHeight;
+@end
+@implementation DPTestVirtualDisplayMode
+- (instancetype)initWithWidth:(unsigned)width height:(unsigned)height refreshRate:(double)rate {
+    if ((self=[super init])) { self.testWidth=width; self.testHeight=height; } return self;
+}
+@end
+@implementation DPTestVirtualDisplaySettings
+@end
+@implementation DPTestVirtualDisplayDescriptor
+@end
+@implementation DPTestVirtualDisplay
+- (instancetype)initWithDescriptor:(DPTestVirtualDisplayDescriptor *)descriptor { return [super init]; }
+- (unsigned)displayID { return 9; }
+- (BOOL)applySettings:(DPTestVirtualDisplaySettings *)settings {
+    DPTestVirtualDisplayMode *mode=settings.modes.firstObject;
+    screen(9)[@"width"]=@(mode.testWidth); screen(9)[@"height"]=@(mode.testHeight);
+    screen(9)[@"pixelsW"]=@(mode.testWidth*(settings.hiDPI ? 2 : 1));
+    screen(9)[@"pixelsH"]=@(mode.testHeight*(settings.hiDPI ? 2 : 1));
+    return YES;
+}
+@end
+static BOOL recover(void) {
+    for (unsigned i=0;i<5;i++) if (restoreTopology(9)) return YES;
+    return NO;
+}
 static NSMutableDictionary *entry(BOOL enabled,BOOL main,int x) {
     return [@{@"enabled":@(enabled),@"main":@(main),@"mirror":@0,@"x":@(x),@"y":@0,@"width":@1920,@"height":@1080} mutableCopy];
 }
 static void reset(void) {
-    savedTopology=nil; preserveTopologyJournal=NO; rejectCommit=NO; enableAvailable=YES;
+    savedTopology=nil; preserveTopologyJournal=NO; recoveryOwnedDisplay=0; rejectCommit=NO; enableAvailable=YES; modeWrites=0;
+    display=nil; sessionActive=NO; restoreAttempt=0; ++generation;
     screens=[@{@1:entry(YES,YES,0),@2:entry(YES,NO,1920),@3:entry(NO,NO,3840),@9:entry(YES,NO,5760)} mutableCopy];
     [NSFileManager.defaultManager removeItemAtPath:topologyPath() error:nil];
 }
@@ -79,7 +130,7 @@ int main(void) { @autoreleasepool {
         if (policy==1) assert(![screen(1)[@"enabled"] boolValue] && ![screen(2)[@"enabled"] boolValue]);
         if (policy==2) assert([screen(1)[@"main"] boolValue] && [screen(2)[@"x"] intValue]==1920);
         assert(snapshotTopology(9) && savedTopology==before); // Resize keeps original snapshot.
-        restoreTopology(9); assert(restoreTopology(9)); assert(!savedTopology);
+        assert(recover()); assert(!savedTopology);
         assert([screen(1)[@"main"] boolValue] && [screen(1)[@"enabled"] boolValue]);
         assert([screen(2)[@"enabled"] boolValue] && ![screen(3)[@"enabled"] boolValue]);
     }
@@ -96,10 +147,56 @@ int main(void) { @autoreleasepool {
     assert(!restoreTopology(9)); assert(savedTopology && [NSFileManager.defaultManager fileExistsAtPath:topologyPath()]);
     rejectCommit=NO;
     [screens removeObjectForKey:@2]; // Detached display is skipped during recovery.
-    assert(!restoreTopology(9)); assert(restoreTopology(9)); assert(!savedTopology);
+    assert(!restoreTopology(9)); assert(recover()); assert(!savedTopology);
     reset(); sessionDisplayPolicy=0; assert(snapshotTopology(9)); assert(applySessionTopology(9));
     savedTopology=[NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:topologyPath()] options:0 error:nil];
-    assert(!restoreTopology(9)); assert(restoreTopology(9)); // Simulated helper crash/restart.
+    assert(!restoreTopology(9)); assert(recover()); // Simulated helper crash/restart.
+    // A mirror sink exposes only constrained modes until a completed detach.
+    reset(); sessionDisplayPolicy=0; assert(snapshotTopology(9));
+    screen(1)[@"nativeModes"]=@[[screen(1) copy]];
+    screen(1)[@"mirror"]=@9; screen(1)[@"width"]=@1280;
+    assert(!restoreTopology(9)); assert(modeWrites==0);
+    assert(![screen(1)[@"mirror"] unsignedIntValue]);
+    assert(recover()); assert([screen(1)[@"width"] intValue]==1920);
+
+    // Older journals can refer to our own virtual source. Do not recreate it.
+    reset(); screen(1)[@"mirror"]=@9; assert(snapshotTopology(9));
+    assert([savedTopology[0][@"mirror"] length]==0);
+    NSMutableArray *legacy=[savedTopology mutableCopy];
+    NSMutableDictionary *legacyEntry=[legacy[0] mutableCopy];
+    legacyEntry[@"mirror"]=displayUUID(9); legacy[0]=legacyEntry; savedTopology=legacy;
+    assert(recover()); assert(![screen(1)[@"mirror"] unsignedIntValue]);
+
+    // Missing physical modes retain recovery, but cannot poison the next lease.
+    for (int policy=0;policy<=2;policy++) {
+        reset(); sessionDisplayPolicy=policy; assert(snapshotTopology(9));
+        NSArray *original=savedTopology;
+        screen(1)[@"width"]=@1280;
+        assert(!recover()); assert(savedTopology==original);
+        assert([NSFileManager.defaultManager fileExistsAtPath:topologyPath()]);
+        display=[DPTestVirtualDisplay new];
+        configure(2560,1440,1,6,NO); // Leaves an idle restore callback queued.
+        configure(1920,1888,2,7,YES);
+        for (unsigned i=0;i<40;i++) CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.1,false);
+        assert(sessionActive && (sessionTopologyReady(9) || sessionLayoutWarning));
+        assert(lastWidth==1920 && lastHeight==1888 && lastScale==2);
+        assert(savedTopology==original);
+        assert(CGDisplayModeGetPixelWidth((CGDisplayModeRef)(__bridge void *)screen(9))==1920);
+        assert(CGDisplayModeGetPixelHeight((CGDisplayModeRef)(__bridge void *)screen(9))==1888);
+        // A queued idle callback must not restore over the new session.
+        if (policy!=DP_DISPLAY_EXTEND) assert(CGDisplayIsMain(9));
+    }
+    // Local transaction rejection is a recorded warning, not bad-size video.
+    reset(); sessionDisplayPolicy=DP_DISPLAY_PRIMARY_MIRROR; assert(snapshotTopology(9));
+    display=[DPTestVirtualDisplay new]; rejectCommit=YES;
+    configure(1920,1888,2,9,YES);
+    for (unsigned i=0;i<5;i++) CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.1,false);
+    assert(sessionActive && sessionLayoutWarning);
+    assert(lastWidth==1920 && lastHeight==1888 && lastScale==2);
+    NSString *events=[topologyPath().stringByDeletingLastPathComponent stringByAppendingPathComponent:@"display-layout-events.jsonl"];
+    NSString *logged=[NSString stringWithContentsOfFile:events encoding:NSUTF8StringEncoding error:nil];
+    assert([logged containsString:@"local display layout could not be fully applied"]);
+    assert([logged containsString:@"original"] && [logged containsString:@"observed"] && [logged containsString:@"time"]);
     [NSFileManager.defaultManager removeItemAtPath:testHome error:nil];
-    puts("PASS: three policies, original snapshot, disabled displays, hotplug, failed commit and crash recovery");
+    puts("PASS: three policies, mode-list recovery, journal retention, queued restore takeover, degraded local layout and diagnostic events");
 } }

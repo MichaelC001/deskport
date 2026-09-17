@@ -56,7 +56,9 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     connect(this, &HostManager::displayResized, this, [this](int sequence, int, int, const QString& error) {
         if (sequence >= 0 || m_QueuedDisplayRequest.isEmpty()) return;
         const auto pending = m_QueuedDisplayRequest; m_QueuedDisplayRequest = {};
-        if (!error.isEmpty() || !resizeDisplay(pending["width"].toInt(), pending["height"].toInt(),
+        // Both native helpers can retain failed local recovery while validating
+        // an independent workspace for the next authenticated controller.
+        if (!resizeDisplay(pending["width"].toInt(), pending["height"].toInt(),
                 pending["scale"].toInt(), pending["seq"].toInt(), pending["policy"].toInt())) {
             emit displayResized(pending["seq"].toInt(), m_DisplayWidth, m_DisplayHeight,
                                 error.isEmpty() ? QStringLiteral("Display restoration did not complete") : error);

@@ -2,6 +2,10 @@
 // A connection-owned KWin primary output with temporary physical-screen mirroring.
 #include "gnome-display.h"
 #include <QCoreApplication>
+#include <QDateTime>
+#include <QDir>
+#include <QFile>
+#include <QStandardPaths>
 #include <QElapsedTimer>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -55,6 +59,8 @@ class Display {
     std::unique_ptr<QProcess> recovery;
     QJsonArray baseline;
     bool sessionActive = false;
+    bool recoveryPending = false;
+    QString layoutWarning;
     int sessionPolicy = -1;
 public:
     const QString name = "DeskPort-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
@@ -153,6 +159,27 @@ public:
         }
         return state;
     }
+    void baselineForDiagnostics(const QJsonArray& state) { baseline=state; }
+    void recordLayoutEvent(const QString& reason) const {
+        const QString directory = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/DeskPort";
+        QDir().mkpath(directory);
+        const QString path = directory + "/display-layout-events.jsonl";
+        QFile file(path);
+        if (file.size() > 1024 * 1024) { QFile::remove(path + ".previous"); QFile::rename(path, path + ".previous"); }
+        QJsonObject event{{"time", QDateTime::currentDateTimeUtc().toString(Qt::ISODate)},
+            {"reason", reason}, {"policy", sessionPolicy}, {"original", baseline}, {"observed", layout()},
+            {"workspace", outputName()}};
+        if (file.open(QIODevice::WriteOnly | QIODevice::Append)) {
+            file.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+            file.write(QJsonDocument(event).toJson(QJsonDocument::Compact) + '\n');
+        }
+        fprintf(stderr,"DeskPort local layout: %s; original and observed layouts recorded\n",reason.toUtf8().constData());
+    }
+    void deferLocalLayout() {
+        layoutWarning = error.isEmpty() ? QStringLiteral("Local layout recovery remains pending") : error;
+        recoveryPending = true;
+        recordLayoutEvent(layoutWarning);
+    }
     bool saveRecovery(const QJsonArray& state) {
         recovery->write(QJsonDocument(state).toJson(QJsonDocument::Compact) + '\n');
         if (!recovery->waitForReadyRead(3000) || recovery->readLine() != "ready\n") {
@@ -210,9 +237,12 @@ public:
         return sync();
     }
     bool restoreIdle() {
-        if (!owned && !stream && !sessionActive) return true;
-        if (!removeOutput() || !restore(baseline)) return false;
+        if (!owned && !stream && !sessionActive && !recoveryPending) return true;
+        // Lease ownership ends even if physical-layout recovery fails.
         sessionActive = false; sessionPolicy = -1;
+        if (!removeOutput() || !restore(baseline)) { deferLocalLayout(); return false; }
+        recordLayoutEvent("Local layout recovery verified; detached outputs were skipped");
+        recoveryPending = false;
         return saveRecovery({});
     }
     bool beginSession(int width, int height, int policy) {
@@ -221,8 +251,10 @@ public:
             return true;
         }
         if (!sync()) return false;
-        // Capture fresh policy on each connection, never capture our mirrored state.
-        baseline = layout();
+        // Retain the original recovery target across failed restores. Never
+        // replace it with the damaged local layout at the next connection.
+        if (!recoveryPending) baseline = layout();
+        else recordLayoutEvent("New client takes over while local recovery remains pending");
         if (!saveRecovery(baseline)) return false;
         if (!owned && !createOutput(width, height)) return false;
         sessionActive = true; sessionPolicy = policy;
@@ -266,7 +298,12 @@ public:
             fprintf(stderr, "KWin initial mode differs; reconciling to %dx%d at scale 1\n", width, height);
             if (!resize(width, height, 1)) return false;
         }
-        return restore(baseline);
+        if (!restore(baseline)) {
+            deferLocalLayout();
+            // The physical layout and the owned capture mode are independent.
+            if (broken) return false;
+        }
+        return matches(width,height,1) || resize(width,height,1);
     }
     bool mirror(int policy) {
         if (policy == 2) return true;
@@ -289,6 +326,7 @@ public:
                 kde_output_configuration_v2_set_replication_source(config, out.proxy, value["replication"].toString().toUtf8().constData());
                 continue;
             }
+            kde_output_configuration_v2_enable(config, out.proxy, 1);
             kde_output_configuration_v2_set_replication_source(config, out.proxy, owned->uuid.toUtf8().constData());
             kde_output_configuration_v2_set_priority(config, out.proxy, priority++);
         }
@@ -306,7 +344,8 @@ public:
         return true;
     }
     bool matches(int width, int height, int scale) const {
-        if (!owned || owned->removed || !owned->current) return false;
+        if (!owned || owned->removed || !owned->current || !owned->enabled ||
+            !owned->replication.isEmpty() || owned->transform != 0) return false;
         const auto mode = owned->modes.find(owned->current);
         return mode != owned->modes.end() && !mode->second.removed &&
             mode->second.size == QSize(width, height) && owned->scale == scale;
@@ -351,12 +390,24 @@ public:
         for (const auto& mode : owned->modes) if (!mode.second.removed && mode.second.size == QSize(width, height) && mode.second.refresh == 60000) selected = mode.first;
         if (!selected) { error = "KWin did not advertise the requested virtual mode"; return false; }
         config = kde_output_management_v2_create_configuration(management);
+        kde_output_configuration_v2_enable(config, owned->proxy, 1);
+        kde_output_configuration_v2_set_replication_source(config, owned->proxy, "");
+        kde_output_configuration_v2_transform(config, owned->proxy, 0);
         kde_output_configuration_v2_mode(config, owned->proxy, selected);
         kde_output_configuration_v2_scale(config, owned->proxy, wl_fixed_from_int(scale));
         if (!apply(config)) return false;
         if (!matches(width, height, scale)) { error = "KWin mode acknowledgment did not match requested pixels and scale"; return false; }
         return true;
     }
+    bool configureWorkspace(int width, int height, int scale, int policy) {
+        layoutWarning.clear();
+        if (!beginSession(width,height,policy) || !resize(width,height,scale)) return false;
+        if (!mirror(policy)) { deferLocalLayout(); if (broken) return false; }
+        // Local policy submission can change the owned mode too. Acknowledging
+        // success always requires a final independent capture-target check.
+        return resize(width,height,scale);
+    }
+    QString localLayoutWarning() const { return layoutWarning; }
     QString outputName() const { return owned ? owned->name : QString(); }
     QString lastError() const { return error; }
     int fd() const { return wl_display_get_fd(display); }
@@ -412,7 +463,7 @@ int main(int argc, char** argv) {
         }
         if (state.isEmpty()) return 0;
         const bool ok = restore.waitForRemoval(args[2]) && restore.restore(state);
-        if (!ok) fprintf(stderr, "KWin layout recovery: %s\n", restore.lastError().toUtf8().constData());
+        if (!ok) { restore.baselineForDiagnostics(state); restore.recordLayoutEvent(restore.lastError()); }
         return ok ? 0 : 1;
     }
     if (args.size() != 3 || !Display::valid(args[1].toInt(), args[2].toInt(), 1)) {
@@ -442,9 +493,10 @@ int main(int argc, char** argv) {
                 QJsonObject response{{"seq", seq}};
                 if (policy < 0 || policy > 2 || !seq || !Display::valid(width, height, scale)) response["error"] = "Invalid virtual output request";
                 else if (!(request["session"].toBool(true)
-                         ? display.beginSession(width, height, policy) && display.resize(width, height, scale) && display.mirror(policy)
+                         ? display.configureWorkspace(width, height, scale, policy)
                          : display.restoreIdle())) response["error"] = display.lastError();
-                else { response["width"] = width; response["height"] = height; response["scale"] = scale; response["active"] = request["session"].toBool(true); }
+                else { response["width"] = width; response["height"] = height; response["scale"] = scale; response["active"] = request["session"].toBool(true);
+                    if (!display.localLayoutWarning().isEmpty()) response["layoutWarning"] = display.localLayoutWarning(); }
                 reply(response);
                 if (!display.healthy()) return 1; // Never accept a late acknowledgment after a timeout.
             }

@@ -14,8 +14,10 @@ The protocol is defined in the pinned core's `protocol/SESSION_DISPLAY.md`.
 `hello.meta.displayPolicy=1` gates the optional request field. Legacy clients use
 the default mode. Unsupported non-default choices and policy changes within a
 lease are rejected. Trust, exclusive ownership, frame bounds and heartbeat expiry
-remain enforced by the existing control channel. Non-default modes stop or refuse
-video when display control fails, rather than continuing with the wrong topology.
+remain enforced by the existing control channel. Invalid or unsupported modes still fail before mutation. A verified independent
+workspace can continue when only local layout operations fail; the host records
+the deviation and retains recovery for later repair. Incorrect capture modes
+still fail.
 
 ## Recovery
 
@@ -83,3 +85,35 @@ on pk4. All three policies passed isolated KDE lifecycle checks; KDE/GNOME
 software capture passed. The final display CI, including delayed restoration
 and queued-controller cancellation, passed. The notarized Mac assets and mm4
 system build passed; activation and physical-device acceptance remain user-owned.
+
+## Recovery availability update — 2026-09-17
+
+Reason: a local restoration failure blocked subsequent clients even though the
+virtual capture display could be configured independently. macOS now detaches
+mirror sinks before looking up their native modes and ignores legacy references
+to its own workspace as an original physical mirror source. Missing saved modes
+retain recovery instead of submitting incomplete transactions. A new lease
+cancels old idle callbacks and verifies its own pixels and scale. Local primary,
+mirror and disable failures are recorded without rejecting a correct workspace.
+Idle retries are bounded so they do not continually overwrite later manual edits.
+
+KDE clears the old lease even when restoration fails after output removal. It
+retains the original baseline in its independent recovery process, recreates the
+workspace and verifies enabled state, independent replication, transform, pixel
+mode and scale. Local recovery/policy failures are recorded while the remote
+workspace remains usable. Genuine Wayland connection loss still terminates the
+helper; a compositor timeout is not treated as a verified mode.
+
+Both adapters append time, reason, policy and original/observed layout to
+`display-layout-events.jsonl` under the user's DeskPort data directory. One
+previous log is retained at rotation (1 MiB); no screen or clipboard content is
+included. macOS also keeps its original `display-recovery.json` journal. Linux
+recovery retains its baseline in the separate recovery process and records a
+failed final attempt for manual repair. Detached and added displays can be seen
+by comparing the original and observed snapshots.
+
+Validation covers the production macOS helper with an isolated WindowServer
+adapter and KDE in an isolated real compositor, including injected local restore
+and policy failures, different-policy reconnects, correct workspace dimensions,
+recorded recovery targets and successful restoration after removing the fault.
+These tests do not establish physical streaming or touch acceptance.

@@ -20,7 +20,7 @@ if '--inside' not in sys.argv:
         project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c" "{source.parent.parent}/host/linux/kde-output-management-v2.c"\n')
         subprocess.run(['qmake', str(project)], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(['make', '-j2'], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
-        if '--initial-mode-mismatch' in sys.argv:
+        if '--initial-mode-mismatch' in sys.argv or '--restore-failure' in sys.argv:
             # Fault injection: emulate a compositor choosing a different initial
             # size/scale, while keeping the helper's requested target unchanged.
             fixture = Path(tmp) / 'initial-mode-fixture'
@@ -29,7 +29,13 @@ if '--inside' not in sys.argv:
             text = cpp.read_text()
             anchor = 'name.toUtf8().constData(), width, height, wl_fixed_from_int(1),'
             assert text.count(anchor) == 1
-            cpp.write_text(text.replace(anchor, 'name.toUtf8().constData(), 1024, 768, wl_fixed_from_int(2),'))
+            if '--initial-mode-mismatch' in sys.argv:
+                text = text.replace(anchor, 'name.toUtf8().constData(), 1024, 768, wl_fixed_from_int(2),')
+            if '--restore-failure' in sys.argv:
+                for signature in ('bool restore(const QJsonArray& state) {', 'bool mirror(int policy) {'):
+                    assert text.count(signature) == 1
+                    text = text.replace(signature, signature + '\n        if (QFile::exists(qEnvironmentVariable("XDG_RUNTIME_DIR") + "/reject-local-layout")) { error="Injected local layout failure"; return false; }')
+            cpp.write_text(text)
             subprocess.run(['qmake', str(fixture / 'linux.pro')], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
             subprocess.run(['make', '-j4'], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
             helper = str(fixture / 'deskport-display')
@@ -70,7 +76,7 @@ if '--inside' not in sys.argv:
         # race removal of its isolated configuration/data directories.
         bus_config = Path(tmp) / 'session-bus.conf'
         bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
-        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []),
+        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []),
                        env=env, check=True, timeout=180)
     raise SystemExit(0)
 
@@ -134,12 +140,12 @@ try:
 
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
-    def receive():
+    def receive(allow_error=False):
         assert select.select([p.stdout], [], [], 10)[0], 'helper acknowledgment timed out'
         line = p.stdout.readline()
         assert line, f'helper exited: {p.poll()}'
         result = json.loads(line)
-        assert 'error' not in result, result
+        assert allow_error or 'error' not in result, result
         return result
     initial = receive()
     assert initial['width'] == 1280 and initial['height'] == 720, initial
@@ -192,6 +198,33 @@ try:
         if gnome: assert observed == baseline, 'Other output modes, positions or scales changed'
         else: verify_mirror(owned)
         if seq == 3: capture(width, height, scale)
+    if '--restore-failure' in sys.argv:
+        assert not gnome
+        fault = Path(os.environ['XDG_RUNTIME_DIR']) / 'reject-local-layout'
+        fault.touch()
+        p.stdin.write(json.dumps(dict(seq=100, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush()
+        assert 'error' in receive(allow_error=True)
+        assert owned not in outputs(), 'Old virtual output was not removed'
+        next_policy = (policy + 1) % 3
+        p.stdin.write(json.dumps(dict(displayPolicy=next_policy, seq=101, width=1920, height=1888, scale=2, session=True)) + '\n'); p.stdin.flush()
+        resumed = receive()
+        assert resumed.get('layoutWarning'), resumed
+        actual = devices()[owned]
+        assert (actual['width'],actual['height'],actual['scale']) == (1920,1888,2), actual
+        assert actual['enabled'] and not actual['replication_source'], actual
+        event_file = Path(os.environ['XDG_DATA_HOME']) / 'DeskPort/display-layout-events.jsonl'
+        events = [json.loads(line) for line in event_file.read_text().splitlines()]
+        assert any('Injected local layout failure' in e['reason'] for e in events), events
+        assert all('time' in e and 'original' in e and 'observed' in e for e in events)
+        assert events[-1]['original'] == events[0]['original'], 'Failed recovery overwrote original baseline'
+        fault.unlink()
+        p.stdin.close(); assert p.wait(timeout=5) == 0
+        for _ in range(50):
+            if restored(): break
+            time.sleep(.05)
+        assert restored(), 'Pending recovery did not restore after fault removal'
+        print('PASS: failed KDE restore, different-policy takeover, verified 1920x1888@2, local failure diagnostics and eventual recovery')
+        raise SystemExit(0)
     # Session ends without stopping sharing: the output itself must disappear.
     p.stdin.write(json.dumps(dict(displayPolicy=policy, seq=100, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
     for _ in range(50):

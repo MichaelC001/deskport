@@ -39,7 +39,9 @@ static NSInteger requestedScale = 1;
 static NSInteger lastWidth, lastHeight, lastScale = 1;
 static BOOL rollingBack;
 static BOOL sessionActive;
+static NSString *sessionLayoutWarning;
 static unsigned restoreAttempt;
+static BOOL idleRecoveryExhausted;
 static CFAbsoluteTime requestStarted;
 static unsigned readyGeneration;
 static NSArray *displayModes(NSInteger width, NSInteger height, NSInteger scale) {
@@ -103,13 +105,13 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             CFRelease(modes);
         }
     }
-    if (ready && sessionActive && !sessionTopologyReady(display.displayID)) {
+    if (ready && sessionActive && !sessionLayoutWarning && !sessionTopologyReady(display.displayID)) {
         if (attempt >= 30 || !applySessionTopology(display.displayID)) {
-            restoreTopology(display.displayID);
-            sessionActive=NO;
-            respond(@{@"error": @"Could not apply the selected virtual screen mode"}); return;
-        }
-        ready=NO;
+            // Local mirror/primary/disable failures must not discard a verified
+            // independent workspace. Retain recovery and describe the deviation.
+            sessionLayoutWarning=@"The client workspace is ready, but the local display layout could not be fully applied";
+            recordLayoutEvent(sessionLayoutWarning);
+        } else ready=NO;
     }
     if (ready && readyGeneration != token) {
         // Confirm on another run-loop turn: mode/mirror changes are asynchronous.
@@ -126,8 +128,10 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             rollingBack = NO;
             respond(@{@"error": @"Requested mode was rejected; the previous display mode was restored"}); return;
         }
-        respond(@{@"displayId": @(capture), @"virtualDisplayId": @(display.displayID),
-            @"mirrored": @(sessionActive && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_MIRROR && sessionTopologyReady(capture)), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)});
+        NSMutableDictionary *result=[@{@"displayId": @(capture), @"virtualDisplayId": @(display.displayID),
+            @"mirrored": @(sessionActive && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_MIRROR && sessionTopologyReady(capture)), @"scale": @(requestedScale), @"width": @(width), @"height": @(height)} mutableCopy];
+        if (sessionLayoutWarning) result[@"layoutWarning"]=sessionLayoutWarning;
+        respond(result);
     } else if (attempt < 30) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
             waitForMode(width, height, token, attempt + 1);
@@ -148,7 +152,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
 }
 static void configure(NSInteger width, NSInteger height, NSInteger scale, int sequence, BOOL session) {
     fprintf(stderr,"DeskPort configure seq=%d session=%d %ldx%ld@%ld\n",sequence,session,(long)width,(long)height,(long)scale);
-    requestSequence = sequence; requestedScale = scale; rollingBack = NO;
+    requestSequence = sequence; requestedScale = scale; rollingBack = NO; sessionLayoutWarning=nil;
     requestStarted = CFAbsoluteTimeGetCurrent();
     if (width < 640 || height < 360 || width > 7680 || height > 4320 || width % 2 || height % 2 || (scale != 1 && scale != 2)) {
         respond(@{@"error": @"Use an even pixel size between 640x360 and 7680x4320"}); return;
@@ -156,11 +160,12 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     if (session && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY && !enableDisplayFunction()) {
         respond(@{@"error": @"Disabling other screens is unavailable on this macOS version"}); return;
     }
-    BOOL restoring=!session && savedTopology!=nil;
-    if (!session && !restoreTopology(display.displayID)) {
+    BOOL restoring=!session && sequence!=0 && savedTopology!=nil;
+    if (!session && sequence!=0 && !restoreTopology(display.displayID)) {
         sessionActive=NO;
         if (++restoreAttempt>=30) {
-            restoreAttempt=0;
+            restoreAttempt=0; idleRecoveryExhausted=YES;
+            recordLayoutEvent(@"Local recovery retries exhausted; original layout retained for manual repair or the next session");
             respond(@{@"error": @"Could not restore the original display layout; recovery is retained"}); return;
         }
         const unsigned token=++generation;
@@ -169,7 +174,7 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         });
         return;
     }
-    restoreAttempt=0;
+    restoreAttempt=0; idleRecoveryExhausted=NO;
     if (restoring) {
         sessionActive=NO;
         // WindowServer detaches mirrors asynchronously. Applying the idle mode
@@ -181,7 +186,10 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         return;
     }
     if (session && savedTopology && !sessionActive) {
-        respond(@{@"error": @"The previous screen layout is still being restored"}); return;
+        // The authenticated new lease owns the workspace now. Cancel idle retry
+        // callbacks, retain the original journal and verify this client's mode.
+        ++generation;
+        recordLayoutEvent(@"New client takes over the workspace; original local layout recovery is retained");
     }
     if (session && !snapshotTopology(display.displayID)) {
         respond(@{@"error": @"Could not save the original display layout"}); return;
@@ -197,6 +205,9 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         if (same) { waitForMode(width, height, ++generation, 0); return; }
     }
     if (!display) {
+        if (!savedTopology && !snapshotTopology(0)) {
+            respond(@{@"error": @"Could not save the original display layout"}); return;
+        }
         if (!NSClassFromString(@"CGVirtualDisplay")) {
             respond(@{@"error": @"Virtual displays are unavailable on this macOS version"}); return;
         }
@@ -278,7 +289,7 @@ int main(int argc, const char *argv[]) {
                 restored=restoreTopology(0);
                 if (!restored) CFRunLoopRunInMode(kCFRunLoopDefaultMode,0.1,false);
             }
-            if (!restored) return 1;
+            if (!restored) { idleRecoveryExhausted=YES; recordLayoutEvent(@"Startup local layout recovery is pending; keeping the host available for new clients"); }
         }
         configure(atoi(argv[1]), atoi(argv[2]), 1, 0, NO);
         if (!display) return 1;
@@ -310,7 +321,7 @@ int main(int argc, const char *argv[]) {
         dispatch_source_set_timer(caretTimer,dispatch_time(DISPATCH_TIME_NOW,0),200*NSEC_PER_MSEC,40*NSEC_PER_MSEC);
         dispatch_source_set_event_handler(caretTimer, ^{
             if (!sessionActive) {
-                if (savedTopology && !preserveTopologyJournal) restoreTopology(display.displayID);
+                if (savedTopology && !preserveTopologyJournal && !idleRecoveryExhausted) restoreTopology(display.displayID);
                 return;
             }
             // Send periodic geometry so clients can expire stale focus information.

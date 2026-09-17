@@ -29,6 +29,9 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
 for line in sys.stdin:
     request = json.loads(line)
     if os.environ.get("DESKPORT_TEST_MODE") == "restore-slow" and not request.get("session", True): time.sleep(0.8)
+    if os.environ.get("DESKPORT_TEST_MODE") == "restore-reject" and not request.get("session", True):
+        time.sleep(0.2)
+        request["error"] = "Local layout recovery is pending"
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
     request["displayId"] = 123

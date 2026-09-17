@@ -3,11 +3,11 @@
     "deskport-core": {
       "flake": false,
       "locked": {
-        "lastModified": 1789614917,
-        "narHash": "sha256-KOJTyTMeqkdUQFzYy1N9ShiPU/X75LIwrDmziNDWIL0=",
+        "lastModified": 1789624958,
+        "narHash": "sha256-FT3UFHplCZ5CXcKv36X6M6ojTIDc9ZevIDb91pl1P1w=",
         "owner": "keithxc",
         "repo": "deskport-core",
-        "rev": "0227ccf867356f9a05d74d4dadef70ee77e64aa1",
+        "rev": "0d3f86a942263479ba9df50d11b0b7a93705e1f0",
         "type": "github"
       },
       "original": {

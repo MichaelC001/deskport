@@ -1,3 +1,13 @@
+## 0.3.13 connection recovery (2026-09-17)
+
+Reason: prioritize verified remote workspace availability over failed local
+monitor restoration. Fix macOS mirror-mode recovery and KDE stale lease state;
+retain recovery evidence and record local layout deviations. Deliver macOS
+arm64 and Linux x86_64 through mynix for user verification on mm4, pk4 and wmn,
+including iPad handoff. See [session display recovery](SESSION_DISPLAY.md).
+Checkpoint: helper fault regressions, host/binding suites, platform builds and
+notarized prerelease. Activation and physical streaming remain user-owned.
+
 ## 0.3.12 macOS adaptive resolution delivery (2026-09-17)
 
 Reason: client resolution requests reach the host but disconnected connector

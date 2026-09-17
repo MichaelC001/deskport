@@ -26,6 +26,20 @@ private slots:
         QCOMPARE(result[1][1].toInt(), 1920);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
+    void reconnectAfterFailedRestore() {
+        qputenv("DESKPORT_TEST_MODE", "restore-reject");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path()); host.start(2560,1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(),5000);
+        QSignalSpy result(&host,&HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(2560,1440,1,-1));
+        QVERIFY(host.resizeDisplay(1920,1888,2,7));
+        QTRY_COMPARE_WITH_TIMEOUT(result.size(),2,4000);
+        QVERIFY(!result[0][3].toString().isEmpty());
+        QCOMPARE(result[1][0].toInt(),7);
+        QVERIFY(result[1][3].toString().isEmpty());
+        QCOMPARE(result[1][1].toInt(),1920); QCOMPARE(result[1][2].toInt(),1888);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(),5000);
+    }
     void disconnectedQueuedControllerNeverTakesOver() {
         qputenv("DESKPORT_TEST_MODE", "restore-slow");
         QTemporaryDir dir; HostManager host(nullptr, dir.path());

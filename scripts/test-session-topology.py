@@ -9,5 +9,5 @@ with tempfile.TemporaryDirectory(prefix="deskport-topology-") as temporary:
     binary = Path(temporary) / "topology"
     subprocess.run(["xcrun", "clang", "-fobjc-arc", "-fblocks", "-fsanitize=address,undefined",
                     str(root / "tests/session-topology.m"), "-framework", "Foundation",
-                    "-framework", "ApplicationServices", "-o", str(binary)], check=True)
+                    "-framework", "ApplicationServices", "-framework", "AppKit", "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
