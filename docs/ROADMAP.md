@@ -1,13 +1,36 @@
-## Stable desktop 0.4.0 release preparation (2026-09-17)
+## Stable desktop 0.4.0 release (2026-09-17)
 
 Reason: consolidate the adaptive-display core, per-device address editing, macOS
 mirror-mode/KDE lease recovery and the Linux TCP fallback prereleases (0.3.6–0.3.14)
 into main for a formal desktop release. Version declarations were bumped to 0.4.0
 in `app/version.txt` and `flake.nix`; see [release notes](RELEASE_0.4.0.md) for the
-established macOS arm64 and Linux x86_64 package matrix. Building, packaging,
-signing/notarization, publishing and test/verification runs have not been performed
-as part of this preparation step. The open TLS-fallback pending-handshake issue
-below is carried forward unresolved.
+established macOS arm64 and Linux x86_64 package matrix.
+
+Published as stable `v0.4.0` from commit `6133f7e9`. The macOS arm64 DMG and ZIP
+are Developer ID signed, notarized and stapled, with the extracted application
+accepted by Gatekeeper. Linux x86_64 DEB, RPM, Arch, AppImage and the client-only
+Flatpak were built from the same commit and installed in clean Ubuntu 24.04,
+Debian 13, Fedora 44 and Arch containers. Binding, shared workspace contract,
+small-MSS TCP and package smoke checks passed on both platforms; per-asset hashes
+and the acceptance boundaries this release does not cover are in the release
+`VERIFICATION.txt`. Consuming mynix pins were updated for pk4 and mm4; activation
+remains the user's manual `rebuild switch` followed by live device acceptance.
+
+The open TLS-fallback pending-handshake issue below is carried forward unresolved.
+
+### TODO: host lifecycle responsiveness assertion is unstable on hosted CI (2026-09-17)
+
+- [ ] Make `HostLifecycle::startupAndStopStayResponsive()` tolerate a slow shared
+  runner, or measure responsiveness in a way that does not depend on wall-clock
+  tick throughput, so a genuine startup/stop stall is still detected.
+
+Reason: the macOS display workflow failed once on `dev/tcp-path-recovery-0.3.14`
+with `'ticks >= 10' returned FALSE` while the rest of the suite passed
+(28 passed, 1 failed, 2 skipped). The same test passes locally on macOS and Linux
+and on every subsequent main run, including the 0.4.0 release commit, so this is
+a CI timing sensitivity rather than an observed product regression. Until it is
+fixed, a single failure of this case on a hosted runner should be re-run before
+being treated as a release blocker.
 
 ## 0.3.14 TCP path recovery (2026-09-17)
 
