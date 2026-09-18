@@ -5,6 +5,13 @@
 <h1 align="center">DeskPort</h1>
 
 <p align="center">
+  <b>English</b> ·
+  <a href="README.zh-CN.md">简体中文</a> ·
+  <a href="README.zh-TW.md">繁體中文</a> ·
+  <a href="README.ja.md">日本語</a>
+</p>
+
+<p align="center">
   A remote desktop workspace built on Moonlight and Sunshine.<br>
   Keep your remote desktop ready in the background, bring it onto your current
   workspace with one action, and tuck it away without reconnecting.
@@ -12,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.4.1-71e0c3"></a>
-  <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad-0a84ff?logo=apple&logoColor=white"></a>
+  <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
@@ -26,8 +33,8 @@
 | **Linux x86-64** | Viewer + host | ✅ Released — Nix 0.4.1; DEB / RPM / Arch / AppImage / Flatpak at 0.4.0 | [Releases](https://github.com/keithxc/deskport/releases) · [guide](docs/LINUX_PACKAGES.md) |
 | **Linux ARM64** | Viewer + host | 🧪 Nix package definition only; build and runtime not yet verified | — |
 | **Windows** | Viewer (inherited source) | 🚧 Build and packaging not yet done | — |
-| **iOS / iPadOS** | 📱 Client only | ✅ Released — purchase and install from the App Store | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
-| **Android** (8.0+) | 📱 Client only | 🚧 In development — native UI and MediaCodec; not published yet | — |
+| **iOS / iPadOS** | 📱 Client only | ✅ Released — US$4.99 on the App Store | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
+| **Android** (8.0+) | 📱 Client only | 🚧 In development — native UI and MediaCodec; Google Play at the same US$4.99 | — |
 
 > **Mobile scope:** iOS/iPadOS and Android are planned as **clients only**. They
 > connect to authorized DeskPort/Sunshine hosts and never provide host features —
@@ -37,9 +44,17 @@
 
 ## Install
 
-**iPhone / iPad** — [DeskPort on the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
-A native client for authorized DeskPort/Sunshine hosts, with direct touch,
-an office keyboard mode and adaptive workspace sizing on bound hosts.
+**iPhone / iPad** — [DeskPort on the App Store](https://apps.apple.com/us/app/deskport/id6812389978),
+**US$4.99, a one-time purchase**. A native client for authorized DeskPort/Sunshine
+hosts, with direct touch, an office keyboard mode and adaptive workspace sizing on
+bound hosts. The Android client will carry the same US$4.99 price on Google Play
+when it ships.
+
+> 💚 **Thank you for supporting DeskPort.** The desktop app stays free and open
+> source; the mobile clients are what keep the project funded. Every purchase goes
+> straight back into developer accounts, code signing, test hardware and the time
+> to keep building. If you have bought it — thank you, genuinely. If you have not,
+> issues, translations and feedback are just as welcome.
 
 **macOS** — [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)
 for Apple Silicon running macOS 26 or later. Open the DMG, drag DeskPort into
