@@ -1,3 +1,4 @@
+#include <atomic>
 #include <QMap>
 #pragma once
 #include "clipboardsync.h"
@@ -317,6 +318,7 @@ private:
     QWindow* m_QtWindow;
     bool m_ThreadedExec;
     bool m_UnexpectedTermination;
+    std::atomic<bool> m_TerminationReported {false};
     SdlInputHandler* m_InputHandler;
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;

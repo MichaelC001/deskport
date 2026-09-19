@@ -110,10 +110,17 @@ void Session::clStageFailed(int stage, int errorCode)
 void Session::clConnectionTerminated(int errorCode)
 {
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
-    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
-    // Display the termination dialog if this was not intended
-    switch (errorCode) {
+    // The host joins the old video/input workers before reporting takeover on
+    // the authenticated control channel. Resolve that reason before generic UI.
+    const bool takenOver = s_ActiveSession->m_AdaptiveDisplay &&
+        s_ActiveSession->m_AdaptiveDisplay->wasTakenOver(3000);
+    if (s_ActiveSession->m_TerminationReported.exchange(true)) return;
+    if (!takenOver) s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
+    if (takenOver) {
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError(tr("This connection was taken over by another device."));
+    } else switch (errorCode) {
     case ML_ERROR_GRACEFUL_TERMINATION:
         break;
 
@@ -621,7 +628,7 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
             scale = systemScale; // Native output pixels, not an oversampled window buffer.
         }
     }
-    const auto workspace = DeskPortDisplay::adjusted(DeskPortDisplay::forClient(pixels, scale), m_Preferences->desktopAdjustment);
+    const auto workspace = DeskPortDisplay::adjusted(DeskPortDisplay::forClient(pixels, scale), m_Preferences->desktopAdjustment, m_Computer->operatingSystem);
     if (initialFullscreen || window != m_Window)
         qInfo() << "Client display pixels:" << pixels << "system scale:" << scale << "workspace backing:" << workspace.pixels << "host scale:" << workspace.scale;
     return workspace;
@@ -737,7 +744,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = m_Preferences->adaptiveResolution ? workspace.scale : 1;
     // Restore window geometry, not a stream size negotiated by an older policy.
-    const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
+    const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment, m_Computer->operatingSystem).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
@@ -2378,7 +2385,10 @@ void Session::execInternal()
             }
         }
         if (m_AdaptiveDisplay && (m_Preferences->displayPolicy != 0 || m_AdaptiveDisplay->admissionRequired()) && m_AdaptiveDisplay->failed()) {
-            emit displayLaunchError(tr("Virtual screen control ended. Reconnect to apply the selected mode."));
+            if (!m_TerminationReported.exchange(true))
+                emit displayLaunchError(m_AdaptiveDisplay->wasTakenOver()
+                    ? tr("This connection was taken over by another device.")
+                    : tr("Virtual screen control ended. Reconnect to apply the selected mode."));
             goto DispatchDeferredCleanup;
         }
         if (checkAdaptiveResize()) goto DispatchDeferredCleanup;

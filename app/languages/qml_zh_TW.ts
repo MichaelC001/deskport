@@ -554,6 +554,7 @@
 </context>
 <context>
     <name>Session</name>
+    <message><source>This connection was taken over by another device.</source><translation>連線已被其他用戶端接管。</translation></message>
     <message><source>Adjusting resolution…</source><translation>正在調整解析度…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>

@@ -381,9 +381,9 @@ private slots:
         host.start(2560, 1440);
         QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
         QSignalSpy resized(&host, &HostManager::displayResized), approval(&server, &PeerManager::incomingRequest);
-        auto resize = [this](AdaptiveDisplay& channel, QSize size) {
+        auto resize = [this](AdaptiveDisplay& channel, QSize size, bool takeover = false) {
             std::atomic<int> frames {0};
-            auto result = std::async(std::launch::async, [&] { return channel.resize(size, 2, [&] { ++frames; }); });
+            auto result = std::async(std::launch::async, [&] { return channel.resize(size, 2, [&] { ++frames; }, [takeover] { return takeover; }); });
             QElapsedTimer timer; timer.start();
             while (result.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready && timer.elapsed() < 11000) QTest::qWait(10);
             const bool connected = result.get();
@@ -430,6 +430,13 @@ private slots:
             QVERIFY(!host.resizeDisplay(99999, 1000, 2, 99));
             QVERIFY(!host.resizeDisplay(1600, 1000, 9, 99));
             QCOMPARE(approval.size(), 0);
+            // A real admitted client must consume unsolicited takeover before
+            // its five-second heartbeat, even when the host closes immediately.
+            AdaptiveDisplay incoming("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
+            QVERIFY(resize(incoming, QSize(1920,1080), true));
+            QTRY_VERIFY_WITH_TIMEOUT(channel.failed(), 1500);
+            QVERIFY(channel.wasTakenOver());
+            QVERIFY(!incoming.wasTakenOver());
         }
         // A released controller cannot prevent the next connection taking over.
         QTest::qWait(100);
@@ -437,7 +444,7 @@ private slots:
         QVERIFY(resize(next, QSize(2560, 1440)));
         int clientReplies = 0;
         for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
-        QCOMPARE(clientReplies, 4);
+        QCOMPARE(clientReplies, 5);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
     void workspaceUsesClientSystemScale() {

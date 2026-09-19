@@ -1,3 +1,13 @@
+## Takeover reason and compact macOS workspaces (2026-09-19)
+
+- Read authenticated takeover termination promptly and resolve it before generic
+  video-disconnect errors. Report a terminal error once, with Chinese translations.
+- Apply the shared conservative macOS workspace floor after desktop tuning,
+  retaining aspect ratio and 1x/2x backing scale. Other host sizing is unchanged.
+- Targeted binding tests include an actual displaced desktop control channel.
+  Physical Android-to-Apple handoff and Android takeover notice were verified;
+  deployed desktop-client acceptance follows manual activation of preview.2.
+
 ## Vendored third-party sources 0.4.1 release (2026-09-17)
 
 Reason: `mynix` consumes this flake through a GitHub commit-archive tarball,

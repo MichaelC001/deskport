@@ -21,6 +21,13 @@ AdaptiveDisplay::~AdaptiveDisplay() {
 }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
+bool AdaptiveDisplay::wasTakenOver(int timeoutMs) {
+    QMutexLocker lock(&m_Mutex);
+    QElapsedTimer timer; timer.start();
+    while (m_AdmissionRequired && !m_Failed && !m_TakenOver && timer.elapsed() < timeoutMs)
+        m_Wake.wait(&m_Mutex, qMax(1, timeoutMs - int(timer.elapsed())));
+    return m_TakenOver;
+}
 QSize AdaptiveDisplay::boundedSize(QSize pixels) {
     if (pixels.width() <= 0 || pixels.height() <= 0) return {};
     const double factor = qMin(1.0, qMin(double(DeskPortDisplay::MaxWidth) / pixels.width(), double(DeskPortDisplay::MaxHeight) / pixels.height()));
@@ -69,14 +76,20 @@ void AdaptiveDisplay::run() {
     };
     auto receive = [&](int timeout = 6000) -> QJsonObject {
         QElapsedTimer timer; timer.start();
-        while (!isInterruptionRequested() && timer.elapsed() < timeout && socket.state() == QAbstractSocket::ConnectedState) {
+        while (!isInterruptionRequested() && timer.elapsed() < timeout) {
             buffer += socket.readAll();
             if (buffer.size() > 32768) return {};
             const auto newline = buffer.indexOf('\n');
             if (newline >= 0) {
                 const auto object = QJsonDocument::fromJson(buffer.left(newline)).object();
-                buffer.remove(0, newline + 1); return object;
+                buffer.remove(0, newline + 1);
+                if (object["type"].toString() == DP_MESSAGE_SESSION_ENDED && object["reason"].toString() == "taken-over") {
+                    QMutexLocker lock(&m_Mutex);
+                    if (m_AdmissionRequired) { m_TakenOver = true; m_Wake.wakeAll(); }
+                }
+                return object;
             }
+            if (socket.state() != QAbstractSocket::ConnectedState) return {};
             socket.waitForReadyRead(100);
         }
         return {};
@@ -133,11 +146,12 @@ void AdaptiveDisplay::run() {
             connected = receive()["type"].toString() == DP_MESSAGE_DISPLAY_PONG;
             heartbeat.restart();
         } else {
-            // Wait atomically with the pending predicate: no lost request wakeup.
-            QMutexLocker lock(&m_Mutex);
-            if (!m_Pending && !isInterruptionRequested())
-                m_Wake.wait(&m_Mutex, qMax<qint64>(1, 5000 - heartbeat.elapsed()));
-            connected = socket.state() == QAbstractSocket::ConnectedState;
+            // Read unsolicited termination promptly, including buffered TLS data
+            // after EOF. Video teardown can precede the control-channel reason.
+            if (socket.bytesAvailable() || socket.waitForReadyRead(100)) {
+                receive();
+                connected = false;
+            } else connected = socket.state() == QAbstractSocket::ConnectedState;
         }
     }
     socket.abort();

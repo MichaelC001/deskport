@@ -20,6 +20,7 @@ public:
                 const std::function<bool()>& confirmTakeover = {});
     static QSize boundedSize(QSize pixels);
     bool failed();
+    bool wasTakenOver(int timeoutMs = 0);
     bool admissionRequired();
 private:
     void run() override;
@@ -32,6 +33,7 @@ private:
     QSize m_Size;
     int m_Scale = 1;
     int m_Policy = 0;
+    bool m_TakenOver = false;
     bool m_AdmissionRequired = false, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };
