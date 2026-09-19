@@ -44,6 +44,36 @@ static unsigned restoreAttempt;
 static BOOL idleRecoveryExhausted;
 static CFAbsoluteTime requestStarted;
 static unsigned readyGeneration;
+static BOOL displayRebuilt;
+static void configure(NSInteger width, NSInteger height, NSInteger scale, int sequence, BOOL session);
+// WindowServer needs a few run-loop turns to register a freshly created virtual
+// display. Until it does, CGDisplayMirrorsDisplay answers the 0xFFFFFFFF
+// sentinel rather than 0, so a raw check reads an unregistered display as a
+// mirror sink and the detach transaction fails with kCGErrorIllegalArgument. An
+// unregistered display carries no topology; report it independent and let the
+// bounded mode retries wait for registration instead.
+static BOOL displayRegistered(CGDirectDisplayID ident) {
+    return ident && ident != (CGDirectDisplayID)-1 && CGDisplayIsOnline(ident) > 0;
+}
+static CGDirectDisplayID mirrorSource(CGDirectDisplayID ident) {
+    if (!displayRegistered(ident)) return kCGNullDirectDisplay;
+    const CGDirectDisplayID source = CGDisplayMirrorsDisplay(ident);
+    return source == (CGDirectDisplayID)-1 ? kCGNullDirectDisplay : source;
+}
+// A mirror set that refuses to detach must not wedge sharing for the lifetime of
+// this helper. Discard the virtual display once per request so the retry builds
+// a fresh one, instead of answering an error the host can only surface as a stop.
+static BOOL rebuildDisplay(NSInteger width, NSInteger height, NSInteger scale, int sequence, BOOL session, CGError error) {
+    if (displayRebuilt) return NO;
+    displayRebuilt = YES;
+    fprintf(stderr,"DeskPort rebuild seq=%d: dedicated display could not be separated (%d); recreating it\n",sequence,error);
+    display = nil;
+    const unsigned token = ++generation;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 300 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
+        if (token == generation) configure(width, height, scale, sequence, session);
+    });
+    return YES;
+}
 static NSArray *displayModes(NSInteger width, NSInteger height, NSInteger scale) {
     return @[[[CGVirtualDisplayMode alloc] initWithWidth:(unsigned)width / scale
         height:(unsigned)height / scale refreshRate:60.0]];
@@ -66,7 +96,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
     if (token != generation) return;
     // Mirror membership can be restored asynchronously after applySettings.
     // Verify independence here before reporting a capture ID to Sunshine.
-    CGDirectDisplayID source = CGDisplayMirrorsDisplay(display.displayID);
+    CGDirectDisplayID source = mirrorSource(display.displayID);
     if (source) {
         CGDisplayConfigRef config;
         CGError result = CGBeginDisplayConfiguration(&config);
@@ -76,6 +106,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
             else CGCancelDisplayConfiguration(config);
         }
         if (result != kCGErrorSuccess || attempt >= 30) {
+            if (rebuildDisplay(width, height, requestedScale, requestSequence, sessionActive, result)) return;
             respond(@{@"error": @"Could not separate the dedicated display"}); return;
         }
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
@@ -124,6 +155,7 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
     if (!ready) readyGeneration = 0;
     if (ready) {
         lastWidth = width; lastHeight = height; lastScale = requestedScale;
+        displayRebuilt = NO;
         if (rollingBack) {
             rollingBack = NO;
             respond(@{@"error": @"Requested mode was rejected; the previous display mode was restored"}); return;
@@ -197,7 +229,8 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     sessionActive=session;
     // Repeated requests still verify the actual OS mode; cached dimensions alone
     // are not proof that a display remains active, independent, and correctly scaled.
-    if (display && CGDisplayIsActive(display.displayID) && !CGDisplayMirrorsDisplay(display.displayID)) {
+    if (display && displayRegistered(display.displayID) && CGDisplayIsActive(display.displayID) &&
+        !mirrorSource(display.displayID)) {
         CGDisplayModeRef mode = CGDisplayCopyDisplayMode(display.displayID);
         BOOL same = mode && CGDisplayModeGetPixelWidth(mode) == width && CGDisplayModeGetPixelHeight(mode) == height &&
             CGDisplayModeGetWidth(mode) == width / scale && CGDisplayModeGetHeight(mode) == height / scale;
@@ -221,7 +254,7 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     }
     // The virtual display must be the source, not a sink in an old mirror set.
     // Physical displays join it only after the requested mode has settled.
-    if (display && CGDisplayMirrorsDisplay(display.displayID)) {
+    if (display && mirrorSource(display.displayID)) {
         CGDisplayConfigRef config;
         if (CGBeginDisplayConfiguration(&config) != kCGErrorSuccess) {
             respond(@{@"error": @"Could not configure the dedicated display"}); return;
@@ -229,7 +262,10 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         CGError result = CGConfigureDisplayMirrorOfDisplay(config, display.displayID, kCGNullDirectDisplay);
         if (result == kCGErrorSuccess) result = CGCompleteDisplayConfiguration(config, kCGConfigureForSession);
         else CGCancelDisplayConfiguration(config);
-        if (result != kCGErrorSuccess) { respond(@{@"error": @"Could not separate the dedicated display"}); return; }
+        if (result != kCGErrorSuccess) {
+            if (rebuildDisplay(width, height, scale, sequence, session, result)) return;
+            respond(@{@"error": @"Could not separate the dedicated display"}); return;
+        }
     }
     CGVirtualDisplaySettings *settings = [CGVirtualDisplaySettings new];
     settings.hiDPI = scale == 2;
@@ -292,7 +328,8 @@ int main(int argc, const char *argv[]) {
             if (!restored) { idleRecoveryExhausted=YES; recordLayoutEvent(@"Startup local layout recovery is pending; keeping the host available for new clients"); }
         }
         configure(atoi(argv[1]), atoi(argv[2]), 1, 0, NO);
-        if (!display) return 1;
+        // A pending rebuild owns the virtual display; it is recreated on the next turn.
+        if (!display && !displayRebuilt) return 1;
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             char *line = NULL; size_t length = 0;
             while (getline(&line, &length, stdin) != -1) {
@@ -311,6 +348,7 @@ int main(int argc, const char *argv[]) {
                             requestSequence=sequence; respond(@{@"error":@"Invalid or changed session display policy"}); return;
                         }
                         if (session) sessionDisplayPolicy=policy;
+                        displayRebuilt=NO;
                         configure(width, height, scale ?: 1, sequence, session);
                     });
                 }

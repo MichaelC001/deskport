@@ -146,5 +146,7 @@ private:
     bool m_DesiredSharing = false, m_ShuttingDown = false;
     bool m_Resident = false, m_ExitRequested = false;
     int m_RecoveryAttempt = 0, m_RequestedWidth = 2560, m_RequestedHeight = 1440;
+    int m_DisplayFailures = 0;
+    bool m_PhysicalFallback = false;
 
 };

@@ -1,5 +1,8 @@
 #include <QSysInfo>
 #include "hostmanager.h"
+#ifdef Q_OS_MACOS
+#include <CoreGraphics/CoreGraphics.h>
+#endif
 #include "workspaceresolution.h"
 #include "peerstore.h"
 #include "serviceconfig.h"
@@ -105,6 +108,18 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
             }
             if (object.contains("error")) {
                 qWarning() << "Virtual display startup failed:" << object["error"].toString();
+#ifdef Q_OS_MACOS
+                // A private virtual display can stay unavailable indefinitely: a
+                // mirror set WindowServer will not detach, or a private API that
+                // stops answering. Retrying it alone leaves the host unreachable,
+                // so share this Mac's own screen instead until sharing is cycled.
+                if (!m_PhysicalFallback && ++m_DisplayFailures >= 3) {
+                    m_PhysicalFallback = true;
+                    beginStop(tr("A private virtual display is unavailable (%1). Sharing this Mac's own screen instead.")
+                        .arg(object["error"].toString()));
+                    return;
+                }
+#endif
                 beginStop(object["error"].toString()); return;
             }
             if (object["displayId"].toInt() > 0 && m_Starting && !m_ServerRequested) {
@@ -127,6 +142,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     connect(&m_Server, &QProcess::started, this, [this] {
         if (m_Stopping) { m_Server.terminate(); return; }
         m_Starting = false;
+        m_DisplayFailures = 0;
         if (!m_Isolated) QSettings().setValue("host/port", m_BasePort);
         setStatus(tr("Sharing has started. Connect from an approved device to check picture, sound and control."));
 #ifdef Q_OS_LINUX
@@ -404,8 +420,17 @@ void HostManager::start(int width, int height) {
     } else
 #endif
     {
-        m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
-        setStatus(tr("Creating a private virtual display…"));
+#ifdef Q_OS_MACOS
+        if (m_PhysicalFallback) {
+            m_DisplayWidth = m_DisplayHeight = 0; m_DisplayScale = 1;
+            setStatus(tr("Sharing this Mac's own screen…"));
+            startServer(int(CGMainDisplayID()));
+        } else
+#endif
+        {
+            m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
+            setStatus(tr("Creating a private virtual display…"));
+        }
     }
     QTimer::singleShot(15000, this, [this, generation] {
         if (m_Starting && m_Generation == generation) { beginStop(tr("Host startup timed out; see logs")); }
@@ -458,6 +483,7 @@ void HostManager::startServer(int displayId) {
 }
 void HostManager::stop() {
     m_DesiredSharing = false; m_RecoveryTimer.stop(); m_RecoveryAttempt = 0;
+    m_DisplayFailures = 0; m_PhysicalFallback = false;
     if (!m_Isolated) {
         QSettings().setValue("host/shareOnLaunch", false);
         QSettings().setValue("host/sharingDisabled", true);
