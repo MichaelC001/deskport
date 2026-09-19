@@ -18,6 +18,9 @@ with tempfile.TemporaryDirectory(prefix="deskport-lifecycle-") as temporary:
     interpreter = shutil.which("python3")
     display = helpers / "deskport-display"
     display.write_text(f"#!{interpreter}\n" + '''import json, os, select, sys, time
+assert os.environ.get("DESKPORT_DISPLAY_ISOLATED") == "1"
+assert os.environ.get("DESKPORT_DISPLAY_STATE_DIR", "").startswith("/")
+assert int(os.environ.get("DESKPORT_DISPLAY_SERIAL", "0")) >= 0x80000000
 if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
@@ -57,7 +60,45 @@ if mode == "host-crash-once" and not (state / "crashed-once").exists():
     sys.exit(7)
 if mode == "stubborn": signal.signal(signal.SIGTERM, signal.SIG_IGN)
 (state / "host-started").touch()
-while True: time.sleep(1)
+# Loopback-only, certificate-pinned management fixture; never a personal host.
+if (state / "credentials/cert.pem").exists():
+    import base64, http.server, json, ssl
+    config = dict(line.split(" = ", 1) for line in pathlib.Path(sys.argv[1]).read_text().splitlines() if " = " in line)
+    session_file = state / "test-sessions.json"
+    session_file.write_text(json.dumps(dict(generation=0, sessions=0, lease="")))
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *args): pass
+        def handle_session(self):
+            expected = "Basic " + base64.b64encode(("deskport:" + (state / "control-secret").read_text().strip()).encode()).decode()
+            if self.path != "/api/deskport/sessions" or self.headers.get("Authorization") != expected:
+                self.send_error(403); return
+            current = json.loads(session_file.read_text())
+            def snapshot(): return str(current["generation"]) + ":" + str(current["sessions"])
+            output = dict(status=True, version=1)
+            if self.command == "POST":
+                body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                if body.get("action") == "release":
+                    if current["lease"] == body.get("lease"):
+                        current.update(lease="", generation=current["generation"] + 1)
+                elif body.get("action") == "acquire":
+                    if body.get("snapshot") != snapshot(): output.update(status=False, code="stale")
+                    elif not body.get("takeover") and (current["sessions"] or current["lease"]): output.update(status=False, code="busy")
+                    elif current.get("fail"): output.update(status=False, code="unavailable")
+                    else:
+                        current.update(lease=body["lease"], sessions=0, generation=current["generation"] + 1)
+                        current["takeovers"] = current.get("takeovers", 0) + int(body.get("takeover", False))
+                session_file.write_text(json.dumps(current))
+            output.update(snapshot=snapshot(), sessions=current["sessions"], reserved=bool(current["lease"]))
+            data = json.dumps(output).encode()
+            self.send_response(200); self.send_header("Content-Length", str(len(data))); self.end_headers(); self.wfile.write(data)
+        do_GET = do_POST = handle_session
+    server = http.server.HTTPServer(("127.0.0.1", int(config["port"]) + 1), Handler)
+    tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    tls.load_cert_chain(state / "credentials/cert.pem", state / "credentials/key.pem")
+    server.socket = tls.wrap_socket(server.socket, server_side=True)
+    server.serve_forever()
+else:
+    while True: time.sleep(1)
 ''')
     if sys.platform != "darwin":
         linux_host = work / "Contents/libexec/deskport-host"
@@ -110,6 +151,7 @@ macx {{
         environment["XDG_CURRENT_DESKTOP"] = "KDE"
         environment["WAYLAND_DISPLAY"] = "deskport-isolated-fake"
     if binding:
+        environment["TEST_CORE_SESSION_CASES"] = str(root / "shared/deskport-core/protocol/session-cases.json")
         environment["TEST_CORE_DISPLAY_CASES"] = str(root / "shared/deskport-core/protocol/display-cases.json")
         environment["TEST_GUI_DIR"] = str(root / "app/gui")
         environment["TEST_BINDING_QML"] = str(root / "app/gui/BindingApproval.qml")

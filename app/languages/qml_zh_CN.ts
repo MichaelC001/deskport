@@ -767,6 +767,26 @@
 
 <message><source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source><translation>所选虚拟屏幕模式不可用，请更新主机或选择其他模式。</translation></message>
 <message><source>Virtual screen control ended. Reconnect to apply the selected mode.</source><translation>虚拟屏幕控制已断开，请重新连接以应用所选模式。</translation></message>
+    <message>
+        <source>Host already in use</source>
+        <translation>主机已有连接</translation>
+    </message>
+    <message>
+        <source>Another device is connected to this host. Disconnect it and connect here?</source>
+        <translation>另一台设备正在连接此主机。是否断开旧连接并在这里连接？</translation>
+    </message>
+    <message>
+        <source>Disconnect and connect</source>
+        <translation>断开旧连接并连接</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+    <message>
+        <source>Connection cancelled or session access was not granted. Reconnect to try again.</source>
+        <translation>连接已取消或未获得会话使用权，请重新连接后重试。</translation>
+    </message>
 </context>
 <context>
     <name>SettingsView</name>
@@ -2541,6 +2561,10 @@
         <source>Cannot enable login startup.</source>
         <translation>无法开启登录启动。</translation>
     </message>
+    <message>
+        <source>Desktop adjustment</source>
+        <translation>桌面微调</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2624,6 +2648,14 @@
     <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>保留现有绑定，重新连接后使用新地址。</translation></message>
     <message><source>Computer name or IP, without port</source><translation>计算机名称或 IP，不含端口</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
+    <message>
+        <source>Desktop adjustment</source>
+        <translation>桌面微调</translation>
+    </message>
+    <message>
+        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source>
+        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中可通过托盘菜单的“桌面微调”立即应用。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

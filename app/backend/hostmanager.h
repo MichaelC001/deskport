@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <functional>
 #include <QVariantList>
 #include <QUrl>
 #include <QJsonObject>
@@ -60,6 +61,9 @@ public:
     bool displayPoliciesAvailable() const;
     bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
     void restoreDisplay();
+    void settleSessionDisplay(QObject* context, std::function<void(bool)> completion);
+    virtual void sessionControl(const QJsonObject& request, QObject* context,
+                                std::function<void(QJsonObject)> completion);
     bool running() const;
     bool canPair() const;
     int basePort() const { return m_BasePort; }
@@ -80,6 +84,7 @@ public:
     Q_INVOKABLE void permission(const QString &kind);
     Q_INVOKABLE void openLogs();
     Q_INVOKABLE void recallViewer() { emit viewerRecallRequested(); }
+    void setViewerDesktopAdjustment(double value);
     void setResident(bool enabled) { m_Resident = enabled; }
     Q_INVOKABLE void requestExit();
     Q_INVOKABLE void requestRestart();
@@ -95,6 +100,8 @@ signals:
     void exitRequested();
     void disconnectRequested();
     void reconnectRequested();
+    void viewerMenuRequested();
+    void desktopAdjustmentRequested(double value);
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
@@ -134,6 +141,7 @@ private:
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
+    QMenu* m_AdjustmentMenu = nullptr;
     bool m_TrustBusy = false;
     bool m_Starting = false;
     bool m_Stopping = false;

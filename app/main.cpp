@@ -1,4 +1,8 @@
 #include <QApplication>
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushButton>
 #include "clipboard/agent.h"
 #include <QTemporaryDir>
 #include <QTimer>
@@ -369,6 +373,16 @@ int main(int argc, char *argv[])
     for (int i = 1; i < argc; ++i) {
         if (QByteArray(argv[i]) == "--clipboard-helper") return runClipboardHelper(argc, argv);
     }
+    bool isolatedSessionTest = false;
+    for (int i = 1; i < argc; ++i) isolatedSessionTest |= QByteArray(argv[i]) == "--host-session-test";
+    if (isolatedSessionTest) {
+        QFile marker(QDir::currentPath()+"/SESSION_TEST_ONLY");
+        if (!marker.open(QIODevice::ReadOnly) || marker.readAll() != "DeskPort isolated session test\n" ||
+            !QFile::exists("portable.dat")) {
+            fprintf(stderr, "Use scripts/run-isolated-session-host.sh with a disposable test directory.\n");
+            return 2;
+        }
+    }
     SDL_SetMainReady();
 
     // Set the app version for the QCommandLineParser's showVersion() command
@@ -379,7 +393,7 @@ int main(int argc, char *argv[])
     // it is critical that these be called before Path::initialize().
     QCoreApplication::setOrganizationName("DeskPort");
     QCoreApplication::setOrganizationDomain("deskport.keithxc.github.io");
-    QCoreApplication::setApplicationName("DeskPort");
+    QCoreApplication::setApplicationName(isolatedSessionTest ? "DeskPortSessionTest" : "DeskPort");
 
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -659,6 +673,51 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
+    if (isolatedSessionTest) {
+        QFile certFile("test-cert.pem"), keyFile("test-key.pem");
+        if (!certFile.open(QIODevice::ReadOnly) || !keyFile.open(QIODevice::ReadOnly)) return 2;
+        const auto cert = certFile.readAll(), key = keyFile.readAll();
+        if (QSslCertificate(cert).isNull() || QSslKey(key, QSsl::Rsa).isNull()) return 2;
+        QLockFile testLock(QDir::currentPath()+"/session-test.lock");
+        if (!testLock.tryLock(0)) return 2;
+        HostManager host(nullptr, QDir::currentPath()+"/host");
+        PeerManager peers(&host, cert, key, QDir::currentPath()+"/binding", 0);
+        QDialog window;
+        window.setWindowTitle("DeskPort temporary session test");
+        auto layout = new QVBoxLayout(&window);
+        auto status = new QLabel(&window);
+        status->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        auto pending = new QLabel(&window);
+        pending->setWordWrap(true);
+        auto approve = new QPushButton("Approve this device", &window);
+        auto reject = new QPushButton("Reject this device", &window);
+        auto stop = new QPushButton("Stop temporary host", &window);
+        layout->addWidget(status); layout->addWidget(pending);
+        layout->addWidget(approve); layout->addWidget(reject); layout->addWidget(stop);
+        bool changingTestPort = false;
+        auto refresh = [&] {
+            if (!changingTestPort && host.basePort() != DeskPortNetwork::DefaultBasePort && peers.port() != host.basePort()+2) {
+                changingTestPort = true;
+                peers.setConnectionPort(host.basePort()+2);
+                changingTestPort = false;
+            }
+            status->setText(QString("Isolated host; extended workspace only; expires after 15 minutes.\nBinding port: %1   Video base port: %2\n%3\n%4")
+                            .arg(peers.port()).arg(host.basePort()).arg(host.status(), peers.status()));
+            pending->setText(peers.pendingName());
+            approve->setEnabled(!peers.requestId().isEmpty()); reject->setEnabled(!peers.requestId().isEmpty());
+        };
+        QObject::connect(&peers, &PeerManager::changed, &window, refresh);
+        QObject::connect(&host, &HostManager::changed, &window, refresh);
+        QObject::connect(approve, &QPushButton::clicked, &window, [&] { peers.approve(peers.requestId()); });
+        QObject::connect(reject, &QPushButton::clicked, &window, [&] { peers.reject(peers.requestId()); });
+        QObject::connect(stop, &QPushButton::clicked, &app, &QApplication::quit);
+        QObject::connect(&app, &QApplication::aboutToQuit, &host, &HostManager::stop);
+        QTimer::singleShot(15 * 60 * 1000, &app, &QApplication::quit);
+        app.setQuitOnLastWindowClosed(true);
+        refresh(); window.show();
+        QTimer::singleShot(0, &host, [&host] { host.start(2560, 1440); });
+        return app.exec();
+    }
     if (app.arguments().contains("--host-self-test")) {
         QTemporaryDir directory;
         if (!directory.isValid()) return 1;
@@ -853,6 +912,12 @@ int main(int argc, char *argv[])
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);
+    QObject::connect(&hostManager, &HostManager::viewerMenuRequested, &app, [&hostManager] {
+        hostManager.setViewerDesktopAdjustment(Session::get() ? Session::get()->desktopAdjustment() : 0);
+    });
+    QObject::connect(&hostManager, &HostManager::desktopAdjustmentRequested, &app, [](double value) {
+        if (Session::get()) Session::get()->setDesktopAdjustment(value);
+    });
     QObject::connect(&hostManager, &HostManager::reconnectRequested, &app, [] {
         if (Session::get()) Session::get()->requestReconnect();
     });

@@ -21,6 +21,114 @@ static QByteArray credential(const char* name) {
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void sessionAdmission_data() {
+        QTest::addColumn<QString>("scenario");
+        QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
+        QVERIFY(fixtures.open(QIODevice::ReadOnly));
+        for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
+            const auto name = entry.toObject()["name"].toString();
+            QTest::newRow(qPrintable(name)) << name;
+        }
+    }
+    void sessionAdmission() {
+        QFETCH(QString, scenario);
+        QTemporaryDir dir;
+        auto fp = [](const QByteArray& cert) { return QString::fromLatin1(QSslCertificate(cert).digest(QCryptographicHash::Sha256).toHex()); };
+        QJsonObject peers{{fp(credential("TEST_CERT_A")), QJsonObject{{"ready", true}, {"granted", true}}}};
+        if (scenario != "unapproved") peers[fp(credential("TEST_CERT_C"))] = QJsonObject{{"ready", true}, {"granted", true}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json", {{"version",1},{"peers",peers}}));
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager manager(&host,credential("TEST_CERT_B"),credential("TEST_KEY_B"),dir.path()+"/binding",0,QHostAddress::LocalHost);
+        host.start(2560,1440);
+        const auto statePath = dir.path()+"/host/test-sessions.json";
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable() && QFile::exists(statePath),5000);
+        auto state = [&] { QFile file(statePath); file.open(QIODevice::ReadOnly); return QJsonDocument::fromJson(file.readAll()).object(); };
+        auto writeState = [&](QJsonObject object) { QFile file(statePath); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(QJsonDocument(object).toJson()); };
+        auto connectPeer = [&](QSslSocket& socket, const char* cert, const char* key) {
+            socket.setLocalCertificate(QSslCertificate(credential(cert)));
+            socket.setPrivateKey(QSslKey(credential(key),QSsl::Rsa));
+            connect(&socket,qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors),&socket,[&socket](const QList<QSslError>& errors){socket.ignoreSslErrors(errors);});
+            socket.connectToHostEncrypted("127.0.0.1",quint16(manager.port()));
+            QTRY_VERIFY_WITH_TIMEOUT(socket.isEncrypted(),5000);
+            QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(),5000);
+            const auto hello = QJsonDocument::fromJson(socket.readLine()).object();
+            QCOMPARE(hello["meta"].toObject()["sessionTakeover"].toInt(), 1);
+        };
+        auto send = [](QSslSocket& socket, QJsonObject object) { socket.write(QJsonDocument(object).toJson(QJsonDocument::Compact)+'\n'); };
+        auto receive = [](QSslSocket& socket) {
+            QElapsedTimer timer; timer.start();
+            while (!socket.canReadLine() && timer.elapsed() < 6000) QTest::qWait(10);
+            return QJsonDocument::fromJson(socket.readLine()).object();
+        };
+        const QJsonObject query{{"type","session-status"},{"sessionTakeover",1}};
+        const QJsonObject resize{{"type","display-resize"},{"seq",1},{"width",1920},{"height",1080},{"scale",1}};
+        QSslSocket old, incoming, rival;
+        if (scenario == "unapproved") {
+            connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,query);
+            QCOMPARE(receive(incoming)["code"].toString(), QString("unauthorized"));
+            QVERIFY(state()["lease"].toString().isEmpty()); host.stop(); return;
+        }
+        if (scenario == "idle-repeat" || scenario == "same-identity" || scenario == "legacy-reservation") {
+            connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,query);
+            const auto result=receive(incoming); QVERIFY(result["admitted"].toBool());
+            QVERIFY(!state()["lease"].toString().isEmpty());
+            if (scenario == "idle-repeat") {
+                send(incoming,query); QVERIFY(receive(incoming)["admitted"].toBool());
+            } else {
+                connectPeer(rival,scenario == "same-identity" ? "TEST_CERT_C" : "TEST_CERT_A",
+                            scenario == "same-identity" ? "TEST_KEY_C" : "TEST_KEY_A");
+                send(rival,scenario == "same-identity" ? query : resize);
+                if (scenario == "same-identity") QVERIFY(receive(rival)["busy"].toBool());
+                else QTRY_COMPARE(rival.state(),QAbstractSocket::UnconnectedState);
+            }
+            incoming.abort(); rival.abort(); host.stop(); return;
+        }
+        connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,resize);
+        QVERIFY(!receive(old).contains("error"));
+        auto initial=state(); initial["sessions"]=1; writeState(initial);
+        connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,query);
+        const auto busy=receive(incoming); QVERIFY(busy["busy"].toBool()); QVERIFY(!busy["admitted"].toBool());
+        const auto challenge=busy["challenge"].toString(); QVERIFY(!challenge.isEmpty());
+        QCOMPARE(busy["expiresInMs"].toInt(),30000);
+        if (scenario == "cancel") {
+            incoming.abort(); QTest::qWait(100);
+            QCOMPARE(state()["sessions"].toInt(),1);
+            send(old,{{"type","display-ping"}}); QCOMPARE(receive(old)["type"].toString(),QString("display-pong"));
+        } else {
+            if (scenario == "changed-stream") { auto changed=state(); changed["generation"]=1; writeState(changed); }
+            if (scenario == "backend-failure") { auto changed=state(); changed["fail"]=true; writeState(changed); }
+            if (scenario == "expired") {
+                for (int i=0;i<3;++i) { QTest::qWait(10200); send(old,{{"type","display-ping"}}); receive(old); }
+            }
+            QJsonObject takeover{{"type","session-takeover"},{"challenge",challenge}};
+            if (scenario == "foreign-challenge" || scenario == "competing-confirmations") {
+                connectPeer(rival,"TEST_CERT_A","TEST_KEY_A");
+                if (scenario == "foreign-challenge") {
+                    send(rival,takeover); QCOMPARE(receive(rival)["code"].toString(),QString("unauthorized"));
+                    QCOMPARE(state()["sessions"].toInt(),1); incoming.abort(); rival.abort(); old.abort(); host.stop(); return;
+                }
+                send(rival,query); const auto rivalState=receive(rival); QVERIFY(rivalState["busy"].toBool());
+                send(incoming,takeover); QVERIFY(receive(incoming)["admitted"].toBool());
+                send(rival,{{"type","session-takeover"},{"challenge",rivalState["challenge"]}});
+                QCOMPARE(receive(rival)["code"].toString(),QString("stale"));
+                QCOMPARE(state()["takeovers"].toInt(),1); incoming.abort(); rival.abort(); old.abort(); host.stop(); return;
+            }
+            if (scenario == "invalid-confirmation") takeover["challenge"]="wrong";
+            send(incoming,takeover); const auto result=receive(incoming);
+            if (scenario == "takeover") {
+                QVERIFY(result["admitted"].toBool()); QCOMPARE(state()["sessions"].toInt(),0);
+                QCOMPARE(state()["takeovers"].toInt(),1);
+                QTRY_COMPARE(old.state(),QAbstractSocket::UnconnectedState);
+                send(incoming,resize); QVERIFY(!receive(incoming).contains("error"));
+            } else {
+                QCOMPARE(result["code"].toString(),scenario == "backend-failure" ? QString("unavailable") : QString("stale"));
+                QVERIFY(!result["admitted"].toBool()); QCOMPARE(state()["sessions"].toInt(),1);
+                send(old,{{"type","display-ping"}}); QCOMPARE(receive(old)["type"].toString(),QString("display-pong"));
+            }
+        }
+        incoming.abort(); rival.abort(); old.abort(); host.stop();
+    }
     void sharedDisplayContract_data() {
         QTest::addColumn<QJsonObject>("message");
         QTest::addColumn<bool>("accepted");

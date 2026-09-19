@@ -2,6 +2,7 @@
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
 #include <QSysInfo>
+#include <QPointer>
 #include "peerstore.h"
 #include "clipboardprotocol.h"
 #include "clipboard/process.h"
@@ -73,6 +74,10 @@ struct PeerManager::Link : QObject {
     qint64 clipboardNativeRevision = -1;
     int clipboardRevision = 0, clipboardSequence = 0;
     qint64 lastClipboardRequest = 0;
+    bool sessionOptIn = false, sessionAdmitted = false;
+    QString sessionChallenge, sessionSnapshot, sessionLease;
+    qint64 sessionDeadline = 0;
+    quint64 sessionEpoch = 0;
     bool displayControl = false;
     bool caretUpdates = false;
     int displaySequence = 0;
@@ -127,6 +132,8 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
     });
     auto watchdog = new QTimer(this);
     connect(watchdog, &QTimer::timeout, this, [this] {
+        if (m_SessionLink && QDateTime::currentMSecsSinceEpoch() - m_SessionLink->lastDisplayRequest > 20000)
+            fail(m_SessionLink, tr("Session controller disconnected"));
         if (m_DisplayLink && (!m_Host->adaptiveDisplayAvailable() ||
             QDateTime::currentMSecsSinceEpoch() - m_DisplayLink->lastDisplayRequest > 20000))
             fail(m_DisplayLink, tr("Display controller disconnected"));
@@ -261,6 +268,7 @@ QJsonObject PeerManager::metadata() const {
     meta["clientBinding"] = 1;
     meta["endpointRefresh"] = 1;
     meta["clipboard"] = 1;
+    meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
     meta["clipboardV2"] = 1;
 #endif
@@ -321,10 +329,10 @@ void PeerManager::attach(Link* link) {
         if (!link->ended) fail(link, tr("Binding connection failed: %1").arg(link->socket->errorString()));
     });
     QTimer::singleShot(10000, link, [this, link] {
-        if (!link->ended && !link->displayControl && !link->clipboardControl && link->peer.isEmpty()) fail(link, tr("Binding handshake timed out"));
+        if (!link->ended && !link->sessionOptIn && !link->displayControl && !link->clipboardControl && link->peer.isEmpty()) fail(link, tr("Binding handshake timed out"));
     });
     QTimer::singleShot(120000, link, [this, link] {
-        if (!link->ended && !link->displayControl && !link->clipboardControl) fail(link, tr("Binding request expired. No new request will be accepted automatically."));
+        if (!link->ended && !link->sessionAdmitted && !link->displayControl && !link->clipboardControl) fail(link, tr("Binding request expired. No new request will be accepted automatically."));
     });
 }
 void PeerManager::drain(Link* link) {
@@ -447,6 +455,9 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         link->socket->disconnectFromHost();
         QTimer::singleShot(2000, link, &QObject::deleteLater); return;
     }
+    if (type == DP_MESSAGE_SESSION_STATUS || type == DP_MESSAGE_SESSION_TAKEOVER) {
+        sessionRequest(link, message); return;
+    }
     if (type == "endpoint-query") {
         const auto peer = m_Peers.value(link->fingerprint).toObject();
         if (!link->incoming || link->requested || link->displayControl || link->clipboardControl ||
@@ -463,10 +474,11 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
     if (type == "clipboard-v2-start") {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || link->displayControl || link->clipboardControl ||
-            !peer["ready"].toBool() || !peer["granted"].toBool() || !m_Host->running() || m_ClipboardLink) {
+            !peer["ready"].toBool() || !peer["granted"].toBool() || !m_Host->running() || m_ClipboardLink ||
+            m_SessionOperation || (m_SessionLink && m_SessionLink->fingerprint != link->fingerprint)) {
             fail(link, tr("Clipboard sharing requires an enabled host and an approved exclusive session")); return;
         }
-        link->clipboardControl = true; m_ClipboardLink = link;
+        link->clipboardControl = true; m_ClipboardLink = link; ++m_SessionEpoch;
         if (m_Link == link) m_Link = nullptr;
         link->lastClipboardRequest = QDateTime::currentMSecsSinceEpoch();
         link->socket->setReadBufferSize(DeskPortClipboard::MaxFrame + 1);
@@ -499,7 +511,8 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || link->displayControl || !peer["ready"].toBool() ||
             !peer["granted"].toBool() || !m_Host->running() ||
-            (m_ClipboardLink && m_ClipboardLink != link)) {
+            (m_ClipboardLink && m_ClipboardLink != link) || m_SessionOperation ||
+            (m_SessionLink && m_SessionLink->fingerprint != link->fingerprint)) {
             fail(link, tr("Clipboard sharing requires an enabled host and an approved exclusive session")); return;
         }
         auto clipboard = QGuiApplication::clipboard();
@@ -531,7 +544,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         link->clipboardIsText = isText;
         if (type == "clipboard-start") {
             if (link->clipboardControl) { fail(link, tr("Clipboard session already started")); return; }
-            link->clipboardControl = true; m_ClipboardLink = link;
+            link->clipboardControl = true; m_ClipboardLink = link; ++m_SessionEpoch;
             connect(clipboard, &QClipboard::dataChanged, link, [link] { link->clipboardDirty = true; });
             if (m_Link == link) m_Link = nullptr;
             link->socket->setReadBufferSize(DeskPortClipboard::MaxFrame + 1);
@@ -569,11 +582,13 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
     if (type == DP_MESSAGE_DISPLAY_RESIZE || type == DP_MESSAGE_DISPLAY_PING) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || !peer["ready"].toBool() || !peer["granted"].toBool() ||
-            !m_Host->adaptiveDisplayAvailable() || (m_DisplayLink && m_DisplayLink != link)) {
+            !m_Host->adaptiveDisplayAvailable() || (m_DisplayLink && m_DisplayLink != link) ||
+            m_SessionOperation || (m_SessionLink && m_SessionLink != link) ||
+            (link->sessionOptIn && !link->sessionAdmitted)) {
             fail(link, tr("Virtual display control requires an available host and an approved, exclusive device")); return;
         }
         if (type == DP_MESSAGE_DISPLAY_PING) {
-            if (!link->displayControl) { fail(link, tr("Display control has not started")); return; }
+            if (!link->displayControl && !link->sessionAdmitted) { fail(link, tr("Display control has not started")); return; }
             link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
             send(link, {{"type", DP_MESSAGE_DISPLAY_PONG}}); return;
         }
@@ -588,6 +603,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         link->displayPolicy = policy;
         link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+        if (m_DisplayLink != link) ++m_SessionEpoch;
         m_DisplayLink = link;
         if (m_Link == link) m_Link = nullptr;
         emit changed(); return;
@@ -684,14 +700,123 @@ void PeerManager::fail(Link* link, const QString& message) {
         link->socket->abort(); link->deleteLater();
         return; // Background reachability failures must not replace UI status.
     }
-    if (m_ClipboardLink == link) m_ClipboardLink = nullptr;
+    if (m_SessionLink == link) {
+        m_SessionLink = nullptr; ++m_SessionEpoch;
+        const auto lease = link->sessionLease;
+        m_Host->sessionControl({{"action", "release"}, {"lease", lease}}, this, [](QJsonObject) {});
+    }
+    if (m_ClipboardLink == link) { m_ClipboardLink = nullptr; ++m_SessionEpoch; }
     if (link->clipboardHelper) link->clipboardHelper->closeWriteChannel();
-    if (m_DisplayLink == link) { m_DisplayLink = nullptr; m_Host->restoreDisplay(); }
+    if (m_DisplayLink == link) { m_DisplayLink = nullptr; ++m_SessionEpoch; m_Host->restoreDisplay(); }
     if (m_Link == link) m_Link = nullptr;
     m_Status = message; connect(link->socket, &QSslSocket::disconnected, link, &QObject::deleteLater);
     link->socket->disconnectFromHost();
     QTimer::singleShot(2000, link, &QObject::deleteLater); emit changed();
 }
+void PeerManager::sessionError(Link* link, const QString& code) {
+    send(link, {{"type", DP_MESSAGE_SESSION_RESULT}, {"admitted", false}, {"code", code},
+                {"error", tr("Session access was not granted (%1). Reconnect and try again.").arg(code)}});
+}
+void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
+    const auto peer = m_Peers.value(link->fingerprint).toObject();
+    if (!link->incoming || link->requested || link->clipboardControl ||
+        !peer["ready"].toBool() || !peer["granted"].toBool() || m_Revoking == link->fingerprint || !m_Host->running()) {
+        sessionError(link, "unauthorized"); return;
+    }
+    const bool takeover = message["type"].toString() == DP_MESSAGE_SESSION_TAKEOVER;
+    if ((!takeover && message["sessionTakeover"].toInt() != DP_SESSION_TAKEOVER_VERSION) ||
+        (takeover && !link->sessionOptIn)) { sessionError(link, "unauthorized"); return; }
+    link->sessionOptIn = true;
+    if (m_Link == link) m_Link = nullptr;
+    if (m_SessionOperation) { sessionError(link, "busy"); return; }
+    if (link == m_SessionLink && link->sessionAdmitted) {
+        link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+        send(link, {{"type", DP_MESSAGE_SESSION_STATE}, {"busy", false}, {"admitted", true}}); return;
+    }
+    if (takeover) {
+        const bool valid = !link->sessionChallenge.isEmpty() &&
+            message["challenge"].toString() == link->sessionChallenge &&
+            QDateTime::currentMSecsSinceEpoch() <= link->sessionDeadline && link->sessionEpoch == m_SessionEpoch;
+        link->sessionChallenge.clear(); // Every attempted confirmation consumes it.
+        if (!valid) { sessionError(link, "stale"); return; }
+        acquireSession(link, link->sessionSnapshot, true); return;
+    }
+    m_SessionOperation = true;
+    const QPointer<Link> alive(link);
+    m_Host->sessionControl({}, this, [this, alive](QJsonObject result) {
+        m_SessionOperation = false;
+        if (!alive || alive->ended) return;
+        auto link = alive.data();
+        if (!result["status"].toBool() || result["snapshot"].toString().isEmpty() || !result["sessions"].isDouble()) {
+            sessionError(link, "unavailable"); return;
+        }
+        if (m_SessionLink || m_DisplayLink || m_ClipboardLink || result["sessions"].toInt() > 0 || result["reserved"].toBool()) {
+            link->sessionSnapshot = result["snapshot"].toString();
+            link->sessionChallenge = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            link->sessionDeadline = QDateTime::currentMSecsSinceEpoch() + DP_SESSION_CONFIRMATION_TTL_MS;
+            link->sessionEpoch = m_SessionEpoch;
+            send(link, {{"type", DP_MESSAGE_SESSION_STATE}, {"busy", true}, {"admitted", false},
+                        {"challenge", link->sessionChallenge}, {"expiresInMs", DP_SESSION_CONFIRMATION_TTL_MS}});
+        } else acquireSession(link, result["snapshot"].toString(), false);
+    });
+}
+void PeerManager::acquireSession(Link* link, const QString& snapshot, bool takeover) {
+    m_SessionOperation = true;
+    link->sessionLease = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const auto lease = link->sessionLease;
+    const QPointer<Link> alive(link);
+    m_Host->sessionControl({{"action", "acquire"}, {"uuid", trustId(link->fingerprint)},
+        {"lease", lease}, {"snapshot", snapshot}, {"takeover", takeover}}, this,
+        [this, alive, lease, takeover](QJsonObject result) {
+        if (!result["status"].toBool()) {
+            m_SessionOperation = false;
+            if (alive && !alive->ended) sessionError(alive, result["code"].toString("unavailable"));
+            return;
+        }
+        // The management response means all old streams have stopped and joined.
+        // Their input contexts are gone before any new display lease is admitted.
+        const bool hadDisplay = m_DisplayLink;
+        auto oldSession = m_SessionLink;
+        auto oldDisplay = m_DisplayLink;
+        auto oldClipboard = m_ClipboardLink;
+        const QPointer<ClipboardProcess> oldHelper(oldClipboard ? oldClipboard->clipboardHelper : nullptr);
+        for (auto old : {oldSession, oldDisplay, oldClipboard}) {
+            if (!old || old->ended || old == alive) continue;
+            if (old->sessionOptIn) send(old, {{"type", DP_MESSAGE_SESSION_ENDED}, {"reason", "taken-over"}});
+            fail(old, tr("Another device took over this session"));
+        }
+        auto finish = [this, alive, lease, takeover](bool restored) {
+            m_SessionOperation = false;
+            const auto peer = alive ? m_Peers.value(alive->fingerprint).toObject() : QJsonObject();
+            if (!restored || !alive || alive->ended || !peer["ready"].toBool() || !peer["granted"].toBool() || m_Revoking == alive->fingerprint) {
+                m_Host->sessionControl({{"action", "release"}, {"lease", lease}}, this, [](QJsonObject) {});
+                if (alive && !alive->ended) sessionError(alive, "unavailable");
+                return;
+            }
+            m_SessionLink = alive; ++m_SessionEpoch;
+            alive->sessionAdmitted = true;
+            alive->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+            send(alive, {{"type", takeover ? DP_MESSAGE_SESSION_RESULT : DP_MESSAGE_SESSION_STATE},
+                         {"busy", false}, {"admitted", true}});
+        };
+        // Closing a helper's stdin is asynchronous. Do not hand a new client the
+        // clipboard while the previous delayed-rendering process can still write.
+        auto barrier = new QTimer(this);
+        const auto displayDone = std::make_shared<bool>(!hadDisplay);
+        const auto displayOkay = std::make_shared<bool>(true);
+        if (hadDisplay) m_Host->settleSessionDisplay(barrier, [displayDone, displayOkay](bool ok) {
+            *displayDone = true; *displayOkay = ok;
+        });
+        const auto deadline = QDateTime::currentMSecsSinceEpoch() + 10500;
+        connect(barrier, &QTimer::timeout, barrier, [barrier, oldHelper, displayDone, displayOkay, deadline, finish] {
+            const bool ready = *displayDone && (!oldHelper || oldHelper->state() == QProcess::NotRunning);
+            if (!ready && QDateTime::currentMSecsSinceEpoch() < deadline) return;
+            barrier->stop(); finish(ready && *displayOkay); barrier->deleteLater();
+        });
+        barrier->start(25);
+    });
+}
+
 void PeerManager::cancel() { if (m_Link) fail(m_Link, tr("Binding cancelled. Review saved access if approval had already completed.")); }
 void PeerManager::refreshEndpoints() {
     if (!m_Healthy || busy() || m_RefreshLink || m_Peers.isEmpty()) return;
@@ -747,6 +872,7 @@ bool PeerManager::editPeer(const QString& fp, const QString& nameValue,
 }
 void PeerManager::revoke(const QString& fp) {
     if (busy() || !m_Peers.contains(fp)) return;
+    if (m_SessionLink && m_SessionLink->fingerprint == fp) fail(m_SessionLink, tr("Device access removed"));
     if (m_ClipboardLink && m_ClipboardLink->fingerprint == fp) fail(m_ClipboardLink, tr("Device access removed"));
     if (m_DisplayLink && m_DisplayLink->fingerprint == fp) fail(m_DisplayLink, tr("Device access removed"));
     m_Revoking = fp; m_TrustInFlight = true;

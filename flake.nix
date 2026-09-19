@@ -16,13 +16,14 @@
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
               python3 ${./scripts/patch-host-session-settings.py} .
+              python3 ${./scripts/patch-host-session-takeover.py} .
               python3 ${./scripts/patch-host-linux-display.py} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
-          version = "0.4.1";
+          version = "0.4.2-preview.1";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation, CI edits and the vendored macOS prebuilts do not

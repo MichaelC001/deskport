@@ -48,3 +48,10 @@ The next core pin adds the optional `displayPolicy` capability, three stable mod
 values, and malformed-policy fixtures. See [SESSION_DISPLAY.md](SESSION_DISPLAY.md).
 The base binding version remains 1; peers negotiate the optional field explicitly.
 Local core commits must be pushed before publishing consumer branches that pin them.
+
+## Session takeover prerelease — 2026-09-19
+
+The prerelease pins the shared admission contract and workspace adjustment policy
+in both consumer Git submodules and the host Nix input. See core
+`protocol/SESSION_TAKEOVER.md`. Physical takeover acceptance remains pending
+until the user activates the prerelease.

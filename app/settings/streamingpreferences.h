@@ -25,6 +25,10 @@ public:
     bool remoteAudio = true;
     Q_PROPERTY(int displayPolicy MEMBER displayPolicy NOTIFY displayPolicyChanged)
     int displayPolicy = 0;
+    Q_PROPERTY(double desktopAdjustment MEMBER desktopAdjustment NOTIFY desktopAdjustmentChanged)
+    double desktopAdjustment = 1.0;
+    static bool validDesktopAdjustment(double value);
+    static bool saveDesktopAdjustment(const QString& hostId, double value);
     Q_PROPERTY(bool remoteInput MEMBER remoteInput NOTIFY remoteInputChanged)
     bool remoteInput = true;
 
@@ -216,6 +220,7 @@ signals:
     void unlockBitrateChanged();
     void adaptiveResolutionChanged();
     void displayPolicyChanged();
+    void desktopAdjustmentChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();

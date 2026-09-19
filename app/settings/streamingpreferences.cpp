@@ -144,6 +144,18 @@ StreamingPreferences* StreamingPreferences::snapshot(const QString& hostId, QObj
     return prefs;
 }
 
+bool StreamingPreferences::validDesktopAdjustment(double value) {
+    for (double choice : {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5})
+        if (qAbs(choice - value) < 0.000001) return true;
+    return false;
+}
+bool StreamingPreferences::saveDesktopAdjustment(const QString& hostId, double value) {
+    if (hostId.isEmpty() || !validDesktopAdjustment(value)) return false;
+    DeviceSettings settings(hostId);
+    settings.setValue("desktopAdjustment", value); settings.sync();
+    return settings.status() == QSettings::NoError;
+}
+
 void StreamingPreferences::reload()
 {
     DeviceSettings settings(m_DeviceId);
@@ -171,6 +183,8 @@ void StreamingPreferences::reload()
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     adaptiveResolution = settings.value("adaptiveResolution", true).toBool();
+    desktopAdjustment = settings.value("desktopAdjustment", 1.0).toDouble();
+    if (!validDesktopAdjustment(desktopAdjustment)) desktopAdjustment = 1.0;
     displayPolicy = settings.value("displayPolicy", 0).toInt();
     if (!DPDisplayPolicyValid(displayPolicy)) displayPolicy = DP_DISPLAY_PRIMARY_MIRROR;
     enableVsync = settings.value(SER_VSYNC, true).toBool();
@@ -389,6 +403,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue("adaptiveResolution", adaptiveResolution);
     settings.setValue("displayPolicy", displayPolicy);
+    settings.setValue("desktopAdjustment", validDesktopAdjustment(desktopAdjustment) ? desktopAdjustment : 1.0);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);

@@ -1,5 +1,6 @@
 #pragma once
-#include <QStringList>
+class QMenu;
+class QAction;
 
 // DeskPort lives in the menu bar: the tray icon is the only entry point, so the
 // application starts as an accessory (LSUIElement in Info.plist) and keeps no
@@ -13,6 +14,6 @@ void deskPortActivateApplication();
 
 // A menu attached to a status item opens on either mouse button and swallows the
 // button action, which leaves no left click for the window toggle. The right
-// button pops this native menu up at the pointer instead; it returns the index
-// of the chosen title, or -1 when the menu is dismissed.
-int deskPortShowStatusMenu(const QStringList& titles);
+// button pops this native menu up at the pointer instead. Preserve submenus,
+// enabled state and checks; return nullptr when dismissed.
+QAction* deskPortShowStatusMenu(QMenu* source);

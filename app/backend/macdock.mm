@@ -1,4 +1,8 @@
 #include "macdock.h"
+#include <QMenu>
+#include <QAction>
+#include <QPointer>
+#include <functional>
 #import <AppKit/AppKit.h>
 
 void deskPortSetDockIconVisible(bool visible) {
@@ -24,27 +28,31 @@ void deskPortActivateApplication() {
 - (void)itemSelected:(NSMenuItem*)sender { self.chosen = sender.tag; }
 @end
 
-int deskPortShowStatusMenu(const QStringList& titles) {
+QAction* deskPortShowStatusMenu(QMenu* source) {
     DeskPortStatusMenuTarget* target = [[DeskPortStatusMenuTarget alloc] init];
     target.chosen = -1;
-    NSMenu* menu = [[NSMenu alloc] initWithTitle:@"DeskPort"];
-    // The items carry no validation target of their own.
-    menu.autoenablesItems = NO;
-    for (int index = 0; index < titles.size(); ++index) {
-        NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:titles.at(index).toNSString()
-                                                      action:@selector(itemSelected:)
-                                               keyEquivalent:@""];
-        item.target = target;
-        item.tag = index;
-        item.enabled = YES;
-        [menu addItem:item];
-        [item release];
-    }
-    // Tracking is modal and the action is sent before this returns, so the caller
-    // runs the chosen item outside the menu's event loop.
+    QList<QPointer<QAction>> actions;
+    std::function<NSMenu*(QMenu*)> build = [&](QMenu* input) {
+        NSMenu* menu = [[NSMenu alloc] initWithTitle:input->title().toNSString()];
+        menu.autoenablesItems = NO;
+        for (auto action : input->actions()) {
+            if (!action->isVisible()) continue;
+            if (action->isSeparator()) { [menu addItem:NSMenuItem.separatorItem]; continue; }
+            NSMenuItem* item = [[NSMenuItem alloc] initWithTitle:action->text().toNSString()
+                action:@selector(itemSelected:) keyEquivalent:@""];
+            item.target = target; item.tag = actions.size(); actions.append(action);
+            item.enabled = action->isEnabled();
+            item.state = action->isChecked() ? NSControlStateValueOn : NSControlStateValueOff;
+            if (action->menu()) {
+                NSMenu* submenu = build(action->menu()); item.submenu = submenu; [submenu release];
+            }
+            [menu addItem:item]; [item release];
+        }
+        return menu;
+    };
+    NSMenu* menu = build(source);
     [menu popUpMenuPositioningItem:nil atLocation:NSEvent.mouseLocation inView:nil];
     const int chosen = int(target.chosen);
-    [menu release];
-    [target release];
-    return chosen;
+    [menu release]; [target release];
+    return chosen >= 0 && chosen < actions.size() ? actions.at(chosen).data() : nullptr;
 }

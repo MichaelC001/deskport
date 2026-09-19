@@ -52,6 +52,19 @@ UiPage {
                 onActivated: { preferences.displayPolicy = currentIndex; save() }
             }
             Label { text: qsTr("The previous screen layout is restored automatically when the session ends."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Desktop adjustment"); color: ui.text }
+            ComboBox {
+                objectName: "deviceDesktopAdjustment"; Layout.fillWidth: true
+                readonly property var factors: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5]
+                model: ["0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.2", "1.3", "1.4", "1.5"]
+                currentIndex: Math.max(0, factors.indexOf(preferences.desktopAdjustment))
+                onActivated: function(index) {
+                    preferences.desktopAdjustment = factors[index]; save()
+                    if (typeof window !== "undefined" && window.activeHostId === page.deviceId && window.activeStreamPage)
+                        window.activeStreamPage.session.setDesktopAdjustment(factors[index])
+                }
+            }
+            Label { text: qsTr("0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch { text: qsTr("Match the client window resolution"); checked: preferences.adaptiveResolution; onClicked: { preferences.adaptiveResolution = checked; save() } }
             Switch { text: qsTr("Receive sound from this device"); checked: preferences.remoteAudio; onClicked: { preferences.remoteAudio = checked; save() } }
             Switch { text: qsTr("Allow keyboard, pointer and controller input"); checked: preferences.remoteInput; onClicked: { preferences.remoteInput = checked; save() } }

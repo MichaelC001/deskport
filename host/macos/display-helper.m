@@ -246,10 +246,12 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
         }
         CGVirtualDisplayDescriptor *descriptor = [CGVirtualDisplayDescriptor new];
         descriptor.queue = dispatch_get_main_queue();
-        descriptor.name = @"DeskPort Workspace";
+        descriptor.name = isolatedDisplay() ? @"DeskPort Temporary Workspace" : @"DeskPort Workspace";
         descriptor.maxPixelsWide = 7680; descriptor.maxPixelsHigh = 4320;
         descriptor.sizeInMillimeters = CGSizeMake(600, 340);
-        descriptor.vendorID = 0x4450; descriptor.productID = 1; descriptor.serialNum = 1;
+        descriptor.vendorID = 0x4450; descriptor.productID = isolatedDisplay() ? 2 : 1;
+        descriptor.serialNum = isolatedDisplay() ?
+            (unsigned int)[NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_SERIAL"] longLongValue] : 1;
         display = [[CGVirtualDisplay alloc] initWithDescriptor:descriptor];
     }
     // The virtual display must be the source, not a sink in an old mirror set.
@@ -307,7 +309,7 @@ int main(int argc, const char *argv[]) {
         [NSApplication sharedApplication];
         [NSApp setActivationPolicy:NSApplicationActivationPolicyProhibited];
         CGDisplayRegisterReconfigurationCallback(displayReconfigured,NULL);
-        NSData *recovery=[NSData dataWithContentsOfFile:topologyPath()];
+        NSData *recovery=isolatedDisplay() ? nil : [NSData dataWithContentsOfFile:topologyPath()];
         if (recovery) {
             id entries=[NSJSONSerialization JSONObjectWithData:recovery options:0 error:nil];
             if (![entries isKindOfClass:NSArray.class]) return 1;
@@ -343,11 +345,12 @@ int main(int argc, const char *argv[]) {
                         id value=request[@"displayPolicy"];
                         int policy=[value isKindOfClass:NSNumber.class] ? [value intValue] : DP_DISPLAY_PRIMARY_MIRROR;
                         BOOL session=[request[@"session"] boolValue];
+                        if (isolatedDisplay()) policy=DP_DISPLAY_EXTEND;
                         if ((value && (![value isKindOfClass:NSNumber.class] || ![@[@0,@1,@2] containsObject:value])) ||
                             (session && sessionActive && policy!=sessionDisplayPolicy)) {
                             requestSequence=sequence; respond(@{@"error":@"Invalid or changed session display policy"}); return;
                         }
-                        if (session) sessionDisplayPolicy=policy;
+                        if (session) sessionDisplayPolicy=isolatedDisplay() ? DP_DISPLAY_EXTEND : policy;
                         displayRebuilt=NO;
                         configure(width, height, scale ?: 1, sequence, session);
                     });

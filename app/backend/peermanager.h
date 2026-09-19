@@ -58,6 +58,9 @@ private:
     void finish(Link* link);
     QJsonObject metadata() const;
     bool save();
+    void sessionRequest(Link* link, const QJsonObject& message);
+    void acquireSession(Link* link, const QString& snapshot, bool takeover);
+    void sessionError(Link* link, const QString& code);
     HostManager* m_Host;
     QTcpServer* m_Server;
     QList<QTcpServer*> m_PreviousServers;
@@ -71,6 +74,9 @@ private:
     Link* m_RefreshLink = nullptr;
     int m_RefreshCursor = 0;
     Link* m_DisplayLink = nullptr;
+    Link* m_SessionLink = nullptr;
+    bool m_SessionOperation = false;
+    quint64 m_SessionEpoch = 0;
     Link* m_ClipboardLink = nullptr;
     bool m_Healthy = false;
     bool m_IdentityHealthy = false;

@@ -1299,3 +1299,22 @@ Checkpoint: UI save/reopen and invalid-input regression, binding persistence,
 Linux build/release and user verification at a changed endpoint. Two-finger
 mobile wheel gestures were already implemented; the shared gesture/input tests
 passed on macOS. NixOS finger input still needs post-activation acceptance.
+
+## 2026-09-19: Confirmed session takeover
+
+- Implement capability-negotiated admission before display/video startup, explicit
+  desktop confirmation, and fatal control-loss handling.
+- Gate Sunshine launch/resume/RTSP through a certificate-bound local reservation;
+  terminate and join old streams without restarting the host.
+- Validate cancellation, stale/expired/replayed confirmation, concurrent contenders,
+  legacy viewers, and management failure through isolated TLS tests.
+- Pending acceptance: temporary signed host and physical desktop/Android/Apple
+  takeover, including old-input release and local display restoration. No live
+  service activation is authorized by these source changes.
+
+- Desktop adjustment now uses the shared final multiplier, persists by device,
+  and reconnects video from the tray while retaining admission. The macOS native
+  tray preserves submenu and checked/disabled state.
+- The explicit parallel-host acceptance entry uses isolated display identity and
+  no shared layout journal; it only exercises extended-workspace behavior.
+  See [SESSION_TAKEOVER.md](SESSION_TAKEOVER.md) for limits and acceptance steps.

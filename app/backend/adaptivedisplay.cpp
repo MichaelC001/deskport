@@ -19,6 +19,7 @@ AdaptiveDisplay::~AdaptiveDisplay() {
     { QMutexLocker lock(&m_Mutex); m_Wake.wakeAll(); }
     wait();
 }
+bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
 QSize AdaptiveDisplay::boundedSize(QSize pixels) {
     if (pixels.width() <= 0 || pixels.height() <= 0) return {};
@@ -27,13 +28,20 @@ QSize AdaptiveDisplay::boundedSize(QSize pixels) {
     return QSize(qBound(640, int(pixels.width() * factor) & ~3, DeskPortDisplay::MaxWidth),
                  qBound(360, int(pixels.height() * factor) & ~3, DeskPortDisplay::MaxHeight));
 }
-bool AdaptiveDisplay::resize(const QSize& pixels, int scale, const std::function<void()>& progress) {
+bool AdaptiveDisplay::resize(const QSize& pixels, int scale, const std::function<void()>& progress,
+                             const std::function<bool()>& confirmTakeover) {
     QMutexLocker lock(&m_Mutex);
     if (m_Failed || m_Pending || pixels != boundedSize(pixels) || (scale != 1 && scale != 2)) return false;
     m_Size = pixels; m_Scale = scale; m_Pending = true; m_Complete = false;
     m_Wake.wakeAll();
     QElapsedTimer timer; timer.start();
-    while (!m_Complete && !m_Failed && timer.elapsed() < 10000) {
+    while (!m_Complete && !m_Failed && timer.elapsed() < 25000) {
+        if (m_ConfirmationNeeded && !m_ConfirmationReady) {
+            lock.unlock();
+            const bool confirmed = confirmTakeover && confirmTakeover();
+            lock.relock(); m_Confirmed = confirmed; m_ConfirmationReady = true;
+            m_Wake.wakeAll(); timer.restart();
+        }
         m_Wake.wait(&m_Mutex, progress ? 20 : 100);
         if (progress) { lock.unlock(); progress(); lock.relock(); }
     }
@@ -59,9 +67,9 @@ void AdaptiveDisplay::run() {
     auto send = [&socket](QJsonObject object) {
         socket.write(QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n'); socket.flush();
     };
-    auto receive = [&]() -> QJsonObject {
+    auto receive = [&](int timeout = 6000) -> QJsonObject {
         QElapsedTimer timer; timer.start();
-        while (!isInterruptionRequested() && timer.elapsed() < 6000 && socket.state() == QAbstractSocket::ConnectedState) {
+        while (!isInterruptionRequested() && timer.elapsed() < timeout && socket.state() == QAbstractSocket::ConnectedState) {
             buffer += socket.readAll();
             if (buffer.size() > 32768) return {};
             const auto newline = buffer.indexOf('\n');
@@ -80,6 +88,28 @@ void AdaptiveDisplay::run() {
         const auto hello = receive();
         connected = hello["type"].toString() == "hello" && hello["meta"].toObject()["adaptiveDisplay"].toInt() == 1;
         policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
+        const bool admission = hello["meta"].toObject()["sessionTakeover"].toInt() == DP_SESSION_TAKEOVER_VERSION;
+        { QMutexLocker lock(&m_Mutex); m_AdmissionRequired = admission; }
+        if (admission) {
+            send({{"type", DP_MESSAGE_SESSION_STATUS}, {"sessionTakeover", DP_SESSION_TAKEOVER_VERSION}});
+            auto state = receive();
+            bool admitted = state["type"].toString() == DP_MESSAGE_SESSION_STATE && state["admitted"].toBool();
+            if (!admitted && state["type"].toString() == DP_MESSAGE_SESSION_STATE && state["busy"].toBool() &&
+                !state["challenge"].toString().isEmpty()) {
+                QElapsedTimer confirmation; confirmation.start();
+                QMutexLocker lock(&m_Mutex); m_ConfirmationNeeded = true; m_Wake.wakeAll();
+                while (!m_ConfirmationReady && !isInterruptionRequested() && confirmation.elapsed() < DP_SESSION_CONFIRMATION_TTL_MS)
+                    m_Wake.wait(&m_Mutex, 100);
+                const bool confirmed = m_ConfirmationReady && m_Confirmed && confirmation.elapsed() < DP_SESSION_CONFIRMATION_TTL_MS;
+                lock.unlock();
+                if (confirmed) {
+                    send({{"type", DP_MESSAGE_SESSION_TAKEOVER}, {"challenge", state["challenge"]}});
+                    const auto result = receive(25000);
+                    admitted = result["type"].toString() == DP_MESSAGE_SESSION_RESULT && result["admitted"].toBool();
+                }
+            }
+            connected = connected && admitted;
+        }
         connected = connected && DPDisplayPolicyValid(m_Policy) && (policySupported || m_Policy == DP_DISPLAY_PRIMARY_MIRROR);
         if (!connected) qWarning() << "The host does not support the selected virtual screen policy";
     }

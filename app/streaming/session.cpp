@@ -621,7 +621,7 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
             scale = systemScale; // Native output pixels, not an oversampled window buffer.
         }
     }
-    const auto workspace = DeskPortDisplay::forClient(pixels, scale);
+    const auto workspace = DeskPortDisplay::adjusted(DeskPortDisplay::forClient(pixels, scale), m_Preferences->desktopAdjustment);
     if (initialFullscreen || window != m_Window)
         qInfo() << "Client display pixels:" << pixels << "system scale:" << scale << "workspace backing:" << workspace.pixels << "host scale:" << workspace.scale;
     return workspace;
@@ -634,7 +634,7 @@ Session* Session::adaptiveContinuation() {
         next->m_TrafficReceivedBase = m_TrafficReceivedBase;
         next->m_TrafficSentBase = m_TrafficSentBase;
         next->m_ManualResume = true;
-        if (next->m_Preferences->adaptiveResolution) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
+        if (next->m_Preferences->adaptiveResolution || (m_AdaptiveDisplay && m_AdaptiveDisplay->admissionRequired())) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
         else m_AdaptiveDisplay.reset();
         SDL_FlushEvents(SDL_USEREVENT, SDL_LASTEVENT);
         return next;
@@ -656,6 +656,11 @@ Session* Session::adaptiveContinuation() {
     next->m_AdaptiveResume = true;
     deskportResizeStage("continuation");
     return next;
+}
+void Session::setDesktopAdjustment(double value) {
+    if (qFuzzyCompare(value, m_Preferences->desktopAdjustment)) return;
+    // Save only this key; do not overwrite unrelated edits with a session snapshot.
+    if (StreamingPreferences::saveDesktopAdjustment(m_Computer->uuid, value)) requestReconnect();
 }
 void Session::requestReconnect() {
     // SDL owns session state on Linux; marshal tray requests to that thread.
@@ -732,12 +737,24 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = m_Preferences->adaptiveResolution ? workspace.scale : 1;
     // Restore window geometry, not a stream size negotiated by an older policy.
-    const QSize target = !m_Preferences->adaptiveResolution ? AdaptiveDisplay::boundedSize(QSize(m_StreamConfig.width,m_StreamConfig.height)) : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
+    const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_TransitionWindow) m_TransitionWindow->pump();
             if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
+        }, [this, window] {
+            const auto title = tr("Host already in use").toUtf8();
+            const auto text = tr("Another device is connected to this host. Disconnect it and connect here?").toUtf8();
+            const auto cancel = tr("Cancel").toUtf8();
+            const auto takeover = tr("Disconnect and connect").toUtf8();
+            const SDL_MessageBoxButtonData buttons[] = {
+                {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT | SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 0, cancel.constData()},
+                {0, 1, takeover.constData()}
+            };
+            SDL_MessageBoxData dialog{SDL_MESSAGEBOX_WARNING, window, title.constData(), text.constData(), 2, buttons, nullptr};
+            int selected = 0;
+            return SDL_ShowMessageBox(&dialog, &selected) == 0 && selected == 1;
         })) {
         m_StreamConfig.width = target.width(); m_StreamConfig.height = target.height();
         deskportResizeStage("mode-ready", target.width(), target.height());
@@ -746,6 +763,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         // Older/unavailable hosts retain normal fixed-resolution streaming.
         // Disable adaptation for this session to avoid reconnect loops.
         deskportResizeStage("mode-failed");
+        m_SessionAdmissionFailed = m_AdaptiveDisplay->admissionRequired();
         m_AdaptiveDisplay.reset();
         qWarning() << "Using fixed-resolution streaming; adaptive display negotiation was unavailable";
     }
@@ -911,6 +929,11 @@ bool Session::initialize()
 
     if (!m_AdaptiveGeometry.isValid()) m_AdaptiveGeometry = QRect(x, y, width, height);
     initializeAdaptiveDisplay(testWindow);
+    if (m_SessionAdmissionFailed) {
+        emit displayLaunchError(tr("Connection cancelled or session access was not granted. Reconnect to try again."));
+        SDL_DestroyWindow(testWindow); SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
     if (m_Preferences->displayPolicy != 0 && !m_AdaptiveDisplay) {
         emit displayLaunchError(tr("The selected virtual screen mode is unavailable. Update the host or choose another mode."));
         SDL_DestroyWindow(testWindow); SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -2354,7 +2377,7 @@ void Session::execInternal()
                 m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, !clipboardStatus.isEmpty());
             }
         }
-        if (m_Preferences->displayPolicy != 0 && m_AdaptiveDisplay && m_AdaptiveDisplay->failed()) {
+        if (m_AdaptiveDisplay && (m_Preferences->displayPolicy != 0 || m_AdaptiveDisplay->admissionRequired()) && m_AdaptiveDisplay->failed()) {
             emit displayLaunchError(tr("Virtual screen control ended. Reconnect to apply the selected mode."));
             goto DispatchDeferredCleanup;
         }

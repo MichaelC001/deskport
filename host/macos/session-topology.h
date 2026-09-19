@@ -16,7 +16,14 @@ static BOOL wasEnabled(NSDictionary *entry) { return !entry[@"enabled"] || [entr
 static NSArray<NSDictionary *> *savedTopology;
 static BOOL preserveTopologyJournal;
 static CGDirectDisplayID recoveryOwnedDisplay;
+static BOOL isolatedDisplay(void) {
+    return [NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_ISOLATED"] isEqualToString:@"1"];
+}
 static NSString *topologyPath(void) {
+    if (isolatedDisplay()) {
+        NSString *directory=NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_STATE_DIR"];
+        return [directory stringByAppendingPathComponent:@"display-recovery.json"];
+    }
     return [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/DeskPort/display-recovery.json"];
 }
 static NSString *displayUUID(CGDirectDisplayID ident) {
@@ -65,6 +72,9 @@ static NSArray *captureTopology(CGDirectDisplayID own) {
     return entries;
 }
 static BOOL snapshotTopology(CGDirectDisplayID own) {
+    // Parallel acceptance hosts must never journal or restore another helper's
+    // physical/virtual layout. They only move their own extended display.
+    if (isolatedDisplay()) return YES;
     if (savedTopology) return YES;
     NSArray *entries=captureTopology(own); if (!entries) return NO;
     NSString *path=topologyPath();
@@ -144,6 +154,7 @@ static BOOL restoredTopologyReady(void) {
     return YES;
 }
 static BOOL restoreTopology(CGDirectDisplayID own) {
+    if (isolatedDisplay()) return YES;
     if (own) recoveryOwnedDisplay=own;
     if (!savedTopology) return YES;
     if (!onlineDisplays()) return NO;
@@ -209,6 +220,7 @@ static BOOL restoreTopology(CGDirectDisplayID own) {
 }
 static BOOL sessionTopologyReady(CGDirectDisplayID own) {
     if (!CGDisplayIsActive(own) || CGDisplayMirrorsDisplay(own)) return NO;
+    if (isolatedDisplay()) return !CGDisplayIsMain(own);
     if (sessionDisplayPolicy==DP_DISPLAY_EXTEND) {
         return restoredTopologyReady();
     }
@@ -223,6 +235,21 @@ static BOOL sessionTopologyReady(CGDirectDisplayID own) {
     return YES;
 }
 static BOOL applySessionTopology(CGDirectDisplayID own) {
+    if (isolatedDisplay()) {
+        if (sessionTopologyReady(own)) return YES;
+        CGFloat right=0;
+        for (NSNumber *item in onlineDisplays()) {
+            CGDirectDisplayID other=item.unsignedIntValue;
+            if (other!=own && CGDisplayIsActive(other)) right=MAX(right,CGRectGetMaxX(CGDisplayBounds(other)));
+        }
+        CGDisplayConfigRef config;
+        if (CGBeginDisplayConfiguration(&config)!=kCGErrorSuccess) return NO;
+        CGError error=CGConfigureDisplayMirrorOfDisplay(config,own,kCGNullDirectDisplay);
+        if (error==kCGErrorSuccess) error=CGConfigureDisplayOrigin(config,own,(int)MAX(1,right),0);
+        if (error==kCGErrorSuccess) error=CGCompleteDisplayConfiguration(config,kCGConfigureForSession);
+        else CGCancelDisplayConfiguration(config);
+        return error==kCGErrorSuccess;
+    }
     if (!snapshotTopology(own)) return NO;
     if (sessionTopologyReady(own)) return YES;
     DPEnableDisplay enable=enableDisplayFunction();

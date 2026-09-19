@@ -102,6 +102,7 @@ class Session : public QObject
     Q_OBJECT
     Q_PROPERTY(QString hostId READ hostId CONSTANT)
     Q_PROPERTY(QString hostName READ hostName CONSTANT)
+    Q_PROPERTY(double desktopAdjustment READ desktopAdjustment CONSTANT)
 
     friend class SdlInputHandler;
     friend class DeferredSessionCleanupTask;
@@ -127,6 +128,8 @@ public:
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
     void requestReconnect();
+    double desktopAdjustment() const { return m_Preferences->desktopAdjustment; }
+    Q_INVOKABLE void setDesktopAdjustment(double value);
 
     static
     void getDecoderInfo(SDL_Window* window,
@@ -171,6 +174,7 @@ private:
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
+    bool m_SessionAdmissionFailed = false;
     std::shared_ptr<TransitionWindow> m_TransitionWindow;
     QTimer* m_TransitionTimer = nullptr;
     QSize m_AdaptiveNextSize, m_AdaptiveObservedSize;

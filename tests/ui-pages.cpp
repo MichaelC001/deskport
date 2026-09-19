@@ -158,6 +158,7 @@ private slots:
 import TestPreferences 1.0
 TestPreferences {
  property int displayPolicy: 0
+ property double desktopAdjustment: 1.0
  property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
  property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property int language: 1; property int retranslations: 0
@@ -531,6 +532,12 @@ ApplicationWindow {
         policy->setProperty("currentIndex",2);
         QVERIFY(QMetaObject::invokeMethod(policy,"activated",Q_ARG(int,2)));
         QCOMPARE(prefs->property("displayPolicy").toInt(),2);
+        auto adjustment=page->findChild<QObject*>("deviceDesktopAdjustment"); QVERIFY(adjustment);
+        QCOMPARE(adjustment->property("currentIndex").toInt(),5);
+        QVERIFY(QMetaObject::invokeMethod(adjustment,"activated",Q_ARG(int,0)));
+        QCOMPARE(prefs->property("desktopAdjustment").toDouble(),0.5);
+        QVERIFY(QMetaObject::invokeMethod(adjustment,"activated",Q_ARG(int,9)));
+        QCOMPARE(prefs->property("desktopAdjustment").toDouble(),1.5);
         QVERIFY(page->findChild<QObject*>("changeDeviceAddress"));
         QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }

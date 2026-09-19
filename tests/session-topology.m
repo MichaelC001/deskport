@@ -119,6 +119,23 @@ static void reset(void) {
 }
 int main(void) { @autoreleasepool {
     testHome=[NSTemporaryDirectory() stringByAppendingPathComponent:NSUUID.UUID.UUIDString];
+    if (isolatedDisplay()) {
+        reset(); sessionDisplayPolicy=DP_DISPLAY_PRIMARY_MIRROR;
+        NSDictionary *first=[screen(1) copy], *second=[screen(2) copy];
+        NSString *expected=[NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_STATE_DIR"] stringByAppendingPathComponent:@"display-recovery.json"];
+        assert([topologyPath() isEqualToString:expected]);
+        assert(snapshotTopology(9) && !savedTopology);
+        screen(9)[@"mirror"]=@1;
+        assert(applySessionTopology(9));
+        assert(![screen(9)[@"mirror"] unsignedIntValue]);
+        assert([screen(1) isEqual:first] && [screen(2) isEqual:second]);
+        assert(restoreTopology(9));
+        assert([screen(1) isEqual:first] && [screen(2) isEqual:second]);
+        assert(modeWrites==0 && !savedTopology);
+        assert(![NSFileManager.defaultManager fileExistsAtPath:topologyPath()]);
+        puts("PASS: isolated helper only changes its own extended display, no shared journal or physical restore");
+        return 0;
+    }
     for (int policy=0;policy<=2;policy++) {
         reset(); sessionDisplayPolicy=policy;
         assert(snapshotTopology(9)); NSArray *before=savedTopology;

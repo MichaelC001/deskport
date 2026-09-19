@@ -16,9 +16,11 @@ public:
     AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
                     QByteArray certificate, QByteArray key, int policy = 0);
     ~AdaptiveDisplay();
-    bool resize(const QSize& pixels, int scale, const std::function<void()>& progress = {});
+    bool resize(const QSize& pixels, int scale, const std::function<void()>& progress = {},
+                const std::function<bool()>& confirmTakeover = {});
     static QSize boundedSize(QSize pixels);
     bool failed();
+    bool admissionRequired();
 private:
     void run() override;
     QString m_Address;
@@ -30,5 +32,6 @@ private:
     QSize m_Size;
     int m_Scale = 1;
     int m_Policy = 0;
+    bool m_AdmissionRequired = false, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };

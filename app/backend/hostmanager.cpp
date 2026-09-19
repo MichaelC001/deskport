@@ -34,6 +34,8 @@
 #include <QDateTime>
 #include "../../host/macos/recovery-policy.h"
 #include <QSettings>
+#include <QPointer>
+#include <QActionGroup>
 #include <QRegularExpression>
 #include <QHostInfo>
 #ifdef Q_OS_MACOS
@@ -216,6 +218,15 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     });
     m_Menu = new QMenu;
     connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested);
+    m_AdjustmentMenu = m_Menu->addMenu(tr("Desktop adjustment"));
+    m_AdjustmentMenu->setEnabled(false);
+    auto adjustments = new QActionGroup(m_AdjustmentMenu);
+    for (double factor : {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5}) {
+        auto action = m_AdjustmentMenu->addAction(QString::number(factor, 'f', 1));
+        action->setCheckable(true); action->setData(factor); adjustments->addAction(action);
+        connect(action, &QAction::triggered, this, [this, factor] { emit desktopAdjustmentRequested(factor); });
+    }
+    connect(m_Menu, &QMenu::aboutToShow, this, &HostManager::viewerMenuRequested);
     connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested);
     connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested);
     // Restarting from the tray is how a remote viewer picks up a version that a
@@ -268,11 +279,8 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 }
 #ifdef Q_OS_MACOS
 void HostManager::showTrayMenu() {
-    QStringList titles;
-    for (auto action : m_Menu->actions()) titles += action->text();
-    const int chosen = deskPortShowStatusMenu(titles);
-    const auto actions = m_Menu->actions();
-    if (chosen >= 0 && chosen < actions.size()) actions.at(chosen)->trigger();
+    emit viewerMenuRequested();
+    if (auto chosen = deskPortShowStatusMenu(m_Menu)) chosen->trigger();
 }
 #endif
 void HostManager::updateTrayIcon() {
@@ -383,8 +391,11 @@ void HostManager::start(int width, int height) {
         m_HostLock.reset();
         setStatus(tr("Another DeskPort instance is already using this host state. Open that instance to manage sharing.")); return;
     }
+    const bool liveIsolated = m_Isolated && QCoreApplication::arguments().contains("--host-session-test");
+    if (liveIsolated && m_BasePort == DeskPortNetwork::DefaultBasePort)
+        m_BasePort += DeskPortNetwork::PortStep * (1 + (qHash(m_Directory) % (DeskPortNetwork::PortChoices - 1)));
     const int selectedPort = m_Ports.reserve(m_BasePort,
-        m_Isolated ? QHostAddress::LocalHost : QHostAddress::AnyIPv4);
+        m_Isolated && !liveIsolated ? QHostAddress::LocalHost : QHostAddress::AnyIPv4);
     if (!selectedPort) {
         beginStop(tr("No free DeskPort port group is available. Existing services were left unchanged.")); return;
     }
@@ -428,6 +439,18 @@ void HostManager::start(int width, int height) {
         } else
 #endif
         {
+            auto displayEnvironment = QProcessEnvironment::systemEnvironment();
+            if (m_Isolated) {
+                displayEnvironment.insert("DESKPORT_DISPLAY_ISOLATED", "1");
+                displayEnvironment.insert("DESKPORT_DISPLAY_STATE_DIR", m_Directory);
+                const auto digest = QCryptographicHash::hash(m_Directory.toUtf8(), QCryptographicHash::Sha256).toHex().left(8);
+                displayEnvironment.insert("DESKPORT_DISPLAY_SERIAL", QString::number(digest.toUInt(nullptr, 16) | 0x80000000u));
+            } else {
+                displayEnvironment.remove("DESKPORT_DISPLAY_ISOLATED");
+                displayEnvironment.remove("DESKPORT_DISPLAY_STATE_DIR");
+                displayEnvironment.remove("DESKPORT_DISPLAY_SERIAL");
+            }
+            m_Display.setProcessEnvironment(displayEnvironment);
             m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
             setStatus(tr("Creating a private virtual display…"));
         }
@@ -536,6 +559,41 @@ void HostManager::finishStop() {
         setStatus(m_StopStatus);
         scheduleRecovery();
     });
+}
+void HostManager::sessionControl(const QJsonObject& body, QObject* context,
+                                 std::function<void(QJsonObject)> completion) {
+    const auto certificates = QSslCertificate::fromPath(m_Directory + "/credentials/cert.pem");
+    if (!running() || certificates.isEmpty()) {
+        completion({{"status", false}, {"code", "unavailable"}}); return;
+    }
+    const auto generation = m_Generation;
+    const auto expected = certificates.first();
+    QNetworkRequest request(QUrl(QString("https://127.0.0.1:%1/api/deskport/sessions").arg(m_BasePort + 1)));
+    request.setTransferTimeout(10000);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("Authorization", "Basic " + ("deskport:" + m_Password).toUtf8().toBase64());
+    auto reply = body.isEmpty() ? m_Network.get(request) :
+        m_Network.post(request, QJsonDocument(body).toJson(QJsonDocument::Compact));
+    connect(reply, qOverload<const QList<QSslError>&>(&QNetworkReply::sslErrors), reply,
+            [reply, expected](const QList<QSslError>&) {
+        if (reply->sslConfiguration().peerCertificate() == expected) reply->ignoreSslErrors();
+    });
+    const QPointer<QObject> alive(context);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, alive, generation, expected, completion] {
+        const auto object = QJsonDocument::fromJson(reply->readAll()).object();
+        const bool valid = generation == m_Generation && running() &&
+            reply->error() == QNetworkReply::NoError &&
+            reply->sslConfiguration().peerCertificate() == expected && object["version"].toInt() == 1 &&
+            object["status"].isBool();
+        reply->deleteLater();
+        if (alive) completion(valid ? object : QJsonObject{{"status", false}, {"code", "unavailable"}});
+    });
+}
+
+void HostManager::setViewerDesktopAdjustment(double value) {
+    m_AdjustmentMenu->setEnabled(value > 0);
+    for (auto action : m_AdjustmentMenu->actions()) action->setChecked(qFuzzyCompare(action->data().toDouble(), value));
 }
 void HostManager::pair(const QString &pin, const QString &name) {
     if (!canPair()) return;
@@ -911,6 +969,19 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
         }
     });
     return true;
+}
+void HostManager::settleSessionDisplay(QObject* context, std::function<void(bool)> completion) {
+    auto pending = new QObject(context);
+    auto finished = std::make_shared<bool>(false);
+    auto finish = [pending, finished, completion](bool ok) {
+        if (*finished) return;
+        *finished = true; completion(ok); pending->deleteLater();
+    };
+    connect(this, &HostManager::displayResized, pending, [finish](int sequence, int, int, const QString& error) {
+        if (sequence < 0) finish(error.isEmpty());
+    });
+    QTimer::singleShot(10000, pending, [finish] { finish(false); });
+    restoreDisplay();
 }
 void HostManager::restoreDisplay() {
     m_QueuedDisplayRequest = {}; // A disconnected queued controller must never take over later.

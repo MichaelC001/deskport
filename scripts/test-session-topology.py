@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise production display policy and recovery without touching real displays."""
 from pathlib import Path
+import os
 import subprocess
 import tempfile
 
@@ -11,3 +12,5 @@ with tempfile.TemporaryDirectory(prefix="deskport-topology-") as temporary:
                     str(root / "tests/session-topology.m"), "-framework", "Foundation",
                     "-framework", "ApplicationServices", "-framework", "AppKit", "-o", str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
+
+    subprocess.run([str(binary)], check=True, env=dict(os.environ, DESKPORT_DISPLAY_ISOLATED="1", DESKPORT_DISPLAY_STATE_DIR=temporary, DESKPORT_DISPLAY_SERIAL="2147483650"))
