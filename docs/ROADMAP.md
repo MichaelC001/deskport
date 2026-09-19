@@ -5,6 +5,11 @@ formal release. Includes confirmed takeover, desktop tuning, compact macOS sizin
 dedicated-display recovery and the vendored dependency work. Refresh README feature,
 platform and comparison tables. See [release notes](RELEASE_0.4.2.md).
 
+Portable Linux packaging must compile the patched host, rather than bundle an
+unmodified upstream executable that lacks the session admission API. Installed
+package checks exercise authentication and reject unpaired/browser requests. Native
+packages include the KWin display-helper permission entry.
+
 Checkpoint: all established desktop package formats, signing/notarization, isolated
 package and regression checks, release source/checksums, and consuming mynix pins.
 Activation remains manual; existing TLS and long-session acceptance gaps remain.

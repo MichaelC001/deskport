@@ -63,7 +63,9 @@
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 Native Linux packages require glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
-current Arch, or a compatible AppImage system. Mobile apps do not host desktops.
+current Arch, or a compatible AppImage system. KDE virtual-display hosting needs
+a native or Nix installation with compositor permission entries; use AppImage as
+a viewer on KDE. Mobile apps do not host desktops.
 A source definition or successful compilation alone is not a supported platform.
 
 ## Install

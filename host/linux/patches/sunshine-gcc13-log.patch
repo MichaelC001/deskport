@@ -1,0 +1,16 @@
+--- a/src/platform/linux/kmsgrab.cpp
++++ b/src/platform/linux/kmsgrab.cpp
+@@ -2141,7 +2141,12 @@
+ 
+     kms::card_descriptors = std::move(cds);
+ 
+-    BOOST_LOG(debug) << "Final KMS display_names return list: " << (display_names | std::views::join_with(' ') | std::ranges::to<std::string>());
++    std::string display_names_log;
++    for (const auto &name : display_names) {
++      if (!display_names_log.empty()) display_names_log += ' ';
++      display_names_log += name;
++    }
++    BOOST_LOG(debug) << "Final KMS display_names return list: " << display_names_log;
+     return display_names;
+   }
+ 

@@ -8,6 +8,8 @@ Stable desktop release consolidating the 0.4.1 and 0.4.2 development work.
   preserve aspect ratio and HiDPI scale.
 - macOS dedicated-display recovery when the display cannot be separated initially.
 - Vendored viewer dependencies and a pinned shared workspace/protocol core.
+- Portable Linux packages now build the patched host with authenticated session
+  admission; native installers include the KDE display-helper permission entry.
 - Updated feature, platform and product-comparison documentation.
 
 ## Downloads

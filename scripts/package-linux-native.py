@@ -12,6 +12,16 @@ subprocess.run(['tar', '-xzf', str(cache / 'nfpm.tar.gz'), '-C', str(cache)], ch
 launcher = work / 'deskport-launcher'
 launcher.write_text('#!/bin/sh\nexec /opt/deskport/AppRun "$@"\n')
 launcher.chmod(0o755)
+permission = work / 'io.github.keithxc.DeskPort.display.desktop'
+permission.write_text('[Desktop Entry]\nType=Application\n'
+    'Name=DeskPort virtual display permission\n'
+    'Exec=/opt/deskport/usr/libexec/deskport-display\nNoDisplay=true\n'
+    'X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1\n')
+host_permission = work / 'io.github.keithxc.DeskPort.host.desktop'
+host_permission.write_text(permission.read_text().replace(
+    'DeskPort virtual display permission', 'DeskPort host capture permission').replace(
+    '/opt/deskport/usr/libexec/deskport-display',
+    '/opt/deskport/usr/libexec/sunshine/usr/bin/sunshine'))
 config = {
     'name': 'deskport', 'arch': 'amd64', 'platform': 'linux',
     'version': version, 'release': '1', 'section': 'net', 'priority': 'optional',
@@ -21,6 +31,10 @@ config = {
                    'Host capture and input require session/device permissions.',
     'homepage': 'https://github.com/keithxc/deskport', 'license': 'GPL-3.0-or-later',
     'contents': [
+        {'src': str(host_permission),
+         'dst': '/usr/share/applications/io.github.keithxc.DeskPort.host.desktop'},
+        {'src': str(permission),
+         'dst': '/usr/share/applications/io.github.keithxc.DeskPort.display.desktop'},
         {'src': str(appdir) + '/', 'dst': '/opt/deskport', 'type': 'tree'},
         {'src': str(launcher), 'dst': '/usr/bin/deskport'},
         {'src': str(appdir / 'usr/share/applications/io.github.keithxc.DeskPort.desktop'),

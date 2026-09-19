@@ -57,8 +57,11 @@ peers use the connection entry, initially port 48991, and refresh streaming port
 automatically. LAN or a separately configured VPN must provide reachability;
 installing DeskPort does not create an Internet tunnel.
 
-For Linux hosting, KDE uses its capture integration; other desktops can ask for a
-screen selection through the desktop portal. Remote keyboard/mouse input requires
+For Linux hosting, KDE and GNOME require their supported virtual-display APIs;
+see [adaptive display requirements](LINUX_ADAPTIVE_DISPLAY.md). Native installers
+include KWin permission entries for the display helper and bundled host. AppImage mount paths
+are transient and do not install that permission entry; use a native or Nix
+package for KDE virtual-display hosting. Remote keyboard/mouse input requires
 permission to access `/dev/uinput`. The application shows when input setup is
 needed. This release does not silently install privileged device rules, grant
 capabilities, join the user to input groups or replace a standalone Sunshine
@@ -72,8 +75,8 @@ configuration and port selection, independently of standalone Sunshine.
 
 ## Build and validate
 
-Initialize the shared core with `git submodule update --init shared/deskport-core`
-(all third-party dependencies are vendored), then run:
+Initialize the shared core with `git submodule update --init shared/deskport-core`,
+then run:
 
 ```sh
 bash scripts/package-linux.sh
@@ -82,11 +85,15 @@ bash scripts/package-flatpak.sh build-linux.noindex/DeskPort.AppDir \
 ```
 
 The rootless Podman build uses a pinned Ubuntu 24.04 image and checksum-pinned
-packaging tools/Sunshine asset. Ubuntu package versions are recorded in the build
+packaging tools/Sunshine assets. The portable host is compiled from the exact
+Sunshine revision in `scripts/build-linux-host.sh`, with the same session-settings,
+authenticated takeover and Linux display patches used by the Nix package. Its
+pinned upstream submodules and build dependencies are fetched during the build. Ubuntu package versions are recorded in the build
 output; apt repositories are not a historical snapshot. Qt 6 deployment includes
 Wayland and offscreen plugins. `qmake -r` refreshes nested version headers. The
-pipeline checks the internal version, CLI, packaged QML startup and host state
-isolation before producing packages. nFPM creates the DEB/RPM/pacman metadata;
+pipeline checks the internal version, CLI, packaged QML startup, host state
+isolation and authenticated session API before producing packages. The API check
+also rejects unpaired admission and browser-origin/unauthenticated requests. nFPM creates the DEB/RPM/pacman metadata;
 the payload is shared, rather than rebuilding against each distribution's Qt.
 
 `scripts/test-linux-installers.py WORK_DIR VERSION` installs packages in clean

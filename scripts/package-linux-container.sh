@@ -14,7 +14,11 @@ apt-get install -y --no-install-recommends \
     libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \
     libswscale-dev libva-dev libvdpau-dev libdrm-dev libegl1-mesa-dev libgl1-mesa-dev \
     libwayland-dev libx11-dev libxkbcommon-dev libxcb-cursor0 libfuse2t64 \
-    libpipewire-0.3-0t64 libpipewire-0.3-dev desktop-file-utils
+    libpipewire-0.3-0t64 libpipewire-0.3-dev desktop-file-utils \
+    cmake ninja-build pkg-config libcap-dev libcurl4-openssl-dev libevdev-dev \
+    libgbm-dev libminiupnpc-dev libnuma-dev libpulse-dev libsystemd-dev libudev-dev \
+    libxcb-shm0-dev libxcb-xfixes0-dev libxfixes-dev libxrandr-dev libxtst-dev \
+    libvulkan-dev glslang-tools nodejs npm python3-jinja2
 mkdir -p "$work/build" "$work/cache" "$work/output"
 python3 - "$repo/scripts/linux-tools.json" "$work/cache" <<'PY'
 import hashlib,json,pathlib,subprocess,sys
@@ -26,6 +30,7 @@ for name,item in json.load(open(sys.argv[1])).items():
         raise SystemExit(f'Checksum mismatch: {name}; review upstream tool changes before updating lock')
     path.chmod(0o755)
 PY
+bash "$repo/scripts/build-linux-host.sh"
 cd "$work/build"
 qmake6 -r "$repo/moonlight-qt.pro" CONFIG+=release CONFIG+=disable-cuda \
     CONFIG+=disable-libplacebo PREFIX=/usr
@@ -52,6 +57,10 @@ export PATH="$work/cache/bin:$PATH"
 # Keep the host's dependency tree separate from the viewer's Qt/media libraries.
 mkdir -p "$appdir/usr/libexec"
 python3 "$repo/scripts/extract-appimage.py" "$work/cache/sunshine.AppImage" "$appdir/usr/libexec/sunshine"
+# Keep upstream assets, but replace the executable with our patched host.
+install -m755 "$work/host-build/sunshine" "$appdir/usr/libexec/sunshine/usr/bin/sunshine"
+"$work/cache/linuxdeploy.dir/AppRun" --appdir "$appdir/usr/libexec/sunshine" \
+    --executable "$appdir/usr/libexec/sunshine/usr/bin/sunshine"
 cat > "$appdir/usr/libexec/deskport-host" <<'SH'
 #!/bin/sh
 root=$(CDPATH= cd -- "$(dirname -- "$0")/sunshine" && pwd)
