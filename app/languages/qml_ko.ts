@@ -2597,6 +2597,8 @@
     <message><source>Primary screen and turn off others</source><translation>기본 화면으로 설정하고 다른 화면 끄기</translation></message>
     <message><source>Use client as an extended screen</source><translation>클라이언트를 확장 화면으로 사용</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>세션이 종료되면 이전 화면 배치가 자동으로 복원됩니다.</translation></message>
+    <message><source>Desktop adjustment</source><translation>데스크톱 크기 조정</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0.5는 컨트롤을 더 크게 표시하고 1.5는 더 많은 내용을 표시합니다. 자동 계산된 데스크톱 크기에 적용됩니다. 연결 중에는 트레이 메뉴의 데스크톱 크기 조정에서 즉시 적용할 수 있습니다.</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

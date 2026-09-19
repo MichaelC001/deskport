@@ -18,77 +18,102 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.4.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
-## Platform status
+## Main features
 
-| Platform | Role | Progress | Get it |
+- **One desktop app for viewing and sharing.** Bundled Sunshine, device approval,
+  independent credentials and settings; no separate Sunshine installation for the
+  macOS and native Linux packages.
+- **A workspace that follows your client.** Adaptive sizing on compatible macOS
+  and KDE hosts, HiDPI, portrait/landscape mobile layouts and per-device size tuning.
+  Size changes briefly reconnect video; they are not seamless encoder changes.
+- **Choose the host display policy.** Virtual primary with mirrored screens,
+  virtual primary with other screens disabled, or an extended workspace on capable
+  hosts. DeskPort restores the saved layout when the session ends.
+- **Move between authorized devices.** Confirm before taking over an active
+  session; the displaced client receives an authenticated takeover explanation.
+- **Keep desktop work within reach.** Hide and recall a connected viewer, release
+  remote input when hidden, and disconnect viewing independently of local sharing.
+- **Save settings per computer.** Picture, audio, input, desktop tuning and address
+  editing stay with the device; cards, pins, themes and localized interfaces.
+- **Share desktop clipboard content on demand.** Text updates immediately;
+  supported images and files are fetched when requested, between opted-in bound
+  desktop peers. See [clipboard scope and limits](docs/CLIPBOARD.md).
+- **Native mobile controls.** iPhone/iPad and the Android development client offer
+  touch/trackpad input, keyboard controls and direct entry into the remote desktop.
+- **Optional login startup and macOS recovery.** These require an active graphical
+  login and system approval; they do not unlock FileVault or log in for you.
+
+## Supported platforms
+
+| Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| **macOS** (Apple Silicon, macOS 26+) | Viewer + host + virtual display | ✅ Stable — 0.4.1, Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg) |
-| **Linux x86-64** | Viewer + host | ✅ Released — Nix 0.4.1; DEB / RPM / Arch / AppImage / Flatpak at 0.4.0 | [Releases](https://github.com/keithxc/deskport/releases) · [guide](docs/LINUX_PACKAGES.md) |
-| **Linux ARM64** | Viewer + host | 🧪 Nix package definition only; build and runtime not yet verified | — |
-| **Windows** | Viewer (inherited source) | 🚧 Build and packaging not yet done | — |
-| **iOS / iPadOS** | 📱 Client only | ✅ Released — US$4.99 on the App Store | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
-| **Android** (8.0+) | 📱 Client only | 🚧 In development — native UI and MediaCodec; Google Play at the same US$4.99 | — |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.4.2 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.4.2 stable**: DEB, RPM, Arch, AppImage and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.4.2) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.4.2 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.4.2) |
+| iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
+| Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
+| Windows | Inherited viewer sources | Build and packaging unfinished; no supported release | — |
+| Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
-> **Mobile scope:** iOS/iPadOS and Android are planned as **clients only**. They
-> connect to authorized DeskPort/Sunshine hosts and never provide host features —
-> no screen capture, virtual display or local input injection. Host duties stay on
-> macOS, Linux and (later) Windows. The mobile clients are developed in a
-> separate repository.
+Native Linux packages require glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
+current Arch, or a compatible AppImage system. Mobile apps do not host desktops.
+A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**iPhone / iPad** — [DeskPort on the App Store](https://apps.apple.com/us/app/deskport/id6812389978),
-**US$4.99, a one-time purchase**. A native client for authorized DeskPort/Sunshine
-hosts, with direct touch, an office keyboard mode and adaptive workspace sizing on
-bound hosts. The Android client will carry the same US$4.99 price on Google Play
-when it ships.
+**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg),
+drag DeskPort into Applications and open it. Grant Screen Recording and
+Accessibility permissions to use host features. Nix and Homebrew are not required.
 
-> 💚 **Thank you for supporting DeskPort.** The desktop app stays free and open
-> source; the mobile clients are what keep the project funded. Every purchase goes
-> straight back into developer accounts, code signing, test hardware and the time
-> to keep building. If you have bought it — thank you, genuinely. If you have not,
-> issues, translations and feedback are just as welcome.
+**Linux:** Choose the [0.4.2 package](https://github.com/keithxc/deskport/releases/tag/v0.4.2)
+for your system and follow the [installation guide](docs/LINUX_PACKAGES.md),
+including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.4.2`.
+Flatpak provides viewing only.
 
-**macOS** — [Apple-notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)
-for Apple Silicon running macOS 26 or later. Open the DMG, drag DeskPort into
-Applications, then open it. Host features require first-use Screen Recording and
-Accessibility authorization. No separate Sunshine, Qt, Nix or Homebrew is needed.
+**iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
+The mobile app is a paid, one-time purchase; see your storefront for current local
+pricing. Desktop releases remain free and open source. Purchases support signing,
+test hardware and continued development.
 
-**Linux** — 0.4.1 ships for Nix and NixOS only — `nix run github:keithxc/deskport/v0.4.1`,
-or see [Build and run on Linux](#build-and-run-on-linux) below. It changes how the
-project vendors its dependencies, not the client itself, so the
-[0.4.0 DEB, RPM, Arch, AppImage and Flatpak packages](https://github.com/keithxc/deskport/releases/tag/v0.4.0)
-remain current for those formats; see the
-[Linux installation guide](docs/LINUX_PACKAGES.md) for supported systems and
-first-use setup. Native packages require x86_64 and glibc 2.39 or newer.
+Start Sharing on the host, select it on the client, and approve the device on the
+host. Both devices need a working network path: use a LAN or your own VPN such as
+Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
+or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
-## What DeskPort is
+## Comparison with similar products
 
-**Stable version: 0.4.1 — ready-to-install desktop packages.** DeskPort combines a
-viewer and optional host in one application, with a shared device list, mutual
-binding and permission controls. The macOS package includes Sunshine and a native
-virtual display; the Linux native packages and AppImage include a Sunshine host for
-the existing desktop. Flatpak provides the client only; Nix remains supported.
+This is a workflow and platform comparison, checked against the linked official
+documentation on **2026-09-20**, not a latency or image-quality benchmark. Product
+features and platform limits may change.
 
-The dedicated macOS workspace follows the client window's drawable pixel size.
-Clients at 150% scale or above request a 2× HiDPI workspace for sharp text.
-Resizing briefly reconnects video while retaining the client window and showing
-a loading animation. It is not seamless encoder reconfiguration.
+| Aspect | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
+| --- | --- | --- | --- | --- |
+| Main workflow | Persistent remote desktop workspace, adaptive sizing and device handoff | Game/desktop streaming through separate client and host apps | General remote control and support | Interactive remote desktop and collaboration |
+| Desktop host platforms | macOS Apple Silicon and Linux x86_64 | Windows, macOS, Linux and FreeBSD, subject to platform limits | Windows, macOS and Linux | Windows and macOS; Linux cannot host |
+| Desktop clients | macOS Apple Silicon and Linux x86_64 | Windows, macOS and Linux, among others | Windows, macOS and Linux | Windows, macOS, Linux and supported Chromium browsers |
+| Mobile clients | iPhone/iPad released; Android in development | iOS/iPadOS and Android | iOS/iPadOS and Android; iOS cannot host | Android; no iOS/iPadOS client |
+| Setup model | Bundled host in native desktop packages; approve devices in DeskPort | Install and configure Sunshine separately, then pair Moonlight | Public server infrastructure or a self-hosted server | Parsec account and application |
+| Network/service model | Bring your own LAN/VPN reachability; no DeskPort relay | Self-hosted streaming; configure network reachability | Public infrastructure or self-hosted OSS/Pro server | Parsec account/service infrastructure |
+| Source and distribution | GPL desktop, free desktop packages; paid Apple app with corresponding source | Open-source clients and host | Open-source client and OSS server; commercial Pro server option | Proprietary application/service |
 
-See the [release notes](docs/RELEASE_0.4.1.md),
-[architecture](docs/ARCHITECTURE.md) and
-[macOS installation guide](docs/MACOS_PACKAGE.md).
-Persistent hide/show is implemented; native long-session acceptance remains open.
-Shared display policies support capable macOS and KDE hosts. Opted-in bound
-DeskPort devices share text immediately and fetch images/files on demand.
-Windows packaging remains unfinished. See the release notes for known limitations.
+Sources: [Moonlight](https://moonlight-stream.org/),
+[Sunshine installation and platform support](https://docs.lizardbyte.dev/projects/sunshine/latest/md_docs_2getting__started.html),
+[RustDesk clients](https://rustdesk.com/docs/en/client/),
+[RustDesk self-hosting](https://rustdesk.com/docs/en/self-host/),
+[Parsec platform compatibility](https://support.parsec.app/hc/en-us/articles/32381568346644-Hardware-and-Software-Compatibility),
+[Parsec Linux setup](https://support.parsec.app/hc/en-us/articles/32381552552340-Install-Parsec-App-on-Linux).
+DeskPort's current platform limits are listed above; this table does not imply
+feature parity across every OS or a measured performance advantage.
+
+See the [0.4.2 release notes](docs/RELEASE_0.4.2.md),
+[architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux
 
@@ -101,8 +126,9 @@ nix build
 ./result/bin/deskport
 ```
 
-All third-party dependencies are vendored in this repository, so the Nix build
-needs no extra fetches; see [docs/VENDORED.md](docs/VENDORED.md).
+The viewer's third-party source dependencies are vendored; the shared core and
+Nix build inputs remain pinned external dependencies. Native builds must initialize
+`shared/deskport-core`. See [docs/VENDORED.md](docs/VENDORED.md).
 `nix run . -- --help` prints the inherited command-line interface. Start Sharing on the host and bind the devices before connecting. Legacy
 Sunshine PIN pairing is also available. No personal host or pairing
 credential is included or imported from Moonlight.
@@ -143,7 +169,7 @@ list or cards. Appearance follows the system, with light and dark overrides.
 
 ## Platform scope
 
-See the [platform status table](#platform-status) above for release state per
+See the [platform table](#supported-platforms) above for release state per
 platform. KDE Wayland / AMD on Linux x86-64 is the first live-use target.
 
 The first development workflow is Linux → macOS through Sunshine. Client platform
@@ -178,7 +204,8 @@ to recall it, **Disconnect viewer** to end only the current connection, or
 
 Plain-text clipboard sharing and system-shortcut capture are enabled by default on
 both bound devices. Setting changes apply after reconnecting. Only new copies are
-shared, up to 1 MiB; images and files are not transferred. In desktop pointer
+shared, up to 1 MiB. Supported images and files are fetched on demand between
+compatible opted-in desktop peers; see [limits](docs/CLIPBOARD.md). In desktop pointer
 mode, keyboard routing follows the pointer inside the focused video.
 **Ctrl+Alt+Shift+Z** releases input;
 **Ctrl+Alt+Shift+Q** disconnects the viewer. Click inside to regain input after

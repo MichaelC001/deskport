@@ -2597,6 +2597,8 @@
     <message><source>Primary screen and turn off others</source><translation>Pantalla principal y apagar las demás</translation></message>
     <message><source>Use client as an extended screen</source><translation>Usar el cliente como pantalla extendida</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposición anterior de las pantallas se restaura automáticamente al finalizar la sesión.</translation></message>
+    <message><source>Desktop adjustment</source><translation>Ajuste del escritorio</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0,5 amplía los controles; 1,5 muestra más contenido. Se aplica después de calcular automáticamente el tamaño del escritorio. Durante una conexión, use Ajuste del escritorio en el menú de la bandeja para aplicarlo inmediatamente.</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

@@ -2605,6 +2605,8 @@
     <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>既存のペアリングは保持されます。再接続すると保存したアドレスを使用します。</translation></message>
     <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
+    <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はトレイメニューの「デスクトップの微調整」からすぐに適用できます。</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

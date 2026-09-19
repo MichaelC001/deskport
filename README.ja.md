@@ -18,19 +18,23 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.1"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.4.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="ライセンス" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
+## 主な機能と製品比較
+
+自動サイズ調整、デバイス別の微調整、確認付き接続引き継ぎ、バックグラウンドからの復帰、オンデマンドのクリップボード共有と、公式資料付きの比較表は[詳細説明](README.md#main-features)をご覧ください。確認日：2026-09-20。性能ベンチマークではありません。
+
 ## プラットフォーム状況
 
 | プラットフォーム | 役割 | 進捗 | 入手 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.4.1、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg) |
-| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — Nix は 0.4.1、DEB / RPM / Arch / AppImage / Flatpak は 0.4.0 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](docs/LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.4.2、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
+| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.4.2：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](docs/LINUX_PACKAGES.md) |
 | **Linux ARM64** | ビューア + ホスト | 🧪 Nix パッケージ定義のみ。ビルドと動作は未検証 | — |
 | **Windows** | ビューア（上流ソースを継承） | 🚧 ビルドとパッケージングは未完了 | — |
 | **iOS / iPadOS** | 📱 クライアントのみ | ✅ 公開済み — App Store で 4.99 米ドル | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -54,21 +58,15 @@
 > まだの方も、Issue・翻訳・フィードバックは同じくらいありがたい支援です。
 
 **macOS** — macOS 26 以降の Apple Silicon 向け
-[Apple 公証済み DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)。
+[Apple 公証済み DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg)。
 DMG を開き、DeskPort を「アプリケーション」にドラッグして起動します。ホスト機能は初回使用時に
 「画面収録」と「アクセシビリティ」の許可を求めます。Sunshine、Qt、Nix、Homebrew を別途入れる必要はありません。
 
-**Linux** — 0.4.1 は Nix と NixOS のみの提供です（`nix run github:keithxc/deskport/v0.4.1`）。
-下記の [Linux でのビルドと実行](#linux-でのビルドと実行) も参照してください。この版で変わったのは
-依存関係の同梱方法であり、クライアント自体ではないため、
-[0.4.0 の DEB・RPM・Arch・AppImage・Flatpak パッケージ](https://github.com/keithxc/deskport/releases/tag/v0.4.0)
-はこれらの形式では引き続き最新です。対応システムと初回設定は
-[Linux インストールガイド](docs/LINUX_PACKAGES.md) を参照してください。ネイティブパッケージには
-x86_64 と glibc 2.39 以降が必要です。
+**Linux** — 0.4.2 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.4.2` または [Linux インストールガイド](docs/LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
 
 ## DeskPort とは
 
-**安定版：0.4.1 — そのままインストールできるデスクトップパッケージ。** DeskPort はビューアと
+**安定版：0.4.2 — そのままインストールできるデスクトップパッケージ。** DeskPort はビューアと
 任意のホストを 1 つのアプリにまとめ、デバイス一覧・相互バインド・権限管理を共有します。
 macOS パッケージには Sunshine とネイティブ仮想ディスプレイが含まれ、Linux のネイティブパッケージと
 AppImage には既存デスクトップ向けの Sunshine ホストが含まれます。Flatpak はクライアントのみ、
@@ -79,7 +77,7 @@ macOS の専用ワークスペースはクライアントウィンドウの描�
 サイズ変更時は映像が一時的に再接続され、その間クライアントウィンドウは保持されローディング表示になります。
 シームレスなエンコーダ再構成ではありません。
 
-[リリースノート](docs/RELEASE_0.4.1.md)、[アーキテクチャ](docs/ARCHITECTURE.md)、
+[リリースノート](docs/RELEASE_0.4.2.md)、[アーキテクチャ](docs/ARCHITECTURE.md)、
 [macOS インストールガイド](docs/MACOS_PACKAGE.md) を参照してください。永続的な非表示/表示は実装済みですが、
 ネイティブでの長時間セッション受け入れ試験は未完了です。共有ディスプレイポリシーは条件を満たす
 macOS と KDE のホストに対応します。オプトインしたバインド済み DeskPort デバイスはテキストを即座に共有し、
@@ -171,7 +169,7 @@ python3 scripts/deskport-smoke.py ./result
 
 バインドされた双方のデバイスでは、プレーンテキストのクリップボード共有とシステムショートカットの
 取り込みが既定で有効です。設定変更は再接続後に反映されます。共有されるのは新しくコピーした内容のみで、
-上限は 1 MiB、画像とファイルは転送されません。デスクトップポインタモードでは、キーボードのルーティングは
+上限は 1 MiB、対応する共有有効なデスクトップ間では画像とファイルを必要時に取得します。デスクトップポインタモードでは、キーボードのルーティングは
 フォーカスされた映像内のポインタに従います。**Ctrl+Alt+Shift+Z** で入力を解放し、
 **Ctrl+Alt+Shift+Q** でビューアを切断します。明示的に解放した後は、映像内をクリックすると入力が戻ります。
 OS が予約するショートカットはデスクトップのコンポジタに依存します。

@@ -1,3 +1,14 @@
+## Stable desktop 0.4.2 (2026-09-20)
+
+Reason: user-requested consolidation of desktop development into main and a full
+formal release. Includes confirmed takeover, desktop tuning, compact macOS sizing,
+dedicated-display recovery and the vendored dependency work. Refresh README feature,
+platform and comparison tables. See [release notes](RELEASE_0.4.2.md).
+
+Checkpoint: all established desktop package formats, signing/notarization, isolated
+package and regression checks, release source/checksums, and consuming mynix pins.
+Activation remains manual; existing TLS and long-session acceptance gaps remain.
+
 ## Takeover reason and compact macOS workspaces (2026-09-19)
 
 - Read authenticated takeover termination promptly and resolve it before generic

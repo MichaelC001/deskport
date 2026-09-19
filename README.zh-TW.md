@@ -18,19 +18,23 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.1"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="授權" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
+## 主要功能與產品比較
+
+自適應工作區、每裝置桌面微調、確認接管、背景呼出與按需剪貼簿等功能，以及附官方來源的比較表，請見[完整說明](README.md#main-features)。比較核對日期：2026-09-20；不代表效能測試。
+
 ## 平台進度
 
 | 平台 | 角色 | 進度 | 取得 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.4.1，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg) |
-| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — Nix 為 0.4.1；DEB / RPM / Arch / AppImage / Flatpak 為 0.4.0 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.4.2，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
+| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.4.2：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
 | **Linux ARM64** | 檢視端 + 主機端 | 🧪 僅有 Nix 套件定義，建置與執行尚未驗證 | — |
 | **Windows** | 檢視端（沿用上游原始碼） | 🚧 建置與封裝尚未完成 | — |
 | **iOS / iPadOS** | 📱 僅客戶端 | ✅ 已上架 — App Store 售價 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -52,20 +56,15 @@
 > 如果你已經購買——由衷感謝。如果還沒有，提出 issue、參與翻譯與給予回饋同樣可貴。
 
 **macOS** — 適用於 macOS 26 以上 Apple Silicon 的
-[Apple 公證 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)。
+[Apple 公證 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg)。
 開啟 DMG，把 DeskPort 拖進「應用程式」後啟動即可。主機端功能會在首次使用時要求
 「螢幕錄製」與「輔助使用」授權。不需要另外安裝 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.4.1 只提供 Nix 與 NixOS：`nix run github:keithxc/deskport/v0.4.1`，
-或參考下方的[在 Linux 上建置與執行](#在-linux-上建置與執行)。此版本改變的是相依套件的內建方式，
-而非客戶端本身，因此
-[0.4.0 的 DEB、RPM、Arch、AppImage 與 Flatpak 套件](https://github.com/keithxc/deskport/releases/tag/v0.4.0)
-對這些格式仍是目前版本；支援的系統與首次使用設定請見
-[Linux 安裝指南](docs/LINUX_PACKAGES.md)。原生套件需要 x86_64 與 glibc 2.39 以上。
+**Linux** — 0.4.2 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.4.2`，或依照 [Linux 安裝指南](docs/LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
 
 ## DeskPort 是什麼
 
-**穩定版本：0.4.1 — 可直接安裝的桌面套件。** DeskPort 把檢視端與選用的主機端整合在同一個
+**穩定版本：0.4.2 — 可直接安裝的桌面套件。** DeskPort 把檢視端與選用的主機端整合在同一個
 應用程式中，共用裝置清單、雙向綁定與權限控制。macOS 套件內含 Sunshine 與原生虛擬顯示器；
 Linux 原生套件與 AppImage 內含供現有桌面使用的 Sunshine 主機端。Flatpak 只提供客戶端；Nix 持續支援。
 
@@ -73,7 +72,7 @@ macOS 上的專用工作區會跟隨客戶端視窗的可繪製像素尺寸。�
 2× HiDPI 工作區，讓文字更銳利。調整尺寸時視訊會短暫重新連線，期間保留客戶端視窗並顯示載入動畫。
 這並不是無縫的編碼器重新設定。
 
-請見[發佈說明](docs/RELEASE_0.4.1.md)、[架構說明](docs/ARCHITECTURE.md)與
+請見[發佈說明](docs/RELEASE_0.4.2.md)、[架構說明](docs/ARCHITECTURE.md)與
 [macOS 安裝指南](docs/MACOS_PACKAGE.md)。持續性的隱藏/顯示已經實作；原生長時間工作階段的驗收仍未完成。
 共用顯示策略支援條件符合的 macOS 與 KDE 主機。選擇加入的已綁定 DeskPort 裝置會立即共用文字，
 並在需要時取得圖片與檔案。Windows 封裝尚未完成。已知限制請見發佈說明。
@@ -155,7 +154,7 @@ python3 scripts/deskport-smoke.py ./result
 只結束目前的連線，或用**結束 DeskPort** 終止整個服務。檢視端關閉時，本機共用會繼續。
 
 兩端綁定裝置預設啟用純文字剪貼簿共用與系統快速鍵擷取。設定變更在重新連線後生效。只會共用新的
-複製內容，上限 1 MiB；圖片與檔案不會傳輸。在桌面指標模式下，鍵盤路由會跟隨位於聚焦視訊內的指標。
+複製內容，上限 1 MiB；相容且已啟用共享的桌面裝置之間可按需取得圖片與檔案。在桌面指標模式下，鍵盤路由會跟隨位於聚焦視訊內的指標。
 **Ctrl+Alt+Shift+Z** 釋放輸入；**Ctrl+Alt+Shift+Q** 中斷檢視端。明確釋放後，點按畫面內部即可
 重新取得輸入。系統保留的快速鍵取決於桌面合成器。
 

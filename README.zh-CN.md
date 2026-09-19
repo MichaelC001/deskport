@@ -18,19 +18,44 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.1"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
+## 主要功能
+
+- 桌面端整合查看、共享、设备授权和独立配置，原生安装包内置 Sunshine。
+- 兼容 macOS/KDE 主机的自适应工作区、HiDPI、每设备桌面微调；调整尺寸时会短暂重连视频。
+- 虚拟主屏镜像、虚拟主屏并关闭其他屏幕、扩展工作区三种策略，断开后恢复屏幕布局。
+- 跨设备接管前确认，被接管端显示明确原因。
+- 桌面会话后台保留与快速呼出；隐藏时释放远程输入。
+- 每台电脑保存画面、声音、输入和地址设置；桌面之间文字即时共享，图片/文件按需获取。
+- 原生移动触控、触控板与办公键盘；可选登录启动和 macOS 进程恢复。
+
+## 同类产品对比
+
+核对日期：2026-09-20。下表对比平台和使用方式，不代表性能测试。
+
+| 项目 | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
+| --- | --- | --- | --- | --- |
+| 主要用途 | 持续远程工作区、自适应大小、跨设备接管 | 游戏和桌面串流 | 远程控制与支持 | 交互式远程桌面与协作 |
+| 桌面主机 | macOS Apple Silicon、Linux x86_64 | Windows、macOS、Linux、FreeBSD | Windows、macOS、Linux | Windows、macOS；Linux 不能作为主机 |
+| 桌面客户端 | macOS Apple Silicon、Linux x86_64 | Windows、macOS、Linux 等 | Windows、macOS、Linux | Windows、macOS、Linux、兼容 Chromium 浏览器 |
+| 移动客户端 | iPhone/iPad 已发布；Android 开发中 | iOS/iPadOS、Android | iOS/iPadOS、Android | Android；不支持 iOS/iPadOS |
+| 配置方式 | 原生桌面包内置主机，设备端请求授权 | 单独配置 Sunshine 后配对 Moonlight | 公共服务器或自建服务器 | Parsec 账号与应用 |
+| 网络路径 | 自备局域网/VPN，无 DeskPort 中继服务 | 自建串流，配置网络可达性 | 公共服务或自建 OSS/Pro 服务 | Parsec 账号/服务体系 |
+
+官方来源和完整说明见[英文对比表](README.md#comparison-with-similar-products)。Windows、Intel Mac 和 ARM Linux 尚不属于 DeskPort 已验证发布平台；Flatpak 仅为客户端。
+
 ## 平台进度
 
 | 平台 | 角色 | 进度 | 获取 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.4.1，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg) |
-| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — Nix 为 0.4.1；DEB / RPM / Arch / AppImage / Flatpak 为 0.4.0 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.4.2，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
+| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.4.2：Nix / DEB / RPM / Arch / AppImage；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
 | **Linux ARM64** | 查看端 + 主机端 | 🧪 仅有 Nix 包定义，构建与运行尚未验证 | — |
 | **Windows** | 查看端（沿用上游源码） | 🚧 构建与打包尚未完成 | — |
 | **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -52,20 +77,15 @@
 > 时间上。如果你已经购买——真心感谢。如果还没有，提 issue、参与翻译和给出反馈同样珍贵。
 
 **macOS** — 面向 macOS 26 及以上 Apple Silicon 的
-[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.1/DeskPort-0.4.1-macos-arm64.dmg)。
+[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg)。
 打开 DMG，把 DeskPort 拖入「应用程序」，然后启动即可。主机端功能会在首次使用时请求
 「屏幕录制」和「辅助功能」授权。无需另外安装 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.4.1 只提供 Nix 与 NixOS：`nix run github:keithxc/deskport/v0.4.1`，
-或参考下面的[在 Linux 上构建与运行](#在-linux-上构建与运行)。该版本改变的是依赖的内置方式，
-而不是客户端本身，因此
-[0.4.0 的 DEB、RPM、Arch、AppImage 与 Flatpak 包](https://github.com/keithxc/deskport/releases/tag/v0.4.0)
-对这些格式仍然是当前版本；支持的系统与首次使用设置见
-[Linux 安装指南](docs/LINUX_PACKAGES.md)。原生包需要 x86_64 与 glibc 2.39 或更新版本。
+**Linux** — 0.4.2 提供 DEB、RPM、Arch、AppImage、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.4.2`，或按 [Linux 安装指南](docs/LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。
 
 ## DeskPort 是什么
 
-**稳定版本：0.4.1 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
+**稳定版本：0.4.2 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
 应用里，共用设备列表、双向绑定与权限控制。macOS 安装包内含 Sunshine 和原生虚拟显示器；
 Linux 原生包与 AppImage 内含面向现有桌面的 Sunshine 主机端。Flatpak 只提供客户端；Nix 依然支持。
 
@@ -73,7 +93,7 @@ macOS 上的专用工作区会跟随客户端窗口的可绘制像素尺寸。�
 2× HiDPI 工作区以获得清晰文字。调整尺寸时视频会短暂重连，期间保留客户端窗口并显示加载动画。
 这不是无缝的编码器重配置。
 
-参见[发行说明](docs/RELEASE_0.4.1.md)、[架构说明](docs/ARCHITECTURE.md)与
+参见[发行说明](docs/RELEASE_0.4.2.md)、[架构说明](docs/ARCHITECTURE.md)与
 [macOS 安装指南](docs/MACOS_PACKAGE.md)。持久化的隐藏/显示已经实现；原生长时间会话的验收仍未完成。
 共享显示策略支持具备条件的 macOS 与 KDE 主机。选择加入的已绑定 DeskPort 设备会立即共享文本，
 并按需获取图片与文件。Windows 打包尚未完成。已知限制见发行说明。
@@ -155,7 +175,7 @@ python3 scripts/deskport-smoke.py ./result
 当前连接，或用**退出 DeskPort** 结束整个服务。查看端关闭时，本地共享继续运行。
 
 两端绑定设备默认启用纯文本剪贴板共享与系统快捷键捕获。设置更改在重新连接后生效。只共享新的
-复制内容，上限 1 MiB；图片与文件不会传输。在桌面指针模式下，键盘路由跟随位于聚焦视频内的指针。
+复制内容，上限 1 MiB；兼容且已启用共享的桌面设备之间可按需获取图片与文件。在桌面指针模式下，键盘路由跟随位于聚焦视频内的指针。
 **Ctrl+Alt+Shift+Z** 释放输入；**Ctrl+Alt+Shift+Q** 断开查看端。显式释放后，点击画面内部即可
 重新获得输入。系统保留的快捷键取决于桌面合成器。
 
