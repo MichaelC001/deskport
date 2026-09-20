@@ -4,10 +4,17 @@
 #include <QCryptographicHash>
 #include <QtTest>
 #include "settings/streamingpreferences.h"
+#include "backend/hostports.h"
 namespace WMUtils { bool isRunningWayland() { return false; } }
 class DevicePreferences : public QObject {
     Q_OBJECT
 private slots:
+    void publicPortFamilyHasNoFallbackToAnotherHost() {
+        for (int port = 0; port <= 65536; ++port) {
+            const bool expected = port >= 48989 && port <= 50889 && (port - 48989) % 100 == 0;
+            QCOMPARE(DeskPortNetwork::isPrivateBase(port), expected);
+        }
+    }
     void adjustmentIsDeviceScopedAndDoesNotOverwriteOtherEdits() {
         QCoreApplication::setOrganizationName("DeskPortTest");
         QCoreApplication::setApplicationName("DevicePreferences");
@@ -16,6 +23,14 @@ private slots:
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,directory.path());
         QSettings::setPath(QSettings::IniFormat,QSettings::SystemScope,directory.path());
         auto global=StreamingPreferences::get();
+        QCOMPARE(global->desktopAdjustmentChoices().size(), 10);
+        QCOMPARE(global->desktopAdjustmentLabels().size(), 10);
+        QCOMPARE(global->desktopAdjustmentChoices().at(5).toDouble(), 1.0);
+        for (int i = 0; i < global->desktopAdjustmentChoices().size(); ++i) {
+            const auto value = global->desktopAdjustmentChoices().at(i).toDouble();
+            QVERIFY(StreamingPreferences::validDesktopAdjustment(value));
+            QCOMPARE(global->desktopAdjustmentLabels().at(i).toDouble(), value);
+        }
         QObject owner;
         auto a=global->snapshot("device-a",&owner);
         auto b=global->snapshot("device-b",&owner);

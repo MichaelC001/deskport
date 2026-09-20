@@ -55,3 +55,16 @@ The prerelease pins the shared admission contract and workspace adjustment polic
 in both consumer Git submodules and the host Nix input. See core
 `protocol/SESSION_TAKEOVER.md`. Physical takeover acceptance remains pending
 until the user activates the prerelease.
+
+## Public catalog and private mobile boundary — 2026-09-20
+
+The independently authored `shared/deskport-core/portable/` module is MIT and
+owns the port family, desktop tuning options and display policy IDs. The existing
+GPL core files retain their licenses. `hostports.h` consumes generated C rules;
+StreamingPreferences exposes catalog choices/labels to QML. Platform sockets,
+settings persistence, localized text and media remain native.
+
+Run the normal core and device-preference tests after changing the catalog. Never
+edit generated C/Java output directly. See core `portable/FEATURES.md` for adapter
+coverage and the rules for advancing core and consumer pins. The mobile product's
+private repository and paid/proprietary target do not relicense any PC code.

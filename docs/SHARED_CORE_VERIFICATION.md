@@ -72,3 +72,22 @@ Core vectors, 36 binding/display tests, 9 desktop-state tests and a fresh macOS
 native build passed again. The Nix devShell build and x86_64-linux package evaluation
 also passed. Earlier Linux client-only build evidence above applies to the original
 extraction base; no new full Linux package or live streaming acceptance is claimed.
+
+## Portable catalog integration — 2026-09-20
+
+The standalone MIT catalog is pinned by the Git submodule and matching Nix lock.
+The lock hash was calculated from the committed core archive. Local checks used
+an explicit local core override because the new commits have not been pushed.
+
+- C11/C++11 and Java catalog fixtures passed, including endpoint boundaries,
+  invalid policies, tuning labels and immutable Java array accessors.
+- Qt workspace adapter fixtures passed; all four device-preference test cases
+  passed, including exhaustive port-family checks and choice/label agreement.
+- All 20 QML page tests passed, including selecting first/last tuning choices.
+- The desktop application rebuilt successfully in the locked Nix devShell.
+- `nix build .#devShells.aarch64-darwin.default` passed. This builds the development
+  environment, not a Linux application package; Linux package validation remains
+  part of the separately requested pk4 temporary-deployment task.
+
+No installed application, deployed service, release or host setting was changed.
+The pre-existing AGENTS.md and .DS_Store edits are outside this commit.

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../shared/deskport-core/portable/include/deskport/catalog.h"
 #include <QHostAddress>
 #include <QList>
 #include <QNetworkProxy>
@@ -9,15 +10,14 @@
 #include <vector>
 
 namespace DeskPortNetwork {
-constexpr int DefaultBasePort = 48989;
-constexpr int PortStep = 100;
-constexpr int PortChoices = 20;
+constexpr int DefaultBasePort = DP_CATALOG_BASE_PORT;
+constexpr int PortStep = DP_CATALOG_PORT_STEP;
+constexpr int PortChoices = DP_CATALOG_PORT_COUNT;
 // Sunshine v2026.906.222525 port offsets. Reserve the unused microphone slot too.
 inline QList<int> tcpOffsets() { return {-5, 0, 1, 21}; }
 inline QList<int> udpOffsets() { return {9, 10, 11, 13}; }
 inline bool isPrivateBase(int port) {
-    return port >= DefaultBasePort && port < DefaultBasePort + PortStep * PortChoices &&
-        (port - DefaultBasePort) % PortStep == 0;
+    return dp_catalog_is_base_port(port);
 }
 }
 

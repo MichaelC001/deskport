@@ -144,8 +144,19 @@ StreamingPreferences* StreamingPreferences::snapshot(const QString& hostId, QObj
     return prefs;
 }
 
+QVariantList StreamingPreferences::desktopAdjustmentChoices() const {
+    QVariantList values;
+    for (double choice : dp_catalog_tuning_values) values.append(choice);
+    return values;
+}
+QStringList StreamingPreferences::desktopAdjustmentLabels() const {
+    QStringList labels;
+    for (const char *label : dp_catalog_tuning_labels) labels.append(QString::fromLatin1(label));
+    return labels;
+}
+
 bool StreamingPreferences::validDesktopAdjustment(double value) {
-    for (double choice : {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5})
+    for (double choice : dp_catalog_tuning_values)
         if (qAbs(choice - value) < 0.000001) return true;
     return false;
 }
@@ -183,8 +194,8 @@ void StreamingPreferences::reload()
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps, enableYUV444)).toInt();
     unlockBitrate = settings.value(SER_UNLOCK_BITRATE, false).toBool();
     adaptiveResolution = settings.value("adaptiveResolution", true).toBool();
-    desktopAdjustment = settings.value("desktopAdjustment", 1.0).toDouble();
-    if (!validDesktopAdjustment(desktopAdjustment)) desktopAdjustment = 1.0;
+    desktopAdjustment = settings.value("desktopAdjustment", dp_catalog_tuning_values[DP_CATALOG_TUNING_DEFAULT_INDEX]).toDouble();
+    if (!validDesktopAdjustment(desktopAdjustment)) desktopAdjustment = dp_catalog_tuning_values[DP_CATALOG_TUNING_DEFAULT_INDEX];
     displayPolicy = settings.value("displayPolicy", 0).toInt();
     if (!DPDisplayPolicyValid(displayPolicy)) displayPolicy = DP_DISPLAY_PRIMARY_MIRROR;
     enableVsync = settings.value(SER_VSYNC, true).toBool();
@@ -403,7 +414,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_UNLOCK_BITRATE, unlockBitrate);
     settings.setValue("adaptiveResolution", adaptiveResolution);
     settings.setValue("displayPolicy", displayPolicy);
-    settings.setValue("desktopAdjustment", validDesktopAdjustment(desktopAdjustment) ? desktopAdjustment : 1.0);
+    settings.setValue("desktopAdjustment", validDesktopAdjustment(desktopAdjustment) ? desktopAdjustment : dp_catalog_tuning_values[DP_CATALOG_TUNING_DEFAULT_INDEX]);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);

@@ -1,7 +1,10 @@
 #pragma once
 
 #include <QObject>
+#include "../../shared/deskport-core/portable/include/deskport/catalog.h"
 #include <QRect>
+#include <QVariantList>
+#include <QStringList>
 #include <QQmlEngine>
 
 class StreamingPreferences : public QObject
@@ -26,7 +29,11 @@ public:
     Q_PROPERTY(int displayPolicy MEMBER displayPolicy NOTIFY displayPolicyChanged)
     int displayPolicy = 0;
     Q_PROPERTY(double desktopAdjustment MEMBER desktopAdjustment NOTIFY desktopAdjustmentChanged)
-    double desktopAdjustment = 1.0;
+    double desktopAdjustment = dp_catalog_tuning_values[DP_CATALOG_TUNING_DEFAULT_INDEX];
+    Q_PROPERTY(QVariantList desktopAdjustmentChoices READ desktopAdjustmentChoices CONSTANT)
+    Q_PROPERTY(QStringList desktopAdjustmentLabels READ desktopAdjustmentLabels CONSTANT)
+    QVariantList desktopAdjustmentChoices() const;
+    QStringList desktopAdjustmentLabels() const;
     static bool validDesktopAdjustment(double value);
     static bool saveDesktopAdjustment(const QString& hostId, double value);
     Q_PROPERTY(bool remoteInput MEMBER remoteInput NOTIFY remoteInputChanged)

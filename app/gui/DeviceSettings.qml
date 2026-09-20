@@ -55,8 +55,8 @@ UiPage {
             Label { text: qsTr("Desktop adjustment"); color: ui.text }
             ComboBox {
                 objectName: "deviceDesktopAdjustment"; Layout.fillWidth: true
-                readonly property var factors: [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5]
-                model: ["0.5", "0.6", "0.7", "0.8", "0.9", "1.0", "1.2", "1.3", "1.4", "1.5"]
+                readonly property var factors: preferences.desktopAdjustmentChoices
+                model: preferences.desktopAdjustmentLabels
                 currentIndex: Math.max(0, factors.indexOf(preferences.desktopAdjustment))
                 onActivated: function(index) {
                     preferences.desktopAdjustment = factors[index]; save()

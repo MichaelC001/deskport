@@ -12,6 +12,7 @@
 #include "peermanager.h"
 #include "peerstore.h"
 #include "singleinstance.h"
+#include "../shared/deskport-core/portable/include/deskport/catalog.h"
 
 static QQuickItem* findVisual(QQuickItem* item, const QString& name) {
     if (item->objectName() == name) return item;
@@ -101,6 +102,18 @@ class TestPreferences : public QObject {
     Q_OBJECT
 public:
     using QObject::QObject;
+    Q_PROPERTY(QVariantList desktopAdjustmentChoices READ adjustmentChoices CONSTANT)
+    Q_PROPERTY(QStringList desktopAdjustmentLabels READ adjustmentLabels CONSTANT)
+    QVariantList adjustmentChoices() const {
+        QVariantList values;
+        for (double value : dp_catalog_tuning_values) values.append(value);
+        return values;
+    }
+    QStringList adjustmentLabels() const {
+        QStringList labels;
+        for (const char *label : dp_catalog_tuning_labels) labels.append(QString::fromLatin1(label));
+        return labels;
+    }
     enum Language { LANG_AUTO, LANG_EN, LANG_FR, LANG_ZH_CN, LANG_DE, LANG_NB_NO, LANG_RU, LANG_ES, LANG_JA, LANG_VI, LANG_TH, LANG_KO, LANG_HU, LANG_NL, LANG_SV, LANG_TR, LANG_UK, LANG_ZH_TW, LANG_PT, LANG_PT_BR, LANG_EL, LANG_IT, LANG_HI, LANG_PL, LANG_CS, LANG_HE, LANG_CKB, LANG_LT, LANG_ET };
     Q_ENUM(Language)
 };

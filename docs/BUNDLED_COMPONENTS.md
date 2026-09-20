@@ -86,3 +86,10 @@ The OS marks in `app/res/os` come from Simple Icons 11.15.0
 CC0-1.0; the license is bundled alongside them. Colors are adapted for the cards.
 The generic computer mark comes from the existing bundled Material icon set.
 The DeskPort application mark remains the existing project asset.
+
+
+## Portable DeskPort catalog — 2026-09-20
+
+The generated product catalog is independently MIT-licensed. Its full notice is
+embedded at `:/licenses/deskport-catalog.txt` and retained in the pinned core
+`portable/LICENSE`. Existing GPL workspace and upstream licenses are unchanged.

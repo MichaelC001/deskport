@@ -1,3 +1,11 @@
+## Cross-platform product catalog (2026-09-20)
+
+Reason: reduce independently maintained rules while preserving public desktop/core
+and the private mobile product boundary. Integrate generated port/tuning/policy
+rules from the new MIT catalog, keep the legacy GPL code intact, and test native
+adapters. Next: shared capability/behavior fixtures and incremental session-state
+extraction. Do not bring mobile UI or commercial code into this repository.
+
 ## H.264 reference-picture recovery (2026-09-20)
 
 Reason: prolonged desktop streaming exposed repeated reference-picture errors and

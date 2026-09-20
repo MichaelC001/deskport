@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>res/os/LICENSE.txt</file>
+        <file alias="licenses/deskport-catalog.txt">../shared/deskport-core/portable/LICENSE</file>
         <file>res/os/apple.svg</file>
         <file>res/os/arch.svg</file>
         <file>res/os/computer.svg</file>

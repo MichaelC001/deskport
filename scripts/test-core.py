@@ -15,5 +15,6 @@ if (core / '.git').exists():
     node = lock['nodes']['root']['inputs']['deskport-core']
     if revision != lock['nodes'][node]['locked']['rev']:
         raise SystemExit('Core submodule and flake.lock differ; update both pins before building')
+subprocess.run([sys.executable, str((core) / 'portable/test_catalog.py')], check=True)
 subprocess.run([sys.executable, str(core / 'tests/test_workspace.py'),
                 '--qt-header', str(root / 'app/backend/workspaceresolution.h')], check=True)
