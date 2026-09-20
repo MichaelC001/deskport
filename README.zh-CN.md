@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.3"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.3-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.5"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.5-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -54,8 +54,8 @@
 
 | 平台 | 角色 | 进度 | 获取 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.4.3，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.3/DeskPort-0.4.3-macos-arm64.dmg) |
-| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.4.3：Nix / DEB / RPM / Arch / AppImage；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.4.5，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.5/DeskPort-0.4.5-macos-arm64.dmg) |
+| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.4.5：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](docs/LINUX_PACKAGES.md) |
 | **Linux ARM64** | 查看端 + 主机端 | 🧪 仅有 Nix 包定义，构建与运行尚未验证 | — |
 | **Windows** | 查看端（沿用上游源码） | 🚧 构建与打包尚未完成 | — |
 | **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -77,15 +77,15 @@
 > 时间上。如果你已经购买——真心感谢。如果还没有，提 issue、参与翻译和给出反馈同样珍贵。
 
 **macOS** — 面向 macOS 26 及以上 Apple Silicon 的
-[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.3/DeskPort-0.4.3-macos-arm64.dmg)。
+[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.5/DeskPort-0.4.5-macos-arm64.dmg)。
 打开 DMG，把 DeskPort 拖入「应用程序」，然后启动即可。主机端功能会在首次使用时请求
 「屏幕录制」和「辅助功能」授权。无需另外安装 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.4.3 提供 DEB、RPM、Arch、AppImage、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.4.3`，或按 [Linux 安装指南](docs/LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。
+**Linux** — 0.4.5 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.4.5`，或按 [Linux 安装指南](docs/LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.4.5/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.4.5/VERIFICATION.txt)。
 
 ## DeskPort 是什么
 
-**稳定版本：0.4.3 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
+**稳定版本：0.4.5 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
 应用里，共用设备列表、双向绑定与权限控制。macOS 安装包内含 Sunshine 和原生虚拟显示器；
 Linux 原生包与 AppImage 内含面向现有桌面的 Sunshine 主机端。Flatpak 只提供客户端；Nix 依然支持。
 
@@ -93,7 +93,7 @@ macOS 上的专用工作区会跟随客户端窗口的可绘制像素尺寸。�
 2× HiDPI 工作区以获得清晰文字。调整尺寸时视频会短暂重连，期间保留客户端窗口并显示加载动画。
 这不是无缝的编码器重配置。
 
-参见[发行说明](docs/RELEASE_0.4.3.md)、[架构说明](docs/ARCHITECTURE.md)与
+参见[发行说明](docs/RELEASE_0.4.5.md)、[架构说明](docs/ARCHITECTURE.md)与
 [macOS 安装指南](docs/MACOS_PACKAGE.md)。持久化的隐藏/显示已经实现；原生长时间会话的验收仍未完成。
 共享显示策略支持具备条件的 macOS 与 KDE 主机。选择加入的已绑定 DeskPort 设备会立即共享文本，
 并按需获取图片与文件。Windows 打包尚未完成。已知限制见发行说明。

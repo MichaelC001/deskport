@@ -3,7 +3,10 @@
 Reason: the user confirmed successful 0.4.4 physical resize/resume, reconnect,
 keyboard/mouse input and local display recovery, and requested a full Linux and
 macOS stable release. Package validation and published asset verification remain
-required. Update the consuming mynix pins after publication; activation is manual.
+required. Published all 11 assets with matching remote SHA-256 digests.
+Ubuntu/Debian/Fedora/Arch installation, authenticated host API, Flatpak isolated
+startup/recovery, Nix smoke, macOS notarization/Gatekeeper and both CI checks
+passed. Consuming Linux and macOS system configuration builds passed; activation remains manual.
 
 ## 0.4.4 prerelease — 2026-09-20
 
