@@ -1,6 +1,6 @@
 # Linux release packages
 
-DeskPort 0.4.2 provides x86_64 Linux downloads for users who do not build from
+DeskPort 0.4.3 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package.
 
@@ -8,12 +8,13 @@ host tree, Qt and media libraries. The Flatpak is a **client-only** package.
 
 | Format | Target | Install |
 | --- | --- | --- |
-| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install ./deskport_0.4.2-1_amd64.deb` |
-| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.4.2-1.x86_64.rpm` |
-| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.4.2-1-x86_64.pkg.tar.zst` |
+| portable `.tar.gz` | x86_64, glibc 2.39+ | Extract and run `DeskPort.AppDir/AppRun` |
+| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install ./deskport_0.4.3-1_amd64.deb` |
+| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.4.3-1.x86_64.rpm` |
+| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.4.3-1-x86_64.pkg.tar.zst` |
 | `.AppImage` | Modern glibc-based desktops, glibc 2.39+ | Make executable, then open |
 | `.flatpak` | Distributions with Flatpak and Freedesktop Platform 25.08 | See below |
-| Nix | NixOS / Linux with Nix | `nix run github:keithxc/deskport/v0.4.2` |
+| Nix | NixOS / Linux with Nix | `nix run github:keithxc/deskport/v0.4.3` |
 
 Native packages install a private runtime in `/opt/deskport`, an application-menu
 entry and `/usr/bin/deskport`. Package managers install required system graphics,
@@ -26,8 +27,8 @@ separately supported source/Nix build rather than these glibc 2.39 binaries.
 For AppImage:
 
 ```sh
-chmod +x DeskPort-0.4.2-x86_64.AppImage
-./DeskPort-0.4.2-x86_64.AppImage
+chmod +x DeskPort-0.4.3-x86_64.AppImage
+./DeskPort-0.4.3-x86_64.AppImage
 ```
 
 Keep the AppImage in a permanent location before enabling login startup. Moving
@@ -38,7 +39,7 @@ AppImage with an FHS environment. Desktop graphics drivers remain system-provide
 For Flatpak:
 
 ```sh
-flatpak install --user ./DeskPort-0.4.2-client-x86_64.flatpak
+flatpak install --user ./DeskPort-0.4.3-client-x86_64.flatpak
 flatpak run io.github.keithxc.DeskPort
 ```
 

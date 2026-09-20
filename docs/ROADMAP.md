@@ -1,6 +1,6 @@
 ## Formal release 0.4.3 — 2026-09-20
 
-Reason: user requested a new full-platform formal release. macOS and the complete Linux package matrix are in preparation. Windows remains gated on its separate candidate validation; mobile-store status is tracked independently. Next checkpoint: verified public assets and persisted Apple review state, with Android identity/signing blockers resolved before store publication.
+Reason: user requested a new full-platform formal release. macOS app/DMG notarization, extracted-ZIP Gatekeeper and version checks passed. The Linux Nix build, Ubuntu/Debian/Fedora/Arch installers and isolated Flatpak startup/recovery checks passed. Windows remains gated on its separate candidate validation. Universal Apple 1.2 (11) was submitted and reread as Waiting for Review; Android app creation is blocked by Google Play account verification. Next checkpoint: public desktop asset verification, Apple approval/store availability, and resolution of Windows/Android release gates.
 
 ## Initial connection window ownership (2026-09-20)
 
