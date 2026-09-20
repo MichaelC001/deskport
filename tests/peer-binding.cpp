@@ -6,6 +6,7 @@
 #include <QTemporaryDir>
 #include <QHostInfo>
 #include <QSignalSpy>
+#include <QPointer>
 #include <QSslSocket>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -18,6 +19,38 @@
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
 }
+// Simulate Windows without a host while exercising production PeerManager on Linux/macOS.
+class UnavailableHost : public HostManager {
+public:
+    using HostManager::HostManager;
+    bool available() const override { return false; }
+};
+class ScriptedBindingHost : public QTcpServer {
+public:
+    ScriptedBindingHost(QByteArray cert, QByteArray key) : certificate(cert), privateKey(key, QSsl::Rsa) {}
+    QPointer<QSslSocket> socket;
+    QList<QJsonObject> messages;
+    void send(const QJsonObject& frame) { socket->write(QJsonDocument(frame).toJson(QJsonDocument::Compact)+'\n'); }
+protected:
+    void incomingConnection(qintptr fd) override {
+        socket = new QSslSocket(this);
+        socket->setSocketDescriptor(fd);
+        socket->setLocalCertificate(certificate); socket->setPrivateKey(privateKey);
+        socket->setProtocol(QSsl::TlsV1_2OrLater); socket->setPeerVerifyMode(QSslSocket::VerifyPeer);
+        connect(socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), socket, [this](const QList<QSslError>& errors) {
+            for (const auto& error : errors) if (error.error() != QSslError::SelfSignedCertificate &&
+                error.error() != QSslError::HostNameMismatch) return;
+            socket->ignoreSslErrors(errors);
+        });
+        connect(socket, &QSslSocket::readyRead, this, [this] {
+            while (socket->canReadLine()) messages.append(QJsonDocument::fromJson(socket->readLine()).object());
+        });
+        socket->startServerEncryption();
+    }
+private:
+    QSslCertificate certificate;
+    QSslKey privateKey;
+};
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
@@ -197,6 +230,8 @@ private slots:
         const auto reply=QJsonDocument::fromJson(socket.readLine()).object();
         QCOMPARE(reply["type"].toString(),QString("display-result"));
         QCOMPARE(reply["seq"].toInt(),message["seq"].toInt());
+        if ((!reply.contains("error")) != accepted)
+            qWarning() << "Display contract response" << reply << "policies" << host.displayPoliciesAvailable();
         QCOMPARE(!reply.contains("error"),accepted);
         if (accepted) {
             QCOMPARE(reply["width"].toInt(),message["width"].toInt());
@@ -273,18 +308,246 @@ private slots:
         host.stop();
     }
 
+    void outboundClientInitialization_data() {
+        QTest::addColumn<int>("failure");
+        QTest::newRow("valid-with-occupied-local-port") << 0;
+        QTest::newRow("invalid-certificate") << 1;
+        QTest::newRow("invalid-key") << 2;
+        QTest::newRow("corrupt-store") << 3;
+        QTest::newRow("unsupported-store") << 4;
+    }
+    void outboundClientInitialization() {
+        QFETCH(int, failure);
+        QTemporaryDir dir;
+        UnavailableHost host(nullptr, dir.path()+"/host");
+        QVERIFY(!host.available());
+        QTcpServer occupied; QVERIFY(occupied.listen(QHostAddress::LocalHost, 0));
+        QDir().mkpath(dir.path()+"/binding");
+        if (failure == 3) {
+            QFile f(dir.path()+"/binding/peers.json"); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("{broken");
+        } else if (failure == 4) {
+            QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json", {{"version",2},{"peers",QJsonObject()}}));
+        }
+        PeerManager client(&host, failure == 1 ? QByteArray("invalid") : credential("TEST_CERT_A"),
+            failure == 2 ? QByteArray("invalid") : credential("TEST_KEY_A"), dir.path()+"/binding",
+            occupied.serverPort(), QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
+        QVERIFY(client.clientOnly()); QCOMPARE(client.port(), 0);
+        for (auto listener : client.findChildren<QTcpServer*>()) QVERIFY(!listener->isListening());
+        QVERIFY(!client.setConnectionPort(occupied.serverPort()));
+        QVERIFY(!QFile::exists(dir.path()+"/host/state.json"));
+        QVERIFY(!QFile::exists(dir.path()+"/host/credentials/cert.pem"));
+        QVERIFY(!host.running());
+        QSignalSpy restored(&client, &PeerManager::peerBound);
+        client.restoreHosts(); QCOMPARE(restored.size(), 0);
+        // An invalid local identity/store must not even attempt an outbound socket.
+        if (failure) {
+            client.request(QString("127.0.0.1:%1").arg(occupied.serverPort()));
+            QVERIFY(!client.busy()); QVERIFY(client.findChildren<QSslSocket*>().isEmpty());
+        } else QVERIFY(client.status().contains("Ready to request"));
+    }
+    void outboundClientBindsToProductionHost_data() {
+        QTest::addColumn<int>("result");
+        QTest::newRow("approved-persist-restore-control-forget") << 0;
+        QTest::newRow("rejected") << 1;
+        QTest::newRow("cancel-before-approval") << 2;
+        QTest::newRow("host-grant-save-fails") << 3;
+    }
+    void outboundClientBindsToProductionHost() {
+        QFETCH(int, result);
+        QTemporaryDir dir;
+        UnavailableHost local(nullptr, dir.path()+"/local");
+        HostManager remote(nullptr, dir.path()+"/remote");
+        PeerManager server(&remote, credential("TEST_CERT_B"), credential("TEST_KEY_B"),
+                           dir.path()+"/server", 0, QHostAddress::LocalHost);
+        auto client = std::make_unique<PeerManager>(&local, credential("TEST_CERT_A"), credential("TEST_KEY_A"),
+            dir.path()+"/client", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
+        QSignalSpy imported(client.get(), &PeerManager::peerBound), inbound(&server, &PeerManager::incomingRequest);
+        QSignalSpy localTrust(&local, &HostManager::trustUpdated), remoteImported(&server, &PeerManager::peerBound);
+        client->request(QString("127.0.0.1:%1").arg(server.port()));
+        QTRY_COMPARE_WITH_TIMEOUT(inbound.size(), 1, 5000);
+        QTRY_VERIFY(client->status().contains("Request received"));
+        QVERIFY(server.pendingClientOnly());
+        QVERIFY(client->peers().isEmpty()); QVERIFY(server.peers().isEmpty());
+        server.approve("stale-approval"); QTest::qWait(30);
+        QVERIFY(client->peers().isEmpty()); QCOMPARE(imported.size(), 0);
+        if (result == 1) server.reject(server.requestId());
+        else if (result == 2) client->cancel();
+        else {
+            if (result == 3) {
+                QFile f(dir.path()+"/remote/state.json"); QVERIFY(f.open(QIODevice::WriteOnly)); f.write("{broken");
+            }
+            server.approve(server.requestId());
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!client->busy() && !server.busy(), 7000);
+        QCOMPARE(imported.size(), result == 0 ? 1 : 0);
+        QCOMPARE(localTrust.size(), 0); QCOMPARE(remoteImported.size(), 0);
+        QVERIFY(!local.running()); QVERIFY(!QFile::exists(dir.path()+"/local/state.json"));
+        QVERIFY(!QFile::exists(dir.path()+"/local/credentials/cert.pem"));
+        if (result != 0) { QVERIFY(client->peers().isEmpty()); remote.stop(); return; }
+        const auto peer = imported.first().first().toMap();
+        QVERIFY(peer["ready"].toBool()); QVERIFY(peer["granted"].toBool()); QVERIFY(peer["outboundOnly"].toBool());
+        QCOMPARE(peer["address"].toString(), QString("127.0.0.1"));
+        QCOMPARE(peer["hostId"].toString(), remote.identity()["hostId"].toString());
+        QCOMPARE(QSslCertificate(peer["hostCert"].toString().toUtf8()), QSslCertificate(credential("TEST_CERT_B")));
+        QCOMPARE(QSslCertificate(peer["clientCert"].toString().toUtf8()), QSslCertificate(credential("TEST_CERT_B")));
+        QCOMPARE(peer["hostPort"].toInt(), remote.basePort()); QCOMPARE(peer["bindingPort"].toInt(), server.port());
+        const auto remotePeer = server.peers().first().toMap();
+        QCOMPARE(remotePeer["role"].toString(), QString("client"));
+        QVERIFY(remotePeer["ready"].toBool()); QVERIFY(!remotePeer.contains("hostPort"));
+        auto trust = PeerStore::read(dir.path()+"/remote/state.json")["root"].toObject()["named_devices"].toArray();
+        QCOMPARE(trust.size(), 1);
+        QCOMPARE(QSslCertificate(trust.first().toObject()["cert"].toString().toUtf8()), QSslCertificate(credential("TEST_CERT_A")));
+        client.reset();
+        PeerManager restored(&local, credential("TEST_CERT_A"), credential("TEST_KEY_A"),
+            dir.path()+"/client", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
+        QSignalSpy reimported(&restored, &PeerManager::peerBound); restored.restoreHosts();
+        QCOMPARE(reimported.size(), 1);
+        const auto restoredPeer = reimported.first().first().toMap();
+        QCOMPARE(restoredPeer.keys(), peer.keys());
+        for (const auto& key : peer.keys())
+            QVERIFY2(restoredPeer[key] == peer[key], qPrintable("Restored binding field differs: " + key));
+        // Exercise the same pinned, certificate-authenticated control path used
+        // before streaming, against fake host/display children only.
+        QTRY_VERIFY_WITH_TIMEOUT(remote.adaptiveDisplayAvailable() &&
+            QFile::exists(dir.path()+"/remote/test-sessions.json"), 5000);
+        {
+            AdaptiveDisplay control(peer["address"].toString(), quint16(peer["bindingPort"].toInt()),
+                QSslCertificate(peer["clientCert"].toString().toUtf8()), credential("TEST_CERT_A"), credential("TEST_KEY_A"));
+            auto operation = std::async(std::launch::async, [&] { return control.resize(QSize(1280,720),1); });
+            QTRY_VERIFY_WITH_TIMEOUT(operation.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready, 11000);
+            QVERIFY(operation.get()); QVERIFY(control.admissionRequired());
+        }
+        const auto fp = restored.peers().first().toMap()["fingerprint"].toString();
+        restored.revoke(fp); QVERIFY(restored.peers().isEmpty());
+        QCOMPARE(localTrust.size(), 0); QVERIFY(!local.running());
+        QCOMPARE(PeerStore::read(dir.path()+"/remote/state.json")["root"].toObject()["named_devices"].toArray(), trust);
+        remote.stop();
+    }
+    void outboundClientWireValidation_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const auto name : {"success", "missing-capability", "invalid-host-cert", "client-host-claim", "expired-tls",
+             "accept-before-pending", "ready-before-accept", "bound-before-ready", "wrong-pending-tx", "wrong-accept-tx",
+             "wrong-ready-tx", "wrong-bound-tx", "duplicate-pending", "duplicate-ready", "invalid-port",
+             "disconnect-before-bound", "pending-save-failure", "completed-save-failure", "known-key-change"})
+            QTest::newRow(name) << QString::fromLatin1(name);
+    }
+    void outboundClientWireValidation() {
+        QFETCH(QString, scenario);
+        QTemporaryDir dir;
+        UnavailableHost host(nullptr, dir.path()+"/host");
+        PeerManager client(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"),
+            dir.path()+"/binding", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
+        auto remote = std::make_unique<ScriptedBindingHost>(
+            credential(scenario == "expired-tls" ? "TEST_CERT_EXPIRED" : "TEST_CERT_B"), credential("TEST_KEY_B"));
+        QVERIFY(remote->listen(QHostAddress::LocalHost, 0));
+        const auto port = remote->serverPort();
+        const auto endpoint = QString("127.0.0.1:%1").arg(port);
+        QSignalSpy imported(&client, &PeerManager::peerBound);
+        client.request(endpoint);
+        if (scenario == "expired-tls") {
+            QTRY_VERIFY_WITH_TIMEOUT(!client.busy(), 5000);
+            QCOMPARE(imported.size(), 0); QVERIFY(client.peers().isEmpty()); return;
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(remote->socket && remote->socket->isEncrypted(), 5000);
+        // No request before the host hello/capability check.
+        QTest::qWait(20); QCOMPARE(remote->messages.size(), 0);
+        QJsonObject meta{{"version",1},{"clientBinding",1},{"name","Fixture host"},
+            {"hostId", QUuid::createUuid().toString()}, {"hostCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"hostPort",49089},{"bindingPort",int(port)}, {"ready",true},{"granted",true}};
+        if (scenario == "missing-capability") meta.remove("clientBinding");
+        if (scenario == "invalid-host-cert") meta["hostCert"] = "not a certificate";
+        if (scenario == "client-host-claim") meta["role"] = "client";
+        remote->send({{"type","hello"},{"meta",meta}});
+        if (scenario == "missing-capability" || scenario == "invalid-host-cert" || scenario == "client-host-claim") {
+            QTRY_VERIFY_WITH_TIMEOUT(!client.busy(), 5000);
+            QCOMPARE(remote->messages.size(), 0); QVERIFY(client.peers().isEmpty()); return;
+        }
+        QTRY_COMPARE_WITH_TIMEOUT(remote->messages.size(), 1, 5000);
+        const auto request = remote->messages.first();
+        QCOMPARE(request["type"].toString(), QString("request"));
+        const auto clientMeta = request["meta"].toObject();
+        QCOMPARE(clientMeta.size(), 4); QCOMPARE(clientMeta["role"].toString(), QString("client"));
+        QCOMPARE(clientMeta["clientBinding"].toInt(), 1); QCOMPARE(clientMeta["version"].toInt(), 1);
+        QVERIFY(!clientMeta["name"].toString().isEmpty());
+        const auto tx = request["tx"].toString(); QVERIFY(!QUuid(tx).isNull());
+        auto send = [&](const char* type, bool wrong = false) {
+            QJsonObject frame{{"type",QString::fromLatin1(type)},{"tx",wrong ? QString("wrong") : tx}};
+            if (QString::fromLatin1(type) == "ready") frame["hostPort"] = scenario == "invalid-port" ? 1 : 49189;
+            remote->send(frame);
+        };
+        if (scenario == "accept-before-pending") send("accept");
+        else {
+            send("pending", scenario == "wrong-pending-tx");
+            if (scenario == "duplicate-pending") send("pending");
+            else if (scenario == "ready-before-accept") send("ready");
+            else if (scenario != "wrong-pending-tx") {
+                send("accept", scenario == "wrong-accept-tx");
+                if (scenario == "bound-before-ready") send("bound");
+                else if (scenario != "wrong-accept-tx") {
+                    if (scenario == "pending-save-failure") QVERIFY(QDir().mkdir(dir.path()+"/binding/peers.json"));
+                    send("ready", scenario == "wrong-ready-tx");
+                    if (scenario != "wrong-ready-tx" && scenario != "pending-save-failure" && scenario != "invalid-port") {
+                        QTRY_COMPARE_WITH_TIMEOUT(remote->messages.size(), 2, 5000);
+                        const auto commit = remote->messages.last();
+                        QCOMPARE(commit["type"].toString(), QString("client-ready")); QCOMPARE(commit["tx"].toString(), tx);
+                        QCOMPARE(imported.size(), 0);
+                        const auto storedPeers = PeerStore::read(dir.path()+"/binding/peers.json")["peers"].toObject();
+                        const auto saved = storedPeers.begin().value().toObject();
+                        QVERIFY(!saved["ready"].toBool()); QVERIFY(saved["granted"].toBool());
+                        QSignalSpy premature(&client, &PeerManager::peerBound); client.restoreHosts(); QCOMPARE(premature.size(), 0);
+                        if (scenario == "duplicate-ready") send("ready");
+                        else if (scenario == "disconnect-before-bound") remote->socket->disconnectFromHost();
+                        else {
+                            if (scenario == "completed-save-failure") {
+                                QVERIFY(QFile::rename(dir.path()+"/binding/peers.json",dir.path()+"/binding/pending.json"));
+                                QVERIFY(QDir().mkdir(dir.path()+"/binding/peers.json"));
+                            }
+                            send("bound", scenario == "wrong-bound-tx");
+                        }
+                    }
+                }
+            }
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!client.busy(), 5000);
+        const bool success = scenario == "success" || scenario == "known-key-change";
+        QCOMPARE(imported.size(), success ? 1 : 0);
+        QVERIFY(!host.running()); QVERIFY(!QFile::exists(dir.path()+"/host/state.json"));
+        if (success) {
+            QCOMPARE(imported.first().first().toMap()["hostPort"].toInt(), 49189);
+            QVERIFY(client.peers().first().toMap()["ready"].toBool());
+        } else {
+            for (const auto& p : client.peers()) QVERIFY(!p.toMap()["ready"].toBool());
+            client.restoreHosts(); QCOMPARE(imported.size(), 0);
+            UnavailableHost restartedHost(nullptr, dir.path()+"/restarted-host");
+            PeerManager restarted(&restartedHost, credential("TEST_CERT_A"), credential("TEST_KEY_A"),
+                dir.path()+"/binding", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
+            QSignalSpy restored(&restarted, &PeerManager::peerBound);
+            restarted.restoreHosts(); QCOMPARE(restored.size(), 0);
+        }
+        if (scenario == "known-key-change") {
+            const auto saved = PeerStore::read(dir.path()+"/binding/peers.json");
+            remote.reset();
+            remote = std::make_unique<ScriptedBindingHost>(credential("TEST_CERT_C"), credential("TEST_KEY_C"));
+            QVERIFY(remote->listen(QHostAddress::LocalHost, port));
+            client.request(endpoint);
+            QTRY_VERIFY_WITH_TIMEOUT(!client.busy(), 5000);
+            QVERIFY(client.status().contains("different device key"));
+            QCOMPARE(remote->messages.size(), 0); QCOMPARE(imported.size(), 1);
+            QCOMPARE(PeerStore::read(dir.path()+"/binding/peers.json"), saved);
+        }
+    }
+
     void automaticEndpointRefresh_data() {
         QTest::addColumn<int>("failure");
-        QTest::newRow("changed-port") << 0;
-        QTest::newRow("wrong-stream-identity") << 1;
-        QTest::newRow("wrong-tls-pin") << 2;
-        QTest::newRow("revoked-at-server") << 3;
-        QTest::newRow("wrong-stream-certificate") << 4;
-        QTest::newRow("concurrent-local-edit") << 5;
-        QTest::newRow("changed-entry-port") << 6;
+        QTest::addColumn<bool>("outboundOnly");
+        const QStringList scenarios {"changed-port", "wrong-stream-identity", "wrong-tls-pin", "revoked-at-server",
+                                     "wrong-stream-certificate", "concurrent-local-edit", "changed-entry-port"};
+        for (bool client : {false, true}) for (int i = 0; i < scenarios.size(); ++i)
+            QTest::newRow(qPrintable((client ? QString("client-only-") : QString("mutual-")) + scenarios[i])) << i << client;
     }
     void automaticEndpointRefresh() {
         QFETCH(int, failure);
+        QFETCH(bool, outboundOnly);
         QTemporaryDir dir;
         const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
         auto digest = [](const QByteArray& cert) {
@@ -309,7 +572,8 @@ private slots:
         const QJsonObject before{{"version",1},{"peers",QJsonObject{{fp,peer}}}};
         QVERIFY(PeerStore::write(dir.path()+"/ab/peers.json",before));
         HostManager ah(nullptr,dir.path()+"/ah");
-        PeerManager a(&ah,aCert,credential("TEST_KEY_A"),dir.path()+"/ab",0,QHostAddress::LocalHost);
+        PeerManager a(&ah,aCert,credential("TEST_KEY_A"),dir.path()+"/ab",0,QHostAddress::LocalHost,
+                      outboundOnly ? PeerManager::Mode::ClientOnly : PeerManager::Mode::PlatformDefault);
         QSignalSpy updated(&a,&PeerManager::peerBound), approval(&b,&PeerManager::incomingRequest);
         const auto status=a.status();
         if (failure==6) {
@@ -483,6 +747,25 @@ private slots:
         for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
         QCOMPARE(clientReplies, 5);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void adaptiveDisplayNegotiatesFiniteModes() {
+        const auto aCert=credential("TEST_CERT_A"),bCert=credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert,credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost,0));
+        AdaptiveDisplay channel("127.0.0.1",server.serverPort(),QSslCertificate(bCert),aCert,credential("TEST_KEY_A"));
+        auto result=std::async(std::launch::async,[&]{return channel.resize(QSize(1400,800),2);});
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(),5000);
+        server.send({{"type","hello"},{"meta",QJsonObject{{"adaptiveDisplay",1},{"displayModes",QJsonArray{
+            QJsonObject{{"width",1280},{"height",720}},QJsonObject{{"width",1920},{"height",1080}}}}}}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),5000);
+        const auto request=server.messages.takeFirst();
+        QCOMPARE(request["width"].toInt(),1280);QCOMPARE(request["height"].toInt(),720);QCOMPARE(request["scale"].toInt(),1);
+        server.send({{"type","display-result"},{"seq",request["seq"]},{"width",1280},{"height",720},{"scale",1}});
+        QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0))==std::future_status::ready,5000);
+        QVERIFY(result.get());QCOMPARE(channel.negotiatedSize(),QSize(1280,720));
+        QCOMPARE(channel.selectedSize(QSize(1400,800)),QSize(1280,720));
+        QCOMPARE(channel.selectedSize(QSize(1920,1080)),QSize(1920,1080));
+        QCOMPARE(channel.selectedScale(2),1);
     }
     void workspaceUsesClientSystemScale() {
         const auto fractional = DeskPortDisplay::forClient(QSize(2880, 1620), 1.5);

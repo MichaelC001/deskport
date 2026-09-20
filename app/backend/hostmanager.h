@@ -4,6 +4,7 @@
 #include <QVariantList>
 #include <QUrl>
 #include <QJsonObject>
+#include <QJsonArray>
 #include <QSslCertificate>
 #include <QLockFile>
 #include "hostports.h"
@@ -23,6 +24,7 @@ class HostManager : public QObject {
     Q_PROPERTY(int displayWidth READ displayWidth NOTIFY changed)
     Q_PROPERTY(int displayHeight READ displayHeight NOTIFY changed)
     Q_PROPERTY(bool virtualDisplayActive READ virtualDisplayActive NOTIFY changed)
+    Q_PROPERTY(bool physicalDisplaySharing READ physicalDisplaySharing NOTIFY changed)
     Q_PROPERTY(int sharingWidth READ sharingWidth NOTIFY changed)
     Q_PROPERTY(int sharingHeight READ sharingHeight NOTIFY changed)
     Q_PROPERTY(bool changing READ changing NOTIFY changed)
@@ -41,12 +43,19 @@ class HostManager : public QObject {
 public:
     explicit HostManager(QObject *parent = nullptr, const QString &directory = QString());
     ~HostManager();
-    bool available() const;
+    virtual bool available() const;
+#ifdef Q_OS_WIN
+private:
+    void* m_WindowsHostJob = nullptr;
+    bool m_WindowsVirtualDisplay = false;
+public:
+#endif
     QVariantList permissions() const;
     bool setupComplete() const;
     QString deviceName() const;
     QUrl applicationUrl() const;
     int displayScale() const { return m_DisplayScale; }
+    QJsonArray displayModes() const { return m_DisplayModes; }
     int displayWidth() const { return m_DisplayWidth; }
     int displayHeight() const { return m_DisplayHeight; }
     int sharingWidth() const;
@@ -58,6 +67,7 @@ public:
     bool prepareIdentity(const QByteArray& certificate, const QByteArray& key);
     QJsonObject identity() const;
     void updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove = false);
+    bool physicalDisplaySharing() const;
     bool adaptiveDisplayAvailable() const;
     bool virtualDisplayActive() const { return adaptiveDisplayAvailable() && m_DisplayWidth > 0 && m_DisplayHeight > 0; }
     bool displayPoliciesAvailable() const;
@@ -142,6 +152,7 @@ private:
     quint32 m_LinuxPipewireNode = 0;
     QString m_LinuxPipewireSerial;
     bool saveLinuxDisplayState();
+    QJsonArray m_DisplayModes;
     int m_DisplayWireSequence = 0, m_DisplaySequence = 0, m_DisplayWidth = 0, m_DisplayHeight = 0;
     quint64 m_DisplayGeneration = 0;
     QJsonObject m_QueuedDisplayRequest;

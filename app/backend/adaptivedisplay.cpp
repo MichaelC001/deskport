@@ -1,3 +1,6 @@
+#include <QJsonArray>
+#include <cmath>
+#include <limits>
 #include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "adaptivedisplay.h"
@@ -9,7 +12,6 @@
 #include <QJsonObject>
 #include <QElapsedTimer>
 #include <QDebug>
-#include <cmath>
 
 AdaptiveDisplay::AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
                                  QByteArray certificate, QByteArray key, int policy, QString resumeToken)
@@ -24,6 +26,20 @@ QString AdaptiveDisplay::warning() { QMutexLocker lock(&m_Mutex); return m_Warni
 QString AdaptiveDisplay::resumeToken() { QMutexLocker lock(&m_Mutex); return m_ResumeToken; }
 void AdaptiveDisplay::cancel() { QMutexLocker lock(&m_Mutex); m_Failed = true; m_Retryable = false; requestInterruption(); m_Wake.wakeAll(); }
 void AdaptiveDisplay::release() { QMutexLocker lock(&m_Mutex); m_Release = true; requestInterruption(); }
+QSize AdaptiveDisplay::selectedSize(QSize requested) {
+    QMutexLocker lock(&m_Mutex);
+    if(m_Modes.isEmpty() || m_Modes.contains(requested))return requested;
+    QSize best; double score=std::numeric_limits<double>::infinity();
+    for(const auto mode:m_Modes) {
+        const double x=std::log(double(mode.width())/requested.width());
+        const double y=std::log(double(mode.height())/requested.height());
+        const double candidate=x*x+y*y+4*(x-y)*(x-y);
+        if(candidate<score){score=candidate;best=mode;}
+    }
+    return best;
+}
+int AdaptiveDisplay::selectedScale(int requested) { QMutexLocker lock(&m_Mutex); return m_Modes.isEmpty()?requested:1; }
+QSize AdaptiveDisplay::negotiatedSize() { QMutexLocker lock(&m_Mutex); return m_NegotiatedSize; }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
 bool AdaptiveDisplay::takeLeaveFullscreen() { QMutexLocker lock(&m_Mutex); bool value = m_LeaveFullscreen; m_LeaveFullscreen = false; return value; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
@@ -116,6 +132,14 @@ void AdaptiveDisplay::run() {
         { QMutexLocker lock(&m_Mutex); m_Lifecycle = hello["meta"].toObject()["sessionLifecycle"].toInt() == DP_SESSION_LIFECYCLE_VERSION; }
         windowSupported = hello["meta"].toObject()["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
         policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
+        const auto advertised=hello["meta"].toObject()["displayModes"].toArray();
+        QVector<QSize> modes;
+        if(advertised.size()<=96)for(const auto value:advertised) {
+            const auto mode=value.toObject();const QSize size(mode["width"].toInt(),mode["height"].toInt());
+            if(size!=boundedSize(size)||!size.isValid()){modes.clear();break;}
+            if(!modes.contains(size))modes.append(size);
+        }
+        { QMutexLocker lock(&m_Mutex); m_Modes=modes; }
         const bool admission = hello["meta"].toObject()["sessionTakeover"].toInt() == DP_SESSION_TAKEOVER_VERSION;
         { QMutexLocker lock(&m_Mutex); m_AdmissionRequired = admission; }
         if (admission) {
@@ -154,6 +178,7 @@ void AdaptiveDisplay::run() {
         QSize size; int scale; bool pending;
         { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; }
         if (pending) {
+            size=selectedSize(size);scale=selectedScale(scale);
             QJsonObject request{{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}};
             if (policySupported) request["displayPolicy"] = m_Policy;
             if (windowSupported) request["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
@@ -163,7 +188,7 @@ void AdaptiveDisplay::run() {
                 reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");
             if (!connected && !reply.isEmpty()) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
-            { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
+            { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; if (connected) m_NegotiatedSize = size; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();
         } else if (heartbeat.elapsed() >= 5000) {
             send({{"type", DP_MESSAGE_DISPLAY_PING}});

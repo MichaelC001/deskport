@@ -1403,3 +1403,92 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
 - Keep picture presets, automatic resolution, remote audio/input and clipboard
   switches in Device settings only. Advanced streaming retains detailed tuning;
   editing frame rate or bandwidth selects manual streaming.
+
+## 2026-09-20 — Windows x64 static client evaluation package
+
+User-requested MinGW cross build retains the Windows client, D3D11VA/DXVA2 and
+Vulkan renderer. Audit the offline NSIS payload and distinguish static libraries
+from Windows/driver DLLs and installer plugins. Windows integrated hosting is
+unavailable in the selected source revision; AntiHooking and Discord RPC are
+not included by this build. Native installation, input release, background recall
+and streaming acceptance remain pending user VM testing. No deployment or
+release is part of this task.
+
+
+## 2026-09-20 — Windows outbound client binding fix
+
+Windows VM feedback exposed a binding initializer that required local hosting.
+Use the existing client role and complete its approved/persisted
+`hello/request/pending/accept/ready/client-ready/bound` flow without a listener,
+local host metadata, trust provisioning or service startup. Preserve the default
+macOS/Linux mutual flow and certificate pins. Add isolated outbound protocol,
+persistence, endpoint-refresh and one-way UI regression coverage. Deliver a
+separately named Windows evaluation installer; VM binding/streaming acceptance
+remains the user's next checkpoint, with no automatic installation or networking
+changes.
+
+## 2026-09-20 — Full Windows host integration (in progress)
+
+The requested full Windows package supersedes the client-only evaluation scope.
+Work is restoring mutual binding and adding a privately managed, protocol-patched
+Sunshine host, Windows display lifecycle, startup and installer integration.
+Existing static Qt/client dependencies are reused. Windows VM capability probing
+found Desktop Duplication initialization and the software H.264 encoder available;
+this is not streaming, input, audio, clipboard or full-package acceptance.
+Physical display mode changes require an advertised mode and a persisted recovery
+record. The original signed MIT virtual driver started successfully in the VM under
+a DeskPort-owned device instance. Live topology/restoration and adaptive-mode
+behavior remain under implementation and test. Full-package readiness is not claimed until the autonomous
+VM acceptance checklist is complete. Existing deployed desktop sessions are not
+part of these tests.
+
+### Display recovery incident follow-up
+
+A test left the owned VDD enabled and a later VM reboot caused mouse-coordinate
+problems. The user disabled the owned device and restored the internal display.
+The resumed baseline verifies Code 22 and one physical primary output. A new
+independent elevated display lease durably snapshots QueryDisplayConfig and
+restores topology, primary, coordinates, mode and refresh while disabling only
+the owned device. Native helper EOF, forced termination and invalid-mode tests
+now restore the baseline; full application, installer and normal-protection
+acceptance remain outstanding. The original detected binary and Defender evidence
+are preserved. No false-positive determination or release readiness is claimed.
+
+Windows full follow-up (2026-09-20): native clipboard pipe transport is implemented; actual Windows-to-Linux frames, software audio, keyboard/mouse, bidirectional text and Windows-to-Linux image transfer have private VM evidence. Window hiding released a held remote key before local key-up. These are partial acceptance, not a release. Installation now owns/restores the upstream VDD configuration pointer and checks privileged recovery executable path permissions. Windows advertises its enumerated SDR modes; new clients select the nearest supported backing size. These latest installer/mode changes await VM validation. Reverse media, file clipboard, full upgrade/uninstall and normal-protection detection verification remain open.
+
+Windows full continuation (2026-09-20 evening): replaced Windows Qt delayed
+clipboard publishing with an OLE IDataObject advertising formats without reading
+file contents. Queued pipe dispatch permits data replies during OLE nested loops;
+CF_BITMAP/CF_DIB/PNG support native receivers. Windows source-file reads verify
+handle identity, size/time and reject reparse points. Native fixtures and actual
+isolated Linux-to-Windows files/images passed; Windows-to-Linux files passed again.
+A real Windows tray click hid/recalled the same streaming window, releasing a held
+remote key before local key-up. Candidate2 running upgrade/pairing preservation
+and finite-mode decoding have VM evidence. Fresh baseline recovery after VBox
+physical-screen resizing also passed. Full uninstall/reinstall, abnormal
+disconnection/reconnect, final display acceptance and normal-protection retest
+remain pending. VM testing is paused pending permission to constrain the existing
+VirtualBox process and the Windows network trust decision; no deployed host
+services or host network rules were modified. Full package notices are maintained
+separately from the historical client-only notices. No release is ready.
+
+
+## 2026-09-20 — Windows 0.4.3 integration (acceptance pending)
+
+The explicit Windows delivery request integrates desktop 7fccde75 and core
+0badc8e3 with the full Windows host, recovery guardian, finite display modes,
+OLE clipboard and installer. Keep the upstream connection-window recall and
+session lifecycle fixes. Windows currently creates its private display for the
+sharing lifetime and removes it when sharing stops; do not present the macOS/Linux
+per-connection display lifecycle as verified Windows behavior. Empty OLE publish
+now releases only this provider's offer, preserving another clipboard owner's
+later data. Native ownership regression, new UI recall, exact final package
+maintenance and normal-protection validation remain release gates.
+
+Native Windows OLE ownership regression and full-sync1 running upgrade with
+identity preservation passed. New Windows UI was captured privately. A physical
+primary-mode regression during virtual-output attachment was reproduced and
+fixed by preserving the pre-enable CCD modes; startup, supported resize and EOF
+restoration passed with the diagnostic helper. Full-sync2 adds post-apply mode
+verification and failure-triggered lease termination; exact-package acceptance
+remains pending. Network Private was authorized and verified on the VM only.

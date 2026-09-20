@@ -16,3 +16,10 @@ CONFIG(release, debug|release) {
 #QMAKE_CFLAGS += -fsanitize=address
 #QMAKE_CXXFLAGS += -fsanitize=address
 #QMAKE_LFLAGS += -incremental:no -wholearchive:clang_rt.asan_dynamic-x86_64.lib -wholearchive:clang_rt.asan_dynamic_runtime_thunk-x86_64.lib
+
+# MinGW cross builds on a case-sensitive filesystem need forwarding headers for
+# the mixed-case Windows SDK spellings used by the sources.
+win32-g++ {
+    DESKPORT_WIN_COMPAT_INCLUDE = $$(DESKPORT_WIN_COMPAT_INCLUDE)
+    !isEmpty(DESKPORT_WIN_COMPAT_INCLUDE): INCLUDEPATH += $$DESKPORT_WIN_COMPAT_INCLUDE
+}

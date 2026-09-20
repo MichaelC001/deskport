@@ -29,7 +29,7 @@ QMAKE_RPATHDIR += "{sdl}"
         project += 'CONFIG += link_pkgconfig\nPKGCONFIG += sdl2 wayland-client\nDEFINES += HAS_WAYLAND\n'
     (work / 'test.pro').write_text(project)
     subprocess.run([os.environ.get('DESKPORT_QMAKE', 'qmake'), 'test.pro'], cwd=work, check=True)
-    subprocess.run(['make', '-j4'], cwd=work, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(['make', '-j' + str(max(1, min(4, int(os.environ.get('JOBS', '2')))))], cwd=work, check=True, stdout=subprocess.DEVNULL)
     env = dict(os.environ)
     if '--native' not in sys.argv:
         env.update(QT_QPA_PLATFORM='offscreen', SDL_VIDEODRIVER='dummy')

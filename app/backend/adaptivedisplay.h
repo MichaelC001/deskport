@@ -1,5 +1,6 @@
 #pragma once
 #include <QSize>
+#include <QVector>
 #include <QString>
 #include <QSslCertificate>
 #include <QSslKey>
@@ -19,6 +20,9 @@ public:
     bool resize(const QSize& pixels, int scale, const std::function<void()>& progress = {},
                 const std::function<bool()>& confirmTakeover = {});
     static QSize boundedSize(QSize pixels);
+    QSize selectedSize(QSize requested);
+    int selectedScale(int requested);
+    QSize negotiatedSize();
     bool failed();
     bool takeLeaveFullscreen();
     bool retryable();
@@ -36,7 +40,8 @@ private:
     QByteArray m_Certificate, m_Key;
     QMutex m_Mutex;
     QWaitCondition m_Wake;
-    QSize m_Size;
+    QSize m_Size, m_NegotiatedSize;
+    QVector<QSize> m_Modes;
     int m_Scale = 1;
     int m_Policy = 0;
     bool m_TakenOver = false;

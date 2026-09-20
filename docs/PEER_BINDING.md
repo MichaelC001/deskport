@@ -111,3 +111,49 @@ offline devices; further changes must reuse an earlier port once the limit is
 reached. Port conflicts never stop the currently working listener. Custom ports
 and retained entry ports must be reachable through the host firewall. The default
 Nix firewall already covers the default entry and all supported stream groups.
+
+## Windows outbound-only binding (2026-09-20)
+
+Windows uses the existing `role: "client"` contract without a local host identity,
+Sunshine state, or binding listener. Its TLS identity is still the viewer's
+persisted certificate/key, and a damaged identity or peer store fails closed.
+An unavailable host on macOS/Linux does not silently select this mode: the
+platform-default mutual flow retains its host-readiness requirements.
+
+The client waits for a valid host `hello` advertising `clientBinding: 1`, sends
+`request`, and requires matching `pending`, `accept`, and `ready` messages. The
+host still needs explicit user approval and a successful persisted grant. The
+client atomically saves an incomplete, pinned host record before `client-ready`;
+only a matching `bound` followed by a successful final save emits `peerBound` and
+imports the host. Interruptions never promote an incomplete record to a usable
+binding. Replay/out-of-order messages and transaction mismatches fail closed.
+
+The local binding port is zero (no listener); a bare remote address defaults to
+48991, while `address:port` selects that host's rendezvous. An explicitly entered
+IP or DNS name is retained instead of being replaced by a host-advertised name
+that Windows might not resolve. No host identity,
+streaming port, listener port, or hosting capability is advertised by the client.
+The host's streaming endpoint and its separate binding TLS certificate are saved
+for the existing pinned viewer, endpoint-refresh, session and clipboard paths.
+Remembered hosts are restored after restart without provisioning a local host.
+
+The UI describes one-way host access. Forgetting a saved binding removes that
+local record only; remove the separate device entry under Devices if desired,
+and revoke the client on the host to deny its certificate. This is not remote
+revocation. Local host sharing remains unsupported on Windows.
+
+The binding suite additionally exercises the production outbound client against
+both the production host adapter and a scripted TLS peer, with no host available
+on the client. It covers absent listeners, corrupt credentials/stores, host
+approval/rejection, invalid capabilities/certificates, ordering/replay/transaction
+errors, pending/final save failures, incomplete restart recovery, endpoint pins,
+and a post-binding session/display request to fake host children. Native Windows
+binding and real streaming still require VM acceptance.
+
+## Full Windows integration (in progress)
+
+The full package restores `PlatformDefault` to mutual binding, using the same
+private host identity and authorization protocol as Linux/macOS. Explicit
+`Mode::ClientOnly` remains available for client-only tests. Existing outbound-only
+records do not silently grant reverse access; mutual access requires a new,
+explicitly approved exchange. Native full-package acceptance is pending.

@@ -801,10 +801,12 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             int selected = 0;
             return SDL_ShowMessageBox(&dialog, &selected) == 0 && selected == 1;
         })) {
-        m_StreamConfig.width = target.width(); m_StreamConfig.height = target.height();
+        const auto selected=m_AdaptiveDisplay->negotiatedSize();
+        m_AdaptiveScale=m_AdaptiveDisplay->selectedScale(m_AdaptiveScale);
+        m_StreamConfig.width = selected.width(); m_StreamConfig.height = selected.height();
         deskportResizeStage("mode-ready", target.width(), target.height());
         if (!m_AdaptiveDisplay->warning().isEmpty()) emit displayLaunchWarning(m_AdaptiveDisplay->warning());
-        qInfo() << "Adaptive display negotiated:" << target << "scale" << m_AdaptiveScale;
+        qInfo() << "Adaptive display negotiated:" << selected << "requested" << target << "scale" << m_AdaptiveScale;
     } else {
         // Older/unavailable hosts retain normal fixed-resolution streaming.
         // Disable adaptation for this session to avoid reconnect loops.
@@ -827,7 +829,7 @@ bool Session::checkAdaptiveResize() {
         m_AdaptiveObservedSize = size; m_AdaptiveObservedScale = scale;
         deskportResizeStage("observed", size.width(), size.height()); return false;
     }
-    if (size == QSize(m_StreamConfig.width, m_StreamConfig.height) && scale == m_AdaptiveScale) {
+    if (m_AdaptiveDisplay->selectedSize(size) == QSize(m_StreamConfig.width, m_StreamConfig.height) && m_AdaptiveDisplay->selectedScale(scale) == m_AdaptiveScale) {
         if (settled) rememberAdaptiveWindow();
         return false;
     }

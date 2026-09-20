@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QAbstractNativeEventFilter>
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QLabel>
@@ -61,8 +62,11 @@ static void forwardTerminationSignal(int)
 #include "streaming/video/ffmpeg.h"
 #endif
 
-#if defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32) && defined(HAVE_ANTIHOOKING)
 #include "antihookingprotection.h"
+#endif
+
+#if defined(Q_OS_WIN32)
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -85,6 +89,31 @@ static void forwardTerminationSignal(int)
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
+
+#ifdef Q_OS_WIN
+// A resident window may treat ordinary close/quit as hide. Restart Manager's
+// confirmed shutdown must instead take the same cleanup path as tray Quit.
+class WindowsInstallShutdown final : public QAbstractNativeEventFilter {
+public:
+    explicit WindowsInstallShutdown(HostManager& host) : m_Host(host) {}
+    bool nativeEventFilter(const QByteArray&, void* message, qintptr* result) override {
+        auto msg = static_cast<MSG*>(message);
+        if (!(msg->lParam & ENDSESSION_CLOSEAPP)) return false;
+        if (msg->message == WM_QUERYENDSESSION) {
+            *result = TRUE;
+            return true;
+        }
+        if (msg->message == WM_ENDSESSION) {
+            if (msg->wParam) m_Host.requestExit();
+            *result = 0;
+            return true;
+        }
+        return false;
+    }
+private:
+    HostManager& m_Host;
+};
+#endif
 
 #if defined(Q_OS_WIN32)
 #define IS_UNSPECIFIED_HANDLE(x) ((x) == INVALID_HANDLE_VALUE || (x) == NULL)
@@ -363,6 +392,11 @@ static void relaunchAfterExit()
             .arg(QCoreApplication::applicationPid()).arg(relaunch);
     if (!QProcess::startDetached("/bin/sh", {"-c", command}))
         qCritical() << "Could not schedule the restart";
+#elif defined(Q_OS_WIN)
+    QStringList arguments{"relaunch", QString::number(QCoreApplication::applicationPid()), QDir::toNativeSeparators(QCoreApplication::applicationFilePath())};
+    arguments.append(QCoreApplication::arguments().mid(1));
+    if (!QProcess::startDetached(QCoreApplication::applicationDirPath() + "/deskport-maintenance.exe", arguments))
+        qCritical() << "Could not schedule the Windows restart";
 #else
     QProcess::startDetached(QCoreApplication::applicationFilePath(), QCoreApplication::arguments().mid(1));
 #endif
@@ -457,7 +491,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-#if defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32) && defined(HAVE_ANTIHOOKING)
     // Force AntiHooking.dll to be statically imported and loaded
     // by ntdll on Win32 platforms by calling a dummy function.
     AntiHookingDummyImport();
@@ -681,7 +715,9 @@ int main(int argc, char *argv[])
         QLockFile testLock(QDir::currentPath()+"/session-test.lock");
         if (!testLock.tryLock(0)) return 2;
         HostManager host(nullptr, QDir::currentPath()+"/host");
-        PeerManager peers(&host, cert, key, QDir::currentPath()+"/binding", 0);
+        const int testBindingPort = qEnvironmentVariableIntValue("DESKPORT_TEST_BINDING_PORT");
+        if (testBindingPort && (testBindingPort < 1024 || testBindingPort > 65535)) return 2;
+        PeerManager peers(&host, cert, key, QDir::currentPath()+"/binding", quint16(testBindingPort));
         QDialog window;
         window.setWindowTitle("DeskPort temporary session test");
         auto layout = new QVBoxLayout(&window);
@@ -696,7 +732,7 @@ int main(int argc, char *argv[])
         layout->addWidget(approve); layout->addWidget(reject); layout->addWidget(stop);
         bool changingTestPort = false;
         auto refresh = [&] {
-            if (!changingTestPort && host.basePort() != DeskPortNetwork::DefaultBasePort && peers.port() != host.basePort()+2) {
+            if (!testBindingPort && !changingTestPort && host.basePort() != DeskPortNetwork::DefaultBasePort && peers.port() != host.basePort()+2) {
                 changingTestPort = true;
                 peers.setConnectionPort(host.basePort()+2);
                 changingTestPort = false;
@@ -909,6 +945,10 @@ int main(int argc, char *argv[])
     }
 
     HostManager hostManager;
+#ifdef Q_OS_WIN
+    WindowsInstallShutdown installShutdown(hostManager);
+    app.installNativeEventFilter(&installShutdown);
+#endif
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);

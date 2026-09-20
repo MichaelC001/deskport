@@ -6,6 +6,7 @@ linux {
 }
 SOURCES += clipboard/agent.cpp clipboard/native.cpp
 HEADERS += clipboard/agent.h clipboard/native.h
+win32: HEADERS += clipboard/windowsnative.h
 macx: OBJECTIVE_SOURCES += clipboard/macnative.mm
 SOURCES += streaming/clipboardsync.cpp
 HEADERS += streaming/clipboardsync.h
@@ -55,7 +56,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-win32 {
+win32-g++ {
+    # MinGW-w64 cross build: dependencies come from a locally built static
+    # prefix instead of the MSVC prebuilts in libs/windows.
+    DESKPORT_WIN_PREFIX = $$(DESKPORT_WIN_PREFIX)
+    isEmpty(DESKPORT_WIN_PREFIX): error(DESKPORT_WIN_PREFIX must point at the static dependency prefix)
+
+    INCLUDEPATH += $$DESKPORT_WIN_PREFIX/include
+    # SDL2/SDL2_ttf install their headers into an SDL2 subdirectory; the MSVC
+    # prebuilts put them at the top level.
+    INCLUDEPATH += $$DESKPORT_WIN_PREFIX/include/SDL2
+    INCLUDEPATH += $$DESKPORT_WIN_PREFIX/include/opus
+    LIBS += -L$$DESKPORT_WIN_PREFIX/lib
+    LIBS += -lws2_32 -lwinmm -ldxva2 -lole32 -lgdi32 -luser32 -ld3d9 -ldwmapi -ldbghelp
+
+    # Work around a conflict with math.h inclusion between SDL and Qt 6
+    DEFINES += _USE_MATH_DEFINES
+}
+win32:!win32-g++ {
     contains(QT_ARCH, i386) {
         LIBS += -L$$PWD/../libs/windows/lib/x86
         INCLUDEPATH += $$PWD/../libs/windows/include/x86
@@ -167,11 +185,28 @@ unix:if(!macx|disable-prebuilts) {
         }
     }
 }
-win32 {
+win32-g++ {
+    LIBS += -lSDL2_ttf -lSDL2 -lfreetype -lavformat -lavcodec -lswscale -lavutil -lopus -lssl -lcrypto
+    LIBS += -ldxgi -ld3d11 -lz -lbcrypt -lcrypt32 -lsetupapi -limm32 -lversion -loleaut32 -luuid
+    CONFIG += ffmpeg
+
+    # libplacebo is optional here: it is only present when the Vulkan renderer
+    # dependencies were built (winbuild/scripts/build-vulkan-deps.sh).
+    exists($$DESKPORT_WIN_PREFIX/lib/libplacebo.a) {
+        LIBS += -lplacebo -lglslang-default-resource-limits -lglslang -lMachineIndependent -lGenericCodeGen -lOSDependent -lSPIRV -lshlwapi
+        # Without PL_STATIC libplacebo's headers declare the API as dllimport.
+        DEFINES += PL_STATIC
+        CONFIG += libplacebo
+    }
+}
+win32:!win32-g++ {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
     CONFIG += ffmpeg libplacebo
 }
-win32:!winrt {
+win32-g++:!winrt {
+    CONFIG += soundio
+}
+win32:!win32-g++:!winrt {
     CONFIG += soundio discord-rpc
 }
 macx {
@@ -532,7 +567,10 @@ else:unix: LIBS += -L$$OUT_PWD/../h264bitstream/ -lh264bitstream
 INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
 DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
 
-!winrt {
+# AntiHooking needs Microsoft Detours, which is MSVC-only and is not part of
+# the MinGW cross build. HAVE_ANTIHOOKING gates its use in main.cpp.
+!winrt:!win32-g++ {
+    DEFINES += HAVE_ANTIHOOKING
     win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
     else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
 
@@ -565,13 +603,20 @@ unix:!macx: {
     INSTALLS += target desktop icons appstream
 }
 win32 {
-    RC_ICONS = moonlight.ico
+    # DeskPort branding: generated from res/deskport.svg for this cross build.
+    RC_ICONS = deskport.ico
     QMAKE_TARGET_COMPANY = DeskPort contributors
     QMAKE_TARGET_DESCRIPTION = DeskPort Remote Desktop Client
     QMAKE_TARGET_PRODUCT = DeskPort
 
-    CONFIG -= embed_manifest_exe
-    QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
+    !win32-g++ {
+        CONFIG -= embed_manifest_exe
+        QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
+    }
+    win32-g++ {
+        # windres embeds the same manifest through the generated resource file.
+        QMAKE_MANIFEST = $${PWD}/Moonlight.exe.manifest
+    }
 }
 macx {
     # Create Info.plist in object dir with the correct version string

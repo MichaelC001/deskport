@@ -1,0 +1,49 @@
+diff --git a/src/platform/windows/windows_backend.cpp b/src/platform/windows/windows_backend.cpp
+index 150c35a..9c2ad28 100644
+--- a/src/platform/windows/windows_backend.cpp
++++ b/src/platform/windows/windows_backend.cpp
+@@ -2753,7 +2753,9 @@ namespace lvh::detail {
+     class WindowsBackend final: public Backend {
+     public:
+       WindowsBackend():
+-          WindowsBackend(open_brokered_control_channels()) {}
++          // DeskPort uses the MIT Win32 input backend only. Do not open an
++          // independently installed proprietary broker or create licensed HID devices.
++          WindowsBackend(WindowsControlChannels {}) {}
+ 
+       explicit WindowsBackend(WindowsControlChannels channels):
+           WindowsBackend(std::move(channels.command), std::move(channels.event)) {}
+diff --git a/src/platform/windows/windows_license.cpp b/src/platform/windows/windows_license.cpp
+index f1825c1..79e7772 100644
+--- a/src/platform/windows/windows_license.cpp
++++ b/src/platform/windows/windows_license.cpp
+@@ -4,7 +4,7 @@
+  */
+ 
+ // local includes
+-#include "lvh_windows_broker_config.hpp"
++// DeskPort does not include proprietary broker entitlement constants.
+ #include "lvh_windows_broker_protocol.h"
+ #include "platform/windows/windows_broker_client.hpp"
+ 
+@@ -47,8 +47,8 @@ namespace lvh {
+         .plan_name = status.plan_name.data(),
+         .customer_email = status.customer_email.data(),
+         .message = status.message.data(),
+-        .purchase_url = std::string {windows::broker_config::buy_url},
+-        .manage_account_url = std::string {windows::broker_config::manage_account_url},
++        .purchase_url = std::string {},
++        .manage_account_url = std::string {},
+       };
+     }
+ 
+@@ -56,8 +56,8 @@ namespace lvh {
+       LicenseStatus status;
+       status.service_available = service_available;
+       status.message = message;
+-      status.purchase_url = windows::broker_config::buy_url;
+-      status.manage_account_url = windows::broker_config::manage_account_url;
++      status.purchase_url = "";
++      status.manage_account_url = "";
+       return status;
+     }

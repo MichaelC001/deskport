@@ -147,7 +147,7 @@ macx {{
                 f.write(f'\nQMAKE_CXXFLAGS += -F"{sdl}"\nINCLUDEPATH += "{sdl}/SDL2.framework/Versions/A/Headers"\nLIBS += -F"{sdl}" -framework SDL2\nQMAKE_RPATHDIR += "{sdl}"\n')
             else:
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
-    environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"))
+    environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"), XDG_DATA_HOME=str(work / "data"))
     if sys.platform != "darwin":
         environment["XDG_CURRENT_DESKTOP"] = "KDE"
         environment["WAYLAND_DISPLAY"] = "deskport-isolated-fake"
@@ -163,10 +163,14 @@ macx {{
                 check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             environment[f"TEST_CERT_{name}"] = str(cert)
             environment[f"TEST_KEY_{name}"] = str(key)
+        expired = work / "expired.pem"
+        subprocess.run(["openssl", "x509", "-in", str(work / "B.pem"), "-signkey", str(work / "B.key"),
+                        "-not_before", "20200101000000Z", "-not_after", "20200102000000Z", "-out", str(expired)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        environment["TEST_CERT_EXPIRED"] = str(expired)
     environment.setdefault("QT_QUICK_BACKEND", "software")
     environment.setdefault("DEVELOPER_DIR", "/Applications/Xcode.app/Contents/Developer")
     subprocess.run([qmake, str(project)], cwd=work, env=environment, check=True)
-    subprocess.run(["make", "-j4"], cwd=work, env=environment, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(["make", "-j" + str(max(1, min(4, int(os.environ.get("JOBS", "4")))))], cwd=work, env=environment, check=True, stdout=subprocess.DEVNULL)
     test_binary = macos / "host-lifecycle-tests"
     if sys.platform != "darwin":
         # Unwrapped test binaries must use the QML plugins from their linked Qt,
@@ -183,4 +187,4 @@ macx {{
             environment["QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment["NIXPKGS_QT6_QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment.pop("QML2_IMPORT_PATH", None)
-    subprocess.run([str(test_binary)], cwd=work, env=environment, check=True)
+    subprocess.run([str(test_binary), *os.environ.get("DESKPORT_TEST_FUNCTIONS", "").split()], cwd=work, env=environment, check=True)

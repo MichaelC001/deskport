@@ -16,6 +16,12 @@
 #include <QBuffer>
 #include <QDateTime>
 #include <QScopedValueRollback>
+#ifdef Q_OS_WIN
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#endif
 #ifdef Q_OS_UNIX
 #include <unistd.h>
 #include <fcntl.h>
@@ -85,6 +91,17 @@ bool ClipboardAgent::snapshotFiles(const QByteArray& data) {
         struct stat stamp;
         if (::lstat(QFile::encodeName(f.absoluteFilePath()).constData(), &stamp) != 0) return false;
         m_FileStamps.append({quint64(stamp.st_dev), quint64(stamp.st_ino)});
+#elif defined(Q_OS_WIN)
+        const auto path = QDir::toNativeSeparators(f.absoluteFilePath());
+        HANDLE handle = CreateFileW(reinterpret_cast<LPCWSTR>(path.utf16()), FILE_READ_ATTRIBUTES,
+                                    FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                                    FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) return false;
+        BY_HANDLE_FILE_INFORMATION stamp = {};
+        const bool safe = GetFileInformationByHandle(handle, &stamp) && !(stamp.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT);
+        CloseHandle(handle);
+        if (!safe) return false;
+        m_FileStamps.append({stamp.dwVolumeSerialNumber, (quint64(stamp.nFileIndexHigh) << 32) | stamp.nFileIndexLow});
 #else
         m_FileStamps.append({0, 0});
 #endif
@@ -188,6 +205,24 @@ QJsonObject ClipboardAgent::serve(const QJsonObject& message) {
         if (::fstat(fd, &stamp) != 0 || !S_ISREG(stamp.st_mode) || quint64(stamp.st_dev) != m_FileStamps[index].device ||
             quint64(stamp.st_ino) != m_FileStamps[index].inode || stamp.st_size != size) { ::close(fd); return fail(); }
         if (!file.open(fd, QIODevice::ReadOnly, QFileDevice::AutoCloseHandle)) { ::close(fd); return fail(); }
+#elif defined(Q_OS_WIN)
+        const auto path = QDir::toNativeSeparators(m_Paths[index]);
+        HANDLE handle = CreateFileW(reinterpret_cast<LPCWSTR>(path.utf16()), GENERIC_READ,
+                                    FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) return fail();
+        BY_HANDLE_FILE_INFORMATION stamp = {};
+        const bool haveStamp = GetFileInformationByHandle(handle, &stamp);
+        const quint64 fileTime = (quint64(stamp.ftLastWriteTime.dwHighDateTime) << 32) | stamp.ftLastWriteTime.dwLowDateTime;
+        const qint64 modified = qint64(fileTime / 10000) - 11644473600000LL;
+        if (!haveStamp || (stamp.dwFileAttributes & (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY)) ||
+            stamp.dwVolumeSerialNumber != m_FileStamps[index].device ||
+            ((quint64(stamp.nFileIndexHigh) << 32) | stamp.nFileIndexLow) != m_FileStamps[index].inode ||
+            ((quint64(stamp.nFileSizeHigh) << 32) | stamp.nFileSizeLow) != quint64(size) || modified != number(f["modified"])) {
+            CloseHandle(handle); return fail();
+        }
+        const int fd = _open_osfhandle(reinterpret_cast<intptr_t>(handle), _O_RDONLY | _O_BINARY);
+        if (fd < 0) { CloseHandle(handle); return fail(); }
+        if (!file.open(fd, QIODevice::ReadOnly, QFileDevice::AutoCloseHandle)) { _close(fd); return fail(); }
 #else
         file.setFileName(m_Paths[index]); if (!file.open(QIODevice::ReadOnly)) return fail();
 #endif
@@ -351,6 +386,69 @@ int runClipboardHelper(int argc, char** argv) {
             agent.receive(doc.object());
         }
     });
+    return app.exec();
+#elif defined(Q_OS_WIN)
+    auto trace = [](const char* stage) {
+        if (!qEnvironmentVariableIsSet("DESKPORT_CLIPBOARD_DIAGNOSTICS")) return;
+        DWORD written=0;
+        WriteFile(GetStdHandle(STD_ERROR_HANDLE),stage,DWORD(strlen(stage)),&written,nullptr);
+    };
+    trace("clipboard: application initialization\n");
+    QGuiApplication app(argc, argv);
+    trace("clipboard: application ready\n");
+    app.setQuitOnLastWindowClosed(false);
+    const HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
+    const HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (!input || input == INVALID_HANDLE_VALUE || !output || output == INVALID_HANDLE_VALUE ||
+        GetFileType(input) != FILE_TYPE_PIPE || GetFileType(output) != FILE_TYPE_PIPE) return 5;
+    bool broken = false;
+    auto send = [&](const QJsonObject& message) {
+        const auto bytes = QJsonDocument(message).toJson(QJsonDocument::Compact) + '\n';
+        qsizetype offset = 0;
+        while (!broken && offset < bytes.size()) {
+            DWORD written = 0;
+            if (!WriteFile(output, bytes.constData()+offset, DWORD(bytes.size()-offset), &written, nullptr) || !written) {
+                broken = true; app.exit(5); return;
+            }
+            offset += written;
+        }
+    };
+    ClipboardAgent agent(makeClipboardNative(), send, app.arguments().contains("--clipboard-helper-host"));
+    trace("clipboard: native provider ready\n");
+    if (!agent.valid()) return 2;
+    QByteArray buffer;
+    // Anonymous QProcess pipes are not WinSock descriptors. PeekNamedPipe keeps
+    // clipboard/OLE dispatch on the GUI thread without a blocking stdin read.
+    QTimer inputTimer;
+    QObject::connect(&inputTimer, &QTimer::timeout, &app, [&] {
+        if (broken) { agent.stop(); app.exit(5); return; }
+        DWORD available = 0;
+        if (!PeekNamedPipe(input, nullptr, 0, nullptr, &available, nullptr)) {
+            agent.stop(); app.quit(); return;
+        }
+        DWORD remaining = qMin<DWORD>(available, 1024*1024);
+        if (remaining) trace("clipboard: input available\n");
+        while (remaining) {
+            char bytes[65536]; DWORD received = 0;
+            if (!ReadFile(input, bytes, qMin<DWORD>(remaining, sizeof(bytes)), &received, nullptr) || !received) {
+                agent.stop(); app.quit(); return;
+            }
+            remaining -= received; buffer.append(bytes, received);
+            if (buffer.size() > ClipboardV2::Frame) { agent.stop(); app.exit(3); return; }
+        }
+        int end;
+        while ((end = buffer.indexOf('\n')) >= 0) {
+            const auto frame = buffer.left(end); buffer.remove(0, end+1);
+            QJsonParseError error; const auto doc = QJsonDocument::fromJson(frame, &error);
+            if (error.error != QJsonParseError::NoError || !doc.isObject()) { agent.stop(); app.exit(4); return; }
+            // OLE may request delayed data while an offer is being published.
+            // Leave this timer callback before dispatch so nested request loops
+            // can continue draining the pipe.
+            const auto message = doc.object();
+            QTimer::singleShot(0, &agent, [&agent, message] { agent.receive(message); });
+        }
+    });
+    inputTimer.start(10);
     return app.exec();
 #else
     Q_UNUSED(argc); Q_UNUSED(argv); return 2;

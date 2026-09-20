@@ -23,6 +23,28 @@ public:
 class DemandTest : public QObject {
     Q_OBJECT
 private slots:
+    void nativeWindowsOwnership() {
+#ifdef Q_OS_WIN
+        if (qEnvironmentVariable("DESKPORT_TEST_WINDOWS_CLIPBOARD") != "1")
+            QSKIP("Requires the authorized isolated Windows clipboard fixture.");
+        auto first = makeClipboardNative();
+        auto second = makeClipboardNative();
+        auto unused = makeClipboardNative();
+        first->publish({"text/plain;charset=utf-8"}, [](const QString&) { return QByteArray("deskport-owner-a"); });
+        second->publish({"text/plain;charset=utf-8"}, [](const QString&) { return QByteArray("deskport-owner-b"); });
+        QCoreApplication::processEvents();
+        first->publish({}, {});
+        unused->publish({}, {});
+        first.reset();
+        QCoreApplication::processEvents();
+        QCOMPARE(second->read("text/plain"), QByteArray("deskport-owner-b"));
+        second->publish({}, {});
+        QCoreApplication::processEvents();
+        QVERIFY(second->read("text/plain").isEmpty());
+#else
+        QSKIP("Windows only");
+#endif
+    }
     void nativeMacProviders() {
 #ifdef Q_OS_MACOS
         if (QGuiApplication::platformName() != "cocoa") QSKIP("Named pasteboard test runs in the separate Cocoa pass.");

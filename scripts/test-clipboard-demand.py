@@ -15,7 +15,8 @@ with tempfile.TemporaryDirectory(prefix="deskport-demand-test-") as tmp:
     project.write_text('QT += core gui testlib\nCONFIG += console c++17 testcase\nCONFIG -= app_bundle\nTARGET = demand\n' + f'INCLUDEPATH += "{root}/app"\n' + 'SOURCES += ' + ' '.join(f'"{root / p}"' for p in sources) + '\n' + extra)
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
     subprocess.run(["qmake", str(project)], cwd=work, env=env, check=True)
-    subprocess.run(["make", "-j4"], cwd=work, env=env, check=True, stdout=subprocess.DEVNULL)
+    jobs = max(1, min(4, int(os.environ.get("JOBS", "2"))))
+    subprocess.run(["make", f"-j{jobs}"], cwd=work, env=env, check=True, stdout=subprocess.DEVNULL)
     subprocess.run([str(work / "demand")], cwd=work, env=env, check=True, timeout=120)
 
     if sys.platform == "darwin":

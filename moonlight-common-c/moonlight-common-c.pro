@@ -15,7 +15,14 @@ CONFIG += staticlib
 # Include global qmake defs
 include(../globaldefs.pri)
 
-win32 {
+win32-g++ {
+    DESKPORT_WIN_PREFIX = $$(DESKPORT_WIN_PREFIX)
+    isEmpty(DESKPORT_WIN_PREFIX): error(DESKPORT_WIN_PREFIX must point at the static dependency prefix)
+
+    INCLUDEPATH += $$DESKPORT_WIN_PREFIX/include
+    DEFINES += HAS_QOS_FLOWID=1 HAS_PQOS_FLOWID=1
+}
+win32:!win32-g++ {
     contains(QT_ARCH, i386) {
         INCLUDEPATH += $$PWD/../libs/windows/include/x86
     }

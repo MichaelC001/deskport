@@ -486,6 +486,26 @@ ApplicationWindow {
         const auto bad=warnings.filter(QRegularExpression("ReferenceError|TypeError|binding loop|Binding loop|Cannot assign|Unable to assign|Missing parent|Component is not ready"));
         QVERIFY2(bad.isEmpty(),qPrintable(bad.join('\n')));
     }
+    void clientOnlyBindingPageDoesNotAdvertiseSharing() {
+        QTemporaryDir dir;
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),
+            dir.path()+"/peers",0,QHostAddress::LocalHost,PeerManager::Mode::ClientOnly);
+        QQmlEngine engine;
+        const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        engine.rootContext()->setContextProperty("ui",theme.data());
+        engine.rootContext()->setContextProperty("hostManager",&host);
+        engine.rootContext()->setContextProperty("peerManager",&peers);
+        QQmlComponent component(&engine,QUrl::fromLocalFile(gui+"/BindView.qml"));
+        QVERIFY2(component.isReady(),qPrintable(component.errorString()));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
+        QCOMPARE(page->property("heading").toString(),QString("Request access to a computer"));
+        auto text=page->findChild<QObject*>("bindingScope"); QVERIFY(text);
+        QVERIFY(text->property("text").toString().contains("does not share its own desktop"));
+        QCOMPARE(peers.port(),0); QVERIFY(!host.running()); QVERIFY(peers.peers().isEmpty());
+    }
     void themeFollowsSystemAndAllowsIndependentOverrides() {
         QQmlEngine engine;
         QQmlComponent component(&engine,QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/UiTheme.qml"));

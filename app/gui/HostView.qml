@@ -61,14 +61,14 @@ UiPage {
         }
     }
     UiCard {
-        visible: Qt.platform.os === "osx"
+        visible: Qt.platform.os === "osx" || Qt.platform.os === "windows"
         ColumnLayout {
             anchors.fill: parent; spacing: 12
             Label { visible: hostManager.displayWarning.length > 0; text: hostManager.displayWarning; color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: qsTr("Built-in virtual display"); color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold }
-            Label { text: hostManager.virtualDisplayActive ? qsTr("Active · %1 × %2 pixels").arg(hostManager.displayWidth).arg(hostManager.displayHeight) : qsTr("Created when an approved client connects"); color: ui.accent; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: hostManager.physicalDisplaySharing ? qsTr("Shared Windows display") : qsTr("Built-in virtual display"); color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold }
+            Label { text: hostManager.virtualDisplayActive ? qsTr("Active · %1 × %2 pixels").arg(hostManager.displayWidth).arg(hostManager.displayHeight) : (hostManager.physicalDisplaySharing ? qsTr("Shares this Windows desktop; supported resolutions are restored after disconnect") : (Qt.platform.os === "windows" ? qsTr("Created automatically when sharing starts") : qsTr("Created when an approved client connects"))); color: ui.accent; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { visible: hostManager.virtualDisplayActive; text: qsTr("Workspace · %1 × %2 · %3× scaling").arg(Math.round(hostManager.displayWidth / hostManager.displayScale)).arg(Math.round(hostManager.displayHeight / hostManager.displayScale)).arg(hostManager.displayScale); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: qsTr("Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: hostManager.physicalDisplaySharing ? qsTr("Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.") : Qt.platform.os === "windows" ? qsTr("Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.") : qsTr("Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     UiCard {
@@ -92,7 +92,7 @@ UiPage {
             anchors.fill: parent; spacing: 12
             UiButton { id: advanced; text: checked ? qsTr("Hide compatibility & diagnostics") : qsTr("Compatibility & diagnostics"); checkable: true }
             ColumnLayout {
-                visible: advanced.checked; Layout.fillWidth: true; spacing: 12
+                visible: advanced.checked && !peerManager.clientOnly; Layout.fillWidth: true; spacing: 12
                 Label { text: qsTr("Legacy PIN pairing"); color: ui.text; font.pixelSize: 17 }
                 Label { text: qsTr("For Moonlight or other clients without mutual binding. Enter the PIN shown on that client. This grants access in one direction."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                 RowLayout {

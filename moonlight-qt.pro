@@ -7,7 +7,7 @@ SUBDIRS = \
 
 # Build the dependencies in parallel before the final app
 app.depends = qmdnsengine moonlight-common-c h264bitstream
-win32:!winrt {
+win32:!winrt:!win32-g++ {
     SUBDIRS += AntiHooking
     app.depends += AntiHooking
 }
@@ -26,4 +26,8 @@ qtCompileTest(EGL)
 
 linux {
     SUBDIRS += host/linux
+}
+
+win32:!winrt {
+    SUBDIRS += host/windows
 }

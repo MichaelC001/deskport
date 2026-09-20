@@ -6,7 +6,7 @@ import StreamingPreferences 1.0
 UiPage {
     id: page
     objectName: qsTr("Add a device")
-    heading: qsTr("One confirmation. Both directions.")
+    heading: peerManager.clientOnly ? qsTr("Request access to a computer") : qsTr("One confirmation. Both directions.")
     description: qsTr("Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.")
     function setAddress(value) { address.text = value }
     UiCard {
@@ -24,7 +24,7 @@ UiPage {
                 Label { text: peerManager.status; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; Accessible.role: Accessible.StaticText }
                 UiButton { text: qsTr("Cancel"); visible: peerManager.busy; onClicked: peerManager.cancel() }
             }
-            Label { text: qsTr("Approval lets both computers view and control each other. System permissions are still required on each device."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { objectName: "bindingScope"; text: peerManager.clientOnly ? qsTr("Approval lets this device view and control the other computer. This device does not share its own desktop.") : qsTr("Approval lets both computers view and control each other. System permissions are still required on each device."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     Label { text: qsTr("Saved access"); font.pixelSize: 20; font.weight: Font.DemiBold; color: ui.text }
@@ -37,14 +37,14 @@ UiPage {
                 RowLayout {
                     Layout.fillWidth: true
                     Label { text: modelData.name; textFormat: Text.PlainText; color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
-                    Label { text: modelData.ready ? (modelData.role === "client" ? qsTr("Client access") : qsTr("Bound both ways")) : qsTr("Incomplete"); color: modelData.ready ? ui.accent : ui.warning }
+                    Label { text: modelData.ready ? (modelData.role === "client" ? qsTr("Client access") : modelData.outboundOnly ? qsTr("Host access") : qsTr("Bound both ways")) : qsTr("Incomplete"); color: modelData.ready ? ui.accent : ui.warning }
                 }
                 Label { text: modelData.address; textFormat: Text.PlainText; color: ui.muted }
                 UiButton {
                     text: qsTr("Edit device"); visible: modelData.role !== "client"; enabled: !peerManager.busy
                     onClicked: editDialog.edit(modelData)
                 }
-                UiButton { text: qsTr("Remove access to this computer"); enabled: !peerManager.busy; onClicked: { removeDialog.fingerprint = modelData.fingerprint; removeDialog.deviceName = modelData.name; removeDialog.open() } }
+                UiButton { text: peerManager.clientOnly ? qsTr("Forget saved binding") : qsTr("Remove access to this computer"); enabled: !peerManager.busy; onClicked: { removeDialog.fingerprint = modelData.fingerprint; removeDialog.deviceName = modelData.name; removeDialog.open() } }
             }
         }
     }
@@ -67,7 +67,7 @@ UiPage {
         width: Math.max(280, Math.min(page.width - 32, 460))
         implicitHeight: contentItem.implicitHeight + 150
         modal: true; standardButtons: Dialog.Yes | Dialog.No
-        contentItem: Label { text: qsTr("%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.").arg(removeDialog.deviceName); textFormat: Text.PlainText; wrapMode: Text.WordWrap }
+        contentItem: Label { text: peerManager.clientOnly ? qsTr("Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.").arg(removeDialog.deviceName) : qsTr("%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.").arg(removeDialog.deviceName); textFormat: Text.PlainText; wrapMode: Text.WordWrap }
         onAccepted: peerManager.revoke(fingerprint)
     }
 }

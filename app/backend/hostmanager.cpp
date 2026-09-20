@@ -1,4 +1,7 @@
 #include <QSysInfo>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 #include "hostmanager.h"
 #ifdef Q_OS_MACOS
 #include <CoreGraphics/CoreGraphics.h>
@@ -48,6 +51,26 @@
 
 HostManager::HostManager(QObject *parent, const QString &directory) : QObject(parent) {
     m_Isolated = !directory.isEmpty();
+#ifdef Q_OS_WIN
+    // Own only our QProcess children. Never look up or terminate hosts by name.
+    auto job = CreateJobObjectW(nullptr, nullptr);
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION limits{};
+    limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+    if (job && SetInformationJobObject(job, JobObjectExtendedLimitInformation, &limits, sizeof(limits))) {
+        m_WindowsHostJob = job;
+        for (auto child : {&m_Server, &m_Credentials}) {
+            connect(child, &QProcess::started, this, [this, child] {
+                auto process = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, FALSE, DWORD(child->processId()));
+                const bool owned = process && AssignProcessToJobObject(HANDLE(m_WindowsHostJob), process);
+                if (process) CloseHandle(process);
+                if (!owned) {
+                    child->kill();
+                    beginStop(tr("Cannot establish private Windows host process ownership"));
+                }
+            });
+        }
+    } else if (job) CloseHandle(job);
+#endif
     m_RecoveryTimer.setSingleShot(true);
     connect(&m_RecoveryTimer, &QTimer::timeout, this, [this] {
         if (!m_DesiredSharing || m_ShuttingDown || running()) return;
@@ -71,7 +94,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     });
     m_Network.setProxy(QNetworkProxy::NoProxy);
     m_Directory = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/host" : directory;
-    m_Status = available() ? tr("Sharing is off") : tr("Hosting is available in the macOS all-in-one package");
+    m_Status = available() ? tr("Sharing is off") : tr("The bundled DeskPort host is missing. Repair the installation to enable sharing.");
     connect(&m_Display, &QProcess::readyReadStandardOutput, this, [this] {
         m_Buffer += m_Display.readAllStandardOutput();
         while (m_Buffer.contains('\n')) {
@@ -119,7 +142,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                                 beginStop(tr("Invalid virtual display identity")); return;
                             }
                             m_LinuxOutputName = output;
-                            m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                            m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
                             if (object.contains("pipewireNode")) m_LinuxGnome = true;
                             m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                         }
@@ -149,14 +172,25 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                     return;
                 }
 #endif
+#ifdef Q_OS_WIN
+                // Display setup requires interactive authorization. Retrying a
+                // denied or failed lease would repeatedly raise UAC dialogs.
+                m_DesiredSharing = false;
+                m_RecoveryTimer.stop();
+                if (!m_Isolated) QSettings().setValue("host/shareOnLaunch", false);
+#endif
                 beginStop(object["error"].toString()); return;
             }
             if (object["displayId"].toInt() > 0 && m_Starting && !m_ServerRequested) {
+#ifdef Q_OS_WIN
+                m_WindowsVirtualDisplay = object["virtual"].toBool();
+                m_DisplayModes = object["displayModes"].toArray();
+#endif
                 m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                 m_DisplayScale = object["scale"].toInt(1);
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
-                m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
@@ -215,7 +249,11 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         if (code != 0 || exitStatus != QProcess::NormalExit) {
             beginStop(tr("Could not initialize host authentication")); return;
         }
+#ifdef Q_OS_WIN
+        m_Server.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
+#else
         m_Server.setWorkingDirectory(m_Directory);
+#endif
         m_LogOffset = QFileInfo(m_Directory + "/host.log").size();
         m_Server.setStandardOutputFile(m_Directory + "/host.log", QIODevice::Append);
         m_Server.setStandardErrorFile(m_Directory + "/host.log", QIODevice::Append);
@@ -350,24 +388,31 @@ HostManager::~HostManager() {
             process->kill(); process->waitForFinished(1000);
         }
     }
+#ifdef Q_OS_WIN
+    if (m_WindowsHostJob) CloseHandle(HANDLE(m_WindowsHostJob));
+#endif
     delete m_Menu;
 }
 QString HostManager::helperPath() const {
-#ifdef Q_OS_LINUX
+#ifdef Q_OS_WIN
+    return QCoreApplication::applicationDirPath() + "/host/deskport-display.exe";
+#elif defined(Q_OS_LINUX)
     return QCoreApplication::applicationDirPath() + "/../libexec/deskport-display";
 #else
     return QCoreApplication::applicationDirPath() + "/../Helpers/deskport-display";
 #endif
 }
 QString HostManager::serverPath() const {
-#ifdef Q_OS_LINUX
+#ifdef Q_OS_WIN
+    return QCoreApplication::applicationDirPath() + "/host/deskport-host.exe";
+#elif defined(Q_OS_LINUX)
     return QCoreApplication::applicationDirPath() + "/../libexec/deskport-host";
 #else
     return QCoreApplication::applicationDirPath() + "/../Helpers/Sunshine.app/Contents/MacOS/Sunshine";
 #endif
 }
 bool HostManager::available() const {
-#ifdef Q_OS_MACOS
+#if defined(Q_OS_MACOS) || defined(Q_OS_WIN)
     return QFile::exists(helperPath()) && QFile::exists(serverPath());
 #elif defined(Q_OS_LINUX)
     return QFile::exists(serverPath());
@@ -380,9 +425,17 @@ bool HostManager::running() const {
         m_Server.state() != QProcess::NotRunning || m_Display.state() != QProcess::NotRunning;
 }
 bool HostManager::canPair() const { return !m_Starting && !m_Stopping && m_Server.state() == QProcess::Running; }
-void HostManager::setStatus(const QString &value) { m_Status = value; emit changed(); }
+void HostManager::setStatus(const QString &value) {
+#ifdef Q_OS_WIN
+    qInfo() << "Windows host status:" << value;
+#endif
+    m_Status = value; emit changed();
+}
 void HostManager::start(int width, int height) {
     if (!available() || running()) return;
+#ifdef Q_OS_WIN
+    if (!m_WindowsHostJob) { setStatus(tr("Cannot create private Windows host process ownership")); return; }
+#endif
     if (width < 640 || width > 3840 || height < 360 || height > 2160 || width % 2 || height % 2) {
         setStatus(tr("Unsupported display size")); return;
     }
@@ -400,7 +453,15 @@ void HostManager::start(int width, int height) {
         setStatus(tr("Another DeskPort instance is already using this host state. Open that instance to manage sharing.")); return;
     }
     const bool liveIsolated = m_Isolated && QCoreApplication::arguments().contains("--host-session-test");
-    if (liveIsolated && m_BasePort == DeskPortNetwork::DefaultBasePort)
+    const int testBase = liveIsolated ? qEnvironmentVariableIntValue("DESKPORT_TEST_BASE_PORT") : 0;
+    if (testBase) {
+        if (testBase < DeskPortNetwork::DefaultBasePort ||
+            testBase >= DeskPortNetwork::DefaultBasePort + DeskPortNetwork::PortStep * DeskPortNetwork::PortChoices ||
+            (testBase - DeskPortNetwork::DefaultBasePort) % DeskPortNetwork::PortStep) {
+            beginStop(tr("Invalid isolated test port group")); return;
+        }
+        m_BasePort = testBase;
+    } else if (liveIsolated && m_BasePort == DeskPortNetwork::DefaultBasePort)
         m_BasePort += DeskPortNetwork::PortStep * (1 + (qHash(m_Directory) % (DeskPortNetwork::PortChoices - 1)));
     const int selectedPort = m_Ports.reserve(m_BasePort,
         m_Isolated && !liveIsolated ? QHostAddress::LocalHost : QHostAddress::AnyIPv4);
@@ -441,7 +502,7 @@ void HostManager::start(int width, int height) {
     {
 #ifdef Q_OS_MACOS
         if (m_PhysicalFallback) {
-            m_DisplayWidth = m_DisplayHeight = 0; m_DisplayScale = 1;
+            m_DisplayWidth = m_DisplayHeight = 0; m_DisplayScale = 1; m_DisplayModes = {};
             setStatus(tr("Sharing this Mac's own screen…"));
             startServer(int(CGMainDisplayID()));
         } else
@@ -459,13 +520,35 @@ void HostManager::start(int width, int height) {
                 displayEnvironment.remove("DESKPORT_DISPLAY_STATE_DIR");
                 displayEnvironment.remove("DESKPORT_DISPLAY_SERIAL");
             }
+#ifdef Q_OS_WIN
+            displayEnvironment.insert("DESKPORT_DISPLAY_STATE_DIR", m_Directory);
+#endif
             m_Display.setProcessEnvironment(displayEnvironment);
             m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
+#ifdef Q_OS_WIN
+            setStatus(tr("Preparing Windows display sharing…"));
+#else
             setStatus(tr("Preparing on-demand desktop sharing…"));
+#endif
         }
     }
-    QTimer::singleShot(15000, this, [this, generation] {
-        if (m_Starting && m_Generation == generation) { beginStop(tr("Host startup timed out; see logs")); }
+    // Windows may show normal UAC consent for the owned display lease.
+#ifdef Q_OS_WIN
+    constexpr int displayStartupTimeout = 60000;
+#else
+    constexpr int displayStartupTimeout = 15000;
+#endif
+    QTimer::singleShot(displayStartupTimeout, this, [this, generation] {
+        if (m_Starting && m_Generation == generation) {
+#ifdef Q_OS_WIN
+            // A timeout may be unanswered UAC, not a transient media error.
+            // Retrying would repeatedly summon an administrative prompt.
+            m_DesiredSharing = false;
+            m_RecoveryTimer.stop();
+            if (!m_Isolated) QSettings().setValue("host/shareOnLaunch", false);
+#endif
+            beginStop(tr("Host startup timed out; see logs"));
+        }
     });
 }
 void HostManager::startServer(int displayId) {
@@ -495,6 +578,17 @@ void HostManager::startServer(int displayId) {
     Q_UNUSED(displayId);
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
+#ifdef Q_OS_WIN
+    hostEnvironment.insert("DESKPORT_HOST_STATE_DIR", m_Directory);
+    config.write("dd_configuration_option = disabled\n");
+    // The helper owns mode restoration; Sunshine must not race it.
+    QFile displayState(m_Directory + "/windows-display.json");
+    if (displayState.open(QIODevice::ReadOnly)) {
+        const auto output = QJsonDocument::fromJson(displayState.readAll()).object()["output"].toString();
+        if (!output.isEmpty() && !output.contains('\n') && !output.contains('\r'))
+            config.write(QString("output_name = %1\n").arg(output).toUtf8());
+    }
+#endif
 #ifdef Q_OS_LINUX
     if (!m_LinuxOutputName.isEmpty()) {
         hostEnvironment.insert("DESKPORT_VIRTUAL_DISPLAY", m_Directory + "/virtual-display.json");
@@ -510,7 +604,13 @@ void HostManager::startServer(int displayId) {
     config.write(!m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }
+#ifdef Q_OS_WIN
+    // Upstream resolves immutable assets relative to cwd, while every mutable
+    // state/config path above remains absolute and private to DeskPort.
+    m_Credentials.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
+#else
     m_Credentials.setWorkingDirectory(m_Directory);
+#endif
     m_Credentials.setStandardOutputFile(QProcess::nullDevice());
     m_Credentials.setStandardErrorFile(QProcess::nullDevice());
     m_Credentials.start(serverPath(), {m_Directory + "/sunshine.conf", "--creds", "deskport", m_Password});
@@ -527,7 +627,7 @@ void HostManager::stop() {
         QSettings().setValue("host/shareOnLaunch", false);
         QSettings().setValue("host/sharingDisabled", true);
     }
-    beginStop(available() ? tr("Sharing is off") : tr("Hosting is available in the macOS all-in-one package"));
+    beginStop(available() ? tr("Sharing is off") : tr("The bundled DeskPort host is missing. Repair the installation to enable sharing."));
 }
 void HostManager::beginStop(const QString &status) {
     m_DisplaySequence = 0; m_QueuedDisplayRequest = {}; ++m_DisplayGeneration;
@@ -693,6 +793,9 @@ QVariantList HostManager::permissions() const {
     add("input", tr("Keyboard & mouse"), tr("Let a device you approve control this computer."),
         AXIsProcessTrusted() ? "allowed" : "denied");
     add("microphone", tr("Audio input"), tr("Needed only when your sharing audio path uses microphone access."), deskPortMicrophoneStatus());
+#elif defined(Q_OS_WIN)
+    add("screen", tr("Desktop capture"), tr("Shares the selected Windows display in this signed-in session."), "onShare");
+    add("input", tr("Keyboard & mouse"), tr("Controls ordinary applications in this session. Windows may restrict elevated applications and secure desktops."), "onShare");
 #else
     add("screen", tr("Desktop capture"), tr("KDE uses the current desktop. Other desktops may ask you to choose a screen when sharing starts."), "onShare");
     add("input", tr("Keyboard & mouse"), tr("Remote control requires access to the system input device."),
@@ -878,6 +981,13 @@ void HostManager::setLoginStart(bool enabled) {
     }
     QProcess::startDetached("systemctl", {"--user", "daemon-reload"});
     QSettings().setValue("host/startAtLogin", enabled); emit changed();
+#elif defined(Q_OS_WIN)
+    QSettings startup("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    if (enabled) startup.setValue("io.github.keithxc.DeskPort", "\"" + QDir::toNativeSeparators(QCoreApplication::applicationFilePath()) + "\" --background");
+    else startup.remove("io.github.keithxc.DeskPort");
+    startup.sync();
+    if (startup.status() != QSettings::NoError) { setStatus(tr("Cannot update Windows login startup")); return; }
+    QSettings().setValue("host/startAtLogin", enabled); emit changed();
 #else
     Q_UNUSED(enabled);
 #endif
@@ -950,15 +1060,26 @@ bool HostManager::saveLinuxDisplayState() {
     return true;
 }
 
+bool HostManager::physicalDisplaySharing() const {
+#ifdef Q_OS_WIN
+    QSettings owned(QStringLiteral("HKEY_LOCAL_MACHINE\\Software\\DeskPort"), QSettings::NativeFormat);
+    const auto instance=owned.value("VirtualDisplayDevice").toString();
+    return !m_WindowsVirtualDisplay && !instance.startsWith("ROOT\\DESKPORTVIRTUALDISPLAY\\", Qt::CaseInsensitive);
+#else
+    return false;
+#endif
+}
 bool HostManager::adaptiveDisplayAvailable() const {
-#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     return running() && !changing() && m_Display.state() == QProcess::Running;
 #else
     return false;
 #endif
 }
 bool HostManager::displayPoliciesAvailable() const {
-#ifdef Q_OS_LINUX
+#ifdef Q_OS_WIN
+    return false; // Physical Windows mode must not advertise virtual-only policies.
+#elif defined(Q_OS_LINUX)
     return adaptiveDisplayAvailable() && !m_LinuxGnome;
 #else
     return adaptiveDisplayAvailable();

@@ -96,8 +96,9 @@ qint64 PeerManager::nativeClipboardRevision() const {
 }
 
 PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
-                         const QString& directory, quint16 port, const QHostAddress& listenAddress)
-    : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
+                         const QString& directory, quint16 port, const QHostAddress& listenAddress, Mode mode)
+    : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()),
+      m_ClientOnly(mode == Mode::ClientOnly), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
     const QString path = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding" : directory;
     m_Path = path + "/peers.json";
     QDir().mkpath(path);
@@ -111,14 +112,16 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         auto peer = it.value().toObject();
         const auto requested = requestedHost(peer["requestedAddress"].toString());
         const auto storedName = dnsName(peer["address"].toString());
-        const auto hostName = !storedName.isEmpty() ? storedName : requested;
+        const auto hostName = m_ClientOnly && !requested.isEmpty() ? requested :
+                              !storedName.isEmpty() ? storedName : requested;
         if (!hostName.isEmpty()) {
             if (!peer.contains("resolvedAddress")) peer["resolvedAddress"] = peer["address"];
             peer["address"] = hostName;
             it.value() = peer;
         }
     }
-    m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && m_Host->available() && !m_Certificate.isNull() && !m_Key.isNull() && m_Host->prepareIdentity(cert, key);
+    m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && !m_Certificate.isNull() && !m_Key.isNull() &&
+        (m_ClientOnly || (m_Host->available() && m_Host->prepareIdentity(cert, key)));
     connect(host, &HostManager::trustUpdated, this, &PeerManager::granted);
     connect(host, &HostManager::caretChanged, this, [this](const QJsonObject& caret) {
         if (m_DisplayLink && m_DisplayLink->displayControl && m_DisplayLink->caretUpdates)
@@ -162,8 +165,13 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         const int configured = QSettings().value("binding/port", int(port)).toInt();
         if (configured >= 1024 && configured <= 65535) port = quint16(configured);
     }
-    if (!m_Healthy) m_Status = tr("Binding identity could not be loaded. Check host state and close other DeskPort instances.");
-    else if (!server->listen(listenAddress, port)) {
+    if (!m_Healthy) m_Status = m_ClientOnly ? tr("Binding identity or saved devices could not be loaded.") :
+        tr("Binding identity could not be loaded. Check host state and close other DeskPort instances.");
+    else if (m_ClientOnly) {
+        // Outbound TLS uses the viewer identity. There is no local host to
+        // advertise, provision or accept connections for (including aliases).
+        m_Status = tr("Ready to request access to another computer");
+    } else if (!server->listen(listenAddress, port)) {
         m_Healthy = false; m_Status = tr("Binding port is occupied. Existing services were left unchanged.");
     } else {
         m_Status = tr("Ready for binding requests");
@@ -196,7 +204,7 @@ QTcpServer* PeerManager::createListener() {
     return server;
 }
 bool PeerManager::setConnectionPort(int value) {
-    if (!m_IdentityHealthy) return false;
+    if (!m_IdentityHealthy || m_ClientOnly) return false;
     if (value < 1024 || value > 65535) {
         m_Status = tr("Enter a connection port between 1024 and 65535."); emit changed(); return false;
     }
@@ -247,7 +255,7 @@ QString PeerManager::requestId() const {
     return m_Link && m_Link->incoming && m_Link->requested && !m_Link->accepted ? m_Link->transaction : QString();
 }
 bool PeerManager::pendingClientOnly() const {
-    return m_Link && m_Link->peer["role"].toString() == "client";
+    return m_Link && m_Link->peer.value("role").toString() == "client";
 }
 QString PeerManager::pendingName() const {
     if (requestId().isEmpty()) return {};
@@ -270,6 +278,8 @@ void PeerManager::releaseClientFullscreen() {
 }
 bool PeerManager::save() { return PeerStore::write(m_Path, {{"version", 1}, {"peers", m_Peers}}); }
 QJsonObject PeerManager::metadata() const {
+    if (m_ClientOnly) return {{"version", 1}, {"clientBinding", 1}, {"role", "client"},
+                              {"name", QHostInfo::localHostName().left(64)}};
     auto meta = m_Host->identity();
     meta["name"] = QHostInfo::localHostName().left(64);
     meta["dnsName"] = dnsName(QHostInfo::localHostName());
@@ -281,10 +291,11 @@ QJsonObject PeerManager::metadata() const {
     meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
     meta["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
     meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
-#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     meta["clipboardV2"] = 1;
 #endif
     meta["adaptiveDisplay"] = m_Host->adaptiveDisplayAvailable() ? 1 : 0;
+    if (!m_Host->displayModes().isEmpty()) meta["displayModes"] = m_Host->displayModes();
     if (m_Host->displayPoliciesAvailable()) meta["displayPolicy"] = DP_DISPLAY_POLICY_VERSION;
     meta["bindingPort"] = int(m_Server->serverPort());
     return meta;
@@ -328,7 +339,7 @@ void PeerManager::attach(Link* link) {
         if (!link->incoming) SmallTcp::accepted(*link->socket,
             link->endpointRefresh ? link->expectedPeer["address"].toString() : requestedHost(link->requestedAddress), link->socket->peerPort());
         if (link->incoming) send(link, {{"type", "hello"}, {"meta", metadata()}});
-        else if (!link->endpointRefresh) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
+        else if (!link->endpointRefresh && !m_ClientOnly) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
         drain(link);
     });
     connect(socket, &QSslSocket::readyRead, link, [this, link] {
@@ -366,8 +377,9 @@ void PeerManager::request(const QString& value) {
     if (!m_Healthy || busy()) return;
     // This dialog uses the binding endpoint, not the video port.
     const auto url = QUrl::fromUserInput("https://" + value.trimmed());
+    const int remotePort = url.port(m_ClientOnly ? 48991 : port());
     if (url.host().isEmpty() || !url.userInfo().isEmpty() || url.path().size() > 1 || url.hasQuery() || url.hasFragment() ||
-            url.port(port()) <= 0 || url.port(port()) > 65535) {
+            remotePort <= 0 || remotePort > 65535) {
         m_Status = tr("Enter an IP address or domain, optionally followed by the binding port."); emit changed(); return;
     }
     auto link = new Link(this); link->socket = new QSslSocket(link); m_Link = link;
@@ -375,7 +387,7 @@ void PeerManager::request(const QString& value) {
     link->requestedAddress = value.trimmed();
     m_Status = tr("Connecting to the other computer…");
     attach(link);
-    SmallTcp::connectAsync(link->socket, url.host(), quint16(url.port(port())));
+    SmallTcp::connectAsync(link->socket, url.host(), quint16(remotePort));
     emit changed();
 }
 bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
@@ -387,6 +399,7 @@ bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
     if (metadata["version"].toInt() != 1 ||
         metadata["name"].toString().trimmed().isEmpty() || metadata["name"].toString().size() > 64 ||
         metadata["name"].toString().contains(QRegularExpression("[\\x00-\\x1f\\x7f]"))) return false;
+    if (m_ClientOnly && metadata["clientBinding"].toInt() != 1) return false;
     if (clientOnly && (!link->incoming || metadata["clientBinding"].toInt() != 1 ||
         metadata.contains("hostId") || metadata.contains("hostCert") || metadata.contains("hostPort") ||
         metadata.contains("bindingPort"))) return false;
@@ -394,10 +407,16 @@ bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
         id == m_Host->identity()["hostId"].toString() || port < 1024 || port > 65514 ||
         metadata["name"].toString().trimmed().isEmpty() || metadata["name"].toString().size() > 64)) return false;
     link->peer = clientOnly ? QJsonObject{{"version",1},{"role","client"},{"clientBinding",1},{"name",metadata["name"]}} : metadata;
+    // Trust flags are local state, never remote capability advertisements.
+    link->peer.remove("ready"); link->peer.remove("granted");
+    link->peer.remove("outboundOnly");
+    if (m_ClientOnly) link->peer["outboundOnly"] = true;
     link->peer["resolvedAddress"] = link->socket->peerAddress().toString();
     const auto previous = m_Peers.value(link->fingerprint).toObject();
     const auto requested = requestedHost(link->requestedAddress);
-    QString address = dnsName(requested);
+    // Client-only viewers may not resolve the host's advertised LAN name.
+    // Preserve an explicitly entered numeric address as well as DNS names.
+    QString address = m_ClientOnly ? requested : dnsName(requested);
     if (address.isEmpty()) address = dnsName(previous["address"].toString());
     if (address.isEmpty()) address = dnsName(requestedHost(previous["requestedAddress"].toString()));
     if (address.isEmpty()) address = dnsName(metadata["dnsName"].toString());
@@ -630,7 +649,10 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
     }
     if (link->displayControl) { fail(link, tr("Unexpected display-control message")); return; }
     if (type == "hello" && !link->incoming && link->peer.isEmpty() && !link->accepted) {
-        if (!acceptMetadata(link, message["meta"].toObject())) fail(link, tr("Unsupported peer identity"));
+        if (!acceptMetadata(link, message["meta"].toObject())) { fail(link, tr("Unsupported peer identity")); return; }
+        // Client-only requests require a host that advertises the existing
+        // mobile-client contract; do not claim host capabilities as a fallback.
+        if (m_ClientOnly) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
     } else if (type == "request" && link->incoming && !link->requested) {
         if (!acceptMetadata(link, message["meta"].toObject()) || QUuid(message["tx"].toString()).isNull()) {
             fail(link, tr("Unsupported binding request")); return;
@@ -640,14 +662,37 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         m_Status = pendingClientOnly() ? tr("A client is requesting access to this computer") : tr("A computer is requesting mutual desktop access"); emit changed(); emit incomingRequest();
     } else if (type == "pending" && !link->incoming && !link->requested && !link->accepted && !link->peer.isEmpty() && message["tx"].toString() == link->transaction) {
         link->requested = true;
-        m_Status = tr("Request received. Waiting for the other computer to approve mutual desktop access…"); emit changed();
-    } else if (type == "accept" && !link->incoming && !link->accepted && !link->peer.isEmpty() && message["tx"].toString() == link->transaction) {
-        link->accepted = true; grant(link);
+        m_Status = m_ClientOnly ? tr("Request received. Waiting for the other computer to approve access…") :
+                                  tr("Request received. Waiting for the other computer to approve mutual desktop access…"); emit changed();
+    } else if (type == "accept" && !link->incoming && !link->accepted && !link->peer.isEmpty() &&
+               (!m_ClientOnly || link->requested) && message["tx"].toString() == link->transaction) {
+        link->accepted = true;
+        if (m_ClientOnly) {
+            m_Status = tr("Access approved. Waiting for the host to save authorization…"); emit changed();
+        } else grant(link);
+    } else if (type == "ready" && m_ClientOnly && !link->incoming && link->accepted &&
+               !link->remoteReady && message["tx"].toString() == link->transaction) {
+        const int hostPort = message["hostPort"].toInt();
+        if (hostPort < 1024 || hostPort > 65514) { fail(link, tr("Invalid host port")); return; }
+        link->peer["hostPort"] = hostPort;
+        link->peer["ready"] = false; link->peer["granted"] = true;
+        const auto previous = m_Peers;
+        m_Peers[link->fingerprint] = link->peer;
+        if (!save()) {
+            m_Peers = previous;
+            fail(link, tr("Could not save the approved host. Binding is incomplete.")); return;
+        }
+        link->localReady = true; link->remoteReady = true;
+        send(link, {{"type", "client-ready"}, {"tx", link->transaction}});
+        m_Status = tr("Confirming the saved binding with the host…"); emit changed();
+    } else if (type == "bound" && m_ClientOnly && !link->incoming && link->accepted &&
+               link->localReady && link->remoteReady && message["tx"].toString() == link->transaction) {
+        finish(link);
     } else if (type == "client-ready" && link->incoming && pendingClientOnly() &&
                link->accepted && link->localReady && !link->remoteReady && message["tx"].toString() == link->transaction) {
         link->remoteReady = true;
         finish(link);
-    } else if (type == "ready" && !pendingClientOnly() && link->accepted && !link->remoteReady && message["tx"].toString() == link->transaction) {
+    } else if (type == "ready" && !m_ClientOnly && !pendingClientOnly() && link->accepted && !link->remoteReady && message["tx"].toString() == link->transaction) {
         const int port = message["hostPort"].toInt();
         if (port < 1024 || port > 65514) { fail(link, tr("Invalid host port")); return; }
         link->peer["hostPort"] = port; link->remoteReady = true;
@@ -700,12 +745,17 @@ void PeerManager::granted(bool success) {
 void PeerManager::finish(Link* link) {
     if (!link->localReady || !link->remoteReady) return;
     link->peer["ready"] = true; link->peer["granted"] = true;
+    const auto previous = m_Peers;
     m_Peers[link->fingerprint] = link->peer;
-    if (!save()) { fail(link, tr("Could not persist completed binding")); return; }
-    const bool clientOnly = link->peer["role"].toString() == "client";
+    if (!save()) {
+        m_Peers = previous;
+        fail(link, tr("Could not persist completed binding")); return;
+    }
+    const bool clientOnly = link->peer.value("role").toString() == "client";
     if (clientOnly) send(link, {{"type","bound"},{"tx",link->transaction}});
     else emit peerBound(link->peer.toVariantMap());
-    m_Status = clientOnly ? tr("Client access approved. This device can connect to this computer.") : tr("Bound in both directions. Desktop availability depends on sharing and system permissions.");
+    m_Status = m_ClientOnly ? tr("Host access saved. This computer can connect to the approved host.") :
+        clientOnly ? tr("Client access approved. This device can connect to this computer.") : tr("Bound in both directions. Desktop availability depends on sharing and system permissions.");
     link->ended = true; m_Link = nullptr;
     connect(link->socket, &QSslSocket::disconnected, link, &QObject::deleteLater);
     link->socket->disconnectFromHost();
@@ -901,7 +951,9 @@ void PeerManager::refreshEndpoints() {
     });
 }
 void PeerManager::restoreHosts() {
-    for (const auto& peer : m_Peers) if (peer.toObject()["role"].toString() != "client" && peer.toObject()["ready"].toBool()) emit peerBound(peer.toObject().toVariantMap());
+    if (!m_Healthy) return;
+    for (const auto& peer : m_Peers) if (peer.toObject()["role"].toString() != "client" &&
+        peer.toObject()["ready"].toBool() && peer.toObject()["granted"].toBool()) emit peerBound(peer.toObject().toVariantMap());
 }
 bool PeerManager::editPeer(const QString& fp, const QString& nameValue,
                            const QString& addressValue, int hostPort, int bindingPort) {
@@ -935,6 +987,16 @@ bool PeerManager::editPeer(const QString& fp, const QString& nameValue,
 }
 void PeerManager::revoke(const QString& fp) {
     if (busy() || !m_Peers.contains(fp)) return;
+    if (m_ClientOnly) {
+        // Forget only this local record. The remote host remains the authority
+        // for revocation; never provision or restart a nonexistent local host.
+        const auto previous = m_Peers;
+        m_Peers.remove(fp);
+        if (!save()) {
+            m_Peers = previous; m_Status = tr("Could not remove the saved binding; retry");
+        } else m_Status = tr("Saved binding removed. Remove the device from Devices separately; revoke access on the host to deny this client's certificate.");
+        emit changed(); return;
+    }
     if (m_SessionLink && m_SessionLink->fingerprint == fp) fail(m_SessionLink, tr("Device access removed"));
     if (m_ClipboardLink && m_ClipboardLink->fingerprint == fp) fail(m_ClipboardLink, tr("Device access removed"));
     if (m_DisplayLink && m_DisplayLink->fingerprint == fp) fail(m_DisplayLink, tr("Device access removed"));

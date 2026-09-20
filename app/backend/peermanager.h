@@ -11,6 +11,7 @@ class PeerManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool canReleaseClientFullscreen READ canReleaseClientFullscreen NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
+    Q_PROPERTY(bool clientOnly READ clientOnly CONSTANT)
     Q_PROPERTY(bool pendingClientOnly READ pendingClientOnly NOTIFY changed)
     Q_PROPERTY(QString pendingName READ pendingName NOTIFY changed)
     Q_PROPERTY(QString requestId READ requestId NOTIFY changed)
@@ -18,12 +19,15 @@ class PeerManager : public QObject {
     Q_PROPERTY(int port READ port NOTIFY changed)
     Q_PROPERTY(QVariantList peers READ peers NOTIFY changed)
 public:
+    enum class Mode { PlatformDefault, ClientOnly };
     PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                 const QString& directory = QString(), quint16 port = 48991,
-                const QHostAddress& listenAddress = QHostAddress::AnyIPv4);
+                const QHostAddress& listenAddress = QHostAddress::AnyIPv4,
+                Mode mode = Mode::PlatformDefault);
     ~PeerManager();
     bool canReleaseClientFullscreen() const;
     Q_INVOKABLE void releaseClientFullscreen();
+    bool clientOnly() const { return m_ClientOnly; }
     QString status() const { return m_Status; }
     QString pendingName() const;
     bool pendingClientOnly() const;
@@ -70,6 +74,7 @@ private:
     QList<QTcpServer*> m_PreviousServers;
     QHostAddress m_ListenAddress;
     bool m_Persistent;
+    const bool m_ClientOnly;
     QSslCertificate m_Certificate;
     QSslKey m_Key;
     QString m_Path, m_Status, m_Revoking;

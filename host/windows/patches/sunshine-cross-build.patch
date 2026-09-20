@@ -1,0 +1,111 @@
+diff --git a/cmake/compile_definitions/common.cmake b/cmake/compile_definitions/common.cmake
+index c662a001..87c1fc53 100644
+--- a/cmake/compile_definitions/common.cmake
++++ b/cmake/compile_definitions/common.cmake
+@@ -105,6 +105,7 @@ if(WIN32)
+                 NVENC_SDK_VERSION=${sdk_version}
+         )
+         target_compile_options(${target_name} PRIVATE ${SUNSHINE_COMPILE_OPTIONS})
++        target_link_libraries(${target_name} PRIVATE ${Boost_LIBRARIES})
+     endfunction()
+ 
+     add_nvenc_sdk_implementation(nvenc_sdk_1100 1100 "${NV_CODEC_HEADERS_11_INCLUDE_DIR}")
+diff --git a/cmake/compile_definitions/windows.cmake b/cmake/compile_definitions/windows.cmake
+index a7c18bde..703a6d3d 100644
+--- a/cmake/compile_definitions/windows.cmake
++++ b/cmake/compile_definitions/windows.cmake
+@@ -3,7 +3,7 @@
+ add_compile_definitions(SUNSHINE_PLATFORM="windows")
+ 
+ enable_language(RC)
+-set(CMAKE_RC_COMPILER windres)
++set(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres)
+ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+ 
+ # gcc complains about misleading indentation in some mingw includes
+@@ -90,19 +90,17 @@ list(PREPEND PLATFORM_LIBRARIES
+         ${CURL_STATIC_LIBRARIES}
+         avrt
+         d3d11
+-        D3DCompiler
++        d3dcompiler
+         dwmapi
+         dxgi
+         iphlpapi
+         ksuser
+-        libssp.a
+         libstdc++.a
+-        libwinpthread.a
+         minhook::minhook
+         ntdll
+         setupapi
+         shlwapi
+-        synchronization.lib
++        synchronization
+         userenv
+         ws2_32
+         wsock32
+diff --git a/cmake/targets/common.cmake b/cmake/targets/common.cmake
+index 2aa9f094..349f1759 100644
+--- a/cmake/targets/common.cmake
++++ b/cmake/targets/common.cmake
+@@ -50,7 +50,7 @@ endif()
+ #WebUI build
+ find_program(NPM npm REQUIRED)
+ 
+-if(WIN32)
++if(WIN32 AND NOT CMAKE_CROSSCOMPILING)
+     get_filename_component(NPM_DIRECTORY "${NPM}" DIRECTORY)
+     find_program(NPM_NODE_EXECUTABLE NAMES node node.exe HINTS "${NPM_DIRECTORY}" NO_DEFAULT_PATH NO_CACHE REQUIRED)
+     string(CONCAT NPM_NODE_GNU_BINDING_CHECK
+diff --git a/cmake/targets/windows.cmake b/cmake/targets/windows.cmake
+index d5807aa6..9dc449a8 100644
+--- a/cmake/targets/windows.cmake
++++ b/cmake/targets/windows.cmake
+@@ -4,6 +4,6 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+ find_library(ZLIB ZLIB1)
+ list(APPEND SUNSHINE_EXTERNAL_LIBRARIES
+         $<TARGET_OBJECTS:sunshine_rc_object>
+-        Windowsapp.lib
+-        Wtsapi32.lib
+-        version.lib)
++        windowsapp
++        wtsapi32
++        version)
+diff --git a/src/display_device.cpp b/src/display_device.cpp
+index bcc81bdb..39382ee4 100644
+--- a/src/display_device.cpp
++++ b/src/display_device.cpp
+@@ -1,3 +1,4 @@
++#include <cstdlib>
+ /**
+  * @file src/display_device.cpp
+  * @brief Definitions for display device handling.
+@@ -822,6 +823,13 @@ namespace display_device {
+   }
+ 
+   std::string map_output_name(const std::string &output_name) {
++#ifdef _WIN32
++    // DeskPort's display owner supplies a verified GDI output name. Do not
++    // reinterpret it as a libdisplaydevice UUID and silently capture primary.
++    if (output_name.rfind(R"(\\.\DISPLAY)", 0) == 0 && std::getenv("DESKPORT_HOST_STATE_DIR")) {
++      return output_name;
++    }
++#endif
+     std::lock_guard lock {DD_DATA.mutex};
+     if (!DD_DATA.sm_instance) {
+       // Fallback to giving back the output name if the platform is not supported.
+diff --git a/src/platform/windows/misc.cpp b/src/platform/windows/misc.cpp
+index a03f56d3..8c735580 100644
+--- a/src/platform/windows/misc.cpp
++++ b/src/platform/windows/misc.cpp
+@@ -145,6 +145,9 @@ namespace platf {
+   decltype(WlanSetInterface) *fn_WlanSetInterface = nullptr;  ///< Fn wlan set interface.
+ 
+   std::filesystem::path appdata() {
++    if (const auto state = _wgetenv(L"DESKPORT_HOST_STATE_DIR"); state && *state) {
++      return std::filesystem::path(state);
++    }
+     WCHAR sunshine_path[MAX_PATH];
+     GetModuleFileNameW(nullptr, sunshine_path, _countof(sunshine_path));
+     return std::filesystem::path {sunshine_path}.remove_filename() / L"config"sv;

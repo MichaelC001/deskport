@@ -34,8 +34,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-sps-') as directory:
         original.write_bytes(Path(sys.argv[1]).read_bytes())
     else:
         run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i',
-             'testsrc2=size=640x360:rate=60', '-frames:v', '600',
-             '-c:v', 'libx264', '-refs', '4', '-bf', '0', '-g', '250',
+             'testsrc2=size=640x360:rate=60', '-filter_threads', '1', '-frames:v', '600',
+             '-c:v', 'libx264', '-threads', '2', '-refs', '4', '-bf', '0', '-g', '250',
              '-pix_fmt', 'yuv420p', original])
     data = original.read_bytes()
     starts = list(re.finditer(b'\x00\x00(?:\x00)?\x01', data))
@@ -51,8 +51,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-sps-') as directory:
         (work/(mode+'.h264')).write_bytes(b''.join(chunks))
     results = {}
     for mode in ['original', 'legacy', 'fixed']:
-        result = sp.run(['ffmpeg', '-v', 'warning', '-i', str(work/(mode+'.h264')),
-                         '-f', 'framemd5', '-'], capture_output=True, check=mode != 'legacy')
+        result = sp.run(['ffmpeg', '-v', 'warning', '-threads', '2', '-i', str(work/(mode+'.h264')),
+                         '-threads', '2', '-f', 'framemd5', '-'], capture_output=True, check=mode != 'legacy')
         hashes = [line for line in result.stdout.splitlines() if not line.startswith(b'#')]
         errors = result.stderr.count(b'exceeds max') + result.stderr.count(b'decode_slice_header error')
         results[mode] = (hashes, errors)

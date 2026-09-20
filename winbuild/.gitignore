@@ -1,0 +1,9 @@
+*
+!.gitignore
+!scripts/
+scripts/*
+!scripts/*.sh
+!scripts/*.py
+!scripts/*.cmake
+!scripts/*.txt
+!scripts/*.nsi
