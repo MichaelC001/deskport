@@ -233,9 +233,14 @@ private slots:
 
 int runGnomeDisplay(int width, int height) {
     auto send = [](const QJsonObject& o) { auto bytes = QJsonDocument(o).toJson(QJsonDocument::Compact) + '\n'; fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout); fflush(stdout); };
-    auto display = std::make_unique<GnomeDisplay>();
-    if (!display->start(width, height)) { send({{"error", display->lastError()}}); return 1; }
-    auto initial = display->identity(); initial["width"] = width; initial["height"] = height; initial["scale"] = 1; send(initial);
+    std::unique_ptr<GnomeDisplay> display;
+    if (qEnvironmentVariableIntValue("DESKPORT_DISPLAY_ON_DEMAND") == 1)
+        send({{"ready",true},{"active",false},{"gnome",true},{"outputName","DeskPort-pending"}});
+    else {
+        display = std::make_unique<GnomeDisplay>();
+        if (!display->start(width, height)) { send({{"error", display->lastError()}}); return 1; }
+        auto initial = display->identity(); initial["width"] = width; initial["height"] = height; initial["scale"] = 1; send(initial);
+    }
     QByteArray buffer;
     QSocketNotifier input(STDIN_FILENO, QSocketNotifier::Read);
     QObject::connect(&input, &QSocketNotifier::activated, &input, [&] {

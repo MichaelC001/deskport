@@ -2,23 +2,15 @@
 # Build the pinned DeskPort host with virtual-display input routing.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-source_dir="${DESKPORT_HOST_SOURCE_DIR:-$repo/build-macos.noindex/sunshine-source}"
+source_dir="${DESKPORT_HOST_SOURCE_DIR:-$repo/build-macos.noindex/sunshine-vendored-source}"
 if [ "${DESKPORT_NIX_DEPS:-0}" = 1 ]; then
     build_root=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex/nix}
 else
     build_root=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex}
 fi
-build_dir="$build_root/sunshine-build"
-revision=cb72dffa3233c5815cd5ba88f09f049dd679ba75
-mkdir -p "$repo/build-macos.noindex"
-if [ ! -d "$source_dir" ]; then
-    git clone --depth 1 --branch v2026.906.222525 https://github.com/LizardByte/Sunshine.git "$source_dir"
-fi
-[ "$(git -C "$source_dir" rev-parse HEAD)" = "$revision" ] || { echo 'Unexpected host source revision' >&2; exit 1; }
-git -C "$source_dir" submodule update --init --depth 1 -- third-party/build-deps third-party/libvirtualhid third-party/lizardbyte-common third-party/libdisplaydevice third-party/moonlight-common-c third-party/Simple-Web-Server third-party/TPCircularBuffer
-git -C "$source_dir/third-party/moonlight-common-c" submodule update --init --depth 1 -- enet nanors
+build_dir="$build_root/sunshine-vendored-build"
+python3 "$repo/scripts/prepare-host-source.py" "$source_dir"
 hid="$source_dir/third-party/libvirtualhid"
-[ "$(git -C "$hid" rev-parse HEAD)" = 6fdb8bd4de3b68d96c30e5303ac2ebb333c09746 ]
 patch="$repo/host/macos/patches/libvirtualhid-target-display.patch"
 if git -C "$hid" apply --check "$patch"; then
     git -C "$hid" apply "$patch"
@@ -65,8 +57,11 @@ cp "$repo/host/macos/pixelmatch.h" "$source_dir/src/deskport/macos/pixelmatch.h"
 git -C "$source_dir" apply --check "$sck_patch"
 git -C "$source_dir" apply "$sck_patch"
 cp "$repo/host/macos/screen-video.h" "$repo/host/macos/screen-video.m" "$source_dir/src/deskport/macos/"
+cp "$repo/host/macos/admitted-display.h" "$source_dir/src/deskport/macos/"
+cp "$repo/host/macos/admitted-display.h" "$hid/src/platform/macos/deskport-admitted-display.h"
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
+python3 "$repo/scripts/patch-host-macos-lifecycle.py" "$source_dir"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

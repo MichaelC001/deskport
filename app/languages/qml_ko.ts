@@ -434,6 +434,18 @@
         <source>Nearby discovery is off</source>
         <translation>주변 기기 검색이 꺼져 있습니다</translation>
     </message>
+    <message>
+        <source>Toggle fullscreen</source>
+        <translation>전체 화면 전환</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>연결 끊기</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>다시 연결</translation>
+    </message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1340,6 +1352,18 @@
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
+    <message>
+        <source>Connection interrupted. Reconnecting…</source>
+        <translation>연결이 끊어졌습니다. 다시 연결 중…</translation>
+    </message>
+    <message>
+        <source>Cancel reconnect</source>
+        <translation>다시 연결 취소</translation>
+    </message>
+    <message>
+        <source>Press %1 to leave fullscreen; press again to disconnect</source>
+        <translation>%1 키로 전체 화면 해제, 다시 누르면 연결 끊기</translation>
+    </message>
 </context>
 <context>
     <name>main</name>
@@ -1927,6 +1951,10 @@
         <source>Computer</source>
         <translation>컴퓨터</translation>
     </message>
+    <message>
+        <source>Device details</source>
+        <translation>기기 세부 정보</translation>
+    </message>
 </context>
 <context>
     <name>HostView</name>
@@ -2158,6 +2186,18 @@
     <message>
         <source>Open background permissions</source>
         <translation>백그라운드 권한 열기</translation>
+    </message>
+    <message>
+        <source>Ask client to leave fullscreen</source>
+        <translation>클라이언트 전체 화면 해제 요청</translation>
+    </message>
+    <message>
+        <source>Created when an approved client connects</source>
+        <translation>승인된 클라이언트 연결 시 생성</translation>
+    </message>
+    <message>
+        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+        <translation>연결을 끊으면 실제 화면을 복원하고 가상 화면을 제거합니다. 일시적인 네트워크 중단 시 복구를 위해 작업 공간을 유지합니다.</translation>
     </message>
 </context>
 <context>

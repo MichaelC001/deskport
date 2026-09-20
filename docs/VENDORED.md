@@ -1,9 +1,11 @@
 # Vendored third-party sources
 
-Every third-party dependency DeskPort builds against lives in this repository
-as plain files. Nothing is fetched from another project's repository at build
-time, so an upstream repository being deleted, renamed or made private cannot
-break a build or a release.
+The desktop viewer's upstream code is stored as plain files. The supported
+Sunshine host sources are stored in checksum-verified archives under
+`host/vendor`, together with upstream provenance and licenses. Shared core,
+distribution libraries and build toolchains remain separately pinned dependencies.
+This protects the included component sources from upstream repository deletion;
+it is not a promise that the whole toolchain builds offline.
 
 Vendored on 2026-09-17, for 0.4.1. Each directory keeps its own upstream
 licence file untouched; DeskPort adds no licence terms to them. See
@@ -37,8 +39,7 @@ the exact upstream revision. `libs/mac` was committed as ordinary files.
   `scripts/generate-src.sh` splices it into the source tarball.
 - **`libs/windows`** (252 MB) was deliberately dropped. See
   [`libs/VENDORED.md`](../libs/VENDORED.md) for why and how to restore it.
-- **nixpkgs** supplies Qt, FFmpeg, SDL and the Sunshine host on Linux. That is a
-  pinned distribution dependency, not a single-maintainer repository.
+- **nixpkgs** supplies Qt, FFmpeg, SDL and the Linux host build recipe. The host source now comes from the repository archive.
 
 ## Updating a vendored dependency
 
@@ -52,13 +53,33 @@ this table and `libs/VENDORED.md`.
 
 ## Consequences
 
-- `git archive` now produces a build-complete tree on its own. Release source
-  tarballs come from `scripts/generate-src.sh`, which no longer needs GNU tar or
-  Bash 5, and the GPL corresponding-source obligation is satisfied by the
-  tarball without chasing submodule revisions.
+- `git archive` contains the vendored third-party content. Release source
+  tarballs come from `scripts/generate-src.sh`, which also inserts the pinned
+  shared core and no longer needs GNU tar or Bash 5. Toolchains and system
+  libraries still come from their normal dependency providers.
 - The Nix flake no longer refetches `moonlight-stream/moonlight-qt` with
   `fetchSubmodules` to recover gitlink contents. That workaround existed only
   because GitHub archive tarballs carry no submodules, which is how `mynix`
   consumes this flake.
 - A fresh clone needs `git submodule update --init shared/deskport-core` and
   nothing else.
+
+## Host sources and assets — 2026-09-20
+
+- `host/vendor/sunshine.tar.gz`: pristine macOS/portable Linux host revision
+  cb72dffa3233c5815cd5ba88f09f049dd679ba75 and required source submodules.
+  `sunshine.json` records each upstream URL/revision and the archive SHA-256.
+- `host/vendor/sunshine-nix.tar.gz`: the unchanged 2026.516.143833 source from
+  the locked Nix package, preserving that recipe's compatibility. FFmpeg source
+  build submodules not used by this recipe are excluded; Nix supplies FFmpeg.
+- `host/vendor/sunshine-macos-resources.tar.gz`: static web resources/notices
+  from the pinned, signature-verified upstream DMG, plus the matching Sunshine
+  source license. The matching JSON identifies
+  the original donor and hashes. Packaging no longer downloads that DMG.
+
+All original license files are retained in their archive paths. Sunshine is
+GPL-3.0; component notices retain their respective terms. `prepare-host-source.py`
+verifies the archive before materializing a managed build-only checkout. Reviewed
+DeskPort overlays remain outside the archives. It refuses to overwrite unmanaged
+source directories. System/distribution dependency acquisition remains separate;
+mobile Moonlight submodules are not part of this desktop change.

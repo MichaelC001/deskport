@@ -124,11 +124,22 @@ private:
     quint64 m_TrafficReceivedBase = 0, m_TrafficSentBase = 0;
 public:
     Q_INVOKABLE void exec(QWindow* qtWindow);
-    Q_INVOKABLE bool adaptiveRestartPending() const { return m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
+    Q_INVOKABLE bool adaptiveRestartPending() const { return m_NetworkRetry || m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
     Q_INVOKABLE Session* adaptiveContinuation();
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
     void requestReconnect();
+    bool leaveFullscreen();
+    Q_INVOKABLE int retryDelay() const { return m_RecoveryDeadline ? qMin(4000, 1000 << qMin(m_RecoveryAttempt, 2)) : 0; }
+    Q_INVOKABLE void cancelRecovery() { m_RecoveryCancelled = true; m_NetworkRetry = false; }
+private:
+    bool scheduleNetworkRecovery();
+    std::atomic<bool> m_NetworkRetry{false};
+    std::atomic<bool> m_RecoveryCancelled{false};
+    std::atomic<qint64> m_RecoveryDeadline{0}, m_StreamStartedAt{0};
+    int m_RecoveryAttempt = 0;
+    QString m_ResumeToken;
+public:
     double desktopAdjustment() const { return m_Preferences->desktopAdjustment; }
     Q_INVOKABLE void setDesktopAdjustment(double value);
 

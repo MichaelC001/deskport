@@ -3,23 +3,8 @@
 set -euo pipefail
 repo=${DESKPORT_SOURCE:-/src}
 work=${DESKPORT_WORK:-/work}
-source="$work/cache/sunshine-source"
-revision=cb72dffa3233c5815cd5ba88f09f049dd679ba75
-if [ ! -d "$source/.git" ]; then
-    git clone --no-checkout https://github.com/LizardByte/Sunshine.git "$source"
-    git -C "$source" checkout --detach "$revision"
-fi
-test "$(git -C "$source" rev-parse HEAD)" = "$revision"
-git -C "$source" submodule update --init --force --depth 1 -- third-party/build-deps
-git -C "$source/third-party/build-deps" submodule update --init --force --depth 1 -- \
-    third-party/FFmpeg/Vulkan-Headers third-party/FFmpeg/nv-codec-headers
-git -C "$source" submodule update --init --force --depth 1 -- \
-    third-party/glad third-party/libdisplaydevice third-party/libvirtualhid \
-    third-party/lizardbyte-common third-party/moonlight-common-c \
-    third-party/plasma-wayland-protocols third-party/Simple-Web-Server \
-    third-party/wayland-protocols third-party/wlr-protocols
-git -C "$source/third-party/libdisplaydevice" submodule update --init --force --depth 1 -- third-party/lizardbyte-common
-git -C "$source/third-party/moonlight-common-c" submodule update --init --force --depth 1 -- enet nanors
+source="$work/cache/sunshine-vendored-source"
+python3 "$repo/scripts/prepare-host-source.py" "$source"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source" --revert
 for patch in session-settings session-takeover linux-display; do

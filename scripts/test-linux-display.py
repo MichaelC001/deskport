@@ -138,6 +138,23 @@ try:
                 assert actual[key] == expected[key], (name, key, expected, actual)
         assert set(outputs()) == {owned}, 'Physical outputs still expose an extended workspace'
 
+    # Production startup mode: no encoder-probe display before admission.
+    idle = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            text=True, env=dict(os.environ, DESKPORT_DISPLAY_ON_DEMAND='1'))
+    children.append(idle)
+    assert select.select([idle.stdout], [], [], 10)[0]
+    ready = json.loads(idle.stdout.readline())
+    assert ready.get('ready') and not ready.get('active'), ready
+    assert restored(), 'Idle startup created an output or changed physical policy'
+    for active in (True, False):
+        idle.stdin.write(json.dumps(dict(displayPolicy=2, seq=1 if active else 2, width=1280, height=720, scale=1, session=active))+'\n'); idle.stdin.flush()
+        assert select.select([idle.stdout], [], [], 10)[0]
+        ack=json.loads(idle.stdout.readline()); assert 'error' not in ack, ack
+        if active: assert ack.get('outputName') and len(outputs()) > len(baseline), ack
+        else: assert restored(), 'Explicit release did not restore idle display state'
+    idle.stdin.close(); assert idle.wait(timeout=5)==0
+    assert restored()
+    print('PASS on-demand startup, admitted creation and explicit removal', flush=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
     def receive(allow_error=False):
@@ -157,10 +174,10 @@ try:
         descriptor = work / 'virtual-display.json'
         descriptor.write_text(json.dumps(dict(node=initial.get('pipewireNode'), serial=initial.get('pipewireSerial'), output=initial['outputName'], width=width, height=height, scale=scale)))
         config = work / 'sunshine.conf'
-        config.write_text(f'capture = {"portal" if gnome else "kwin"}\noutput_name = {initial["outputName"]}\nencoder = software\nkeyboard = disabled\nmouse = disabled\ncontroller = disabled\nstream_audio = disabled\nupnp = disabled\nsystem_tray = disabled\nbind_address = 127.0.0.1\nport = {57989 if gnome else 56989}\nmin_log_level = 1\nfile_state = {work}/state.json\ncredentials_file = {work}/control.json\npkey = {work}/key.pem\ncert = {work}/cert.pem\nfile_apps = {work}/apps.json\nlog_path = {work}/sunshine.log\n')
+        config.write_text(f'capture = {"portal" if gnome else "kwin"}\noutput_name = {initial["outputName"] if gnome else "DeskPort-stale-startup-name"}\nencoder = software\nkeyboard = disabled\nmouse = disabled\ncontroller = disabled\nstream_audio = disabled\nupnp = disabled\nsystem_tray = disabled\nbind_address = 127.0.0.1\nport = {57989 if gnome else 56989}\nmin_log_level = 1\nfile_state = {work}/state.json\ncredentials_file = {work}/control.json\npkey = {work}/key.pem\ncert = {work}/cert.pem\nfile_apps = {work}/apps.json\nlog_path = {work}/sunshine.log\n')
         (work / 'apps.json').write_text('{"apps": []}')
         hostenv = dict(os.environ, DBUS_SYSTEM_BUS_ADDRESS='unix:path=' + str(work / 'no-system-bus'))
-        if gnome: hostenv['DESKPORT_VIRTUAL_DISPLAY'] = str(descriptor)
+        hostenv['DESKPORT_VIRTUAL_DISPLAY'] = str(descriptor)
         log = tempfile.TemporaryFile(mode='w+')
         process = subprocess.Popen([host, str(config)], cwd=work, env=hostenv, stdout=log, stderr=log)
         children.append(process)

@@ -5,6 +5,7 @@
 #import <QuartzCore/QuartzCore.h>
 #include <stdlib.h>
 #include <string.h>
+#include "admitted-display.h"
 
 @interface DPCapture : NSObject <SCStreamOutput, SCStreamDelegate>
 @property(nonatomic, strong) dispatch_queue_t queue;
@@ -138,13 +139,22 @@
     self = [super init]; // Do not start the legacy AVFoundation session.
     if (!self) return nil;
     CGDisplayModeRef mode = CGDisplayCopyDisplayMode(displayID);
-    if (!mode) return nil;
+    int width = 0, height = 0, scale = 0;
+    if (getenv("DESKPORT_CAPTURE_DISPLAY_FILE")) {
+        if (!dp_admitted_display_mode(displayID, &width, &height, &scale)) {
+            if (mode) CFRelease(mode);
+            return nil;
+        }
+    } else if (mode) {
+        width = (int)CGDisplayModeGetPixelWidth(mode);
+        height = (int)CGDisplayModeGetPixelHeight(mode);
+    } else return nil;
     self.displayID = displayID;
     self.pixelFormat = kCVPixelFormatType_32BGRA;
-    self.frameWidth = (int)CGDisplayModeGetPixelWidth(mode);
-    self.frameHeight = (int)CGDisplayModeGetPixelHeight(mode);
+    self.frameWidth = width;
+    self.frameHeight = height;
     self.minFrameDuration = CMTimeMake(1, MAX(1, frameRate));
-    CFRelease(mode);
+    if (mode) CFRelease(mode);
     self.captureQueue = dispatch_queue_create("deskport.screen-capture", DISPATCH_QUEUE_SERIAL);
     self.captures = [NSMutableDictionary dictionary];
     return self;

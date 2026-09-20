@@ -98,9 +98,10 @@ void Session::clStageStarting(int stage)
 
 void Session::clStageFailed(int stage, int errorCode)
 {
+    if (s_ActiveSession->m_RecoveryDeadline) s_ActiveSession->scheduleNetworkRecovery();
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
     unsigned int portFlags = LiGetPortFlagsFromStage(stage);
-    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
+    if (!s_ActiveSession->m_NetworkRetry) s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
     char failingPorts[128];
     LiStringifyPortFlags(portFlags, ", ", failingPorts, sizeof(failingPorts));
@@ -116,7 +117,11 @@ void Session::clConnectionTerminated(int errorCode)
     const bool takenOver = s_ActiveSession->m_AdaptiveDisplay &&
         s_ActiveSession->m_AdaptiveDisplay->wasTakenOver(3000);
     if (s_ActiveSession->m_TerminationReported.exchange(true)) return;
-    if (!takenOver) s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
+    if (!takenOver && errorCode != ML_ERROR_GRACEFUL_TERMINATION &&
+        errorCode != ML_ERROR_PROTECTED_CONTENT && errorCode != ML_ERROR_FRAME_CONVERSION &&
+        errorCode != ML_ERROR_UNEXPECTED_EARLY_TERMINATION)
+        s_ActiveSession->scheduleNetworkRecovery();
+    if (!takenOver && !s_ActiveSession->m_NetworkRetry) s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
     if (takenOver) {
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError(tr("This connection was taken over by another device."));
@@ -169,7 +174,7 @@ void Session::clConnectionTerminated(int errorCode)
     // Push a quit event to the main loop
     SDL_Event event;
     event.type = SDL_USEREVENT;
-    event.user.code = DeskPortEndSession;
+    event.user.code = DeskPortTransportEnded;
     event.user.timestamp = SDL_GetTicks();
     SDL_PushEvent(&event);
 }
@@ -633,8 +638,37 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
         qInfo() << "Client display pixels:" << pixels << "system scale:" << scale << "workspace backing:" << workspace.pixels << "host scale:" << workspace.scale;
     return workspace;
 }
+bool Session::scheduleNetworkRecovery() {
+    if (m_RecoveryCancelled || !m_AdaptiveDisplay || !m_AdaptiveDisplay->retryable() ||
+        (!m_RecoveryDeadline && !m_AdaptiveDisplay->admissionRequired())) return false;
+    const auto now = QDateTime::currentMSecsSinceEpoch();
+    if (m_StreamStartedAt && now - m_StreamStartedAt > 10000) {
+        m_RecoveryDeadline = 0; m_RecoveryAttempt = 0;
+    }
+    if (!m_RecoveryDeadline) m_RecoveryDeadline = now + 30000;
+    if (now >= m_RecoveryDeadline || m_RecoveryAttempt >= 5) return false;
+    if (!m_AdaptiveDisplay->resumeToken().isEmpty()) m_ResumeToken = m_AdaptiveDisplay->resumeToken();
+    m_NetworkRetry = true; m_UnexpectedTermination = true;
+    return true;
+}
 Session* Session::adaptiveContinuation() {
     if (!adaptiveRestartPending()) return nullptr;
+    if (m_NetworkRetry) {
+        auto next = new Session(m_Computer, m_App, m_Preferences);
+        next->m_RecoveryDeadline = m_RecoveryDeadline.load();
+        next->m_RecoveryAttempt = m_RecoveryAttempt + 1;
+        next->m_ResumeToken = m_ResumeToken;
+        next->m_ManualResume = true;
+        next->m_AdaptiveGeometry = m_AdaptiveGeometry;
+        next->m_IsFullScreen = m_IsFullScreen;
+        next->m_TrafficReceivedBase = m_TrafficReceivedBase;
+        next->m_TrafficSentBase = m_TrafficSentBase;
+        // A media-only interruption may retain its authenticated controller.
+        if (m_AdaptiveDisplay && !m_AdaptiveDisplay->failed()) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
+        else m_AdaptiveDisplay.reset();
+        SDL_FlushEvents(SDL_USEREVENT, SDL_LASTEVENT);
+        return next;
+    }
     if (m_ManualReconnect) {
         // Read the saved device profile only after the old transport is stopped.
         auto next = new Session(m_Computer, m_App);
@@ -711,7 +745,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             if (certificate.isNull() || port < 1 || port > 65535) break;
             auto identity = IdentityManager::get();
             m_AdaptiveDisplay = std::make_shared<AdaptiveDisplay>(m_Computer->activeAddress.address(), quint16(port),
-                certificate, identity->getCertificate(), identity->getPrivateKey(), m_Preferences->displayPolicy);
+                certificate, identity->getCertificate(), identity->getPrivateKey(), m_Preferences->displayPolicy, m_ResumeToken);
             break;
         }
     }
@@ -748,9 +782,12 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
+            if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline))
+                m_AdaptiveDisplay->cancel();
             if (m_TransitionWindow) m_TransitionWindow->pump();
             if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
         }, [this, window] {
+            if (m_RecoveryDeadline || m_RecoveryCancelled) return false;
             const auto title = tr("Host already in use").toUtf8();
             const auto text = tr("Another device is connected to this host. Disconnect it and connect here?").toUtf8();
             const auto cancel = tr("Cancel").toUtf8();
@@ -765,12 +802,14 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         })) {
         m_StreamConfig.width = target.width(); m_StreamConfig.height = target.height();
         deskportResizeStage("mode-ready", target.width(), target.height());
+        if (!m_AdaptiveDisplay->warning().isEmpty()) emit displayLaunchWarning(m_AdaptiveDisplay->warning());
         qInfo() << "Adaptive display negotiated:" << target << "scale" << m_AdaptiveScale;
     } else {
         // Older/unavailable hosts retain normal fixed-resolution streaming.
         // Disable adaptation for this session to avoid reconnect loops.
         deskportResizeStage("mode-failed");
-        m_SessionAdmissionFailed = m_AdaptiveDisplay->admissionRequired();
+        m_SessionAdmissionFailed = m_RecoveryDeadline || m_AdaptiveDisplay->admissionRequired();
+        if (m_RecoveryDeadline) scheduleNetworkRecovery();
         m_AdaptiveDisplay.reset();
         qWarning() << "Using fixed-resolution streaming; adaptive display negotiation was unavailable";
     }
@@ -1763,6 +1802,12 @@ void Session::updateOptimalWindowDisplayMode()
     SDL_SetWindowDisplayMode(m_Window, &bestMode);
 }
 
+bool Session::leaveFullscreen() {
+    if (!m_Window || !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) return false;
+    toggleFullscreen();
+    if (m_InputHandler) { m_InputHandler->raiseAllKeys(); m_InputHandler->setCaptureActive(false); }
+    return true;
+}
 void Session::toggleFullscreen()
 {
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
@@ -1796,6 +1841,8 @@ void Session::toggleFullscreen()
         SDL_SetWindowPosition(m_Window, x, y);
     }
 #endif
+
+    m_IsFullScreen = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) != 0;
 
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
@@ -1891,13 +1938,16 @@ bool Session::startConnectionAsync()
                       m_InputHandler->getAttachedGamepadMask(),
                       !m_Preferences->multiController,
                       rtspSessionUrl,
-                      m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
+                      m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
                       m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
         if (m_AdaptiveResume) deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
         return false;
     } catch (const QtNetworkReplyException& e) {
+        if (m_RecoveryDeadline && (e.getError() == QNetworkReply::TimeoutError ||
+            e.getError() == QNetworkReply::RemoteHostClosedError || e.getError() == QNetworkReply::TemporaryNetworkFailureError ||
+            e.getError() == QNetworkReply::ConnectionRefusedError || e.getError() == QNetworkReply::HostNotFoundError)) scheduleNetworkRecovery();
         if (m_AdaptiveResume) {
             qWarning() << "Adaptive resize resume failed:" << e.toQString();
             emit displayLaunchError(tr("The host did not resume the desktop at the new size. Connect again to continue where you left off."));
@@ -2065,6 +2115,9 @@ void Session::exec(QWindow* qtWindow)
         // Keep tray and local activation requests responsive while SDL owns
         // its window on the worker. Recall itself is queued to that owner.
         while (!execThread.wait(10)) {
+            if (m_RecoveryCancelled || (m_RecoveryDeadline && !m_StreamStartedAt && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
+                m_RecoveryCancelled = true; LiInterruptConnection();
+            }
             QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
         }
     }
@@ -2090,7 +2143,7 @@ void Session::execInternal()
     //
     // NB: This initializes the SDL video subsystem, so it must be
     // called on the main thread.
-    const bool initialized = (!m_TransitionWindow || !m_TransitionWindow->cancelled()) && initialize();
+    const bool initialized = !m_RecoveryCancelled && (!m_RecoveryDeadline || QDateTime::currentMSecsSinceEpoch() < m_RecoveryDeadline) && (!m_TransitionWindow || !m_TransitionWindow->cancelled()) && initialize();
     if (!initialized || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
         if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
         m_TransitionWindow.reset();
@@ -2118,6 +2171,9 @@ void Session::execInternal()
         // Kick off the async connection thread while we sit here and pump the event loop
         asyncConnThread.start();
         while (!asyncConnThread.wait(10)) {
+            if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
+                m_RecoveryCancelled = true; LiInterruptConnection();
+            }
             if (m_TransitionWindow) {
                 m_TransitionWindow->pump();
                 if (m_TransitionWindow->cancelled()) LiInterruptConnection();
@@ -2143,7 +2199,7 @@ void Session::execInternal()
     }
 
     // If the connection failed, clean up and abort the connection.
-    if (!m_AsyncConnectionSuccess || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
+    if (!m_AsyncConnectionSuccess || m_RecoveryCancelled || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
         m_TransitionWindow.reset();
         delete m_InputHandler;
         m_InputHandler = nullptr;
@@ -2352,6 +2408,7 @@ void Session::execInternal()
     // unless it comes from the connection termination callback where
     // (m_UnexpectedTermination is set back to true).
     m_UnexpectedTermination = false;
+    m_StreamStartedAt = QDateTime::currentMSecsSinceEpoch();
 
     // Start rich presence to indicate we're in game
     RichPresenceManager presence(*m_Preferences, m_App.name);
@@ -2384,13 +2441,16 @@ void Session::execInternal()
                 m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, !clipboardStatus.isEmpty());
             }
         }
+        if (m_RecoveryCancelled) { m_NetworkRetry = false; goto DispatchDeferredCleanup; }
         if (m_AdaptiveDisplay && (m_Preferences->displayPolicy != 0 || m_AdaptiveDisplay->admissionRequired()) && m_AdaptiveDisplay->failed()) {
+            scheduleNetworkRecovery();
             if (!m_TerminationReported.exchange(true))
                 emit displayLaunchError(m_AdaptiveDisplay->wasTakenOver()
                     ? tr("This connection was taken over by another device.")
                     : tr("Virtual screen control ended. Reconnect to apply the selected mode."));
             goto DispatchDeferredCleanup;
         }
+        if (m_AdaptiveDisplay && m_AdaptiveDisplay->takeLeaveFullscreen()) leaveFullscreen();
         if (checkAdaptiveResize()) goto DispatchDeferredCleanup;
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
@@ -2430,12 +2490,19 @@ void Session::execInternal()
 
         case SDL_USEREVENT:
             switch (event.user.code) {
+            case DeskPortFullscreen:
+                recallDesktopWindow(m_Window);
+                toggleFullscreen();
+                break;
             case DeskPortReconnect:
                 if (m_UnexpectedTermination || adaptiveRestartPending()) break;
                 rememberAdaptiveWindow();
                 m_ManualReconnect = true;
                 goto DispatchDeferredCleanup;
             case DeskPortEndSession:
+                m_RecoveryCancelled = true; m_NetworkRetry = false;
+                goto DispatchDeferredCleanup;
+            case DeskPortTransportEnded:
                 goto DispatchDeferredCleanup;
             case DeskPortHideWindow:
                 m_InputHandler->setCaptureActive(false);
@@ -2830,7 +2897,7 @@ DispatchDeferredCleanup:
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
-    if (adaptiveRestartPending() && !m_ManualReconnect) {
+    if (adaptiveRestartPending() && !m_ManualReconnect && !m_NetworkRetry) {
         m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Adjusting resolution…"));
         qInfo() << "Adaptive display keeping client window:" << SDL_GetWindowID(m_Window);
     }

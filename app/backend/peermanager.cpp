@@ -80,6 +80,8 @@ struct PeerManager::Link : QObject {
     quint64 sessionEpoch = 0;
     bool displayControl = false;
     bool caretUpdates = false;
+    bool clientWindow = false;
+    bool lifecycle = false, recovering = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
@@ -128,6 +130,7 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         link->displaySequence = 0;
         QJsonObject response{{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"width", width}, {"height", height}};
         if (!error.isEmpty()) response["error"] = error;
+        if (!m_Host->displayWarning().isEmpty()) response["warning"] = m_Host->displayWarning();
         send(link, response);
     });
     auto watchdog = new QTimer(this);
@@ -258,6 +261,13 @@ QVariantList PeerManager::peers() const {
     }
     return result;
 }
+bool PeerManager::canReleaseClientFullscreen() const {
+    return m_DisplayLink && !m_DisplayLink->ended && !m_DisplayLink->recovering && m_DisplayLink->clientWindow;
+}
+void PeerManager::releaseClientFullscreen() {
+    if (canReleaseClientFullscreen())
+        send(m_DisplayLink, {{"type", DP_MESSAGE_CLIENT_WINDOW}, {"action", "leave-fullscreen"}});
+}
 bool PeerManager::save() { return PeerStore::write(m_Path, {{"version", 1}, {"peers", m_Peers}}); }
 QJsonObject PeerManager::metadata() const {
     auto meta = m_Host->identity();
@@ -269,6 +279,8 @@ QJsonObject PeerManager::metadata() const {
     meta["endpointRefresh"] = 1;
     meta["clipboard"] = 1;
     meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
+    meta["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
+    meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
     meta["clipboardV2"] = 1;
 #endif
@@ -323,10 +335,10 @@ void PeerManager::attach(Link* link) {
         drain(link);
     });
     connect(socket, &QSslSocket::disconnected, link, [this, link] {
-        if (!link->ended) fail(link, tr("Binding connection closed. Check both devices; locally approved access may need removal."));
+        if (!link->ended) transportLost(link);
     });
     connect(socket, &QSslSocket::errorOccurred, link, [this, link](QAbstractSocket::SocketError) {
-        if (!link->ended) fail(link, tr("Binding connection failed: %1").arg(link->socket->errorString()));
+        if (!link->ended) transportLost(link);
     });
     QTimer::singleShot(10000, link, [this, link] {
         if (!link->ended && !link->sessionOptIn && !link->displayControl && !link->clipboardControl && link->peer.isEmpty()) fail(link, tr("Binding handshake timed out"));
@@ -454,6 +466,12 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         link->ended = true; m_RefreshLink = nullptr;
         link->socket->disconnectFromHost();
         QTimer::singleShot(2000, link, &QObject::deleteLater); return;
+    }
+    if (type == DP_MESSAGE_SESSION_RELEASE) {
+        if (link == m_SessionLink && link->lifecycle && link->sessionAdmitted)
+            fail(link, tr("Client disconnected"));
+        else fail(link, tr("Session release requires the admitted controller"));
+        return;
     }
     if (type == DP_MESSAGE_SESSION_STATUS || type == DP_MESSAGE_SESSION_TAKEOVER) {
         sessionRequest(link, message); return;
@@ -600,11 +618,13 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq, policy)) {
             send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
+        link->clientWindow = message["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
         link->displayPolicy = policy;
         link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
         if (m_DisplayLink != link) ++m_SessionEpoch;
         m_DisplayLink = link;
+        emit changed();
         if (m_Link == link) m_Link = nullptr;
         emit changed(); return;
     }
@@ -691,9 +711,28 @@ void PeerManager::finish(Link* link) {
     link->socket->disconnectFromHost();
     QTimer::singleShot(2000, link, &QObject::deleteLater); emit changed();
 }
+void PeerManager::transportLost(Link* link) {
+    if (link->recovering) return;
+    if (link == m_SessionLink && link->lifecycle && link->sessionAdmitted && !m_SessionOperation &&
+        m_Revoking != link->fingerprint) {
+        link->recovering = true;
+        // Preserve the original display snapshot and reservation for this identity.
+        if (m_ClipboardLink && m_ClipboardLink->fingerprint == link->fingerprint)
+            fail(m_ClipboardLink, tr("Clipboard transport interrupted"));
+        QTimer::singleShot(15000, link, [this, link] {
+            if (!link->ended && link->recovering) fail(link, tr("Session recovery timed out"));
+        });
+        emit changed();
+        return;
+    }
+    fail(link, tr("Control connection closed"));
+}
 void PeerManager::fail(Link* link, const QString& message) {
     if (link->ended) return;
     if (!link->endpointRefresh) qWarning() << "Binding:" << message;
+    if (link->lifecycle && link->sessionAdmitted && !link->recovering &&
+        link->socket->state() == QAbstractSocket::ConnectedState && link->socket->bytesToWrite() <= DeskPortClipboard::MaxFrame)
+        send(link, {{"type", DP_MESSAGE_SESSION_ENDED}, {"reason", "ended"}});
     link->ended = true;
     if (m_RefreshLink == link) {
         m_RefreshLink = nullptr;
@@ -726,12 +765,33 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
     const bool takeover = message["type"].toString() == DP_MESSAGE_SESSION_TAKEOVER;
     if ((!takeover && message["sessionTakeover"].toInt() != DP_SESSION_TAKEOVER_VERSION) ||
         (takeover && !link->sessionOptIn)) { sessionError(link, "unauthorized"); return; }
+    link->lifecycle = message["sessionLifecycle"].toInt() == DP_SESSION_LIFECYCLE_VERSION;
     link->sessionOptIn = true;
     if (m_Link == link) m_Link = nullptr;
     if (m_SessionOperation) { sessionError(link, "busy"); return; }
+    auto previous = m_SessionLink;
+    if (!takeover && link != previous && previous && previous->lifecycle && !previous->ended &&
+        link->lifecycle && previous->fingerprint == link->fingerprint &&
+        !previous->sessionLease.isEmpty() && message["resumeToken"].toString() == previous->sessionLease) {
+        link->sessionLease = previous->sessionLease;
+        link->sessionAdmitted = true;
+        link->displayControl = previous->displayControl;
+        link->displayPolicy = previous->displayPolicy;
+        link->clientWindow = previous->clientWindow;
+        link->caretUpdates = previous->caretUpdates;
+        m_SessionLink = link;
+        if (m_DisplayLink == previous) m_DisplayLink = link;
+        if (m_ClipboardLink && m_ClipboardLink->fingerprint == link->fingerprint)
+            fail(m_ClipboardLink, tr("Clipboard transport replaced"));
+        previous->sessionLease.clear();
+        fail(previous, tr("Session transport recovered"));
+        ++m_SessionEpoch;
+    }
     if (link == m_SessionLink && link->sessionAdmitted) {
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
-        send(link, {{"type", DP_MESSAGE_SESSION_STATE}, {"busy", false}, {"admitted", true}}); return;
+        QJsonObject response{{"type", DP_MESSAGE_SESSION_STATE}, {"busy", false}, {"admitted", true}};
+        if (link->lifecycle) response["resumeToken"] = link->sessionLease;
+        send(link, response); return;
     }
     if (takeover) {
         const bool valid = !link->sessionChallenge.isEmpty() &&
@@ -796,8 +856,11 @@ void PeerManager::acquireSession(Link* link, const QString& snapshot, bool takeo
             m_SessionLink = alive; ++m_SessionEpoch;
             alive->sessionAdmitted = true;
             alive->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
-            send(alive, {{"type", takeover ? DP_MESSAGE_SESSION_RESULT : DP_MESSAGE_SESSION_STATE},
-                         {"busy", false}, {"admitted", true}});
+            QJsonObject response{{"type", takeover ? DP_MESSAGE_SESSION_RESULT : DP_MESSAGE_SESSION_STATE},
+                                 {"busy", false}, {"admitted", true}};
+            if (alive->lifecycle) response["resumeToken"] = alive->sessionLease;
+            send(alive, response);
+            emit changed();
         };
         // Closing a helper's stdin is asynchronous. Do not hand a new client the
         // clipboard while the previous delayed-rendering process can still write.

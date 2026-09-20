@@ -9,6 +9,7 @@
 
 class PeerManager : public QObject {
     Q_OBJECT
+    Q_PROPERTY(bool canReleaseClientFullscreen READ canReleaseClientFullscreen NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
     Q_PROPERTY(bool pendingClientOnly READ pendingClientOnly NOTIFY changed)
     Q_PROPERTY(QString pendingName READ pendingName NOTIFY changed)
@@ -21,6 +22,8 @@ public:
                 const QString& directory = QString(), quint16 port = 48991,
                 const QHostAddress& listenAddress = QHostAddress::AnyIPv4);
     ~PeerManager();
+    bool canReleaseClientFullscreen() const;
+    Q_INVOKABLE void releaseClientFullscreen();
     QString status() const { return m_Status; }
     QString pendingName() const;
     bool pendingClientOnly() const;
@@ -47,6 +50,7 @@ protected:
 private:
     struct Link;
     void attach(Link* link);
+    void transportLost(Link* link);
     QTcpServer* createListener();
     void drain(Link* link);
     void receive(Link* link, const QJsonObject& message);

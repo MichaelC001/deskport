@@ -192,31 +192,30 @@ static void configure(NSInteger width, NSInteger height, NSInteger scale, int se
     if (session && sessionDisplayPolicy==DP_DISPLAY_PRIMARY_ONLY && !enableDisplayFunction()) {
         respond(@{@"error": @"Disabling other screens is unavailable on this macOS version"}); return;
     }
-    BOOL restoring=!session && sequence!=0 && savedTopology!=nil;
-    if (!session && sequence!=0 && !restoreTopology(display.displayID)) {
+    if (!session) {
         sessionActive=NO;
-        if (++restoreAttempt>=30) {
-            restoreAttempt=0; idleRecoveryExhausted=YES;
-            recordLayoutEvent(@"Local recovery retries exhausted; original layout retained for manual repair or the next session");
-            respond(@{@"error": @"Could not restore the original display layout; recovery is retained"}); return;
-        }
         const unsigned token=++generation;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,100*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
-            if (token==generation) configure(width,height,scale,sequence,NO);
+        // Preserve the journal through removal: removing a mirror source can
+        // change the fallback physical display's mode after the first restore.
+        preserveTopologyJournal=YES;
+        restoreTopology(display.displayID);
+        display=nil;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,500*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
+            if (token!=generation) return;
+            preserveTopologyJournal=NO;
+            if (!restoreTopology(0)) {
+                if (++restoreAttempt < 30) { configure(width,height,scale,sequence,NO); return; }
+                idleRecoveryExhausted=YES;
+                respond(@{@"active":@NO,@"error":@"Physical layout recovery is retained for repair"});
+                return;
+            }
+            restoreAttempt=0; idleRecoveryExhausted=NO;
+            respond(@{@"active":@NO,@"width":@0,@"height":@0,@"scale":@1});
         });
         return;
     }
+    preserveTopologyJournal=NO;
     restoreAttempt=0; idleRecoveryExhausted=NO;
-    if (restoring) {
-        sessionActive=NO;
-        // WindowServer detaches mirrors asynchronously. Applying the idle mode
-        // in the same transaction turn leaves the virtual mode list stale.
-        const unsigned token=++generation;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW,250*NSEC_PER_MSEC),dispatch_get_main_queue(), ^{
-            if (token==generation) configure(width,height,scale,sequence,NO);
-        });
-        return;
-    }
     if (session && savedTopology && !sessionActive) {
         // The authenticated new lease owns the workspace now. Cancel idle retry
         // callbacks, retain the original journal and verify this client's mode.
@@ -283,7 +282,7 @@ static void finishHelper(void) {
     static BOOL stopping;
     if (stopping) return;
     stopping=YES; sessionActive=NO; ++generation;
-    snapshotTopology(display.displayID);
+    if (display) snapshotTopology(display.displayID);
     preserveTopologyJournal=YES;
     restoreTopology(display.displayID);
     // Removing the virtual source can itself reset the fallback monitor's mode.
@@ -329,9 +328,9 @@ int main(int argc, const char *argv[]) {
             }
             if (!restored) { idleRecoveryExhausted=YES; recordLayoutEvent(@"Startup local layout recovery is pending; keeping the host available for new clients"); }
         }
-        configure(atoi(argv[1]), atoi(argv[2]), 1, 0, NO);
-        // A pending rebuild owns the virtual display; it is recreated on the next turn.
-        if (!display && !displayRebuilt) return 1;
+        // A running helper is ready to accept leases, not an active display.
+        // Startup recovery above may restore an old journal but creates nothing.
+        respond(@{@"ready":@YES,@"active":@NO});
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             char *line = NULL; size_t length = 0;
             while (getline(&line, &length, stdin) != -1) {

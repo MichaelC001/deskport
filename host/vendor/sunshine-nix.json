@@ -1,0 +1,9 @@
+{
+  "archive": "sunshine-nix.tar.gz",
+  "sha256": "bfa0bff6d83ca697ebaf83581588a4038908ab1a6b9397727292fcc3bfc5a7a3",
+  "upstream": "https://github.com/LizardByte/Sunshine",
+  "version": "2026.516.143833",
+  "nixpkgs": "93108a538f079596c9a16c72cf03e9322782b6dd",
+  "sourceStore": "82yyr02836smhm2k5pq5a3gm3bnkvz37-source",
+  "scope": "Existing pinned Nix host with required bundled source dependencies; unused FFmpeg toolchain source builds and Git metadata excluded. Nix provides multimedia libraries. Original component license files are preserved."
+}

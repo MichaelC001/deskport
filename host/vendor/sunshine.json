@@ -1,0 +1,92 @@
+{
+  "archive": "sunshine.tar.gz",
+  "sha256": "63d7b9c71e0ed759b85ddfe1d8e65520a5c36454703ec524c5d831c4e2ef204d",
+  "sources": [
+    {
+      "path": ".",
+      "upstream": "https://github.com/LizardByte/Sunshine.git",
+      "revision": "cb72dffa3233c5815cd5ba88f09f049dd679ba75"
+    },
+    {
+      "path": "third-party/build-deps",
+      "upstream": "https://github.com/LizardByte/build-deps.git",
+      "revision": "a9a9277cdafe8a0ff9f197915fe43b383ed4f36b"
+    },
+    {
+      "path": "third-party/build-deps/third-party/FFmpeg/Vulkan-Headers",
+      "upstream": "https://github.com/KhronosGroup/Vulkan-Headers.git",
+      "revision": "e3b1eec08173d6b825cd3ac88c885a63b621504a"
+    },
+    {
+      "path": "third-party/build-deps/third-party/FFmpeg/nv-codec-headers",
+      "upstream": "https://github.com/FFmpeg/nv-codec-headers.git",
+      "revision": "0a6fba9a2820628b8103464f4c8753ee05838baa"
+    },
+    {
+      "path": "third-party/libvirtualhid",
+      "upstream": "https://github.com/LizardByte/libvirtualhid.git",
+      "revision": "6fdb8bd4de3b68d96c30e5303ac2ebb333c09746"
+    },
+    {
+      "path": "third-party/lizardbyte-common",
+      "upstream": "https://github.com/LizardByte/lizardbyte-common.git",
+      "revision": "f9d91e1d29b7473f58e43acde4579da4e56c4abe"
+    },
+    {
+      "path": "third-party/libdisplaydevice",
+      "upstream": "https://github.com/LizardByte/libdisplaydevice.git",
+      "revision": "6e9722f89103320c948dc1199066c9e17a69e88a"
+    },
+    {
+      "path": "third-party/libdisplaydevice/third-party/lizardbyte-common",
+      "upstream": "https://github.com/LizardByte/lizardbyte-common.git",
+      "revision": "06cd442b808f02f1674f3192a84d25b9a503c482"
+    },
+    {
+      "path": "third-party/moonlight-common-c",
+      "upstream": "https://github.com/moonlight-stream/moonlight-common-c.git",
+      "revision": "874ac9548f1bd6f095ef2b435c42cdde460e7821"
+    },
+    {
+      "path": "third-party/moonlight-common-c/enet",
+      "upstream": "https://github.com/cgutman/enet.git",
+      "revision": "aca87840b57f045a1f7f9299e4b1b9b8e2a5e2f1"
+    },
+    {
+      "path": "third-party/moonlight-common-c/nanors",
+      "upstream": "https://github.com/sleepybishop/nanors.git",
+      "revision": "b1e3c22ca0cdc0bb83e3cd6ed1a2fc77869ed99a"
+    },
+    {
+      "path": "third-party/Simple-Web-Server",
+      "upstream": "https://github.com/LizardByte-infrastructure/Simple-Web-Server.git",
+      "revision": "546895a93a29062bb178367b46c7afb72da9881e"
+    },
+    {
+      "path": "third-party/TPCircularBuffer",
+      "upstream": "https://github.com/michaeltyson/TPCircularBuffer.git",
+      "revision": "cc520397504bb72bc6df79ff03eb72988a6dc50d"
+    },
+    {
+      "path": "third-party/glad",
+      "upstream": "https://github.com/Dav1dde/glad.git",
+      "revision": "73db193f853e2ee079bf3ca8a64aa2eaf6459043"
+    },
+    {
+      "path": "third-party/plasma-wayland-protocols",
+      "upstream": "https://github.com/KDE/plasma-wayland-protocols.git",
+      "revision": "4c015e90ae6c88f2ffa766e899387ef431eade49"
+    },
+    {
+      "path": "third-party/wayland-protocols",
+      "upstream": "https://github.com/LizardByte-infrastructure/wayland-protocols.git",
+      "revision": "ee78491a237eaff9389a0ccf8680521d074407d3"
+    },
+    {
+      "path": "third-party/wlr-protocols",
+      "upstream": "https://github.com/LizardByte-infrastructure/wlr-protocols.git",
+      "revision": "bf4fc79abc359eea5a0edec0ac6d4a2b2955f82a"
+    }
+  ],
+  "scope": "Pinned macOS and portable Linux host source and required source submodules. Distribution-provided libraries and toolchains are separate."
+}

@@ -13,6 +13,7 @@ Rectangle {
     property bool favorite: false
     property bool activeSession: false
     property bool anotherSession: false
+    signal detailsRequested()
     signal moreRequested()
     signal settingsRequested()
     signal activateRequested()
@@ -31,11 +32,26 @@ Rectangle {
     border.width: selected ? 2 : 1
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 16; spacing: 6
-        RowLayout {
+        Row {
+            id: header
             Layout.fillWidth: true
-            Label { text: card.activeSession ? qsTr("Connected") : card.unknown ? qsTr("Checking…") : card.online ? qsTr("Online") : qsTr("Offline"); color: card.online || card.activeSession ? ui.accent : ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; elide: Text.ElideRight }
-            ToolButton { objectName: "cardSettings"; text: "⚙"; implicitWidth: 30; implicitHeight: 30; Accessible.name: qsTr("Device settings") + " · " + card.deviceName; onClicked: card.settingsRequested() }
-            ToolButton { text: "⋯"; implicitWidth: 26; implicitHeight: 30; Accessible.name: qsTr("Device actions") + " · " + card.deviceName; onClicked: card.moreRequested() }
+            Layout.preferredHeight: 44
+            Item {
+                objectName: "cardStatus"
+                width: header.width / 4; height: 44
+                readonly property string statusText: card.activeSession ? qsTr("Connected") : card.unknown ? qsTr("Checking…") : card.online ? qsTr("Online") : qsTr("Offline")
+                readonly property color statusColor: card.online || card.activeSession ? "#2FA66A" : card.unknown ? "#D29922" : ui.muted
+                Accessible.role: Accessible.StaticText
+                Accessible.name: statusText + " · " + card.deviceName
+                Column {
+                    anchors.centerIn: parent; width: parent.width; spacing: 2
+                    Rectangle { width: 6; height: 6; radius: 3; color: parent.parent.statusColor; anchors.horizontalCenter: parent.horizontalCenter }
+                    Label { width: parent.width; text: parent.parent.statusText; color: parent.parent.statusColor; font.pixelSize: 10; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight }
+                }
+            }
+            ToolButton { objectName: "cardDetails"; text: "ⓘ"; width: header.width / 4; height: 44; Accessible.name: qsTr("Device details") + " · " + card.deviceName; onClicked: card.detailsRequested() }
+            ToolButton { objectName: "cardActions"; text: "⋯"; width: header.width / 4; height: 44; Accessible.name: qsTr("Device actions") + " · " + card.deviceName; onClicked: card.moreRequested() }
+            ToolButton { objectName: "cardSettings"; text: "⚙"; width: header.width / 4; height: 44; Accessible.name: qsTr("Device settings") + " · " + card.deviceName; onClicked: card.settingsRequested() }
         }
         Item {
             Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 55

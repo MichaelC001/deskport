@@ -1,3 +1,12 @@
+## Session usability and lifecycle (2026-09-20)
+
+Reason: user approved the audited backlog and Mac/iPad/Android emulator checks.
+Implement explicit device actions, authenticated desktop fullscreen release,
+on-demand macOS/Linux displays and bounded network recovery, and finish host source
+vendoring. Preserve physical topology, exclusive ownership and old-client
+compatibility. See [the active checklist](../todo.md). Mobile auto-reconnect and
+mobile vendoring are separate; simulator results do not establish real streams.
+
 ## Stable desktop 0.4.2 (2026-09-20)
 
 Reason: user-requested consolidation of desktop development into main and a full
@@ -1344,3 +1353,13 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
 - The explicit parallel-host acceptance entry uses isolated display identity and
   no shared layout journal; it only exercises extended-workspace behavior.
   See [SESSION_TAKEOVER.md](SESSION_TAKEOVER.md) for limits and acceptance steps.
+
+## 2026-09-20: Device action menu cleanup
+
+- Keep details and per-device settings on the dedicated card buttons. Remove
+  their duplicate action-menu entries, application browsing and Wake-on-LAN.
+- Keep session controls, pinning, address editing, legacy pairing, network testing,
+  renaming and removal in the action menu. Card activation still opens Desktop.
+
+- Device headers now allocate equal slots to online/offline/checking status,
+  details, actions and settings, matching the mobile card layout.

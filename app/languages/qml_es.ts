@@ -434,6 +434,18 @@
         <source>Nearby discovery is off</source>
         <translation>La búsqueda de dispositivos cercanos está desactivada</translation>
     </message>
+    <message>
+        <source>Toggle fullscreen</source>
+        <translation>Alternar pantalla completa</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>Desconectar</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>Reconectar</translation>
+    </message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1340,6 +1352,18 @@
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Mayús+Q</translation>
     </message>
+    <message>
+        <source>Connection interrupted. Reconnecting…</source>
+        <translation>Conexión interrumpida. Reconectando…</translation>
+    </message>
+    <message>
+        <source>Cancel reconnect</source>
+        <translation>Cancelar reconexión</translation>
+    </message>
+    <message>
+        <source>Press %1 to leave fullscreen; press again to disconnect</source>
+        <translation>Pulsa %1 para salir de pantalla completa; pulsa de nuevo para desconectar</translation>
+    </message>
 </context>
 <context>
     <name>main</name>
@@ -1927,6 +1951,10 @@
         <source>Computer</source>
         <translation>Equipo</translation>
     </message>
+    <message>
+        <source>Device details</source>
+        <translation>Detalles del dispositivo</translation>
+    </message>
 </context>
 <context>
     <name>HostView</name>
@@ -2158,6 +2186,18 @@
     <message>
         <source>Open background permissions</source>
         <translation>Abrir permisos en segundo plano</translation>
+    </message>
+    <message>
+        <source>Ask client to leave fullscreen</source>
+        <translation>Solicitar al cliente salir de pantalla completa</translation>
+    </message>
+    <message>
+        <source>Created when an approved client connects</source>
+        <translation>Se crea cuando se conecta un cliente autorizado</translation>
+    </message>
+    <message>
+        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+        <translation>Al desconectar se restauran las pantallas físicas y se elimina la pantalla virtual. Una breve interrupción de red mantiene el espacio de trabajo para recuperarlo.</translation>
     </message>
 </context>
 <context>

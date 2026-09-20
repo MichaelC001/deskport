@@ -30,6 +30,9 @@ public:
     QString hostId() const { return "device-a"; }
     QString hostName() const { return "Studio"; }
     Q_INVOKABLE QVariantMap traffic() const { return {{"received",862000000.0},{"sent",18000000.0}}; }
+    int delay = 0; bool cancelled = false;
+    Q_INVOKABLE int retryDelay() const { return delay; }
+    Q_INVOKABLE void cancelRecovery() { cancelled = true; }
     int executions = 0;
     QQuickWindow* receivedWindow = nullptr;
     TestSession* next = nullptr;
@@ -281,6 +284,39 @@ ApplicationWindow {
         QVERIFY(!root->property("navigationVisible").toBool());
         QVERIFY(QMetaObject::invokeMethod(root.data(),"back"));
         QVERIFY(root->property("navigationVisible").toBool());
+        QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
+    }
+    void reconnectDelayCanBeCancelled() {
+        QQmlEngine engine;
+        QStringList warnings;
+        connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
+        TestSession session; session.delay = 10000;
+        engine.rootContext()->setContextProperty("testSession", &session);
+        QQmlComponent harness(&engine);
+        harness.setData(R"(import QtQuick 2.9
+import QtQuick.Controls 2.2
+ApplicationWindow {
+ id: window; width: 800; height: 600
+ property alias depth: stackView.depth
+ property alias currentPage: stackView.currentItem
+ QtObject { id: streamSegueErrorDialog; property string text: ""; property bool quitAfter: false; function open() {} }
+ StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
+ function start() { stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {session: testSession, appName: "Test"}, StackView.Immediate) }
+ function showDevices() { stackView.push(controlPage, StackView.Immediate) }
+ Component { id: controlPage; Item { property bool controlCenterForActiveSession: true } }
+})",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/control-center-harness.qml"));
+        QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"start"));
+        QTest::qWait(100);
+        QCOMPARE(session.executions,0);
+        auto cancel=root->findChild<QObject*>("cancelReconnect"); QVERIFY(cancel);
+        QVERIFY(QMetaObject::invokeMethod(cancel,"clicked"));
+        QVERIFY(session.cancelled);
+        QTRY_COMPARE(session.executions,1); // Normal cleanup owner runs exactly once.
+        emit session.sessionFinished(0);
+        emit session.readyForDeletion();
+        QTest::qWait(150);
+        QCOMPARE(session.executions,1);
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }
     void controlCenterDoesNotReplaceActiveSession() {

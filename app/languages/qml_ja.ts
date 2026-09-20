@@ -434,6 +434,18 @@
         <source>Nearby discovery is off</source>
         <translation>近くのデバイスの検出はオフです</translation>
     </message>
+    <message>
+        <source>Toggle fullscreen</source>
+        <translation>全画面表示を切り替え</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>切断</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>再接続</translation>
+    </message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1343,6 +1355,18 @@
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
+    <message>
+        <source>Connection interrupted. Reconnecting…</source>
+        <translation>接続が中断されました。再接続中…</translation>
+    </message>
+    <message>
+        <source>Cancel reconnect</source>
+        <translation>再接続をキャンセル</translation>
+    </message>
+    <message>
+        <source>Press %1 to leave fullscreen; press again to disconnect</source>
+        <translation>%1 で全画面表示を解除、もう一度押すと切断</translation>
+    </message>
 </context>
 <context>
     <name>main</name>
@@ -1930,6 +1954,10 @@
         <source>Computer</source>
         <translation>コンピュータ</translation>
     </message>
+    <message>
+        <source>Device details</source>
+        <translation>デバイスの詳細</translation>
+    </message>
 </context>
 <context>
     <name>HostView</name>
@@ -2161,6 +2189,18 @@
     <message>
         <source>Open background permissions</source>
         <translation>バックグラウンド権限を開く</translation>
+    </message>
+    <message>
+        <source>Ask client to leave fullscreen</source>
+        <translation>クライアントの全画面表示を解除</translation>
+    </message>
+    <message>
+        <source>Created when an approved client connects</source>
+        <translation>承認済みクライアントの接続時に作成</translation>
+    </message>
+    <message>
+        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+        <translation>切断すると物理ディスプレイを復元し、仮想ディスプレイを削除します。短いネットワーク切断では復旧のため作業領域を維持します。</translation>
     </message>
 </context>
 <context>

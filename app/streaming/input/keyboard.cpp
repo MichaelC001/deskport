@@ -20,6 +20,9 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected quit key combo");
 
+        // The native escape chord first gives local control back without
+        // tearing down a fullscreen session. A second press disconnects.
+        if (Session::get()->leaveFullscreen()) break;
         // Push a quit event to the main loop
         SDL_Event event;
         event.type = SDL_USEREVENT;

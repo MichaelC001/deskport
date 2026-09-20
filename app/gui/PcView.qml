@@ -138,6 +138,7 @@ CenteredGridView {
             deviceName: model.name; address: model.address
             favorite: model.favorite
             operatingSystem: model.operatingSystem
+            onDetailsRequested: { showPcDetailsDialog.pcDetails = model.details; showPcDetailsDialog.open() }
             onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId})
             activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
@@ -159,16 +160,26 @@ CenteredGridView {
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
-                    text: model.favorite ? qsTr("Unpin device") : qsTr("Pin device")
-                    onTriggered: computerModel.setFavorite(index, !model.favorite)
+                    text: qsTr("Disconnect")
+                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    onTriggered: hostManager.disconnectViewer()
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
-                    objectName: "deviceSettings-" + model.hostId
-                    text: qsTr("Device settings")
-                    onTriggered: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {
-                        "preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId
-                    })
+                    text: qsTr("Reconnect")
+                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    onTriggered: hostManager.reconnectViewer()
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("Toggle fullscreen")
+                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    onTriggered: hostManager.toggleViewerFullscreen()
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: model.favorite ? qsTr("Unpin device") : qsTr("Pin device")
+                    onTriggered: computerModel.setFavorite(index, !model.favorite)
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
@@ -180,16 +191,6 @@ CenteredGridView {
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
-                    text: qsTr("Applications")
-                    onTriggered: {
-                        var component = Qt.createComponent("AppView.qml")
-                        var appView = component.createObject(stackView, {"computerIndex": model.sourceIndex, "objectName": model.name, "showHiddenGames": true})
-                        stackView.push(appView)
-                    }
-                    visible: model.online && model.paired && !pcGrid.controlCenterForActiveSession
-                }
-                NavigableMenuItem {
-                    parentMenu: pcContextMenu
                     text: qsTr("Pair with a legacy PIN")
                     visible: model.online && !model.paired
                     onTriggered: {
@@ -197,12 +198,6 @@ CenteredGridView {
                         computerModel.pairComputer(index, pin)
                         pairDialog.pin = pin; pairDialog.open()
                     }
-                }
-                NavigableMenuItem {
-                    parentMenu: pcContextMenu
-                    text: qsTr("Wake PC")
-                    onTriggered: computerModel.wakeComputer(index)
-                    visible: !model.online && model.wakeable
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
@@ -229,14 +224,6 @@ CenteredGridView {
                         deletePcDialog.pcIndex = index
                         deletePcDialog.pcName = model.name
                         deletePcDialog.open()
-                    }
-                }
-                NavigableMenuItem {
-                    parentMenu: pcContextMenu
-                    text: qsTr("View Details")
-                    onTriggered: {
-                        showPcDetailsDialog.pcDetails = model.details
-                        showPcDetailsDialog.open()
                     }
                 }
             }

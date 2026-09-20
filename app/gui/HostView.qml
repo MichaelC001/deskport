@@ -56,6 +56,7 @@ UiPage {
             }
             Label { text: qsTr("Approved DeskPort devices: %1").arg(peerManager.peers.length); color: ui.text; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Saved approval and network reachability are separate. Legacy PIN clients are managed separately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            UiButton { text: qsTr("Ask client to leave fullscreen"); enabled: peerManager.canReleaseClientFullscreen; onClicked: peerManager.releaseClientFullscreen() }
             UiButton { text: qsTr("Manage devices"); onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
         }
     }
@@ -63,10 +64,11 @@ UiPage {
         visible: Qt.platform.os === "osx"
         ColumnLayout {
             anchors.fill: parent; spacing: 12
+            Label { visible: hostManager.displayWarning.length > 0; text: hostManager.displayWarning; color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Built-in virtual display"); color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold }
-            Label { text: hostManager.virtualDisplayActive ? qsTr("Active · %1 × %2 pixels").arg(hostManager.displayWidth).arg(hostManager.displayHeight) : qsTr("Created automatically when sharing starts"); color: ui.accent; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: hostManager.virtualDisplayActive ? qsTr("Active · %1 × %2 pixels").arg(hostManager.displayWidth).arg(hostManager.displayHeight) : qsTr("Created when an approved client connects"); color: ui.accent; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { visible: hostManager.virtualDisplayActive; text: qsTr("Workspace · %1 × %2 · %3× scaling").arg(Math.round(hostManager.displayWidth / hostManager.displayScale)).arg(Math.round(hostManager.displayHeight / hostManager.displayScale)).arg(hostManager.displayScale); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: Qt.platform.os === "linux" ? qsTr("Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.") : qsTr("Your remote workspace stays open when the client window is hidden. After disconnecting, its resolution returns to the idle size. Stopping sharing removes this virtual display."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     UiCard {

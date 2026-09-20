@@ -1,0 +1,7 @@
+{
+  "archive": "sunshine-macos-resources.tar.gz",
+  "sha256": "ff24266fdfe5f52e58adefd1487cceab337c530cdbb00cb6810ee604f5d0ad20",
+  "upstream": "https://github.com/LizardByte/Sunshine/releases/download/v2026.906.222525/Sunshine-macOS-arm64.dmg",
+  "donorSha256": "b630d35a184d8eaff39c5104f3c6a0c40e91ddc447ccf7a0c5b24706465fab6a",
+  "scope": "Static web assets from the signature-verified pinned upstream bundle, with Sunshine LICENSE added from the matching source revision. No executable or framework is included."
+}

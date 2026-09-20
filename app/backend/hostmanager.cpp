@@ -80,20 +80,47 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
             m_Buffer.remove(0, index + 1);
             if (m_Stopping) continue;
             if (object.contains("caret")) { emit caretChanged(object["caret"].toObject()); continue; }
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+            if (object["ready"].toBool() && m_Starting && !m_ServerRequested) {
+                m_DisplayWidth = m_DisplayHeight = 0;
+#ifdef Q_OS_LINUX
+                m_LinuxOutputName = object["outputName"].toString();
+                m_LinuxGnome = object["gnome"].toBool();
+                if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
+                    beginStop(tr("Invalid virtual display identity")); return;
+                }
+#endif
+                startServer(0);
+                continue;
+            }
+#endif
             if (object.contains("seq")) {
                 if (object["seq"].toInt() == m_DisplayWireSequence && m_DisplaySequence != 0) {
                     const int sequence = m_DisplaySequence; m_DisplaySequence = 0;
+                    m_DisplayWarning = object.contains("layoutWarning") ? tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.") : QString();
                     if (!object.contains("error")) {
                         m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                         m_DisplayScale = object["scale"].toInt(1);
+#ifdef Q_OS_MACOS
+                        QSaveFile target(m_Directory + "/capture-display");
+                        if (!target.open(QIODevice::WriteOnly)) object["error"] = tr("Cannot save capture display identity");
+                        else {
+                            target.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
+                            target.write(QByteArray::number(object["displayId"].toInt()) + ' ' +
+                                QByteArray::number(m_DisplayWidth) + ' ' + QByteArray::number(m_DisplayHeight) + ' ' +
+                                QByteArray::number(m_DisplayScale) + '\n');
+                            if (!target.commit()) object["error"] = tr("Cannot save capture display identity");
+                        }
+#endif
 #ifdef Q_OS_LINUX
-                        if (object.contains("pipewireNode")) {
+                        if (object.contains("outputName") && object["active"].toBool(true)) {
                             const auto output = object["outputName"].toString();
                             if (output.isEmpty() || output.size() > 128 || output.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
                                 beginStop(tr("Invalid virtual display identity")); return;
                             }
                             m_LinuxOutputName = output;
                             m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                            if (object.contains("pipewireNode")) m_LinuxGnome = true;
                             m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                         }
                         if (object.contains("active") && !object["active"].toBool()) {
@@ -130,6 +157,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxPipewireNode = quint32(object["pipewireNode"].toDouble());
+                if (object.contains("pipewireNode")) m_LinuxGnome = true;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
                     m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
@@ -147,26 +175,6 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         m_DisplayFailures = 0;
         if (!m_Isolated) QSettings().setValue("host/port", m_BasePort);
         setStatus(tr("Sharing has started. Connect from an approved device to check picture, sound and control."));
-#ifdef Q_OS_LINUX
-        if (!m_LinuxOutputName.isEmpty()) {
-            // Sunshine probes encoders once at startup. Retire that temporary
-            // display once initialization completes unless a client has claimed it.
-            auto bootstrap = new QTimer(this);
-            const auto displayGeneration = m_DisplayGeneration;
-            connect(bootstrap, &QTimer::timeout, this, [this, bootstrap, displayGeneration, attempts = 0]() mutable {
-                if (m_Stopping || m_Server.state() != QProcess::Running || displayGeneration != m_DisplayGeneration || ++attempts > 120) {
-                    bootstrap->stop(); bootstrap->deleteLater(); return;
-                }
-                QFile log(m_Directory + "/host.log");
-                if (!log.open(QIODevice::ReadOnly)) return;
-                log.seek(m_LogOffset);
-                if (log.readAll().contains("Configuration UI available")) {
-                    bootstrap->stop(); bootstrap->deleteLater(); restoreDisplay();
-                }
-            });
-            bootstrap->start(250);
-        }
-#endif
         const auto generation = m_Generation;
         QTimer::singleShot(60000, this, [this, generation] {
             if (generation == m_Generation && m_Server.state() == QProcess::Running) m_RecoveryAttempt = 0;
@@ -422,7 +430,7 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     m_Display.setStandardErrorFile(m_Directory + "/display.log", QIODevice::Append);
 #ifdef Q_OS_LINUX
-    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0;
+    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false;
     QFile::remove(m_Directory + "/virtual-display.json");
     const auto desktops = qgetenv("XDG_CURRENT_DESKTOP").split(':');
     if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME"))) {
@@ -440,6 +448,7 @@ void HostManager::start(int width, int height) {
 #endif
         {
             auto displayEnvironment = QProcessEnvironment::systemEnvironment();
+            displayEnvironment.insert("DESKPORT_DISPLAY_ON_DEMAND", "1");
             if (m_Isolated) {
                 displayEnvironment.insert("DESKPORT_DISPLAY_ISOLATED", "1");
                 displayEnvironment.insert("DESKPORT_DISPLAY_STATE_DIR", m_Directory);
@@ -452,7 +461,7 @@ void HostManager::start(int width, int height) {
             }
             m_Display.setProcessEnvironment(displayEnvironment);
             m_Display.start(helperPath(), {QString::number(width), QString::number(height)});
-            setStatus(tr("Creating a private virtual display…"));
+            setStatus(tr("Preparing on-demand desktop sharing…"));
         }
     }
     QTimer::singleShot(15000, this, [this, generation] {
@@ -474,6 +483,10 @@ void HostManager::startServer(int displayId) {
     config.write(QString("output_name = %1\n").arg(displayId).toUtf8());
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_CAPTURE_DISPLAY", QString::number(displayId));
+    if (!displayId) {
+        QFile::remove(m_Directory + "/capture-display");
+        hostEnvironment.insert("DESKPORT_CAPTURE_DISPLAY_FILE", m_Directory + "/capture-display");
+    } else hostEnvironment.remove("DESKPORT_CAPTURE_DISPLAY_FILE");
     hostEnvironment.insert("DESKPORT_SMART_STREAMING", "1");
     hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
     m_Server.setProcessEnvironment(hostEnvironment);
@@ -483,7 +496,10 @@ void HostManager::startServer(int displayId) {
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();
     hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
 #ifdef Q_OS_LINUX
-    if (m_LinuxPipewireNode) hostEnvironment.insert("DESKPORT_VIRTUAL_DISPLAY", m_Directory + "/virtual-display.json");
+    if (!m_LinuxOutputName.isEmpty()) {
+        hostEnvironment.insert("DESKPORT_VIRTUAL_DISPLAY", m_Directory + "/virtual-display.json");
+        hostEnvironment.insert("DESKPORT_ON_DEMAND_DISPLAY", "1");
+    }
     else hostEnvironment.remove("DESKPORT_VIRTUAL_DISPLAY");
 #endif
     m_Server.setProcessEnvironment(hostEnvironment);
@@ -491,7 +507,7 @@ void HostManager::startServer(int displayId) {
 #endif
 #ifdef Q_OS_LINUX
     config.write(QString("output_name = %1\n").arg(m_LinuxOutputName).toUtf8());
-    config.write(!m_LinuxOutputName.isEmpty() && !m_LinuxPipewireNode ? "capture = kwin\n" : "capture = portal\n");
+    config.write(!m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }
     m_Credentials.setWorkingDirectory(m_Directory);
@@ -925,7 +941,7 @@ void HostManager::updatePeerTrust(const QString& id, const QString& name, const 
 
 bool HostManager::saveLinuxDisplayState() {
 #ifdef Q_OS_LINUX
-    if (m_LinuxPipewireNode) {
+    if (!m_LinuxOutputName.isEmpty()) {
         return PeerStore::write(m_Directory + "/virtual-display.json", {
             {"node", double(m_LinuxPipewireNode)}, {"serial", m_LinuxPipewireSerial}, {"output", m_LinuxOutputName},
             {"width", m_DisplayWidth}, {"height", m_DisplayHeight}, {"scale", m_DisplayScale}});
@@ -943,7 +959,7 @@ bool HostManager::adaptiveDisplayAvailable() const {
 }
 bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_LINUX
-    return adaptiveDisplayAvailable() && !m_LinuxPipewireNode;
+    return adaptiveDisplayAvailable() && !m_LinuxGnome;
 #else
     return adaptiveDisplayAvailable();
 #endif

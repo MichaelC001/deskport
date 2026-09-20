@@ -13,6 +13,12 @@
         let
           pkgs = import nixpkgs { inherit system; };
           sessionHost = pkgs.sunshine.overrideAttrs (old: {
+            # Keep the distribution's existing host revision and build recipe,
+            # but obtain its source from this repository instead of upstream.
+            src = pkgs.runCommand "deskport-sunshine-vendored-source" {} ''
+              mkdir -p "$out"
+              tar -xzf ${./host/vendor/sunshine-nix.tar.gz} --strip-components=1 -C "$out"
+            '';
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
               python3 ${./scripts/patch-host-session-settings.py} .

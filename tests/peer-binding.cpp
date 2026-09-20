@@ -23,6 +23,7 @@ class PeerBinding : public QObject {
 private slots:
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -64,6 +65,36 @@ private slots:
         const QJsonObject query{{"type","session-status"},{"sessionTakeover",1}};
         const QJsonObject resize{{"type","display-resize"},{"seq",1},{"width",1920},{"height",1080},{"scale",1}};
         QSslSocket old, incoming, rival;
+        if (scenario.startsWith("recover-") || scenario == "release-explicit") {
+            auto lifecycleQuery = query; lifecycleQuery["sessionLifecycle"] = 1;
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,lifecycleQuery);
+            const auto admitted = receive(old); QVERIFY(admitted["admitted"].toBool());
+            const auto token = admitted["resumeToken"].toString(); QVERIFY(!token.isEmpty());
+            send(old,resize); QVERIFY(!receive(old).contains("error"));
+            QSignalSpy restored(&host,&HostManager::displayResized);
+            if (scenario == "release-explicit") {
+                send(old,{{"type","session-release"}});
+                QTRY_VERIFY(state()["lease"].toString().isEmpty());
+                QTRY_VERIFY(!restored.isEmpty());
+            } else {
+                if (scenario != "recover-before-eof") old.abort();
+                QTest::qWait(400);
+                QCOMPARE(state()["lease"].toString(), token);
+                QCOMPARE(restored.size(),0); // No display churn on transport loss.
+                const bool same = scenario != "recover-wrong-identity";
+                connectPeer(incoming,same ? "TEST_CERT_A" : "TEST_CERT_C",same ? "TEST_KEY_A" : "TEST_KEY_C");
+                lifecycleQuery["resumeToken"] = scenario == "recover-wrong-token" ? "invalid" : token;
+                send(incoming,lifecycleQuery); const auto recovered = receive(incoming);
+                if (scenario == "recover-owner" || scenario == "recover-before-eof") {
+                    QVERIFY(recovered["admitted"].toBool()); QCOMPARE(recovered["resumeToken"].toString(),token);
+                    QCOMPARE(restored.size(),0);
+                    send(incoming,{{"type","display-ping"}}); QCOMPARE(receive(incoming)["type"].toString(),QString("display-pong"));
+                    send(incoming,{{"type","session-release"}}); QTRY_VERIFY(state()["lease"].toString().isEmpty());
+                } else { QVERIFY(!recovered["admitted"].toBool()); QVERIFY(recovered["busy"].toBool()); }
+                QCOMPARE(state()["takeovers"].toInt(),0);
+            }
+            incoming.abort(); host.stop(); return;
+        }
         if (scenario == "unapproved") {
             connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,query);
             QCOMPARE(receive(incoming)["code"].toString(), QString("unauthorized"));
@@ -405,6 +436,12 @@ private slots:
             AdaptiveDisplay channel("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
             QVERIFY(resize(channel, QSize(1920, 1080)));
             QCOMPARE(resized.size(), 1); QVERIFY(host.running()); QVERIFY(!server.busy());
+            QVERIFY(server.canReleaseClientFullscreen());
+            server.releaseClientFullscreen();
+            bool receivedWindowCommand = false;
+            QTRY_VERIFY_WITH_TIMEOUT((receivedWindowCommand = receivedWindowCommand || channel.takeLeaveFullscreen()), 1500);
+            QVERIFY(!channel.failed());
+            QVERIFY(!channel.resumeToken().isEmpty());
             // Let the worker enter its long condition wait before submitting again.
             QTest::qWait(150);
             QElapsedTimer wakeLatency; wakeLatency.start();

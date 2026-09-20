@@ -918,6 +918,12 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::desktopAdjustmentRequested, &app, [](double value) {
         if (Session::get()) Session::get()->setDesktopAdjustment(value);
     });
+    QObject::connect(&hostManager, &HostManager::fullscreenRequested, &app, [] {
+        if (Session::get()) {
+            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortFullscreen;
+            SDL_PushEvent(&event);
+        }
+    });
     QObject::connect(&hostManager, &HostManager::reconnectRequested, &app, [] {
         if (Session::get()) Session::get()->requestReconnect();
     });

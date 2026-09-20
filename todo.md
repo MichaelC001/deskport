@@ -1,5 +1,35 @@
 # DeskPort TODO
 
+## Session usability and lifecycle — 2026-09-20
+
+Reason: user approved completing the audited backlog together, with Mac, iPad and Android emulator verification. Development and testing only; deployment and release remain separate.
+
+- [x] Audit existing fullscreen, vendored dependencies, display policies, device cards and reconnect paths against source.
+- [x] Existing desktop fullscreen toggle (Ctrl+Alt+Shift+X) and native disconnect shortcut (Ctrl+Alt+Shift+Q).
+- [x] Vendor desktop viewer dependencies and preserve upstream source/version/license records (0.4.1).
+- [x] Add authenticated, capability-negotiated host request to leave desktop fullscreen without ending the stream; make the native quit shortcut leave fullscreen first.
+- [x] Expose device Details, Actions and Settings separately, including active-session disconnect/reconnect actions.
+- [x] Create macOS/Linux virtual displays on admission, restore physical topology and destroy on explicit disconnect; retain a bounded grace period for opted-in transport recovery. The audit also found and removed Linux's short-lived startup probe display.
+- [x] Verify macOS mirror/disable/extend recovery adapters, including initially disabled and hotplugged screens; verify three native extended-display create/remove cycles.
+- [ ] Verify physical macOS mirror/disable topology and real two-device video/input after activation. Adapter checks do not close this item.
+- [x] Add bounded desktop network recovery with backoff/cancel; never retry intentional disconnect, revocation or takeover; never automatically take over another device.
+- [x] Vendor the supported Sunshine host source and required source dependencies with provenance; preserve the shared-core single source of truth. System toolchains/libraries are outside this scope.
+- [x] Mac desktop/host builds, 62 binding/session tests, host lifecycle tests (Mac: 29 passed/2 Linux skips; Linux: all 31 passed), 20 QML checks, core/state/navigation and macOS topology checks.
+- [x] iPad simulator: three UI cases. Android emulator: build/install, cards/settings and landscape. Existing Apple/Android protocol adapters pass.
+- [x] User-selected Linux host on the home LAN: final Nix build and all three isolated KWin policies passed, each with 12 resizes, real capture/encoder probes, disabled-output preservation and EOF/crash recovery.
+- [ ] Real stream recovery across a temporary Wi-Fi/VPN path change; host-requested fullscreen exit on a connected desktop viewer.
+- [ ] GNOME on-demand runtime acceptance; macOS VM topology run (disk-space prerequisite not met).
+- [ ] Publish the new core revision before distributing the desktop pin; package/release/activate only through the established delivery workflow.
+
+- [x] User-authorized direct local validation update (2026-09-20): same-identity notarized macOS bundle and independent Linux package/service override installed; rollback preserved. No system-generation activation or public release. See [local update route](docs/LOCAL_UPDATE.md).
+
+- [x] Fix first live macOS admission returning HTTP 503: long-lived CoreGraphics consumers miss newly created display modes. Publish the verified backing dimensions with the admitted target, validate live identity/bounds in capture and input, and add a persistent-consumer native regression.
+- [x] Install the notarized macOS correction and verify authenticated paired `/launch` returns status 200 with successful H.264 / 8-bit HEVC capture probing.
+- [ ] Retest full video and input from the installed desktop client; the launch probe is not a completed stream acceptance test.
+
+Next checkpoint: validate the activated local candidate with paired live streams. Mobile automatic reconnect and mobile upstream vendoring remain separate follow-ups. See [implementation and verification](docs/SESSION_LIFECYCLE.md).
+
+
 ## 设备 UI、主题与流量（2026-09-14）
 
 - [x] 卡片式设备列表、系统标识、每设备串流设置、本机外观与语言独立。
@@ -25,14 +55,14 @@
 检查点：用户 rebuild switch 后验证两端实际版本、30 次尺寸切换、CPU 同场景对照和长会话。
 
 
-## 组件源码集成（2026-09-13，明确暂缓）
+## 组件源码集成（2026-09-13 历史计划；2026-09-20 已恢复）
 
-- [ ] 后续评估将 Sunshine 等组件以源码方式纳入 DeskPort 的统一构建，逐步减少发布时拼装上游预编译包。
-- [ ] 先盘点已有 Moonlight 派生代码、Sunshine、输入辅助组件以及音视频依赖，明确哪些维护源码/补丁、哪些继续采用系统依赖；不默认把所有第三方库复制进一个仓库。
-- [ ] 锁定上游版本、保留许可证与来源，设计跨平台构建、补丁维护、依赖缓存和升级回归流程。
+- [x] Sunshine 支持的 host 源码已纳入统一构建；macOS 静态资源也已内置。
+- [x] 已盘点桌面源码、输入组件和音视频依赖；系统库/工具链与移动端源码另列范围。
+- [x] 已锁定上游版本，保留许可证、来源和归档摘要，并接入现有平台补丁流程。
 - [ ] 首个检查点：选一个组件完成源码构建与现有发布包的功能对照，确认包体积、构建时间、签名及运行行为后再扩大范围。
 
-本次 0.2.0 不做源码集成改造；继续完成当前安装包方案的验证与发布。恢复此项需用户另行决定。
+历史边界：0.2.0 未包含此项。0.4.1 已内置桌面 viewer 依赖；2026-09-20 用户授权继续，当前范围和未完成项以上方清单为准。
 
 ## 后续性能优化（2026-09-12，暂缓）
 
@@ -67,3 +97,7 @@ Reason: user resumed this item and requested development-branch-only delivery.
   chooses to activate a build. Main and deployed services remain unchanged.
 
 See [session settings](docs/SESSION_SETTINGS.md) for protocol, migration and limits.
+
+- [x] Simplify desktop device actions: remove duplicate settings/details entries, Applications and Wake PC; retain dedicated card buttons and direct Desktop connection.
+
+- [x] Match the mobile card header with four equal slots: status, details, actions and settings.

@@ -25,6 +25,7 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
+if os.environ.get("DESKPORT_TEST_MODE") == "gnome-idle": initial = dict(ready=True, active=False, gnome=True, outputName="DeskPort-pending")
 print(json.dumps(initial), flush=True)
 if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
     select.select([sys.stdin], [], [], 1.5)
@@ -38,7 +39,7 @@ for line in sys.stdin:
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
     request["displayId"] = 123
-    if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display":
+    if os.environ.get("DESKPORT_TEST_MODE") in ("gnome-display", "gnome-idle"):
         request["active"] = request.get("session", True)
         if request["active"]: request.update(outputName="Meta-2", pipewireNode=43, pipewireSerial="143")
     print(json.dumps(request), flush=True)

@@ -14,12 +14,18 @@
 class AdaptiveDisplay : private QThread {
 public:
     AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
-                    QByteArray certificate, QByteArray key, int policy = 0);
+                    QByteArray certificate, QByteArray key, int policy = 0, QString resumeToken = {});
     ~AdaptiveDisplay();
     bool resize(const QSize& pixels, int scale, const std::function<void()>& progress = {},
                 const std::function<bool()>& confirmTakeover = {});
     static QSize boundedSize(QSize pixels);
     bool failed();
+    bool takeLeaveFullscreen();
+    bool retryable();
+    QString resumeToken();
+    QString warning();
+    void release();
+    void cancel();
     bool wasTakenOver(int timeoutMs = 0);
     bool admissionRequired();
 private:
@@ -34,6 +40,9 @@ private:
     int m_Scale = 1;
     int m_Policy = 0;
     bool m_TakenOver = false;
+    bool m_LeaveFullscreen = false;
+    bool m_Retryable = true, m_Release = true, m_Lifecycle = false;
+    QString m_ResumeToken, m_Warning;
     bool m_AdmissionRequired = false, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };

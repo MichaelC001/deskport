@@ -442,6 +442,18 @@
         <source>Nearby discovery is off</source>
         <translation>附近裝置探索已關閉</translation>
     </message>
+    <message>
+        <source>Toggle fullscreen</source>
+        <translation>切換全螢幕</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>中斷連線</translation>
+    </message>
+    <message>
+        <source>Reconnect</source>
+        <translation>重新連線</translation>
+    </message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1352,6 +1364,18 @@
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
+    <message>
+        <source>Connection interrupted. Reconnecting…</source>
+        <translation>連線中斷，正在重新連線…</translation>
+    </message>
+    <message>
+        <source>Cancel reconnect</source>
+        <translation>取消重新連線</translation>
+    </message>
+    <message>
+        <source>Press %1 to leave fullscreen; press again to disconnect</source>
+        <translation>按 %1 退出全螢幕，再按一次中斷連線</translation>
+    </message>
 </context>
 <context>
     <name>main</name>
@@ -1939,6 +1963,10 @@
         <source>Computer</source>
         <translation>電腦</translation>
     </message>
+    <message>
+        <source>Device details</source>
+        <translation>裝置詳細資訊</translation>
+    </message>
 </context>
 <context>
     <name>HostView</name>
@@ -2170,6 +2198,18 @@
     <message>
         <source>Open background permissions</source>
         <translation>開啟背景執行權限</translation>
+    </message>
+    <message>
+        <source>Ask client to leave fullscreen</source>
+        <translation>通知用戶端退出全螢幕</translation>
+    </message>
+    <message>
+        <source>Created when an approved client connects</source>
+        <translation>已授權用戶端連線時建立</translation>
+    </message>
+    <message>
+        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+        <translation>中斷連線後還原實體螢幕並移除虛擬螢幕。網路短暫中斷時會保留工作區以便復原。</translation>
     </message>
 </context>
 <context>

@@ -111,20 +111,26 @@ private slots:
         QVERIFY(!QFile::exists(path));
 #endif
     }
-    void idleLinuxStartupReleasesProbeDisplay() {
+    void idleLinuxStartupWaitsForAdmission() {
 #ifndef Q_OS_LINUX
-        QSKIP("Linux startup probe lifecycle");
+        QSKIP("Linux on-demand lifecycle");
 #else
-        qputenv("DESKPORT_TEST_MODE", "gnome-display");
+        qputenv("DESKPORT_TEST_MODE", "gnome-idle");
         QTemporaryDir dir; HostManager host(nullptr, dir.path());
         host.start(2560, 1440);
         QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
         const auto path = dir.path() + "/virtual-display.json";
-        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(path), 5000);
+        QVERIFY(!QFile::exists(path));
         QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
-        QFile log(dir.path() + "/host.log"); QVERIFY(log.open(QIODevice::WriteOnly | QIODevice::Append));
-        log.write("Configuration UI available\n"); log.close();
+        QCOMPARE(host.displayWidth(), 0);
+        QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
+        QVERIFY(config.readAll().contains("capture = portal\n"));
+        QVERIFY(host.resizeDisplay(1920, 1080, 1, 7));
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(path), 5000);
+        QCOMPARE(PeerStore::read(path)["output"].toString(), QString("Meta-2"));
+        host.restoreDisplay();
         QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 5000);
+        QCOMPARE(host.displayWidth(), 0);
         QVERIFY(host.running()); QVERIFY(host.adaptiveDisplayAvailable());
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
 #endif

@@ -66,6 +66,22 @@ edit('kwingrab.cpp', '      // Fall back to first element from the map in case o
 edit('kwingrab.cpp', '    return screencast->get_output_names();', """    const auto& wanted = config::video.output_name;
     if (wanted.starts_with("DeskPort-") || wanted.starts_with("Virtual-DeskPort-")) return {wanted};
     return screencast->get_output_names();""")
+edit('kwingrab.cpp', '#include "src/config.h"', '#include "src/config.h"\n#include <boost/property_tree/json_parser.hpp>\n#include <fstream>')
+edit('kwingrab.cpp', '      if (screencast->start(display_name) < 0) {', '''      std::string target = display_name;
+      if (const char* path = std::getenv("DESKPORT_VIRTUAL_DISPLAY")) {
+        try {
+          boost::property_tree::ptree state;
+          boost::property_tree::read_json(path, state);
+          target = state.get<std::string>("output");
+          if (!target.starts_with("DeskPort-") && !target.starts_with("Virtual-DeskPort-")) return -1;
+        } catch (const std::exception&) { return -1; }
+      }
+      if (screencast->start(target) < 0) {''')
+main = root / 'src/main.cpp'
+original = main.read_text()
+anchor = 'if (video::probe_encoders()) {'
+if original.count(anchor) != 1: raise SystemExit('Unexpected encoder probe anchor')
+changes[main] = original, original.replace(anchor, 'if (!std::getenv("DESKPORT_ON_DEMAND_DISPLAY") && video::probe_encoders()) {', 1)
 patch = ''.join(''.join(difflib.unified_diff(old.splitlines(True), new.splitlines(True),
     fromfile='a/' + str(path.relative_to(root)), tofile='b/' + str(path.relative_to(root)))) for path, (old, new) in changes.items())
 marker.write_text(patch)

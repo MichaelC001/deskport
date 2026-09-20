@@ -22,7 +22,7 @@ class HostManager : public QObject {
     Q_PROPERTY(int displayScale READ displayScale NOTIFY changed)
     Q_PROPERTY(int displayWidth READ displayWidth NOTIFY changed)
     Q_PROPERTY(int displayHeight READ displayHeight NOTIFY changed)
-    Q_PROPERTY(bool virtualDisplayActive READ adaptiveDisplayAvailable NOTIFY changed)
+    Q_PROPERTY(bool virtualDisplayActive READ virtualDisplayActive NOTIFY changed)
     Q_PROPERTY(int sharingWidth READ sharingWidth NOTIFY changed)
     Q_PROPERTY(int sharingHeight READ sharingHeight NOTIFY changed)
     Q_PROPERTY(bool changing READ changing NOTIFY changed)
@@ -36,6 +36,7 @@ class HostManager : public QObject {
     Q_PROPERTY(bool loginStart READ loginStart NOTIFY changed)
     Q_PROPERTY(bool loginStartManaged READ loginStartManaged NOTIFY changed)
     Q_PROPERTY(QString readiness READ readiness NOTIFY permissionsChanged)
+    Q_PROPERTY(QString displayWarning READ displayWarning NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
 public:
     explicit HostManager(QObject *parent = nullptr, const QString &directory = QString());
@@ -58,6 +59,7 @@ public:
     QJsonObject identity() const;
     void updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove = false);
     bool adaptiveDisplayAvailable() const;
+    bool virtualDisplayActive() const { return adaptiveDisplayAvailable() && m_DisplayWidth > 0 && m_DisplayHeight > 0; }
     bool displayPoliciesAvailable() const;
     bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
     void restoreDisplay();
@@ -78,11 +80,15 @@ public:
     Q_INVOKABLE void refreshUnattended();
     QString readiness() const;
     QString status() const { return m_Status; }
+    QString displayWarning() const { return m_DisplayWarning; }
     Q_INVOKABLE void start(int width, int height);
     Q_INVOKABLE void stop();
     Q_INVOKABLE void pair(const QString &pin, const QString &name);
     Q_INVOKABLE void permission(const QString &kind);
     Q_INVOKABLE void openLogs();
+    Q_INVOKABLE void disconnectViewer() { emit disconnectRequested(); }
+    Q_INVOKABLE void reconnectViewer() { emit reconnectRequested(); }
+    Q_INVOKABLE void toggleViewerFullscreen() { emit fullscreenRequested(); }
     Q_INVOKABLE void recallViewer() { emit viewerRecallRequested(); }
     void setViewerDesktopAdjustment(double value);
     void setResident(bool enabled) { m_Resident = enabled; }
@@ -100,6 +106,7 @@ signals:
     void exitRequested();
     void disconnectRequested();
     void reconnectRequested();
+    void fullscreenRequested();
     void viewerMenuRequested();
     void desktopAdjustmentRequested(double value);
     void changed();
@@ -124,13 +131,14 @@ private:
     void finishStop();
     QString helperPath() const;
     QString serverPath() const;
-    QString m_Directory, m_Password, m_Status, m_StopStatus;
+    QString m_Directory, m_Password, m_Status, m_StopStatus, m_DisplayWarning;
     QProcess m_Display, m_Server, m_Credentials;
     HostPortReservation m_Ports;
     std::unique_ptr<QLockFile> m_HostLock;
     int m_BasePort = DeskPortNetwork::DefaultBasePort;
     QByteArray m_Buffer;
     QString m_LinuxOutputName;
+    bool m_LinuxGnome = false;
     quint32 m_LinuxPipewireNode = 0;
     QString m_LinuxPipewireSerial;
     bool saveLinuxDisplayState();

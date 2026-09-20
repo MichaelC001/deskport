@@ -19,6 +19,21 @@ workspace can continue when only local layout operations fail; the host records
 the deviation and retains recovery for later repair. Incorrect capture modes
 still fail.
 
+## On-demand lifecycle — 2026-09-20
+
+Sharing startup now leaves the virtual display absent on macOS, KDE and GNOME.
+An authenticated DeskPort display request creates the workspace; explicit release
+restores physical topology and removes it. Capture resolves the admitted display
+at stream startup and refuses physical fallback. Encoder probing is deferred until
+launch/resume, so first discovery conservatively advertises baseline codec support.
+Standalone Moonlight clients without DeskPort display admission do not create a
+workspace. Existing DeskPort mobile clients retain their display-control flow.
+
+Clients that negotiate session recovery retain ownership for a bounded 15-second
+transport-loss grace period. Explicit release does not wait for that grace period;
+older clients keep their previous disconnect behavior. See
+[session lifecycle](SESSION_LIFECYCLE.md) for recovery and validation boundaries.
+
 ## Recovery
 
 The macOS helper journals stable display UUIDs, enabled/disabled state, primary,
@@ -26,8 +41,8 @@ origin, mirror source, logical/backing mode and refresh rate before changing the
 session topology. Resize requests retain the original snapshot. Displays attached
 after the snapshot are excluded from mirror/disable operations.
 
-Actual controller disconnect schedules restore after 250 ms, waiting for any
-pending mode request. Video renegotiation keeps the controller and does not restore
+For clients without negotiated transport recovery, controller disconnect
+schedules restore after 250 ms, waiting for any pending mode request. Video renegotiation keeps the controller and does not restore
 the desktop. Lost transport heartbeats expire after the existing 20-second lease
 timeout. Helper setup failures, EOF/signals and startup recovery also restore the
 snapshot. Missing displays are skipped; configuration failures retain the journal.

@@ -34,6 +34,7 @@ Item {
 
     function connectionStarted()
     {
+        streamSegueErrorDialog.text = ""
         // Hide the UI contents so the user doesn't
         // see them briefly when we pop off the StackView
         stageSpinner.visible = false
@@ -159,9 +160,33 @@ Item {
 
         // Kick off the stream
         spinnerTimer.start()
-        streamLoader.active = true
+        if (session.retryDelay() > 0) {
+            streamSegueErrorDialog.text = ""
+            stageText = qsTr("Connection interrupted. Reconnecting…")
+            window.visible = true
+            retryTimer.interval = session.retryDelay()
+            retryTimer.start()
+        } else streamLoader.active = true
     }
 
+    Timer {
+        id: retryTimer
+        onTriggered: streamLoader.active = true
+    }
+    Button {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: hintText.top; anchors.bottomMargin: 20
+        visible: session && session.retryDelay() > 0
+        objectName: "cancelReconnect"
+        text: qsTr("Cancel reconnect")
+        onClicked: {
+            streamSegueErrorDialog.text = ""
+            session.cancelRecovery()
+            retryTimer.stop()
+            // Run cancellation through Session's normal lifetime barrier.
+            if (!streamLoader.active) streamLoader.active = true
+        }
+    }
     Timer {
         id: spinnerTimer
 
@@ -184,7 +209,7 @@ Item {
             // in the hintText control itself to synchronize
             // with Session.exec() which requires no concurrent
             // gamepad usage.
-            hintText.text = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
+            hintText.text = qsTr("Tip:") + " " + qsTr("Press %1 to leave fullscreen; press again to disconnect").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
                                                   qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
 
             // Stop GUI gamepad usage now

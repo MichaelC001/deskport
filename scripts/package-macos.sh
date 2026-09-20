@@ -91,34 +91,25 @@ cp "$build_dir/deskport-display" "$app/Contents/Helpers/deskport-display"
 cp "$build_dir/deskport-recovery" "$app/Contents/Helpers/deskport-recovery"
 mkdir -p "$app/Contents/Library/LaunchDaemons"
 cp app/deploy/macos/io.github.keithxc.DeskPort.Recovery.plist "$app/Contents/Library/LaunchDaemons/"
-dmg="$repo/build-macos/Sunshine-macOS-arm64.dmg"
-if [ ! -f "$dmg" ]; then
-    curl -fL --retry 3 https://github.com/LizardByte/Sunshine/releases/download/v2026.906.222525/Sunshine-macOS-arm64.dmg -o "$dmg"
-fi
-echo "b630d35a184d8eaff39c5104f3c6a0c40e91ddc447ccf7a0c5b24706465fab6a  $dmg" | shasum -a 256 -c -
-mount="$stage/host-image"
-mkdir "$mount"
-hdiutil attach -readonly -nobrowse -mountpoint "$mount" "$dmg"
-# Verify the pinned asset donor before copying its notices and web resources.
-if ! codesign --verify --deep --strict \
-    -R '=identifier "dev.lizardbyte.app.Sunshine" and anchor apple generic and certificate leaf[subject.OU] = "F8XQ7XCN2R"' \
-    "$mount/Sunshine.app"; then
-    hdiutil detach "$mount"; exit 1
-fi
 host_app="$app/Contents/Helpers/Sunshine.app"
-ditto "$build_dir/sunshine-build/Sunshine.app" "$host_app"
-if ! ditto "$mount/Sunshine.app/Contents/Resources" "$host_app/Contents/Resources"; then
-    hdiutil detach "$mount"; exit 1
-fi
-hdiutil detach "$mount"
-rmdir "$mount"
+ditto "$build_dir/sunshine-vendored-build/Sunshine.app" "$host_app"
+python3 - "$repo" "$host_app/Contents" <<'ASSETS'
+import hashlib, json, pathlib, sys, tarfile
+root = pathlib.Path(sys.argv[1]) / 'host/vendor'
+manifest = json.loads((root / 'sunshine-macos-resources.json').read_text())
+archive = root / manifest['archive']
+if hashlib.sha256(archive.read_bytes()).hexdigest() != manifest['sha256']:
+    raise SystemExit('Vendored Sunshine resource checksum mismatch')
+with tarfile.open(archive) as resources:
+    resources.extractall(sys.argv[2], filter='data')
+ASSETS
 python3 scripts/fix-macos-dependencies.py "$host_app"
 find "$host_app/Contents/Frameworks" -type f -name '*.dylib' -exec codesign --force --sign - {} \;
 cp host/macos/patches/libvirtualhid-target-display.patch host/macos/patches/sunshine-capture-timeout.patch host/macos/patches/sunshine-idr-diagnostics.patch host/macos/patches/sunshine-pkgconfig-link.patch "$host_app/Contents/Resources/"
 cp host/macos/patches/sunshine-smart-streaming.patch host/macos/patches/sunshine-screen-capture-kit.patch "$host_app/Contents/Resources/"
 mkdir -p "$host_app/Contents/Resources/deskport-smart-source/common" "$host_app/Contents/Resources/deskport-smart-source/macos"
 cp host/common/smartstream.h "$host_app/Contents/Resources/deskport-smart-source/common/"
-cp host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "$host_app/Contents/Resources/deskport-smart-source/macos/"
+cp host/macos/admitted-display.h host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "$host_app/Contents/Resources/deskport-smart-source/macos/"
 cp scripts/build-macos-host.sh "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"

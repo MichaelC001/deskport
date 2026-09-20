@@ -12,14 +12,20 @@
 #include <cmath>
 
 AdaptiveDisplay::AdaptiveDisplay(QString address, quint16 port, QSslCertificate peer,
-                                 QByteArray certificate, QByteArray key, int policy)
-    : m_Address(address), m_Port(port), m_Peer(peer), m_Certificate(certificate), m_Key(key), m_Policy(policy) { start(); }
+                                 QByteArray certificate, QByteArray key, int policy, QString resumeToken)
+    : m_Address(address), m_Port(port), m_Peer(peer), m_Certificate(certificate), m_Key(key), m_Policy(policy), m_ResumeToken(resumeToken) { start(); }
 AdaptiveDisplay::~AdaptiveDisplay() {
     requestInterruption();
     { QMutexLocker lock(&m_Mutex); m_Wake.wakeAll(); }
     wait();
 }
+bool AdaptiveDisplay::retryable() { QMutexLocker lock(&m_Mutex); return m_Retryable && !m_TakenOver; }
+QString AdaptiveDisplay::warning() { QMutexLocker lock(&m_Mutex); return m_Warning; }
+QString AdaptiveDisplay::resumeToken() { QMutexLocker lock(&m_Mutex); return m_ResumeToken; }
+void AdaptiveDisplay::cancel() { QMutexLocker lock(&m_Mutex); m_Failed = true; m_Retryable = false; requestInterruption(); m_Wake.wakeAll(); }
+void AdaptiveDisplay::release() { QMutexLocker lock(&m_Mutex); m_Release = true; requestInterruption(); }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
+bool AdaptiveDisplay::takeLeaveFullscreen() { QMutexLocker lock(&m_Mutex); bool value = m_LeaveFullscreen; m_LeaveFullscreen = false; return value; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
 bool AdaptiveDisplay::wasTakenOver(int timeoutMs) {
     QMutexLocker lock(&m_Mutex);
@@ -65,7 +71,7 @@ void AdaptiveDisplay::run() {
     socket.setPeerVerifyMode(QSslSocket::VerifyPeer);
     QObject::connect(&socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), &socket,
         [&socket, this](const QList<QSslError>& errors) {
-            if (socket.peerCertificate() != m_Peer) return;
+            if (socket.peerCertificate() != m_Peer) { QMutexLocker lock(&m_Mutex); m_Retryable = false; return; }
             for (const auto& error : errors)
                 if (error.error() != QSslError::SelfSignedCertificate && error.error() != QSslError::HostNameMismatch) return;
             socket.ignoreSslErrors(errors);
@@ -74,6 +80,7 @@ void AdaptiveDisplay::run() {
     auto send = [&socket](QJsonObject object) {
         socket.write(QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n'); socket.flush();
     };
+    bool windowSupported = false;
     auto receive = [&](int timeout = 6000) -> QJsonObject {
         QElapsedTimer timer; timer.start();
         while (!isInterruptionRequested() && timer.elapsed() < timeout) {
@@ -83,9 +90,15 @@ void AdaptiveDisplay::run() {
             if (newline >= 0) {
                 const auto object = QJsonDocument::fromJson(buffer.left(newline)).object();
                 buffer.remove(0, newline + 1);
-                if (object["type"].toString() == DP_MESSAGE_SESSION_ENDED && object["reason"].toString() == "taken-over") {
+                if (object["type"].toString() == DP_MESSAGE_SESSION_ENDED) {
                     QMutexLocker lock(&m_Mutex);
-                    if (m_AdmissionRequired) { m_TakenOver = true; m_Wake.wakeAll(); }
+                    m_Retryable = false;
+                    if (m_AdmissionRequired) { m_TakenOver = m_TakenOver || object["reason"].toString() == "taken-over"; m_Wake.wakeAll(); }
+                }
+                if (windowSupported && object["type"].toString() == DP_MESSAGE_CLIENT_WINDOW &&
+                    object["action"].toString() == "leave-fullscreen") {
+                    QMutexLocker lock(&m_Mutex); m_LeaveFullscreen = true;
+                    continue;
                 }
                 return object;
             }
@@ -100,11 +113,15 @@ void AdaptiveDisplay::run() {
     if (connected) {
         const auto hello = receive();
         connected = hello["type"].toString() == "hello" && hello["meta"].toObject()["adaptiveDisplay"].toInt() == 1;
+        { QMutexLocker lock(&m_Mutex); m_Lifecycle = hello["meta"].toObject()["sessionLifecycle"].toInt() == DP_SESSION_LIFECYCLE_VERSION; }
+        windowSupported = hello["meta"].toObject()["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
         policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
         const bool admission = hello["meta"].toObject()["sessionTakeover"].toInt() == DP_SESSION_TAKEOVER_VERSION;
         { QMutexLocker lock(&m_Mutex); m_AdmissionRequired = admission; }
         if (admission) {
-            send({{"type", DP_MESSAGE_SESSION_STATUS}, {"sessionTakeover", DP_SESSION_TAKEOVER_VERSION}});
+            QJsonObject query{{"type", DP_MESSAGE_SESSION_STATUS}, {"sessionTakeover", DP_SESSION_TAKEOVER_VERSION}};
+            if (m_Lifecycle) { query["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION; query["resumeToken"] = m_ResumeToken; }
+            send(query);
             auto state = receive();
             bool admitted = state["type"].toString() == DP_MESSAGE_SESSION_STATE && state["admitted"].toBool();
             if (!admitted && state["type"].toString() == DP_MESSAGE_SESSION_STATE && state["busy"].toBool() &&
@@ -118,8 +135,13 @@ void AdaptiveDisplay::run() {
                 if (confirmed) {
                     send({{"type", DP_MESSAGE_SESSION_TAKEOVER}, {"challenge", state["challenge"]}});
                     const auto result = receive(25000);
+                    state = result;
                     admitted = result["type"].toString() == DP_MESSAGE_SESSION_RESULT && result["admitted"].toBool();
                 }
+            }
+            { QMutexLocker lock(&m_Mutex);
+              if (admitted && m_Lifecycle) m_ResumeToken = state["resumeToken"].toString();
+              if (!admitted && !state.isEmpty()) m_Retryable = false;
             }
             connected = connected && admitted;
         }
@@ -134,12 +156,14 @@ void AdaptiveDisplay::run() {
         if (pending) {
             QJsonObject request{{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}};
             if (policySupported) request["displayPolicy"] = m_Policy;
+            if (windowSupported) request["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
             send(request);
             const auto reply = receive();
             connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&
                 reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");
+            if (!connected && !reply.isEmpty()) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
-            { QMutexLocker lock(&m_Mutex); m_Result = connected; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
+            { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();
         } else if (heartbeat.elapsed() >= 5000) {
             send({{"type", DP_MESSAGE_DISPLAY_PING}});
@@ -149,10 +173,16 @@ void AdaptiveDisplay::run() {
             // Read unsolicited termination promptly, including buffered TLS data
             // after EOF. Video teardown can precede the control-channel reason.
             if (socket.bytesAvailable() || socket.waitForReadyRead(100)) {
-                receive();
-                connected = false;
+                const auto unsolicited = receive(150);
+                connected = unsolicited.isEmpty() && socket.state() == QAbstractSocket::ConnectedState;
             } else connected = socket.state() == QAbstractSocket::ConnectedState;
         }
+    }
+    { QMutexLocker lock(&m_Mutex);
+      if (m_Release && m_Lifecycle && socket.state() == QAbstractSocket::ConnectedState) {
+          send({{"type", DP_MESSAGE_SESSION_RELEASE}});
+          socket.waitForBytesWritten(250);
+      }
     }
     socket.abort();
     QMutexLocker lock(&m_Mutex); m_Failed = true; m_Wake.wakeAll();

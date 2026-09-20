@@ -275,6 +275,7 @@ public:
         recovery->setProcessChannelMode(QProcess::ForwardedErrorChannel);
         recovery->start(QCoreApplication::applicationFilePath(), {"--restore-kwin", name});
         if (!recovery->waitForStarted(3000)) { error = "Cannot start display layout recovery"; return false; }
+        if (qEnvironmentVariableIntValue("DESKPORT_DISPLAY_ON_DEMAND") == 1) return saveRecovery({});
         if (!saveRecovery(baseline)) return false;
         return createOutput(width, height);
     }
@@ -472,7 +473,9 @@ int main(int argc, char** argv) {
     if (qgetenv("XDG_CURRENT_DESKTOP").split(':').contains("GNOME")) return runGnomeDisplay(args[1].toInt(), args[2].toInt());
     Display display;
     if (!display.start(args[1].toInt(), args[2].toInt())) { reply({{"error", display.lastError()}}); return 1; }
-    reply({{"displayId", 1}, {"outputName", display.outputName()}, {"width", args[1].toInt()}, {"height", args[2].toInt()}, {"scale", 1}});
+    if (qEnvironmentVariableIntValue("DESKPORT_DISPLAY_ON_DEMAND") == 1)
+        reply({{"ready", true}, {"active", false}, {"outputName", display.name}});
+    else reply({{"displayId", 1}, {"outputName", display.outputName()}, {"width", args[1].toInt()}, {"height", args[2].toInt()}, {"scale", 1}});
     QByteArray buffer;
     while (display.healthy()) {
         pollfd fds[] = {{STDIN_FILENO, POLLIN, 0}, {display.fd(), POLLIN, 0}};
@@ -495,7 +498,7 @@ int main(int argc, char** argv) {
                 else if (!(request["session"].toBool(true)
                          ? display.configureWorkspace(width, height, scale, policy)
                          : display.restoreIdle())) response["error"] = display.lastError();
-                else { response["width"] = width; response["height"] = height; response["scale"] = scale; response["active"] = request["session"].toBool(true);
+                else { response["outputName"] = display.outputName(); response["displayId"] = request["session"].toBool(true) ? 1 : 0; response["width"] = width; response["height"] = height; response["scale"] = scale; response["active"] = request["session"].toBool(true);
                     if (!display.localLayoutWarning().isEmpty()) response["layoutWarning"] = display.localLayoutWarning(); }
                 reply(response);
                 if (!display.healthy()) return 1; // Never accept a late acknowledgment after a timeout.
