@@ -1,3 +1,10 @@
+## 0.4.5 stable release — 2026-09-21
+
+Reason: the user confirmed successful 0.4.4 physical resize/resume, reconnect,
+keyboard/mouse input and local display recovery, and requested a full Linux and
+macOS stable release. Package validation and published asset verification remain
+required. Update the consuming mynix pins after publication; activation is manual.
+
 ## 0.4.4 prerelease — 2026-09-20
 
 Reason: withdraw the faulty 0.4.3 release and provide a macOS arm64 / NixOS
