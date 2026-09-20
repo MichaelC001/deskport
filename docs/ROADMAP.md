@@ -1,3 +1,7 @@
+## Formal release 0.4.3 — 2026-09-20
+
+Reason: user requested a new full-platform formal release. macOS and the complete Linux package matrix are in preparation. Windows remains gated on its separate candidate validation; mobile-store status is tracked independently. Next checkpoint: verified public assets and persisted Apple review state, with Android identity/signing blockers resolved before store publication.
+
 ## Initial connection window ownership (2026-09-20)
 
 Reason: returning from Devices during host startup could hide Qt before any SDL
