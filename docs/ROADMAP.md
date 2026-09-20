@@ -1,3 +1,21 @@
+## 0.4.4 prerelease — 2026-09-20
+
+Reason: withdraw the faulty 0.4.3 release and provide a macOS arm64 / NixOS
+x86_64 candidate for manual activation. Includes the managed-display resume
+probe fix below. Managed macOS capture currently supports 8-bit H.264/HEVC;
+10-bit/HDR is unavailable. Do not promote to stable until real resize/resume,
+reconnect, input and local display recovery have been checked after activation.
+
+## macOS adaptive resume deadline — 2026-09-20
+
+Reason: a deployed 0.4.3 session rendered its first frame but timed out after a
+window resize. Managed virtual displays must skip the generic one-second display
+wake probe and reject unsupported AVFoundation-only formats immediately. Preserve
+native ScreenCaptureKit 8-bit H.264/HEVC capture; managed-display 10-bit/HDR remains
+unavailable until a native capture path passes resize and reconnect acceptance.
+Checkpoint: targeted capture tests, packaged host build, and real resize/resume
+with paired client/host evidence before promoting another stable release.
+
 ## Formal release 0.4.3 — 2026-09-20
 
 Reason: user requested a new full-platform formal release. macOS app/DMG notarization, extracted-ZIP Gatekeeper and version checks passed. The Linux Nix build, Ubuntu/Debian/Fedora/Arch installers and isolated Flatpak startup/recovery checks passed. Windows remains gated on its separate candidate validation. Universal Apple 1.2 (11) was submitted and reread as Waiting for Review; Android app creation is blocked by Google Play account verification. Next checkpoint: public desktop asset verification, Apple approval/store availability, and resolution of Windows/Android release gates.

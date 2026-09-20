@@ -173,6 +173,14 @@
     // Preserve upstream 10-bit behavior without silently changing bit depth.
     if (self.pixelFormat != kCVPixelFormatType_32BGRA &&
         self.pixelFormat != kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange) {
+        // AVFoundation cannot reliably reopen an on-demand virtual display after
+        // a mode change. Reject this optional format immediately so encoder
+        // discovery cannot consume the authenticated resume request's deadline.
+        // Do not advertise 10-bit support based on an 8-bit substitute.
+        if (getenv("DESKPORT_CAPTURE_DISPLAY_FILE")) {
+            NSLog(@"DeskPort capture: unsupported managed-display pixel format %u", self.pixelFormat);
+            return nil;
+        }
         if (!self.legacy) self.legacy = [[AVVideo alloc] initWithDisplay:self.displayID
             frameRate:(int)(1.0 / CMTimeGetSeconds(self.minFrameDuration))];
         self.legacy.pixelFormat = self.pixelFormat;
