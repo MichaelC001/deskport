@@ -5,6 +5,8 @@
 #include <cassert>
 #include <cstdio>
 #include "transitionwindow.h"
+#include "connectionwait.h"
+#include <atomic>
 
 static void* nativeWindow(SDL_Window* window) {
     SDL_SysWMinfo info {}; SDL_VERSION(&info.version);
@@ -20,7 +22,7 @@ static void* nativeWindow(SDL_Window* window) {
 int main(int argc, char** argv) {
     QGuiApplication app(argc, argv);
     assert(SDL_Init(SDL_INIT_VIDEO) == 0);
-    auto window = SDL_CreateWindow("DeskPort transition test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_RESIZABLE | (qEnvironmentVariableIsSet("DESKPORT_TRANSITION_METAL") ? SDL_WINDOW_METAL : 0)
+    auto window = SDL_CreateWindow("DeskPort transition test", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 400, SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE | (qEnvironmentVariableIsSet("DESKPORT_TRANSITION_METAL") ? SDL_WINDOW_METAL : 0)
         | (qEnvironmentVariableIsSet("DESKPORT_TRANSITION_GL") ? SDL_WINDOW_OPENGL : 0)
         | (qEnvironmentVariableIsSet("DESKPORT_TRANSITION_VULKAN") ? SDL_WINDOW_VULKAN : 0));
     assert(window);
@@ -31,6 +33,8 @@ int main(int argc, char** argv) {
     {
         TransitionWindow warmup(window, "Preparing transition test");
         assert(warmup.rendering());
+        assert(!desktopWindowVisible(window));
+        recallDesktopWindow(window);
         for (int i = 0; i < 15; ++i) { warmup.pump(); SDL_Delay(20); }
         assert(warmup.takeWindow() == window);
     }
@@ -71,6 +75,27 @@ int main(int argc, char** argv) {
         assert(transition.takeWindow() == window);
         assert(!SDL_GetRenderer(window));
         assert(SDL_GetWindowFromID(id) == window);
+    }
+    // Real asynchronous startup held pending, using the production SDL-owner
+    // wait loop. No network, pairing, capture, or remote input is involved.
+    for (bool serviceQt : {false, true}) {
+        TransitionWindow pending(window, "Connecting to desktop…");
+        struct DelayedConnection : QThread { void run() override { msleep(650); } } connection;
+        int ticks = 0;
+        auto send = [](int code) { SDL_Event e {}; e.type = SDL_USEREVENT; e.user.code = code; assert(SDL_PushEvent(&e) == 1); };
+        waitForDesktopConnection(connection, pending, serviceQt, [&] {
+            ++ticks;
+            if (ticks == 3) send(DeskPortShowDevices);
+            if (ticks == 5) { assert(!desktopWindowVisible(window)); send(DeskPortRecallWindow); }
+            if (ticks == 7) assert(desktopWindowVisible(window));
+            if (ticks == 9) send(DeskPortShowDevices);
+            if (ticks == 11) assert(!desktopWindowVisible(window));
+        });
+        assert(ticks >= 12);
+        assert(!desktopWindowVisible(window)); // Completion must preserve Devices.
+        assert(!pending.cancelled());
+        assert(pending.takeWindow() == window);
+        recallDesktopWindow(window); // Already-streaming recall uses the same window.
     }
     {
         TransitionWindow transition(window, "Adjusting resolution…");

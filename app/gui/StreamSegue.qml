@@ -35,14 +35,14 @@ Item {
     function connectionStarted()
     {
         streamSegueErrorDialog.text = ""
-        // Hide the UI contents so the user doesn't
-        // see them briefly when we pop off the StackView
-        stageSpinner.visible = false
-        stageLabel.visible = false
-        hintText.visible = false
+        stageText = qsTr("Waiting for desktop video…")
+    }
 
-        // Hide the window now that streaming has begun
-        if (stackView.currentItem === streamPage) window.visible = false
+    function viewerReadyChanged()
+    {
+        if (typeof session === "undefined" || !session) return
+        if (session.viewerReady && stackView.currentItem === streamPage)
+            window.visible = false
     }
 
     function displayLaunchError(text)
@@ -152,6 +152,7 @@ Item {
         session.stageStarting.connect(stageStarting)
         session.stageFailed.connect(stageFailed)
         session.connectionStarted.connect(connectionStarted)
+        session.viewerReadyChanged.connect(viewerReadyChanged)
         session.displayLaunchError.connect(displayLaunchError)
         session.displayLaunchWarning.connect(displayLaunchWarning)
         session.quitStarting.connect(quitStarting)
@@ -176,9 +177,9 @@ Item {
     Button {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: hintText.top; anchors.bottomMargin: 20
-        visible: session && session.retryDelay() > 0
+        visible: session && !session.viewerReady
         objectName: "cancelReconnect"
-        text: qsTr("Cancel reconnect")
+        text: session && session.retryDelay() > 0 ? qsTr("Cancel reconnect") : qsTr("Cancel connection")
         onClicked: {
             streamSegueErrorDialog.text = ""
             session.cancelRecovery()

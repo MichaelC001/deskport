@@ -484,6 +484,8 @@ NvHTTP::openConnection(QUrl baseUrl,
                        int timeoutMs,
                        NvLogLevel logLevel)
 {
+    if (m_Cancelled && m_Cancelled->load())
+        throw QtNetworkReplyException(QNetworkReply::OperationCanceledError, "Connection cancelled");
     // Port must be set
     Q_ASSERT(baseUrl.port(0) != 0);
 
@@ -539,6 +541,13 @@ NvHTTP::openConnection(QUrl baseUrl,
                 if (m_ServerCert.isNull() || error.certificate() != m_ServerCert) certificateRejected = true;
         });
         QEventLoop loop;
+        QTimer cancellation;
+        if (m_Cancelled) {
+            connect(&cancellation, &QTimer::timeout, &loop, [&] {
+                if (m_Cancelled->load()) reply->abort();
+            });
+            cancellation.start(20);
+        }
         QTimer deadline; deadline.setSingleShot(true);
         connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
         connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
@@ -578,7 +587,8 @@ NvHTTP::openConnection(QUrl baseUrl,
             throw exception;
         }
         else if (reply->error() == QNetworkReply::OperationCanceledError) {
-            QtNetworkReplyException exception(QNetworkReply::TimeoutError, "Request timed out");
+            QtNetworkReplyException exception(m_Cancelled && m_Cancelled->load() ? QNetworkReply::OperationCanceledError : QNetworkReply::TimeoutError,
+                m_Cancelled && m_Cancelled->load() ? "Connection cancelled" : "Request timed out");
             delete reply;
             throw exception;
         }

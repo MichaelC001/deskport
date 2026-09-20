@@ -81,6 +81,19 @@ private slots:
         QCOMPARE(http.openConnectionToString(http.m_BaseUrlHttps, "serverinfo", {}, 400).size(), 262144);
         QCOMPARE(count("mss"), 2); QCOMPARE(count("request"), 1);
     }
+    void cancelPendingLaunch() {
+        start("drop"); NvHTTP http(NvAddress("127.0.0.1", port), port, cert);
+        std::atomic<bool> cancelled{false}; http.setCancellationFlag(&cancelled);
+        QTimer::singleShot(200, [&] { cancelled = true; });
+        QElapsedTimer elapsed; elapsed.start();
+        try { http.openConnectionToString(http.m_BaseUrlHttps, "launch", {}, 10000); QFAIL("Cancelled launch succeeded"); }
+        catch (const QtNetworkReplyException& error) { QCOMPARE(error.getError(), QNetworkReply::OperationCanceledError); }
+        QVERIFY(elapsed.elapsed() < 1500);
+        QCOMPARE(count("request"), 1); // A launch is never replayed after abort.
+        try { http.openConnectionToString(http.m_BaseUrlHttps, "launch", {}, 10000); QFAIL("Late launch after cancellation"); }
+        catch (const QtNetworkReplyException& error) { QCOMPARE(error.getError(), QNetworkReply::OperationCanceledError); }
+        QCOMPARE(count("request"), 1);
+    }
     void normalPathUsesOneConnection() {
         start("normal"); NvHTTP http(NvAddress("127.0.0.1", port), port, cert);
         QCOMPARE(http.openConnectionToString(http.m_BaseUrlHttps, "serverinfo", {}, 400).size(), 262144);

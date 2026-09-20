@@ -1,3 +1,13 @@
+## Initial connection window ownership (2026-09-20)
+
+Reason: returning from Devices during host startup could hide Qt before any SDL
+window existed. Create the native loading window before launch, keep its owner
+responsive during asynchronous connection, and gate Qt hiding on explicit window
+readiness. Preserve Devices focus through handoff and cancel pending HTTP launch
+without replay. Validate delayed startup navigation, cancellation, failures, and
+loading-to-video ownership using isolated Qt/SDL/TLS tests plus native KWin checks.
+Actual streaming and input remain separate acceptance checks.
+
 ## Cross-platform product catalog (2026-09-20)
 
 Reason: reduce independently maintained rules while preserving public desktop/core

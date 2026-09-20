@@ -88,6 +88,7 @@ ApplicationWindow {
     readonly property string activeHostName: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
     function showDevices() {
         if (activeStreamPage) {
+            if (activeStreamPage.session !== undefined && activeStreamPage.session) activeStreamPage.session.setViewerRequested(false)
             if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
             stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
@@ -101,13 +102,24 @@ ApplicationWindow {
         window.requestActivate()
     }
     function prepareViewerRecall() {
+        if (!activeStreamPage) return false
         if (activeStreamPage && stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
-        window.hide()
+        if (activeStreamPage.session !== undefined && activeStreamPage.session) {
+            activeStreamPage.session.setViewerRequested(true)
+            if (activeStreamPage.session.viewerReady) { window.hide(); return true }
+        }
+        // Session ownership precedes native-window readiness. Keep the progress
+        // page visible until its owner confirms a usable loading/video window.
+        if (window.windowState === Qt.WindowMinimized) window.showNormal()
+        else window.show()
+        window.raise()
+        window.requestActivate()
+        return true
     }
     function recallRemoteSession() { hostManager.recallViewer() }
     function goBack() {
         if (activeStreamPage && stackView.currentItem.controlCenterForActiveSession === true) {
-            window.hide()
+            recallRemoteSession()
             return
         }
         if (clearOnBack) {

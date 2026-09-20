@@ -31,6 +31,11 @@ public:
     QString hostId() const { return "device-a"; }
     QString hostName() const { return "Studio"; }
     Q_INVOKABLE QVariantMap traffic() const { return {{"received",862000000.0},{"sent",18000000.0}}; }
+    Q_PROPERTY(bool viewerReady READ viewerReady NOTIFY viewerReadyChanged)
+    bool nativeReady = false, viewerRequested = true;
+    bool viewerReady() const { return nativeReady; }
+    Q_INVOKABLE void setViewerRequested(bool visible) { viewerRequested = visible; }
+    void makeViewerReady() { nativeReady = true; emit viewerReadyChanged(); }
     int delay = 0; bool cancelled = false;
     Q_INVOKABLE int retryDelay() const { return delay; }
     Q_INVOKABLE void cancelRecovery() { cancelled = true; }
@@ -42,6 +47,7 @@ public:
     Q_INVOKABLE TestSession* adaptiveContinuation() { auto value = next; next = nullptr; return value; }
     Q_INVOKABLE void exec(QQuickWindow* window) { receivedWindow = window; ++executions; if (duringExec) duringExec(); }
 signals:
+    void viewerReadyChanged();
     void stageStarting(QString stage);
     void stageFailed(QString stage, int error, QString ports);
     void connectionStarted();
@@ -590,7 +596,12 @@ ApplicationWindow {
         QVERIFY(page->findChild<QObject*>("changeDeviceAddress"));
         QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }
+    void navigationAndDeviceIdentity_data() {
+        QTest::addColumn<QString>("outcome");
+        for (auto name : {"streaming", "failure", "cancel"}) QTest::newRow(name) << QString(name);
+    }
     void navigationAndDeviceIdentity() {
+        QFETCH(QString, outcome);
         QTemporaryDir directory;
         PreviewHost host(nullptr,directory.path()+"/host");
         PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
@@ -628,6 +639,40 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testStart"));
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));
+        // Hold transport/window creation pending: returning must keep progress
+        // visible even after the connection callback (which is not window-ready).
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
+        QVERIFY(!session.viewerRequested);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
+        QVERIFY(window->isVisible());
+        QVERIFY(session.viewerRequested);
+        emit session.connectionStarted();
+        QVERIFY(window->isVisible());
+        QTest::qWait(250);
+        QVERIFY(window->isVisible());
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
+        if (outcome != "streaming") {
+            if (outcome == "cancel") {
+                QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
+                auto cancel = root->findChild<QObject*>("cancelReconnect"); QVERIFY(cancel);
+                QVERIFY(QMetaObject::invokeMethod(cancel,"clicked"));
+                QVERIFY(session.cancelled);
+            } else emit session.stageFailed("Synthetic delayed host", -1, "");
+            emit session.sessionFinished(0);
+            QTRY_COMPARE(root->property("testDepth").toInt(),1);
+            QVERIFY(window->isVisible());
+            emit session.readyForDeletion();
+            QTest::qWait(50);
+            session.makeViewerReady(); // Late callback cannot hide Devices.
+            QVERIFY(window->isVisible());
+            QCOMPARE(session.executions,1);
+            QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
+            return;
+        }
+        session.makeViewerReady();
+        QVERIFY(window->isVisible()); // Late readiness must not steal Devices.
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
+        QVERIFY(!window->isVisible());
         int recalls=0;
         connect(&host,&HostManager::viewerRecallRequested,this,[&]{recalls++;});
         for(int i=0;i<50;++i) {
@@ -641,6 +686,7 @@ ApplicationWindow {
             QCOMPARE(root->property("testDepth").toInt(),4);
             QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
             QCOMPARE(root->property("testDepth").toInt(),2);
+            QVERIFY(!window->isVisible());
             QTest::qWait(20);
         }
         QCOMPARE(session.executions,1);

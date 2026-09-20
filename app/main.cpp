@@ -1009,13 +1009,14 @@ int main(int argc, char *argv[])
         }
     };
     auto recallViewer = [&engine, &showDevices] {
-        if (Session::get()) {
-            // In active-session mode, the tray menu switches the view mode:
-            // control-center UI in Qt, or the retained SDL desktop window.
-            if (!engine.rootObjects().isEmpty())
-                QMetaObject::invokeMethod(engine.rootObjects().first(), "prepareViewerRecall");
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortRecallWindow;
-            SDL_PushEvent(&event);
+        QVariant handled;
+        if (!engine.rootObjects().isEmpty())
+            QMetaObject::invokeMethod(engine.rootObjects().first(), "prepareViewerRecall", Q_RETURN_ARG(QVariant, handled));
+        if (handled.toBool()) {
+            if (SessionLifetime::busy()) {
+                SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortRecallWindow;
+                SDL_PushEvent(&event);
+            }
             return;
         }
         showDevices();
@@ -1030,7 +1031,11 @@ int main(int argc, char *argv[])
     });
     // The tray's left button is the one-action route to the window: it shows the
     // remote desktop or the device list, and hides whichever of them is up.
-    auto toggleWindow = [&engine, &showDevices] {
+    auto toggleWindow = [&engine, &showDevices, &recallViewer] {
+        if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
+            recallViewer();
+            return;
+        }
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortToggleWindow;
             SDL_PushEvent(&event);

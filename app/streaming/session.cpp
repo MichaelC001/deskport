@@ -1,3 +1,4 @@
+#include "connectionwait.h"
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
@@ -1895,7 +1896,10 @@ bool Session::startConnectionAsync()
     // Wait 1.5 seconds before connecting to let the user
     // have time to read any messages present on the segue.
     // An adaptive resize shows no segue; resume immediately.
-    if (!m_AdaptiveResume) SDL_Delay(1500);
+    if (!m_AdaptiveResume) {
+        for (int elapsed = 0; elapsed < 1500 && !m_RecoveryCancelled; elapsed += 10) SDL_Delay(10);
+    }
+    if (m_RecoveryCancelled) return false;
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
@@ -1929,6 +1933,7 @@ bool Session::startConnectionAsync()
 
     try {
         NvHTTP http(m_Computer);
+        http.setCancellationFlag(&m_RecoveryCancelled);
         if (m_AdaptiveResume) deskportResizeStage("resume-request");
         http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
@@ -1942,9 +1947,11 @@ bool Session::startConnectionAsync()
                       m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
         if (m_AdaptiveResume) deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
+        if (m_RecoveryCancelled) return false;
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
         return false;
     } catch (const QtNetworkReplyException& e) {
+        if (m_RecoveryCancelled) return false;
         if (m_RecoveryDeadline && (e.getError() == QNetworkReply::TimeoutError ||
             e.getError() == QNetworkReply::RemoteHostClosedError || e.getError() == QNetworkReply::TemporaryNetworkFailureError ||
             e.getError() == QNetworkReply::ConnectionRefusedError || e.getError() == QNetworkReply::HostNotFoundError)) scheduleNetworkRecovery();
@@ -2035,6 +2042,7 @@ bool Session::startConnectionAsync()
                                                                          false);
     }
 
+    if (m_RecoveryCancelled) return false;
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -2166,48 +2174,6 @@ void Session::execInternal()
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
     if (m_AdaptiveResume) deskportResizeStage("input-init-end");
 
-    AsyncConnectionStartThread asyncConnThread(this);
-    if (!m_ThreadedExec || m_TransitionWindow) {
-        // Kick off the async connection thread while we sit here and pump the event loop
-        asyncConnThread.start();
-        while (!asyncConnThread.wait(10)) {
-            if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
-                m_RecoveryCancelled = true; LiInterruptConnection();
-            }
-            if (m_TransitionWindow) {
-                m_TransitionWindow->pump();
-                if (m_TransitionWindow->cancelled()) LiInterruptConnection();
-            }
-            if (!m_ThreadedExec) {
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
-                QCoreApplication::sendPostedEvents();
-            }
-        }
-
-        // Pump the event loop one last time to ensure we pick up any events from
-        // the thread that happened while it was in the final successful QThread::wait().
-        if (!m_ThreadedExec) {
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
-            QCoreApplication::sendPostedEvents();
-        }
-    }
-    else {
-        // We're already in a separate thread so run the connection operations
-        // synchronously and don't pump the event loop. The main thread is already
-        // pumping the event loop for us.
-        asyncConnThread.run();
-    }
-
-    // If the connection failed, clean up and abort the connection.
-    if (!m_AsyncConnectionSuccess || m_RecoveryCancelled || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
-        m_TransitionWindow.reset();
-        delete m_InputHandler;
-        m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-        return;
-    }
-
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
@@ -2224,7 +2190,7 @@ void Session::execInternal()
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 
     // We always want a resizable window with High DPI enabled
-    Uint32 defaultWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+    Uint32 defaultWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
     if ((m_AdaptiveResume || m_RestoredWindow) && !m_IsFullScreen && m_AdaptiveMaximized) defaultWindowFlags |= SDL_WINDOW_MAXIMIZED;
 
     // If we're starting in windowed mode and the Moonlight GUI is maximized or
@@ -2257,7 +2223,7 @@ void Session::execInternal()
     std::string windowName = QString(m_Computer->name + " - DeskPort").toStdString();
 #endif
 
-    const bool retainedWindow = bool(m_TransitionWindow);
+    const bool hadTransitionWindow = bool(m_TransitionWindow);
     if (m_TransitionWindow) {
         m_Window = m_TransitionWindow->takeWindow();
         m_TransitionWindow.reset();
@@ -2325,6 +2291,48 @@ void Session::execInternal()
     }
 #endif
 
+    // Establish a real, recallable loading window before host launch/RTSP can
+    // block. The SDL owner keeps pumping it even on Linux's exec worker.
+    if (m_IsFullScreen) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Connecting to desktop…"));
+    m_Window = nullptr;
+    if (!m_TransitionWindow->rendering()) {
+        emit displayLaunchError(tr("Unable to display the connection window."));
+        m_TransitionWindow.reset();
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+        return;
+    }
+    if (!hadTransitionWindow) {
+        if (m_ViewerRequested) recallDesktopWindow(m_TransitionWindow->window());
+        else SDL_HideWindow(m_TransitionWindow->window());
+    }
+    setViewerReady(true);
+
+    AsyncConnectionStartThread asyncConnThread(this);
+    waitForDesktopConnection(asyncConnThread, *m_TransitionWindow, !m_ThreadedExec, [this] {
+        if (m_TransitionWindow->cancelled() || m_RecoveryCancelled ||
+            (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
+            m_RecoveryCancelled = true;
+            LiInterruptConnection();
+        }
+    });
+    // If the connection failed, clean up and abort the connection.
+    if (!m_AsyncConnectionSuccess || m_RecoveryCancelled || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
+        setViewerReady(false);
+        m_TransitionWindow.reset();
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+        return;
+    }
+
+    m_Window = m_TransitionWindow->takeWindow();
+    m_TransitionWindow.reset();
+
     m_InputHandler->setWindow(m_Window);
 
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
@@ -2357,21 +2365,9 @@ void Session::execInternal()
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
-    bool needsFirstEnterCapture = false;
-    bool needsPostDecoderCreationCapture = false;
-
-    // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
-    // event where it seems to work consistently on GNOME. For other platforms,
-    // especially where SDL may call SDL_RecreateWindow(), we must only capture
-    // after the decoder is created.
-    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0 && !retainedWindow) {
-        // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
-        needsFirstEnterCapture = true;
-    }
-    else {
-        // X11/XWayland: Capture after decoder creation
-        needsPostDecoderCreationCapture = true;
-    }
+    // The loading window already received its first ENTER/SHOWN events. Capture
+    // only after decoder creation, and only if the user still wants this window.
+    bool needsPostDecoderCreationCapture = true;
 
     // Stop text input. SDL enables it by default
     // when we initialize the video subsystem, but this
@@ -2393,7 +2389,7 @@ void Session::execInternal()
     // sleep precision and more accurate callback timing.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
 
-    if (retainedWindow) {
+    {
         // Reusing a visible window produces no SHOWN event. Trigger decoder setup
         // explicitly after disposing the temporary loading renderer.
         SDL_Event resizeEvent {}; resizeEvent.type = SDL_WINDOWEVENT;
@@ -2590,13 +2586,6 @@ void Session::execInternal()
 
             presence.runCallbacks();
 
-            // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
-            if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
-                m_InputHandler->setCaptureActive(true);
-                needsFirstEnterCapture = false;
-            }
-
-            // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
             // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
             // seem to fire when switching from windowed to full-screen on X11.
             if (event.window.event != SDL_WINDOWEVENT_SIZE_CHANGED &&
@@ -2764,7 +2753,7 @@ void Session::execInternal()
                 // is set up, this ensures the window re-creation is already done.
                 if (needsPostDecoderCreationCapture) {
                     const auto flags = SDL_GetWindowFlags(m_Window);
-                    if (!retainedWindow || ((flags & SDL_WINDOW_INPUT_FOCUS) && !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED))))
+                    if ((flags & SDL_WINDOW_INPUT_FOCUS) && !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)))
                         m_InputHandler->setCaptureActive(true);
                     needsPostDecoderCreationCapture = false;
                 }
@@ -2842,6 +2831,7 @@ void Session::execInternal()
     }
 
 DispatchDeferredCleanup:
+    setViewerReady(false);
     m_Clipboard.reset();
     if (!adaptiveRestartPending()) rememberAdaptiveWindow();
     // Uncapture the mouse and hide the window immediately,

@@ -6,6 +6,7 @@
 
 #include <Limelight.h>
 
+#include <atomic>
 #include <QUrl>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -112,6 +113,7 @@ public:
     explicit NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert);
 
     explicit NvHTTP(NvComputer* computer);
+    void setCancellationFlag(const std::atomic<bool>* flag) { m_Cancelled = flag; }
 
     static
     int
@@ -199,6 +201,7 @@ private:
                    int timeoutMs,
                    NvLogLevel logLevel);
 
+    const std::atomic<bool>* m_Cancelled = nullptr;
     NvAddress m_Address;
     QNetworkAccessManager m_Nam;
     QSslCertificate m_ServerCert;
