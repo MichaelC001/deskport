@@ -277,6 +277,7 @@ ffmpeg {
 
     HEADERS += \
         streaming/video/ffmpeg.h \
+        streaming/video/h264-sps.h \
         streaming/video/ffmpeg-renderers/renderer.h \
         streaming/video/ffmpeg-renderers/genhwaccel.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \

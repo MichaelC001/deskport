@@ -37,7 +37,7 @@ UiPage {
                 model: [qsTr("Automatic (recommended)"), qsTr("Clear"), qsTr("Smooth"), qsTr("Save data"), qsTr("Custom")]
                 currentIndex: preferences.smartStreaming ? 0 : preferences.fps === 60 && preferences.bitrateKbps === 40000 ? 1 : preferences.fps === 60 && preferences.bitrateKbps === 15000 ? 2 : preferences.fps === 30 && preferences.bitrateKbps === 5000 ? 3 : 4
                 onActivated: function(index) {
-                    if (index === 4) { stackView.push(Qt.resolvedUrl("DeviceAdvanced.qml"), {preferences: page.preferences, deviceName: page.deviceName}); return }
+                    if (index === 4) { preferences.smartStreaming = false; save(); stackView.push(Qt.resolvedUrl("DeviceAdvanced.qml"), {preferences: page.preferences, deviceName: page.deviceName}); return }
                     preferences.smartStreaming = index === 0
                     if (index > 0) { preferences.fps = index === 3 ? 30 : 60; preferences.bitrateKbps = index === 1 ? 40000 : index === 2 ? 15000 : 5000 }
                     save()

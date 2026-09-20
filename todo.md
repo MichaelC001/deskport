@@ -101,3 +101,14 @@ See [session settings](docs/SESSION_SETTINGS.md) for protocol, migration and lim
 - [x] Simplify desktop device actions: remove duplicate settings/details entries, Applications and Wake PC; retain dedicated card buttons and direct Desktop connection.
 
 - [x] Match the mobile card header with four equal slots: status, details, actions and settings.
+
+- [x] Remove settings duplicated between Device settings and Advanced streaming settings; manual frame-rate/bitrate edits leave automatic mode.
+
+## H.264 streaming recovery — 2026-09-20
+
+- [x] Reproduce reference-picture corruption with synthetic multi-reference H.264; preserve the original SPS reference count in the desktop decoder.
+- [x] Verify fixed decoded pixels match the original bitstream and preserve reordered-stream declarations.
+- [x] Validate the corrected Linux client on a live 3824x2000 H.264 macOS stream: the reference/slice errors and decoder-triggered recovery loop are absent.
+- [x] Confirm a 26-minute live H.264 session with no reference/slice errors, decode failures, decoder-triggered recovery or disconnects; user reports the slowdown resolved.
+- [ ] Investigate residual occasional decode-queue overflow separately from SPS corruption; no further overflows occurred after the first two during this observation.
+- [ ] Investigate the separate macOS session-teardown watchdog: one rapid reconnect hit the 10-second join timeout; retain paired logs and the crash stack before changing host lifecycle.

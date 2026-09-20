@@ -1,3 +1,17 @@
+## H.264 reference-picture recovery (2026-09-20)
+
+Reason: prolonged desktop streaming exposed repeated reference-picture errors and
+keyframe recovery requests. The inherited client SPS fixup reduced every H.264
+stream to one reference picture, even when VideoToolbox encoded multiple references.
+Preserve the encoder's reference count; reduce excess decoder buffering only when
+the SPS explicitly disables frame reordering. Keep reordered streams unchanged.
+
+Regression: `python3 scripts/test-h264-sps.py` compares decoded frame hashes before
+and after the real fixup, and reproduces corruption with the old behavior. An
+optional synthetic VideoToolbox Annex B fixture exercises the macOS encoder too.
+Live validation must separately check decoder errors, recovery requests and network
+loss; a clean build or synthetic decode does not establish long-session acceptance.
+
 ## Session usability and lifecycle (2026-09-20)
 
 Reason: user approved the audited backlog and Mac/iPad/Android emulator checks.
@@ -1363,3 +1377,7 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
 
 - Device headers now allocate equal slots to online/offline/checking status,
   details, actions and settings, matching the mobile card layout.
+
+- Keep picture presets, automatic resolution, remote audio/input and clipboard
+  switches in Device settings only. Advanced streaming retains detailed tuning;
+  editing frame rate or bandwidth selects manual streaming.

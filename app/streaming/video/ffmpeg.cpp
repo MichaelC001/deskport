@@ -2,7 +2,7 @@
 #include "ffmpeg.h"
 #include "streaming/session.h"
 
-#include <h264_stream.h>
+#include "h264-sps.h"
 
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
@@ -1545,9 +1545,9 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
         SDL_assert(nalStart == 3 || nalStart == 4); // 3 or 4 byte Annex B start sequence
         SDL_assert(nalEnd == entry->length);
 
-        // Fixup the SPS to what OS X needs to use hardware acceleration
-        stream->sps->num_ref_frames = 1;
-        stream->sps->vui.max_dec_frame_buffering = 1;
+        // Keep the encoder's reference-picture count intact. Only reduce
+        // surplus output buffering when the bitstream forbids reordering.
+        minimizeH264DecodeBuffer(*stream->sps);
 
         int initialOffset = offset;
 
