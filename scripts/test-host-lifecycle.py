@@ -164,8 +164,32 @@ macx {{
             environment[f"TEST_CERT_{name}"] = str(cert)
             environment[f"TEST_KEY_{name}"] = str(key)
         expired = work / "expired.pem"
-        subprocess.run(["openssl", "x509", "-in", str(work / "B.pem"), "-signkey", str(work / "B.key"),
-                        "-not_before", "20200101000000Z", "-not_after", "20200102000000Z", "-out", str(expired)], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        # Explicit x509 validity setters require newer OpenSSL; ca supports
+        # fixed dates on older OpenSSL and LibreSSL versions as well.
+        csr = work / "expired.csr"
+        (work / "ca-index.txt").write_text("")
+        (work / "ca-serial.txt").write_text("01\n")
+        ca_config = work / "expired-ca.cnf"
+        ca_config.write_text(f"""[ca]
+default_ca = test_ca
+[test_ca]
+database = {work / 'ca-index.txt'}
+serial = {work / 'ca-serial.txt'}
+new_certs_dir = {work}
+certificate = {work / 'B.pem'}
+private_key = {work / 'B.key'}
+default_md = sha256
+policy = test_policy
+[test_policy]
+commonName = supplied
+""")
+        subprocess.run(["openssl", "req", "-new", "-key", str(work / "B.key"),
+                        "-subj", "/CN=NVIDIA GameStream Client", "-out", str(csr)],
+                       check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(["openssl", "ca", "-batch", "-selfsign", "-config", str(ca_config),
+                        "-in", str(csr), "-startdate", "20200101000000Z",
+                        "-enddate", "20200102000000Z", "-notext", "-out", str(expired)],
+                       check=True, stdout=subprocess.DEVNULL)
         environment["TEST_CERT_EXPIRED"] = str(expired)
     environment.setdefault("QT_QUICK_BACKEND", "software")
     environment.setdefault("DEVELOPER_DIR", "/Applications/Xcode.app/Contents/Developer")
