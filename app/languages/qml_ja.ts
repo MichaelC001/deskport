@@ -1919,6 +1919,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>サイドバーに通信量を表示</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>診断とフィードバック</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>診断ログを有効にする</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>初期設定はオフです。アプリ、内蔵ホスト、画面ヘルパーの接続、操作準備、実行イベント、時刻差、解像度を記録します。変更は即時反映されます。上限は 9 MiB で、実行中に 7 日を超えたログを削除します。</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>IP、ドメイン、デバイス名、自由形式のメッセージは自動的に省略します。入力文字、クリップボード、画面内容は収集しません。起動ごとにランダムな匿名 ID を使用します。詳細が省略されるため、すべての問題を診断できるわけではありません。共有前に確認してください。</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>GitHub の Issue と添付ファイルは公開されます。ZIP を作成し、Issue の下書きを開きます。自動送信はしません。ZIP を確認して Issue にドラッグし、ご自身で送信してください。</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>ログ ZIP を作成して GitHub を開く…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>ZIP のフォルダーを開く</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>保存した診断データを削除</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>オフにすると新しい記録を停止します。診断データの削除で既存ログと ZIP を消去します。旧バージョンの生ログは含めません。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2245,6 +2281,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>切断すると物理ディスプレイを復元し、仮想ディスプレイを削除します。短いネットワーク切断では復旧のため作業領域を維持します。</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>問題を報告…</translation>
     </message>
 </context>
 <context>

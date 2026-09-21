@@ -1916,6 +1916,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>Datenverbrauch in der Seitenleiste anzeigen</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>Diagnose und Feedback</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>Diagnoseprotokolle aktivieren</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>Standardmäßig aus. Erfasst Verbindungs-, Interaktionsstart- und Laufzeitereignisse, Zeitabstände und Auflösungen aus App, Host und Anzeigehelfer. Wirkt sofort. Maximal 9 MiB; beim Betrieb werden über 7 Tage alte Protokolle gelöscht.</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>IP-Adressen, Domains, Gerätenamen und freie Meldungstexte werden ausgelassen. Keine eingegebenen Zeichen, Zwischenablage- oder Bildschirminhalte. Jeder Start erhält eine zufällige anonyme ID. Die Filterung verringert Details und kann nicht jedes Problem diagnostizieren. Archiv vor dem Teilen prüfen.</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>GitHub-Issues und Anhänge sind öffentlich. Die Schaltfläche erstellt eine ZIP und öffnet einen Entwurf. Nichts wird automatisch hochgeladen oder gesendet. ZIP prüfen, in das Issue ziehen und selbst absenden.</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>Protokoll-ZIP erstellen und GitHub öffnen…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>ZIP im Ordner anzeigen</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>Gespeicherte Diagnosedaten löschen</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>Ausschalten beendet neue Aufzeichnungen. Löschen entfernt vorhandene Protokolle und die ZIP. Rohprotokolle älterer Versionen werden nie einbezogen.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2242,6 +2278,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>Beim Trennen werden die physischen Bildschirme wiederhergestellt und der virtuelle Bildschirm entfernt. Bei kurzen Netzunterbrechungen bleibt der Arbeitsbereich zur Wiederherstellung erhalten.</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>Problem melden…</translation>
     </message>
 </context>
 <context>

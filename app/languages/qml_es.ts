@@ -1916,6 +1916,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>Mostrar uso de datos en la barra lateral</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>Diagnóstico y comentarios</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>Activar registros de diagnóstico</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>Desactivado por defecto. Recopila eventos de conexión, preparación de interacción y ejecución, tiempos y resoluciones de la aplicación, el host y el asistente de pantalla. Se aplica inmediatamente. Máximo 9 MiB; durante la ejecución se eliminan registros de más de 7 días.</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>Se omiten IP, dominios, nombres de dispositivos y mensajes libres. No se recopilan caracteres escritos ni contenido del portapapeles o de la pantalla. Cada inicio usa un identificador anónimo aleatorio. El filtrado reduce detalles y no permite diagnosticar todos los problemas. Revise el archivo antes de compartirlo.</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>Los tickets y adjuntos de GitHub son públicos. Este botón crea un ZIP y abre un borrador. No se carga ni envía nada automáticamente. Revise el ZIP, arrástrelo al ticket y envíelo usted mismo.</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>Crear ZIP de registros y abrir GitHub…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>Mostrar ZIP en la carpeta</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>Borrar diagnósticos guardados</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>Desactivar detiene los nuevos registros. Borrar elimina los registros existentes y el ZIP. Nunca se incluyen registros sin filtrar de versiones anteriores.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2242,6 +2278,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>Al desconectar se restauran las pantallas físicas y se elimina la pantalla virtual. Una breve interrupción de red mantiene el espacio de trabajo para recuperarlo.</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>Informar de un problema…</translation>
     </message>
 </context>
 <context>

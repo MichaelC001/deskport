@@ -44,9 +44,11 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>DeskPort's bundled host uses audio input access to capture audio for your remote desktop session.</string>
 	<key>CFBundleVersion</key>
-	<string>VERSION</string>
+	<string>NUMERIC_VERSION</string>
 	<key>CFBundleShortVersionString</key>
-	<string>VERSION</string>
+	<string>NUMERIC_VERSION</string>
+	<key>DeskPortDisplayVersion</key>
+	<string>DISPLAY_VERSION</string>
 	<key>CFBundleDisplayName</key>
 	<string>DeskPort</string>
 </dict>

@@ -1895,6 +1895,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>在側欄顯示流量用量</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>診斷與回饋</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>啟用診斷日誌</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>預設關閉。收集應用程式、內建主機和顯示輔助程式的連線、互動初始化與執行事件、時序及解析度。立即生效。日誌最多 9 MiB，DeskPort 執行時清理超過 7 天的日誌。</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>自動省略 IP、網域、裝置名稱與任意訊息原文。不收集按鍵文字、剪貼簿或畫面內容。每次啟動使用隨機匿名識別碼。過濾會減少細節，無法診斷所有問題；分享前請檢查壓縮檔。</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>GitHub Issue 與附件是公開的。此按鈕產生 ZIP 並開啟問題草稿，不會自動上傳或提交。請檢查 ZIP，拖入 Issue 後自行提交。</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>產生日誌 ZIP 並開啟 GitHub…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>在資料夾中顯示 ZIP</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>清除已儲存的診斷資料</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>關閉日誌會停止新記錄。清除診斷資料會刪除現有日誌與產生的 ZIP。不會包含舊版產生的原始日誌。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2221,6 +2257,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>中斷連線後還原實體螢幕並移除虛擬螢幕。網路短暫中斷時會保留工作區以便復原。</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>回報問題…</translation>
     </message>
 </context>
 <context>
@@ -2913,6 +2953,45 @@
     <message>
         <source>Report a problem</source>
         <translation>回報問題</translation>
+    </message>
+</context>
+<context>
+    <name>Diagnostics</name>
+    <message>
+        <source>Cannot use the diagnostics directory.</source>
+        <translation>無法使用診斷目錄。</translation>
+    </message>
+    <message>
+        <source>Cannot create the diagnostics directory.</source>
+        <translation>無法建立診斷目錄。</translation>
+    </message>
+    <message>
+        <source>Cannot replace the diagnostics archive.</source>
+        <translation>無法取代診斷壓縮檔。</translation>
+    </message>
+    <message>
+        <source>Cannot write the diagnostics archive.</source>
+        <translation>無法寫入診斷壓縮檔。</translation>
+    </message>
+    <message>
+        <source>Cannot save the diagnostics archive.</source>
+        <translation>無法儲存診斷壓縮檔。</translation>
+    </message>
+    <message>
+        <source>Archive contains version information only. Enable logs and reproduce the problem to collect events.</source>
+        <translation>壓縮檔僅含版本資訊。請啟用日誌並重現問題以收集診斷事件。</translation>
+    </message>
+    <message>
+        <source>Archive ready. Review it, then drag the ZIP into your public GitHub issue. Nothing is uploaded automatically.</source>
+        <translation>壓縮檔已產生。請檢查內容，再將 ZIP 拖入公開的 GitHub Issue。不會自動上傳。</translation>
+    </message>
+    <message>
+        <source> Could not open the browser. Open github.com/keithxc/deskport/issues/new manually.</source>
+        <translation> 無法開啟瀏覽器，請手動開啟 github.com/keithxc/deskport/issues/new。</translation>
+    </message>
+    <message>
+        <source>Saved diagnostics cleared.</source>
+        <translation>已清除儲存的診斷資料。</translation>
     </message>
 </context>
 </TS>

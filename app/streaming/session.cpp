@@ -1,3 +1,4 @@
+#include "backend/diagnostics.h"
 #include "connectionwait.h"
 #include "resizetrace.h"
 #include <QElapsedTimer>
@@ -91,6 +92,7 @@ QSemaphore Session::s_ActiveSessionSemaphore(1);
 
 void Session::clStageStarting(int stage)
 {
+    Diagnostics::instance().connection(stage, 0, "starting");
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
@@ -99,6 +101,7 @@ void Session::clStageStarting(int stage)
 
 void Session::clStageFailed(int stage, int errorCode)
 {
+    Diagnostics::instance().connection(stage, errorCode, "failed");
     if (s_ActiveSession->m_RecoveryDeadline) s_ActiveSession->scheduleNetworkRecovery();
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
     unsigned int portFlags = LiGetPortFlagsFromStage(stage);
@@ -111,6 +114,7 @@ void Session::clStageFailed(int stage, int errorCode)
 
 void Session::clConnectionTerminated(int errorCode)
 {
+    Diagnostics::instance().connection(0, errorCode, "terminated");
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
 
     // The host joins the old video/input workers before reporting takeover on

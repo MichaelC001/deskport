@@ -1916,6 +1916,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>사이드바에 데이터 사용량 표시</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>진단 및 피드백</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>진단 로그 사용</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>기본값은 꺼짐입니다. 앱, 내장 호스트, 화면 도우미의 연결, 상호 작용 준비, 실행 이벤트, 시간 및 해상도를 수집합니다. 즉시 적용됩니다. 최대 9 MiB이며 실행 중 7일이 지난 로그를 정리합니다.</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>IP, 도메인, 기기 이름 및 자유 형식 메시지는 자동으로 제외합니다. 입력 문자, 클립보드 및 화면 내용은 수집하지 않습니다. 실행마다 임의의 익명 ID를 사용합니다. 필터링으로 세부 정보가 줄어 모든 문제를 진단할 수는 없습니다. 공유 전 압축 파일을 확인하세요.</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>GitHub 이슈와 첨부 파일은 공개됩니다. ZIP을 만들고 이슈 초안을 엽니다. 자동 업로드나 제출은 하지 않습니다. ZIP을 검토하고 이슈에 끌어 놓은 뒤 직접 제출하세요.</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>로그 ZIP 생성 및 GitHub 열기…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>ZIP 폴더 열기</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>저장된 진단 데이터 삭제</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>로그를 끄면 새 기록이 중지됩니다. 진단 데이터를 삭제하면 기존 로그와 ZIP이 제거됩니다. 이전 버전의 원시 로그는 포함하지 않습니다.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2242,6 +2278,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>연결을 끊으면 실제 화면을 복원하고 가상 화면을 제거합니다. 일시적인 네트워크 중단 시 복구를 위해 작업 공간을 유지합니다.</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>문제 보고…</translation>
     </message>
 </context>
 <context>

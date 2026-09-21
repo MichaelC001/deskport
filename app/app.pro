@@ -1,3 +1,5 @@
+SOURCES += backend/diagnostics.cpp
+HEADERS += backend/diagnostics.h
 HEADERS += backend/smalltcp.h backend/smalltcptunnel.h
 linux {
     CONFIG += link_pkgconfig
@@ -575,8 +577,9 @@ win32 {
 }
 macx {
     # Create Info.plist in object dir with the correct version string
-    system(cp $$PWD/Info.plist $$OUT_PWD/Info.plist)
-    system(sed -i -e 's/VERSION/$$cat(version.txt)/g' $$OUT_PWD/Info.plist)
+    DISPLAY_VERSION = $$cat(version.txt)
+    BUNDLE_VERSION = $$section(DISPLAY_VERSION, -, 0, 0)
+    system(sed -e 's/NUMERIC_VERSION/$$BUNDLE_VERSION/g' -e 's/DISPLAY_VERSION/$$DISPLAY_VERSION/g' $$PWD/Info.plist > $$OUT_PWD/Info.plist)|error("Cannot generate Info.plist")
 
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
 

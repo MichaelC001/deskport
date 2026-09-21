@@ -1,3 +1,4 @@
+#include "backend/diagnostics.h"
 #include <QApplication>
 #include <QDialog>
 #include <QVBoxLayout>
@@ -89,70 +90,13 @@ static void forwardTerminationSignal(int)
 #if defined(Q_OS_WIN32)
 #define IS_UNSPECIFIED_HANDLE(x) ((x) == INVALID_HANDLE_VALUE || (x) == NULL)
 
-// Log to file or console dynamically for Windows builds
-#define LOG_TO_FILE
-#elif !defined(QT_DEBUG) && defined(Q_OS_DARWIN)
-// Log to file for release Mac builds
-#define LOG_TO_FILE
-#else
-// Log to console for debug Mac builds
 #endif
 
 static QElapsedTimer s_LoggerTime;
-static QTextStream s_LoggerStream(stderr);
-static QMutex s_LoggerLock;
 static bool s_SuppressVerboseOutput;
-static QRegularExpression k_RikeyRegex("&rikey=\\w+");
-static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
-#ifdef LOG_TO_FILE
-// Max log file size of 10 MB
-#define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
-static int s_LogBytesWritten = 0;
-static bool s_LogLimitReached = false;
-static QFile* s_LoggerFile;
-#endif
-
 void logToLoggerStream(QString& message)
 {
-    QMutexLocker lock(&s_LoggerLock);
-
-#if defined(QT_DEBUG) && defined(Q_OS_WIN32)
-    // Output log messages to a debugger if attached
-    if (IsDebuggerPresent()) {
-        static QString lineBuffer;
-        lineBuffer += message;
-        if (message.endsWith('\n')) {
-            OutputDebugStringW(lineBuffer.toStdWString().c_str());
-            lineBuffer.clear();
-        }
-    }
-#endif
-
-    // Strip session encryption keys and IVs from the logs
-    message.replace(k_RikeyRegex, "&rikey=REDACTED");
-    message.replace(k_RikeyIdRegex, "&rikeyid=REDACTED");
-
-#ifdef LOG_TO_FILE
-    if (s_LogLimitReached) {
-        return;
-    }
-    else if (s_LogBytesWritten >= MAX_LOG_SIZE_BYTES) {
-        s_LoggerStream << "Log size limit reached!";
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-        s_LoggerStream << Qt::endl;
-#else
-        s_LoggerStream << endl;
-#endif
-        s_LogLimitReached = true;
-        return;
-    }
-    else {
-        s_LogBytesWritten += message.size();
-    }
-#endif
-
-    s_LoggerStream << message;
-    s_LoggerStream.flush();
+    Diagnostics::instance().record("client", message);
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
@@ -272,62 +216,6 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
 #endif
 
-#ifdef Q_OS_WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <DbgHelp.h>
-
-static UINT s_HitUnhandledException = 0;
-
-LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
-{
-    // Only write a dump for the first unhandled exception
-    if (InterlockedCompareExchange(&s_HitUnhandledException, 1, 0) != 0) {
-        return EXCEPTION_CONTINUE_SEARCH;
-    }
-
-    WCHAR dmpFileName[MAX_PATH];
-    swprintf_s(dmpFileName, L"%ls\\DeskPort-%I64u.dmp",
-               (PWCHAR)QDir::toNativeSeparators(Path::getLogDir()).utf16(), QDateTime::currentSecsSinceEpoch());
-    QString qDmpFileName = QString::fromUtf16((const char16_t*)dmpFileName);
-    HANDLE dumpHandle = CreateFileW(dmpFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (dumpHandle != INVALID_HANDLE_VALUE) {
-        MINIDUMP_EXCEPTION_INFORMATION info;
-
-        info.ThreadId = GetCurrentThreadId();
-        info.ExceptionPointers = ExceptionInfo;
-        info.ClientPointers = FALSE;
-
-        DWORD typeFlags = MiniDumpWithIndirectlyReferencedMemory |
-                MiniDumpIgnoreInaccessibleMemory |
-                MiniDumpWithUnloadedModules |
-                MiniDumpWithThreadInfo;
-
-        if (MiniDumpWriteDump(GetCurrentProcess(),
-                               GetCurrentProcessId(),
-                               dumpHandle,
-                               (MINIDUMP_TYPE)typeFlags,
-                               &info,
-                               nullptr,
-                               nullptr)) {
-            qCritical() << "Unhandled exception! Minidump written to:" << qDmpFileName;
-        }
-        else {
-            qCritical() << "Unhandled exception! Failed to write dump:" << GetLastError();
-        }
-
-        CloseHandle(dumpHandle);
-    }
-    else {
-        qCritical() << "Unhandled exception! Failed to open dump file:" << qDmpFileName << "with error" << GetLastError();
-    }
-
-    // Let the program crash and WER collect a dump
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
-#endif
-
 // Both service managers we install deliberately leave a clean quit alone
 // (launchd's KeepAlive.SuccessfulExit=false, systemd's Restart=on-failure), so a
 // restart is handed to a detached shell that waits for this process to
@@ -419,22 +307,7 @@ int main(int argc, char *argv[])
     HANDLE oldConErr = GetStdHandle(STD_ERROR_HANDLE);
 #endif
 
-#ifdef LOG_TO_FILE
-    QDir tempDir(Path::getLogDir());
-
-#ifdef Q_OS_WIN32
-    // Only log to a file if the user didn't redirect stderr somewhere else
-    if (IS_UNSPECIFIED_HANDLE(oldConErr))
-#endif
-    {
-        s_LoggerFile = new QFile(tempDir.filePath(QString("DeskPort-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
-        if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
-            s_LoggerStream.setDevice(s_LoggerFile);
-        }
-    }
-#endif
-
+    Diagnostics::instance(); // Initialize before installing a handler that uses it.
     s_LoggerTime.start();
     qInstallMessageHandler(qtLogToDiskHandler);
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
@@ -443,19 +316,7 @@ int main(int argc, char *argv[])
     av_log_set_callback(ffmpegLogToDiskHandler);
 #endif
 
-#ifdef Q_OS_WIN32
-    // Create a crash dump when we crash on Windows
-    SetUnhandledExceptionFilter(UnhandledExceptionHandler);
-#endif
-
-#ifdef LOG_TO_FILE
-    // Prune the oldest existing logs if there are more than 10
-    QStringList existingLogNames = tempDir.entryList(QStringList("DeskPort-*.log"), QDir::NoFilter, QDir::SortFlag::Time);
-    for (int i = 10; i < existingLogNames.size(); i++) {
-        qInfo() << "Removing old log file:" << existingLogNames.at(i);
-        QFile(tempDir.filePath(existingLogNames.at(i))).remove();
-    }
-#endif
+    // Memory dumps may contain credentials or private input. Do not create them.
 
 #if defined(Q_OS_WIN32)
     // Force AntiHooking.dll to be statically imported and loaded
@@ -673,6 +534,7 @@ int main(int argc, char *argv[])
 #endif
 
     QApplication app(argc, argv);
+    Diagnostics::instance().startMaintenance();
     if (isolatedSessionTest) {
         QFile certFile("test-cert.pem"), keyFile("test-key.pem");
         if (!certFile.open(QIODevice::ReadOnly) || !keyFile.open(QIODevice::ReadOnly)) return 2;
@@ -1053,6 +915,7 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
+    engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
     engine.rootContext()->setContextProperty("startInBackground", app.arguments().contains("--background"));

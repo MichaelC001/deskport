@@ -1,4 +1,21 @@
+## Default diagnostic recording — 2026-09-21
+
+Reason: user requested logs to be available before a fault occurs. Enable bounded,
+privacy-filtered local diagnostics by default; preserve saved off preferences.
+Storage limits, retention and manual-only uploads remain unchanged.
+
 ## Encoding efficiency audit — 2026-09-21
+
+## Bounded diagnostics and feedback — 2026-09-21
+
+Reason: user-requested privacy-conscious log collection for real connection and
+interaction reports. Desktop/embedded host/display logging now shares a default-on
+sink with bounded, allowlisted event records. Settings generates a validated local
+ZIP and opens a public GitHub issue draft; upload and submission remain manual.
+See [DIAGNOSTICS.md](DIAGNOSTICS.md) for the exact audit, storage limits and tests.
+Next checkpoint: review this development commit, then separately authorize a
+candidate package and validate real user reports after manual activation.
+
 
 Reason: small screen changes at high FPS still consumed the configured bitrate.
 The bundled Vulkan H.264/HEVC encoder test confirmed CBR filler dominates the

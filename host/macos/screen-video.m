@@ -4,6 +4,9 @@
 #import <ScreenCaptureKit/ScreenCaptureKit.h>
 #import <QuartzCore/QuartzCore.h>
 #include <stdlib.h>
+#include <stdio.h>
+// Route capture diagnostics through the parent pipe, never the system NSLog store.
+#define DP_CAPTURE_LOG(format, ...) fprintf(stderr, "%s\n", [[NSString stringWithFormat:format, ##__VA_ARGS__] UTF8String])
 #include <string.h>
 #include "admitted-display.h"
 
@@ -65,7 +68,7 @@
         if (!s || s.finished) return;
         double now = CACurrentMediaTime();
         if (!s.latest && now - s.started >= 5.0) {
-            NSLog(@"DeskPort ScreenCaptureKit: first-frame timeout");
+            DP_CAPTURE_LOG(@"DeskPort ScreenCaptureKit: first-frame timeout");
             s.failed = YES;
             [s finish];
             return;
@@ -85,7 +88,7 @@
                 if (candidate.displayID == display) { selected = candidate; break; }
             }
             if (error || !selected) {
-                NSLog(@"DeskPort ScreenCaptureKit: display unavailable (%@)", error);
+                DP_CAPTURE_LOG(@"DeskPort ScreenCaptureKit: display unavailable (%@)", error);
                 self.failed = YES;
                 [self finish];
                 return;
@@ -95,7 +98,7 @@
             NSError *outputError = nil;
             if (![self.stream addStreamOutput:self type:SCStreamOutputTypeScreen
                           sampleHandlerQueue:self.queue error:&outputError]) {
-                NSLog(@"DeskPort ScreenCaptureKit: output failed (%@)", outputError);
+                DP_CAPTURE_LOG(@"DeskPort ScreenCaptureKit: output failed (%@)", outputError);
                 self.failed = YES;
                 [self finish];
                 return;
@@ -103,7 +106,7 @@
             [self.stream startCaptureWithCompletionHandler:^(NSError *startError) {
                 if (startError) dispatch_async(self.queue, ^{
                     if (self.finished) return;
-                    NSLog(@"DeskPort ScreenCaptureKit: start failed (%@)", startError);
+                    DP_CAPTURE_LOG(@"DeskPort ScreenCaptureKit: start failed (%@)", startError);
                     self.failed = YES;
                     [self finish];
                 });
@@ -114,7 +117,7 @@
 - (void)stream:(SCStream *)stream didStopWithError:(NSError *)error {
     dispatch_async(self.queue, ^{
         if (self.finished) return;
-        NSLog(@"DeskPort ScreenCaptureKit: capture stopped (%@)", error);
+        DP_CAPTURE_LOG(@"DeskPort ScreenCaptureKit: capture stopped (%@)", error);
         self.failed = YES;
         [self finish];
     });
@@ -130,7 +133,7 @@
     NSArray *dirty = attachments.firstObject[SCStreamFrameInfoDirtyRects];
     if ([dirty isKindOfClass:[NSArray class]] && dirty.count == 0) ++self.emptyDamageFrames;
     if (now - self.statsAt >= 5.0) {
-        NSLog(@"DeskPort capture updates: complete=%lu idle=%lu empty_damage=%lu", (unsigned long)self.completeFrames,
+        DP_CAPTURE_LOG(@"DeskPort capture updates: complete=%lu idle=%lu empty_damage=%lu", (unsigned long)self.completeFrames,
               (unsigned long)self.idleFrames, (unsigned long)self.emptyDamageFrames);
         self.completeFrames = self.idleFrames = self.emptyDamageFrames = 0;
         self.statsAt = now;
@@ -194,14 +197,14 @@
         // discovery cannot consume the authenticated resume request's deadline.
         // Do not advertise 10-bit support based on an 8-bit substitute.
         if (getenv("DESKPORT_CAPTURE_DISPLAY_FILE")) {
-            NSLog(@"DeskPort capture: unsupported managed-display pixel format %u", self.pixelFormat);
+            DP_CAPTURE_LOG(@"DeskPort capture: unsupported managed-display pixel format %u", self.pixelFormat);
             return nil;
         }
         if (!self.legacy) self.legacy = [[AVVideo alloc] initWithDisplay:self.displayID
             frameRate:(int)(1.0 / CMTimeGetSeconds(self.minFrameDuration))];
         self.legacy.pixelFormat = self.pixelFormat;
         [self.legacy setFrameWidth:self.frameWidth frameHeight:self.frameHeight];
-        NSLog(@"DeskPort capture: AVFoundation compatibility format %u (no CPU pixel comparison)", self.pixelFormat);
+        DP_CAPTURE_LOG(@"DeskPort capture: AVFoundation compatibility format %u (no CPU pixel comparison)", self.pixelFormat);
         return [self.legacy capture:callback];
     }
     SCStreamConfiguration *config = [[SCStreamConfiguration alloc] init];
@@ -221,7 +224,7 @@
         self.captures[[NSValue valueWithPointer:(__bridge const void *)capture.signal]] = capture;
         [capture startDisplay:self.displayID configuration:config];
     });
-    NSLog(@"DeskPort capture: ScreenCaptureKit native updates, no CPU pixel comparison");
+    DP_CAPTURE_LOG(@"DeskPort capture: ScreenCaptureKit native updates, no CPU pixel comparison");
     return capture.signal;
 }
 - (BOOL)captureFailed:(dispatch_semaphore_t)signal {

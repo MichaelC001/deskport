@@ -73,7 +73,7 @@ xcrun stapler staple "$app"
 xcrun stapler validate "$app"
 codesign --verify --deep --strict "$app"
 spctl --assess --type execute --verbose=2 "$app"
-version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")
+version=$(/usr/libexec/PlistBuddy -c 'Print :DeskPortDisplayVersion' "$app/Contents/Info.plist")
 dmg="$output/DeskPort-$version-macos-arm64.dmg"
 zip="$output/DeskPort-$version-macos-arm64.zip"
 if [ ! -s "$output/dmg-submit.json" ]; then
