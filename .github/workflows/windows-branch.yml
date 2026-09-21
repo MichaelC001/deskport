@@ -1,0 +1,38 @@
+name: Windows branch checks
+
+on:
+  push:
+    branches: [dev/windows]
+  pull_request:
+    branches: [dev/windows]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Validate Windows build scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          find winbuild/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
+          python3 -m compileall -q winbuild/scripts
+          if grep -R -nE '/nix/store|/run/current-system' winbuild/scripts; then
+            echo "Windows build scripts must not depend on machine-specific Nix paths." >&2
+            exit 1
+          fi
+
+      - name: Shared smart-stream regressions
+        run: |
+          python3 scripts/test-smart-stream.py
+          python3 scripts/test-host-network.py
+
+      - name: Translation consistency
+        run: python3 scripts/test-translations.py
