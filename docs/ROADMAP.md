@@ -5,7 +5,9 @@ preservation of configured connection entries during authenticated refresh.
 The user-selected release scope is macOS arm64 and Linux x86_64, including all
 supported desktop package formats. Windows remains on its development branch
 and is excluded from this release. Native streaming acceptance and deployment
-remain separate from package verification and publication.
+remain separate from package verification and publication. Distribution signing
+retries transient Apple timestamp-service failures up to three attempts per
+object; all signature, timestamp and notarization requirements remain enforced.
 
 ## ENet host creation failure — 2026-09-21
 
