@@ -22,7 +22,7 @@ patch('src/video.cpp', '''    // set max frame time based on client-requested ta
 ''', '''    const bool smart = std::getenv("DESKPORT_SMART_STREAMING") &&
         std::string_view(std::getenv("DESKPORT_SMART_STREAMING")) == "1";
     deskport::StreamPolicy policy(config.framerate);
-    auto congestion = mail->event<bool>("deskport_congestion");
+    auto congestion = mail->event<int>("deskport_congestion");
     const auto smart_start = std::chrono::steady_clock::now();
     int last_target = config.framerate;
     auto last_encoded = smart_start;
@@ -81,7 +81,7 @@ patch('src/stream.cpp', '''    server->map(packetTypes[IDX_LOSS_STATS], [&](sess
     // Only final, unrecoverable blocks count; repaired loss must not lower FPS.
     server->map(0x5502, [](session_t *session, const std::string_view &payload) {
       if (deskport::unrecoverableFec(reinterpret_cast<const unsigned char *>(payload.data()), payload.size())) {
-        session->mail->event<bool>("deskport_congestion")->raise(true);
+        session->mail->event<int>("deskport_congestion")->raise(1);
       }
     });
 

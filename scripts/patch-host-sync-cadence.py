@@ -41,7 +41,7 @@ patch(old, '''          std::optional<std::chrono::steady_clock::time_point> fra
             auto &cadence = *pos->deskport_cadence;
             const auto now_us = std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
-            if (ctx->deskport_mail->event<bool>("deskport_congestion")->pop(0ms))
+            if (ctx->deskport_mail->event<int>("deskport_congestion")->pop(0ms))
               cadence.policy.loss(now_us / 1000);
             if (auto boost = ctx->deskport_mail->event<deskport::ActivityBoost>("deskport_activity")->pop(0ms))
               cadence.boost = *boost;

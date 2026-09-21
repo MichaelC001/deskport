@@ -17,4 +17,14 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         assert 'ctx->config.deskport_smart' in video
         assert 'deskport_cadence.emplace(ctx.config.framerate,' in video
         assert 'pos->deskport_timestamp.reset()' in video
+        # Compile the actual upstream mailbox template: the older bool event
+        # cannot instantiate timed pop(), while optional<int> works on both.
+        mailbox = target / 'cadence-mailbox.cpp'
+        mailbox.write_text('#include "src/thread_safe.h"\n#include <cassert>\n'
+            'int main() { safe::event_t<int> event; '
+            'assert(!event.pop(std::chrono::milliseconds(0))); '
+            'event.raise(1); assert(event.pop(std::chrono::milliseconds(0))); '
+            'assert(!event.pop(std::chrono::milliseconds(0))); }\n')
+        subprocess.run(['c++', '-std=c++23', '-pthread', str(mailbox), '-o', str(target / 'mailbox-test')], check=True)
+        subprocess.run([str(target / 'mailbox-test')], check=True)
         print(f'PASS: async/sync/input/PipeWire overlays: {archive}')
