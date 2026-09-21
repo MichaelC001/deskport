@@ -22,6 +22,17 @@ static QQuickItem* findVisual(QQuickItem* item, const QString& name) {
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
 }
+class TestUpdates : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString status MEMBER status CONSTANT)
+    Q_PROPERTY(QString latestVersion MEMBER version CONSTANT)
+    Q_PROPERTY(QString releaseNotes MEMBER notes CONSTANT)
+    Q_PROPERTY(QString publishedAt MEMBER date CONSTANT)
+    Q_PROPERTY(QString releaseUrl MEMBER url CONSTANT)
+public:
+    QString status = "available", version = "0.4.6", notes = "Release notes", date = "2026-09-21", url = "https://github.com/keithxc/deskport/releases/tag/v0.4.6";
+    Q_INVOKABLE void start() {}
+};
 class TestSession : public QObject {
     Q_OBJECT
 public:
@@ -164,7 +175,7 @@ private slots:
     }
     void initTestCase() {
         qmlRegisterType<TestComputers>("ComputerModel",1,0,"ComputerModel");
-        qmlRegisterSingletonType<QObject>("AutoUpdateChecker",1,0,"AutoUpdateChecker",+[](QQmlEngine*,QJSEngine*) -> QObject* { return new QObject; });
+        qmlRegisterSingletonType<QObject>("AutoUpdateChecker",1,0,"AutoUpdateChecker",+[](QQmlEngine*,QJSEngine*) -> QObject* { return new TestUpdates; });
         qmlRegisterType<TestSession>("Session",1,0,"Session");
         qmlRegisterType<TestDesktopApps>("AppModel",1,0,"AppModel");
         qmlRegisterSingletonType<QObject>("SdlGamepadKeyNavigation",1,0,"SdlGamepadKeyNavigation",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
@@ -633,6 +644,12 @@ ApplicationWindow {
         QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
         auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
         window->resize(800,620); window->show(); QTest::qWait(100);
+        auto updateButton = findVisual(window->contentItem(), "versionUpdateButton"); QVERIFY(updateButton);
+        QVERIFY(updateButton->property("highlighted").toBool());
+        QVERIFY(QMetaObject::invokeMethod(updateButton, "clicked"));
+        auto updatePopup = root->findChild<QObject*>("updateDialog"); QVERIFY(updatePopup);
+        QVERIFY(updatePopup->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(updatePopup, "close"));
         QCOMPARE(root->property("testDepth").toInt(),2);
         // Discard only initial setup navigation, which is scheduled once.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));

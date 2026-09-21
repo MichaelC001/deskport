@@ -1462,3 +1462,35 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
   explicit damage metadata without GPU readback. Keep video updates independent of input.
 - Deliver a private Nix/macOS candidate; physical Linux idle/input/video validation
   follows the user's manual activation. This is not a formal release.
+
+
+### Desktop stable update entry and remote macOS upgrade (2026-09-21)
+
+Phase 1 implemented: the sidebar version opens stable release status and plain-text
+release notes, with a GitHub download-page action on macOS and Linux. Checks run
+at startup and every six hours; manual retry is available. Requests time out after
+15 seconds, reject draft/prerelease or malformed metadata and unexpected release
+URLs, and compare numeric versions to avoid downgrade prompts. Includes English,
+Simplified Chinese and Traditional Chinese UI. Installation remains manual; the
+UI directs Nix-managed users to their existing package-management workflow.
+
+Validation: isolated stable-channel parser tests and macOS app compilation passed.
+All 22 isolated Qt UI regressions passed, including opening the update dialog. Linux Nix build attempted
+but unavailable: this Mac has no configured x86_64-linux builder.
+
+TODO — macOS self-update (deferred by user, 2026-09-21):
+- [ ] Evaluate Sparkle 2 with Qt UI and the signed/notarized release pipeline.
+- [ ] Detect ordinary writable app installs versus Nix-managed installations.
+- [ ] Download and authenticate the complete update before stopping sharing;
+      resolve required installation authorization while still connected.
+- [ ] Use an independent installer; coordinate login-agent restart and temporary
+      recovery-helper suppression so replacement survives remote disconnection.
+- [ ] Preserve pairing, app identity, settings and previously enabled sharing;
+      validate capture/input permissions after replacement.
+- [ ] Define bounded health checks, old-version recovery and configuration rollback.
+- [ ] Verify a real remote old-to-new upgrade, reconnection, video and input,
+      interrupted downloads and failed-start recovery before claiming unattended
+      update support. This does not include rebooting macOS.
+
+Next action: review phase 1 in a candidate build. No automatic installation,
+release publication or deployed-service changes are included in this phase.
