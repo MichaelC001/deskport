@@ -2397,6 +2397,26 @@
         <source>Discover nearby devices</source>
         <translation>近くのデバイスを検出</translation>
     </message>
+    <message>
+        <source>Request access to a computer</source>
+        <translation>コンピューターへのアクセスを要求</translation>
+    </message>
+    <message>
+        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+        <translation>承認すると、このデバイスから相手のコンピューターを表示・操作できます。このデバイス自身のデスクトップは共有されません。</translation>
+    </message>
+    <message>
+        <source>Host access</source>
+        <translation>ホストアクセス</translation>
+    </message>
+    <message>
+        <source>Forget saved binding</source>
+        <translation>保存済みの連携を削除</translation>
+    </message>
+    <message>
+        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+        <translation>このデバイスに保存された %1 の連携を削除しますか？デバイス一覧からは別途削除してください。このデバイスのアクセス権を取り消すには、ホスト側でも削除してください。</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
