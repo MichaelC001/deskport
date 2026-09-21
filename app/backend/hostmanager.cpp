@@ -1,3 +1,4 @@
+#include "diagnostics.h"
 #include <QSysInfo>
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -92,6 +93,20 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
                                 error.isEmpty() ? QStringLiteral("Display restoration did not complete") : error);
         }
     });
+    // Drain child pipes even while disabled. Raw data remains transient; no raw
+    // file handles are inherited, and toggles affect already-running children.
+    const auto consumeHost = [this](const QByteArray& output) {
+        Diagnostics::instance().ingest("host", output);
+        // Operational status must work without diagnostic files. Fixed messages only.
+        m_DiagnosticStatusBuffer = (m_DiagnosticStatusBuffer + output).right(4096);
+        if (m_DiagnosticStatusBuffer.contains("No screen capture permission"))
+            setStatus(tr("Screen recording permission is required. Authorize DeskPort in system settings, then restart sharing."));
+        else if (m_DiagnosticStatusBuffer.contains("Video failed to find working encoder"))
+            setStatus(tr("Screen capture could not start. Check screen recording permission and encoder availability."));
+    };
+    connect(&m_Server, &QProcess::readyReadStandardOutput, this, [this, consumeHost] { consumeHost(m_Server.readAllStandardOutput()); });
+    connect(&m_Server, &QProcess::readyReadStandardError, this, [this, consumeHost] { consumeHost(m_Server.readAllStandardError()); });
+    connect(&m_Display, &QProcess::readyReadStandardError, this, [this] { Diagnostics::instance().ingest("display", m_Display.readAllStandardError()); });
     m_Network.setProxy(QNetworkProxy::NoProxy);
     m_Directory = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/host" : directory;
     m_Status = available() ? tr("Sharing is off") : tr("The bundled DeskPort host is missing. Repair the installation to enable sharing.");
@@ -204,6 +219,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         }
     });
     connect(&m_Server, &QProcess::started, this, [this] {
+        Diagnostics::instance().record("host", "Host started");
         if (m_Stopping) { m_Server.terminate(); return; }
         m_Starting = false;
         m_DisplayFailures = 0;
@@ -213,17 +229,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         QTimer::singleShot(60000, this, [this, generation] {
             if (generation == m_Generation && m_Server.state() == QProcess::Running) m_RecoveryAttempt = 0;
         });
-        QTimer::singleShot(3000, this, [this, generation] {
-            if (generation != m_Generation || m_Server.state() != QProcess::Running) return;
-            QFile log(m_Directory + "/host.log");
-            if (!log.open(QIODevice::ReadOnly)) return;
-            log.seek(m_LogOffset);
-            const auto output = log.readAll();
-            if (output.contains("No screen capture permission"))
-                setStatus(tr("Screen recording permission is required. Click Screen recording, authorize DeskPort in macOS, then stop and start sharing."));
-            else if (output.contains("Video failed to find working encoder"))
-                setStatus(tr("Screen capture could not start. Check host logs, then stop and start sharing."));
-        });
+
     });
     const auto watchProcess = [this](QProcess *process, const QString &label) {
         connect(process, &QProcess::errorOccurred, this, [this, process, label](QProcess::ProcessError) {
@@ -236,6 +242,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
             beginStop(tr("%1 stopped (%2). See host logs, then retry.").arg(label).arg(code));
         });
     };
+    connect(&m_Display, &QProcess::started, this, [] { Diagnostics::instance().record("display", "Display started"); });
     watchProcess(&m_Server, tr("Host"));
     watchProcess(&m_Display, tr("Virtual display"));
     connect(&m_Credentials, &QProcess::errorOccurred, this, [this](QProcess::ProcessError) {
@@ -252,11 +259,14 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #ifdef Q_OS_WIN
         m_Server.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
 #else
+        m_DiagnosticStatusBuffer.clear();
+#ifdef Q_OS_WIN
+        m_Server.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
+#else
         m_Server.setWorkingDirectory(m_Directory);
 #endif
-        m_LogOffset = QFileInfo(m_Directory + "/host.log").size();
-        m_Server.setStandardOutputFile(m_Directory + "/host.log", QIODevice::Append);
-        m_Server.setStandardErrorFile(m_Directory + "/host.log", QIODevice::Append);
+#endif
+        m_Server.setProcessChannelMode(QProcess::SeparateChannels);
         // The child cannot inherit these listeners. Release immediately before
         // starting it; bind failures still clean up only our own processes.
         m_Ports.release();
@@ -489,7 +499,7 @@ void HostManager::start(int width, int height) {
     }
     m_Buffer.clear(); m_Starting = true; m_ServerRequested = false;
     const auto generation = ++m_Generation;
-    m_Display.setStandardErrorFile(m_Directory + "/display.log", QIODevice::Append);
+    // stderr is consumed by the shared diagnostics sink; stdout is the control protocol.
 #ifdef Q_OS_LINUX
     m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false;
     QFile::remove(m_Directory + "/virtual-display.json");
@@ -556,7 +566,7 @@ void HostManager::startServer(int displayId) {
     QSaveFile config(m_Directory + "/sunshine.conf");
     if (!config.open(QIODevice::WriteOnly)) { beginStop(tr("Cannot write host configuration")); return; }
     config.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
-    config.write(QString("file_apps = %1/apps.json\nfile_state = %1/state.json\npkey = %1/credentials/key.pem\ncert = %1/credentials/cert.pem\ncredentials_file = %1/control.json\nlog_path = %1/sunshine.log\n").arg(m_Directory).toUtf8());
+    config.write(QString("file_apps = %1/apps.json\nfile_state = %1/state.json\npkey = %1/credentials/key.pem\ncert = %1/credentials/cert.pem\ncredentials_file = %1/control.json\nlog_path = %2\n").arg(m_Directory, QProcess::nullDevice()).toUtf8());
     config.write("stream_audio = enabled\n");
     QString deviceName = QHostInfo::localHostName().left(64);
     deviceName.replace('\n', ' '); deviceName.replace('\r', ' ');
@@ -823,7 +833,7 @@ void HostManager::permission(const QString &kind) {
 #endif
     refreshPermissions();
 }
-void HostManager::openLogs() { QDesktopServices::openUrl(QUrl::fromLocalFile(m_Directory)); }
+void HostManager::openLogs() { Diagnostics::instance().feedback(); }
 
 bool HostManager::loginStartManaged() const {
 #ifdef Q_OS_LINUX

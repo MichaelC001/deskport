@@ -85,3 +85,60 @@ one after this change; measure the time saved on the target desktop after upgrad
 The full network resume and encoder probing remain; this is not video-only
 reconfiguration. Retest audio, input, rapid size changes, cancellation and returning
 to the control center before claiming native acceptance.
+
+## Input-driven cadence and connection preparation (2026-09-21)
+
+Initial connection no longer sleeps 3.5 seconds per informational warning or
+1.5 seconds for the segue. Adaptive sessions map the real loading window before
+negotiating the workspace, wait for its compositor geometry to settle (500 ms
+quiet, 1500 ms bound), and retain that same native window for streaming. Hidden
+codec probes remain separate. Cancellation consumes pending input and releases
+only the pending session. Initial connections now emit the same probe, input,
+resume and decoder timing markers as resize continuations.
+
+The smart host on macOS and Linux observes authenticated, enabled keyboard/mouse input using
+the existing control channel. Typing, clicks and nonzero scrolling request a
+350 ms cadence boost; sustained activity extends it to 700 ms. Pointer movement
+requires six units of net displacement, starts at 30 FPS for 180 ms, and reaches
+60 FPS on sustained input. Alternating tiny jitter, repeated absolute positions,
+controller status traffic and malformed packets do not renew activity. All
+cadence targets are bounded by the client FPS and congestion ceiling. Input does
+not request an IDR. State belongs to the media session and expires with it.
+
+Completely idle content has a one-FPS refresh floor. New capture updates are
+still consumed immediately, independently of that floor. During activity the
+encoder checks for updates at most every two milliseconds; when idle it polls at
+most every ten milliseconds for lifecycle and recovery. After the bounded input
+hold, cadence returns to one FPS. Zero-FPS quiescence is not enabled.
+
+This changes transmission cadence and therefore actual traffic, not the live
+VideoToolbox target bitrate. The existing negotiated bitrate ceiling remains in
+force; do not describe a logged policy value as a successful encoder rate change.
+A live bitrate setter needs a supported encoder interface and packet-level
+verification before it can replace the existing prebuilt FFmpeg path.
+
+Validation requires separate static text/clock, single click, typing, scrolling,
+continuous pointer movement, sensor jitter and injected loss cases. Record both
+policy cadence and measured receive/render FPS. The synthetic classifier tests
+are not physical input-to-photon acceptance. Compare initial mode request to
+first render submission and count immediate resize continuations, then verify
+visible correctness and input on the actual client after manual activation.
+
+### Linux host cadence (private candidate)
+
+Both asynchronous and synchronous encoders use the same session-local input
+classifier, hold times and congestion policy. The synchronous path retains the
+last converted update across denied slots, including its capture timestamp.
+Recovery requests bypass pacing; disabling smart streaming retains stock cadence.
+
+KDE/GNOME PipeWire capture polls at bounded intervals so input, recovery and
+shutdown are serviced while idle. Explicit empty SPA video-damage metadata can
+suppress consecutive unchanged captures; missing metadata, sequence gaps and
+first frames are treated conservatively. No GPU readback or full-frame CPU hash
+is added. Other Linux capture backends share the encoder policy but can still
+produce duplicate frames when they cannot report unchanged content. One FPS is
+an idle refresh target, not a cap on video, cursor or animation updates.
+
+The metadata interpretation follows the [PipeWire SPA definition](https://docs.pipewire.org/meta_8h.html).
+Pure policy tests and both vendored-source overlay checks precede the Nix build.
+Physical Linux idle/input/video acceptance remains a manual test after activation.

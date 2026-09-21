@@ -1399,6 +1399,17 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Update available</source><translation>有更新</translation></message>
+    <message><source>DeskPort updates</source><translation>DeskPort 更新</translation></message>
+    <message><source>Checking for updates…</source><translation>正在检查更新…</translation></message>
+    <message><source>New version: %1</source><translation>发现新版本：%1</translation></message>
+    <message><source>No newer stable release is available.</source><translation>暂无更新的正式版本。</translation></message>
+    <message><source>Could not check for updates. Please try again.</source><translation>无法检查更新，请稍后重试。</translation></message>
+    <message><source>Published: %1</source><translation>发布日期：%1</translation></message>
+    <message><source>No release notes provided.</source><translation>此版本未提供更新日志。</translation></message>
+    <message><source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source><translation>将打开 GitHub 发布页面，请按原有方式安装；由 Nix 管理的安装请通过 Nix 更新。</translation></message>
+    <message><source>Check again</source><translation>重新检查</translation></message>
+    <message><source>Open download page</source><translation>前往下载页面</translation></message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>Settings</source>
@@ -1904,6 +1915,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>在侧栏显示流量用量</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>诊断与反馈</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>启用诊断日志</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>默认关闭。收集应用、内嵌主机和显示辅助程序的连接、交互初始化和运行事件、时序及分辨率。立即生效。日志最多 9 MiB，DeskPort 运行时清理超过 7 天的日志。</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>自动省略 IP、域名、设备名和任意消息原文。不收集按键文字、剪贴板或屏幕内容。每次启动使用随机匿名标识。过滤会减少细节，无法诊断所有问题；分享前请检查压缩包。</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>GitHub Issue 和附件是公开的。此按钮生成 ZIP 并打开问题草稿，不会自动上传或提交。请检查 ZIP，拖入 Issue 后自行提交。</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>生成日志 ZIP 并打开 GitHub…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>在文件夹中显示 ZIP</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>清除已保存的诊断资料</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>关闭日志会停止新记录。清除诊断资料会删除已有日志和生成的 ZIP。不会包含旧版产生的原始日志。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2233,6 +2280,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>断开连接后恢复物理屏幕并移除虚拟屏幕。网络短暂中断时会保留工作区以便恢复。</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>报告问题…</translation>
     </message>
 </context>
 <context>
@@ -2935,6 +2986,45 @@
     <message>
         <source>Report a problem</source>
         <translation>报告问题</translation>
+    </message>
+</context>
+<context>
+    <name>Diagnostics</name>
+    <message>
+        <source>Cannot use the diagnostics directory.</source>
+        <translation>无法使用诊断目录。</translation>
+    </message>
+    <message>
+        <source>Cannot create the diagnostics directory.</source>
+        <translation>无法创建诊断目录。</translation>
+    </message>
+    <message>
+        <source>Cannot replace the diagnostics archive.</source>
+        <translation>无法替换诊断压缩包。</translation>
+    </message>
+    <message>
+        <source>Cannot write the diagnostics archive.</source>
+        <translation>无法写入诊断压缩包。</translation>
+    </message>
+    <message>
+        <source>Cannot save the diagnostics archive.</source>
+        <translation>无法保存诊断压缩包。</translation>
+    </message>
+    <message>
+        <source>Archive contains version information only. Enable logs and reproduce the problem to collect events.</source>
+        <translation>压缩包仅含版本信息。请启用日志并重现问题以收集诊断事件。</translation>
+    </message>
+    <message>
+        <source>Archive ready. Review it, then drag the ZIP into your public GitHub issue. Nothing is uploaded automatically.</source>
+        <translation>压缩包已生成。请检查内容，再将 ZIP 拖入公开的 GitHub Issue。不会自动上传。</translation>
+    </message>
+    <message>
+        <source> Could not open the browser. Open github.com/keithxc/deskport/issues/new manually.</source>
+        <translation> 无法打开浏览器，请手动打开 github.com/keithxc/deskport/issues/new。</translation>
+    </message>
+    <message>
+        <source>Saved diagnostics cleared.</source>
+        <translation>已清除保存的诊断资料。</translation>
     </message>
 </context>
 </TS>

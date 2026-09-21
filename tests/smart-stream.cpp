@@ -1,10 +1,42 @@
 #include "host/common/smartstream.h"
+#include "host/common/encoderpolicy.h"
+#include "host/common/inputactivity.h"
+#include "host/common/framecadence.h"
 #include "app/backend/streambudget.h"
 #include <cassert>
 #include <iostream>
 #include <vector>
 int main() {
+    deskport::KeyframeRequests keys;
+    keys.submitted(10, true);
+    keys.submitted(11, false);
+    assert(!keys.take(7)); // Delayed packet must not consume the new request.
+    assert(keys.take(10));
+    assert(!keys.take(10));
+    assert(!keys.take(11));
+    keys.submitted(20, true);
+    keys.submitted(21, true);
+    assert(keys.take(21)); // Match even when a backend reorders outputs.
+    assert(keys.take(20));
+
     using namespace DeskPortStream;
+    for (bool smart : {false, true}) for (bool qualified : {false, true})
+        for (int mode : {0, 1, 2, 4}) for (int attempt : {0, 1}) {
+            const auto rate = deskport::rateControl(smart, qualified, mode, attempt);
+            const bool expected = smart && qualified && mode == 2 && attempt == 0;
+            assert(rate.boundedVbr == expected && rate.retryOriginalOnFailure == expected);
+        }
+    deskport::EncodedWindow encoded, otherSession;
+    assert(!encoded.add(1000, 1000, true));
+    assert(!encoded.add(5999, 2000, false));
+    assert(encoded.add(6000, 7000, false));
+    assert(encoded.bytes == 10000 && encoded.packets == 3 && encoded.keys == 1);
+    assert(encoded.maxPacketBytes == 7000 && encoded.mbps(6000) == 0.016);
+    assert(otherSession.bytes == 0);
+    encoded.reset(6000);
+    assert(encoded.bytes == 0 && encoded.keys == 0 && encoded.maxPacketBytes == 0);
+    assert(!encoded.add(6000, 100, false) && encoded.mbps(6000) == 0.0);
+
     assert(initialBitrate(25000,2560,1440,60,false)==15000);
     assert(initialBitrate(7000,3840,2160,60,false)==7000);
     assert(initialBitrate(40000,1280,720,30,false)==5000);
@@ -46,5 +78,70 @@ int main() {
     assert(idle.frameRate(116000)==15);
     deskport::StreamPolicy low(10);
     low.loss(8000);low.loss(9500);low.loss(11000);assert(low.frameRate(11000)==10);
+    // Input packets are classified without unaligned reads or retaining key data.
+    auto packet = [](unsigned type, unsigned size) {
+        std::vector<unsigned char> p(size);
+        p[3] = size - 4;
+        for (int i=0;i<4;++i) p[4+i] = (type >> (8*i)) & 255;
+        return p;
+    };
+    deskport::InputActivity input;
+    auto key = packet(3,14);
+    auto boost = input.observe(key.data(),key.size(),1000);
+    assert(deskport::activityFrameRate(boost,1000,120)==60);
+    assert(deskport::activityFrameRate(boost,1000,15)==15); // loss cap wins
+    assert(deskport::activityFrameRate(boost,1350,60)==1);
+    input.observe(key.data(),key.size(),1100);
+    boost=input.observe(key.data(),key.size(),1200);
+    assert(boost.untilMs==1900); // continued typing holds activity
+    assert(deskport::activityFrameRate(boost,1900,60)==1);
+    for(unsigned n=0;n<14;++n) assert(input.observe(key.data(),n,1300).untilMs==0);
+    key[3]=11;assert(input.observe(key.data(),key.size(),1300).untilMs==0);
+    deskport::InputActivity pointer;
+    auto move=packet(7,12);
+    for(int i=0;i<1000;++i) {
+        move[8]=(i%2)?255:0;move[9]=(i%2)?255:1;
+        assert(pointer.observe(move.data(),move.size(),i*10).untilMs==0);
+    }
+    move[8]=0;move[9]=8;
+    boost=pointer.observe(move.data(),move.size(),11000);
+    assert(boost.fps==30 && boost.untilMs==11180);
+    pointer.observe(move.data(),move.size(),11050);
+    boost=pointer.observe(move.data(),move.size(),11100);
+    assert(boost.fps==60 && boost.untilMs==11800);
+    auto abs=packet(5,18);abs[15]=100;abs[17]=100;abs[9]=50;abs[11]=50;
+    deskport::InputActivity absolute;
+    assert(absolute.observe(abs.data(),abs.size(),1000).untilMs==0);
+    for(int i=0;i<1000;++i) {
+        abs[9]=50+(i%2);
+        assert(absolute.observe(abs.data(),abs.size(),1010+i*10).untilMs==0);
+    }
+    abs[9]=60;assert(absolute.observe(abs.data(),abs.size(),12000).fps==30);
+    assert(deskport::activityFrameRate({},0,60)==1);
+    assert(deskport::activityFrameRate(boost,11100,1)==1);
+    deskport::StreamPolicy absoluteClock(60, 100000);
+    absoluteClock.loss(100000); absoluteClock.loss(101500); absoluteClock.loss(103000);
+    assert(absoluteClock.frameRate(103000)==60); // same startup guard for both clocks
+    absoluteClock.loss(105000); absoluteClock.loss(108000);
+    assert(absoluteClock.frameRate(108000)==30);
+    deskport::FrameCadence cadence(60);
+    assert(cadence.admit(1000000,true,false));
+    assert(!cadence.admit(1999999,false,false));
+    assert(cadence.admit(2000000,false,false)); // one-second idle refresh
+    assert(cadence.admit(2001000,true,false)); // changed content bypasses idle timer
+    cadence.boost = {2350,60};
+    assert(cadence.admit(2020000,false,false)); // input wakes duplicates immediately
+    assert(!cadence.admit(2030000,false,false));
+    assert(cadence.admit(2040000,false,false));
+    assert(!cadence.admit(2350000,false,false)); // expired hold returns to idle
+    assert(cadence.admit(2350001,false,true)); // recovery does not wait for idle
+    deskport::FrameCadence pending(60);
+    pending.policy.loss(8000); pending.policy.loss(9500); pending.policy.loss(11000);
+    assert(pending.admit(12000000,true,false));
+    assert(!pending.admit(12005000,true,false));
+    assert(pending.admit(12034000,false,false)); // final update survives denied slot
+    assert(!pending.admit(12068000,false,false)); // no healthy-frame recovery from idle
+    deskport::FrameCadence other(30);
+    assert(other.floor(12068000)==1); // no cross-session input state
     std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings\n";
 }

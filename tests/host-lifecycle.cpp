@@ -1,3 +1,4 @@
+#include "diagnostics.h"
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QElapsedTimer>
@@ -10,6 +11,23 @@ class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void diagnosticFilesDisabledForAllChildren() {
+        Diagnostics::instance().setEnabled(false);
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()); host.start(2560,1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.running(),5000);
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(dir.filePath("sunshine.conf")),5000);
+        QFile config(dir.filePath("sunshine.conf")); QVERIFY(config.open(QIODevice::ReadOnly));
+        QVERIFY(config.readAll().contains(("log_path = "+QProcess::nullDevice()).toUtf8()));
+        for (auto name : {"host.log","display.log","sunshine.log"}) QVERIFY(!QFile::exists(dir.filePath(name)));
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(),5000);
+        Diagnostics::instance().setEnabled(true);
+        QVERIFY(host.resizeDisplay(1920,1080,1,5));
+        QTest::qWait(100);
+        Diagnostics::instance().setEnabled(false);
+        QVERIFY(host.running());
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(),5000);
+        for (auto name : {"host.log","display.log","sunshine.log"}) QVERIFY(!QFile::exists(dir.filePath(name)));
+    }
     void reconnectWaitsForPendingRestore() {
         qputenv("DESKPORT_TEST_MODE", "restore-slow");
         QTemporaryDir dir; HostManager host(nullptr, dir.path());

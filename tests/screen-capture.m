@@ -3,6 +3,16 @@
 #import "host/macos/screen-video.m"
 #include <assert.h>
 
+static unsigned legacyCalls;
+@interface DPLegacyProbe : AVVideo
+@end
+@implementation DPLegacyProbe
+- (dispatch_semaphore_t)capture:(FrameCallbackBlock)callback {
+    ++legacyCalls;
+    return dispatch_semaphore_create(0);
+}
+@end
+
 static CMSampleBufferRef sample(SCFrameStatus status) {
     CVPixelBufferRef pixels = NULL;
     assert(CVPixelBufferCreate(NULL, 64, 64, kCVPixelFormatType_32BGRA, NULL, &pixels) == kCVReturnSuccess);
@@ -26,6 +36,16 @@ static DPCapture *session(dispatch_queue_t queue, FrameCallbackBlock callback) {
 }
 int main(void) {
     @autoreleasepool {
+        // Probe failure must be synchronous and must never enter legacy capture
+        // for a managed virtual display. No real display or permission needed.
+        assert(setenv("DESKPORT_CAPTURE_DISPLAY_FILE", "/unused-test-descriptor", 1) == 0);
+        DPScreenVideo *unsupported = [DPScreenVideo new];
+        unsupported.legacy = [DPLegacyProbe new];
+        unsupported.pixelFormat = kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange;
+        __block BOOL called = NO;
+        assert([unsupported capture:^bool(CMSampleBufferRef s) { called = YES; return false; }] == nil);
+        assert(!called && legacyCalls == 0);
+        unsetenv("DESKPORT_CAPTURE_DISPLAY_FILE");
         dispatch_queue_t queue = dispatch_queue_create("deskport.synthetic-capture", DISPATCH_QUEUE_SERIAL);
         SCStream *unusedStream = (SCStream *)(id)[NSObject new];
         __block int frames = 0, ticks = 0;

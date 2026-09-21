@@ -71,8 +71,7 @@ def input_gate(s):
         raise SystemExit('Expected both encrypted input dispatch paths')
     return s.replace(anchor, 'if (session->config.deskport_input) ' + anchor)
 edit('stream.cpp', input_gate)
-# The macOS smart-stream overlay is optional. Use the session's selection when
-# present; Linux's stock encoder continues to use its established pacing.
+# Use the authenticated session selection for the common Mac/Linux overlay.
 video = root / 'src/video.cpp'
 if 'const bool smart = std::getenv("DESKPORT_SMART_STREAMING")' in video.read_text():
     edit('video.h', lambda s: append_config(s, 'bool deskport_smart = true;'))

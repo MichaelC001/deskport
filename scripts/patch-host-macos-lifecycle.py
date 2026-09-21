@@ -47,6 +47,9 @@ patch(hid, '        if (!state_->source || !state_->mouse_event) {', '''        
         if (!state_->source || !state_->mouse_event) {''')
 # Do not apply the generic device-mode preflight to our admitted virtual target.
 # Actual capture still verifies its identity and dimensions against the compositor.
+patch('src/platform/macos/display.mm',
+      'if (!display_device::wake_display(display_name, 1s)) {',
+      'if (!std::getenv("DESKPORT_CAPTURE_DISPLAY_FILE") && !display_device::wake_display(display_name, 1s)) {')
 patch('src/video.cpp', '      const auto devices {display_device::enumerate_devices()};', '''#ifdef __APPLE__
       if (std::getenv("DESKPORT_CAPTURE_DISPLAY_FILE")) return true;
 #endif

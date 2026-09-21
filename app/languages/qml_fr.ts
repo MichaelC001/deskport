@@ -1523,6 +1523,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>Compte les données multimédias, de contrôle et du presse-papiers, reconnexions comprises. Hors surcoût IP/VPN et TLS du presse-papiers, découverte et partage hôte. Ce n’est pas un relevé opérateur.</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>Mise à jour disponible</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>Mises à jour de DeskPort</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>Recherche de mises à jour…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>Nouvelle version : %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>Aucune version stable plus récente n’est disponible.</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>Impossible de rechercher les mises à jour. Veuillez réessayer.</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>Publication : %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>Aucune note de version fournie.</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>Ouvre la page de version sur GitHub. Installez avec votre méthode habituelle ; les installations gérées par Nix doivent être mises à jour via Nix.</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Vérifier à nouveau</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>Ouvrir la page de téléchargement</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1872,6 +1916,42 @@
         <source>Show data usage in the sidebar</source>
         <translation>Afficher les données utilisées dans la barre latérale</translation>
     </message>
+    <message>
+        <source>Diagnostics and feedback</source>
+        <translation>Diagnostic et commentaires</translation>
+    </message>
+    <message>
+        <source>Enable diagnostic logs</source>
+        <translation>Activer les journaux de diagnostic</translation>
+    </message>
+    <message>
+        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+        <translation>Désactivé par défaut. Enregistre les événements de connexion, de préparation des interactions et de fonctionnement, les délais et les résolutions de l’application, de l’hôte et de l’assistant d’affichage. Effet immédiat. Limite de 9 Mio ; suppression des journaux de plus de 7 jours pendant l’exécution.</translation>
+    </message>
+    <message>
+        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+        <translation>Les adresses IP, domaines, noms d’appareils et messages libres sont omis. Aucun texte saisi ni contenu du presse-papiers ou de l’écran. Chaque lancement reçoit un identifiant anonyme aléatoire. Le filtrage réduit les détails et ne permet pas de diagnostiquer tous les problèmes. Vérifiez l’archive avant de la partager.</translation>
+    </message>
+    <message>
+        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+        <translation>Les tickets GitHub et leurs pièces jointes sont publics. Ce bouton crée un ZIP et ouvre un brouillon. Aucun envoi automatique. Vérifiez le ZIP, glissez-le dans le ticket et envoyez vous-même le ticket.</translation>
+    </message>
+    <message>
+        <source>Create logs ZIP and open GitHub…</source>
+        <translation>Créer le ZIP et ouvrir GitHub…</translation>
+    </message>
+    <message>
+        <source>Show ZIP in folder</source>
+        <translation>Afficher le ZIP dans son dossier</translation>
+    </message>
+    <message>
+        <source>Clear saved diagnostics</source>
+        <translation>Effacer les diagnostics enregistrés</translation>
+    </message>
+    <message>
+        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+        <translation>Désactiver arrête les nouveaux enregistrements. Effacer supprime les journaux et le ZIP existants. Les journaux bruts des anciennes versions sont exclus.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2198,6 +2278,10 @@
     <message>
         <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
         <translation>La déconnexion restaure les écrans physiques et supprime l’écran virtuel. Une brève interruption réseau conserve l’espace de travail pour la reconnexion.</translation>
+    </message>
+    <message>
+        <source>Report a problem…</source>
+        <translation>Signaler un problème…</translation>
     </message>
 </context>
 <context>

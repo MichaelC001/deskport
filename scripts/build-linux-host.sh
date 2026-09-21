@@ -5,9 +5,17 @@ repo=${DESKPORT_SOURCE:-/src}
 work=${DESKPORT_WORK:-/work}
 source="$work/cache/sunshine-vendored-source"
 python3 "$repo/scripts/prepare-host-source.py" "$source"
+python3 "$repo/scripts/patch-host-diagnostics.py" "$source"
+python3 "$repo/scripts/patch-host-network.py" "$source"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source" --revert
+python3 "$repo/scripts/patch-host-smart-stream.py" "$source"
 for patch in session-settings session-takeover linux-display; do
+    python3 "$repo/scripts/patch-host-$patch.py" "$source"
+done
+mkdir -p "$source/src/deskport/common"
+cp "$repo"/host/common/{smartstream,inputactivity,framecadence,encoderpolicy}.h "$source/src/deskport/common/"
+for patch in input-activity sync-cadence linux-cadence encoder-policy; do
     python3 "$repo/scripts/patch-host-$patch.py" "$source"
 done
 # Ubuntu 24.04's libstdc++ lacks ranges::to; only debug formatting changes.

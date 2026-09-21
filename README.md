@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.3"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.4.3-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.5.0"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.5.0-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -54,9 +54,9 @@
 
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.4.3 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.3/DeskPort-0.4.3-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.4.3 stable**: DEB, RPM, Arch, AppImage and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.4.3) · [installation guide](docs/LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Viewer only | **0.4.3 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.4.3) |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.5.0 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.5.0/DeskPort-0.5.0-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.5.0 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.0) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.5.0 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.0) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
 | Windows | Inherited viewer sources | Build and packaging unfinished; no supported release | — |
@@ -70,14 +70,14 @@ A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.4.3/DeskPort-0.4.3-macos-arm64.dmg),
+**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.5.0/DeskPort-0.5.0-macos-arm64.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
 
-**Linux:** Choose the [0.4.3 package](https://github.com/keithxc/deskport/releases/tag/v0.4.3)
+**Linux:** Choose the [0.5.0 package](https://github.com/keithxc/deskport/releases/tag/v0.5.0)
 for your system and follow the [installation guide](docs/LINUX_PACKAGES.md),
-including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.4.3`.
-Flatpak provides viewing only.
+including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.5.0`.
+Flatpak provides viewing only. Release assets include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.5.0/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.5.0/VERIFICATION.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 The mobile app is a paid, one-time purchase; see your storefront for current local
@@ -103,7 +103,7 @@ features and platform limits may change.
 | Mobile clients | iPhone/iPad released; Android in development | iOS/iPadOS and Android | iOS/iPadOS and Android; iOS cannot host | Android; no iOS/iPadOS client |
 | Setup model | Bundled host in native desktop packages; approve devices in DeskPort | Install and configure Sunshine separately, then pair Moonlight | Public server infrastructure or a self-hosted server | Parsec account and application |
 | Network/service model | Bring your own LAN/VPN reachability; no DeskPort relay | Self-hosted streaming; configure network reachability | Public infrastructure or self-hosted OSS/Pro server | Parsec account/service infrastructure |
-| Source and distribution | GPL desktop, free desktop packages; paid Apple app with corresponding source | Open-source clients and host | Open-source client and OSS server; commercial Pro server option | Proprietary application/service |
+| Source and distribution | GPL desktop, free desktop packages; paid Apple app distributed separately | Open-source clients and host | Open-source client and OSS server; commercial Pro server option | Proprietary application/service |
 
 Sources: [Moonlight](https://moonlight-stream.org/),
 [Sunshine installation and platform support](https://docs.lizardbyte.dev/projects/sunshine/latest/md_docs_2getting__started.html),
@@ -114,7 +114,7 @@ Sources: [Moonlight](https://moonlight-stream.org/),
 DeskPort's current platform limits are listed above; this table does not imply
 feature parity across every OS or a measured performance advantage.
 
-See the [0.4.3 release notes](docs/RELEASE_0.4.3.md),
+See the [0.5.0 release notes](docs/RELEASE_0.5.0.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux
@@ -228,3 +228,10 @@ Separately installed Sunshine services are kept independent.
 GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and the
 license of each vendored dependency listed in [docs/VENDORED.md](docs/VENDORED.md). Original documentation is preserved in
 [README.upstream.md](README.upstream.md).
+
+### Diagnostics and feedback
+
+Diagnostic logs are enabled by default. Reproduce the issue,
+then create a logs ZIP and open a GitHub issue draft. Review the ZIP before attaching
+it: GitHub issues are public, and DeskPort does not upload or submit anything for
+you. See [diagnostic data and limits](docs/DIAGNOSTICS.md).

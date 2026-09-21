@@ -581,6 +581,8 @@ private slots:
             const int next=reservation.serverPort(); reservation.close();
             QVERIFY(b.setConnectionPort(next));
         }
+        bool observedBusy = false;
+        connect(&b, &PeerManager::changed, this, [&] { observedBusy = b.busy(); });
         a.refreshEndpoints();
         QVERIFY(!a.busy());
         QJsonObject edited;
@@ -609,6 +611,7 @@ private slots:
         QCOMPARE(approval.size(),0);
         if (failure!=5) QCOMPARE(a.status(),status);
         QTRY_VERIFY(!b.busy());
+        QVERIFY(!observedBusy); // QML must observe the idle transition too.
         QVERIFY(!ah.running()); QVERIFY(!bh.running());
     }
 

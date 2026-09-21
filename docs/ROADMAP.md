@@ -1,3 +1,74 @@
+## ENet host creation failure — 2026-09-21
+
+Reason: a failed ENet host allocation was dereferenced while enabling QoS,
+crashing the bundled host during session startup. Return the empty host to the
+existing caller error path on all desktop host build routes. Runtime regression
+coverage exercises both failure and success against both vendored revisions.
+
+## 0.5.0 stable release — 2026-09-21
+
+Reason: user-authorized desktop release of bounded local diagnostics, update
+notifications and encoding-efficiency changes. Published 11 remotely hash-verified assets after macOS notarization/Gatekeeper,
+the full Linux installer/API/Flatpak matrix and CI passed. Consumer activation and
+real streaming/input acceptance remain manual follow-up checks.
+
+## Default diagnostic recording — 2026-09-21
+
+Reason: user requested logs to be available before a fault occurs. Enable bounded,
+privacy-filtered local diagnostics by default; preserve saved off preferences.
+Storage limits, retention and manual-only uploads remain unchanged.
+
+## Encoding efficiency audit — 2026-09-21
+
+## Bounded diagnostics and feedback — 2026-09-21
+
+Reason: user-requested privacy-conscious log collection for real connection and
+interaction reports. Desktop/embedded host/display logging now shares a default-on
+sink with bounded, allowlisted event records. Settings generates a validated local
+ZIP and opens a public GitHub issue draft; upload and submission remain manual.
+See [DIAGNOSTICS.md](DIAGNOSTICS.md) for the exact audit, storage limits and tests.
+Next checkpoint: review this development commit, then separately authorize a
+candidate package and validate real user reports after manual activation.
+
+
+Reason: small screen changes at high FPS still consumed the configured bitrate.
+The bundled Vulkan H.264/HEVC encoder test confirmed CBR filler dominates the
+simple-scene output. Add shared rate selection/fallback and encoded-byte telemetry;
+smart AMD RADV Vulkan H.264/HEVC sessions try bounded VBR. Preserve other drivers.
+Match asynchronous IDR diagnostics by output PTS and notify the device editor
+after background endpoint refresh releases its busy state.
+See [the audit and backend matrix](ENCODING_AUDIT.md). Isolated bidirectional streaming precedes private packaging; manual activation
+and the user's own WAN experience remain separate checkpoints. WAN pacing, live bitrate adaptation and unified mobile/desktop budget
+fixtures remain explicit follow-up work, not completed behavior.
+
+## 0.4.5 stable release — 2026-09-21
+
+Reason: the user confirmed successful 0.4.4 physical resize/resume, reconnect,
+keyboard/mouse input and local display recovery, and requested a full Linux and
+macOS stable release. Package validation and published asset verification remain
+required. Published all 11 assets with matching remote SHA-256 digests.
+Ubuntu/Debian/Fedora/Arch installation, authenticated host API, Flatpak isolated
+startup/recovery, Nix smoke, macOS notarization/Gatekeeper and both CI checks
+passed. Consuming Linux and macOS system configuration builds passed; activation remains manual.
+
+## 0.4.4 prerelease — 2026-09-20
+
+Reason: withdraw the faulty 0.4.3 release and provide a macOS arm64 / NixOS
+x86_64 candidate for manual activation. Includes the managed-display resume
+probe fix below. Managed macOS capture currently supports 8-bit H.264/HEVC;
+10-bit/HDR is unavailable. Do not promote to stable until real resize/resume,
+reconnect, input and local display recovery have been checked after activation.
+
+## macOS adaptive resume deadline — 2026-09-20
+
+Reason: a deployed 0.4.3 session rendered its first frame but timed out after a
+window resize. Managed virtual displays must skip the generic one-second display
+wake probe and reject unsupported AVFoundation-only formats immediately. Preserve
+native ScreenCaptureKit 8-bit H.264/HEVC capture; managed-display 10-bit/HDR remains
+unavailable until a native capture path passes resize and reconnect acceptance.
+Checkpoint: targeted capture tests, packaged host build, and real resize/resume
+with paired client/host evidence before promoting another stable release.
+
 ## Formal release 0.4.3 — 2026-09-20
 
 Reason: user requested a new full-platform formal release. macOS app/DMG notarization, extracted-ZIP Gatekeeper and version checks passed. The Linux Nix build, Ubuntu/Debian/Fedora/Arch installers and isolated Flatpak startup/recovery checks passed. Windows remains gated on its separate candidate validation. Universal Apple 1.2 (11) was submitted and reread as Waiting for Review; Android app creation is blocked by Google Play account verification. Next checkpoint: public desktop asset verification, Apple approval/store availability, and resolution of Windows/Android release gates.
@@ -1403,6 +1474,57 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
 - Keep picture presets, automatic resolution, remote audio/input and clipboard
   switches in Device settings only. Advanced streaming retains detailed tuning;
   editing frame rate or bandwidth selects manual streaming.
+
+
+### 2026-09-21 input and startup candidate
+
+- Candidate: remove informational startup sleeps, negotiate from mapped viewer
+  geometry, input-driven cadence with one-FPS idle refresh and loss/user ceilings.
+- Pending physical checkpoint: repeated cold connects without immediate resize,
+  real first frame/input, static clock, sustained typing/scrolling, jitter and loss.
+- Pending encoder work: supported live VideoToolbox bitrate reconfiguration and
+  measured packet throughput; input cadence alone does not prove bitrate control.
+
+
+### 2026-09-21: shared Linux smart cadence candidate
+
+- Reuse host/common input activity and congestion policy in both Linux encoder paths.
+- Preserve the final changed frame during pacing; poll PipeWire while idle and use
+  explicit damage metadata without GPU readback. Keep video updates independent of input.
+- Deliver a private Nix/macOS candidate; physical Linux idle/input/video validation
+  follows the user's manual activation. This is not a formal release.
+
+
+### Desktop stable update entry and remote macOS upgrade (2026-09-21)
+
+Phase 1 implemented: the sidebar version opens stable release status and plain-text
+release notes, with a GitHub download-page action on macOS and Linux. Checks run
+at startup and every six hours; manual retry is available. Requests time out after
+15 seconds, reject draft/prerelease or malformed metadata and unexpected release
+URLs, and compare numeric versions to avoid downgrade prompts. Includes English,
+Simplified Chinese and Traditional Chinese UI. Installation remains manual; the
+UI directs Nix-managed users to their existing package-management workflow.
+
+Validation: isolated stable-channel parser tests and macOS app compilation passed.
+All 22 isolated Qt UI regressions passed, including opening the update dialog. Linux Nix build attempted
+but unavailable: this Mac has no configured x86_64-linux builder.
+
+TODO — macOS self-update (deferred by user, 2026-09-21):
+- [ ] Evaluate Sparkle 2 with Qt UI and the signed/notarized release pipeline.
+- [ ] Detect ordinary writable app installs versus Nix-managed installations.
+- [ ] Download and authenticate the complete update before stopping sharing;
+      resolve required installation authorization while still connected.
+- [ ] Use an independent installer; coordinate login-agent restart and temporary
+      recovery-helper suppression so replacement survives remote disconnection.
+- [ ] Preserve pairing, app identity, settings and previously enabled sharing;
+      validate capture/input permissions after replacement.
+- [ ] Define bounded health checks, old-version recovery and configuration rollback.
+- [ ] Verify a real remote old-to-new upgrade, reconnection, video and input,
+      interrupted downloads and failed-start recovery before claiming unattended
+      update support. This does not include rebooting macOS.
+
+Next action: review phase 1 in a candidate build. No automatic installation,
+release publication or deployed-service changes are included in this phase.
 
 ## 2026-09-20 — Windows x64 static client evaluation package
 

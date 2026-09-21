@@ -1,3 +1,4 @@
+#include "backend/diagnostics.h"
 #include "connectionwait.h"
 #include "resizetrace.h"
 #include <QElapsedTimer>
@@ -91,6 +92,7 @@ QSemaphore Session::s_ActiveSessionSemaphore(1);
 
 void Session::clStageStarting(int stage)
 {
+    Diagnostics::instance().connection(stage, 0, "starting");
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
@@ -99,6 +101,7 @@ void Session::clStageStarting(int stage)
 
 void Session::clStageFailed(int stage, int errorCode)
 {
+    Diagnostics::instance().connection(stage, errorCode, "failed");
     if (s_ActiveSession->m_RecoveryDeadline) s_ActiveSession->scheduleNetworkRecovery();
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
     unsigned int portFlags = LiGetPortFlagsFromStage(stage);
@@ -111,6 +114,7 @@ void Session::clStageFailed(int stage, int errorCode)
 
 void Session::clConnectionTerminated(int errorCode)
 {
+    Diagnostics::instance().connection(0, errorCode, "terminated");
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
 
     // The host joins the old video/input workers before reporting takeover on
@@ -356,7 +360,7 @@ int Session::drSetup(int videoFormat, int width, int height, int frameRate, void
     s_ActiveSession->m_ActiveVideoWidth = width;
     s_ActiveSession->m_ActiveVideoHeight = height;
     s_ActiveSession->m_ActiveVideoFrameRate = frameRate;
-    if (s_ActiveSession->m_AdaptiveResume) deskportResizeStage("decoder-setup", width, height);
+    deskportResizeStage("decoder-setup", width, height);
 
     // Defer decoder setup until we've started streaming so we
     // don't have to hide and show the SDL window (which seems to
@@ -958,6 +962,42 @@ bool Session::initialize()
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
+    // Negotiate from the mapped viewer, after the compositor has tiled it.
+    // A hidden probe window has only the requested geometry and can otherwise
+    // cause an immediate full reconnect as soon as the first frame arrives.
+    if (!m_TransitionWindow && m_Preferences->adaptiveResolution) {
+        Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
+        if (!m_IsFullScreen && (m_AdaptiveMaximized ||
+            (!m_RestoredWindow && m_QtWindow && (m_QtWindow->windowState() & Qt::WindowMaximized))))
+            flags |= SDL_WINDOW_MAXIMIZED;
+        const auto title = m_Computer->name.toUtf8();
+        auto viewer = SDL_CreateWindow(title.constData(), x, y, width, height,
+                                       flags | StreamUtils::getPlatformWindowFlags());
+        if (!viewer) viewer = SDL_CreateWindow(title.constData(), x, y, width, height, flags);
+        if (!viewer) { SDL_QuitSubSystem(SDL_INIT_VIDEO); return false; }
+        if (m_IsFullScreen) SDL_SetWindowFullscreen(viewer, m_FullScreenFlag);
+        m_TransitionWindow = std::make_shared<TransitionWindow>(viewer, tr("Connecting to desktop…"));
+        if (!m_TransitionWindow->rendering()) {
+            m_TransitionWindow.reset(); SDL_QuitSubSystem(SDL_INIT_VIDEO); return false;
+        }
+        if (m_ViewerRequested) recallDesktopWindow(viewer);
+        setViewerReady(true);
+        ResizeSettler settling;
+        const auto started = SDL_GetTicks();
+        while (!m_TransitionWindow->cancelled() && desktopWindowVisible(viewer) &&
+               SDL_GetTicks() - started < 1500) {
+            m_TransitionWindow->pump();
+            const auto current = workspaceForWindow(viewer);
+            if (settling.update(current.pixels, current.scale, SDL_GetTicks(), false)) break;
+            if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
+            SDL_Delay(10);
+        }
+        deskportResizeStage("viewer-geometry-ready");
+        if (m_TransitionWindow->cancelled()) {
+            m_TransitionWindow.reset(); SDL_QuitSubSystem(SDL_INIT_VIDEO); return false;
+        }
+    }
+
     // Create a hidden window to use for decoder initialization tests
     SDL_Window* testWindow = SDL_CreateWindow("", x, y, width, height,
                                               SDL_WINDOW_HIDDEN | SDL_WINDOW_ALLOW_HIGHDPI | StreamUtils::getPlatformWindowFlags());
@@ -977,7 +1017,7 @@ bool Session::initialize()
     }
 
     if (!m_AdaptiveGeometry.isValid()) m_AdaptiveGeometry = QRect(x, y, width, height);
-    initializeAdaptiveDisplay(testWindow);
+    initializeAdaptiveDisplay(m_TransitionWindow ? m_TransitionWindow->window() : testWindow);
     if (m_SessionAdmissionFailed) {
         emit displayLaunchError(tr("Connection cancelled or session access was not granted. Reconnect to try again."));
         SDL_DestroyWindow(testWindow); SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -989,7 +1029,7 @@ bool Session::initialize()
         return false;
     }
 
-    if (m_AdaptiveResume) deskportResizeStage("probe-begin");
+    deskportResizeStage("probe-begin");
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
@@ -1245,7 +1285,7 @@ bool Session::initialize()
     bool ret = validateLaunch(testWindow);
     if (negotiatedSize != QSize(m_StreamConfig.width, m_StreamConfig.height)) m_AdaptiveDisplay.reset();
 
-    if (m_AdaptiveResume) deskportResizeStage("probe-end");
+    deskportResizeStage("probe-end");
     if (ret) {
         // Video format is now locked in
         m_StreamConfig.supportedVideoFormats = m_SupportedVideoFormats.front();
@@ -1277,19 +1317,8 @@ void Session::emitLaunchWarning(QString text)
     // Emit the warning to the UI
     emit displayLaunchWarning(text);
 
-    // Wait a little bit so the user can actually read what we just said.
-    // This wait is a little longer than the actual toast timeout (3 seconds)
-    // to allow it to transition off the screen before continuing.
-    uint32_t start = SDL_GetTicks();
-    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
-        SDL_Delay(5);
+    // Warnings are informational; the UI owns their display lifetime.
 
-        if (!m_ThreadedExec) {
-            // Pump the UI loop while we wait if we're on the main thread
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
-            QCoreApplication::sendPostedEvents();
-        }
-    }
 }
 
 bool Session::validateLaunch(SDL_Window* testWindow)
@@ -1895,12 +1924,6 @@ public:
 
 bool Session::startConnectionAsync()
 {
-    // Wait 1.5 seconds before connecting to let the user
-    // have time to read any messages present on the segue.
-    // An adaptive resize shows no segue; resume immediately.
-    if (!m_AdaptiveResume) {
-        for (int elapsed = 0; elapsed < 1500 && !m_RecoveryCancelled; elapsed += 10) SDL_Delay(10);
-    }
     if (m_RecoveryCancelled) return false;
 
     // The UI should have ensured the old game was already quit
@@ -1936,7 +1959,7 @@ bool Session::startConnectionAsync()
     try {
         NvHTTP http(m_Computer);
         http.setCancellationFlag(&m_RecoveryCancelled);
-        if (m_AdaptiveResume) deskportResizeStage("resume-request");
+        deskportResizeStage("resume-request");
         http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
                       m_Computer->isNvidiaServerSoftware,
                       m_App.id, &m_StreamConfig,
@@ -1947,7 +1970,7 @@ bool Session::startConnectionAsync()
                       rtspSessionUrl,
                       m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
                       m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
-        if (m_AdaptiveResume) deskportResizeStage("resume-response");
+        deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         if (m_RecoveryCancelled) return false;
         emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
@@ -2153,6 +2176,7 @@ void Session::execInternal()
     //
     // NB: This initializes the SDL video subsystem, so it must be
     // called on the main thread.
+    deskportResizeStage("initialize-begin");
     const bool initialized = !m_RecoveryCancelled && (!m_RecoveryDeadline || QDateTime::currentMSecsSinceEpoch() < m_RecoveryDeadline) && (!m_TransitionWindow || !m_TransitionWindow->cancelled()) && initialize();
     if (!initialized || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
         if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
@@ -2172,9 +2196,9 @@ void Session::execInternal()
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.
-    if (m_AdaptiveResume) deskportResizeStage("input-init-begin");
+    deskportResizeStage("input-init-begin");
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
-    if (m_AdaptiveResume) deskportResizeStage("input-init-end");
+    deskportResizeStage("input-init-end");
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
