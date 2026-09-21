@@ -1,4 +1,5 @@
 #include "host/common/smartstream.h"
+#include "host/common/inputactivity.h"
 #include "app/backend/streambudget.h"
 #include <cassert>
 #include <iostream>
@@ -46,5 +47,46 @@ int main() {
     assert(idle.frameRate(116000)==15);
     deskport::StreamPolicy low(10);
     low.loss(8000);low.loss(9500);low.loss(11000);assert(low.frameRate(11000)==10);
+    // Input packets are classified without unaligned reads or retaining key data.
+    auto packet = [](unsigned type, unsigned size) {
+        std::vector<unsigned char> p(size);
+        p[3] = size - 4;
+        for (int i=0;i<4;++i) p[4+i] = (type >> (8*i)) & 255;
+        return p;
+    };
+    deskport::InputActivity input;
+    auto key = packet(3,14);
+    auto boost = input.observe(key.data(),key.size(),1000);
+    assert(deskport::activityFrameRate(boost,1000,120)==60);
+    assert(deskport::activityFrameRate(boost,1000,15)==15); // loss cap wins
+    assert(deskport::activityFrameRate(boost,1350,60)==1);
+    input.observe(key.data(),key.size(),1100);
+    boost=input.observe(key.data(),key.size(),1200);
+    assert(boost.untilMs==1900); // continued typing holds activity
+    assert(deskport::activityFrameRate(boost,1900,60)==1);
+    for(unsigned n=0;n<14;++n) assert(input.observe(key.data(),n,1300).untilMs==0);
+    key[3]=11;assert(input.observe(key.data(),key.size(),1300).untilMs==0);
+    deskport::InputActivity pointer;
+    auto move=packet(7,12);
+    for(int i=0;i<1000;++i) {
+        move[8]=(i%2)?255:0;move[9]=(i%2)?255:1;
+        assert(pointer.observe(move.data(),move.size(),i*10).untilMs==0);
+    }
+    move[8]=0;move[9]=8;
+    boost=pointer.observe(move.data(),move.size(),11000);
+    assert(boost.fps==30 && boost.untilMs==11180);
+    pointer.observe(move.data(),move.size(),11050);
+    boost=pointer.observe(move.data(),move.size(),11100);
+    assert(boost.fps==60 && boost.untilMs==11800);
+    auto abs=packet(5,18);abs[15]=100;abs[17]=100;abs[9]=50;abs[11]=50;
+    deskport::InputActivity absolute;
+    assert(absolute.observe(abs.data(),abs.size(),1000).untilMs==0);
+    for(int i=0;i<1000;++i) {
+        abs[9]=50+(i%2);
+        assert(absolute.observe(abs.data(),abs.size(),1010+i*10).untilMs==0);
+    }
+    abs[9]=60;assert(absolute.observe(abs.data(),abs.size(),12000).fps==30);
+    assert(deskport::activityFrameRate({},0,60)==1);
+    assert(deskport::activityFrameRate(boost,11100,1)==1);
     std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings\n";
 }

@@ -70,6 +70,10 @@ trap 'chmod -R u+w "$stage" 2>/dev/null || true; rm -rf "$stage"' EXIT
 app="$stage/DeskPort.app"
 ditto "$build_dir/app/DeskPort.app" "$app"
 chmod -R u+w "$app"
+if [ -n "${DESKPORT_TEST_BUILD_ID:-}" ]; then
+    /usr/libexec/PlistBuddy -c "Add :DeskPortTestBuildID string $DESKPORT_TEST_BUILD_ID" "$app/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Add :DeskPortSourceRevision string $(git rev-parse HEAD)" "$app/Contents/Info.plist"
+fi
 PATH="$qt_bin:$PATH" python3 scripts/deploy-macos-runtime.py "$app" "$repo/app"
 python3 scripts/fix-macos-dependencies.py "$app"
 # Resource-directory QML plugins are not traversed by codesign --deep.
@@ -108,9 +112,9 @@ find "$host_app/Contents/Frameworks" -type f -name '*.dylib' -exec codesign --fo
 cp host/macos/patches/libvirtualhid-target-display.patch host/macos/patches/sunshine-capture-timeout.patch host/macos/patches/sunshine-idr-diagnostics.patch host/macos/patches/sunshine-pkgconfig-link.patch "$host_app/Contents/Resources/"
 cp host/macos/patches/sunshine-smart-streaming.patch host/macos/patches/sunshine-screen-capture-kit.patch "$host_app/Contents/Resources/"
 mkdir -p "$host_app/Contents/Resources/deskport-smart-source/common" "$host_app/Contents/Resources/deskport-smart-source/macos"
-cp host/common/smartstream.h "$host_app/Contents/Resources/deskport-smart-source/common/"
+cp host/common/smartstream.h host/common/inputactivity.h "$host_app/Contents/Resources/deskport-smart-source/common/"
 cp host/macos/admitted-display.h host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "$host_app/Contents/Resources/deskport-smart-source/macos/"
-cp scripts/build-macos-host.sh "$host_app/Contents/Resources/"
+cp scripts/build-macos-host.sh scripts/patch-host-input-activity.py "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime "$app/Contents/Helpers/deskport-recovery"

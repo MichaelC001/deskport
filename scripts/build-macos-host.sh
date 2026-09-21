@@ -62,6 +62,8 @@ cp "$repo/host/macos/admitted-display.h" "$hid/src/platform/macos/deskport-admit
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
 python3 "$repo/scripts/patch-host-macos-lifecycle.py" "$source_dir"
+cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
+python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

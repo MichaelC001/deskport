@@ -1431,3 +1431,13 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
 - Keep picture presets, automatic resolution, remote audio/input and clipboard
   switches in Device settings only. Advanced streaming retains detailed tuning;
   editing frame rate or bandwidth selects manual streaming.
+
+
+### 2026-09-21 input and startup candidate
+
+- Candidate: remove informational startup sleeps, negotiate from mapped viewer
+  geometry, input-driven cadence with one-FPS idle refresh and loss/user ceilings.
+- Pending physical checkpoint: repeated cold connects without immediate resize,
+  real first frame/input, static clock, sustained typing/scrolling, jitter and loss.
+- Pending encoder work: supported live VideoToolbox bitrate reconfiguration and
+  measured packet throughput; input cadence alone does not prove bitrate control.
