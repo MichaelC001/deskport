@@ -18,6 +18,10 @@
 @property(nonatomic) double started;
 @property(nonatomic) BOOL finished;
 @property(nonatomic) BOOL failed;
+@property(nonatomic) double statsAt;
+@property(nonatomic) NSUInteger completeFrames;
+@property(nonatomic) NSUInteger idleFrames;
+@property(nonatomic) NSUInteger emptyDamageFrames;
 - (void)finish;
 - (void)startDisplay:(CGDirectDisplayID)display configuration:(SCStreamConfiguration *)config;
 @end
@@ -119,6 +123,18 @@
     if (self.finished || type != SCStreamOutputTypeScreen || !CMSampleBufferIsValid(sample)) return;
     NSArray *attachments = (__bridge NSArray *)CMSampleBufferGetSampleAttachmentsArray(sample, false);
     NSNumber *status = attachments.firstObject[SCStreamFrameInfoStatus];
+    double now = CACurrentMediaTime();
+    if (!self.statsAt) self.statsAt = now;
+    if (status && status.integerValue == SCFrameStatusComplete) ++self.completeFrames;
+    if (status && status.integerValue == SCFrameStatusIdle) ++self.idleFrames;
+    NSArray *dirty = attachments.firstObject[SCStreamFrameInfoDirtyRects];
+    if ([dirty isKindOfClass:[NSArray class]] && dirty.count == 0) ++self.emptyDamageFrames;
+    if (now - self.statsAt >= 5.0) {
+        NSLog(@"DeskPort capture updates: complete=%lu idle=%lu empty_damage=%lu", (unsigned long)self.completeFrames,
+              (unsigned long)self.idleFrames, (unsigned long)self.emptyDamageFrames);
+        self.completeFrames = self.idleFrames = self.emptyDamageFrames = 0;
+        self.statsAt = now;
+    }
     // Idle samples have no new surface. Never map or compare their pixels.
     if (!status || (status.integerValue != SCFrameStatusComplete && status.integerValue != SCFrameStatusStarted) ||
         !CMSampleBufferGetImageBuffer(sample)) return;

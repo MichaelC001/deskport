@@ -1,3 +1,15 @@
+## Encoding efficiency audit — 2026-09-21
+
+Reason: small screen changes at high FPS still consumed the configured bitrate.
+The bundled Vulkan H.264/HEVC encoder test confirmed CBR filler dominates the
+simple-scene output. Add shared rate selection/fallback and encoded-byte telemetry;
+smart AMD RADV Vulkan H.264/HEVC sessions try bounded VBR. Preserve other drivers.
+Match asynchronous IDR diagnostics by output PTS and notify the device editor
+after background endpoint refresh releases its busy state.
+See [the audit and backend matrix](ENCODING_AUDIT.md). Isolated bidirectional streaming precedes private packaging; manual activation
+and the user's own WAN experience remain separate checkpoints. WAN pacing, live bitrate adaptation and unified mobile/desktop budget
+fixtures remain explicit follow-up work, not completed behavior.
+
 ## 0.4.5 stable release — 2026-09-21
 
 Reason: the user confirmed successful 0.4.4 physical resize/resume, reconnect,

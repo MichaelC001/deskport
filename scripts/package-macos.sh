@@ -109,12 +109,12 @@ with tarfile.open(archive) as resources:
 ASSETS
 python3 scripts/fix-macos-dependencies.py "$host_app"
 find "$host_app/Contents/Frameworks" -type f -name '*.dylib' -exec codesign --force --sign - {} \;
-cp host/macos/patches/libvirtualhid-target-display.patch host/macos/patches/sunshine-capture-timeout.patch host/macos/patches/sunshine-idr-diagnostics.patch host/macos/patches/sunshine-pkgconfig-link.patch "$host_app/Contents/Resources/"
+cp host/macos/patches/libvirtualhid-target-display.patch host/macos/patches/sunshine-capture-timeout.patch host/macos/patches/sunshine-pkgconfig-link.patch "$host_app/Contents/Resources/"
 cp host/macos/patches/sunshine-smart-streaming.patch host/macos/patches/sunshine-screen-capture-kit.patch "$host_app/Contents/Resources/"
 mkdir -p "$host_app/Contents/Resources/deskport-smart-source/common" "$host_app/Contents/Resources/deskport-smart-source/macos"
-cp host/common/smartstream.h host/common/inputactivity.h host/common/framecadence.h "$host_app/Contents/Resources/deskport-smart-source/common/"
+cp host/common/smartstream.h host/common/inputactivity.h host/common/framecadence.h host/common/encoderpolicy.h "$host_app/Contents/Resources/deskport-smart-source/common/"
 cp host/macos/admitted-display.h host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "$host_app/Contents/Resources/deskport-smart-source/macos/"
-cp scripts/build-macos-host.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py "$host_app/Contents/Resources/"
+cp scripts/build-macos-host.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py scripts/patch-host-encoder-policy.py "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime "$app/Contents/Helpers/deskport-recovery"

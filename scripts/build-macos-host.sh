@@ -31,13 +31,6 @@ if git -C "$source_dir" apply --check "$capture_patch"; then
 else
     git -C "$source_dir" apply --reverse --check "$capture_patch"
 fi
-# Include frame identities in recovery diagnostics without changing encoded data.
-idr_patch="$repo/host/macos/patches/sunshine-idr-diagnostics.patch"
-if git -C "$source_dir" apply --check "$idr_patch"; then
-    git -C "$source_dir" apply "$idr_patch"
-else
-    git -C "$source_dir" apply --reverse --check "$idr_patch"
-fi
 # Use pkg-config's resolved library path, not a Homebrew-only -l search.
 link_patch="$repo/host/macos/patches/sunshine-pkgconfig-link.patch"
 if git -C "$source_dir" apply --check "$link_patch"; then
@@ -62,6 +55,8 @@ cp "$repo/host/macos/admitted-display.h" "$source_dir/src/deskport/macos/"
 cp "$repo/host/macos/admitted-display.h" "$hid/src/platform/macos/deskport-admitted-display.h"
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
+cp "$repo/host/common/encoderpolicy.h" "$source_dir/src/deskport/common/encoderpolicy.h"
+python3 "$repo/scripts/patch-host-encoder-policy.py" "$source_dir"
 python3 "$repo/scripts/patch-host-macos-lifecycle.py" "$source_dir"
 cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"

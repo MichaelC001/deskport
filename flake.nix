@@ -32,6 +32,8 @@
               python3 ${./scripts/patch-host-input-activity.py} .
               python3 ${./scripts/patch-host-sync-cadence.py} .
               python3 ${./scripts/patch-host-linux-cadence.py} .
+              cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
+              python3 ${./scripts/patch-host-encoder-policy.py} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {

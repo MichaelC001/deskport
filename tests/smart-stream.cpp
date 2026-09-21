@@ -1,4 +1,5 @@
 #include "host/common/smartstream.h"
+#include "host/common/encoderpolicy.h"
 #include "host/common/inputactivity.h"
 #include "host/common/framecadence.h"
 #include "app/backend/streambudget.h"
@@ -6,7 +7,36 @@
 #include <iostream>
 #include <vector>
 int main() {
+    deskport::KeyframeRequests keys;
+    keys.submitted(10, true);
+    keys.submitted(11, false);
+    assert(!keys.take(7)); // Delayed packet must not consume the new request.
+    assert(keys.take(10));
+    assert(!keys.take(10));
+    assert(!keys.take(11));
+    keys.submitted(20, true);
+    keys.submitted(21, true);
+    assert(keys.take(21)); // Match even when a backend reorders outputs.
+    assert(keys.take(20));
+
     using namespace DeskPortStream;
+    for (bool smart : {false, true}) for (bool qualified : {false, true})
+        for (int mode : {0, 1, 2, 4}) for (int attempt : {0, 1}) {
+            const auto rate = deskport::rateControl(smart, qualified, mode, attempt);
+            const bool expected = smart && qualified && mode == 2 && attempt == 0;
+            assert(rate.boundedVbr == expected && rate.retryOriginalOnFailure == expected);
+        }
+    deskport::EncodedWindow encoded, otherSession;
+    assert(!encoded.add(1000, 1000, true));
+    assert(!encoded.add(5999, 2000, false));
+    assert(encoded.add(6000, 7000, false));
+    assert(encoded.bytes == 10000 && encoded.packets == 3 && encoded.keys == 1);
+    assert(encoded.maxPacketBytes == 7000 && encoded.mbps(6000) == 0.016);
+    assert(otherSession.bytes == 0);
+    encoded.reset(6000);
+    assert(encoded.bytes == 0 && encoded.keys == 0 && encoded.maxPacketBytes == 0);
+    assert(!encoded.add(6000, 100, false) && encoded.mbps(6000) == 0.0);
+
     assert(initialBitrate(25000,2560,1440,60,false)==15000);
     assert(initialBitrate(7000,3840,2160,60,false)==7000);
     assert(initialBitrate(40000,1280,720,30,false)==5000);

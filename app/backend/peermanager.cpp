@@ -485,6 +485,8 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         send(link, {{"type", "endpoint-result"}, {"meta", metadata()}});
         link->ended = true;
         if (m_Link == link) m_Link = nullptr;
+        // notify busy bindings after releasing the incoming refresh connection
+        emit changed();
         link->socket->disconnectFromHost();
         QTimer::singleShot(2000, link, &QObject::deleteLater); return;
     }
