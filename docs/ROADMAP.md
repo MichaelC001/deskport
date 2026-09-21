@@ -1,10 +1,11 @@
-## 0.5.1 release preparation — 2026-09-21
+## 0.5.1 macOS and Linux release — 2026-09-21
 
 Prepare the current desktop baseline with ENet startup failure handling and
 preservation of configured connection entries during authenticated refresh.
-The full-platform release remains pending: Windows integration is maintained
-on `dev/windows`, with unresolved Defender detection and trusted code-signing
-requirements. Build/package checks are distinct from native streaming acceptance.
+The user-selected release scope is macOS arm64 and Linux x86_64, including all
+supported desktop package formats. Windows remains on its development branch
+and is excluded from this release. Native streaming acceptance and deployment
+remain separate from package verification and publication.
 
 ## ENet host creation failure — 2026-09-21
 

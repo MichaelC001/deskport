@@ -1,7 +1,6 @@
 # DeskPort 0.5.1
 
-Desktop maintenance release candidate. Publication and the complete platform
-matrix remain pending verification.
+Stable macOS and Linux desktop maintenance release.
 
 ## Changes
 
@@ -10,12 +9,13 @@ matrix remain pending verification.
 - Preserve the configured connection entry when refreshing authenticated peer
   endpoints, avoiding accidental replacement of the saved entry.
 
-## Release status
+## Downloads and validation scope
 
-macOS Apple Silicon and Linux x86_64 packages are being prepared from the current
-main baseline. Windows x64 integration remains on its development branch while
-Defender detections and trusted code signing are resolved. No Windows acceptance
-or complete cross-platform publication is claimed by this candidate.
+macOS Apple Silicon (macOS 26+): Developer ID signed and Apple-notarized DMG/ZIP.
+Linux x86_64: DEB, RPM, Arch, AppImage, portable archive, client-only Flatpak,
+and the pinned Nix flake. Native portable binaries require glibc 2.39 or newer.
+Windows and mobile binaries and private mobile sources are not included.
 
-Package validation does not establish native GPU, live input, WAN latency or
-long-session acceptance. Mobile clients and private mobile sources are excluded.
+See the accompanying verification report and SHA-256 checksums for package
+checks. Package checks do not establish native GPU, live input, WAN latency or
+long-session acceptance; these require user testing after manual activation.
