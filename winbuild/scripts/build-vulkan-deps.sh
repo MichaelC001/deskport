@@ -2,8 +2,8 @@
 # Optional Vulkan renderer dependencies: glslang + libplacebo (static).
 source "$(dirname "$0")/env.sh"
 
-S_GLSLANG=/nix/store/7yp1p12qkg9j9c7q1kds31vh9was40cz-source
-S_LIBPLACEBO="$WB/src/libplacebo"
+S_GLSLANG="${S_GLSLANG:-$WB/source-inputs/glslang}"
+S_LIBPLACEBO="${S_LIBPLACEBO:-$WB/source-inputs/libplacebo}"
 CROSS="$WB/scripts/meson-cross.txt"
 
 stamp() { [ -f "$PREFIX/.stamp-$1" ]; }
