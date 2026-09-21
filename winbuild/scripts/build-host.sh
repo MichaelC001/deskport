@@ -16,5 +16,5 @@ cmake -S "$FULL/sunshine" -B "$FULL/host-build" -G Ninja \
  -DBOOST_USE_STATIC=ON -DBUILD_SHARED_LIBS=OFF \
  -DBUILD_DOCS=OFF -DBUILD_TESTS=OFF -DSUNSHINE_ENABLE_TRAY=OFF \
  -DSUNSHINE_ENABLE_CUDA=OFF -DSUNSHINE_ASSETS_DIR=assets \
- -DNPM=/run/current-system/sw/bin/npm
+ -DNPM="${DESKPORT_NPM:-$(command -v npm)}"
 cmake --build "$FULL/host-build" --target sunshine --parallel "$JOBS"
