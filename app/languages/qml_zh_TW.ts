@@ -2262,6 +2262,22 @@
         <source>Report a problem…</source>
         <translation>回報問題…</translation>
     </message>
+    <message>
+        <source>Shared Windows display</source>
+        <translation>共享 Windows 顯示器</translation>
+    </message>
+    <message>
+        <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
+        <translation>共享此 Windows 桌面；中斷連線後會恢復支援的解析度</translation>
+    </message>
+    <message>
+        <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
+        <translation>使用此 Windows 桌面。中斷連線後恢復原始解析度。不支援的尺寸只會提示，不會變更顯示設定。</translation>
+    </message>
+    <message>
+        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
+        <translation>使用支援的 60 Hz 模式共享獨立的 SDR 桌面。新用戶端會選擇最接近的支援尺寸。停止共享後會移除此顯示器並恢復原始螢幕配置。</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
