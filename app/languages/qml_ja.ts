@@ -1526,6 +1526,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>一時的な再接続を含む映像・音声、制御、クリップボードの通信量です。IP/VPN、クリップボードのTLS、デバイス検出、本機の共有通信は含みません。通信会社の請求額とは異なります。</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>更新があります</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>DeskPort の更新</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>更新を確認中…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>新しいバージョン: %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>新しい安定版はありません。</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>更新を確認できませんでした。もう一度お試しください。</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>公開日: %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>リリースノートはありません。</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>GitHub のリリースページを開きます。通常の方法でインストールしてください。Nix で管理している場合は Nix 経由で更新してください。</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>再確認</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>ダウンロードページを開く</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

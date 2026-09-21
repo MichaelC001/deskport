@@ -1523,6 +1523,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>Compte les données multimédias, de contrôle et du presse-papiers, reconnexions comprises. Hors surcoût IP/VPN et TLS du presse-papiers, découverte et partage hôte. Ce n’est pas un relevé opérateur.</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>Mise à jour disponible</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>Mises à jour de DeskPort</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>Recherche de mises à jour…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>Nouvelle version : %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>Aucune version stable plus récente n’est disponible.</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>Impossible de rechercher les mises à jour. Veuillez réessayer.</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>Publication : %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>Aucune note de version fournie.</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>Ouvre la page de version sur GitHub. Installez avec votre méthode habituelle ; les installations gérées par Nix doivent être mises à jour via Nix.</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Vérifier à nouveau</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>Ouvrir la page de téléchargement</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

@@ -1523,6 +1523,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>Zählt Medien-, Steuerungs- und Zwischenablagedaten einschließlich kurzer Neuverbindungen. Ohne IP/VPN-, Zwischenablage-TLS-, Geräteerkennungs- und Host-Freigabeverkehr. Kein Abrechnungswert des Anbieters.</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>Update verfügbar</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>DeskPort-Updates</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>Suche nach Updates…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>Neue Version: %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>Es ist keine neuere stabile Version verfügbar.</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>Updates konnten nicht geprüft werden. Bitte versuchen Sie es erneut.</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>Veröffentlicht: %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>Keine Versionshinweise vorhanden.</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>Öffnet die GitHub-Releaseseite. Installieren Sie wie gewohnt; mit Nix verwaltete Installationen sollten über Nix aktualisiert werden.</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Erneut prüfen</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>Downloadseite öffnen</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
