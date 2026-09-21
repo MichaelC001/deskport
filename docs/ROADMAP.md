@@ -1,3 +1,11 @@
+## 0.5.1 release preparation — 2026-09-21
+
+Prepare the current desktop baseline with ENet startup failure handling and
+preservation of configured connection entries during authenticated refresh.
+The full-platform release remains pending: Windows integration is maintained
+on `dev/windows`, with unresolved Defender detection and trusted code-signing
+requirements. Build/package checks are distinct from native streaming acceptance.
+
 ## ENet host creation failure — 2026-09-21
 
 Reason: a failed ENet host allocation was dereferenced while enabling QoS,
