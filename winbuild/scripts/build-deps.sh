@@ -2,15 +2,15 @@
 # Build the static third-party dependencies for the Windows x64 cross build.
 source "$(dirname "$0")/env.sh"
 
-S_ZLIB=/nix/store/13vkic2v8zac4m6p38asdhasb3xylv07-zlib-1.3.2.tar.gz
-S_OPENSSL=/nix/store/28gjcxgpb8wznqc5dn45s5xrnbvvf2v7-openssl-3.6.3.tar.gz
-S_OPUS=/nix/store/xyzmpla2ax3r79d4m0l6g8jmwris7a8q-opus-1.6.1.tar.gz
-S_SDL2="$WB/src/SDL2-2.32.10.tar.gz"
-S_SDL2TTF=/nix/store/vx6r4gzgx7wqx4qdn8qxfwvh072gbwq5-SDL2_ttf-2.24.0.tar.gz
-S_FREETYPE=/nix/store/043d41b261zzgpmrxp4islgh9l1j2j67-freetype-2.14.3.tar.xz
-S_FFMPEG=/nix/store/lrsm8w8023kpna6kpw4kr4ixgkm850i9-ffmpeg
-S_DAV1D=/nix/store/2h6bp1bn3fi1nsj5y82nnn8g9y5m63sh-source
-S_LIBPLACEBO=/nix/store/8naam5d8x9d7wv7a8czhzszgnfqj1dns-source
+S_ZLIB="${S_ZLIB:-$WB/source-inputs/zlib-1.3.2.tar.gz}"
+S_OPENSSL="${S_OPENSSL:-$WB/source-inputs/openssl-3.6.3.tar.gz}"
+S_OPUS="${S_OPUS:-$WB/source-inputs/opus-1.6.1.tar.gz}"
+S_SDL2="${S_SDL2:-$WB/source-inputs/SDL2-2.32.10.tar.gz}"
+S_SDL2TTF="${S_SDL2TTF:-$WB/source-inputs/SDL2_ttf-2.24.0.tar.gz}"
+S_FREETYPE="${S_FREETYPE:-$WB/source-inputs/freetype-2.14.3.tar.xz}"
+S_FFMPEG="${S_FFMPEG:-$WB/source-inputs/ffmpeg}"
+S_DAV1D="${S_DAV1D:-$WB/source-inputs/dav1d}"
+S_LIBPLACEBO="${S_LIBPLACEBO:-$WB/source-inputs/libplacebo}"
 
 stamp() { [ -f "$PREFIX/.stamp-$1" ]; }
 done_stamp() { touch "$PREFIX/.stamp-$1"; }
