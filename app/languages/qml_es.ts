@@ -2283,6 +2283,22 @@
         <source>Report a problem…</source>
         <translation>Informar de un problema…</translation>
     </message>
+    <message>
+        <source>Shared Windows display</source>
+        <translation>Pantalla de Windows compartida</translation>
+    </message>
+    <message>
+        <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
+        <translation>Comparte este escritorio de Windows; las resoluciones compatibles se restauran tras desconectar</translation>
+    </message>
+    <message>
+        <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
+        <translation>Usa este escritorio de Windows. Al desconectar se restaura la resolución original. Los tamaños no compatibles se notifican sin cambiar la pantalla.</translation>
+    </message>
+    <message>
+        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
+        <translation>Comparte un escritorio SDR independiente usando modos compatibles de 60 Hz. Los clientes nuevos eligen el tamaño compatible más cercano. Al detener el uso compartido se elimina esta pantalla y se restaura la disposición original.</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
