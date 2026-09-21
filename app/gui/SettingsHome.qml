@@ -12,6 +12,37 @@ UiPage {
     function save() { preferences.save() }
     UiCard {
         ColumnLayout {
+            anchors.fill: parent; spacing: 12
+            Label { text: qsTr("Diagnostics and feedback"); color: ui.text; font.pixelSize: ui.title }
+            Switch {
+                objectName: "diagnosticsSwitch"
+                text: qsTr("Enable diagnostic logs")
+                checked: diagnostics.enabled
+                onClicked: diagnostics.enabled = checked
+            }
+            Label {
+                text: qsTr("Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.")
+                color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            }
+            Label {
+                text: qsTr("IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.")
+                color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            }
+            Label {
+                objectName: "diagnosticsPublicNotice"
+                text: qsTr("GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.")
+                color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            }
+            UiButton { objectName: "feedbackButton"; text: qsTr("Create logs ZIP and open GitHub…"); onClicked: diagnostics.feedback() }
+            Label { text: diagnostics.status; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; visible: text.length > 0 }
+            Label { text: diagnostics.bundlePath; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true; visible: text.length > 0 }
+            UiButton { objectName: "showDiagnosticsBundle"; text: qsTr("Show ZIP in folder"); visible: diagnostics.bundlePath.length > 0; onClicked: diagnostics.showBundle() }
+            UiButton { text: qsTr("Clear saved diagnostics"); onClicked: diagnostics.clear() }
+            Label { text: qsTr("Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        }
+    }
+    UiCard {
+        ColumnLayout {
             anchors.fill: parent; spacing: ui.gap
             Label { text: qsTr("Appearance"); color: ui.text; font.pixelSize: ui.title }
             Label { text: qsTr("Theme"); color: ui.muted }

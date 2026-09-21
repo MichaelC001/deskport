@@ -107,7 +107,7 @@ UiPage {
                     SpinBox { id: connectionPort; from: 1024; to: 65535; value: peerManager.port; editable: true; Layout.fillWidth: true }
                     UiButton { text: qsTr("Apply"); onClicked: peerManager.setConnectionPort(connectionPort.value) }
                 }
-                UiButton { text: qsTr("Open host logs"); onClicked: hostManager.openLogs() }
+                UiButton { text: qsTr("Report a problem…"); onClicked: navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
             }
         }
     }

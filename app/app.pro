@@ -1,3 +1,5 @@
+SOURCES += backend/diagnostics.cpp
+HEADERS += backend/diagnostics.h
 HEADERS += backend/smalltcp.h backend/smalltcptunnel.h
 linux {
     CONFIG += link_pkgconfig

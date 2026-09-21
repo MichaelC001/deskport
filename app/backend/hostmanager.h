@@ -157,7 +157,7 @@ private:
     bool m_ServerRequested = false;
     bool m_RestartRequested = false;
     quint64 m_Generation = 0;
-    qint64 m_LogOffset = 0;
+    QByteArray m_DiagnosticStatusBuffer;
     QTimer m_RecoveryTimer;
     bool m_DesiredSharing = false, m_ShuttingDown = false;
     bool m_Resident = false, m_ExitRequested = false;

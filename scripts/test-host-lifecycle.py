@@ -26,6 +26,7 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-idle": initial = dict(ready=True, active=False, gnome=True, outputName="DeskPort-pending")
+print("display started private.example.net", file=sys.stderr, flush=True)
 print(json.dumps(initial), flush=True)
 if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
     select.select([sys.stdin], [], [], 1.5)
@@ -61,6 +62,7 @@ if mode == "host-crash-once" and not (state / "crashed-once").exists():
     sys.exit(7)
 if mode == "stubborn": signal.signal(signal.SIGTERM, signal.SIG_IGN)
 (state / "host-started").touch()
+print("Connection started 192.0.2.99 token=fixture-secret", flush=True)
 # Loopback-only, certificate-pinned management fixture; never a personal host.
 if (state / "credentials/cert.pem").exists():
     import base64, http.server, json, ssl
@@ -131,8 +133,8 @@ CONFIG += console c++17 testcase
 CONFIG -= app_bundle
 TARGET = host-lifecycle-tests
 DESTDIR = "{macos}"
-SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
-HEADERS += "{root}/app/backend/hostmanager.h" {extra_headers}
+SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
+HEADERS += "{root}/app/backend/diagnostics.h" "{root}/app/backend/hostmanager.h" {extra_headers}
 INCLUDEPATH += "{root}/app/backend" "{root}/app"
 RESOURCES += "{work}/test-resources.qrc"
 macx {{

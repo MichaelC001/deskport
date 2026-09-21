@@ -228,3 +228,10 @@ Separately installed Sunshine services are kept independent.
 GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and the
 license of each vendored dependency listed in [docs/VENDORED.md](docs/VENDORED.md). Original documentation is preserved in
 [README.upstream.md](README.upstream.md).
+
+### Diagnostics and feedback
+
+Diagnostic logs are off by default. Enable them in Settings, reproduce the issue,
+then create a logs ZIP and open a GitHub issue draft. Review the ZIP before attaching
+it: GitHub issues are public, and DeskPort does not upload or submit anything for
+you. See [diagnostic data and limits](docs/DIAGNOSTICS.md).

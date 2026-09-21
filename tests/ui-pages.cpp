@@ -1,3 +1,5 @@
+#include "diagnostics.h"
+#include <QDesktopServices>
 #include <cmath>
 #include <QtTest>
 #include <QQmlEngine>
@@ -139,7 +141,44 @@ public:
 };
 class UiPages : public QObject {
     Q_OBJECT
+    QUrl feedbackUrl;
+public slots:
+    void captureFeedback(const QUrl& url) { feedbackUrl=url; }
 private slots:
+    void diagnosticsControls() {
+        QTemporaryDir dir;
+        Diagnostics logs(nullptr,dir.path()+"/diagnostics");
+        QQmlEngine engine;
+        const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        engine.rootContext()->setContextProperty("ui",theme.data());
+        engine.rootContext()->setContextProperty("diagnostics",&logs);
+        QQmlComponent component(&engine,QUrl::fromLocalFile(gui+"/SettingsHome.qml"));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
+        auto item=qobject_cast<QQuickItem*>(page.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(660,900);
+        item->setParentItem(window.contentItem()); item->setSize(QSizeF(660,900));
+        window.show(); QTest::qWait(100);
+        auto toggle=page->findChild<QQuickItem*>("diagnosticsSwitch"); QVERIFY(toggle);
+        QVERIFY(!toggle->property("checked").toBool());
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,toggle->mapToScene(QPointF(toggle->width()/2,toggle->height()/2)).toPoint());
+        QTRY_VERIFY(logs.enabled());
+        auto button=page->findChild<QObject*>("feedbackButton"); QVERIFY(button);
+        auto notice=page->findChild<QObject*>("diagnosticsPublicNotice"); QVERIFY(notice);
+        QVERIFY(notice->property("text").toString().contains("public"));
+        QDesktopServices::setUrlHandler("https",this,"captureFeedback");
+        QVERIFY(QMetaObject::invokeMethod(button,"clicked"));
+        QVERIFY(QFile::exists(logs.bundlePath()));
+        QCOMPARE(feedbackUrl,Diagnostics::issueUrl());
+        QVERIFY(!feedbackUrl.toString().contains(dir.path()));
+        QDesktopServices::unsetUrlHandler("https");
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,toggle->mapToScene(QPointF(toggle->width()/2,toggle->height()/2)).toPoint());
+        QTRY_VERIFY(!logs.enabled());
+        const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!shots.isEmpty()) { QDir().mkpath(shots); QTest::qWait(100); QVERIFY(window.grabWindow().save(shots+"/diagnostics.png")); }
+    }
+
     void repeatedLaunchActivatesOnlyTheOwner() {
         QTemporaryDir directory;
         int activations = 0;
@@ -440,6 +479,7 @@ ApplicationWindow {
         QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
         QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
         engine.rootContext()->setContextProperty("ui",theme.data());
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
         engine.rootContext()->setContextProperty("hostManager",&host);
         engine.rootContext()->setContextProperty("peerManager",&peers);
         QQuickWindow window;
@@ -608,6 +648,7 @@ ApplicationWindow {
         TestSession session;
         QQmlEngine::setObjectOwnership(&session,QQmlEngine::CppOwnership);
         QQmlEngine engine;
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
         engine.rootContext()->setContextProperty("hostManager", &host);
         engine.rootContext()->setContextProperty("peerManager", &peers);
         engine.rootContext()->setContextProperty("initialView", QString("qrc:/gui/PcView.qml"));
@@ -768,6 +809,7 @@ ApplicationWindow {
         HostManager host(nullptr, directory.path());
         PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
         QQmlEngine engine;
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
         engine.rootContext()->setContextProperty("hostManager", &host);
         engine.rootContext()->setContextProperty("peerManager", &peers);
         const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
@@ -788,6 +830,7 @@ ApplicationWindow {
             QVERIFY(page->property("heading").toString()!=english);
             QCOMPARE(themeChoice->property("currentIndex").toInt(),0);
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
+            QVERIFY(!translator.translate("SettingsHome","Enable diagnostic logs").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Match the client window resolution").isEmpty());
             QVERIFY(!translator.translate("HostView","Built-in virtual display").isEmpty());
             QVERIFY(!translator.translate("HostView","Active · %1 × %2 pixels").isEmpty());
