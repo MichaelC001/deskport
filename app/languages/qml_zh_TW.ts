@@ -2373,6 +2373,26 @@
         <source>Discover nearby devices</source>
         <translation>探索附近裝置</translation>
     </message>
+    <message>
+        <source>Request access to a computer</source>
+        <translation>請求存取電腦</translation>
+    </message>
+    <message>
+        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+        <translation>核准後，此裝置可以檢視並控制另一台電腦，但不會共享此裝置自己的桌面。</translation>
+    </message>
+    <message>
+        <source>Host access</source>
+        <translation>主機存取</translation>
+    </message>
+    <message>
+        <source>Forget saved binding</source>
+        <translation>忘記已儲存的綁定</translation>
+    </message>
+    <message>
+        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+        <translation>要忘記此裝置上為 %1 儲存的綁定嗎？請另行從「裝置」中移除它。若要撤銷此裝置的存取權限，也需在主機端將其移除。</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
