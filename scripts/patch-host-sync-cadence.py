@@ -23,7 +23,9 @@ patch('  struct sync_session_t {', '''  struct sync_session_t {
     int deskport_last_floor = 0;
     int deskport_last_ceiling = 0;''')
 patch('    encode_session.session = std::move(session);', '''    encode_session.session = std::move(session);
-    encode_session.deskport_cadence.emplace(ctx.config.framerate);''')
+    encode_session.deskport_cadence.emplace(ctx.config.framerate,
+        std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count());''')
 patch('          if (ctx->idr_events->peek()) {', '''          const bool deskport_recovery = ctx->idr_events->peek();
           if (deskport_recovery) {''')
 old='''          std::optional<std::chrono::steady_clock::time_point> frame_timestamp;

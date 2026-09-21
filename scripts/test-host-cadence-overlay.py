@@ -15,6 +15,6 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         video = (target / 'src/video.cpp').read_text()
         assert 'const bool smart = config.deskport_smart;' in video
         assert 'ctx->config.deskport_smart' in video
-        assert 'deskport_cadence.emplace(ctx.config.framerate)' in video
+        assert 'deskport_cadence.emplace(ctx.config.framerate,' in video
         assert 'pos->deskport_timestamp.reset()' in video
         print(f'PASS: async/sync/input/PipeWire overlays: {archive}')

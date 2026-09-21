@@ -30,7 +30,9 @@ inline bool unrecoverableFec(const unsigned char* p, std::size_t size) {
 // idle frames, low content frame rates, or render-queue drops.
 class StreamPolicy {
 public:
-    explicit StreamPolicy(int fps) : ceiling(std::max(1, fps)), target(ceiling) {}
+    explicit StreamPolicy(int fps, std::int64_t startMs = 0)
+        : ceiling(std::max(1, fps)), target(ceiling), lastLoss(startMs),
+          lastEpisode(startMs - 10000), lastChange(startMs) {}
     void loss(std::int64_t nowMs) {
         lastLoss = nowMs;
         if (nowMs - lastEpisode < 1000) return; // one burst is one episode

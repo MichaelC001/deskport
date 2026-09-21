@@ -8,7 +8,7 @@ namespace deskport {
 // Keep pending content across denied slots so the final desktop update is sent.
 class FrameCadence {
 public:
-    explicit FrameCadence(int fps) : policy(fps) {}
+    explicit FrameCadence(int fps, std::int64_t startMs = 0) : policy(fps, startMs) {}
     StreamPolicy policy;
     ActivityBoost boost;
     int floor(std::int64_t nowUs) {

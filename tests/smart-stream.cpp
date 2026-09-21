@@ -89,6 +89,11 @@ int main() {
     abs[9]=60;assert(absolute.observe(abs.data(),abs.size(),12000).fps==30);
     assert(deskport::activityFrameRate({},0,60)==1);
     assert(deskport::activityFrameRate(boost,11100,1)==1);
+    deskport::StreamPolicy absoluteClock(60, 100000);
+    absoluteClock.loss(100000); absoluteClock.loss(101500); absoluteClock.loss(103000);
+    assert(absoluteClock.frameRate(103000)==60); // same startup guard for both clocks
+    absoluteClock.loss(105000); absoluteClock.loss(108000);
+    assert(absoluteClock.frameRate(108000)==30);
     deskport::FrameCadence cadence(60);
     assert(cadence.admit(1000000,true,false));
     assert(!cadence.admit(1999999,false,false));
