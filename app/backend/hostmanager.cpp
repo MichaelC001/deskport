@@ -256,9 +256,6 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         if (code != 0 || exitStatus != QProcess::NormalExit) {
             beginStop(tr("Could not initialize host authentication")); return;
         }
-#ifdef Q_OS_WIN
-        m_Server.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
-#else
         m_DiagnosticStatusBuffer.clear();
 #ifdef Q_OS_WIN
         m_Server.setWorkingDirectory(QFileInfo(serverPath()).absolutePath());
