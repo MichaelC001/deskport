@@ -2283,6 +2283,22 @@
         <source>Report a problem…</source>
         <translation>문제 보고…</translation>
     </message>
+    <message>
+        <source>Shared Windows display</source>
+        <translation>공유 Windows 디스플레이</translation>
+    </message>
+    <message>
+        <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
+        <translation>이 Windows 데스크톱을 공유합니다. 연결 해제 후 지원되는 해상도가 복원됩니다</translation>
+    </message>
+    <message>
+        <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
+        <translation>이 Windows 데스크톱을 사용합니다. 연결을 끊으면 원래 해상도로 복원됩니다. 지원되지 않는 크기는 디스플레이를 변경하지 않고 알립니다.</translation>
+    </message>
+    <message>
+        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
+        <translation>지원되는 60 Hz 모드로 별도의 SDR 데스크톱을 공유합니다. 새 클라이언트는 가장 가까운 지원 크기를 선택합니다. 공유를 중지하면 이 디스플레이를 제거하고 원래 화면 배치를 복원합니다.</translation>
+    </message>
 </context>
 <context>
     <name>BindView</name>
