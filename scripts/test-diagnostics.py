@@ -26,7 +26,7 @@ TARGET = diagnostics-test
         assert archive.testzip() is None
         assert set(archive.namelist()) <= {'manifest.json', 'README.txt'} | {f'{s}-{n}.jsonl' for s in ('host', 'client', 'display') for n in range(3)}
         manifest = json.loads(archive.read('manifest.json'))
-        assert manifest['version'] == '0.4.6-D'
+        assert manifest['version'] == (root / 'app/version.txt').read_text().strip()
         assert len(archive.read('host-0.jsonl')) <= 1024 * 1024
         for name in archive.namelist():
             if name.endswith('.jsonl'):

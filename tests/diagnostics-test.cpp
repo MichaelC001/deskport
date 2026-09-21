@@ -15,7 +15,7 @@ public slots:
     void captureUrl(const QUrl& url) { opened=url; }
 private slots:
     void initTestCase() {
-        QCoreApplication::setApplicationVersion("0.4.6-D");
+        QCoreApplication::setApplicationVersion("0.5.0");
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
     }
@@ -45,7 +45,7 @@ private slots:
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.path());
         QFile archive(logs.createBundle()); QVERIFY(archive.open(QIODevice::ReadOnly));
         QVERIFY(archive.readAll().contains("\"version\": \"" + expected.toUtf8() + "\""));
-        QCoreApplication::setApplicationVersion("0.4.6-D");
+        QCoreApplication::setApplicationVersion("0.5.0");
     }
     void privacy_data() {
         QTest::addColumn<QString>("secret");

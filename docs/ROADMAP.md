@@ -1,3 +1,10 @@
+## 0.5.0 stable release — 2026-09-21
+
+Reason: user-authorized desktop release of bounded local diagnostics, update
+notifications and encoding-efficiency changes. macOS notarization and the full
+Linux package matrix are required before publication. Consumer activation and
+real streaming/input acceptance remain manual follow-up checks.
+
 ## Default diagnostic recording — 2026-09-21
 
 Reason: user requested logs to be available before a fault occurs. Enable bounded,
