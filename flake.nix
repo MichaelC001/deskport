@@ -63,6 +63,10 @@
           '';
           postInstall = (old.postInstall or "") + ''
             mkdir -p "$out/libexec"
+            if [ -f TEST_BUILD_ID ]; then
+              mkdir -p "$out/share/deskport"
+              cp TEST_BUILD_ID "$out/share/deskport/TEST_BUILD_ID"
+            fi
             ln -s ${sessionHost}/bin/sunshine "$out/libexec/deskport-host"
             cat > "$out/share/applications/io.github.keithxc.DeskPort.display.desktop" <<EOF
             [Desktop Entry]

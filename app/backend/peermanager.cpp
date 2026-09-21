@@ -449,13 +449,10 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
                 QSslCertificate(current["hostCert"].toString().toUtf8())) {
             fail(link, tr("Endpoint refresh rejected")); return;
         }
-        if (port != current["hostPort"].toInt() || entryPort != current["bindingPort"].toInt()) {
+        if (port != current["hostPort"].toInt()) {
             auto updated = current; updated["hostPort"] = port;
-            updated["bindingPort"] = entryPort;
-            if (entryPort != current["bindingPort"].toInt()) {
-                const auto address = current["address"].toString();
-                updated["requestedAddress"] = (address.contains(':') ? "[" + address + "]" : address) + ":" + QString::number(entryPort);
-            }
+            // Preserve the contacted entry, which may be independently forwarded.
+            // The advertised listener is not a replacement for that working route.
             m_Peers[link->expectedFingerprint] = updated;
             if (!save()) {
                 m_Peers[link->expectedFingerprint] = current;

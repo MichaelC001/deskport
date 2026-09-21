@@ -281,7 +281,7 @@ private slots:
         QTest::newRow("revoked-at-server") << 3;
         QTest::newRow("wrong-stream-certificate") << 4;
         QTest::newRow("concurrent-local-edit") << 5;
-        QTest::newRow("changed-entry-port") << 6;
+        QTest::newRow("retain-reachable-old-entry") << 6;
     }
     void automaticEndpointRefresh() {
         QFETCH(int, failure);
@@ -332,10 +332,6 @@ private slots:
             const auto after=PeerStore::read(dir.path()+"/ab/peers.json")["peers"].toObject()[fp].toObject();
             auto expected=peer; expected["hostPort"]=actualPort;
             expected["resolvedAddress"]="127.0.0.1";
-            if (failure==6) {
-                expected["bindingPort"]=b.port();
-                expected["requestedAddress"]=QString("127.0.0.1:%1").arg(b.port());
-            }
             QCOMPARE(after,expected);
             QTest::qWait(100); a.refreshEndpoints(); QTest::qWait(200);
             QCOMPARE(updated.size(),1);

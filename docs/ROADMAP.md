@@ -1525,3 +1525,5 @@ TODO — macOS self-update (deferred by user, 2026-09-21):
 
 Next action: review phase 1 in a candidate build. No automatic installation,
 release publication or deployed-service changes are included in this phase.
+
+- 2026-09-21: Preserve the configured connection entry across authenticated stream endpoint refreshes; mobile adapters adopt the shared endpoint contract. Private device acceptance remains pending.
