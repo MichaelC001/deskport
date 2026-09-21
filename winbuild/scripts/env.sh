@@ -39,6 +39,11 @@ unpack() { # unpack <src> <destdir>
   if [ -e "$WB/source-inputs/$(basename "$s")" ]; then
     s="$WB/source-inputs/$(basename "$s")"
   fi
+  if [ ! -e "$s" ]; then
+    echo "Missing Windows build source input: $s" >&2
+    echo "Place it under $WB/source-inputs or override the corresponding S_* variable." >&2
+    return 1
+  fi
   rm -rf "$d"; mkdir -p "$d"
   if [ -d "$s" ]; then cp -R "$s/." "$d/" && chmod -R u+w "$d";
   else tar -xf "$s" -C "$d" --strip-components=1; fi
