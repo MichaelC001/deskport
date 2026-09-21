@@ -1,3 +1,10 @@
+## Deterministic host startup responsiveness check — 2026-09-21
+
+The fake authentication process now waits for ten UI heartbeat callbacks before
+completing. Normal and slower timer cadences exercise event-loop progress without
+assuming a fixed callback count in a 400 ms wall-clock window. Authentication has
+a bounded deadline and direct start/stop responsiveness assertions remain intact.
+
 ## 0.5.1 macOS and Linux release — 2026-09-21
 
 Prepare the current desktop baseline with ENet startup failure handling and

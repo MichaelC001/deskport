@@ -54,7 +54,15 @@ if sys.platform == "darwin" and os.environ.get("DESKPORT_CAPTURE_DISPLAY") != "1
 if "--creds" in sys.argv:
     (state / "auth-started").touch()
     if mode == "auth-fail": sys.exit(3)
-    time.sleep(10 if mode == "auth-slow" else 0.4)
+    if mode == "auth-gated":
+        deadline = time.monotonic() + 4
+        while not (state / "auth-release").exists():
+            if time.monotonic() >= deadline:
+                (state / "auth-gate-timed-out").touch()
+                sys.exit(19)
+            time.sleep(0.01)
+    else:
+        time.sleep(10 if mode == "auth-slow" else 0.4)
     sys.exit(0)
 if mode == "host-fail": sys.exit(7)
 if mode == "host-crash-once" and not (state / "crashed-once").exists():
@@ -185,4 +193,5 @@ macx {{
             environment["QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment["NIXPKGS_QT6_QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment.pop("QML2_IMPORT_PATH", None)
-    subprocess.run([str(test_binary)], cwd=work, env=environment, check=True)
+    test_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    subprocess.run([str(test_binary), *test_args], cwd=work, env=environment, check=True)
