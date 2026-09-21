@@ -7,7 +7,7 @@ s = p.read_text()
 old = '''    if (const auto rotation_error = rotate_log_file(log_path)) {
       std::cerr << "Failed to rotate log file '" << log_file << "': " << rotation_error.message() << '\\n';
     }'''
-new = '''    // DeskPort consumes stdout via its opt-in, privacy-filtered diagnostics sink.
+new = '''    // DeskPort consumes stdout via its bounded, privacy-filtered diagnostics sink.
     // Never try to rename /dev/null or create generations of a device target.
     const bool file_logging = log_file != "/dev/null" && log_file != "NUL" && log_file != "\\\\\\\\.\\\\NUL";
     if (file_logging) {

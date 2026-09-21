@@ -61,7 +61,7 @@ Diagnostics& Diagnostics::instance() { static Diagnostics value; return value; }
 Diagnostics::Diagnostics(QObject* parent, const QString& directory) : QObject(parent),
     m_Directory(directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/diagnostics" : directory),
     m_Run(QUuid::createUuid().toString(QUuid::WithoutBraces).remove('-')),
-    m_Enabled(directory.isEmpty() && QSettings().value("diagnostics/enabled",false).toBool()) {
+    m_Enabled(directory.isEmpty() && QSettings().value("diagnostics/enabled",true).toBool()) {
     m_Time.start();
     prune();
     startMaintenance();

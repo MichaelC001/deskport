@@ -231,7 +231,7 @@ license of each vendored dependency listed in [docs/VENDORED.md](docs/VENDORED.m
 
 ### Diagnostics and feedback
 
-Diagnostic logs are off by default. Enable them in Settings, reproduce the issue,
+Diagnostic logs are enabled by default. Reproduce the issue,
 then create a logs ZIP and open a GitHub issue draft. Review the ZIP before attaching
 it: GitHub issues are public, and DeskPort does not upload or submit anything for
 you. See [diagnostic data and limits](docs/DIAGNOSTICS.md).

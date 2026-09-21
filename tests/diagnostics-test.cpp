@@ -1,6 +1,7 @@
 #include <QtTest>
 #include <QTemporaryDir>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QJsonDocument>
 #include <QDesktopServices>
 #include <QUrlQuery>
@@ -17,6 +18,18 @@ private slots:
         QCoreApplication::setApplicationVersion("0.4.6-D");
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
+    }
+    void defaultAndSavedPreference() {
+        QStandardPaths::setTestModeEnabled(true);
+        QSettings settings;
+        settings.remove("diagnostics/enabled");
+        { Diagnostics logs; QVERIFY(logs.enabled()); }
+        settings.setValue("diagnostics/enabled", false);
+        { Diagnostics logs; QVERIFY(!logs.enabled()); }
+        settings.setValue("diagnostics/enabled", true);
+        { Diagnostics logs; QVERIFY(logs.enabled()); }
+        settings.remove("diagnostics/enabled");
+        QStandardPaths::setTestModeEnabled(false);
     }
     void manifestVersion_data() {
         QTest::addColumn<QString>("version");

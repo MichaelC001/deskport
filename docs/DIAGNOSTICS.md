@@ -1,11 +1,11 @@
 # Diagnostics and public feedback
 
 Added 2026-09-21 to collect useful user reports without collecting raw device or
-connection details. This feature is opt-in and applies to the desktop application
+connection details. This feature is enabled by default and applies to the desktop application
 and the host/helper processes it starts. It does not change independently managed
 Sunshine installations or the private mobile clients.
 
-In **Settings → Diagnostics and feedback**, turn on **Enable diagnostic logs**,
+In **Settings → Diagnostics and feedback**, check that **Enable diagnostic logs** is on,
 reproduce the problem, then select **Create logs ZIP and open GitHub…**. This
 creates a local ZIP and opens a prefilled issue at `keithxc/deskport`. Review the
 archive, drag it into the issue editor, describe the steps and expected behavior,
@@ -47,7 +47,8 @@ that a general-purpose filter can recognize every possible sensitive datum.
 
 ## Storage and process coverage
 
-Logs are off by default. The switch persists as `diagnostics/enabled`, separately
+Logs are enabled by default when no preference has been saved. Existing explicit
+off choices remain respected. The switch persists as `diagnostics/enabled`, separately
 from per-device streaming settings, and takes effect immediately. Qt, SDL and
 FFmpeg callbacks use the shared sink. The parent always drains the embedded host's
 stdout/stderr and the native display helper's stderr; it drops data while disabled.
