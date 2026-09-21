@@ -38,6 +38,7 @@ ApplicationWindow {
     color: ui.canvas
 
     Component.onCompleted: {
+        AutoUpdateChecker.start()
         peerManager.restoreHosts()
         if (initialView === "qrc:/gui/PcView.qml") Qt.callLater(function() {
             if (!hostManager.setupComplete && peerManager.peers.length === 0)
@@ -340,12 +341,16 @@ ApplicationWindow {
             Label { text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on"); color: ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; elide: Text.ElideRight }
             UiButton { text: qsTr("Sharing"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "HostView"); onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") } }
             UiButton { text: qsTr("Settings"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "SettingsHome"); onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") } }
-            Label {
-                text: "v" + SystemProperties.versionString
-                color: ui.muted; font.pixelSize: ui.small
+            UiButton {
+                objectName: "versionUpdateButton"
+                text: "v" + SystemProperties.versionString + (AutoUpdateChecker.status === "available" ? " · " + qsTr("Update available") : "")
+                flat: true; highlighted: AutoUpdateChecker.status === "available"
+                font.pixelSize: ui.small
                 Layout.fillWidth: true; Layout.topMargin: 8
-                horizontalAlignment: Text.AlignHCenter
-                elide: Text.ElideRight
+                onClicked: {
+                    updateDialog.open()
+                    if (AutoUpdateChecker.status === "idle" || AutoUpdateChecker.status === "error") AutoUpdateChecker.start()
+                }
             }
         }
         }
@@ -360,6 +365,56 @@ ApplicationWindow {
             Button { visible: stackView.depth > 1; text: "←"; Accessible.name: qsTr("Back"); flat: true; onClicked: goBack() }
             Label { text: stackView.currentItem ? stackView.currentItem.objectName : "DeskPort"; color: ui.text; font.pixelSize: 16; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
             UiButton { text: qsTr("Add a device"); visible: qmltypeof(stackView.currentItem, "PcView"); highlighted: true; onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
+        }
+    }
+    Timer { interval: 21600000; repeat: true; running: true; onTriggered: AutoUpdateChecker.start() }
+    Dialog {
+        id: updateDialog; objectName: "updateDialog"
+        title: qsTr("DeskPort updates")
+        modal: true; anchors.centerIn: parent
+        width: Math.min(window.width - 40, 560)
+        standardButtons: Dialog.Close
+        contentItem: ColumnLayout {
+            spacing: 12
+            Label {
+                text: AutoUpdateChecker.status === "checking" ? qsTr("Checking for updates…")
+                    : AutoUpdateChecker.status === "available" ? qsTr("New version: %1").arg(AutoUpdateChecker.latestVersion)
+                    : AutoUpdateChecker.status === "current" ? qsTr("No newer stable release is available.")
+                    : qsTr("Could not check for updates. Please try again.")
+                color: ui.text; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            }
+            Label {
+                visible: AutoUpdateChecker.publishedAt.length > 0
+                text: qsTr("Published: %1").arg(AutoUpdateChecker.publishedAt.slice(0, 10))
+                color: ui.muted
+            }
+            ScrollView {
+                visible: AutoUpdateChecker.releaseUrl.length > 0
+                Layout.fillWidth: true; Layout.preferredHeight: 230
+                clip: true
+                TextArea {
+                    text: AutoUpdateChecker.releaseNotes || qsTr("No release notes provided.")
+                    readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap
+                    textFormat: TextEdit.PlainText
+                    color: ui.text
+                }
+            }
+            Label {
+                text: qsTr("Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.")
+                color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+            }
+            RowLayout {
+                UiButton {
+                    text: qsTr("Check again")
+                    enabled: AutoUpdateChecker.status !== "checking"
+                    onClicked: AutoUpdateChecker.start()
+                }
+                UiButton {
+                    text: qsTr("Open download page")
+                    enabled: AutoUpdateChecker.releaseUrl.length > 0
+                    onClicked: Qt.openUrlExternally(AutoUpdateChecker.releaseUrl)
+                }
+            }
         }
     }
     Dialog {

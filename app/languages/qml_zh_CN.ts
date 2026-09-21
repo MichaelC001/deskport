@@ -1399,6 +1399,17 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Update available</source><translation>有更新</translation></message>
+    <message><source>DeskPort updates</source><translation>DeskPort 更新</translation></message>
+    <message><source>Checking for updates…</source><translation>正在检查更新…</translation></message>
+    <message><source>New version: %1</source><translation>发现新版本：%1</translation></message>
+    <message><source>No newer stable release is available.</source><translation>暂无更新的正式版本。</translation></message>
+    <message><source>Could not check for updates. Please try again.</source><translation>无法检查更新，请稍后重试。</translation></message>
+    <message><source>Published: %1</source><translation>发布日期：%1</translation></message>
+    <message><source>No release notes provided.</source><translation>此版本未提供更新日志。</translation></message>
+    <message><source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source><translation>将打开 GitHub 发布页面，请按原有方式安装；由 Nix 管理的安装请通过 Nix 更新。</translation></message>
+    <message><source>Check again</source><translation>重新检查</translation></message>
+    <message><source>Open download page</source><translation>前往下载页面</translation></message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>Settings</source>
