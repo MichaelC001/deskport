@@ -4,10 +4,10 @@ source "$(dirname "$0")/env.sh"
 
 QT_PREFIX="$WB/qt-static"
 export QT_PREFIX
-S_QTBASE=/nix/store/2h62s8fj35hf19kkxj6c9r2idrgzwdky-qtbase-everywhere-src-6.11.1.tar.xz
-S_QTSHADERTOOLS=/nix/store/cli9a6i42687p911rr7w6sh7fs16skdh-qtshadertools-everywhere-src-6.11.1.tar.xz
-S_QTDECLARATIVE=/nix/store/3mjbivmirixkdi37ahzkr38z1cinffjz-qtdeclarative-everywhere-src-6.11.1.tar.xz
-S_QTSVG=/nix/store/92vnk2mkk8zphdrlbf3kqg274lq30ajh-qtsvg-everywhere-src-6.11.1.tar.xz
+S_QTBASE="${S_QTBASE:-$WB/source-inputs/qtbase-everywhere-src-6.11.1.tar.xz}"
+S_QTSHADERTOOLS="${S_QTSHADERTOOLS:-$WB/source-inputs/qtshadertools-everywhere-src-6.11.1.tar.xz}"
+S_QTDECLARATIVE="${S_QTDECLARATIVE:-$WB/source-inputs/qtdeclarative-everywhere-src-6.11.1.tar.xz}"
+S_QTSVG="${S_QTSVG:-$WB/source-inputs/qtsvg-everywhere-src-6.11.1.tar.xz}"
 
 stamp() { [ -f "$QT_PREFIX/.stamp-$1" ]; }
 done_stamp() { mkdir -p "$QT_PREFIX"; touch "$QT_PREFIX/.stamp-$1"; }
