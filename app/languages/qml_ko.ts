@@ -2394,6 +2394,26 @@
         <source>Discover nearby devices</source>
         <translation>주변 기기 검색</translation>
     </message>
+    <message>
+        <source>Request access to a computer</source>
+        <translation>컴퓨터 접근 요청</translation>
+    </message>
+    <message>
+        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+        <translation>승인하면 이 기기에서 다른 컴퓨터를 보고 제어할 수 있습니다. 이 기기 자체의 데스크톱은 공유되지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Host access</source>
+        <translation>호스트 접근</translation>
+    </message>
+    <message>
+        <source>Forget saved binding</source>
+        <translation>저장된 연결 승인 삭제</translation>
+    </message>
+    <message>
+        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+        <translation>이 기기에 저장된 %1 연결 승인을 삭제할까요? 기기 목록에서는 별도로 제거해야 합니다. 이 기기의 접근 권한을 취소하려면 호스트에서도 제거하세요.</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
