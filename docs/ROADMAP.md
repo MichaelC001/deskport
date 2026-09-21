@@ -5,9 +5,9 @@ completing. Normal and slower timer cadences exercise event-loop progress withou
 assuming a fixed callback count in a 400 ms wall-clock window. Authentication has
 a bounded deadline and direct start/stop responsiveness assertions remain intact.
 
-## 0.5.1 macOS and Linux release — 2026-09-21
+## 0.5.1 macOS and Linux release — 2026-09-22
 
-Prepare the current desktop baseline with ENet startup failure handling and
+Published the current desktop baseline with ENet startup failure handling and
 preservation of configured connection entries during authenticated refresh.
 The user-selected release scope is macOS arm64 and Linux x86_64, including all
 supported desktop package formats. Windows remains on its development branch
@@ -15,6 +15,8 @@ and is excluded from this release. Native streaming acceptance and deployment
 remain separate from package verification and publication. Distribution signing
 retries transient Apple timestamp-service failures up to three attempts per
 object; all signature, timestamp and notarization requirements remain enforced.
+All 11 remote assets matched local SHA-256 after macOS notarization/Gatekeeper,
+the Linux installation/API/Flatpak matrix and all final-commit GitHub checks passed.
 
 ## ENet host creation failure — 2026-09-21
 

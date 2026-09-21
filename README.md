@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.5.0"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.5.0-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.5.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.5.1-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -54,12 +54,12 @@
 
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.5.0 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.5.0/DeskPort-0.5.0-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.5.0 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.0) · [installation guide](docs/LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Viewer only | **0.5.0 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.0) |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.5.1 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.5.1/DeskPort-0.5.1-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.5.1 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.1) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.5.1 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.5.1) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
-| Windows | Inherited viewer sources | Build and packaging unfinished; no supported release | — |
+| Windows | Viewer + host under development | Separate development branch; excluded from 0.5.1 | — |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 Native Linux packages require glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
@@ -70,14 +70,14 @@ A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.5.0/DeskPort-0.5.0-macos-arm64.dmg),
+**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.5.1/DeskPort-0.5.1-macos-arm64.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
 
-**Linux:** Choose the [0.5.0 package](https://github.com/keithxc/deskport/releases/tag/v0.5.0)
+**Linux:** Choose the [0.5.1 package](https://github.com/keithxc/deskport/releases/tag/v0.5.1)
 for your system and follow the [installation guide](docs/LINUX_PACKAGES.md),
-including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.5.0`.
-Flatpak provides viewing only. Release assets include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.5.0/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.5.0/VERIFICATION.txt).
+including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.5.1`.
+Flatpak provides viewing only. Release assets include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.5.1/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.5.1/VERIFICATION.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 The mobile app is a paid, one-time purchase; see your storefront for current local
@@ -114,7 +114,7 @@ Sources: [Moonlight](https://moonlight-stream.org/),
 DeskPort's current platform limits are listed above; this table does not imply
 feature parity across every OS or a measured performance advantage.
 
-See the [0.5.0 release notes](docs/RELEASE_0.5.0.md),
+See the [0.5.1 release notes](docs/RELEASE_0.5.1.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux
