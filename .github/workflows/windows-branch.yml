@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           find winbuild/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
           python3 -m compileall -q winbuild/scripts
-          if grep -R -nE '/nix/store|/run/current-system' winbuild/scripts; then
+          if grep -R -nE --exclude-dir=__pycache__ '/nix/store|/run/current-system' winbuild/scripts; then
             echo "Windows build scripts must not depend on machine-specific Nix paths." >&2
             exit 1
           fi
