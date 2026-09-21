@@ -578,7 +578,8 @@ win32 {
 macx {
     # Create Info.plist in object dir with the correct version string
     system(cp $$PWD/Info.plist $$OUT_PWD/Info.plist)
-    system(sed -i -e 's/VERSION/$$cat(version.txt)/g' $$OUT_PWD/Info.plist)
+    BUNDLE_VERSION = $$section($$cat(version.txt), -, 0, 0)
+    system(sed -i -e 's/NUMERIC_VERSION/$$BUNDLE_VERSION/g' -e 's/DISPLAY_VERSION/$$cat(version.txt)/g' $$OUT_PWD/Info.plist)
 
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
 

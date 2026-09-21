@@ -188,7 +188,7 @@ QString Diagnostics::createBundle() {
     }
     // Build version is compile-time product metadata, not host/environment inventory.
     QString version=QCoreApplication::applicationVersion();
-    if (!QRegularExpression("^[0-9]+(?:\\.[0-9]+){1,3}$").match(version).hasMatch()) version="development";
+    if (version.size() > 64 || !QRegularExpression("^[0-9]+(?:\\.[0-9]+){1,3}(?:-[A-Za-z0-9]+(?:[.-][A-Za-z0-9]+)*)?\\z").match(version).hasMatch()) version="development";
     files["manifest.json"]=QJsonDocument(QJsonObject{{"schema",1},{"version",version},{"platform",platform()},
         {"diagnostics_enabled",m_Enabled},{"log_files",files.size()}}).toJson();
     files["README.txt"]="DeskPort diagnostics: event classes, relative timing, resize dimensions and random run IDs only. Unknown messages are omitted. No configuration, pairing, keys, clipboard, key text, screen or raw error text is collected. Review before attaching to a PUBLIC GitHub issue. Nothing has been uploaded.\n";

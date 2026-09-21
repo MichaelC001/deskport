@@ -14,9 +14,25 @@ public slots:
     void captureUrl(const QUrl& url) { opened=url; }
 private slots:
     void initTestCase() {
-        QCoreApplication::setApplicationVersion("0.4.5");
+        QCoreApplication::setApplicationVersion("0.4.6-D");
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
+    }
+    void manifestVersion_data() {
+        QTest::addColumn<QString>("version");
+        QTest::addColumn<QString>("expected");
+        for (auto version : {"0.4.6", "0.4.6-D", "0.4.6-preview.2"})
+            QTest::newRow(version) << QString(version) << QString(version);
+        for (auto version : {"private.example.net", "0.4.6-D\n", "0.4.6-/Users/alice", "0.4.6-"})
+            QTest::newRow(version) << QString(version) << QString("development");
+    }
+    void manifestVersion() {
+        QFETCH(QString, version); QFETCH(QString, expected);
+        QCoreApplication::setApplicationVersion(version);
+        QTemporaryDir dir; Diagnostics logs(nullptr,dir.path());
+        QFile archive(logs.createBundle()); QVERIFY(archive.open(QIODevice::ReadOnly));
+        QVERIFY(archive.readAll().contains("\"version\": \"" + expected.toUtf8() + "\""));
+        QCoreApplication::setApplicationVersion("0.4.6-D");
     }
     void privacy_data() {
         QTest::addColumn<QString>("secret");

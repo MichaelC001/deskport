@@ -120,3 +120,13 @@ Screenshots were rendered from synthetic QML fixtures in light/dark and narrow
 layouts. UI URL handlers intercepted the feedback action; no actual issue was
 created. Windows compilation/runtime and live remote-session acceptance were not
 performed in this development task.
+
+## Private 0.4.6-D build (2026-09-21)
+
+The user-requested private test version is `0.4.6-D`. The application and
+diagnostics manifest preserve this complete version; Apple's bundle version
+fields use `0.4.6` and `DeskPortDisplayVersion` retains the test suffix.
+The diagnostic version allowlist accepts bounded prerelease identifiers and
+rejects paths, hostnames, trailing newlines and incomplete suffixes. macOS
+regression: 32 checks plus independent ZIP CRC/metadata validation passed.
+This is packaging validation, not deployed streaming or input acceptance.
