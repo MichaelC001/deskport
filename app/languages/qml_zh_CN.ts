@@ -2396,6 +2396,26 @@
         <source>Discover nearby devices</source>
         <translation>发现附近设备</translation>
     </message>
+    <message>
+        <source>Request access to a computer</source>
+        <translation>请求访问电脑</translation>
+    </message>
+    <message>
+        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+        <translation>批准后，此设备可以查看并控制另一台电脑，但不会共享此设备自己的桌面。</translation>
+    </message>
+    <message>
+        <source>Host access</source>
+        <translation>主机访问</translation>
+    </message>
+    <message>
+        <source>Forget saved binding</source>
+        <translation>忘记已保存的绑定</translation>
+    </message>
+    <message>
+        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+        <translation>要忘记此设备上为 %1 保存的绑定吗？请另行从“设备”中移除它。若要撤销此设备的访问权限，还需在主机端将其移除。</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
