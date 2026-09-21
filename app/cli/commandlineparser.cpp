@@ -46,7 +46,7 @@ public:
             showInfo(helpText());
         }
         if (isSet("version")) {
-            showVersion();
+            showInfo(QCoreApplication::applicationName() + " " + QCoreApplication::applicationVersion());
         }
     }
 
@@ -60,11 +60,16 @@ public:
     void showMessage(QString message, MessageType type) const
     {
     #if defined(Q_OS_WIN32)
-        UINT flags = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
-        flags |= (type == Info ? MB_ICONINFORMATION : MB_ICONERROR);
-        QString title = "Moonlight";
-        MessageBoxW(nullptr, reinterpret_cast<const wchar_t *>(message.utf16()),
-                    reinterpret_cast<const wchar_t *>(title.utf16()), flags);
+        // SSH and redirected commands have a pipe rather than a console.
+        // Only use a dialog when no output handle exists at all.
+        const HANDLE output = GetStdHandle(type == Info ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
+        if (!output || output == INVALID_HANDLE_VALUE) {
+            UINT flags = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
+            flags |= (type == Info ? MB_ICONINFORMATION : MB_ICONERROR);
+            const QString title = QCoreApplication::applicationName();
+            MessageBoxW(nullptr, reinterpret_cast<const wchar_t *>(message.utf16()),
+                        reinterpret_cast<const wchar_t *>(title.utf16()), flags);
+        }
     #endif
         message = message.endsWith('\n') ? message : message + '\n';
         fputs(qPrintable(message), type == Info ? stdout : stderr);
@@ -161,7 +166,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
     parser.setupCommonOptions();
     parser.setApplicationDescription(
         "\n"
-        "Starts Moonlight normally if no arguments are given.\n"
+        "Starts DeskPort normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
         "  list            List the available apps on a host\n"
@@ -169,7 +174,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "  stream          Start streaming an app\n"
         "  pair            Pair a new host\n"
         "\n"
-        "See 'moonlight <action> --help' for help of specific action."
+        "See 'deskport <action> --help' for help of specific action."
     );
     parser.addPositionalArgument("action", "Action to execute", "<action>");
     parser.parse(args);
@@ -367,7 +372,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
-    parser.addToggleOption("mute-on-focus-loss", "mute audio when Moonlight window loses focus");
+    parser.addToggleOption("mute-on-focus-loss", "mute audio when DeskPort window loses focus");
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");

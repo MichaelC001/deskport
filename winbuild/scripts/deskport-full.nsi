@@ -67,6 +67,25 @@ Function un.onInit
   SetRegView 64
 FunctionEnd
 
+; Defender or another security product can quarantine a bundled PE while the
+; installer is running. Keep the uninstaller available, fail the install, and
+; direct the user to Windows Security instead of weakening protection.
+Function VerifyPayload
+  IfFileExists "$INSTDIR\DeskPort.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\deskport-maintenance.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\deskport-driver-setup.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\host\deskport-host.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\host\deskport-display.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\host\deskport-display-recovery.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\driver\MttVDD.inf" +1 payloadMissing
+  IfFileExists "$INSTDIR\driver\MttVDD.dll" +1 payloadMissing
+  Push 0
+  Return
+payloadMissing:
+  MessageBox MB_ICONSTOP|MB_OK "DeskPort installation is incomplete: a required component is missing. Windows Security or another security product may have quarantined it. Review Windows Security protection history, then repair or uninstall this installation. Do not disable protection." /SD IDOK
+  Push 1
+FunctionEnd
+
 Section "DeskPort" SecMain
   SectionIn RO
   InitPluginsDir
@@ -80,6 +99,16 @@ Section "DeskPort" SecMain
   SetOutPath "$INSTDIR"
   File /r "${PAYLOAD}\*.*"
 
+  ; Write this before the first integrity gate so a quarantined install keeps
+  ; an executable path for cleanup and repair.
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+  Call VerifyPayload
+  Pop $0
+  ${If} $0 != 0
+    SetErrorLevel 1
+    Abort
+  ${EndIf}
+
   WriteRegStr HKLM "Software\${APPNAME}" "InstallDir" "$INSTDIR"
   WriteRegStr HKLM "Software\${APPNAME}" "Version" "${VERSION}"
 
@@ -88,7 +117,6 @@ Section "DeskPort" SecMain
     MessageBox MB_ICONSTOP "DeskPort could not register its owned display recovery task (error $0). An unrelated task was not replaced."
     Abort
   ${EndIf}
-  WriteUninstaller "$INSTDIR\Uninstall.exe"
   WriteRegStr HKLM "${REGKEY}" "DisplayName" "${APPNAME} ${VERSION} (x64)"
   WriteRegStr HKLM "${REGKEY}" "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM "${REGKEY}" "Publisher" "${PUBLISHER}"
@@ -137,6 +165,15 @@ Section "DeskPort" SecMain
   Pop $0
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "Windows could not create the DeskPort firewall rule. Installation is incomplete (error $0)."
+    Abort
+  ${EndIf}
+
+  ; Security software can quarantine a file after extraction while setup is
+  ; still running, so verify once more before allowing the finish page.
+  Call VerifyPayload
+  Pop $0
+  ${If} $0 != 0
+    SetErrorLevel 1
     Abort
   ${EndIf}
 

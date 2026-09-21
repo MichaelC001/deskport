@@ -6,8 +6,10 @@ import shutil
 import sys
 wb = Path(__file__).resolve().parents[1]
 out = Path(sys.argv[1])
-roots = [wb/'full/sunshine/third-party']
-roots += sorted((wb/'full/host-build/_deps').glob('*-src'))
+source = Path(os.environ.get('DESKPORT_HOST_SOURCE_DIR', wb/'full/sunshine-prepared'))
+build = Path(os.environ.get('DESKPORT_HOST_BUILD_DIR', wb/'full/host-build-prepared'))
+roots = [source/'third-party']
+roots += sorted((build/'_deps').glob('*-src'))
 for root in roots:
     label = 'sunshine-third-party' if root.name == 'third-party' else root.name
     for base, dirs, files in os.walk(root):

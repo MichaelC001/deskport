@@ -43,3 +43,89 @@ The cause has not been established. Do not restart heavy VM tests merely to
 reproduce the old setup. Keep build outputs, private logs, screenshots and
 credentials out of Git. Cross-build and packaging recipes are preserved under
 `winbuild/scripts`; generated dependencies and binaries remain local.
+
+## Host build order and offline delivery
+
+Prepare the cached inputs first. Client recipes use `winbuild/source-inputs`
+(or matching `S_*` overrides). Host curl/miniupnpc/minhook/onevpl archives,
+prepared media libraries, signed VDD payload and immutable host assets are
+currently required under `winbuild/full`; this is not yet a one-command bootstrap
+from an empty cache. Enter `nix-shell winbuild/scripts/shell.nix` on Linux for
+the repository-locked cross compiler, Qt host tools, npm and NSIS. The host recipe verifies the
+vendored Sunshine archive, creates `winbuild/full/sunshine-prepared`, applies
+the Windows and common DeskPort overlays, and builds into
+`winbuild/full/host-build-prepared`:
+
+```sh
+nix-shell winbuild/scripts/shell.nix
+winbuild/scripts/build-host-deps.sh
+winbuild/scripts/build-host-media.sh
+winbuild/scripts/build-host.sh
+winbuild/scripts/build-app.sh
+winbuild/scripts/build-maintenance.sh
+winbuild/scripts/package-full.sh
+```
+
+Missing Windows-only source archives are downloaded during preparation from
+fixed public commits and checked against `host-vendored-deps.json`. Cached
+archives are rechecked on reuse. None of these downloads are performed by the
+installer or installed application.
+
+Use `DESKPORT_HOST_SOURCE_DIR` and `DESKPORT_HOST_BUILD_DIR` to inspect
+separate prepared trees. `export-full-materials.py` records those actual trees
+under the normal extraction paths and excludes obsolete `full/sunshine` and
+`full/host-build` outputs.
+
+The current Windows work also includes an SSH native CLI patch; its `--version`
+check has passed. Native streaming, input, display, installer and upgrade
+acceptance remain pending, so a successful cross-build or CLI check is not
+native Windows acceptance.
+
+## 2026-09-21 delivery requirements
+
+Windows is a full desktop peer: it both connects to other PCs and hosts incoming
+connections. The deliverable is one offline x64 installer containing the static
+client, private host, display/recovery helpers, signed virtual-display driver and
+notices. Build-time dependency downloads do not run on end-user machines. Windows
+system components and GPU drivers remain OS/vendor-managed. `audit-package.py`
+rejects external Qt, multimedia, crypto and compiler runtime DLL dependencies.
+
+Mutual binding now waits for host readiness before announcing completion. The
+Windows host build reapplies the current common network, encoder, input activity
+and cadence overlays from verified source, instead of reusing an old patched
+tree. Windows enables the same smart-streaming host switch. Actual performance
+and bidirectional session behavior still require native acceptance.
+
+Native CLI regressions can be run over SSH with `tests/windows-cli.ps1`. The
+main window title bar follows the application's theme, including system appearance
+notifications and window recall. Neither check substitutes for streaming/input
+acceptance or proves virtual-display lifecycle parity.
+
+### Current checks
+
+The current candidate passed 98 mutual/client binding regressions, shared core
+workspace fixtures, translations, ENet failure handling and smart-stream policy
+tests. A Linux Nix build passed for the shared binding/CLI changes. On Windows 11
+hardware, all four noninteractive version/help cases passed, and isolated Light
+and Dark profiles both matched native DWM title-bar attributes and screenshots.
+The client directory scan completed with Defender real-time protection enabled
+and no detection records returned. These checks do not certify the final combined
+installer, normal-protection operation of the rebuilt host, or bidirectional
+streaming/input acceptance.
+
+The final full candidate also passed installer/ZIP payload equivalence and PE
+dependency audits. Its exact client binary matches the native title-bar test
+binary; its bundled host reported `2026.906.222525` on Windows. Static Defender
+scans of the extracted payload and installer completed with protection enabled
+and no detection records returned, and the included driver catalog reported a
+valid signature. A later installed/portable helper was nevertheless quarantined
+by Defender as `Trojan:Win32/Bearfoos.A!ml`; this remains a release blocker and
+must be investigated with normal protection enabled. Exact-package installation,
+two-way real streaming/input and recovery remain pending; the Windows virtual
+display is still sharing-scoped.
+
+The full installer verifies all required DeskPort executables and driver files
+immediately after extraction and again before completion. If a file is missing,
+setup fails and leaves the uninstaller available for cleanup. Review Windows
+Security protection history or another security product's quarantine record
+before repairing the installation; protection must not be disabled.

@@ -25,6 +25,7 @@
 #include <QtDebug>
 #include <QNetworkProxyFactory>
 #include <QPalette>
+#include <QStyleHints>
 #include <QFont>
 #include <QCursor>
 #include <QElapsedTimer>
@@ -71,6 +72,7 @@ static void forwardTerminationSignal(int)
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <dwmapi.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
 #endif
@@ -114,6 +116,21 @@ public:
 private:
     HostManager& m_Host;
 };
+
+// Windows defaults every Win32 title bar to light colors for compatibility.
+// DWMWA_USE_IMMERSIVE_DARK_MODE is documented by Microsoft as attribute 20;
+// older SDK headers may omit the enum, while DwmSetWindowAttribute simply
+// rejects it on unsupported Windows versions.
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+static void updateWindowsTitleBar(QWindow* window, bool dark)
+{
+    if (!window) return;
+    const BOOL value = dark ? TRUE : FALSE;
+    DwmSetWindowAttribute(reinterpret_cast<HWND>(window->winId()),
+                          DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+}
 #endif
 
 #if defined(Q_OS_WIN32)
@@ -316,6 +333,26 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationName("DeskPort");
     QCoreApplication::setOrganizationDomain("deskport.keithxc.github.io");
     QCoreApplication::setApplicationName(isolatedSessionTest ? "DeskPortSessionTest" : "DeskPort");
+
+#ifdef Q_OS_WIN
+    // Read-only CLI queries must work in an SSH session without initializing
+    // a graphical desktop, settings, media devices, or a hosting instance.
+    if (argc == 2 && (QByteArray(argv[1]) == "--version" || QByteArray(argv[1]) == "-v" ||
+                      QByteArray(argv[1]) == "--help" || QByteArray(argv[1]) == "-h")) {
+        const HANDLE cliOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        const HANDLE cliErr = GetStdHandle(STD_ERROR_HANDLE);
+        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+            if (!cliOut || cliOut == INVALID_HANDLE_VALUE)
+                freopen("CONOUT$", "w", stdout);
+            if (!cliErr || cliErr == INVALID_HANDLE_VALUE)
+                freopen("CONOUT$", "w", stderr);
+        }
+        QCoreApplication cli(argc, argv);
+        GlobalCommandLineParser parser;
+        parser.parse(cli.arguments());
+        return 0;
+    }
+#endif
 
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -773,7 +810,7 @@ int main(int argc, char *argv[])
                                                 [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                     return new AutoUpdateChecker();
                                                 });
-    qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
+    const int systemPropertiesType = qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
                                                "SystemProperties",
                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                    return new SystemProperties();
@@ -1015,6 +1052,21 @@ int main(int argc, char *argv[])
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
+#ifdef Q_OS_WIN
+        if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) {
+            auto* preferences = StreamingPreferences::get();
+            auto* appearance = engine.singletonInstance<SystemProperties*>(systemPropertiesType);
+            const auto applyTitleBar = [window, preferences, appearance] {
+                const bool dark = preferences->uiTheme == 2 ||
+                    (preferences->uiTheme == 0 && appearance->systemDark());
+                updateWindowsTitleBar(window, dark);
+            };
+            QObject::connect(preferences, &StreamingPreferences::uiThemeChanged, window, applyTitleBar);
+            QObject::connect(appearance, &SystemProperties::appearanceChanged, window, applyTitleBar);
+            QObject::connect(window, &QWindow::visibleChanged, window, applyTitleBar);
+            applyTitleBar();
+        }
+#endif
         if (pendingActivation) showDevices();
     }
 

@@ -85,6 +85,7 @@ struct PeerManager::Link : QObject {
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
+    bool hostReadyRequired = false, hostReadySent = false;
 };
 qint64 PeerManager::nativeClipboardRevision() const {
 #ifdef Q_OS_MACOS
@@ -714,6 +715,12 @@ void PeerManager::reject(const QString& transaction) {
     fail(m_Link, tr("Binding declined"));
 }
 void PeerManager::grant(Link* link) {
+    if (!m_ClientOnly && !m_Host->available()) {
+        const auto message = tr("The bundled DeskPort host is missing. Repair the installation to enable sharing.");
+        m_Status = message; emit changed();
+        fail(link, message);
+        return;
+    }
     m_Status = pendingClientOnly() ? tr("Saving client access and restarting the DeskPort host…") : tr("Saving mutual access and restarting the DeskPort host…");
     link->peer["ready"] = false;
     m_Peers[link->fingerprint] = link->peer;
@@ -741,11 +748,25 @@ void PeerManager::granted(bool success) {
     m_Peers[link->fingerprint] = link->peer;
     if (!save()) { fail(link, tr("Access was approved but device metadata could not be saved. Binding is incomplete.")); return; }
     if (!m_Host->running()) m_Host->start(2560, 1440);
-    send(link, {{"type", "ready"}, {"tx", link->transaction}, {"hostPort", m_Host->basePort()}});
-    finish(link);
+    link->hostReadyRequired = !m_ClientOnly && link->peer.value("role").toString() != "client";
+    const auto sendReady = [this, link] {
+        if (link->ended || link->hostReadySent ||
+            (link->hostReadyRequired && !m_Host->canPair())) return;
+        link->hostReadySent = true;
+        send(link, {{"type", "ready"}, {"tx", link->transaction}, {"hostPort", m_Host->basePort()}});
+        finish(link);
+    };
+    if (link->hostReadyRequired && !m_Host->canPair()) {
+        connect(m_Host, &HostManager::changed, link, [sendReady] { sendReady(); });
+        QTimer::singleShot(60000, link, [this, link] {
+            if (!link->ended && !link->hostReadySent)
+                fail(link, QCoreApplication::translate("HostManager", "Host startup timed out; see logs"));
+        });
+    } else sendReady();
 }
 void PeerManager::finish(Link* link) {
-    if (!link->localReady || !link->remoteReady) return;
+    if (!link->localReady || !link->remoteReady ||
+        (link->hostReadyRequired && !link->hostReadySent)) return;
     link->peer["ready"] = true; link->peer["granted"] = true;
     const auto previous = m_Peers;
     m_Peers[link->fingerprint] = link->peer;

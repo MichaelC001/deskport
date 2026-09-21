@@ -1,0 +1,29 @@
+[
+  {
+    "name": "ViGEmClient",
+    "url": "https://github.com/LizardByte/Virtual-Gamepad-Emulation-Client/archive/8d71f6740ffff4671cdadbca255ce528e3cd3fef.tar.gz",
+    "archive_sha256": "27907cba8c017de220b66e036ed04a39f5eacb9182846700047420aef2f5cd0e",
+    "target": "third-party/ViGEmClient",
+    "files": {
+      "src/ViGEmClient.cpp": "e3df9788823fc9b99c5cb7badbedf03c4c368e1e49f64f32431f8c0dfeb3d5f8"
+    }
+  },
+  {
+    "name": "libvirtualhid-lizardbyte-common",
+    "url": "https://github.com/LizardByte/lizardbyte-common/archive/f9d91e1d29b7473f58e43acde4579da4e56c4abe.tar.gz",
+    "archive_sha256": "b85d29c3df62d2297863ab506dffc631ecc60620f12435a3112f20cb9770028c",
+    "target": "third-party/libvirtualhid/third-party/lizardbyte-common",
+    "files": {
+      "src/common/env.cpp": "e380e1df5940f932d1d03b343ed95d2c5bc5885db4a52515fb43e8f5329fb40a"
+    }
+  },
+  {
+    "name": "nvapi",
+    "url": "https://github.com/NVIDIA/nvapi/archive/cd6918f60b3c9a0476fdfe7e89bb32330602049d.tar.gz",
+    "archive_sha256": "867337168e3b7604df45766d038c379b65fdf21eb5503435a65586bbf126a176",
+    "target": "third-party/nvapi",
+    "files": {
+      "nvapi.h": "bbcfc43bca399444a2bc81c6d0f6502281463d76afcc3a4df02b7ec6f654ccf8"
+    }
+  }
+]

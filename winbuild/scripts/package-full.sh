@@ -5,6 +5,8 @@ source "$(dirname "$0")/env.sh"
 VERSION="$(cat "$SRC_ROOT/app/version.txt")"
 PACKAGE_SUFFIX="${PACKAGE_SUFFIX:--full}"
 BUILD="$WB/build-app"
+HOST_SOURCE="${DESKPORT_HOST_SOURCE_DIR:-$WB/full/sunshine-prepared}"
+HOST_BUILD="${DESKPORT_HOST_BUILD_DIR:-$WB/full/host-build-prepared}"
 EXE="$BUILD/app/release/DeskPort.exe"
 [ -f "$EXE" ] || EXE="$BUILD/app/release/Moonlight.exe"
 [ -f "$EXE" ] || { echo "application binary not found under $BUILD/app/release"; exit 1; }
@@ -53,13 +55,14 @@ cp "$WB/THIRD-PARTY-NOTICES-full.txt" "$STAGE/THIRD-PARTY-NOTICES.txt"
 {
   echo "DeskPort $VERSION Windows x64"
   echo "Build variant: ${PACKAGE_SUFFIX#-}"
-  echo "Base source revision: $(git -C "$SRC_ROOT" rev-parse HEAD) plus local changes"
+  echo "Base source revision: $(git -C "$SRC_ROOT" rev-parse HEAD)"
+  echo "Tracked source diff SHA-256: $(git -C "$SRC_ROOT" diff HEAD --binary | sha256sum | cut -d ' ' -f 1)"
   echo "Client executable SHA-256: $(sha256sum "$STAGE/DeskPort.exe" | cut -d ' ' -f 1)"
   echo "Full Windows integration candidate: client, patched host, display helper. See acceptance report."
 } > "$STAGE/BUILD-INFO.txt"
 python3 "$WB/scripts/collect-notices.py" "$STAGE/licenses"
 mkdir -p "$STAGE/host" "$STAGE/driver"
-cp "$WB/full/host-build/sunshine.exe" "$STAGE/host/deskport-host.exe"
+cp "$HOST_BUILD/sunshine.exe" "$STAGE/host/deskport-host.exe"
 cp "$BUILD/host/windows/release/deskport-display.exe" "$STAGE/host/deskport-display.exe"
 cp "$WB/full/deskport-display-recovery.exe" "$STAGE/host/deskport-display-recovery.exe"
 cp "$WB/full/deskport-maintenance.exe" "$WB/full/deskport-driver-setup.exe" "$STAGE/"
@@ -67,17 +70,17 @@ cp -R "$WB/full/upstream-assets/assets" "$STAGE/host/"
 cp "$WB/full/vdd/"* "$STAGE/driver/"
 cp "$SRC_ROOT/host/windows/vdd_settings.xml" "$STAGE/driver/vdd_settings.xml"
 cp "$WB/full/VDD-LICENSE" "$STAGE/licenses/Virtual-Display-Driver-MIT.txt"
-cp "$WB/full/sunshine/LICENSE" "$STAGE/licenses/Sunshine-GPLv3.txt"
-cp "$WB/full/sunshine/deskport-session-settings.patch" "$WB/full/sunshine/deskport-session-takeover.patch" "$STAGE/licenses/"
+cp "$HOST_SOURCE/LICENSE" "$STAGE/licenses/Sunshine-GPLv3.txt"
+cp "$HOST_SOURCE/deskport-session-settings.patch" "$HOST_SOURCE/deskport-session-takeover.patch" "$STAGE/licenses/"
 for component in curl miniupnpc minhook onevpl; do
     mkdir -p "$STAGE/licenses/host-$component"
     find "$WB/full/$component" -maxdepth 1 -type f \( -iname '*license*' -o -iname 'copying*' \) -exec cp {} "$STAGE/licenses/host-$component/" \;
 done
 # Boost is linked by the host; retain its top-level license as well.
-cp "$WB/full/host-build/_deps/boost-src/LICENSE_1_0.txt" "$STAGE/licenses/host-Boost-BSL-1.0.txt"
+cp "$HOST_BUILD/_deps/boost-src/LICENSE_1_0.txt" "$STAGE/licenses/host-Boost-BSL-1.0.txt"
 # Retain exact linked-component notices, including the separate license map.
 for component in libvirtualhid libdisplaydevice ViGEmClient Simple-Web-Server nvapi; do
-    directory="$WB/full/sunshine/third-party/$component"
+    directory="$HOST_SOURCE/third-party/$component"
     mkdir -p "$STAGE/licenses/host-$component"
     find "$directory" -maxdepth 1 -type f \( -iname '*license*' -o -iname 'copying*' \) -exec cp {} "$STAGE/licenses/host-$component/" \;
     if [ -d "$directory/LICENSES" ]; then cp -R "$directory/LICENSES" "$STAGE/licenses/host-$component/"; fi
@@ -89,7 +92,7 @@ done
 cp "$SRC_ROOT/host/windows/patches/"*.patch "$STAGE/licenses/"
 python3 "$WB/scripts/collect-host-notices.py" "$STAGE/licenses"
 "$STRIP" --strip-unneeded "$STAGE/host/deskport-host.exe" "$STAGE/host/deskport-display.exe"
-sha256sum "$STAGE/host/deskport-host.exe" "$STAGE/host/deskport-display.exe" >> "$STAGE/BUILD-INFO.txt"
+(cd "$STAGE" && sha256sum host/deskport-host.exe host/deskport-display.exe) >> "$STAGE/BUILD-INFO.txt"
 # The ZIP uses portable settings; the installed payload uses the normal profile.
 touch "$STAGE/portable.dat"
 ( cd "$STAGE" && zip -q -r "$OUT/DeskPort-$VERSION-windows-x64-portable$PACKAGE_SUFFIX.zip" . )

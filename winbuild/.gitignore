@@ -7,3 +7,5 @@ scripts/*
 !scripts/*.cmake
 !scripts/*.txt
 !scripts/*.nsi
+!scripts/*.json
+!scripts/*.nix

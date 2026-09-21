@@ -1614,3 +1614,43 @@ fixed by preserving the pre-enable CCD modes; startup, supported resize and EOF
 restoration passed with the diagnostic helper. Full-sync2 adds post-apply mode
 verification and failure-triggered lease termination; exact-package acceptance
 remains pending. Network Private was authorized and verified on the VM only.
+
+
+## 2026-09-21 — Windows hardware parity candidate
+
+User requested a full bidirectional Windows desktop product, an offline installer
+with statically included libraries, and a native title bar matching the app theme.
+The Windows branch now rebuilds verified host source with current shared overlays,
+waits for host readiness during mutual binding, and supports noninteractive CLI
+queries. See [Windows development](WINDOWS_DEVELOPMENT.md) for scope and evidence.
+Final candidate packaging, native theme checks and bidirectional hardware session
+acceptance are tracked separately; this checkpoint does not authorize a release.
+
+Windows candidate checkpoint: the full offline installer and portable payload
+passed static-dependency and payload-equivalence audits. Native version/help and
+Light/Dark title-bar checks passed. Initial payload/installer scans returned no
+Defender detection records, but subsequent native use quarantined the display
+helper and blocked mutual binding. Installation and two-way hardware
+streaming/recovery are not accepted. The Windows display lifecycle remains
+sharing-scoped and is not claimed as per-session parity.
+
+### Windows release blockers and next actions
+
+- [ ] Resolve Microsoft Defender detection of `host/deskport-display.exe`
+  (`Trojan:Win32/Bearfoos.A!ml`). The original sample was submitted to Microsoft
+  for suspected-false-positive review on 2026-09-21; the review is pending, not
+  a clearance. The submission portal also reports `Trojan:Script/Wacatac.C!ml`
+  for the submitted archive. Keep the candidate blocked from release until
+  the findings are resolved.
+- [ ] After the review, update Defender normally and repeat exact-package
+  installation and bidirectional binding/streaming/input/recovery checks with
+  default protection enabled. Do not use exclusions or disable protection to
+  satisfy acceptance. Preserve user settings and existing device identities.
+- [ ] Establish trusted Windows code signing for the installer and embedded
+  executables before public release; signing alone does not resolve detections.
+
+Missing-host startup and binding now report the missing bundled component.
+The installer checks required payload files after extraction and before
+completion, returning a failure for incomplete installs. Binding regression
+coverage passed (99 tests); installer syntax compiled with NSIS. These checks
+improve failure handling but do not resolve the Defender release blocker.

@@ -32,6 +32,17 @@ for value in filter(None, os.environ.get('DESKPORT_EXTRA_SOURCE_INPUTS', '').spl
         raise SystemExit('Missing extra source input: ' + str(p))
     inputs[str(p)] = p.name
 manifest = []
+# Prepared host trees are separate from the historical full/sunshine and
+# full/host-build outputs. Keep overrides under their normal extraction paths.
+host_source = Path(os.environ.get('DESKPORT_HOST_SOURCE_DIR', wb/'full/sunshine-prepared')).expanduser().resolve()
+host_build = Path(os.environ.get('DESKPORT_HOST_BUILD_DIR', wb/'full/host-build-prepared')).expanduser().resolve()
+host_source_arcname = 'deskport/winbuild/full/sunshine-prepared'
+host_build_arcname = 'deskport/winbuild/full/host-build-prepared'
+if not host_source.is_dir():
+    raise SystemExit('Missing prepared Windows host source: ' + str(host_source))
+if '--source-only' not in sys.argv and not host_build.is_dir():
+    raise SystemExit('Missing prepared Windows host build: ' + str(host_build))
+
 def filter_source(info):
     if '.git' in Path(info.name).parts:
         return None
@@ -50,18 +61,19 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
     if shell_nix.exists():
         tar.add(shell_nix, arcname='shell.nix')
     full = wb/'full'
-    host_names = ('sunshine','media-source','curl','miniupnpc','minhook','onevpl','cppwinrt',
+    host_names = ('media-source','curl','miniupnpc','minhook','onevpl','cppwinrt','host-vendored-deps',
                   'mingw-host-toolchain.cmake','fetch-host-deps.py','download-hashes.json',
                   'host-deps-inputs.json','build-deps-releases.json','VDD-LICENSE',
                   'Signed-Driver-v24.12.24-x64.zip','Sunshine-Windows-AMD64-lite.zip')
     for name in host_names:
         p = full/name
         if p.exists(): tar.add(p,arcname='deskport/winbuild/full/'+name,filter=filter_source)
+    tar.add(host_source, arcname=host_source_arcname, filter=filter_source)
     for p in full.glob('*.tar.*'):
         tar.add(p,arcname='deskport/winbuild/full/'+p.name,filter=filter_source)
     # CMake FetchContent's pinned Boost source is required for an offline relink/rebuild.
-    for dependency in sorted((full/'host-build/_deps').glob('*-src')):
-        tar.add(dependency,arcname='deskport/winbuild/full/host-build/_deps/'+dependency.name,filter=filter_source)
+    for dependency in sorted((host_build/'_deps').glob('*-src')):
+        tar.add(dependency,arcname=host_build_arcname+'/_deps/'+dependency.name,filter=filter_source)
     for src, name in inputs.items():
         p=Path(src)
         tar.add(p,arcname='deskport/winbuild/source-inputs/'+name,filter=filter_source)
@@ -78,6 +90,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
 print('Source archive complete',flush=True)
 if '--source-only' in sys.argv: sys.exit(0)
 with tarfile.open(out/('relink-materials'+suffix+'.tar.gz'),'w:gz',compresslevel=1) as tar:
-    for name in ('build-app','prefix','qt-static','compat-include','toolshim','full/host-build','full/media-prefix','full/prefix','full/ffmpeg-build','full/cbs-build','full/deskport-display-recovery.exe','full/deskport-driver-setup.exe','full/deskport-maintenance.exe'):
+    for name in ('build-app','prefix','qt-static','compat-include','toolshim','full/media-prefix','full/prefix','full/ffmpeg-build','full/cbs-build','full/deskport-display-recovery.exe','full/deskport-driver-setup.exe','full/deskport-maintenance.exe'):
         tar.add(wb/name,arcname='deskport/winbuild/'+name,filter=filter_source)
+    tar.add(host_build, arcname=host_build_arcname, filter=filter_source)
 print('Relinking archive complete',flush=True)

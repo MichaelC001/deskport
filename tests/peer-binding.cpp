@@ -869,6 +869,13 @@ private slots:
         QVERIFY(!PeerStore::trust(file, "new", "new", cert));
         QVERIFY(broken.open(QIODevice::ReadOnly)); QCOMPARE(broken.readAll(), QByteArray("{broken"));
     }
+    void unavailableHostReportsMissingBundledComponent() {
+        QTemporaryDir dir;
+        UnavailableHost host(nullptr, dir.path()+"/host");
+        host.start(2560, 1440);
+        QVERIFY(host.status().contains("bundled DeskPort host is missing"));
+        QVERIFY(!host.running());
+    }
     void mutualBindingWaitsForOneApprovalAndSurvivesRestart() {
         QTemporaryDir dir;
         const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
@@ -881,6 +888,8 @@ private slots:
             QVERIFY(a.port() > 0); QVERIFY(b.port() > 0);
             aId=ah.identity()["hostId"].toString(); bId=bh.identity()["hostId"].toString();
             QSignalSpy incoming(&b,&PeerManager::incomingRequest), aDone(&a,&PeerManager::peerBound), bDone(&b,&PeerManager::peerBound);
+            bool completedBeforeHostReady = false;
+            connect(&b, &PeerManager::peerBound, &b, [&] { completedBeforeHostReady = !bh.canPair(); });
             a.request(QString("localhost:%1").arg(b.port()));
             QTRY_COMPARE_WITH_TIMEOUT(incoming.size(), 1, 5000);
             QTRY_VERIFY(a.status().contains("Request received"));
@@ -890,6 +899,9 @@ private slots:
             b.approve(b.requestId());
             QTRY_COMPARE_WITH_TIMEOUT(aDone.size(),1,7000);
             QTRY_COMPARE_WITH_TIMEOUT(bDone.size(),1,7000);
+            // Check at the peerBound emission itself, before any later event
+            // loop turn can make the host ready.
+            QVERIFY(!completedBeforeHostReady);
             QCOMPARE(a.peers().first().toMap()["os"].toString(), QSysInfo::prettyProductName());
             QCOMPARE(a.peers().first().toMap()["address"].toString(), QString("localhost"));
             QCOMPARE(b.peers().first().toMap()["address"].toString(), QHostInfo::localHostName());

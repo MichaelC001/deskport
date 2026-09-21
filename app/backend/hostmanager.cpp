@@ -438,7 +438,11 @@ void HostManager::setStatus(const QString &value) {
     m_Status = value; emit changed();
 }
 void HostManager::start(int width, int height) {
-    if (!available() || running()) return;
+    if (running()) return;
+    if (!available()) {
+        setStatus(tr("The bundled DeskPort host is missing. Repair the installation to enable sharing."));
+        return;
+    }
 #ifdef Q_OS_WIN
     if (!m_WindowsHostJob) { setStatus(tr("Cannot create private Windows host process ownership")); return; }
 #endif
@@ -586,6 +590,7 @@ void HostManager::startServer(int displayId) {
     hostEnvironment.insert("DESKPORT_HOST_OS", QSysInfo::prettyProductName());
 #ifdef Q_OS_WIN
     hostEnvironment.insert("DESKPORT_HOST_STATE_DIR", m_Directory);
+    hostEnvironment.insert("DESKPORT_SMART_STREAMING", "1");
     config.write("dd_configuration_option = disabled\n");
     // The helper owns mode restoration; Sunshine must not race it.
     QFile displayState(m_Directory + "/windows-display.json");

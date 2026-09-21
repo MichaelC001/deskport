@@ -8,6 +8,7 @@ import struct
 import subprocess
 import sys
 import zipfile
+external_runtime = re.compile(r'qt[56]|avcodec|avutil|avformat|avfilter|swscale|swresample|SDL[23]|libgcc|libstdc|libwinpthread|libmcfgthread|libssl|libcrypto|libplacebo|libopus|libcurl|libfreetype|libsoundio|vcruntime|msvcp[0-9]', re.I)
 art = Path(sys.argv[1]).resolve()
 suffix = '-'+sys.argv[2] if len(sys.argv) > 2 else ''
 version = (Path(__file__).resolve().parents[2] / 'app/version.txt').read_text().strip()
@@ -55,7 +56,7 @@ for p in [exe, uninstaller]+sorted(extracted.rglob('*')):
     summary.append({'file':str(p.relative_to(art)), 'machine':hex(machine), 'sha256':hashlib.sha256(data).hexdigest(),'imports':imports,'security_directory':security,'delay_import_directory':delay})
     if p.name=='DeskPort.exe':
         assert machine==0x8664
-        assert not any(re.search('qt6|avcodec|avutil|SDL2|libgcc|libstdc|libwinpthread|libmcfgthread|libssl|libcrypto|libplacebo',dll,re.I) for dll in imports)
+        assert not any(external_runtime.search(dll) for dll in imports)
         start=data.find(b'<assembly ')
         if start>=0:
             end=data.find(b'</assembly>',start)
@@ -69,7 +70,7 @@ if '-full' in suffix:
         name=entry['file']
         if 'installer-extracted/' in name and '$PLUGINSDIR' not in name:
             assert entry['machine']=='0x8664',entry
-            assert not any(re.search('qt6|avcodec|avutil|SDL2|libgcc|libstdc|libwinpthread|libmcfgthread|libssl|libcrypto|libplacebo',dll,re.I) for dll in entry['imports']),entry
+            assert not any(external_runtime.search(dll) for dll in entry['imports']),entry
 else:
     assert len(summary)==5,summary
 print('PASS: setup, generated uninstaller, all extracted payload and plugin PEs audited; ZIP and installer payloads match except portable.dat.')

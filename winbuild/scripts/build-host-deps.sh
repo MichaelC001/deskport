@@ -2,7 +2,7 @@
 set -euo pipefail
 source "$(dirname "$0")/env.sh"
 FULL="$WB/full"
-TOOLCHAIN_FILE="$FULL/mingw-host-toolchain.cmake"
+TOOLCHAIN_FILE="${DESKPORT_HOST_TOOLCHAIN_FILE:-$WB/scripts/mingw-host-toolchain.cmake}"
 export PREFIX="$FULL/prefix"
 mkdir -p "$PREFIX"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
