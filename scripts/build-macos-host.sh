@@ -45,6 +45,7 @@ if git -C "$source_dir" apply --check "$link_patch"; then
 else
     git -C "$source_dir" apply --reverse --check "$link_patch"
 fi
+python3 "$repo/scripts/patch-host-smart-stream.py" "$source_dir"
 smart_patch="$repo/host/macos/patches/sunshine-smart-streaming.patch"
 if git -C "$source_dir" apply --check "$smart_patch"; then
     git -C "$source_dir" apply "$smart_patch"
@@ -64,6 +65,8 @@ python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
 python3 "$repo/scripts/patch-host-macos-lifecycle.py" "$source_dir"
 cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
+cp "$repo/host/common/framecadence.h" "$source_dir/src/deskport/common/"
+python3 "$repo/scripts/patch-host-sync-cadence.py" "$source_dir"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

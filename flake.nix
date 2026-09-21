@@ -21,9 +21,17 @@
             '';
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
+              python3 ${./scripts/patch-host-smart-stream.py} .
               python3 ${./scripts/patch-host-session-settings.py} .
               python3 ${./scripts/patch-host-session-takeover.py} .
               python3 ${./scripts/patch-host-linux-display.py} .
+              mkdir -p src/deskport/common
+              cp ${./host/common/smartstream.h} src/deskport/common/smartstream.h
+              cp ${./host/common/inputactivity.h} src/deskport/common/inputactivity.h
+              cp ${./host/common/framecadence.h} src/deskport/common/framecadence.h
+              python3 ${./scripts/patch-host-input-activity.py} .
+              python3 ${./scripts/patch-host-sync-cadence.py} .
+              python3 ${./scripts/patch-host-linux-cadence.py} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {

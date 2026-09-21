@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add session-local input activity to the existing macOS smart encoder overlay."""
+"""Add session-local input activity to the shared smart encoder overlay."""
 from pathlib import Path
 import sys
 root = Path(sys.argv[1])

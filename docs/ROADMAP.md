@@ -1441,3 +1441,12 @@ passed on macOS. NixOS finger input still needs post-activation acceptance.
   real first frame/input, static clock, sustained typing/scrolling, jitter and loss.
 - Pending encoder work: supported live VideoToolbox bitrate reconfiguration and
   measured packet throughput; input cadence alone does not prove bitrate control.
+
+
+### 2026-09-21: shared Linux smart cadence candidate
+
+- Reuse host/common input activity and congestion policy in both Linux encoder paths.
+- Preserve the final changed frame during pacing; poll PipeWire while idle and use
+  explicit damage metadata without GPU readback. Keep video updates independent of input.
+- Deliver a private Nix/macOS candidate; physical Linux idle/input/video validation
+  follows the user's manual activation. This is not a formal release.

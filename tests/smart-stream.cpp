@@ -1,5 +1,6 @@
 #include "host/common/smartstream.h"
 #include "host/common/inputactivity.h"
+#include "host/common/framecadence.h"
 #include "app/backend/streambudget.h"
 #include <cassert>
 #include <iostream>
@@ -88,5 +89,24 @@ int main() {
     abs[9]=60;assert(absolute.observe(abs.data(),abs.size(),12000).fps==30);
     assert(deskport::activityFrameRate({},0,60)==1);
     assert(deskport::activityFrameRate(boost,11100,1)==1);
+    deskport::FrameCadence cadence(60);
+    assert(cadence.admit(1000000,true,false));
+    assert(!cadence.admit(1999999,false,false));
+    assert(cadence.admit(2000000,false,false)); // one-second idle refresh
+    assert(cadence.admit(2001000,true,false)); // changed content bypasses idle timer
+    cadence.boost = {2350,60};
+    assert(cadence.admit(2020000,false,false)); // input wakes duplicates immediately
+    assert(!cadence.admit(2030000,false,false));
+    assert(cadence.admit(2040000,false,false));
+    assert(!cadence.admit(2350000,false,false)); // expired hold returns to idle
+    assert(cadence.admit(2350001,false,true)); // recovery does not wait for idle
+    deskport::FrameCadence pending(60);
+    pending.policy.loss(8000); pending.policy.loss(9500); pending.policy.loss(11000);
+    assert(pending.admit(12000000,true,false));
+    assert(!pending.admit(12005000,true,false));
+    assert(pending.admit(12034000,false,false)); // final update survives denied slot
+    assert(!pending.admit(12068000,false,false)); // no healthy-frame recovery from idle
+    deskport::FrameCadence other(30);
+    assert(other.floor(12068000)==1); // no cross-session input state
     std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings\n";
 }
