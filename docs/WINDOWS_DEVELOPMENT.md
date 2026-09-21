@@ -1,8 +1,14 @@
 # Windows development checkpoint
 
-This branch preserves the Windows x64 host and client integration based on
-DeskPort 0.4.3 (7fccde75) and core 0badc8e3. It is not a release candidate
+This branch preserves the Windows x64 host and client integration on top of
+the current DeskPort 0.5.0 desktop baseline. It is not a release candidate
 approved for distribution. The main release branch is unchanged.
+
+The deliverable is a self-contained x64 installer (plus an optional portable
+ZIP). End users do not need Nix, Qt, MinGW, npm, or a compiler. The maintained
+cross-build recipes accept ordinary source archives from `winbuild/source-inputs`
+or explicit `S_*` environment overrides; machine-specific `/nix/store` paths
+are forbidden by the Windows-branch CI.
 
 ## Scope and platform impact
 
@@ -14,7 +20,7 @@ be assumed from Windows compilation.
 
 ## Existing evidence
 
-Windows and constrained Nix integration builds passed. Targeted UI, native
+Earlier Windows cross-build and constrained integration builds passed. Targeted UI, native
 window transitions, H.264 decoded-frame and clipboard ownership checks passed.
 Earlier VM runs exercised bidirectional streaming and clipboard transfers,
 tray recall, input release, upgrades and identity retention. Some Linux input
