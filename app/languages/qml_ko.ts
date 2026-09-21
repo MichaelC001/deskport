@@ -1523,6 +1523,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>일시 재연결을 포함한 미디어, 제어 및 클립보드 전송량입니다. IP/VPN, 클립보드 TLS, 기기 검색 및 호스트 공유 트래픽은 제외됩니다. 통신사 청구량과 다릅니다.</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>업데이트 사용 가능</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>DeskPort 업데이트</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>업데이트 확인 중…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>새 버전: %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>새로운 안정 버전이 없습니다.</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>업데이트를 확인할 수 없습니다. 다시 시도하세요.</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>게시일: %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>릴리스 노트가 없습니다.</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>GitHub 릴리스 페이지를 엽니다. 평소 사용하는 방법으로 설치하세요. Nix로 관리하는 설치는 Nix를 통해 업데이트해야 합니다.</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>다시 확인</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>다운로드 페이지 열기</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

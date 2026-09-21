@@ -1523,6 +1523,50 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>Cuenta medios, control y portapapeles, incluidas reconexiones breves. Excluye sobrecarga IP/VPN y TLS del portapapeles, descubrimiento y tráfico del equipo compartido. No equivale a la factura del operador.</translation>
     </message>
+    <message>
+        <source>Update available</source>
+        <translation>Actualización disponible</translation>
+    </message>
+    <message>
+        <source>DeskPort updates</source>
+        <translation>Actualizaciones de DeskPort</translation>
+    </message>
+    <message>
+        <source>Checking for updates…</source>
+        <translation>Buscando actualizaciones…</translation>
+    </message>
+    <message>
+        <source>New version: %1</source>
+        <translation>Nueva versión: %1</translation>
+    </message>
+    <message>
+        <source>No newer stable release is available.</source>
+        <translation>No hay una versión estable más reciente disponible.</translation>
+    </message>
+    <message>
+        <source>Could not check for updates. Please try again.</source>
+        <translation>No se pudieron buscar actualizaciones. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
+        <source>Published: %1</source>
+        <translation>Publicado: %1</translation>
+    </message>
+    <message>
+        <source>No release notes provided.</source>
+        <translation>No se proporcionaron notas de la versión.</translation>
+    </message>
+    <message>
+        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+        <translation>Abre la página de la versión en GitHub. Instala con tu método habitual; las instalaciones gestionadas con Nix deben actualizarse mediante Nix.</translation>
+    </message>
+    <message>
+        <source>Check again</source>
+        <translation>Volver a comprobar</translation>
+    </message>
+    <message>
+        <source>Open download page</source>
+        <translation>Abrir la página de descarga</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
