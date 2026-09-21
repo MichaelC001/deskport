@@ -22,6 +22,7 @@
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
               python3 ${./scripts/patch-host-diagnostics.py} .
+              python3 ${./scripts/patch-host-network.py} .
               python3 ${./scripts/patch-host-smart-stream.py} .
               python3 ${./scripts/patch-host-session-settings.py} .
               python3 ${./scripts/patch-host-session-takeover.py} .

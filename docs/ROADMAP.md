@@ -1,3 +1,10 @@
+## ENet host creation failure — 2026-09-21
+
+Reason: a failed ENet host allocation was dereferenced while enabling QoS,
+crashing the bundled host during session startup. Return the empty host to the
+existing caller error path on all desktop host build routes. Runtime regression
+coverage exercises both failure and success against both vendored revisions.
+
 ## 0.5.0 stable release — 2026-09-21
 
 Reason: user-authorized desktop release of bounded local diagnostics, update

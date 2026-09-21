@@ -11,6 +11,7 @@ fi
 build_dir="$build_root/sunshine-vendored-build"
 python3 "$repo/scripts/prepare-host-source.py" "$source_dir"
 python3 "$repo/scripts/patch-host-diagnostics.py" "$source_dir"
+python3 "$repo/scripts/patch-host-network.py" "$source_dir"
 hid="$source_dir/third-party/libvirtualhid"
 patch="$repo/host/macos/patches/libvirtualhid-target-display.patch"
 if git -C "$hid" apply --check "$patch"; then

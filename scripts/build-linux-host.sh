@@ -6,6 +6,7 @@ work=${DESKPORT_WORK:-/work}
 source="$work/cache/sunshine-vendored-source"
 python3 "$repo/scripts/prepare-host-source.py" "$source"
 python3 "$repo/scripts/patch-host-diagnostics.py" "$source"
+python3 "$repo/scripts/patch-host-network.py" "$source"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source" --revert
 python3 "$repo/scripts/patch-host-smart-stream.py" "$source"
