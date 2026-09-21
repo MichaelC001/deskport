@@ -1,8 +1,8 @@
 ## 0.5.0 stable release — 2026-09-21
 
 Reason: user-authorized desktop release of bounded local diagnostics, update
-notifications and encoding-efficiency changes. macOS notarization and the full
-Linux package matrix are required before publication. Consumer activation and
+notifications and encoding-efficiency changes. Published 11 remotely hash-verified assets after macOS notarization/Gatekeeper,
+the full Linux installer/API/Flatpak matrix and CI passed. Consumer activation and
 real streaming/input acceptance remain manual follow-up checks.
 
 ## Default diagnostic recording — 2026-09-21
