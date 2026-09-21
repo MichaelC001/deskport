@@ -265,7 +265,6 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #else
         m_Server.setWorkingDirectory(m_Directory);
 #endif
-#endif
         m_Server.setProcessChannelMode(QProcess::SeparateChannels);
         // The child cannot inherit these listeners. Release immediately before
         // starting it; bind failures still clean up only our own processes.
