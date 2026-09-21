@@ -2394,6 +2394,26 @@
         <source>Discover nearby devices</source>
         <translation>Descubrir dispositivos cercanos</translation>
     </message>
+    <message>
+        <source>Request access to a computer</source>
+        <translation>Solicitar acceso a un ordenador</translation>
+    </message>
+    <message>
+        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+        <translation>Tras la aprobación, este dispositivo puede ver y controlar el otro ordenador. El escritorio de este dispositivo no se comparte.</translation>
+    </message>
+    <message>
+        <source>Host access</source>
+        <translation>Acceso al host</translation>
+    </message>
+    <message>
+        <source>Forget saved binding</source>
+        <translation>Olvidar vínculo guardado</translation>
+    </message>
+    <message>
+        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+        <translation>¿Olvidar el vínculo guardado para %1 en este dispositivo? Elimínalo por separado de Dispositivos. Para revocar el acceso de este dispositivo, elimínalo también en el host.</translation>
+    </message>
 </context>
 <context>
     <name>SetupView</name>
