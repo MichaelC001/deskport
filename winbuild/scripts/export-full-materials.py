@@ -19,7 +19,17 @@ for script in ('build-deps.sh','build-qt.sh','build-vulkan-deps.sh'):
         p = Path(value)
         if p.exists():
             inputs[str(p)] = p.name
-for p in map(Path, ['/nix/store/6sh1ninjz55qpy73dxna9i6qi7klry65-mingw-w64-v13.0.0.tar.bz2','/nix/store/4vl8n00z8jzg4vmh4z73gbjafckw6s65-nsis-3.11-src.tar.bz2','/nix/store/vclnb6d6yja2m42pjw5jay5zinnh54y3-gcc-15.2.0.tar.xz','/nix/store/0ilsdqa52nrrzrdx22r3w2i0nx3pmgb2-source']):
+# Build-machine toolchain sources are optional inputs, not Nix-store contracts.
+# Put normal inputs in winbuild/source-inputs; use DESKPORT_EXTRA_SOURCE_INPUTS
+# (os.pathsep-separated) for additional compiler/installer source archives.
+source_inputs = wb / 'source-inputs'
+if source_inputs.is_dir():
+    for p in source_inputs.iterdir():
+        inputs[str(p)] = p.name
+for value in filter(None, os.environ.get('DESKPORT_EXTRA_SOURCE_INPUTS', '').split(os.pathsep)):
+    p = Path(value).expanduser().resolve()
+    if not p.exists():
+        raise SystemExit('Missing extra source input: ' + str(p))
     inputs[str(p)] = p.name
 manifest = []
 def filter_source(info):
@@ -36,7 +46,9 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         tar.add(p,arcname='deskport/'+name,recursive=p.is_dir(),filter=filter_source)
     for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices','winbuild/THIRD-PARTY-NOTICES.txt','winbuild/THIRD-PARTY-NOTICES-full.txt','host/windows','app/clipboard/windowsnative.h'):
         tar.add(root/name,arcname='deskport/'+name,filter=filter_source)
-    tar.add(out.parent/'shell.nix',arcname='shell.nix')
+    shell_nix = out.parent / 'shell.nix'
+    if shell_nix.exists():
+        tar.add(shell_nix, arcname='shell.nix')
     full = wb/'full'
     host_names = ('sunshine','media-source','curl','miniupnpc','minhook','onevpl','cppwinrt',
                   'mingw-host-toolchain.cmake','fetch-host-deps.py','download-hashes.json',
