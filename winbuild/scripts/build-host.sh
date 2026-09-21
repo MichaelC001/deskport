@@ -5,6 +5,8 @@ FULL="$WB/full"
 export PREFIX="$FULL/prefix"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 export BUILD_VERSION=2026.906.222525 BRANCH=deskport
+NPM_BIN="${DESKPORT_NPM:-$(command -v npm || true)}"
+[ -n "$NPM_BIN" ] || { echo "npm is required to configure the bundled Windows host; set DESKPORT_NPM if it is not on PATH." >&2; exit 1; }
 cmake -S "$FULL/sunshine" -B "$FULL/host-build" -G Ninja \
  -DCMAKE_TOOLCHAIN_FILE="$FULL/mingw-host-toolchain.cmake" \
  -DCMAKE_CXX_FLAGS="-I$WB/compat-include" -DCMAKE_C_FLAGS="-I$WB/compat-include" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ \
@@ -16,5 +18,5 @@ cmake -S "$FULL/sunshine" -B "$FULL/host-build" -G Ninja \
  -DBOOST_USE_STATIC=ON -DBUILD_SHARED_LIBS=OFF \
  -DBUILD_DOCS=OFF -DBUILD_TESTS=OFF -DSUNSHINE_ENABLE_TRAY=OFF \
  -DSUNSHINE_ENABLE_CUDA=OFF -DSUNSHINE_ASSETS_DIR=assets \
- -DNPM="${DESKPORT_NPM:-$(command -v npm)}"
+ -DNPM="$NPM_BIN"
 cmake --build "$FULL/host-build" --target sunshine --parallel "$JOBS"
