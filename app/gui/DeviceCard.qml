@@ -57,7 +57,7 @@ Rectangle {
         visible: card.addCard
         anchors.fill: parent; anchors.margins: 8; spacing: 0
         Repeater {
-            model: [{ key: "device", symbol: "+", label: qsTr("Add a device") }, { key: "group", symbol: "▣", label: qsTr("New group") }]
+            model: [{ key: "device", icon: "qrc:/res/add-device.svg", label: qsTr("Add a device") }, { key: "group", icon: "qrc:/res/add-group.svg", label: qsTr("New group") }]
             ColumnLayout {
                 Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
                 Rectangle { visible: index === 1; Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; height: 1; color: ui.line }
@@ -66,11 +66,13 @@ Rectangle {
                     Layout.fillWidth: true; Layout.fillHeight: true
                     Accessible.name: modelData.label
                     onClicked: modelData.key === "device" ? card.addDeviceRequested() : card.addGroupRequested()
-                    contentItem: Column {
-                        spacing: 4
-                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.symbol; color: ui.accent; font.pixelSize: 24 }
-                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: ui.accent; font.pixelSize: 14 }
-                    }
+                    display: AbstractButton.TextUnderIcon
+                    text: modelData.label
+                    icon.source: modelData.icon
+                    icon.color: ui.accent
+                    icon.width: 28; icon.height: 28
+                    palette.buttonText: ui.accent
+                    font.pixelSize: 14
                 }
             }
         }

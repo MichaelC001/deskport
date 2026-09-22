@@ -79,13 +79,17 @@ public:
     // Synthetic devices arranged by the real layout rules, stored in memory only.
     const QStringList devices{"device-a","device-b"};
     QVariantList stored; bool hasStored = false; QString group;
+    // Screenshots show the trailing add card; behavior checks run without it.
+    bool showAdd = false;
+    bool hasAdd() const { return showAdd && group.isEmpty(); }
+    Q_INVOKABLE void setShowAdd(bool value) { beginResetModel(); showAdd = value; endResetModel(); }
     HostLayout layout() { return HostLayout(stored, hasStored, {}, [this](const QVariantList& items){ stored = items; hasStored = true; }); }
     QVector<HostLayout::Entry> rows() const { return const_cast<TestComputers*>(this)->layout().entries(devices, group); }
     Q_INVOKABLE void initialize(QObject*) {}
     Q_INVOKABLE void refreshFavorites() {}
     QString currentGroup() const { return group; }
     void setCurrentGroup(const QString& value) { if (group == value) return; beginResetModel(); group = value; endResetModel(); emit currentGroupChanged(); }
-    int rowCount(const QModelIndex& parent = {}) const override { return parent.isValid() ? 0 : rows().size(); }
+    int rowCount(const QModelIndex& parent = {}) const override { return parent.isValid() ? 0 : rows().size() + (hasAdd() ? 1 : 0); }
     Q_INVOKABLE void moveComputer(int from,int to) {
         const int count = rows().size();
         if(from<0||to<0||from>=count||to>=count||from==to) return;
@@ -115,6 +119,16 @@ public:
     }
     QVariant data(const QModelIndex& index,int role) const override {
         const auto shown = rows();
+        if (hasAdd() && index.row() == shown.size()) {
+            switch(role-Qt::UserRole) {
+            case 16: return true;
+            case 2: case 3: case 4: case 9: case 10: case 6: case 12: return false;
+            case 7: return -1;
+            case 14: return 0;
+            case 15: return QStringList();
+            default: return QString();
+            }
+        }
         if (index.row() < 0 || index.row() >= shown.size()) return {};
         const auto entry = shown[index.row()];
         if (entry.group) {
@@ -916,6 +930,9 @@ ApplicationWindow {
             QVERIFY(QMetaObject::invokeMethod(details,"close"));
             window->resize(800,620); QTest::qWait(400);
             QVERIFY(window->grabWindow().save(shots+"/devices.png"));
+            QVERIFY(QMetaObject::invokeMethod(computers,"setShowAdd",Q_ARG(bool,true)));
+            QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/devices-add.png"));
+            QVERIFY(QMetaObject::invokeMethod(computers,"setShowAdd",Q_ARG(bool,false))); QTest::qWait(100);
             auto buttons=a->findChildren<QObject*>();
             for(auto button : buttons) if(button->property("text").toString()=="Return to desktop" && button->property("highlighted").isValid()) {
                 auto content=button->property("contentItem").value<QObject*>(); QVERIFY(content);
@@ -936,6 +953,13 @@ ApplicationWindow {
             QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
             window->resize(1120,760); QTest::qWait(100);
             QVERIFY(window->grabWindow().save(shots+"/devices-dark.png"));
+            {
+                auto page=root->property("testCurrentPage").value<QObject*>(); QVERIFY(page);
+                auto shown=page->property("model").value<QObject*>(); QVERIFY(shown);
+                QVERIFY(QMetaObject::invokeMethod(shown,"setShowAdd",Q_ARG(bool,true)));
+                QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/devices-dark-add.png"));
+                QVERIFY(QMetaObject::invokeMethod(shown,"setShowAdd",Q_ARG(bool,false)));
+            }
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testCards"));
             QTest::qWait(100);
             auto current=root->property("testCurrentPage").value<QObject*>(); QVERIFY(current);
