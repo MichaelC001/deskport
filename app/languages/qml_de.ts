@@ -1615,6 +1615,26 @@
         <source>Open download page</source>
         <translation>Downloadseite öffnen</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>Nicht verbunden</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Bearbeiten</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Fertig</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>Geräte aktualisieren</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>Gespeicherte Geräte prüfen und nach neuen suchen</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1961,8 +1981,8 @@
         <translation>Orange</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>Datenverbrauch in der Seitenleiste anzeigen</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>Datennutzung in der oberen Leiste anzeigen</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2098,6 +2118,14 @@
     <message>
         <source>%1 devices</source>
         <translation>%1 Geräte</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>Gerät hinzufügen</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Neue Gruppe</translation>
     </message>
 </context>
 <context>

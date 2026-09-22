@@ -1618,6 +1618,26 @@
         <source>Open download page</source>
         <translation>ダウンロードページを開く</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>未接続</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>編集</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完了</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>デバイスを更新</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>保存済みデバイスの状態を確認し、新しいデバイスを探します</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1964,8 +1984,8 @@
         <translation>オレンジ</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>サイドバーに通信量を表示</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>上部バーにデータ使用量を表示</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2101,6 +2121,14 @@
     <message>
         <source>%1 devices</source>
         <translation>%1 台のデバイス</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>デバイスを追加</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新規グループ</translation>
     </message>
 </context>
 <context>

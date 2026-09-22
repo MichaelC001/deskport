@@ -1615,6 +1615,26 @@
         <source>Open download page</source>
         <translation>다운로드 페이지 열기</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>연결 안 됨</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>편집</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>완료</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>기기 새로 고침</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>저장된 기기를 확인하고 새 기기를 찾습니다</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1961,8 +1981,8 @@
         <translation>주황색</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>사이드바에 데이터 사용량 표시</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>상단 막대에 데이터 사용량 표시</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2098,6 +2118,14 @@
     <message>
         <source>%1 devices</source>
         <translation>기기 %1대</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>기기 추가</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>새 그룹</translation>
     </message>
 </context>
 <context>

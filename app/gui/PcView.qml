@@ -164,19 +164,6 @@ CenteredGridView {
                     Accessible.name: qsTr("Group actions")
                     onClicked: groupMenu.openFor(computerModel.currentGroup, groupActionsButton)
                 }
-                UiButton {
-                    objectName: "newGroup"
-                    visible: !pcGrid.inGroup
-                    text: qsTr("New group")
-                    onClicked: groupNameDialog.ask("", computerModel.defaultGroupName())
-                }
-                UiButton {
-                    objectName: "arrangeDevices"
-                    text: pcGrid.arranging ? qsTr("Done") : qsTr("Edit")
-                    highlighted: pcGrid.arranging
-                    visible: pcGrid.canEdit || pcGrid.arranging
-                    onClicked: pcGrid.arranging = !pcGrid.arranging
-                }
             }
             Label {
                 visible: pcGrid.arranging
@@ -191,8 +178,13 @@ CenteredGridView {
     move: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
     displaced: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
 
+    function promptNewGroup() { groupNameDialog.ask("", computerModel.defaultGroupName()) }
+
     delegate: NavigableItemDelegate {
-        objectName: model.isGroup ? "group-" + model.groupId : "device-" + model.hostId
+        objectName: model.isAdd ? "addCard" : model.isGroup ? "group-" + model.groupId : "device-" + model.hostId
+        // The add card hides while editing; it never moves.
+        opacity: model.isAdd && pcGrid.arranging ? 0 : 1
+        enabled: !(model.isAdd && pcGrid.arranging)
         width: pcGrid.cellWidth - 12; height: pcGrid.cellHeight - 12;
         padding: 0
         background: Item {}
@@ -205,6 +197,9 @@ CenteredGridView {
             arranging: pcGrid.arranging
             held: arrangeArea.pressed
             group: model.isGroup
+            addCard: model.isAdd
+            onAddDeviceRequested: navigateTo("qrc:/gui/BindView.qml", "BindView")
+            onAddGroupRequested: pcGrid.promptNewGroup()
             memberCount: model.memberCount
             memberSystems: model.memberSystems
             dropTarget: pcGrid.combineIndex === index
@@ -225,7 +220,7 @@ CenteredGridView {
         Loader {
             id: pcContextMenuLoader
             asynchronous: true
-            active: !model.isGroup
+            active: !model.isGroup && !model.isAdd
             sourceComponent: NavigableMenu {
                 id: pcContextMenu
                 MenuItem {
@@ -316,6 +311,7 @@ CenteredGridView {
         }
 
         onClicked: {
+            if (model.isAdd) return
             if (model.isGroup) {
                 pcGrid.openGroup(model.groupId)
                 return
@@ -355,7 +351,7 @@ CenteredGridView {
             objectName: "arrange-" + model.hostId
             anchors.fill: parent
             z: 10
-            enabled: pcGrid.arranging
+            enabled: pcGrid.arranging && !model.isAdd
             visible: enabled
             acceptedButtons: Qt.AllButtons
             preventStealing: true

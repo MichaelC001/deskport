@@ -61,7 +61,7 @@ UiPage {
             }
             Label { text: qsTr("Appearance changes apply immediately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch {
-                objectName: "showTrafficSwitch"; text: qsTr("Show data usage in the sidebar")
+                objectName: "showTrafficSwitch"; text: qsTr("Show data usage in the top bar")
                 checked: preferences.showTraffic
                 onClicked: { preferences.showTraffic = checked; save() }
             }

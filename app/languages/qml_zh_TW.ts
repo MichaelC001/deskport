@@ -1594,6 +1594,26 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>統計本次工作階段的影音、控制及剪貼簿傳輸位元組，短暫重連不歸零。不含 IP/VPN 開銷、剪貼簿 TLS 開銷、裝置探索及本機對外共享流量。數值不代表電信帳單。</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>未連線</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>編輯</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完成</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>重新整理裝置</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>檢查已儲存裝置是否在線，並尋找新裝置</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1940,8 +1960,8 @@
         <translation>橙色</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>在側欄顯示流量用量</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>在頂欄顯示流量</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2077,6 +2097,14 @@
     <message>
         <source>%1 devices</source>
         <translation>%1 台裝置</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>新增裝置</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新增群組</translation>
     </message>
 </context>
 <context>

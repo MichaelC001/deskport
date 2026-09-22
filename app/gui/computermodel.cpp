@@ -29,8 +29,19 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     Q_ASSERT(index.row() < m_Rows.count());
 
     const Row& row = m_Rows[index.row()];
+    if (row.add) {
+        switch (role) {
+        case IsAddRole: return true;
+        case IsGroupRole: case OnlineRole: case PairedRole: case BusyRole: case WakeableRole: case StatusUnknownRole: case ServerSupportedRole: return false;
+        case SourceIndexRole: return -1;
+        case MemberCountRole: return 0;
+        case MemberSystemsRole: return QStringList();
+        default: return QString();
+        }
+    }
     if (!row.computer) {
         switch (role) {
+        case IsAddRole: return false;
         case IsGroupRole: return true;
         case GroupIdRole: return row.entry.id;
         case NameRole: return row.entry.name.isEmpty() ? tr("Group") : row.entry.name;
@@ -48,6 +59,7 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     QReadLocker lock(&computer->lock);
 
     switch (role) {
+    case IsAddRole: return false;
     case IsGroupRole: return false;
     case GroupIdRole: return QString();
     case MemberCountRole: return 0;
@@ -159,6 +171,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[GroupIdRole] = "groupId";
     names[MemberCountRole] = "memberCount";
     names[MemberSystemsRole] = "memberSystems";
+    names[IsAddRole] = "isAdd";
 
     return names;
 }
@@ -313,7 +326,7 @@ bool ComputerModel::sameStructure(const QVector<Row>& a, const QVector<Row>& b)
 {
     if (a.size() != b.size()) return false;
     for (int i = 0; i < a.size(); ++i) {
-        if (a[i].computer != b[i].computer || a[i].entry.id != b[i].entry.id || a[i].entry.name != b[i].entry.name ||
+        if (a[i].computer != b[i].computer || a[i].add != b[i].add || a[i].entry.id != b[i].entry.id || a[i].entry.name != b[i].entry.name ||
             a[i].entry.devices != b[i].entry.devices || a[i].systems != b[i].systems) return false;
     }
     return true;
@@ -359,6 +372,12 @@ QVector<ComputerModel::Row> ComputerModel::buildRows() const
         }
         rows.append(row);
     }
+    // The add card ends the top level once there is something to arrange.
+    if (m_Group.isEmpty() && !rows.isEmpty()) {
+        Row add;
+        add.add = true;
+        rows.append(add);
+    }
     return rows;
 }
 
@@ -384,7 +403,8 @@ void ComputerModel::setCurrentGroup(const QString& group)
 
 void ComputerModel::moveComputer(int from, int to)
 {
-    if (from < 0 || to < 0 || from >= m_Rows.size() || to >= m_Rows.size() || from == to) return;
+    // The add card stays last and never moves.
+    if (from < 0 || to < 0 || from >= m_Rows.size() || to >= m_Rows.size() || from == to || m_Rows[from].add || m_Rows[to].add) return;
     beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to + 1 : to);
     m_Rows.move(from, to);
     endMoveRows();
@@ -394,7 +414,7 @@ void ComputerModel::moveComputer(int from, int to)
 QString ComputerModel::combine(int from, int to)
 {
     // Groups hold devices only, and do not nest.
-    if (!m_Group.isEmpty() || !computerAt(from) || to < 0 || to >= m_Rows.size() || from == to) return {};
+    if (!m_Group.isEmpty() || !computerAt(from) || to < 0 || to >= m_Rows.size() || from == to || m_Rows[to].add) return {};
     HostLayout layout = HostLayout::load();
     const QString group = layout.combine(m_Rows[from].entry.id, m_Rows[to].entry.id, presentDevices(), defaultGroupName());
     reload();

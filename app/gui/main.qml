@@ -137,9 +137,9 @@ ApplicationWindow {
         id: stackView
         initialItem: initialView
         anchors.fill: parent
-        anchors.leftMargin: navigationVisible ? navigation.width + 16 : 0
+        anchors.leftMargin: navigationVisible ? 16 : 0
         anchors.rightMargin: navigationVisible ? 16 : 0
-        anchors.topMargin: navigationVisible ? 66 : 0
+        anchors.topMargin: navigationVisible ? topBar.height : 0
         focus: true
 
         onCurrentItemChanged: {
@@ -272,46 +272,52 @@ ApplicationWindow {
         appWindow: window
     }
 
+    // One top bar replaces the sidebar: brand, version and session traffic on
+    // the left; sharing, edit, refresh and settings on the right.
     Rectangle {
-        id: navigation
+        id: topBar
+        objectName: "topBar"
         visible: navigationVisible
-        width: window.width < 780 ? 168 : 184
-        anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom
+        anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+        height: 56
         color: ui.surface
-        Rectangle { anchors.right: parent.right; width: 1; height: parent.height; color: ui.line }
-        ScrollView {
-            id: sidebarScroll; anchors.fill: parent; clip: true
-            contentWidth: availableWidth
-            ColumnLayout {
-            width: sidebarScroll.availableWidth - 24
-            x: 12
-            height: Math.max(implicitHeight, sidebarScroll.availableHeight - 24)
-            y: 12; spacing: 8
-            RowLayout {
-                Layout.topMargin: 12; Layout.bottomMargin: 24
-                Image { source: "qrc:/res/deskport.svg"; Layout.preferredWidth: 30; Layout.preferredHeight: 30; fillMode: Image.PreserveAspectFit }
-                Label { text: "DeskPort"; font.pixelSize: 18; font.weight: Font.DemiBold; color: ui.text }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ui.line }
+        readonly property var devicesPage: qmltypeof(stackView.currentItem, "PcView") ? stackView.currentItem : null
+        readonly property bool compact: window.width < 900
+        // Very narrow windows drop the traffic chip so the right-hand buttons always fit.
+        readonly property bool narrow: window.width < 720
+        RowLayout {
+            anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 8
+            ToolButton { objectName: "backButton"; visible: stackView.depth > 1 && topBar.devicesPage === null; text: "←"; Accessible.name: qsTr("Back"); onClicked: goBack() }
+            Image {
+                source: "qrc:/res/deskport.svg"; fillMode: Image.PreserveAspectFit
+                Layout.preferredWidth: 28; Layout.preferredHeight: 28
+                sourceSize.width: 84; sourceSize.height: 84
+                MouseArea { anchors.fill: parent; onClicked: showDevices() }
+            }
+            Label {
+                text: "DeskPort"; font.pixelSize: 17; font.weight: Font.DemiBold; color: ui.text
+                MouseArea { anchors.fill: parent; onClicked: showDevices() }
             }
             UiButton {
-                text: qsTr("Devices"); Layout.fillWidth: true; flat: true
-                highlighted: qmltypeof(stackView.currentItem, "PcView") || qmltypeof(stackView.currentItem, "DeviceSettings") || qmltypeof(stackView.currentItem, "DeviceAdvanced") || qmltypeof(stackView.currentItem, "SettingsView")
-                onClicked: showDevices()
-            }
-            Label { visible: activeHostId.length > 0; text: qsTr("Current connection"); color: ui.muted; font.pixelSize: ui.small; Layout.topMargin: 22 }
-            Rectangle {
-                visible: activeHostId.length > 0; Layout.fillWidth: true
-                implicitHeight: currentConnection.implicitHeight + 24; radius: 10; color: ui.raised
-                ColumnLayout {
-                    id: currentConnection; anchors.fill: parent; anchors.margins: 12; spacing: 8
-                    Label { text: activeHostName; textFormat: Text.PlainText; color: ui.text; Layout.fillWidth: true; elide: Text.ElideRight }
-                    Label { text: qsTr("Connected"); color: ui.accent; font.pixelSize: ui.small }
-                    UiButton { text: qsTr("Return"); Layout.fillWidth: true; onClicked: recallRemoteSession() }
+                objectName: "versionUpdateButton"
+                visible: !topBar.compact || AutoUpdateChecker.status === "available"
+                text: topBar.compact ? qsTr("Update available")
+                    : "v" + SystemProperties.versionString + (AutoUpdateChecker.status === "available" ? " · " + qsTr("Update available") : "")
+                flat: true; highlighted: AutoUpdateChecker.status === "available"
+                font.pixelSize: ui.small
+                onClicked: {
+                    updateDialog.open()
+                    if (AutoUpdateChecker.status === "idle" || AutoUpdateChecker.status === "error") AutoUpdateChecker.start()
                 }
             }
-            ColumnLayout {
+            UiButton {
                 id: trafficSummary; objectName: "trafficSummary"
-                visible: StreamingPreferences.showTraffic && activeHostId.length > 0 && Qt.platform.os !== "windows"
-                Layout.fillWidth: true; Layout.topMargin: 12; spacing: 4
+                visible: !topBar.narrow
+                Layout.leftMargin: 4
+                flat: true; font.pixelSize: ui.small
+                readonly property bool connected: activeHostId.length > 0
+                readonly property bool counting: connected && StreamingPreferences.showTraffic && Qt.platform.os !== "windows"
                 property real received: 0
                 property real sent: 0
                 property real downRate: 0
@@ -327,44 +333,55 @@ ApplicationWindow {
                     upRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.sent - sent) / elapsed : 0
                     received = sample.received; sent = sample.sent; sampledAt = now; sampledHost = activeHostId
                 }
-                onVisibleChanged: { sampledAt = 0; if (visible) sample() }
-                Label { text: qsTr("Session data"); color: ui.muted; font.pixelSize: ui.small }
-                Label { text: trafficSummary.amount(trafficSummary.received + trafficSummary.sent); color: ui.text; font.pixelSize: 20 }
-                Label { text: "↓ " + trafficSummary.amount(trafficSummary.downRate) + "/s"; color: ui.muted; font.pixelSize: ui.small }
-                Label { text: "↑ " + trafficSummary.amount(trafficSummary.upRate) + "/s"; color: ui.muted; font.pixelSize: ui.small }
-                UiButton { text: qsTr("Details"); flat: true; font.pixelSize: ui.small; onClicked: trafficDetails.open() }
-                Timer { interval: 1000; repeat: true; running: trafficSummary.visible && window.visible; onTriggered: trafficSummary.sample() }
+                onCountingChanged: { sampledAt = 0; if (counting) sample() }
+                // Narrow windows keep the connection and download speed only.
+                text: !connected ? "○  " + qsTr("Not connected")
+                    : "●  " + activeHostName + (!counting ? "" : topBar.compact
+                        ? "  ↓ " + amount(downRate) + "/s"
+                        : "  " + amount(received + sent) + "  ↓ " + amount(downRate) + "/s  ↑ " + amount(upRate) + "/s")
+                Accessible.name: connected ? qsTr("Session data") + " · " + activeHostName : qsTr("Not connected")
+                onClicked: if (connected) trafficDetails.open()
+                Timer { interval: 1000; repeat: true; running: trafficSummary.counting && window.visible; onTriggered: trafficSummary.sample() }
             }
-            Item { Layout.fillHeight: true }
-            Rectangle { Layout.fillWidth: true; height: 1; color: ui.line }
-            Label { text: hostManager.deviceName; textFormat: Text.PlainText; color: ui.text; Layout.fillWidth: true; elide: Text.ElideRight; Layout.topMargin: 8 }
-            Label { text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on"); color: ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; elide: Text.ElideRight }
-            UiButton { text: qsTr("Sharing"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "HostView"); onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") } }
-            UiButton { text: qsTr("Settings"); Layout.fillWidth: true; flat: true; highlighted: qmltypeof(stackView.currentItem, "SettingsHome"); onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") } }
+            Label {
+                visible: stackView.depth > 1 && topBar.devicesPage === null && !topBar.compact
+                text: stackView.currentItem ? stackView.currentItem.objectName : ""
+                color: ui.muted; elide: Text.ElideRight; Layout.leftMargin: 8
+            }
+            Item { Layout.fillWidth: true }
             UiButton {
-                objectName: "versionUpdateButton"
-                text: "v" + SystemProperties.versionString + (AutoUpdateChecker.status === "available" ? " · " + qsTr("Update available") : "")
-                flat: true; highlighted: AutoUpdateChecker.status === "available"
+                objectName: "sharingButton"
+                text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on")
+                flat: !hostManager.running; highlighted: qmltypeof(stackView.currentItem, "HostView")
                 font.pixelSize: ui.small
-                Layout.fillWidth: true; Layout.topMargin: 8
-                onClicked: {
-                    updateDialog.open()
-                    if (AutoUpdateChecker.status === "idle" || AutoUpdateChecker.status === "error") AutoUpdateChecker.start()
-                }
+                onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
             }
-        }
-        }
-    }
-    Rectangle {
-        visible: navigationVisible
-        anchors.left: navigation.right; anchors.right: parent.right; anchors.top: parent.top; height: 66
-        color: ui.canvas
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ui.line }
-        RowLayout {
-            anchors.fill: parent; anchors.leftMargin: 24; anchors.rightMargin: 24; spacing: 12
-            Button { visible: stackView.depth > 1; text: "←"; Accessible.name: qsTr("Back"); flat: true; onClicked: goBack() }
-            Label { text: stackView.currentItem ? stackView.currentItem.objectName : "DeskPort"; color: ui.text; font.pixelSize: 16; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
-            UiButton { text: qsTr("Add a device"); visible: qmltypeof(stackView.currentItem, "PcView"); highlighted: true; onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
+            ToolButton {
+                objectName: "arrangeDevices"
+                visible: topBar.devicesPage !== null && (topBar.devicesPage.canEdit || topBar.devicesPage.arranging)
+                text: topBar.devicesPage && topBar.devicesPage.arranging ? "✓" : "✎"
+                font.pixelSize: 18
+                Accessible.name: topBar.devicesPage && topBar.devicesPage.arranging ? qsTr("Done") : qsTr("Edit")
+                ToolTip.visible: hovered; ToolTip.text: Accessible.name
+                onClicked: topBar.devicesPage.arranging = !topBar.devicesPage.arranging
+            }
+            ToolButton {
+                objectName: "refreshDevices"
+                visible: topBar.devicesPage !== null
+                text: "↻"; font.pixelSize: 18
+                Accessible.name: qsTr("Refresh devices")
+                ToolTip.visible: hovered; ToolTip.text: qsTr("Check saved devices and look for new ones")
+                // Restarting polling checks every saved device again and restarts discovery.
+                onClicked: { ComputerManager.stopPollingAsync(); ComputerManager.startPolling() }
+            }
+            ToolButton {
+                objectName: "settingsButton"
+                text: "⚙"; font.pixelSize: 18
+                Accessible.name: qsTr("Settings")
+                ToolTip.visible: hovered; ToolTip.text: qsTr("Settings")
+                highlighted: qmltypeof(stackView.currentItem, "SettingsHome")
+                onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
+            }
         }
     }
     Timer { interval: 21600000; repeat: true; running: true; onTriggered: AutoUpdateChecker.start() }

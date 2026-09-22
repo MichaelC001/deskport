@@ -18,6 +18,10 @@ Rectangle {
     property var memberSystems: []
     // A device held over this card would join it in a group.
     property bool dropTarget: false
+    // The last card: add a device, or create a group, each with one click.
+    property bool addCard: false
+    signal addDeviceRequested()
+    signal addGroupRequested()
     property bool activeSession: false
     property bool anotherSession: false
     signal detailsRequested()
@@ -50,6 +54,29 @@ Rectangle {
     border.color: selected || activeSession || dropTarget ? ui.accent : ui.line
     border.width: selected || dropTarget ? 2 : 1
     ColumnLayout {
+        visible: card.addCard
+        anchors.fill: parent; anchors.margins: 8; spacing: 0
+        Repeater {
+            model: [{ key: "device", symbol: "+", label: qsTr("Add a device") }, { key: "group", symbol: "▣", label: qsTr("New group") }]
+            ColumnLayout {
+                Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
+                Rectangle { visible: index === 1; Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; height: 1; color: ui.line }
+                ToolButton {
+                    objectName: modelData.key === "device" ? "addDevice" : "addGroup"
+                    Layout.fillWidth: true; Layout.fillHeight: true
+                    Accessible.name: modelData.label
+                    onClicked: modelData.key === "device" ? card.addDeviceRequested() : card.addGroupRequested()
+                    contentItem: Column {
+                        spacing: 4
+                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.symbol; color: ui.accent; font.pixelSize: 24 }
+                        Label { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.label; color: ui.accent; font.pixelSize: 14 }
+                    }
+                }
+            }
+        }
+    }
+    ColumnLayout {
+        visible: !card.addCard
         anchors.fill: parent; anchors.margins: 16; spacing: 6
         Row {
             id: header

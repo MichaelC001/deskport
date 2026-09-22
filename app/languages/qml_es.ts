@@ -1615,6 +1615,26 @@
         <source>Open download page</source>
         <translation>Abrir la página de descarga</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>Sin conexión</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Editar</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Listo</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>Actualizar dispositivos</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>Comprobar los dispositivos guardados y buscar otros nuevos</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1961,8 +1981,8 @@
         <translation>Naranja</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>Mostrar uso de datos en la barra lateral</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>Mostrar el uso de datos en la barra superior</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2098,6 +2118,14 @@
     <message>
         <source>%1 devices</source>
         <translation>%1 dispositivos</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>Añadir dispositivo</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Nuevo grupo</translation>
     </message>
 </context>
 <context>

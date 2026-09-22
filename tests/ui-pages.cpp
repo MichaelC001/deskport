@@ -111,7 +111,7 @@ public:
         {Qt::UserRole+3,"paired"},{Qt::UserRole+4,"statusUnknown"},{Qt::UserRole+5,"address"},
         {Qt::UserRole+6,"favorite"},{Qt::UserRole+7,"sourceIndex"},{Qt::UserRole+8,"details"},
         {Qt::UserRole+11,"operatingSystem"},{Qt::UserRole+9,"serverSupported"},{Qt::UserRole+10,"wakeable"},
-        {Qt::UserRole+12,"isGroup"},{Qt::UserRole+13,"groupId"},{Qt::UserRole+14,"memberCount"},{Qt::UserRole+15,"memberSystems"}};
+        {Qt::UserRole+12,"isGroup"},{Qt::UserRole+13,"groupId"},{Qt::UserRole+14,"memberCount"},{Qt::UserRole+15,"memberSystems"},{Qt::UserRole+16,"isAdd"}};
     }
     QVariant data(const QModelIndex& index,int role) const override {
         const auto shown = rows();
@@ -126,6 +126,7 @@ public:
             case 12: return true;
             case 13: return entry.id;
             case 14: return int(entry.devices.size());
+            case 16: return false;
             case 15: { QStringList systems; for (const auto& id : entry.devices) systems << (id == "device-a" ? "macOS" : "NixOS"); return systems; }
             default: return {};
             }
@@ -145,6 +146,7 @@ public:
         case 13: return QString();
         case 14: return 0;
         case 15: return QStringList();
+        case 16: return false;
         default: return {};
         }
     }
@@ -819,11 +821,21 @@ ApplicationWindow {
         // Arrange mode: dragging the second card over the first swaps them in the model.
         auto openDetails=grid->findChild<QObject*>("deviceDetails"); QVERIFY(openDetails);
         QVERIFY(QMetaObject::invokeMethod(openDetails,"close")); QTest::qWait(300);
-        auto arrange=findVisual(gridItem,"arrangeDevices"); QVERIFY(arrange);
+        // Edit, refresh and settings sit in the top bar, which replaced the sidebar.
+        auto arrange=findVisual(window->contentItem(),"arrangeDevices"); QVERIFY(arrange);
+        QVERIFY(findVisual(window->contentItem(),"refreshDevices")); QVERIFY(findVisual(window->contentItem(),"settingsButton"));
+        QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
+        // The right-hand buttons stay inside the window at every width.
+        for (int width : {1120, 800, 640}) {
+            window->resize(width, 620); QTest::qWait(100);
+            auto settingsButton=findVisual(window->contentItem(),"settingsButton");
+            QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
+        }
+        window->resize(800,620); QTest::qWait(100);
         QVERIFY(arrange->isVisible());
         QVERIFY(QMetaObject::invokeMethod(arrange,"clicked"));
         QVERIFY(grid->property("arranging").toBool());
-        QCOMPARE(arrange->property("text").toString(),QString("Done"));
+        QCOMPARE(arrange->property("text").toString(),QString("✓"));
         auto computers=qobject_cast<QAbstractListModel*>(grid->property("model").value<QObject*>()); QVERIFY(computers);
         QTest::qWait(100);
         auto second=qobject_cast<QQuickItem*>(b); QVERIFY(second);

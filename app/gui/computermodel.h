@@ -30,7 +30,8 @@ class ComputerModel : public QAbstractListModel
         IsGroupRole,
         GroupIdRole,
         MemberCountRole,
-        MemberSystemsRole
+        MemberSystemsRole,
+        IsAddRole
     };
 
 public:
@@ -91,7 +92,8 @@ private slots:
 private:
     struct Row
     {
-        NvComputer* computer = nullptr; // null for a group
+        NvComputer* computer = nullptr; // null for a group or the add card
+        bool add = false;               // the trailing add card at the top level
         HostLayout::Entry entry;
         QStringList systems;            // group member operating systems, for the card icons
     };
