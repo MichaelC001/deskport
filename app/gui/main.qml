@@ -361,11 +361,9 @@ ApplicationWindow {
                 visible: topBar.devicesPage !== null && (topBar.devicesPage.canEdit || topBar.devicesPage.arranging)
                 // Square-and-pencil edit icon; a check mark while editing.
                 readonly property bool editing: topBar.devicesPage !== null && topBar.devicesPage.arranging
-                text: editing ? "✓" : ""
-                icon.source: editing ? "" : "qrc:/res/edit-square.svg"
-                icon.color: ui.text
+                icon.source: editing ? "qrc:/res/done.svg" : "qrc:/res/edit-square.svg"
+                icon.color: editing ? ui.accent : ui.text
                 icon.width: 20; icon.height: 20
-                font.pixelSize: 18
                 Accessible.name: topBar.devicesPage && topBar.devicesPage.arranging ? qsTr("Done") : qsTr("Edit")
                 ToolTip.visible: hovered; ToolTip.text: Accessible.name
                 onClicked: topBar.devicesPage.arranging = !topBar.devicesPage.arranging
@@ -373,7 +371,8 @@ ApplicationWindow {
             ToolButton {
                 objectName: "refreshDevices"
                 visible: topBar.devicesPage !== null
-                text: "↻"; font.pixelSize: 18
+                icon.source: "qrc:/res/refresh.svg"; icon.color: ui.text
+                icon.width: 20; icon.height: 20
                 Accessible.name: qsTr("Refresh devices")
                 ToolTip.visible: hovered; ToolTip.text: qsTr("Check saved devices and look for new ones")
                 // Restarting polling checks every saved device again and restarts discovery.
@@ -381,7 +380,9 @@ ApplicationWindow {
             }
             ToolButton {
                 objectName: "settingsButton"
-                text: "⚙"; font.pixelSize: 18
+                icon.source: "qrc:/res/settings.svg"
+                icon.color: highlighted ? ui.accent : ui.text
+                icon.width: 20; icon.height: 20
                 Accessible.name: qsTr("Settings")
                 ToolTip.visible: hovered; ToolTip.text: qsTr("Settings")
                 highlighted: qmltypeof(stackView.currentItem, "SettingsHome")

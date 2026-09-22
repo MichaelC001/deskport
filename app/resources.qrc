@@ -40,6 +40,9 @@
         <file>res/moonlight.svg</file>
         <file>res/deskport.svg</file>
         <file>res/edit-square.svg</file>
+        <file>res/refresh.svg</file>
+        <file>res/settings.svg</file>
+        <file>res/done.svg</file>
         <file>res/add-device.svg</file>
         <file>res/add-group.svg</file>
         <file>res/deskport-tray-black.svg</file>

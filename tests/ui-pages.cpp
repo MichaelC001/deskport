@@ -849,7 +849,7 @@ ApplicationWindow {
         QVERIFY(arrange->isVisible());
         QVERIFY(QMetaObject::invokeMethod(arrange,"clicked"));
         QVERIFY(grid->property("arranging").toBool());
-        QCOMPARE(arrange->property("text").toString(),QString("✓"));
+        QVERIFY(arrange->property("editing").toBool());
         auto computers=qobject_cast<QAbstractListModel*>(grid->property("model").value<QObject*>()); QVERIFY(computers);
         QTest::qWait(100);
         auto second=qobject_cast<QQuickItem*>(b); QVERIFY(second);
