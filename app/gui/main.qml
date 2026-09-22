@@ -25,6 +25,9 @@ ApplicationWindow {
     // buttons sit at the left of DeskPort's own top bar (see mactitlebar.mm).
     readonly property bool unifiedTitleBar: Qt.platform.os === "osx"
     flags: unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint) : Qt.Window
+    // The content, top bar included, starts at the very top instead of below the
+    // title-bar safe area; the bar leaves room for the window buttons itself.
+    topPadding: 0; leftPadding: 0; rightPadding: 0; bottomPadding: 0
     onClosing: function(event) {
         event.accepted = false; window.hide();
     }
@@ -286,13 +289,8 @@ ApplicationWindow {
         // 52 points matches the macOS unified title bar that centres the window buttons.
         height: window.unifiedTitleBar ? 52 : 56
         color: ui.surface
-        // Empty parts of the bar move the window and double-click zooms it, as a title bar does.
-        MouseArea {
-            anchors.fill: parent
-            enabled: window.unifiedTitleBar
-            onPressed: typeof macTitleBar !== "undefined" ? macTitleBar.startDrag() : window.startSystemMove()
-            onDoubleClicked: if (typeof macTitleBar !== "undefined") macTitleBar.doubleClick()
-        }
+        // On macOS, empty parts of this bar move the window and a double-click
+        // zooms it, handled natively by MacTitleBar (mactitlebar.mm).
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ui.line }
         readonly property var devicesPage: qmltypeof(stackView.currentItem, "PcView") ? stackView.currentItem : null
         readonly property bool compact: window.width < 900

@@ -1,26 +1,23 @@
 #pragma once
 #include <QObject>
-class QWindow;
+class QQuickWindow;
 
-// The main window's content already extends under the title bar (see
-// Qt::ExpandedClientAreaHint in main.qml). This hides the title text and adds an
-// empty unified toolbar so the close, minimize and zoom buttons sit vertically
-// centred in DeskPort's 52-point top bar, at its left edge.
-void deskPortUnifyTitleBar(QWindow* window);
-
-// Title-bar behaviour for empty parts of the top bar, exposed to QML as
-// "macTitleBar". QWindow::startSystemMove() does not move a window whose content
-// covers the title bar, so the drag goes through AppKit directly.
+// macOS only: DeskPort's top bar replaces the title bar. The window content
+// extends under it (Qt::ExpandedClientAreaHint in main.qml), the title text is
+// hidden, and an empty unified toolbar centres the close, minimize and zoom
+// buttons at the left of the 52-point bar. A press on an empty part of the bar
+// (the item named "topBar", outside any control) moves the window and a
+// double-click zooms or minimizes it, following System Settings.
 class MacTitleBar : public QObject
 {
     Q_OBJECT
 public:
-    using QObject::QObject;
-    void setWindow(QWindow* window) { m_Window = window; }
-    // Call from a mouse press: AppKit follows the pointer until release.
-    Q_INVOKABLE void startDrag();
-    // Honours System Settings: zoom, minimize or nothing on a double-click.
-    Q_INVOKABLE void doubleClick();
+    explicit MacTitleBar(QObject* parent = nullptr);
+    ~MacTitleBar() override;
+    void attach(QQuickWindow* window);
 private:
-    QWindow* m_Window = nullptr;
+    // True when the point (window coordinates) is on the bar but not on a control.
+    bool isDragArea(const QPointF& point) const;
+    QQuickWindow* m_Window = nullptr;
+    void* m_Monitor = nullptr;
 };

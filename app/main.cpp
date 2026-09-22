@@ -21,6 +21,7 @@
 #include <QQmlContext>
 #include <QIcon>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QMutex>
 #include <QtDebug>
 #include <QNetworkProxyFactory>
@@ -918,7 +919,6 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
 #ifdef Q_OS_DARWIN
     MacTitleBar macTitleBar;
-    engine.rootContext()->setContextProperty("macTitleBar", &macTitleBar);
 #endif
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
@@ -981,8 +981,7 @@ int main(int argc, char *argv[])
         if (engine.rootObjects().isEmpty())
             return -1;
 #ifdef Q_OS_DARWIN
-        deskPortUnifyTitleBar(qobject_cast<QWindow*>(engine.rootObjects().first()));
-        macTitleBar.setWindow(qobject_cast<QWindow*>(engine.rootObjects().first()));
+        macTitleBar.attach(qobject_cast<QQuickWindow*>(engine.rootObjects().first()));
 #endif
         if (pendingActivation) showDevices();
     }
