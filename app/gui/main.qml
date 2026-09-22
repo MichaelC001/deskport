@@ -359,7 +359,12 @@ ApplicationWindow {
             ToolButton {
                 objectName: "arrangeDevices"
                 visible: topBar.devicesPage !== null && (topBar.devicesPage.canEdit || topBar.devicesPage.arranging)
-                text: topBar.devicesPage && topBar.devicesPage.arranging ? "✓" : "✎"
+                // Square-and-pencil edit icon; a check mark while editing.
+                readonly property bool editing: topBar.devicesPage !== null && topBar.devicesPage.arranging
+                text: editing ? "✓" : ""
+                icon.source: editing ? "" : "qrc:/res/edit-square.svg"
+                icon.color: ui.text
+                icon.width: 20; icon.height: 20
                 font.pixelSize: 18
                 Accessible.name: topBar.devicesPage && topBar.devicesPage.arranging ? qsTr("Done") : qsTr("Edit")
                 ToolTip.visible: hovered; ToolTip.text: Accessible.name
