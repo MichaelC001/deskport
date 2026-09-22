@@ -7,7 +7,8 @@ class QQuickWindow;
 // hidden, and an empty unified toolbar centres the close, minimize and zoom
 // buttons at the left of the 52-point bar. A press on an empty part of the bar
 // (the item named "topBar", outside any control) moves the window and a
-// double-click zooms or minimizes it, following System Settings.
+// double-click zooms or minimizes it, following System Settings. The green
+// button zooms instead of entering full screen.
 class MacTitleBar : public QObject
 {
     Q_OBJECT

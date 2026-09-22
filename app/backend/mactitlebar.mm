@@ -39,6 +39,10 @@ void MacTitleBar::attach(QQuickWindow* window)
     // window buttons in it; it contributes no items of its own.
     native.toolbar = [[NSToolbar alloc] initWithIdentifier:@"DeskPortTopBar"];
     native.toolbarStyle = NSWindowToolbarStyleUnified;
+    // The green button zooms the device list to fill the screen instead of
+    // entering full screen, where the title bar and window buttons hide.
+    native.collectionBehavior = (native.collectionBehavior & ~NSWindowCollectionBehaviorFullScreenPrimary)
+        | NSWindowCollectionBehaviorFullScreenNone;
     // The drag must start from the original AppKit event, before Qt delivers it.
     id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
         if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
