@@ -53,27 +53,45 @@ Rectangle {
     color: selected ? ui.raised : ui.surface
     border.color: selected || activeSession || dropTarget ? ui.accent : ui.line
     border.width: selected || dropTarget ? 2 : 1
-    ColumnLayout {
+    // Split diagonally from the bottom-left to the top-right corner: adding a
+    // device on the upper-left half, a new group on the lower-right half.
+    Item {
+        id: addHalves
         visible: card.addCard
-        anchors.fill: parent; anchors.margins: 8; spacing: 0
+        anchors.fill: parent
+        Canvas {
+            anchors.fill: parent
+            onWidthChanged: requestPaint(); onHeightChanged: requestPaint()
+            onPaint: {
+                var ctx = getContext("2d"); ctx.reset()
+                ctx.strokeStyle = ui.line; ctx.lineWidth = 1
+                ctx.beginPath(); ctx.moveTo(width * 0.12, height * 0.88); ctx.lineTo(width * 0.88, height * 0.12); ctx.stroke()
+            }
+        }
+        // Either half of the card responds, not only its label.
+        MouseArea {
+            anchors.fill: parent
+            onClicked: function(mouse) {
+                if (mouse.x / width + mouse.y / height < 1) card.addDeviceRequested()
+                else card.addGroupRequested()
+            }
+        }
         Repeater {
             model: [{ key: "device", icon: "qrc:/res/add-device.svg", label: qsTr("Add a device") }, { key: "group", icon: "qrc:/res/add-group.svg", label: qsTr("New group") }]
-            ColumnLayout {
-                Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
-                Rectangle { visible: index === 1; Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; height: 1; color: ui.line }
-                ToolButton {
-                    objectName: modelData.key === "device" ? "addDevice" : "addGroup"
-                    Layout.fillWidth: true; Layout.fillHeight: true
-                    Accessible.name: modelData.label
-                    onClicked: modelData.key === "device" ? card.addDeviceRequested() : card.addGroupRequested()
-                    display: AbstractButton.TextUnderIcon
-                    text: modelData.label
-                    icon.source: modelData.icon
-                    icon.color: ui.accent
-                    icon.width: 28; icon.height: 28
-                    palette.buttonText: ui.accent
-                    font.pixelSize: 14
-                }
+            ToolButton {
+                objectName: modelData.key === "device" ? "addDevice" : "addGroup"
+                // Near the middle of its triangle, clear of the dividing line.
+                x: (index === 0 ? addHalves.width * 0.3 : addHalves.width * 0.7) - width / 2
+                y: (index === 0 ? addHalves.height * 0.3 : addHalves.height * 0.7) - height / 2
+                Accessible.name: modelData.label
+                onClicked: modelData.key === "device" ? card.addDeviceRequested() : card.addGroupRequested()
+                display: AbstractButton.TextUnderIcon
+                text: modelData.label
+                icon.source: modelData.icon
+                icon.color: ui.accent
+                icon.width: 28; icon.height: 28
+                palette.buttonText: ui.accent
+                font.pixelSize: 13
             }
         }
     }
