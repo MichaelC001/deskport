@@ -916,6 +916,10 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
+#ifdef Q_OS_DARWIN
+    MacTitleBar macTitleBar;
+    engine.rootContext()->setContextProperty("macTitleBar", &macTitleBar);
+#endif
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
@@ -978,6 +982,7 @@ int main(int argc, char *argv[])
             return -1;
 #ifdef Q_OS_DARWIN
         deskPortUnifyTitleBar(qobject_cast<QWindow*>(engine.rootObjects().first()));
+        macTitleBar.setWindow(qobject_cast<QWindow*>(engine.rootObjects().first()));
 #endif
         if (pendingActivation) showDevices();
     }

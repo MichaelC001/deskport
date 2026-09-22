@@ -290,8 +290,8 @@ ApplicationWindow {
         MouseArea {
             anchors.fill: parent
             enabled: window.unifiedTitleBar
-            onPressed: window.startSystemMove()
-            onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
+            onPressed: typeof macTitleBar !== "undefined" ? macTitleBar.startDrag() : window.startSystemMove()
+            onDoubleClicked: if (typeof macTitleBar !== "undefined") macTitleBar.doubleClick()
         }
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ui.line }
         readonly property var devicesPage: qmltypeof(stackView.currentItem, "PcView") ? stackView.currentItem : null
