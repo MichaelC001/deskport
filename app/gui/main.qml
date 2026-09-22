@@ -21,6 +21,10 @@ ApplicationWindow {
 
     id: window
     title: "DeskPort"
+    // macOS: one top bar. The content extends under the title bar and the window
+    // buttons sit at the left of DeskPort's own top bar (see mactitlebar.mm).
+    readonly property bool unifiedTitleBar: Qt.platform.os === "osx"
+    flags: unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint) : Qt.Window
     onClosing: function(event) {
         event.accepted = false; window.hide();
     }
@@ -279,15 +283,25 @@ ApplicationWindow {
         objectName: "topBar"
         visible: navigationVisible
         anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
-        height: 56
+        // 52 points matches the macOS unified title bar that centres the window buttons.
+        height: window.unifiedTitleBar ? 52 : 56
         color: ui.surface
+        // Empty parts of the bar move the window and double-click zooms it, as a title bar does.
+        MouseArea {
+            anchors.fill: parent
+            enabled: window.unifiedTitleBar
+            onPressed: window.startSystemMove()
+            onDoubleClicked: window.visibility === Window.Maximized ? window.showNormal() : window.showMaximized()
+        }
         Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: ui.line }
         readonly property var devicesPage: qmltypeof(stackView.currentItem, "PcView") ? stackView.currentItem : null
         readonly property bool compact: window.width < 900
         // Very narrow windows drop the traffic chip so the right-hand buttons always fit.
         readonly property bool narrow: window.width < 720
         RowLayout {
-            anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12; spacing: 8
+            anchors.fill: parent; anchors.rightMargin: 12; spacing: 8
+            // Room for the close, minimize and zoom buttons, which full screen hides.
+            anchors.leftMargin: window.unifiedTitleBar && window.visibility !== Window.FullScreen ? 84 : 12
             ToolButton { objectName: "backButton"; visible: stackView.depth > 1 && topBar.devicesPage === null; text: "←"; Accessible.name: qsTr("Back"); onClicked: goBack() }
             Image {
                 source: "qrc:/res/deskport.svg"; fillMode: Image.PreserveAspectFit

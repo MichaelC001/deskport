@@ -618,8 +618,8 @@ INCLUDEPATH += $$OUT_PWD
 HEADERS += $$OUT_PWD/version.h
 
 macx {
-    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm backend/macclipboard.mm backend/macunattended.mm
-    HEADERS += backend/macdock.h backend/macclipboard.h backend/macunattended.h
+    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm backend/macclipboard.mm backend/macunattended.mm backend/mactitlebar.mm
+    HEADERS += backend/macdock.h backend/macclipboard.h backend/macunattended.h backend/mactitlebar.h
     LIBS += -framework AVFoundation -framework ApplicationServices -framework AppKit -framework ServiceManagement
 }
 

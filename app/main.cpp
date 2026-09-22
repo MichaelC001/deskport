@@ -15,6 +15,7 @@
 #include "version.h"
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
+#include "backend/mactitlebar.h"
 #endif
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -975,6 +976,9 @@ int main(int argc, char *argv[])
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
+#ifdef Q_OS_DARWIN
+        deskPortUnifyTitleBar(qobject_cast<QWindow*>(engine.rootObjects().first()));
+#endif
         if (pendingActivation) showDevices();
     }
 

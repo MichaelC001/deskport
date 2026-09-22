@@ -24,7 +24,10 @@ CenteredGridView {
     readonly property bool canEdit: (layoutRevision, count, inGroup, computerModel.canEdit())
     onCanEditChanged: if (!canEdit) arranging = false
     function refreshLayout() { layoutRevision++ }
-    function openGroup(groupId) { computerModel.currentGroup = groupId; refreshLayout() }
+    // Layout changes reset the model, which destroys the card that asked for them.
+    // Run them after the card's input handler has returned, never inside it.
+    function afterInput(change) { Qt.callLater(function() { change(); pcGrid.refreshLayout() }) }
+    function openGroup(groupId) { afterInput(function() { computerModel.currentGroup = groupId }) }
     Keys.onEscapePressed: function(event) {
         if (inGroup) { openGroup(""); event.accepted = true } else event.accepted = false
     }
@@ -251,7 +254,7 @@ CenteredGridView {
                     objectName: "moveOut-" + model.hostId
                     text: qsTr("Move out of group")
                     visible: pcGrid.inGroup
-                    onTriggered: { pcGrid.refreshLayout(); pcGrid.computerModel.moveOutOfGroup(index) }
+                    onTriggered: { var from = index, model = pcGrid.computerModel; pcGrid.afterInput(function() { model.moveOutOfGroup(from) }) }
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
@@ -379,8 +382,8 @@ CenteredGridView {
             onReleased: {
                 var target = pcGrid.combineIndex
                 pcGrid.combineIndex = -1
-                // Grouping resets the model and destroys this card: call it last.
-                if (target >= 0) { pcGrid.refreshLayout(); pcGrid.computerModel.combine(index, target) }
+                var from = index, model = pcGrid.computerModel
+                if (target >= 0) pcGrid.afterInput(function() { model.combine(from, target) })
             }
             onCanceled: pcGrid.combineIndex = -1
         }

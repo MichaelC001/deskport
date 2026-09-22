@@ -902,7 +902,7 @@ ApplicationWindow {
         if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-group-card.png"));
         QVERIFY(QMetaObject::invokeMethod(groupCard,"clicked"));
-        QCOMPARE(computers->property("currentGroup").toString(),groupId);
+        QTRY_COMPARE(computers->property("currentGroup").toString(),groupId);
         QTRY_COMPARE(computers->rowCount(),2);
         QTest::qWait(150);
         auto back=findVisual(gridItem,"groupBack"); QVERIFY(back && back->isVisible());
@@ -910,7 +910,7 @@ ApplicationWindow {
         if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-group-open.png"));
         QVERIFY(QMetaObject::invokeMethod(back,"clicked"));
-        QCOMPARE(computers->property("currentGroup").toString(),QString());
+        QTRY_COMPARE(computers->property("currentGroup").toString(),QString());
         // Deleting a group keeps its devices: they return where the group was.
         auto groupMenu=grid->findChild<QObject*>("groupMenu"); QVERIFY(groupMenu);
         QVERIFY(groupMenu->setProperty("groupId",groupId));
