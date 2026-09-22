@@ -131,6 +131,8 @@ else:
     binding = "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
+    if "--ui" in sys.argv:
+        extra_sources += f' "{root}/app/gui/hostlayout.cpp"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
@@ -143,7 +145,7 @@ TARGET = host-lifecycle-tests
 DESTDIR = "{macos}"
 SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
 HEADERS += "{root}/app/backend/diagnostics.h" "{root}/app/backend/hostmanager.h" {extra_headers}
-INCLUDEPATH += "{root}/app/backend" "{root}/app"
+INCLUDEPATH += "{root}/app/backend" "{root}/app" "{root}/app/gui"
 RESOURCES += "{work}/test-resources.qrc"
 macx {{
     OBJECTIVE_SOURCES += "{root}/app/backend/macpermissions.mm" "{root}/app/backend/macdock.mm" "{root}/app/backend/macclipboard.mm" "{root}/app/backend/macunattended.mm"

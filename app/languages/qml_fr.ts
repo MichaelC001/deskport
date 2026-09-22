@@ -132,6 +132,10 @@
         <translation>Non apparié</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>Alias : %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>Nom&#x202f;: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>Port HTTPS&#x202f;: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>Groupe</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>Saisissez le nouveau nom de ce PC :</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>Saisissez un alias pour cet appareil. Laissez vide pour utiliser son nom d'origine :</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>Associer avec un PIN classique</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>Renommer l’appareil</translation>
+        <source>Set alias</source>
+        <translation>Définir un alias</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>Vue en liste</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>Détacher l’appareil</translation>
+        <source>Done</source>
+        <translation>Terminé</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>Épingler l’appareil</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>Faites glisser les appareils pour changer leur ordre.</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>Placer en premier</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>Reconnecter</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Nouveau groupe</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>Tous les appareils</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Actions du groupe</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>Renommer le groupe</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>Supprimer le groupe</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>Retirer du groupe</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>Ce groupe est vide. En mode modification, faites glisser des appareils sur le groupe pour les ajouter.</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>Faites glisser les cartes pour changer leur ordre, ou sur un autre appareil pour créer un groupe.</translation>
     </message>
 </context>
 <context>
@@ -2034,6 +2082,22 @@
     <message>
         <source>Device details</source>
         <translation>Détails de l’appareil</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Ouvrir</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Actions du groupe</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 appareil</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 appareils</translation>
     </message>
 </context>
 <context>

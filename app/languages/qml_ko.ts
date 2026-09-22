@@ -132,6 +132,10 @@
         <translation>페어링 되지 않음</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>별칭: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>이름: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 포트: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>그룹</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>이 PC의 새로운 이름 입력:</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>이 기기의 별칭을 입력하세요. 비워 두면 원래 이름을 사용합니다:</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>기존 PIN 방식으로 페어링</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>기기 이름 변경</translation>
+        <source>Set alias</source>
+        <translation>별칭 설정</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>목록 보기</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>고정 해제</translation>
+        <source>Done</source>
+        <translation>완료</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>기기 고정</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>기기를 드래그하여 순서를 바꾸세요.</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>맨 앞으로 이동</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>다시 연결</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>편집</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>새 그룹</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>모든 기기</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>그룹 작업</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>그룹 이름 변경</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>그룹 삭제</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>그룹에서 빼기</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>이 그룹은 비어 있습니다. 편집 모드에서 기기를 그룹으로 끌어 놓으면 추가됩니다.</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>카드를 끌어 순서를 바꾸고, 다른 기기 위에 놓으면 그룹이 됩니다.</translation>
     </message>
 </context>
 <context>
@@ -2034,6 +2082,22 @@
     <message>
         <source>Device details</source>
         <translation>기기 세부 정보</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>열기</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>그룹 작업</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>기기 1대</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>기기 %1대</translation>
     </message>
 </context>
 <context>

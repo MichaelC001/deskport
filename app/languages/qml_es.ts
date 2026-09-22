@@ -132,6 +132,10 @@
         <translation>No emparejado</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>Alias: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>Nombre: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>Puerto HTTPS: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>Grupo</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>Introduzca el nombre nuevo para este PC:</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>Introduce un alias para este dispositivo. Déjalo vacío para usar su nombre original:</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>Emparejar con PIN clásico</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>Renombrar dispositivo</translation>
+        <source>Set alias</source>
+        <translation>Establecer alias</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>Vista de lista</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>Desfijar dispositivo</translation>
+        <source>Done</source>
+        <translation>Listo</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>Fijar dispositivo</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>Arrastra los dispositivos para cambiar su orden.</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>Mover al principio</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>Reconectar</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Editar</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Nuevo grupo</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>Todos los dispositivos</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Acciones del grupo</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>Cambiar nombre del grupo</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>Eliminar grupo</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>Sacar del grupo</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>Este grupo está vacío. En modo de edición, arrastra dispositivos al grupo para añadirlos.</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>Arrastra las tarjetas para cambiar su orden, o sobre otro dispositivo para crear un grupo.</translation>
     </message>
 </context>
 <context>
@@ -2034,6 +2082,22 @@
     <message>
         <source>Device details</source>
         <translation>Detalles del dispositivo</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Abrir</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Acciones del grupo</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 dispositivo</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 dispositivos</translation>
     </message>
 </context>
 <context>

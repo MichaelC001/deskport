@@ -3,6 +3,7 @@
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
+#include "backend/hostalias.h"
 #define DP_TRAFFIC_IMPLEMENTATION
 #include "../../moonlight-common-c/traffic.h"
 #include "backend/clipboardtraffic.h"
@@ -2938,7 +2939,7 @@ DispatchDeferredCleanup:
 }
 
 QString Session::hostId() const { QReadLocker lock(&m_Computer->lock); return m_Computer->uuid; }
-QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return m_Computer->name; }
+QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return HostAlias::displayName(m_Computer->uuid, m_Computer->name); }
 
 QVariantMap Session::traffic() const {
     return {{"received", double(DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed) - m_TrafficReceivedBase)},

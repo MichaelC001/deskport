@@ -132,6 +132,10 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>別名: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation type="unfinished"></translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>群組</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>輸入此電腦的新名稱：</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>輸入此裝置的別名。留空則使用原始名稱：</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>使用傳統 PIN 配對</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>重新命名裝置</translation>
+        <source>Set alias</source>
+        <translation>設定別名</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -423,12 +431,16 @@
         <translation>清單檢視</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>取消置頂</translation>
+        <source>Done</source>
+        <translation>完成</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>置頂裝置</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>拖曳裝置以調整順序。</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>移到最前</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -453,6 +465,42 @@
     <message>
         <source>Reconnect</source>
         <translation>重新連線</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>編輯</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新增群組</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>全部裝置</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>群組操作</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>重新命名群組</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>刪除群組</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>移出群組</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>這個群組還沒有裝置。在編輯模式下把裝置拖到群組上即可加入。</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>拖曳卡片調整順序，拖到另一台裝置上即可組成群組。</translation>
     </message>
 </context>
 <context>
@@ -2013,6 +2061,22 @@
     <message>
         <source>Device details</source>
         <translation>裝置詳細資訊</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>開啟</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>群組操作</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 台裝置</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 台裝置</translation>
     </message>
 </context>
 <context>
