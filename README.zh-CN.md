@@ -61,6 +61,13 @@
 | **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | **Android**（8.0+） | 📱 仅客户端 | 🚧 开发中 — 原生界面与 MediaCodec；Google Play 同为 4.99 美元 | — |
 
+> **Windows 杀毒软件提示（2026-09-23）：** Windows 开发测试版中的
+> `deskport-display.exe` 可能被 Microsoft Defender 报毒并隔离，也可能在软件启动后才触发。
+> 已在 0.5.6 r4 测试包复现 `Trojan:Win32/Bearfoos.A!ml` 检测，现已按疑似误报提交微软复核，
+> **尚未确认解除**。如遇到此问题，请保持防护开启、保留隔离状态，并查看 Windows 安全中心的
+> “保护历史记录”。请勿通过添加排除项或恢复文件来绕过检测。
+> [详情与申诉状态](docs/WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
+
 > **移动端范围：** iOS/iPadOS 与 Android 目前**只规划做客户端功能**。它们连接已授权的
 > DeskPort/Sunshine 主机，不提供任何主机端能力——没有屏幕采集、虚拟显示器或本地输入注入。
 > 主机端仍然由 macOS、Linux 以及（今后的）Windows 承担。移动端客户端在另一个仓库开发。

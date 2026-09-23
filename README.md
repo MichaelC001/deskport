@@ -62,6 +62,15 @@
 | Windows | Viewer + host under development | Separate development branch; excluded from 0.5.1 | — |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
+> **Windows antivirus notice (2026-09-23):** Microsoft Defender may detect and
+> quarantine `deskport-display.exe` in Windows development builds, including after
+> the app starts. This was reproduced with the 0.5.6 r4 test package as
+> `Trojan:Win32/Bearfoos.A!ml`. A suspected false positive has been submitted to
+> Microsoft; review is pending and the issue is not resolved. If affected, keep
+> protection enabled, leave the file quarantined, and check Windows Security's
+> Protection history. Do not add exclusions or restore the file to bypass the
+> detection. See [details and review status](docs/WINDOWS_DEVELOPMENT.md#windows-antivirus-notice).
+
 Native Linux packages require glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
 current Arch, or a compatible AppImage system. KDE virtual-display hosting needs
 a native or Nix installation with compositor permission entries; use AppImage as

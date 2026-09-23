@@ -29,6 +29,40 @@ The latest display helper preserved the physical primary through startup,
 mode changes and restoration in targeted VM checks. These observations do
 not certify the final combined installer on real GPU hardware.
 
+## Windows antivirus notice
+
+Updated 2026-09-23 after repeated tests with protection enabled. Windows
+**development/test builds may be detected and quarantined by Microsoft Defender**,
+including after the application starts. This is a suspected false positive under
+review, not a confirmed Microsoft clearance or a guarantee that a build is safe.
+
+The 0.5.6 r4 test package was uninstalled and reinstalled three times with an empty
+installation directory, real-time and cloud protection enabled, and no path,
+process or extension exclusions. Existing user settings were retained. Each
+installation was followed by launching DeskPort and waiting two minutes. The
+first two rounds passed runtime checks and on-demand scans; the third detected
+`host/deskport-display.exe` as `Trojan:Win32/Bearfoos.A!ml` about eight seconds
+after launch and subsequently quarantined it successfully. The affected helper
+was removed and hosting components stopped, although the main app remained open.
+Definitions were `1.459.343.0`, engine `1.1.26080.3`.
+
+The exact helper sample (SHA-256
+`d74533cf246c648311fd54ffedce19c7004a542422f6071d5a58f82ea1ff6567`) was submitted
+for Microsoft review on 2026-09-23. Submission
+`e28ba5f4-9624-46ec-938a-1e6430c89f89` was verified as **Submitted**, with the final
+determination **Pending**. The earlier 0.5.0 submission concerns a different
+binary and does not clear this sample. Review status is a dated observation.
+
+If affected, keep Defender enabled and leave the file quarantined. Open
+**Windows Security > Virus & threat protection > Protection history** to identify
+the affected file and detection. Do not disable protection, add exclusions or
+restore the file to bypass the detection. When reporting the issue, include the
+DeskPort version, detection name and security intelligence version; redact
+personal information from screenshots or logs. Wait for a reviewed replacement
+and documented retesting with protection enabled before retrying the affected
+build. A successful installation or a single clean scan does not resolve this
+runtime detection. Windows release qualification remains blocked on this issue.
+
 ## Outstanding acceptance
 
 Final exact-package upgrade/uninstall/reinstall and state retention, abnormal
