@@ -1749,7 +1749,6 @@ acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
   received capture-initialization 503, then succeeded on retry. Windows now
   retries only that specific pre-stream failure up to three times while keeping
   the authenticated lease, with cancellation and recovery-deadline checks.
-||||||| 85a0dfeb
 ## 2026-09-23 — Windows runtime detection reproduced; user notice added
 
 Reason: repeated user-requested uninstall/reinstall and two-minute runtime tests
@@ -1770,3 +1769,12 @@ installation and runtime checks with protection enabled and no exclusions.
 - Keep one root README. Localized and upstream READMEs live under `docs/readme`; synthetic UI previews live under `docs/media`.
 - Complete the missing Windows display-policy translations and fix stale UI-test delegate references after model resets. Core, host lifecycle, translation and UI checks pass.
 - Formal packages, signing, exact-package Defender checks, store metadata and submission remain separate release gates. Do not infer release readiness from source integration or earlier private-package acceptance.
+
+### Windows installer follow-up
+
+- Repeated 0.6.0 installation exposed error 13 from the display class installer
+  while DWM held the newly started virtual adapter. Use the recovery helper's
+  Configuration Manager disable path with bounded retries and verify the owned
+  device reaches the disabled state. Failed transitions still fail installation.
+- Exact rebuilt-package installation, protected runtime and live streaming
+  acceptance remain required before Windows publication.

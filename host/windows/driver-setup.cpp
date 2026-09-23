@@ -5,6 +5,7 @@
 #define _UNICODE
 #include <windows.h>
 #include <setupapi.h>
+#include <cfgmgr32.h>
 #include <newdev.h>
 #include <devguid.h>
 #include <string>
@@ -25,14 +26,24 @@ static bool sameHardware(HDEVINFO set, SP_DEVINFO_DATA& device) {
     return false;
 }
 static DWORD disableOwned(HDEVINFO set, SP_DEVINFO_DATA& device) {
-    SP_PROPCHANGE_PARAMS change{};change.ClassInstallHeader.cbSize=sizeof(SP_CLASSINSTALL_HEADER);
-    change.ClassInstallHeader.InstallFunction=DIF_PROPERTYCHANGE;
-    change.StateChange=DICS_DISABLE;change.Scope=DICS_FLAG_GLOBAL;
-    if(!SetupDiSetClassInstallParamsW(set,&device,&change.ClassInstallHeader,sizeof(change)) ||
-       !SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,set,&device))return GetLastError();
-    SP_DEVINSTALL_PARAMS_W params{};params.cbSize=sizeof(params);
-    if(SetupDiGetDeviceInstallParamsW(set,&device,&params)&&(params.Flags&(DI_NEEDREBOOT|DI_NEEDRESTART)))return ERROR_SUCCESS_REBOOT_REQUIRED;
-    return ERROR_SUCCESS;
+    // Match the recovery helper's Configuration Manager path. The indirect
+    // display class installer can return ERROR_INVALID_DATA while DWM still
+    // holds the newly started adapter. Only touch the verified owned instance.
+    ULONG status{}, problem{};
+    CONFIGRET request=CR_SUCCESS;
+    for(int attempt=0;attempt<100;++attempt) {
+        if(CM_Get_DevNode_Status(&status,&problem,device.DevInst,0)==CR_SUCCESS &&
+           problem==CM_PROB_DISABLED)return ERROR_SUCCESS;
+        if(attempt%5==0) {
+            request=CM_Disable_DevNode(device.DevInst,CM_DISABLE_UI_NOT_OK|CM_DISABLE_PERSIST);
+            if(request!=CR_SUCCESS)
+                std::cout << "Owned display disable retry: " << request << std::endl;
+        }
+        Sleep(100);
+    }
+    if(CM_Get_DevNode_Status(&status,&problem,device.DevInst,0)==CR_SUCCESS &&
+       problem==CM_PROB_DISABLED)return ERROR_SUCCESS;
+    return request==CR_SUCCESS ? ERROR_TIMEOUT : CM_MapCrToWin32Err(request,ERROR_GEN_FAILURE);
 }
 // The upstream driver has one machine-wide configuration pointer. Refuse
 // co-existence with independent adapters above; preserve any previous pointer
