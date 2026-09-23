@@ -712,7 +712,13 @@ void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);
 
-    Q_ASSERT(m_PollingRef > 0);
+    // Refresh/focus transitions may request a stop after polling has already
+    // stopped. Never underflow: a subsequent start at zero would create a
+    // second browser, replacing its server while the old timer still runs.
+    if (m_PollingRef <= 0) {
+        qWarning() << "Ignoring stop of inactive computer polling";
+        return;
+    }
     if (--m_PollingRef > 0) {
         return;
     }

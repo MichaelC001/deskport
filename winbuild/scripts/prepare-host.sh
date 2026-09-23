@@ -33,6 +33,7 @@ apply_patch "$HOST_SOURCE/third-party/libvirtualhid" \
 # The following overlays are platform-neutral parts of the DeskPort host
 # protocol and streaming policy. Their scripts select stable source anchors;
 # no platform-specific display implementation is pulled into Windows.
+python3 "$SRC_ROOT/scripts/patch-host-windows-display.py" "$HOST_SOURCE"
 python3 "$SRC_ROOT/scripts/patch-host-diagnostics.py" "$HOST_SOURCE"
 python3 "$SRC_ROOT/scripts/patch-host-network.py" "$HOST_SOURCE"
 python3 "$SRC_ROOT/scripts/patch-host-smart-stream.py" "$HOST_SOURCE"

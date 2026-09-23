@@ -18,6 +18,8 @@
 #include <iostream>
 #include <cstring>
 #include <algorithm>
+#include "protected-path.h"
+#include "display-request.h"
 
 struct Screen { wchar_t name[32]; DEVMODEW mode; DWORD primary; };
 struct Snapshot {
@@ -218,6 +220,33 @@ static std::wstring recoveryDirectory() {
     if(!SetFileSecurityW(path.c_str(),DACL_SECURITY_INFORMATION|PROTECTED_DACL_SECURITY_INFORMATION,sd)){LocalFree(sd);return {};}
     LocalFree(sd);return path;
 }
+// Keep one negotiated mode in the application's administrator-owned XML.
+// This does not use the vendor's global command pipe or alter driver trust.
+static DWORD configureMode(DWORD width,DWORD height) {
+    if(width<640||width>7680||height<360||height>4320||width%4||height%4)return ERROR_INVALID_PARAMETER;
+    wchar_t ownedPath[32768]{},vendorPath[32768]{};DWORD n=sizeof(ownedPath),m=sizeof(vendorPath);
+    if(RegGetValueW(HKEY_LOCAL_MACHINE,L"Software\\DeskPort",L"VddConfigPath",RRF_RT_REG_SZ,nullptr,ownedPath,&n)||
+       RegGetValueW(HKEY_LOCAL_MACHINE,L"SOFTWARE\\MikeTheTech\\VirtualDisplayDriver",L"VDDPATH",RRF_RT_REG_SZ,nullptr,vendorPath,&m)||
+       _wcsicmp(ownedPath,vendorPath))return ERROR_INVALID_STATE;
+    const auto path=std::filesystem::path(ownedPath)/L"vdd_settings.xml";
+    if(!protectedExecutable(path.wstring()))return ERROR_ACCESS_DENIED;
+    std::ifstream in(path,std::ios::binary);
+    std::string xml((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());in.close();
+    if(xml.empty()||xml.size()>65536)return ERROR_INVALID_DATA;
+    const std::string begin="<!-- DeskPort negotiated mode -->",end="<!-- /DeskPort negotiated mode -->";
+    auto first=xml.find(begin);
+    if(first!=std::string::npos){const auto last=xml.find(end,first);if(last==std::string::npos)return ERROR_INVALID_DATA;xml.erase(first,last+end.size()-first);}
+    const auto insert=xml.find("</resolutions>");if(insert==std::string::npos)return ERROR_INVALID_DATA;
+    xml.insert(insert,begin+"<resolution><width>"+std::to_string(width)+"</width><height>"+std::to_string(height)+"</height><refresh_rate>60</refresh_rate></resolution>"+end);
+    const auto temporary=path.wstring()+L"."+std::to_wstring(GetCurrentProcessId())+L".tmp";
+    auto file=CreateFileW(temporary.c_str(),GENERIC_WRITE,0,nullptr,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,nullptr);
+    if(file==INVALID_HANDLE_VALUE)return GetLastError();
+    DWORD written{};const bool ok=WriteFile(file,xml.data(),DWORD(xml.size()),&written,nullptr)&&written==xml.size()&&FlushFileBuffers(file);CloseHandle(file);
+    DWORD result=ok?ERROR_SUCCESS:ERROR_WRITE_FAULT;
+    if(!result&&!MoveFileExW(temporary.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH))result=GetLastError();
+    if(result)DeleteFileW(temporary.c_str());
+    return result;
+}
 static int productionLease(DWORD pid,const std::wstring& nonce) {
     if(nonce.size()!=36||nonce.find_first_not_of(L"0123456789abcdefABCDEF-")!=std::wstring::npos)return ERROR_INVALID_PARAMETER;
     auto parent=OpenProcess(SYNCHRONIZE|PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
@@ -231,6 +260,11 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     auto release=OpenEventW(SYNCHRONIZE,FALSE,(eventPrefix+L".release").c_str());
     auto ready=OpenEventW(EVENT_MODIFY_STATE,FALSE,(eventPrefix+L".ready").c_str());
     if(!release||!ready){if(release)CloseHandle(release);if(ready)CloseHandle(ready);CloseHandle(parent);return ERROR_ACCESS_DENIED;}
+    auto request=OpenEventW(SYNCHRONIZE,FALSE,(eventPrefix+L".request").c_str());
+    auto completed=OpenEventW(EVENT_MODIFY_STATE,FALSE,(eventPrefix+L".completed").c_str());
+    auto mapping=OpenFileMappingW(FILE_MAP_ALL_ACCESS,FALSE,(eventPrefix+L".mode").c_str());
+    auto mode=mapping?static_cast<DisplayModeRequest*>(MapViewOfFile(mapping,FILE_MAP_ALL_ACCESS,0,0,sizeof(DisplayModeRequest))):nullptr;
+    if(!request||!completed||!mode){if(mode)UnmapViewOfFile(mode);if(mapping)CloseHandle(mapping);if(request)CloseHandle(request);if(completed)CloseHandle(completed);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);return ERROR_ACCESS_DENIED;}
     auto mutex=CreateMutexW(nullptr,TRUE,L"Global\\DeskPort.Display.RecoveryLease");
     if(!mutex||GetLastError()==ERROR_ALREADY_EXISTS){if(mutex)CloseHandle(mutex);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);return ERROR_BUSY;}
     const auto directory=recoveryDirectory();
@@ -255,10 +289,19 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
                 const auto window=CreateWindowExW(0,cls.lpszClassName,L"DeskPort display recovery",0,0,0,0,0,nullptr,nullptr,cls.hInstance,nullptr);
                 if(!window)result=int(GetLastError());
                 else {
-                    SetEvent(ready);HANDLE watched[]{parent,release};
+                    SetEvent(ready);HANDLE watched[]{parent,release,request};
                     for(;;){
-                        const auto wait=MsgWaitForMultipleObjects(2,watched,FALSE,INFINITE,QS_ALLINPUT);
-                        if(wait!=WAIT_OBJECT_0+2)break;
+                        const auto wait=MsgWaitForMultipleObjects(3,watched,FALSE,INFINITE,QS_ALLINPUT);
+                        if(wait==WAIT_OBJECT_0+2) {
+                            MemoryBarrier();const DWORD width=mode->width,height=mode->height;
+                            auto resized=runWorker(L"resize-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce+L" "+std::to_wstring(width)+L" "+std::to_wstring(height));
+                            if(!resized&&WaitForSingleObject(parent,0)==WAIT_TIMEOUT)resized=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
+                            else if(!resized)resized=ERROR_CANCELLED;
+                            mode->result=DWORD(resized);MemoryBarrier();SetEvent(completed);
+                            if(resized){result=resized;break;}
+                            continue;
+                        }
+                        if(wait!=WAIT_OBJECT_0+3)break;
                         MSG msg{};while(PeekMessageW(&msg,nullptr,0,0,PM_REMOVE)){TranslateMessage(&msg);DispatchMessageW(&msg);}
                     }
                     DestroyWindow(window);
@@ -270,6 +313,7 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     if(captured){const int recovered=runWorker(L"recover \""+snapshot+L"\"");std::cout<<"recovery_worker_result="<<recovered<<std::endl;if(recovered)result=recovered;else DeleteFileW(snapshot.c_str());}
     if(previousOutput){std::cout.flush();std::cout.rdbuf(previousOutput);leaseLog.close();}
     if(!result)DeleteFileW((snapshot+L".log").c_str());
+    UnmapViewOfFile(mode);CloseHandle(mapping);CloseHandle(request);CloseHandle(completed);
     ReleaseMutex(mutex);CloseHandle(mutex);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);
     return result;
 }
@@ -278,7 +322,7 @@ int wmain(int argc,wchar_t** argv) {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     if(argc<2)return 2;
     const std::wstring action=argv[1];
-    if(action==L"enable-lease"&&argc==4) {
+    if((action==L"enable-lease"&&argc==4)||(action==L"resize-lease"&&argc==6)) {
         const std::wstring nonce=argv[3];wchar_t* end=nullptr;const DWORD pid=wcstoul(argv[2],&end,10);
         if(!pid||*end||nonce.size()!=36||nonce.find_first_not_of(L"0123456789abcdefABCDEF-")!=std::wstring::npos)return ERROR_INVALID_PARAMETER;
         auto guardian=OpenProcess(SYNCHRONIZE|PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
@@ -289,7 +333,16 @@ int wmain(int argc,wchar_t** argv) {
         const bool authorized=QueryFullProcessImageNameW(guardian,0,peer,&length)&&!_wcsicmp(own,peer)&&
             ProcessIdToSessionId(pid,&ps)&&ProcessIdToSessionId(GetCurrentProcessId(),&os)&&ps==os&&
             !directory.empty()&&load(directory+L"\\"+nonce+L".bin",before)&&WaitForSingleObject(guardian,0)==WAIT_TIMEOUT;
-        const auto result=authorized?deviceState(true,true):ERROR_ACCESS_DENIED;
+        DWORD result=authorized?ERROR_SUCCESS:ERROR_ACCESS_DENIED;
+        if(!result&&action==L"resize-lease") {
+            wchar_t *ew=nullptr,*eh=nullptr;const auto width=wcstoul(argv[4],&ew,10),height=wcstoul(argv[5],&eh,10);
+            result=(*ew||*eh)?ERROR_INVALID_PARAMETER:configureMode(width,height);
+            if(!result)result=deviceState(true,false);
+        }
+        if(!result&&action==L"enable-lease") {
+            if(WaitForSingleObject(guardian,0)==WAIT_TIMEOUT)result=deviceState(true,true);
+            else result=ERROR_CANCELLED;
+        }
         CloseHandle(guardian);return int(result);
     }
     if(action==L"boot-disable"&&argc==2){

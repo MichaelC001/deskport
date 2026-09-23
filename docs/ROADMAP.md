@@ -1723,3 +1723,18 @@ acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
   Android fixed-size first-frame/input/reconnect passed. Keep Android finite-mode
   negotiation and the observed macOS mDNS reconnect crash open; do not claim
   complete cross-platform acceptance.
+
+
+### Windows dynamic displays and policies — 2026-09-23
+
+- Implement dynamic dimensions with the existing signed VDD: a bounded guardian
+  request updates the owned mode configuration and recreates the owned adapter.
+- Implement mirror, exclusive and extend with verified CCD topology changes and
+  independent recovery. Follow the actual capture source across re-enumeration;
+  never fall back to physical capture during an absent owned output.
+- Native custom-size, portrait, repeated dynamic resize, cross-session reuse,
+  release and crash-recovery checks passed for all three policies (nine scenarios).
+  Installed streaming acceptance remains a separate gate for the private candidate.
+- Prevent computer-polling reference-count underflow, which could replace an mDNS
+  server while an orphaned browser's timer still referenced it. Real reconnect
+  acceptance is required in addition to this lifecycle fix.

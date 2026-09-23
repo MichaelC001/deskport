@@ -1075,7 +1075,7 @@ bool HostManager::adaptiveDisplayAvailable() const {
 }
 bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
-    return false; // Physical Windows mode must not advertise virtual-only policies.
+    return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
     return adaptiveDisplayAvailable() && !m_LinuxGnome;
 #else

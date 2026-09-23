@@ -24,11 +24,9 @@ settings namespace and command pipe are shared, so they must not be treated as
 private per-device interfaces. No signing-policy, Secure Boot, or certificate
 trust changes are permitted by these helpers.
 
-The current display helper implementation and full installer are incomplete
-candidates. In particular, supported-mode selection, topology policy, crash
-recovery, driver-store cleanup, and live streaming acceptance must be completed
-and verified before claiming release readiness. See the task acceptance report;
-binary compilation alone does not establish any of these capabilities.
+The Windows package remains a private integration candidate. Native display
+acceptance and installed streaming acceptance are recorded separately; compilation
+and native topology tests alone do not establish full release readiness.
 
 Implementation references: Microsoft's
 [SetupCopyOEMInf contract](https://learn.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupcopyoeminfw)
@@ -63,3 +61,32 @@ pre-sharing topology after helper exit. Native VM startup and 1152x648 mode-chan
 checks preserved the 3828x2026 primary and restored the disabled VDD baseline;
 this is functional VM evidence, not a hardware compatibility or release claim.
 See the [SetDisplayConfig contract](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setdisplayconfig).
+
+
+## Session modes and dynamic dimensions
+
+The owned signed driver now accepts a negotiated mode through its private,
+administrator-owned XML configuration. The guardian accepts only bounded numeric
+dimensions over a per-lease event/mapping channel, retains at most one generated
+mode, and restarts only the registered owned adapter through short-lived workers.
+No vendor-global command pipe, certificate import or signing-policy change is used.
+The ordinary UAC lease also covers subsequent resizes in that sharing session.
+
+The helper advertises continuous dimensions for its owned VDD, verifies the exact
+applied dimensions, and publishes the current capture output atomically. The host
+resolves that name again when capture is reinitialized and fails closed while the
+output is unavailable. This prevents a driver restart from silently selecting a
+physical desktop. Supported dimensions retain the protocol's bounds and multiple
+of four alignment.
+
+Mirror creates a CCD virtual clone group, normalizes its orientation, and selects
+the readable shared source. Exclusive keeps only the owned virtual output active.
+Extend preserves physical modes and adds the owned output to their right. Session
+release restores the idle topology, and the independent guardian restores the
+pre-sharing topology and disables the owned adapter on exit or failure.
+
+`tests/windows-display.ps1` covers all three policies, custom dimensions, portrait
+switches, successive dynamic resizes, session reuse, forced termination and crash
+restart. Run each policy with `-CustomSize -PortraitSwitch -DynamicSwitch
+-ReusePolicies` in the interactive elevated test session. The test deliberately
+changes displays and is not an unattended CI test.

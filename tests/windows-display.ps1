@@ -2,7 +2,11 @@ param(
     [Parameter(Mandatory=$true)][string]$Executable,
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
     [ValidateRange(1, 100)][int]$Rounds = 1,
-    [switch]$PortraitSwitch
+    [switch]$PortraitSwitch,
+    [ValidateRange(0, 2)][int]$Policy = 2,
+    [switch]$CustomSize,
+    [switch]$DynamicSwitch,
+    [switch]$ReusePolicies
 )
 
 # Explicit native acceptance: temporarily enables only DeskPort's owned VDD.
@@ -57,18 +61,40 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
         if (-not $ready.virtual) { throw 'Test requires the owned virtual display.' }
         $mode = $ready.displayModes | Where-Object { $_.width -eq 1920 -and $_.height -eq 1080 } | Select-Object -First 1
         if (-not $mode) { $mode = $ready.displayModes | Select-Object -First 1 }
-        if (-not $mode) { throw 'No supported virtual modes advertised.' }
-        $process.StandardInput.WriteLine((@{seq=1;session=$true;displayPolicy=0;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
+        if (-not $mode) { $mode = @{width=1920;height=1080} }
+        if ($CustomSize) { $mode = @{width=1300;height=748} }
+        $watch=[Diagnostics.Stopwatch]::StartNew()
+        $process.StandardInput.WriteLine((@{seq=1;session=$true;displayPolicy=$Policy;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
         $resized = Read-Reply $process
+        $resizeMilliseconds=$watch.ElapsedMilliseconds
         if ($resized.seq -ne 1 -or $resized.width -ne $mode.width -or $resized.height -ne $mode.height) { throw 'Resize acknowledgement mismatch.' }
         $sequence = 1
         if ($PortraitSwitch) {
             foreach ($size in @(@{width=1080;height=1920}, @{width=1920;height=1080})) {
-                if (-not ($ready.displayModes | Where-Object { $_.width -eq $size.width -and $_.height -eq $size.height })) { throw 'Required orientation mode missing.' }
+                if ($ready.displayModes.Count -gt 0 -and -not ($ready.displayModes | Where-Object { $_.width -eq $size.width -and $_.height -eq $size.height })) { throw 'Required orientation mode missing.' }
                 $sequence++
-                $process.StandardInput.WriteLine((@{seq=$sequence;session=$true;displayPolicy=0;width=$size.width;height=$size.height;scale=1} | ConvertTo-Json -Compress))
+                $process.StandardInput.WriteLine((@{seq=$sequence;session=$true;displayPolicy=$Policy;width=$size.width;height=$size.height;scale=1} | ConvertTo-Json -Compress))
                 $resized = Read-Reply $process
                 if ($resized.seq -ne $sequence -or $resized.width -ne $size.width -or $resized.height -ne $size.height) { throw 'Orientation acknowledgement mismatch.' }
+            }
+        }
+        if ($DynamicSwitch) {
+            foreach ($size in @(@{width=1308;height=756}, @{width=1312;height=760})) {
+                $sequence++
+                $process.StandardInput.WriteLine((@{seq=$sequence;session=$true;displayPolicy=$Policy;width=$size.width;height=$size.height;scale=1} | ConvertTo-Json -Compress))
+                $resized = Read-Reply $process
+                if ($resized.seq -ne $sequence -or $resized.width -ne $size.width -or $resized.height -ne $size.height) { throw 'Dynamic resize acknowledgement mismatch.' }
+            }
+        }
+        if ($ReusePolicies) {
+            foreach ($nextPolicy in @(0,1,2)) {
+                $sequence++
+                $process.StandardInput.WriteLine((@{seq=$sequence;session=$false;displayPolicy=$Policy;width=1920;height=1080;scale=1} | ConvertTo-Json -Compress))
+                $null = Read-Reply $process
+                $sequence++
+                $process.StandardInput.WriteLine((@{seq=$sequence;session=$true;displayPolicy=$nextPolicy;width=1920;height=1080;scale=1} | ConvertTo-Json -Compress))
+                $resized = Read-Reply $process
+                if ($resized.seq -ne $sequence -or $resized.width -ne 1920 -or $resized.height -ne 1080) { throw 'Reused lease acknowledgement mismatch.' }
             }
         }
         if ($scenario -eq 'forced-exit') {
@@ -82,7 +108,7 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
             $guard.Dispose()
         } else {
             $sequence++
-            $process.StandardInput.WriteLine((@{seq=$sequence;session=$false;displayPolicy=0;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
+            $process.StandardInput.WriteLine((@{seq=$sequence;session=$false;displayPolicy=$Policy;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
             $released = Read-Reply $process
             if ($released.seq -ne $sequence) { throw 'Release acknowledgement mismatch.' }
             $process.StandardInput.Close()
@@ -96,7 +122,7 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
             Start-Sleep -Milliseconds 250
         }
         if (-not $restored) { throw 'Physical layout or disabled VDD baseline was not restored.' }
-        $results += @{round=$round;scenario=$scenario;width=$resized.width;height=$resized.height;portraitSwitch=[bool]$PortraitSwitch;restored=$true}
+        $results += @{round=$round;scenario=$scenario;width=$resized.width;height=$resized.height;portraitSwitch=[bool]$PortraitSwitch;restored=$true;resizeMilliseconds=$resizeMilliseconds;policy=$Policy;dynamicSwitch=[bool]$DynamicSwitch;reusePolicies=[bool]$ReusePolicies}
         $results | ConvertTo-Json | Set-Content (Join-Path $OutputDirectory 'results.json')
     } finally {
         if (-not $process.HasExited) {
