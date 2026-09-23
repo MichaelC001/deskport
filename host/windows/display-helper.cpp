@@ -85,7 +85,7 @@ struct DisplayLease {
     bool finish() {
         if(!process)return true;
         SetEvent(release);
-        const auto waited=WaitForSingleObject(process,15000);DWORD result=ERROR_TIMEOUT;
+        const auto waited=WaitForSingleObject(process,30000);DWORD result=ERROR_TIMEOUT;
         if(waited==WAIT_OBJECT_0)GetExitCodeProcess(process,&result);
         if(waited==WAIT_OBJECT_0){CloseHandle(process);process=nullptr;}
         if(result){std::cerr<<"Full display recovery failed: "<<result<<"; durable snapshot retained"<<std::endl;return false;}

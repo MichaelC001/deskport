@@ -1,7 +1,7 @@
 # Windows development checkpoint
 
 This branch preserves the Windows x64 host and client integration on top of
-the current DeskPort 0.5.0 desktop baseline. It is not a release candidate
+the current DeskPort 0.5.6 desktop baseline. It is not a release candidate
 approved for distribution. The main release branch is unchanged.
 
 The deliverable is a self-contained x64 installer (plus an optional portable
@@ -129,3 +129,37 @@ immediately after extraction and again before completion. If a file is missing,
 setup fails and leaves the uninstaller available for cleanup. Review Windows
 Security protection history or another security product's quarantine record
 before repairing the installation; protection must not be disabled.
+
+
+## Physical Windows checkpoint — 2026-09-23
+
+The Windows development branch now includes the current desktop UI and core
+revision. Native CLI and light/dark title-bar attributes passed. An upgrade
+from 0.5.0 to the 0.5.6 candidate preserved the tested identity/state files.
+Cross-platform core, binding, lifecycle, UI and Linux package checks passed.
+
+On a closed-lid AMD laptop, both an Apple tablet and a macOS desktop received
+actual Windows lock-screen video. Tablet acceptance also exercised twelve
+workspace changes, disconnect/reconnect, and takeover of a live desktop viewer;
+the previous viewer reported that the session was taken over. The Apple client
+needed finite display-mode negotiation to work with the Windows virtual driver.
+These results do not establish password-entry, secure-desktop transitions,
+pre-login operation, audio/clipboard parity, or reverse-stream input acceptance.
+
+Fast native display enable/resize/release/crash loops exposed output-enumeration
+and device-disable races. `tests/windows-display.ps1 -Rounds 10` exercises each
+round's normal release, forced exit, and reuse of crash state, checking the
+physical layout and disabled owned adapter between scenarios. Run it elevated
+in the interactive session, with sharing stopped; session 0 is intentionally
+rejected. Retained recovery snapshots and phase logs are administrator-only.
+A failed round is a failed acceptance gate even when manual recovery succeeds.
+
+The installer allows only the supported application port families from the
+local subnet across Windows network profiles. Existing explicit block rules
+can still override those allows and require diagnosis. Silent installer errors
+must return a nonzero exit code without waiting on an invisible dialog.
+
+The machine's install-directory antivirus exclusion was configured by its owner.
+Testing within that exclusion does not resolve public-distribution detection.
+A final matching-package install and the remaining live matrix are still needed;
+this development checkpoint is not a stable-release certification.

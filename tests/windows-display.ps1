@@ -30,6 +30,7 @@ function Read-Reply($process) {
 $baseline = Snapshot
 $baseline | Set-Content (Join-Path $OutputDirectory 'before.txt')
 $results = @()
+'[]' | Set-Content (Join-Path $OutputDirectory 'results.json')
 $crashState = $null
 for ($round = 1; $round -le $Rounds; $round++) {
 foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash')) {

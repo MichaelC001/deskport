@@ -45,23 +45,46 @@ static DWORD deviceState(bool change=false, bool enable=false) {
         if (CM_Get_DevNode_Status(&status,&problem,info.DevInst,0)!=CR_SUCCESS) {result=ERROR_NOT_READY;break;}
         if (!change) { std::cout<<"owned_device_problem="<<problem<<"\n";result=problem;break; }
         if ((!enable && problem==CM_PROB_DISABLED) || (enable && !problem && (status&DN_STARTED))) {result=0;break;}
-        SP_PROPCHANGE_PARAMS params{};params.ClassInstallHeader.cbSize=sizeof(SP_CLASSINSTALL_HEADER);
-        params.ClassInstallHeader.InstallFunction=DIF_PROPERTYCHANGE;
-        params.StateChange=enable?DICS_ENABLE:DICS_DISABLE;params.Scope=DICS_FLAG_GLOBAL;
-        if (!SetupDiSetClassInstallParamsW(set,&info,&params.ClassInstallHeader,sizeof(params)) || !SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,set,&info)) {result=GetLastError();break;}
-        SP_DEVINSTALL_PARAMS_W install{};install.cbSize=sizeof(install);
-        const bool restartRequested=SetupDiGetDeviceInstallParamsW(set,&info,&install) &&
-            (install.Flags&(DI_NEEDREBOOT|DI_NEEDRESTART));
+        bool requested=false,restartRequested=false;DWORD requestError=0;
+        if(!enable) {
+            // Disable the verified owned instance through Configuration Manager.
+            // The display class installer intermittently rejects a second
+            // property change in the same lease process with ERROR_INVALID_DATA.
+            const auto rc=CM_Disable_DevNode(info.DevInst,CM_DISABLE_UI_NOT_OK|CM_DISABLE_PERSIST);
+            requested=rc==CR_SUCCESS;requestError=CM_MapCrToWin32Err(rc,ERROR_GEN_FAILURE);
+        } else {
+            SP_PROPCHANGE_PARAMS params{};params.ClassInstallHeader.cbSize=sizeof(SP_CLASSINSTALL_HEADER);
+            params.ClassInstallHeader.InstallFunction=DIF_PROPERTYCHANGE;
+            params.StateChange=DICS_ENABLE;params.Scope=DICS_FLAG_GLOBAL;
+            if (!SetupDiSetClassInstallParamsW(set,&info,&params.ClassInstallHeader,sizeof(params))) {result=GetLastError();break;}
+            requested=SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,set,&info);
+            requestError=requested?ERROR_SUCCESS:GetLastError();
+            SP_DEVINSTALL_PARAMS_W install{};install.cbSize=sizeof(install);
+            restartRequested=SetupDiGetDeviceInstallParamsW(set,&info,&install) &&
+                (install.Flags&(DI_NEEDREBOOT|DI_NEEDRESTART));
+        }
         result=ERROR_TIMEOUT;
-        for (int attempt=0;attempt<50;++attempt) {
+        for (int attempt=0;attempt<100;++attempt) {
             if (CM_Get_DevNode_Status(&status,&problem,info.DevInst,0)==CR_SUCCESS &&
                 (enable ? (!problem && (status&DN_STARTED)) : problem==CM_PROB_DISABLED)) {result=0;break;}
+            if(!enable&&attempt>0&&attempt%5==0) {
+                // A just-ended capture/mode change can temporarily veto removal.
+                // A rejected request is not queued: retry it after teardown,
+                // rather than merely waiting for a state change that cannot occur.
+                const auto rc=CM_Disable_DevNode(info.DevInst,CM_DISABLE_UI_NOT_OK|CM_DISABLE_PERSIST);
+                requested=rc==CR_SUCCESS;requestError=CM_MapCrToWin32Err(rc,ERROR_GEN_FAILURE);
+                if(!requested)std::cout<<"disable_retry_cr="<<rc<<std::endl;
+            }
             Sleep(100);
         }
         // SetupAPI can retain a restart flag while this particular enable or
         // disable transition has already completed. Do not abandon recovery
         // before checking Config Manager's actual device state.
-        if(result!=0&&restartRequested)result=ERROR_SUCCESS_REBOOT_REQUIRED;
+        // An indirect-display class installer may report ERROR_INVALID_DATA
+        // after requesting a transition that subsequently completes. The
+        // observed device state above is authoritative; retain the API error
+        // only when the requested state was never reached.
+        if(result!=0)result=!requested?requestError:restartRequested?ERROR_SUCCESS_REBOOT_REQUIRED:result;
         break;
     }
     SetupDiDestroyDeviceInfoList(set);return result;
@@ -146,6 +169,21 @@ static int restore(const std::wstring& path) {
     Snapshot before;if(!load(path,before))return ERROR_INVALID_DATA;
     return restoreSnapshot(std::move(before));
 }
+static int runWorker(const std::wstring& arguments) {
+    // The process that enabled the indirect adapter can retain display-class
+    // handles which veto its later removal. Restore from a fresh, bounded
+    // worker, using only our own binary and the guardian's protected snapshot.
+    wchar_t executable[32768]{};
+    if(!GetModuleFileNameW(nullptr,executable,32768))return int(GetLastError());
+    std::wstring command=L"\""+std::wstring(executable)+L"\" "+arguments;
+    STARTUPINFOW startup{};startup.cb=sizeof(startup);PROCESS_INFORMATION child{};
+    if(!CreateProcessW(executable,command.data(),nullptr,nullptr,FALSE,CREATE_NO_WINDOW,nullptr,nullptr,&startup,&child))return int(GetLastError());
+    CloseHandle(child.hThread);
+    DWORD result=ERROR_TIMEOUT;
+    if(WaitForSingleObject(child.hProcess,20000)==WAIT_OBJECT_0)GetExitCodeProcess(child.hProcess,&result);
+    else {TerminateProcess(child.hProcess,ERROR_TIMEOUT);WaitForSingleObject(child.hProcess,5000);}
+    CloseHandle(child.hProcess);return int(result);
+}
 // Restore synchronously before Windows ends the interactive session. Loading
 // user32 means a console control handler alone cannot cover logoff/shutdown.
 static Snapshot* shutdownSnapshot=nullptr;
@@ -199,13 +237,17 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     Snapshot original;
     int result=0;bool captured=false;
     const auto snapshot=directory+L"\\"+nonce+L".bin";
+    std::ofstream leaseLog;
+    if(!directory.empty())leaseLog.open(std::filesystem::path(snapshot+L".log"),std::ios::binary);
+    auto previousOutput=leaseLog ? std::cout.rdbuf(leaseLog.rdbuf()) : nullptr;
     if(directory.empty()||deviceState()!=CM_PROB_DISABLED||!capture(original)||!save(snapshot,original))result=ERROR_INVALID_STATE;
     else {
         captured=true;
         // Parent death during UAC approval must never activate the device.
         if(WaitForSingleObject(parent,0)!=WAIT_TIMEOUT)result=ERROR_CANCELLED;
         else {
-            result=int(deviceState(true,true));
+            // Keep driver/class-installer handles out of the long-lived guard.
+            result=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
             if(!result){
                 WNDCLASSW cls{};cls.lpfnWndProc=recoveryWindow;cls.hInstance=GetModuleHandleW(nullptr);cls.lpszClassName=L"DeskPortDisplayRecovery";
                 RegisterClassW(&cls);
@@ -225,7 +267,9 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
             }
         }
     }
-    if(captured){const int recovered=restoreSnapshot(original);if(recovered)result=recovered;else DeleteFileW(snapshot.c_str());}
+    if(captured){const int recovered=runWorker(L"recover \""+snapshot+L"\"");std::cout<<"recovery_worker_result="<<recovered<<std::endl;if(recovered)result=recovered;else DeleteFileW(snapshot.c_str());}
+    if(previousOutput){std::cout.flush();std::cout.rdbuf(previousOutput);leaseLog.close();}
+    if(!result)DeleteFileW((snapshot+L".log").c_str());
     ReleaseMutex(mutex);CloseHandle(mutex);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);
     return result;
 }
@@ -234,6 +278,20 @@ int wmain(int argc,wchar_t** argv) {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     if(argc<2)return 2;
     const std::wstring action=argv[1];
+    if(action==L"enable-lease"&&argc==4) {
+        const std::wstring nonce=argv[3];wchar_t* end=nullptr;const DWORD pid=wcstoul(argv[2],&end,10);
+        if(!pid||*end||nonce.size()!=36||nonce.find_first_not_of(L"0123456789abcdefABCDEF-")!=std::wstring::npos)return ERROR_INVALID_PARAMETER;
+        auto guardian=OpenProcess(SYNCHRONIZE|PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
+        if(!guardian)return int(GetLastError());
+        wchar_t own[32768]{},peer[32768]{};DWORD length=32768,os{},ps{};
+        GetModuleFileNameW(nullptr,own,32768);
+        const auto directory=recoveryDirectory();Snapshot before;
+        const bool authorized=QueryFullProcessImageNameW(guardian,0,peer,&length)&&!_wcsicmp(own,peer)&&
+            ProcessIdToSessionId(pid,&ps)&&ProcessIdToSessionId(GetCurrentProcessId(),&os)&&ps==os&&
+            !directory.empty()&&load(directory+L"\\"+nonce+L".bin",before)&&WaitForSingleObject(guardian,0)==WAIT_TIMEOUT;
+        const auto result=authorized?deviceState(true,true):ERROR_ACCESS_DENIED;
+        CloseHandle(guardian);return int(result);
+    }
     if(action==L"boot-disable"&&argc==2){
         // A boot recovery task must not race a new, explicitly authorized lease.
         auto lock=CreateMutexW(nullptr,TRUE,L"Global\\DeskPort.Display.RecoveryLease");
