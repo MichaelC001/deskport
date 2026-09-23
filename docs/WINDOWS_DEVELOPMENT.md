@@ -158,6 +158,16 @@ which changes to 1080x1920 and back to 1920x1080 before release or forced exit.
 Its helper and mode-list hashes matched the audited package; upgrading retained
 the host certificate and key. The physical tablet then passed twelve orientation
 changes and disconnect/reconnect against that installation.
+Silent uninstall removed the application and its recovery task; reinstall
+restored both while preserving the certificate, private key and peer database.
+The physical tablet received frames again after reinstall, and all four native
+CLI help/version checks passed. The Windows viewer also rendered the macOS
+desktop. These checks still do not establish reverse-stream input or audio.
+
+An elevated interactive user can open the ordinary desktop but receives access
+denied opening the Winlogon desktop on this target. A controlled service boundary
+is still needed for full secure-desktop support; changing authentication or UAC
+policy is not a substitute for implementing that boundary.
 
 The installer allows only the supported application port families from the
 local subnet across Windows network profiles. Existing explicit block rules
