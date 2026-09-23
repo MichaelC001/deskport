@@ -1,10 +1,10 @@
-name: Windows branch checks
+name: Windows source checks
 
 on:
   push:
-    branches: [dev/windows]
+    branches: [main, dev/windows]
   pull_request:
-    branches: [dev/windows]
+    branches: [main, dev/windows]
   workflow_dispatch:
 
 concurrency:
