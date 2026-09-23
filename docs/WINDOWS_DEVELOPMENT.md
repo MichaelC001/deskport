@@ -168,6 +168,9 @@ An elevated interactive user can open the ordinary desktop but receives access
 denied opening the Winlogon desktop on this target. A controlled service boundary
 is still needed for full secure-desktop support; changing authentication or UAC
 policy is not a substitute for implementing that boundary.
+The development-only [session-service probe](WINDOWS_SESSION_SERVICE.md) passed
+thirteen native authentication, desktop-access, timeout and cleanup checks. It is
+not packaged and is not yet connected to the streaming host or input path.
 
 The installer allows only the supported application port families from the
 local subnet across Windows network profiles. Existing explicit block rules

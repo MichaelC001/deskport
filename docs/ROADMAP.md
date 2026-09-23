@@ -1698,3 +1698,11 @@ remains separate. Full secure-desktop input, pre-login operation, reverse-stream
 input and the remaining PC feature matrix are still acceptance
 items. Testing under a pre-existing user exclusion does not close the Defender
 release blocker above. No public release is authorized by these results.
+
+Secure-desktop follow-up: a development-only LocalSystem service probe now
+authenticates a fixed local console client and opens the Winlogon desktop in a
+bounded worker. Thirteen native checks passed, including rejection of foreign
+executables, anonymous/low-integrity clients and session-zero requests, plus pipe
+collision, timeout and shutdown checks. The temporary service was removed after
+testing. This is an IPC/permission checkpoint, not lock-screen streaming or input
+acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
