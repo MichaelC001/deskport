@@ -6,9 +6,9 @@
 
 <p align="center">
   <b>English</b> ·
-  <a href="README.zh-CN.md">简体中文</a> ·
-  <a href="README.zh-TW.md">繁體中文</a> ·
-  <a href="README.ja.md">日本語</a>
+  <a href="docs/readme/README.zh-CN.md">简体中文</a> ·
+  <a href="docs/readme/README.zh-TW.md">繁體中文</a> ·
+  <a href="docs/readme/README.ja.md">日本語</a>
 </p>
 
 <p align="center">
@@ -49,6 +49,15 @@
   touch/trackpad input, keyboard controls and direct entry into the remote desktop.
 - **Optional login startup and macOS recovery.** These require an active graphical
   login and system approval; they do not unlock FileVault or log in for you.
+
+## Interface preview
+
+Screenshots from the current interface with synthetic demo devices. Click a panel
+for the full-size image; these previews do not imply store or release availability.
+
+| Devices and groups | Per-device screen settings | Built-in manual |
+| --- | --- | --- |
+| [![Devices and groups](docs/media/devices.png)](docs/media/devices.png) | [![Per-device screen settings](docs/media/device-settings.png)](docs/media/device-settings.png) | [![Built-in manual](docs/media/manual.png)](docs/media/manual.png) |
 
 ## Supported platforms
 
@@ -236,7 +245,7 @@ Separately installed Sunshine services are kept independent.
 
 GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and the
 license of each vendored dependency listed in [docs/VENDORED.md](docs/VENDORED.md). Original documentation is preserved in
-[README.upstream.md](README.upstream.md).
+[README.upstream.md](docs/readme/README.upstream.md).
 
 ### Diagnostics and feedback
 

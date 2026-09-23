@@ -975,6 +975,8 @@ ApplicationWindow {
             QVERIFY(QMetaObject::invokeMethod(computers,"setShowAdd",Q_ARG(bool,true)));
             QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/devices-add.png"));
             QVERIFY(QMetaObject::invokeMethod(computers,"setShowAdd",Q_ARG(bool,false))); QTest::qWait(100);
+            // setShowAdd resets the model and destroys its old delegates.
+            a=findVisual(gridItem,"device-device-a"); QVERIFY(a);
             auto buttons=a->findChildren<QObject*>();
             for(auto button : buttons) if(button->property("text").toString()=="Return to desktop" && button->property("highlighted").isValid()) {
                 auto content=button->property("contentItem").value<QObject*>(); QVERIFY(content);

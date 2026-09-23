@@ -41,13 +41,13 @@
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
-          version = "0.5.7";
+          version = "0.6.0";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation, CI edits and the vendored macOS prebuilts do not
             # change the Linux client binary.
             filter = path: type: !(builtins.elem (baseNameOf path) [
-              ".github" "docs" "AGENTS.md" "README.md" "README.upstream.md"
+              ".github" "docs" "AGENTS.md" "README.md"
               "flake.nix" "flake.lock" "libs"
             ]);
           };

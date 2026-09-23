@@ -2408,7 +2408,7 @@
     </message>
     <message>
         <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
-        <translation type="unfinished"></translation>
+        <translation>クライアントのウィンドウサイズに合わせて仮想デスクトップを作成します。クライアントでミラー、専用、拡張を選択できます。切断すると以前の画面配置に戻ります。</translation>
     </message>
 </context>
 <context>

@@ -2405,7 +2405,7 @@
     </message>
     <message>
         <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
-        <translation type="unfinished"></translation>
+        <translation>클라이언트 창 크기에 맞춰 가상 데스크톱을 만듭니다. 클라이언트에서 미러링, 전용 또는 확장 모드를 선택하세요. 연결을 끊으면 이전 화면 배치가 복원됩니다.</translation>
     </message>
 </context>
 <context>

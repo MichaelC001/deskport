@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="app/res/deskport.svg" alt="DeskPort" width="128" height="128">
+  <img src="../../app/res/deskport.svg" alt="DeskPort" width="128" height="128">
 </p>
 
 <h1 align="center">DeskPort</h1>
 
 <p align="center">
-  <a href="README.md">English</a> ·
+  <a href="../../README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·
   <a href="README.zh-TW.md">繁體中文</a> ·
   <b>日本語</b>
@@ -20,21 +20,29 @@
 <p align="center">
   <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
-  <a href="LICENSE"><img alt="ライセンス" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
+  <a href="../../LICENSE"><img alt="ライセンス" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
+## 画面プレビュー
+
+デモ用デバイスを使った現在の画面です。画像をクリックすると拡大できます。ストア審査や正式リリースの完了を示すものではありません。
+
+| デバイス | 設定 | マニュアル |
+| --- | --- | --- |
+| [![Devices](../media/devices.png)](../media/devices.png) | [![Settings](../media/device-settings.png)](../media/device-settings.png) | [![Manual](../media/manual.png)](../media/manual.png) |
+
 ## 主な機能と製品比較
 
-自動サイズ調整、デバイス別の微調整、確認付き接続引き継ぎ、バックグラウンドからの復帰、オンデマンドのクリップボード共有と、公式資料付きの比較表は[詳細説明](README.md#main-features)をご覧ください。確認日：2026-09-20。性能ベンチマークではありません。
+自動サイズ調整、デバイス別の微調整、確認付き接続引き継ぎ、バックグラウンドからの復帰、オンデマンドのクリップボード共有と、公式資料付きの比較表は[詳細説明](../../README.md#main-features)をご覧ください。確認日：2026-09-20。性能ベンチマークではありません。
 
 ## プラットフォーム状況
 
 | プラットフォーム | 役割 | 進捗 | 入手 |
 | --- | --- | --- | --- |
 | **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.4.2、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
-| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.4.2：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](docs/LINUX_PACKAGES.md) |
+| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.4.2：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | ビューア + ホスト | 🧪 Nix パッケージ定義のみ。ビルドと動作は未検証 | — |
 | **Windows** | ビューア（上流ソースを継承） | 🚧 ビルドとパッケージングは未完了 | — |
 | **iOS / iPadOS** | 📱 クライアントのみ | ✅ 公開済み — App Store で 4.99 米ドル | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -62,7 +70,7 @@
 DMG を開き、DeskPort を「アプリケーション」にドラッグして起動します。ホスト機能は初回使用時に
 「画面収録」と「アクセシビリティ」の許可を求めます。Sunshine、Qt、Nix、Homebrew を別途入れる必要はありません。
 
-**Linux** — 0.4.2 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.4.2` または [Linux インストールガイド](docs/LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
+**Linux** — 0.4.2 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.4.2` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
 
 ## DeskPort とは
 
@@ -77,8 +85,8 @@ macOS の専用ワークスペースはクライアントウィンドウの描�
 サイズ変更時は映像が一時的に再接続され、その間クライアントウィンドウは保持されローディング表示になります。
 シームレスなエンコーダ再構成ではありません。
 
-[リリースノート](docs/RELEASE_0.4.2.md)、[アーキテクチャ](docs/ARCHITECTURE.md)、
-[macOS インストールガイド](docs/MACOS_PACKAGE.md) を参照してください。永続的な非表示/表示は実装済みですが、
+[リリースノート](../RELEASE_0.4.2.md)、[アーキテクチャ](../ARCHITECTURE.md)、
+[macOS インストールガイド](../MACOS_PACKAGE.md) を参照してください。永続的な非表示/表示は実装済みですが、
 ネイティブでの長時間セッション受け入れ試験は未完了です。共有ディスプレイポリシーは条件を満たす
 macOS と KDE のホストに対応します。オプトインしたバインド済み DeskPort デバイスはテキストを即座に共有し、
 画像とファイルは必要に応じて取得します。Windows のパッケージングは未完了です。既知の制限はリリースノートにあります。
@@ -95,7 +103,7 @@ nix build
 ```
 
 サードパーティ依存はすべて本リポジトリに同梱しているため、Nix ビルドで追加取得は不要です
-（[docs/VENDORED.md](docs/VENDORED.md) 参照）。`nix run . -- --help` で上流から継承した
+（[docs/VENDORED.md](../VENDORED.md) 参照）。`nix run . -- --help` で上流から継承した
 コマンドラインインターフェースを表示します。接続前にホスト側で共有を開始し、デバイスをバインドしてください。
 従来の Sunshine PIN ペアリングも利用できます。個人のホストやペアリング資格情報は同梱しておらず、
 Moonlight から取り込むこともありません。
@@ -148,8 +156,8 @@ Mac ホストに DeskPort の Mac クライアントは必須ではありませ�
 ワークスペースに表示し、ローカル入力を確実に返すこと。新しいフレームまでの遅延とバックグラウンドの
 リソース使用量は、ウィンドウの表示とは切り離して計測します。
 
-受け入れ基準と見送った機能は[ロードマップ](docs/ROADMAP.md)、由来と保守範囲は
-[上流に関する注記](docs/UPSTREAM.md)を参照してください。
+受け入れ基準と見送った機能は[ロードマップ](../ROADMAP.md)、由来と保守範囲は
+[上流に関する注記](../UPSTREAM.md)を参照してください。
 
 ## 検証
 
@@ -175,7 +183,7 @@ python3 scripts/deskport-smoke.py ./result
 OS が予約するショートカットはデスクトップのコンポジタに依存します。
 
 ログイン時の起動と復旧には、アクティブなグラフィカルログインセッションが必要です。無人アクセスのために
-特定のマシンに依存する前に、[受け入れ確認と制限](docs/INPUT_SERVICE_ACCEPTANCE.md)をお読みください。
+特定のマシンに依存する前に、[受け入れ確認と制限](../INPUT_SERVICE_ACCEPTANCE.md)をお読みください。
 
 ## ライセンスと帰属
 
@@ -185,6 +193,6 @@ DeskPort は [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt)（
 macOS とポータブル Linux のホストパッケージに同梱され、Linux の Nix パッケージから提供されます。
 別途インストールされた Sunshine サービスとは独立しています。
 
-GPL-3.0-or-later。[LICENSE](LICENSE)、保持されたソース表記、および
-[docs/VENDORED.md](docs/VENDORED.md) に列挙した同梱依存それぞれのライセンスを参照してください。
+GPL-3.0-or-later。[LICENSE](../../LICENSE)、保持されたソース表記、および
+[docs/VENDORED.md](../VENDORED.md) に列挙した同梱依存それぞれのライセンスを参照してください。
 元のドキュメントは [README.upstream.md](README.upstream.md) に残しています。

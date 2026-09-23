@@ -2405,7 +2405,7 @@
     </message>
     <message>
         <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
-        <translation type="unfinished"></translation>
+        <translation>Crée un bureau virtuel adapté à la fenêtre du client. Choisissez le mode miroir, exclusif ou étendu sur le client. La disposition précédente des écrans est rétablie à la déconnexion.</translation>
     </message>
 </context>
 <context>

@@ -7,7 +7,7 @@ release. It connects to a separately installed Sunshine host.
 - Commit: `f786e94c7b2f943e24e65d7d74deb539b827fc84`
 - Reason: matches the known Nix package baseline used for initial development.
   This is not a claim that v6.1.0 is the latest upstream version.
-- Original build/reference documentation: [README.upstream.md](../README.upstream.md).
+- Original build/reference documentation: [README.upstream.md](readme/README.upstream.md).
 - Initial DeskPort modifications dated 2026-09-09: application identity, desktop
   defaults, update-channel separation, Nix packaging and project documentation.
 

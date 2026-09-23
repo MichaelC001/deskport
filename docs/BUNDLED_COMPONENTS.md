@@ -58,7 +58,7 @@ and desktop login service integration are outside this package's scope.
 Qt is deployed as dynamically linked frameworks from the build environment. Qt
 source and licensing: https://www.qt.io/licensing/open-source-lgpl-obligations
 SDL, FFmpeg, OpenSSL, Opus and other Moonlight dependencies retain upstream notices
-and versions from the pinned Moonlight dependency tree. See README.upstream.md,
+and versions from the pinned Moonlight dependency tree. See [upstream README](readme/README.upstream.md),
 LICENSE and the vendored dependency licenses listed in VENDORED.md, all of which
 are present in the source distribution.
 

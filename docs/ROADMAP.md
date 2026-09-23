@@ -1762,3 +1762,11 @@ English and Simplified Chinese README platform sections now link to the
 [Windows antivirus notice](WINDOWS_DEVELOPMENT.md#windows-antivirus-notice).
 Next checkpoint: obtain Microsoft's determination, then repeat exact-package
 installation and runtime checks with protection enabled and no exclusions.
+
+
+## 2026-09-24 — 0.6.0 source integration
+
+- Integrate desktop development and Windows adaptive-display work into main; prepare desktop version 0.6.0 alongside mobile version 2.0.
+- Keep one root README. Localized and upstream READMEs live under `docs/readme`; synthetic UI previews live under `docs/media`.
+- Complete the missing Windows display-policy translations and fix stale UI-test delegate references after model resets. Core, host lifecycle, translation and UI checks pass.
+- Formal packages, signing, exact-package Defender checks, store metadata and submission remain separate release gates. Do not infer release readiness from source integration or earlier private-package acceptance.

@@ -206,6 +206,14 @@ commonName = supplied
                         "-enddate", "20200102000000Z", "-notext", "-out", str(expired)],
                        check=True, stdout=subprocess.DEVNULL)
         environment["TEST_CERT_EXPIRED"] = str(expired)
+    # Unwrapped test executables need the same Qt plugins as Nix's app wrapper.
+    # In particular, qtsvg's imageformat plugin is outside qtbase's prefix.
+    prefixes = environment.get("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", "").split(os.pathsep)
+    plugin_paths = [str(Path(prefix) / "lib/qt-6/plugins") for prefix in prefixes
+                    if prefix and (Path(prefix) / "lib/qt-6/plugins").is_dir()]
+    if plugin_paths:
+        previous = environment.get("QT_PLUGIN_PATH", "")
+        environment["QT_PLUGIN_PATH"] = os.pathsep.join(plugin_paths + ([previous] if previous else []))
     environment.setdefault("QT_QUICK_BACKEND", "software")
     environment.setdefault("DEVELOPER_DIR", "/Applications/Xcode.app/Contents/Developer")
     subprocess.run([qmake, str(project)], cwd=work, env=environment, check=True)
