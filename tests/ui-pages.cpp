@@ -13,6 +13,7 @@
 #include <QDir>
 #include "peermanager.h"
 #include "hostlayout.h"
+#include "manual.h"
 #include "peerstore.h"
 #include "singleinstance.h"
 #include "../shared/deskport-core/portable/include/deskport/catalog.h"
@@ -283,6 +284,7 @@ private slots:
         qmlRegisterType<TestComputers>("ComputerModel",1,0,"ComputerModel");
         qmlRegisterSingletonType<QObject>("AutoUpdateChecker",1,0,"AutoUpdateChecker",+[](QQmlEngine*,QJSEngine*) -> QObject* { return new TestUpdates; });
         qmlRegisterType<TestSession>("Session",1,0,"Session");
+        qmlRegisterSingletonType<Manual>("Manual",1,0,"Manual",+[](QQmlEngine*,QJSEngine*) -> QObject* { return new Manual; });
         qmlRegisterType<TestDesktopApps>("AppModel",1,0,"AppModel");
         qmlRegisterSingletonType<QObject>("SdlGamepadKeyNavigation",1,0,"SdlGamepadKeyNavigation",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
             QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property int enables: 0; function enable() { enables++ } function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
@@ -302,8 +304,9 @@ TestPreferences {
  property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property int language: 1; property int retranslations: 0
  function retranslate() { retranslations++; return true }
+ function manualLanguage() { return "en" }
  property int width: 2048; property int height: 1152; property int fps: 75; property int bitrateKbps: 125000
- property int windowMode: 2; property int captureSysKeysMode: 1; property int saves: 0
+ property int windowMode: 2; property int recommendedFullScreenMode: 1; property int captureSysKeysMode: 1; property int saves: 0
  property bool smartStreaming: true; property bool framePacing: false; property bool showPerformanceOverlay: false
  property bool sharedClipboard: false; property bool showLocalCursor: true; property bool adaptiveResolution: true; property bool enableVsync: true; property bool absoluteMouseMode: true; property bool reverseScrollDirection: false
  property bool muteOnFocusLoss: true; property bool playAudioOnHost: false; property bool enableMdns: true; property bool keepAwake: true
@@ -711,6 +714,12 @@ ApplicationWindow {
         QCOMPARE(prefs->property("desktopAdjustment").toDouble(),0.5);
         QVERIFY(QMetaObject::invokeMethod(adjustment,"activated",Q_ARG(int,9)));
         QCOMPARE(prefs->property("desktopAdjustment").toDouble(),1.5);
+        auto full=page->findChild<QObject*>("deviceFullScreen"); QVERIFY(full);
+        QVERIFY(!full->property("checked").toBool());
+        full->setProperty("checked",true); QVERIFY(QMetaObject::invokeMethod(full,"clicked"));
+        QCOMPARE(prefs->property("windowMode").toInt(),1);
+        full->setProperty("checked",false); QVERIFY(QMetaObject::invokeMethod(full,"clicked"));
+        QCOMPARE(prefs->property("windowMode").toInt(),2);
         QVERIFY(page->findChild<QObject*>("changeDeviceAddress"));
         QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }
@@ -835,7 +844,7 @@ ApplicationWindow {
         // Arrange mode: dragging the second card over the first swaps them in the model.
         auto openDetails=grid->findChild<QObject*>("deviceDetails"); QVERIFY(openDetails);
         QVERIFY(QMetaObject::invokeMethod(openDetails,"close")); QTest::qWait(300);
-        // Edit, refresh and settings sit in the top bar, which replaced the sidebar.
+        // Devices, manual, edit, refresh, sharing and settings sit in the top bar.
         auto arrange=findVisual(window->contentItem(),"arrangeDevices"); QVERIFY(arrange);
         QVERIFY(findVisual(window->contentItem(),"refreshDevices")); QVERIFY(findVisual(window->contentItem(),"settingsButton"));
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
@@ -960,6 +969,16 @@ ApplicationWindow {
                 QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/devices-dark-add.png"));
                 QVERIFY(QMetaObject::invokeMethod(shown,"setShowAdd",Q_ARG(bool,false)));
             }
+            {
+                // The bundled manual: first chapter open, the rest collapsed.
+                auto manual=findVisual(window->contentItem(),"manualButton"); QVERIFY(manual);
+                QVERIFY(QMetaObject::invokeMethod(manual,"clicked")); QTest::qWait(300);
+                auto page=root->property("testCurrentPage").value<QObject*>(); QVERIFY(page);
+                QCOMPARE(page->objectName(),QString("Manual"));
+                QVERIFY(findVisual(qobject_cast<QQuickItem*>(page),"chapter0"));
+                QVERIFY(window->grabWindow().save(shots+"/manual-dark.png"));
+                QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession")); QTest::qWait(150);
+            }
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testCards"));
             QTest::qWait(100);
             auto current=root->property("testCurrentPage").value<QObject*>(); QVERIFY(current);
@@ -979,6 +998,26 @@ ApplicationWindow {
             QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/device-advanced-chinese.png"));
 
             QCoreApplication::removeTranslator(&chinese); engine.retranslate();
+        }
+        {
+            // The selection slides to the section the current page belongs to.
+            auto selection=findVisual(window->contentItem(),"sectionSelection"); QVERIFY(selection);
+            QVERIFY(findVisual(window->contentItem(),"devicesButton"));
+            const double devicesX=selection->property("x").toDouble();
+            QCOMPARE(devicesX,0.0);
+            auto manual=findVisual(window->contentItem(),"manualButton"); QVERIFY(manual);
+            QVERIFY(QMetaObject::invokeMethod(manual,"clicked")); QTest::qWait(250);
+            auto manualPage=root->property("testCurrentPage").value<QObject*>(); QVERIFY(manualPage);
+            QCOMPARE(manualPage->objectName(),QString("Manual"));
+            const double manualX=selection->property("x").toDouble();
+            QVERIFY(manualX > devicesX);
+            auto settings=findVisual(window->contentItem(),"settingsButton"); QVERIFY(settings);
+            QVERIFY(QMetaObject::invokeMethod(settings,"clicked")); QTest::qWait(250);
+            QVERIFY(selection->property("x").toDouble() > manualX);
+            auto devices=findVisual(window->contentItem(),"devicesButton");
+            QVERIFY(QMetaObject::invokeMethod(devices,"clicked")); QTest::qWait(250);
+            QTRY_COMPARE(selection->property("x").toDouble(),devicesX);
+            QVERIFY(!findVisual(window->contentItem(),"backButton"));
         }
         emit session.sessionFinished(0);
         QTRY_COMPARE(root->property("testDepth").toInt(),1);
