@@ -1634,6 +1634,22 @@
         <source>Check saved devices and look for new ones</source>
         <translation>检查已保存设备是否在线，并查找新设备</translation>
     </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>让客户端退出全屏</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>让当前连接的客户端退出全屏</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>手册</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>DeskPort 使用说明</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2595,7 +2611,7 @@
     </message>
     <message>
         <source>Open device list</source>
-        <translation>打开设备列表</translation>
+        <translation>设备列表</translation>
     </message>
     <message>
         <source>Return to remote desktop</source>
@@ -2745,10 +2761,6 @@
         <source>Cannot enable login startup.</source>
         <translation>无法开启登录启动。</translation>
     </message>
-    <message>
-        <source>Desktop adjustment</source>
-        <translation>桌面微调</translation>
-    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2837,8 +2849,16 @@
         <translation>桌面微调</translation>
     </message>
     <message>
-        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source>
-        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中可通过托盘菜单的“桌面微调”立即应用。</translation>
+        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>全屏</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>连接中也可以按 Ctrl+Alt+Shift+X 切换全屏。</translation>
     </message>
 </context>
 <context>

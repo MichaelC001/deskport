@@ -1638,6 +1638,22 @@
         <source>Check saved devices and look for new ones</source>
         <translation>保存済みデバイスの状態を確認し、新しいデバイスを探します</translation>
     </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>クライアントにフルスクリーンの終了を依頼</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>接続中のクライアントにフルスクリーンの終了を依頼します</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>マニュアル</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>DeskPort の使い方</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2822,7 +2838,15 @@
     <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
     <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はトレイメニューの「デスクトップの微調整」からすぐに適用できます。</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>フルスクリーン</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

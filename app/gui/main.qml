@@ -24,6 +24,8 @@ ApplicationWindow {
     // macOS: one top bar. The content extends under the title bar and the window
     // buttons sit at the left of DeskPort's own top bar (see mactitlebar.mm).
     readonly property bool unifiedTitleBar: Qt.platform.os === "osx"
+    // Right edge of the zoom button in points; MacTitleBar sets the real value.
+    property real windowButtonsEnd: 79
     flags: unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint) : Qt.Window
     // The content, top bar included, starts at the very top instead of below the
     // title-bar safe area; the bar leaves room for the window buttons itself.
@@ -298,9 +300,9 @@ ApplicationWindow {
         readonly property bool narrow: window.width < 720
         RowLayout {
             anchors.fill: parent; anchors.rightMargin: 12; spacing: 8
-            // Room for the close, minimize and zoom buttons, which full screen hides.
-            anchors.leftMargin: window.unifiedTitleBar && window.visibility !== Window.FullScreen ? 84 : 12
-            ToolButton { objectName: "backButton"; visible: stackView.depth > 1 && topBar.devicesPage === null; text: "←"; Accessible.name: qsTr("Back"); onClicked: goBack() }
+            // Room for the close, minimize and zoom buttons, which full screen hides,
+            // with the same gap as between the window edge and the close button.
+            anchors.leftMargin: window.unifiedTitleBar && window.visibility !== Window.FullScreen ? window.windowButtonsEnd + 16 : 12
             Image {
                 source: "qrc:/res/deskport.svg"; fillMode: Image.PreserveAspectFit
                 Layout.preferredWidth: 28; Layout.preferredHeight: 28
@@ -361,44 +363,130 @@ ApplicationWindow {
                 color: ui.muted; elide: Text.ElideRight; Layout.leftMargin: 8
             }
             Item { Layout.fillWidth: true }
-            UiButton {
-                objectName: "sharingButton"
-                text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on")
-                flat: !hostManager.running; highlighted: qmltypeof(stackView.currentItem, "HostView")
-                font.pixelSize: ui.small
-                onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
-            }
+            // Shown while the connected client is in full screen; asks it to leave,
+            // never to enter.
             ToolButton {
-                objectName: "arrangeDevices"
-                visible: topBar.devicesPage !== null && (topBar.devicesPage.canEdit || topBar.devicesPage.arranging)
-                // Square-and-pencil edit icon; a check mark while editing.
-                readonly property bool editing: topBar.devicesPage !== null && topBar.devicesPage.arranging
-                icon.source: editing ? "qrc:/res/done.svg" : "qrc:/res/edit-square.svg"
-                icon.color: editing ? ui.accent : ui.text
+                objectName: "releaseClientFullscreen"
+                visible: typeof peerManager !== "undefined" && peerManager.canReleaseClientFullscreen
+                icon.source: "qrc:/res/fullscreen-exit.svg"; icon.color: ui.text
                 icon.width: 20; icon.height: 20
-                Accessible.name: topBar.devicesPage && topBar.devicesPage.arranging ? qsTr("Done") : qsTr("Edit")
-                ToolTip.visible: hovered; ToolTip.text: Accessible.name
-                onClicked: topBar.devicesPage.arranging = !topBar.devicesPage.arranging
+                Accessible.name: qsTr("Ask client to leave full screen")
+                ToolTip.visible: hovered; ToolTip.text: qsTr("Ask the connected client to leave full screen")
+                onClicked: peerManager.releaseClientFullscreen()
             }
-            ToolButton {
-                objectName: "refreshDevices"
-                visible: topBar.devicesPage !== null
-                icon.source: "qrc:/res/refresh.svg"; icon.color: ui.text
-                icon.width: 20; icon.height: 20
-                Accessible.name: qsTr("Refresh devices")
-                ToolTip.visible: hovered; ToolTip.text: qsTr("Check saved devices and look for new ones")
-                // Restarting polling checks every saved device again and restarts discovery.
-                onClicked: { ComputerManager.stopPollingAsync(); ComputerManager.startPolling() }
-            }
-            ToolButton {
-                objectName: "settingsButton"
-                icon.source: "qrc:/res/settings.svg"
-                icon.color: highlighted ? ui.accent : ui.text
-                icon.width: 20; icon.height: 20
-                Accessible.name: qsTr("Settings")
-                ToolTip.visible: hovered; ToolTip.text: qsTr("Settings")
-                highlighted: qmltypeof(stackView.currentItem, "SettingsHome")
-                onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
+            // Devices, manual, edit, refresh, sharing and settings. The selection
+            // slides to the section the current page belongs to; nothing moves.
+            Item {
+                id: sections
+                readonly property int buttonWidth: 40
+                readonly property int gap: 2
+                // Which top-level section the current page belongs to. Pages opened
+                // from a device card or from sharing keep their own section selected.
+                readonly property string current: {
+                    var page = stackView.currentItem // re-evaluate on every navigation
+                    var root = stackView.find(function(item) {
+                        return qmltypeof(item, "HostView") || qmltypeof(item, "SettingsHome") || qmltypeof(item, "HelpView")
+                    })
+                    if (!root) return "devices"
+                    return qmltypeof(root, "HostView") ? "sharing" : qmltypeof(root, "HelpView") ? "manual" : "settings"
+                }
+                readonly property var order: ["devices", "manual", "", "", "sharing", "settings"]
+                readonly property int selected: order.indexOf(current)
+                Layout.preferredWidth: row.width
+                Layout.preferredHeight: row.height
+                Rectangle {
+                    objectName: "sectionSelection"
+                    visible: sections.selected >= 0
+                    width: sections.buttonWidth; height: 36
+                    anchors.verticalCenter: parent.verticalCenter
+                    radius: 9
+                    color: Qt.rgba(ui.accent.r, ui.accent.g, ui.accent.b, 0.16)
+                    x: Math.max(0, sections.selected) * (sections.buttonWidth + sections.gap)
+                    Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                }
+                Row {
+                    id: row
+                    spacing: sections.gap
+                    ToolButton {
+                        objectName: "devicesButton"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/devices-grid.svg"
+                        icon.color: sections.current === "devices" ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Devices")
+                        ToolTip.visible: hovered; ToolTip.text: Accessible.name
+                        onClicked: showDevices()
+                    }
+                    ToolButton {
+                        objectName: "manualButton"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/manual.svg"
+                        icon.color: sections.current === "manual" ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Manual")
+                        ToolTip.visible: hovered; ToolTip.text: qsTr("How to use DeskPort")
+                        onClicked: { showDevices(); navigateTo("qrc:/gui/HelpView.qml", "HelpView") }
+                    }
+                    ToolButton {
+                        objectName: "arrangeDevices"
+                        width: sections.buttonWidth
+                        // Square-and-pencil edit icon; a check mark while editing.
+                        readonly property bool editing: topBar.devicesPage !== null && topBar.devicesPage.arranging
+                        enabled: topBar.devicesPage === null || topBar.devicesPage.canEdit || topBar.devicesPage.arranging
+                        icon.source: editing ? "qrc:/res/done.svg" : "qrc:/res/edit-square.svg"
+                        icon.color: editing ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: editing ? qsTr("Done") : qsTr("Edit")
+                        ToolTip.visible: hovered; ToolTip.text: Accessible.name
+                        // Editing belongs to the device list; another section returns to it first.
+                        onClicked: {
+                            if (topBar.devicesPage === null) { showDevices(); Qt.callLater(function() {
+                                if (topBar.devicesPage !== null && topBar.devicesPage.canEdit) topBar.devicesPage.arranging = true
+                            }); return }
+                            topBar.devicesPage.arranging = !topBar.devicesPage.arranging
+                        }
+                    }
+                    ToolButton {
+                        objectName: "refreshDevices"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/refresh.svg"; icon.color: ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Refresh devices")
+                        ToolTip.visible: hovered; ToolTip.text: qsTr("Check saved devices and look for new ones")
+                        // Restarting polling checks every saved device again and restarts discovery.
+                        onClicked: { ComputerManager.stopPollingAsync(); ComputerManager.startPolling() }
+                    }
+                    ToolButton {
+                        objectName: "sharingButton"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/share-screen.svg"
+                        icon.color: sections.current === "sharing" ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Sharing")
+                        ToolTip.visible: hovered
+                        ToolTip.text: !hostManager.running ? qsTr("Sharing off") : hostManager.readiness === "attention" ? qsTr("Check permissions") : qsTr("Sharing service on")
+                        onClicked: { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
+                        // A dot under the icon while this computer is shared.
+                        Rectangle {
+                            objectName: "sharingIndicator"
+                            visible: hostManager.running
+                            width: 6; height: 6; radius: 3
+                            color: hostManager.readiness === "attention" ? ui.warning : "#34c759"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom; anchors.bottomMargin: 5
+                        }
+                    }
+                    ToolButton {
+                        objectName: "settingsButton"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/settings.svg"
+                        icon.color: sections.current === "settings" ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Settings")
+                        ToolTip.visible: hovered; ToolTip.text: qsTr("Settings")
+                        onClicked: { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
+                    }
+                }
             }
         }
     }

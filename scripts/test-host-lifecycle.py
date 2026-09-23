@@ -119,20 +119,23 @@ else:
         linux_display = linux_host.parent / "deskport-display"
         linux_display.write_text(display.read_text())
         linux_display.chmod(0o700)
-    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
+    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
     if "--ui" in sys.argv:
         resources = work / "test-resources.qrc"
+        manual = root / "shared/deskport-core/manual/manual.json"
         resources.write_text(resources.read_text().replace('</RCC>', '<qresource prefix="/gui">' + ''.join(
-            f'<file alias="{p.name}">{p}</file>' for p in (root / "app/gui").glob("*.qml")) + '</qresource></RCC>'))
+            f'<file alias="{p.name}">{p}</file>' for p in (root / "app/gui").glob("*.qml"))
+            + f'</qresource><qresource prefix="/manual"><file alias="manual.json">{manual}</file></qresource></RCC>'))
     for executable in (display, host):
         executable.chmod(0o700)
     binding = "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
     if "--ui" in sys.argv:
-        extra_sources += f' "{root}/app/gui/hostlayout.cpp"'
+        extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp"'
+        extra_headers += f' "{root}/app/gui/manual.h"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"

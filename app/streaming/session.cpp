@@ -787,6 +787,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment, m_Computer->operatingSystem).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
+    m_AdaptiveDisplay->setFullScreen(m_IsFullScreen);
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline))
                 m_AdaptiveDisplay->cancel();

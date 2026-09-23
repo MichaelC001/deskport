@@ -1635,6 +1635,22 @@
         <source>Check saved devices and look for new ones</source>
         <translation>Gespeicherte Geräte prüfen und nach neuen suchen</translation>
     </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>Client auffordern, den Vollbildmodus zu verlassen</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>Den verbundenen Client auffordern, den Vollbildmodus zu verlassen</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>Handbuch</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>So verwenden Sie DeskPort</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2814,7 +2830,15 @@
     <message><source>Use client as an extended screen</source><translation>Client als erweiterten Bildschirm verwenden</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>Nach Sitzungsende wird die vorherige Bildschirmanordnung automatisch wiederhergestellt.</translation></message>
     <message><source>Desktop adjustment</source><translation>Desktop-Anpassung</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0,5 vergrößert Bedienelemente; 1,5 zeigt mehr Inhalt. Wird nach der automatischen Berechnung der Desktop-Größe angewendet. Während einer Verbindung lässt sich die Änderung über Desktop-Anpassung im Tray-Menü sofort anwenden.</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0,5 vergrößert Bedienelemente; 1,5 zeigt mehr Inhalt. Wird nach der automatischen Berechnung der Desktop-Größe angewendet. Während einer Verbindung wirkt die Änderung sofort.</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>Vollbild</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>Während einer Verbindung schaltet Strg+Alt+Umschalt+X ebenfalls den Vollbildmodus um.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

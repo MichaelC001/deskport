@@ -81,6 +81,9 @@ struct PeerManager::Link : QObject {
     bool displayControl = false;
     bool caretUpdates = false;
     bool clientWindow = false;
+    // Last full-screen state reported with display-resize; older clients do not
+    // report it and keep the request available.
+    bool clientFullScreen = true;
     bool lifecycle = false, recovering = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
@@ -262,7 +265,8 @@ QVariantList PeerManager::peers() const {
     return result;
 }
 bool PeerManager::canReleaseClientFullscreen() const {
-    return m_DisplayLink && !m_DisplayLink->ended && !m_DisplayLink->recovering && m_DisplayLink->clientWindow;
+    return m_DisplayLink && !m_DisplayLink->ended && !m_DisplayLink->recovering && m_DisplayLink->clientWindow &&
+        m_DisplayLink->clientFullScreen;
 }
 void PeerManager::releaseClientFullscreen() {
     if (canReleaseClientFullscreen())
@@ -618,6 +622,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
             send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
         link->clientWindow = message["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
+        link->clientFullScreen = !message.contains("clientFullScreen") || message["clientFullScreen"].toBool();
         link->displayPolicy = policy;
         link->displayControl = true; link->caretUpdates = message["textCaret"].toBool(); link->displaySequence = seq;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
@@ -776,7 +781,7 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
         link->sessionAdmitted = true;
         link->displayControl = previous->displayControl;
         link->displayPolicy = previous->displayPolicy;
-        link->clientWindow = previous->clientWindow;
+        link->clientWindow = previous->clientWindow; link->clientFullScreen = previous->clientFullScreen;
         link->caretUpdates = previous->caretUpdates;
         m_SessionLink = link;
         if (m_DisplayLink == previous) m_DisplayLink = link;

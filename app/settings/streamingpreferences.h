@@ -172,6 +172,8 @@ public:
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
     Q_INVOKABLE bool retranslate();
+    // The language code used by the shared manual (en, zh-Hans, ja, de, ...).
+    Q_INVOKABLE QString manualLanguage();
 
     // Directly accessible members for preferences
     int width;

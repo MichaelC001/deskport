@@ -329,6 +329,14 @@ bool StreamingPreferences::retranslate()
     return true;
 }
 
+QString StreamingPreferences::manualLanguage()
+{
+    // The manual uses script names where the catalogs use regions.
+    const QString suffix = getSuffixFromLanguage(language);
+    if (suffix.startsWith("zh")) return suffix == "zh_TW" ? "zh-Hant" : "zh-Hans";
+    return suffix.section('_', 0, 0);
+}
+
 QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Language lang)
 {
     switch (lang)

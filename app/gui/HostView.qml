@@ -56,7 +56,6 @@ UiPage {
             }
             Label { text: qsTr("Approved DeskPort devices: %1").arg(peerManager.peers.length); color: ui.text; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Saved approval and network reachability are separate. Legacy PIN clients are managed separately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            UiButton { text: qsTr("Ask client to leave fullscreen"); enabled: peerManager.canReleaseClientFullscreen; onClicked: peerManager.releaseClientFullscreen() }
             UiButton { text: qsTr("Manage devices"); onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
         }
     }

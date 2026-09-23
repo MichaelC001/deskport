@@ -220,6 +220,7 @@ SOURCES += \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
+    gui/manual.cpp \
     gui/hostlayout.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
@@ -256,6 +257,7 @@ HEADERS += \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
+    gui/manual.h \
     gui/hostlayout.h \
     backend/hostalias.h \
     gui/appmodel.h \

@@ -1,5 +1,6 @@
 #include "mactitlebar.h"
 
+#include <QPointer>
 #include <QQuickItem>
 #include <QQuickWindow>
 #import <AppKit/AppKit.h>
@@ -39,6 +40,13 @@ void MacTitleBar::attach(QQuickWindow* window)
     // window buttons in it; it contributes no items of its own.
     native.toolbar = [[NSToolbar alloc] initWithIdentifier:@"DeskPortTopBar"];
     native.toolbarStyle = NSWindowToolbarStyleUnified;
+    // Tell the top bar where the window buttons end once AppKit has laid them
+    // out; their size differs between macOS versions.
+    QPointer<QQuickWindow> guarded(window);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSButton* zoom = [native standardWindowButton:NSWindowZoomButton];
+        if (guarded && zoom) guarded->setProperty("windowButtonsEnd", NSMaxX([zoom convertRect:zoom.bounds toView:nil]));
+    });
     // The green button zooms the device list to fill the screen instead of
     // entering full screen, where the title bar and window buttons hide.
     native.collectionBehavior = (native.collectionBehavior & ~NSWindowCollectionBehaviorFullScreenPrimary)

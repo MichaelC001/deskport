@@ -1635,6 +1635,22 @@
         <source>Check saved devices and look for new ones</source>
         <translation>Vérifier les appareils enregistrés et en rechercher de nouveaux</translation>
     </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>Demander au client de quitter le plein écran</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>Demander au client connecté de quitter le plein écran</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>Manuel</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>Comment utiliser DeskPort</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2814,7 +2830,15 @@
     <message><source>Use client as an extended screen</source><translation>Utiliser le client comme écran étendu</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposition précédente des écrans est automatiquement restaurée à la fin de la session.</translation></message>
     <message><source>Desktop adjustment</source><translation>Ajustement du bureau</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0,5 agrandit les commandes ; 1,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, utilisez Ajustement du bureau dans le menu de la zone de notification pour appliquer immédiatement.</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0,5 agrandit les commandes ; 1,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, la modification s’applique immédiatement.</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>Plein écran</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>Pendant une connexion, Ctrl+Alt+Maj+X bascule aussi le plein écran.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

@@ -21,6 +21,8 @@ public:
     static QSize boundedSize(QSize pixels);
     bool failed();
     bool takeLeaveFullscreen();
+    // Reported with each resize so the host only offers "leave full screen" when it applies.
+    void setFullScreen(bool fullScreen);
     bool retryable();
     QString resumeToken();
     QString warning();
@@ -40,7 +42,7 @@ private:
     int m_Scale = 1;
     int m_Policy = 0;
     bool m_TakenOver = false;
-    bool m_LeaveFullscreen = false;
+    bool m_LeaveFullscreen = false, m_FullScreen = false;
     bool m_Retryable = true, m_Release = true, m_Lifecycle = false;
     QString m_ResumeToken, m_Warning;
     bool m_AdmissionRequired = false, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;

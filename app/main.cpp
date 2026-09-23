@@ -81,6 +81,7 @@ static void forwardTerminationSignal(int)
 #include "path.h"
 #include "utils.h"
 #include "gui/computermodel.h"
+#include "gui/manual.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
@@ -739,6 +740,8 @@ int main(int argc, char *argv[])
                                                 [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                     return new AutoUpdateChecker();
                                                 });
+    qmlRegisterSingletonType<Manual>("Manual", 1, 0, "Manual",
+                                     [](QQmlEngine*, QJSEngine*) -> QObject* { return new Manual(); });
     qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
                                                "SystemProperties",
                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
@@ -776,12 +779,6 @@ int main(int argc, char *argv[])
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);
-    QObject::connect(&hostManager, &HostManager::viewerMenuRequested, &app, [&hostManager] {
-        hostManager.setViewerDesktopAdjustment(Session::get() ? Session::get()->desktopAdjustment() : 0);
-    });
-    QObject::connect(&hostManager, &HostManager::desktopAdjustmentRequested, &app, [](double value) {
-        if (Session::get()) Session::get()->setDesktopAdjustment(value);
-    });
     QObject::connect(&hostManager, &HostManager::fullscreenRequested, &app, [] {
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortFullscreen;

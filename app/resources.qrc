@@ -15,6 +15,8 @@
         <file>gui/DeviceSettings.qml</file>
         <file>gui/DeviceAdvanced.qml</file>
         <file>gui/HostView.qml</file>
+        <file>gui/HelpView.qml</file>
+        <file alias="manual/manual.json">../shared/deskport-core/manual/manual.json</file>
 <file>gui/UiTheme.qml</file>
 <file>gui/UiPage.qml</file>
 <file>gui/UiCard.qml</file>
@@ -41,6 +43,10 @@
         <file>res/deskport.svg</file>
         <file>res/edit-square.svg</file>
         <file>res/refresh.svg</file>
+        <file>res/fullscreen-exit.svg</file>
+        <file>res/devices-grid.svg</file>
+        <file>res/share-screen.svg</file>
+        <file>res/manual.svg</file>
         <file>res/settings.svg</file>
         <file>res/done.svg</file>
         <file>res/add-device.svg</file>
