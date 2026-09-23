@@ -390,7 +390,7 @@ ApplicationWindow {
                     if (!root) return "devices"
                     return qmltypeof(root, "HostView") ? "sharing" : qmltypeof(root, "HelpView") ? "manual" : "settings"
                 }
-                readonly property var order: ["devices", "manual", "", "", "sharing", "settings"]
+                readonly property var order: ["manual", "devices", "", "", "sharing", "settings"]
                 readonly property int selected: order.indexOf(current)
                 Layout.preferredWidth: row.width
                 Layout.preferredHeight: row.height
@@ -408,16 +408,6 @@ ApplicationWindow {
                     id: row
                     spacing: sections.gap
                     ToolButton {
-                        objectName: "devicesButton"
-                        width: sections.buttonWidth
-                        icon.source: "qrc:/res/devices-grid.svg"
-                        icon.color: sections.current === "devices" ? ui.accent : ui.text
-                        icon.width: 20; icon.height: 20
-                        Accessible.name: qsTr("Devices")
-                        ToolTip.visible: hovered; ToolTip.text: Accessible.name
-                        onClicked: showDevices()
-                    }
-                    ToolButton {
                         objectName: "manualButton"
                         width: sections.buttonWidth
                         icon.source: "qrc:/res/manual.svg"
@@ -426,6 +416,16 @@ ApplicationWindow {
                         Accessible.name: qsTr("Manual")
                         ToolTip.visible: hovered; ToolTip.text: qsTr("How to use DeskPort")
                         onClicked: { showDevices(); navigateTo("qrc:/gui/HelpView.qml", "HelpView") }
+                    }
+                    ToolButton {
+                        objectName: "devicesButton"
+                        width: sections.buttonWidth
+                        icon.source: "qrc:/res/devices-grid.svg"
+                        icon.color: sections.current === "devices" ? ui.accent : ui.text
+                        icon.width: 20; icon.height: 20
+                        Accessible.name: qsTr("Devices")
+                        ToolTip.visible: hovered; ToolTip.text: Accessible.name
+                        onClicked: showDevices()
                     }
                     ToolButton {
                         objectName: "arrangeDevices"
@@ -447,6 +447,7 @@ ApplicationWindow {
                         }
                     }
                     ToolButton {
+                        id: refreshDevices
                         objectName: "refreshDevices"
                         width: sections.buttonWidth
                         icon.source: "qrc:/res/refresh.svg"; icon.color: ui.text
@@ -454,7 +455,18 @@ ApplicationWindow {
                         Accessible.name: qsTr("Refresh devices")
                         ToolTip.visible: hovered; ToolTip.text: qsTr("Check saved devices and look for new ones")
                         // Restarting polling checks every saved device again and restarts discovery.
-                        onClicked: { ComputerManager.stopPollingAsync(); ComputerManager.startPolling() }
+                        onClicked: {
+                            refreshSpin.restart()
+                            ComputerManager.stopPollingAsync()
+                            ComputerManager.startPolling()
+                        }
+                        NumberAnimation {
+                            id: refreshSpin
+                            target: refreshDevices
+                            property: "rotation"
+                            from: 0; to: 360; duration: 520
+                            easing.type: Easing.OutCubic
+                        }
                     }
                     ToolButton {
                         objectName: "sharingButton"

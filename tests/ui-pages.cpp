@@ -652,47 +652,18 @@ ApplicationWindow {
             QVERIFY((qMax(a,b)+0.05)/(qMin(a,b)+0.05)>=4.5);
         }
     }
-    void savedDeviceAddressCanBeEditedFromSettings() {
-        QTemporaryDir dir;
-        const auto path = dir.path() + "/peers";
-        QVERIFY(QDir().mkpath(path));
-        QVERIFY(PeerStore::write(path + "/peers.json", {{"version", 1}, {"peers", QJsonObject{
-            {"saved", QJsonObject{{"hostId", "device-a"}, {"name", "Studio"}, {"address", "192.0.2.1"},
-                {"hostPort", 48989}, {"bindingPort", 48991}, {"hostCert", "pinned"}, {"ready", true}}}}}}));
-        HostManager host(nullptr, dir.path() + "/host");
-        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), path, 0, QHostAddress::LocalHost);
+    void deviceSettingsDoNotDuplicateAddressEditing() {
         QQmlEngine engine;
         const auto gui = qEnvironmentVariable("TEST_GUI_DIR");
         QQmlComponent themeComponent(&engine, QUrl::fromLocalFile(gui + "/UiTheme.qml"));
         QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
         engine.rootContext()->setContextProperty("ui", theme.data());
-        engine.rootContext()->setContextProperty("peerManager", &peers);
         QQmlComponent component(&engine);
         component.setData("import QtQuick 2.9; import StreamingPreferences 1.0; DeviceSettings { preferences: StreamingPreferences; deviceName: \"Studio\"; deviceId: \"device-a\" }", QUrl::fromLocalFile(gui + "/address-test.qml"));
         QScopedPointer<QObject> page(component.create()); QVERIFY2(page, qPrintable(component.errorString()));
-        QQuickWindow window; window.resize(800, 720);
-        auto item = qobject_cast<QQuickItem*>(page.data()); QVERIFY(item);
-        item->setParentItem(window.contentItem()); item->setSize({800, 720});
-        auto open = page->findChild<QObject*>("changeDeviceAddress"); QVERIFY(open);
-        QVERIFY(QMetaObject::invokeMethod(open, "clicked"));
-        auto address = page->findChild<QObject*>("editPeerAddress"); QVERIFY(address);
-        QCOMPARE(address->property("text").toString(), QString("192.0.2.1"));
-        auto save = page->findChild<QObject*>("savePeerAddress"); QVERIFY(save);
-        const auto original = PeerStore::read(path + "/peers.json");
-        address->setProperty("text", "https://bad.example/path");
-        QVERIFY(QMetaObject::invokeMethod(save, "clicked"));
-        QCOMPARE(PeerStore::read(path + "/peers.json"), original);
-        address->setProperty("text", "desktop.example");
-        QVERIFY(QMetaObject::invokeMethod(save, "clicked"));
-        const auto peer = peers.peers().first().toMap();
-        QCOMPARE(peer["address"].toString(), QString("desktop.example"));
-        QCOMPARE(peer["hostCert"].toString(), QString("pinned"));
-        QCOMPARE(peer["hostId"].toString(), QString("device-a"));
-        QCOMPARE(peer["hostPort"].toInt(), 48989);
-        auto label = page->findChild<QObject*>("savedDeviceAddress"); QVERIFY(label);
-        QCOMPARE(label->property("text").toString(), QString("desktop.example"));
-        QVERIFY(QMetaObject::invokeMethod(open, "clicked"));
-        QCOMPARE(address->property("text").toString(), QString("desktop.example"));
+        QVERIFY(!page->findChild<QObject*>("changeDeviceAddress"));
+        QVERIFY(!page->findChild<QObject*>("savedDeviceAddress"));
+        QVERIFY(!page->findChild<QObject*>("editPeerAddress"));
     }
     void deviceSettingsAreSeparate() {
         QTemporaryDir directory;
@@ -740,7 +711,6 @@ ApplicationWindow {
         QCOMPARE(prefs->property("windowMode").toInt(),1);
         full->setProperty("checked",false); QVERIFY(QMetaObject::invokeMethod(full,"clicked"));
         QCOMPARE(prefs->property("windowMode").toInt(),2);
-        QVERIFY(page->findChild<QObject*>("changeDeviceAddress"));
         QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
     }
     void navigationAndDeviceIdentity_data() {
@@ -854,6 +824,19 @@ ApplicationWindow {
         QVERIFY(a); QVERIFY(b);
         auto cardB=b->property("contentItem").value<QObject*>(); QVERIFY(cardB);
         auto cardA=a->property("contentItem").value<QObject*>(); QVERIFY(cardA);
+        const int devicePageDepth = root->property("testDepth").toInt();
+        QVERIFY(QMetaObject::invokeMethod(cardA,"settingsRequested"));
+        auto deviceSettingsDialog = grid->findChild<QObject*>("deviceSettingsDialog"); QVERIFY(deviceSettingsDialog);
+        QTRY_VERIFY(deviceSettingsDialog->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),devicePageDepth);
+        QVERIFY(!deviceSettingsDialog->findChild<QObject*>("changeDeviceAddress"));
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/device-settings-popup.png"));
+        }
+        auto closeDeviceSettings = deviceSettingsDialog->findChild<QObject*>("closeDeviceSettings"); QVERIFY(closeDeviceSettings);
+        QVERIFY(QMetaObject::invokeMethod(closeDeviceSettings,"clicked"));
+        QTRY_VERIFY(!deviceSettingsDialog->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(cardB,"activateRequested"));
         QCOMPARE(recalls,0);
         QVERIFY(QMetaObject::invokeMethod(cardA,"activateRequested"));
@@ -864,9 +847,22 @@ ApplicationWindow {
         // Arrange mode: dragging the second card over the first swaps them in the model.
         auto openDetails=grid->findChild<QObject*>("deviceDetails"); QVERIFY(openDetails);
         QVERIFY(QMetaObject::invokeMethod(openDetails,"close")); QTest::qWait(300);
-        // Devices, manual, edit, refresh, sharing and settings sit in the top bar.
+        // Manual, then device controls, sharing and settings sit in the top bar.
         auto arrange=findVisual(window->contentItem(),"arrangeDevices"); QVERIFY(arrange);
-        QVERIFY(findVisual(window->contentItem(),"refreshDevices")); QVERIFY(findVisual(window->contentItem(),"settingsButton"));
+        auto manual=findVisual(window->contentItem(),"manualButton"); QVERIFY(manual);
+        auto devices=findVisual(window->contentItem(),"devicesButton"); QVERIFY(devices);
+        auto refresh=findVisual(window->contentItem(),"refreshDevices"); QVERIFY(refresh);
+        auto sharing=findVisual(window->contentItem(),"sharingButton"); QVERIFY(sharing);
+        auto settings=findVisual(window->contentItem(),"settingsButton"); QVERIFY(settings);
+        QVERIFY(manual->mapToScene(QPointF()).x() < devices->mapToScene(QPointF()).x());
+        QVERIFY(devices->mapToScene(QPointF()).x() < arrange->mapToScene(QPointF()).x());
+        QVERIFY(arrange->mapToScene(QPointF()).x() < refresh->mapToScene(QPointF()).x());
+        QVERIFY(refresh->mapToScene(QPointF()).x() < sharing->mapToScene(QPointF()).x());
+        QVERIFY(sharing->mapToScene(QPointF()).x() < settings->mapToScene(QPointF()).x());
+        QVERIFY(QMetaObject::invokeMethod(refresh,"clicked"));
+        QTest::qWait(80);
+        QVERIFY(std::abs(refresh->property("rotation").toReal()) > 1.0);
+        QVERIFY(findVisual(window->contentItem(),"settingsButton"));
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
@@ -1024,13 +1020,13 @@ ApplicationWindow {
             auto selection=findVisual(window->contentItem(),"sectionSelection"); QVERIFY(selection);
             QVERIFY(findVisual(window->contentItem(),"devicesButton"));
             const double devicesX=selection->property("x").toDouble();
-            QCOMPARE(devicesX,0.0);
+            QVERIFY(devicesX > 0.0);
             auto manual=findVisual(window->contentItem(),"manualButton"); QVERIFY(manual);
             QVERIFY(QMetaObject::invokeMethod(manual,"clicked")); QTest::qWait(250);
             auto manualPage=root->property("testCurrentPage").value<QObject*>(); QVERIFY(manualPage);
             QCOMPARE(manualPage->objectName(),QString("Manual"));
             const double manualX=selection->property("x").toDouble();
-            QVERIFY(manualX > devicesX);
+            QVERIFY(manualX < devicesX);
             auto settings=findVisual(window->contentItem(),"settingsButton"); QVERIFY(settings);
             QVERIFY(QMetaObject::invokeMethod(settings,"clicked")); QTest::qWait(250);
             QVERIFY(selection->property("x").toDouble() > manualX);

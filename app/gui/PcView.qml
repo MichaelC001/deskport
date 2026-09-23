@@ -41,6 +41,58 @@ CenteredGridView {
     }
     property Dialog addressEditor: PeerEditor { id: peerEditor }
 
+    Dialog {
+        id: deviceSettingsDialog
+        objectName: "deviceSettingsDialog"
+        modal: true
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(pcGrid.width - 32, 760)
+        height: Math.min(pcGrid.height - 32, 680)
+        x: Math.max(16, (pcGrid.width - width) / 2)
+        y: Math.max(16, (pcGrid.height - height) / 2)
+        padding: 0
+        property var devicePreferences: null
+        property string deviceName: ""
+        property string deviceId: ""
+        function openFor(hostId, name) {
+            deviceId = hostId
+            deviceName = name
+            devicePreferences = StreamingPreferences.forDevice(hostId)
+            open()
+        }
+        header: Rectangle {
+            height: 56
+            color: ui.surface
+            Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 1; color: ui.line }
+            RowLayout {
+                anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 12
+                Label { text: qsTr("Device settings"); color: ui.text; font.pixelSize: ui.title; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                UiButton { objectName: "closeDeviceSettings"; text: qsTr("Done"); highlighted: true; onClicked: deviceSettingsDialog.close() }
+            }
+        }
+        contentItem: Item {
+            Rectangle { anchors.fill: parent; color: ui.canvas }
+            Loader {
+                anchors.fill: parent
+                active: deviceSettingsDialog.devicePreferences !== null
+                sourceComponent: Component {
+                    DeviceSettings {
+                        preferences: deviceSettingsDialog.devicePreferences
+                        deviceName: deviceSettingsDialog.deviceName
+                        deviceId: deviceSettingsDialog.deviceId
+                        popupMode: true
+                        onAdvancedRequested: {
+                            var settings = deviceSettingsDialog.devicePreferences
+                            var name = deviceSettingsDialog.deviceName
+                            deviceSettingsDialog.close()
+                            stackView.push(Qt.resolvedUrl("DeviceAdvanced.qml"), {preferences: settings, deviceName: name})
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     id: pcGrid
     focus: true
     activeFocusOnTab: true
@@ -141,10 +193,11 @@ CenteredGridView {
     header: Item {
         objectName: "deviceHeader"
         width: pcGrid.width - 12
-        height: controls.implicitHeight + 24
+        height: pcGrid.inGroup || pcGrid.arranging ? controls.implicitHeight + 24 : 0
         ColumnLayout {
             id: controls; width: parent.width; spacing: ui.gap
             RowLayout {
+                visible: pcGrid.inGroup
                 Layout.fillWidth: true
                 UiButton {
                     objectName: "groupBack"
@@ -154,7 +207,7 @@ CenteredGridView {
                 }
                 Label {
                     objectName: "groupTitle"
-                    text: pcGrid.inGroup ? (pcGrid.layoutRevision, computerModel.groupName(computerModel.currentGroup)) : qsTr("Your computers")
+                    text: (pcGrid.layoutRevision, computerModel.groupName(computerModel.currentGroup))
                     textFormat: Text.PlainText; elide: Text.ElideRight
                     font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true
                 }
@@ -207,7 +260,7 @@ CenteredGridView {
             dropTarget: pcGrid.combineIndex === index
             operatingSystem: model.operatingSystem
             onDetailsRequested: { showPcDetailsDialog.pcDetails = model.details; showPcDetailsDialog.open() }
-            onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId})
+            onSettingsRequested: deviceSettingsDialog.openFor(model.hostId, model.name)
             activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
             onActivateRequested: parent.clicked()
