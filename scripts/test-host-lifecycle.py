@@ -54,7 +54,15 @@ if sys.platform == "darwin" and os.environ.get("DESKPORT_CAPTURE_DISPLAY") != "1
 if "--creds" in sys.argv:
     (state / "auth-started").touch()
     if mode == "auth-fail": sys.exit(3)
-    time.sleep(10 if mode == "auth-slow" else 0.4)
+    if mode == "auth-gated":
+        deadline = time.monotonic() + 4
+        while not (state / "auth-release").exists():
+            if time.monotonic() >= deadline:
+                (state / "auth-gate-timed-out").touch()
+                sys.exit(19)
+            time.sleep(0.01)
+    else:
+        time.sleep(10 if mode == "auth-slow" else 0.4)
     sys.exit(0)
 if mode == "host-fail": sys.exit(7)
 if mode == "host-crash-once" and not (state / "crashed-once").exists():
@@ -111,18 +119,23 @@ else:
         linux_display = linux_host.parent / "deskport-display"
         linux_display.write_text(display.read_text())
         linux_display.chmod(0o700)
-    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
+    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
     if "--ui" in sys.argv:
         resources = work / "test-resources.qrc"
+        manual = root / "shared/deskport-core/manual/manual.json"
         resources.write_text(resources.read_text().replace('</RCC>', '<qresource prefix="/gui">' + ''.join(
-            f'<file alias="{p.name}">{p}</file>' for p in (root / "app/gui").glob("*.qml")) + '</qresource></RCC>'))
+            f'<file alias="{p.name}">{p}</file>' for p in (root / "app/gui").glob("*.qml"))
+            + f'</qresource><qresource prefix="/manual"><file alias="manual.json">{manual}</file></qresource></RCC>'))
     for executable in (display, host):
         executable.chmod(0o700)
     binding = "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
+    if "--ui" in sys.argv:
+        extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp"'
+        extra_headers += f' "{root}/app/gui/manual.h"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
@@ -135,7 +148,7 @@ TARGET = host-lifecycle-tests
 DESTDIR = "{macos}"
 SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
 HEADERS += "{root}/app/backend/diagnostics.h" "{root}/app/backend/hostmanager.h" {extra_headers}
-INCLUDEPATH += "{root}/app/backend" "{root}/app"
+INCLUDEPATH += "{root}/app/backend" "{root}/app" "{root}/app/gui"
 RESOURCES += "{work}/test-resources.qrc"
 macx {{
     OBJECTIVE_SOURCES += "{root}/app/backend/macpermissions.mm" "{root}/app/backend/macdock.mm" "{root}/app/backend/macclipboard.mm" "{root}/app/backend/macunattended.mm"
@@ -213,4 +226,7 @@ commonName = supplied
             environment["QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment["NIXPKGS_QT6_QML_IMPORT_PATH"] = os.pathsep.join(qml_paths)
             environment.pop("QML2_IMPORT_PATH", None)
-    subprocess.run([str(test_binary), *os.environ.get("DESKPORT_TEST_FUNCTIONS", "").split()], cwd=work, env=environment, check=True)
+    # Either selection route: explicit arguments after "--", or the environment
+    # variable the Windows branch uses.
+    test_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else os.environ.get("DESKPORT_TEST_FUNCTIONS", "").split()
+    subprocess.run([str(test_binary), *test_args], cwd=work, env=environment, check=True)

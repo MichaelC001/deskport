@@ -270,15 +270,6 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     });
     m_Menu = new QMenu;
     connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested);
-    m_AdjustmentMenu = m_Menu->addMenu(tr("Desktop adjustment"));
-    m_AdjustmentMenu->setEnabled(false);
-    auto adjustments = new QActionGroup(m_AdjustmentMenu);
-    for (double factor : {0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.2, 1.3, 1.4, 1.5}) {
-        auto action = m_AdjustmentMenu->addAction(QString::number(factor, 'f', 1));
-        action->setCheckable(true); action->setData(factor); adjustments->addAction(action);
-        connect(action, &QAction::triggered, this, [this, factor] { emit desktopAdjustmentRequested(factor); });
-    }
-    connect(m_Menu, &QMenu::aboutToShow, this, &HostManager::viewerMenuRequested);
     connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested);
     connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested);
     // Restarting from the tray is how a remote viewer picks up a version that a
@@ -331,7 +322,6 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 }
 #ifdef Q_OS_MACOS
 void HostManager::showTrayMenu() {
-    emit viewerMenuRequested();
     if (auto chosen = deskPortShowStatusMenu(m_Menu)) chosen->trigger();
 }
 #endif
@@ -718,10 +708,6 @@ void HostManager::sessionControl(const QJsonObject& body, QObject* context,
     });
 }
 
-void HostManager::setViewerDesktopAdjustment(double value) {
-    m_AdjustmentMenu->setEnabled(value > 0);
-    for (auto action : m_AdjustmentMenu->actions()) action->setChecked(qFuzzyCompare(action->data().toDouble(), value));
-}
 void HostManager::pair(const QString &pin, const QString &name) {
     if (!canPair()) return;
     const auto generation = m_Generation;

@@ -132,6 +132,10 @@
         <translation>ペア解除</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>別名: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation type="unfinished"></translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPSポート</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>グループ</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>このPCの新しい名前を入力してください:</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>このデバイスの別名を入力します。空欄にすると元の名前を使用します：</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>従来の PIN でペアリング</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>デバイス名を変更</translation>
+        <source>Set alias</source>
+        <translation>別名を設定</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>リスト表示</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>固定を解除</translation>
+        <source>Done</source>
+        <translation>完了</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>端末を固定</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>デバイスをドラッグして順序を変更します。</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>先頭に移動</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>再接続</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>編集</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新規グループ</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>すべてのデバイス</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>グループの操作</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>グループ名を変更</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>グループを削除</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>グループから出す</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>このグループは空です。編集モードでデバイスをグループにドラッグすると追加できます。</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>カードをドラッグして並べ替えます。別のデバイスに重ねるとグループになります。</translation>
     </message>
 </context>
 <context>
@@ -1570,6 +1618,42 @@
         <source>Open download page</source>
         <translation>ダウンロードページを開く</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>未接続</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>編集</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完了</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>デバイスを更新</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>保存済みデバイスの状態を確認し、新しいデバイスを探します</translation>
+    </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>クライアントにフルスクリーンの終了を依頼</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>接続中のクライアントにフルスクリーンの終了を依頼します</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>マニュアル</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>DeskPort の使い方</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1916,8 +2000,8 @@
         <translation>オレンジ</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>サイドバーに通信量を表示</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>上部バーにデータ使用量を表示</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2037,6 +2121,30 @@
     <message>
         <source>Device details</source>
         <translation>デバイスの詳細</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>開く</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>グループの操作</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 台のデバイス</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 台のデバイス</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>デバイスを追加</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新規グループ</translation>
     </message>
 </context>
 <context>
@@ -2766,7 +2874,15 @@
     <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
     <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はトレイメニューの「デスクトップの微調整」からすぐに適用できます。</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>フルスクリーン</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

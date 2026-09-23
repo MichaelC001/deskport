@@ -64,7 +64,15 @@ UiPage {
                         window.activeStreamPage.session.setDesktopAdjustment(factors[index])
                 }
             }
-            Label { text: qsTr("0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Switch {
+                objectName: "deviceFullScreen"
+                text: qsTr("Full screen")
+                // Window modes as in Advanced: 2 is a window; full screen uses the platform's recommended mode.
+                checked: preferences.windowMode !== 2
+                onClicked: { preferences.windowMode = checked ? preferences.recommendedFullScreenMode : 2; save() }
+            }
+            Label { text: qsTr("Ctrl+Alt+Shift+X also toggles full screen during a connection."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch { text: qsTr("Match the client window resolution"); checked: preferences.adaptiveResolution; onClicked: { preferences.adaptiveResolution = checked; save() } }
             Switch { text: qsTr("Receive sound from this device"); checked: preferences.remoteAudio; onClicked: { preferences.remoteAudio = checked; save() } }
             Switch { text: qsTr("Allow keyboard, pointer and controller input"); checked: preferences.remoteInput; onClicked: { preferences.remoteInput = checked; save() } }

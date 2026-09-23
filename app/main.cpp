@@ -16,11 +16,13 @@
 #include "version.h"
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
+#include "backend/mactitlebar.h"
 #endif
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QIcon>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QMutex>
 #include <QtDebug>
 #include <QNetworkProxyFactory>
@@ -85,6 +87,7 @@ static void forwardTerminationSignal(int)
 #include "path.h"
 #include "utils.h"
 #include "gui/computermodel.h"
+#include "gui/manual.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
@@ -810,6 +813,8 @@ int main(int argc, char *argv[])
                                                 [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                     return new AutoUpdateChecker();
                                                 });
+    qmlRegisterSingletonType<Manual>("Manual", 1, 0, "Manual",
+                                     [](QQmlEngine*, QJSEngine*) -> QObject* { return new Manual(); });
     const int systemPropertiesType = qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
                                                "SystemProperties",
                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
@@ -851,12 +856,6 @@ int main(int argc, char *argv[])
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);
-    QObject::connect(&hostManager, &HostManager::viewerMenuRequested, &app, [&hostManager] {
-        hostManager.setViewerDesktopAdjustment(Session::get() ? Session::get()->desktopAdjustment() : 0);
-    });
-    QObject::connect(&hostManager, &HostManager::desktopAdjustmentRequested, &app, [](double value) {
-        if (Session::get()) Session::get()->setDesktopAdjustment(value);
-    });
     QObject::connect(&hostManager, &HostManager::fullscreenRequested, &app, [] {
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortFullscreen;
@@ -992,6 +991,9 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
+#ifdef Q_OS_DARWIN
+    MacTitleBar macTitleBar;
+#endif
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
@@ -1066,6 +1068,9 @@ int main(int argc, char *argv[])
             QObject::connect(window, &QWindow::visibleChanged, window, applyTitleBar);
             applyTitleBar();
         }
+#endif
+#ifdef Q_OS_DARWIN
+        macTitleBar.attach(qobject_cast<QQuickWindow*>(engine.rootObjects().first()));
 #endif
         if (pendingActivation) showDevices();
     }

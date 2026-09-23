@@ -132,6 +132,10 @@
         <translation>페어링 되지 않음</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>별칭: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>이름: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 포트: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>그룹</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>이 PC의 새로운 이름 입력:</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>이 기기의 별칭을 입력하세요. 비워 두면 원래 이름을 사용합니다:</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>기존 PIN 방식으로 페어링</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>기기 이름 변경</translation>
+        <source>Set alias</source>
+        <translation>별칭 설정</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>목록 보기</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>고정 해제</translation>
+        <source>Done</source>
+        <translation>완료</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>기기 고정</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>기기를 드래그하여 순서를 바꾸세요.</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>맨 앞으로 이동</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>다시 연결</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>편집</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>새 그룹</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>모든 기기</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>그룹 작업</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>그룹 이름 변경</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>그룹 삭제</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>그룹에서 빼기</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>이 그룹은 비어 있습니다. 편집 모드에서 기기를 그룹으로 끌어 놓으면 추가됩니다.</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>카드를 끌어 순서를 바꾸고, 다른 기기 위에 놓으면 그룹이 됩니다.</translation>
     </message>
 </context>
 <context>
@@ -1567,6 +1615,42 @@
         <source>Open download page</source>
         <translation>다운로드 페이지 열기</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>연결 안 됨</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>편집</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>완료</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>기기 새로 고침</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>저장된 기기를 확인하고 새 기기를 찾습니다</translation>
+    </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>클라이언트에 전체 화면 종료 요청</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>연결된 클라이언트에 전체 화면 종료를 요청합니다</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>설명서</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>DeskPort 사용법</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1913,8 +1997,8 @@
         <translation>주황색</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>사이드바에 데이터 사용량 표시</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>상단 막대에 데이터 사용량 표시</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2034,6 +2118,30 @@
     <message>
         <source>Device details</source>
         <translation>기기 세부 정보</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>열기</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>그룹 작업</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>기기 1대</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>기기 %1대</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>기기 추가</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>새 그룹</translation>
     </message>
 </context>
 <context>
@@ -2758,7 +2866,15 @@
     <message><source>Use client as an extended screen</source><translation>클라이언트를 확장 화면으로 사용</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>세션이 종료되면 이전 화면 배치가 자동으로 복원됩니다.</translation></message>
     <message><source>Desktop adjustment</source><translation>데스크톱 크기 조정</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0.5는 컨트롤을 더 크게 표시하고 1.5는 더 많은 내용을 표시합니다. 자동 계산된 데스크톱 크기에 적용됩니다. 연결 중에는 트레이 메뉴의 데스크톱 크기 조정에서 즉시 적용할 수 있습니다.</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5는 컨트롤을 더 크게 표시하고 1.5는 더 많은 내용을 표시합니다. 자동 계산된 데스크톱 크기에 적용됩니다. 연결 중에는 즉시 적용됩니다.</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>전체 화면</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>연결 중에는 Ctrl+Alt+Shift+X로도 전체 화면을 전환할 수 있습니다.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

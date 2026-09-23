@@ -8,7 +8,8 @@ Dialog {
     function edit(peer) {
         if (!peer) return
         fingerprint = peer.fingerprint
-        deviceName.text = peer.name
+        // The shown name is changed with "Set alias"; the binding name is kept.
+        peerName = peer.name
         deviceAddress.text = peer.address
         hostPort.value = peer.hostPort || 48989
         bindingPort.value = peer.bindingPort || 48991
@@ -17,14 +18,13 @@ Dialog {
         open()
     }
     property string fingerprint: ""
+    property string peerName: ""
     title: qsTranslate("BindView", "Edit device")
     anchors.centerIn: parent
     width: Math.max(280, Math.min(parent ? parent.width - 32 : 460, 460))
     modal: true
     contentItem: ColumnLayout {
         spacing: 10
-        Label { text: qsTranslate("BindView", "Device name") }
-        TextField { id: deviceName; objectName: "editPeerName"; Layout.fillWidth: true; maximumLength: 64 }
         Label { text: qsTranslate("BindView", "Domain name or IP address") }
         TextField { id: deviceAddress; objectName: "editPeerAddress"; Layout.fillWidth: true; placeholderText: qsTranslate("BindView", "Computer name or IP, without port") }
         Label { text: qsTranslate("BindView", "A domain name is saved as entered and resolved again when connecting."); wrapMode: Text.WordWrap; Layout.fillWidth: true }
@@ -41,7 +41,7 @@ Dialog {
             UiButton {
                 objectName: "savePeerAddress"; text: qsTranslate("BindView", "Save"); highlighted: true; enabled: manager && !manager.busy
                 onClicked: {
-                    if (manager.editPeer(editDialog.fingerprint, deviceName.text, deviceAddress.text, hostPort.value, bindingPort.value)) editDialog.close()
+                    if (manager.editPeer(editDialog.fingerprint, editDialog.peerName, deviceAddress.text, hostPort.value, bindingPort.value)) editDialog.close()
                     else editError.text = manager.status
                 }
             }

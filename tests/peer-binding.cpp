@@ -56,7 +56,7 @@ class PeerBinding : public QObject {
 private slots:
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -127,6 +127,25 @@ private slots:
                 QCOMPARE(state()["takeovers"].toInt(),0);
             }
             incoming.abort(); host.stop(); return;
+        }
+        if (scenario == "client-window") {
+            // The host offers "leave full screen" only while an opted-in client reports it.
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,query); QVERIFY(receive(old)["admitted"].toBool());
+            auto windowed = resize; windowed["clientWindow"] = 1; windowed["clientFullScreen"] = false;
+            send(old,windowed); QVERIFY(!receive(old).contains("error"));
+            QVERIFY(!manager.canReleaseClientFullscreen());
+            auto full = windowed; full["seq"] = 2; full["width"] = 1280; full["height"] = 720; full["clientFullScreen"] = true;
+            send(old,full); QVERIFY(!receive(old).contains("error"));
+            QTRY_VERIFY(manager.canReleaseClientFullscreen());
+            manager.releaseClientFullscreen();
+            const auto request = receive(old);
+            QCOMPARE(request["type"].toString(), QString("client-window"));
+            QCOMPARE(request["action"].toString(), QString("leave-fullscreen"));
+            // Clients that predate the state report keep the request available.
+            auto legacy = resize; legacy["seq"] = 3; legacy["clientWindow"] = 1;
+            send(old,legacy); QVERIFY(!receive(old).contains("error"));
+            QVERIFY(manager.canReleaseClientFullscreen());
+            old.abort(); host.stop(); return;
         }
         if (scenario == "unapproved") {
             connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,query);
@@ -541,7 +560,7 @@ private slots:
         QTest::addColumn<int>("failure");
         QTest::addColumn<bool>("outboundOnly");
         const QStringList scenarios {"changed-port", "wrong-stream-identity", "wrong-tls-pin", "revoked-at-server",
-                                     "wrong-stream-certificate", "concurrent-local-edit", "changed-entry-port"};
+                                     "wrong-stream-certificate", "concurrent-local-edit", "retain-reachable-old-entry"};
         for (bool client : {false, true}) for (int i = 0; i < scenarios.size(); ++i)
             QTest::newRow(qPrintable((client ? QString("client-only-") : QString("mutual-")) + scenarios[i])) << i << client;
     }
@@ -596,10 +615,6 @@ private slots:
             const auto after=PeerStore::read(dir.path()+"/ab/peers.json")["peers"].toObject()[fp].toObject();
             auto expected=peer; expected["hostPort"]=actualPort;
             expected["resolvedAddress"]="127.0.0.1";
-            if (failure==6) {
-                expected["bindingPort"]=b.port();
-                expected["requestedAddress"]=QString("127.0.0.1:%1").arg(b.port());
-            }
             QCOMPARE(after,expected);
             QTest::qWait(100); a.refreshEndpoints(); QTest::qWait(200);
             QCOMPARE(updated.size(),1);
@@ -703,6 +718,9 @@ private slots:
             AdaptiveDisplay channel("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
             QVERIFY(resize(channel, QSize(1920, 1080)));
             QCOMPARE(resized.size(), 1); QVERIFY(host.running()); QVERIFY(!server.busy());
+            QVERIFY(!server.canReleaseClientFullscreen()); // a windowed client has nothing to leave
+            channel.setFullScreen(true);
+            QVERIFY(resize(channel, QSize(1600, 900)));
             QVERIFY(server.canReleaseClientFullscreen());
             server.releaseClientFullscreen();
             bool receivedWindowCommand = false;
@@ -717,7 +735,7 @@ private slots:
             QVERIFY(server.setConnectionPort(nextEntry));
             // The existing authenticated display-control channel survives a port change.
             QVERIFY(resize(channel, QSize(2560, 1440)));
-            QCOMPARE(resized.size(), 2); QVERIFY(host.running());
+            QCOMPARE(resized.size(), 3); QVERIFY(host.running());
             QVERIFY(wakeLatency.elapsed() < 2000); // Must wake on work, not the 5 s heartbeat.
             // Geometry is opt-in. Legacy desktop leases must still receive a
             // display-pong as their next message, never unsolicited caret data.
@@ -730,7 +748,7 @@ private slots:
             }
             QTRY_VERIFY(!server.busy());
             QVERIFY(resize(channel, QSize(1600, 1000)));
-            QCOMPARE(resized.size(), 3);
+            QCOMPARE(resized.size(), 4);
             QVERIFY(!host.resizeDisplay(99999, 1000, 2, 99));
             QVERIFY(!host.resizeDisplay(1600, 1000, 9, 99));
             QCOMPARE(approval.size(), 0);
@@ -748,7 +766,7 @@ private slots:
         QVERIFY(resize(next, QSize(2560, 1440)));
         int clientReplies = 0;
         for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
-        QCOMPARE(clientReplies, 5);
+        QCOMPARE(clientReplies, 6);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
     void adaptiveDisplayNegotiatesFiniteModes() {

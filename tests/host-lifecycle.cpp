@@ -269,7 +269,14 @@ private slots:
         host.stop();
         QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
     }
+    void startupAndStopStayResponsive_data() {
+        QTest::addColumn<int>("heartbeatInterval");
+        QTest::newRow("normal-cadence") << 10;
+        QTest::newRow("slow-cadence") << 75;
+    }
     void startupAndStopStayResponsive() {
+        QFETCH(int, heartbeatInterval);
+        qputenv("DESKPORT_TEST_MODE", "auth-gated");
         QTemporaryDir state;
         HostManager host(nullptr, state.path());
         QVERIFY(host.available());
@@ -280,10 +287,22 @@ private slots:
         QVERIFY(!host.canPair());
         int ticks = 0;
         QTimer heartbeat;
-        connect(&heartbeat, &QTimer::timeout, [&] { ++ticks; });
-        heartbeat.start(10);
+        bool releasedAuthentication = false;
+        connect(&heartbeat, &QTimer::timeout, [&] {
+            if (!QFile::exists(state.filePath("auth-started")) || ticks >= 10) return;
+            ++ticks;
+            if (ticks == 10) {
+                // Authentication cannot finish until the UI event loop proves
+                // progress. Timer coalescing may delay this, but cannot pass it.
+                QFile release(state.filePath("auth-release"));
+                releasedAuthentication = release.open(QIODevice::WriteOnly);
+            }
+        });
+        heartbeat.start(heartbeatInterval);
         QTRY_VERIFY_WITH_TIMEOUT(host.canPair(), 5000);
-        QVERIFY(ticks >= 10); // Authentication runs for 400 ms in the fake host.
+        QVERIFY(!QFile::exists(state.filePath("auth-gate-timed-out")));
+        QVERIFY(releasedAuthentication);
+        QCOMPARE(ticks, 10);
         elapsed.restart(); host.stop();
         QVERIFY(elapsed.elapsed() < 200);
         QVERIFY(!host.canPair());

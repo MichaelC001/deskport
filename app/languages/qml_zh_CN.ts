@@ -132,6 +132,10 @@
         <translation>未配对</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>别名: %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>名称: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>HTTPS 端口: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>分组</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>输入这台计算机的新名称:</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>输入此设备的别名。留空则使用原始名称：</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>使用传统 PIN 配对</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>重命名设备</translation>
+        <source>Set alias</source>
+        <translation>设置别名</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -423,12 +431,16 @@
         <translation>列表视图</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>取消置顶</translation>
+        <source>Done</source>
+        <translation>完成</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>置顶设备</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>拖动设备以调整顺序。</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>移到最前</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -453,6 +465,42 @@
     <message>
         <source>Reconnect</source>
         <translation>重新连接</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新建分组</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>全部设备</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>分组操作</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>重命名分组</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>删除分组</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>移出分组</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>这个分组还没有设备。在编辑模式下把设备拖到分组上即可加入。</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>拖动卡片调整顺序，拖到另一台设备上即可组成分组。</translation>
     </message>
 </context>
 <context>
@@ -1566,6 +1614,42 @@
         <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
         <translation>统计本次会话的音视频、控制和剪贴板传输字节，短暂重连不清零。不包含 IP/VPN 开销、剪贴板 TLS 开销、设备发现和本机对外共享流量。数值不代表运营商账单。</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>未连接</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>完成</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>刷新设备</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>检查已保存设备是否在线，并查找新设备</translation>
+    </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>让客户端退出全屏</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>让当前连接的客户端退出全屏</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>手册</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>DeskPort 使用说明</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1912,8 +1996,8 @@
         <translation>橙色</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>在侧栏显示流量用量</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>在顶栏显示流量</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2033,6 +2117,30 @@
     <message>
         <source>Device details</source>
         <translation>设备详情</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>打开</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>分组操作</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 台设备</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 台设备</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>添加设备</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>新建分组</translation>
     </message>
 </context>
 <context>
@@ -2539,7 +2647,7 @@
     </message>
     <message>
         <source>Open device list</source>
-        <translation>打开设备列表</translation>
+        <translation>设备列表</translation>
     </message>
     <message>
         <source>Return to remote desktop</source>
@@ -2689,10 +2797,6 @@
         <source>Cannot enable login startup.</source>
         <translation>无法开启登录启动。</translation>
     </message>
-    <message>
-        <source>Desktop adjustment</source>
-        <translation>桌面微调</translation>
-    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2781,8 +2885,16 @@
         <translation>桌面微调</translation>
     </message>
     <message>
-        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source>
-        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中可通过托盘菜单的“桌面微调”立即应用。</translation>
+        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
+    </message>
+    <message>
+        <source>Full screen</source>
+        <translation>全屏</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>连接中也可以按 Ctrl+Alt+Shift+X 切换全屏。</translation>
     </message>
 </context>
 <context>

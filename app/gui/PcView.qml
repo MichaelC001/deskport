@@ -12,6 +12,25 @@ import SdlGamepadKeyNavigation 1.0
 CenteredGridView {
     property ComputerModel computerModel : createModel()
     property bool controlCenterForActiveSession: false
+    // Edit mode drags cards to reorder them, or drops a device on a device or
+    // group to group them, like folders on a phone home screen. The layout is
+    // saved locally.
+    property bool arranging: false
+    // Index of the card a held device would join, or -1.
+    property int combineIndex: -1
+    // Bumped after group changes so group names and the edit button refresh.
+    property int layoutRevision: 0
+    readonly property bool inGroup: computerModel.currentGroup !== ""
+    readonly property bool canEdit: (layoutRevision, count, inGroup, computerModel.canEdit())
+    onCanEditChanged: if (!canEdit) arranging = false
+    function refreshLayout() { layoutRevision++ }
+    // Layout changes reset the model, which destroys the card that asked for them.
+    // Run them after the card's input handler has returned, never inside it.
+    function afterInput(change) { Qt.callLater(function() { change(); pcGrid.refreshLayout() }) }
+    function openGroup(groupId) { afterInput(function() { computerModel.currentGroup = groupId }) }
+    Keys.onEscapePressed: function(event) {
+        if (inGroup) { openGroup(""); event.accepted = true } else event.accepted = false
+    }
 
     function savedPeer(hostId) {
         if (typeof peerManager === "undefined") return null
@@ -99,13 +118,20 @@ CenteredGridView {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', pcGrid, '')
         model.initialize(ComputerManager)
         model.pairingCompleted.connect(pairingComplete)
-        model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
         return model
+    }
+
+    Label {
+        objectName: "emptyGroup"
+        anchors.centerIn: parent; width: Math.min(parent.width - 64, 420)
+        visible: pcGrid.count === 0 && pcGrid.inGroup
+        text: qsTr("This group is empty. In edit mode, drag devices onto the group to add them.")
+        color: ui.muted; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
     }
 
     Column {
         anchors.centerIn: parent; width: Math.min(parent.width - 64, 460); spacing: 16
-        visible: pcGrid.count === 0
+        visible: pcGrid.count === 0 && !pcGrid.inGroup
         Label { width: parent.width; text: qsTr("Connect your first device."); color: ui.text; font.pixelSize: 28; font.weight: Font.DemiBold; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap }
         Label { width: parent.width; text: qsTr("Add a device by IP address or name. Confirm once on the other computer, then connect in either direction."); color: ui.muted; font.pixelSize: 14; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap }
         UiButton { anchors.horizontalCenter: parent.horizontalCenter; text: qsTr("Add a device"); highlighted: true; onClicked: navigateTo("qrc:/gui/BindView.qml", "BindView") }
@@ -118,15 +144,49 @@ CenteredGridView {
         height: controls.implicitHeight + 24
         ColumnLayout {
             id: controls; width: parent.width; spacing: ui.gap
-            Label { text: qsTr("Your computers"); font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true }
+            RowLayout {
+                Layout.fillWidth: true
+                UiButton {
+                    objectName: "groupBack"
+                    visible: pcGrid.inGroup
+                    text: "‹ " + qsTr("All devices")
+                    onClicked: pcGrid.openGroup("")
+                }
+                Label {
+                    objectName: "groupTitle"
+                    text: pcGrid.inGroup ? (pcGrid.layoutRevision, computerModel.groupName(computerModel.currentGroup)) : qsTr("Your computers")
+                    textFormat: Text.PlainText; elide: Text.ElideRight
+                    font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true
+                }
+                UiButton {
+                    id: groupActionsButton
+                    objectName: "groupActions"
+                    visible: pcGrid.inGroup
+                    text: "⋯"
+                    Accessible.name: qsTr("Group actions")
+                    onClicked: groupMenu.openFor(computerModel.currentGroup, groupActionsButton)
+                }
+            }
+            Label {
+                visible: pcGrid.arranging
+                text: pcGrid.inGroup ? qsTr("Drag devices to change their order.") : qsTr("Drag cards to change their order, or onto another device to make a group.")
+                color: ui.muted; font.pixelSize: ui.small; Layout.fillWidth: true; wrapMode: Text.WordWrap
+            }
 
         }
     }
 
     model: computerModel
+    move: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+    displaced: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+
+    function promptNewGroup() { groupNameDialog.ask("", computerModel.defaultGroupName()) }
 
     delegate: NavigableItemDelegate {
-        objectName: "device-" + model.hostId
+        objectName: model.isAdd ? "addCard" : model.isGroup ? "group-" + model.groupId : "device-" + model.hostId
+        // The add card hides while editing; it never moves.
+        opacity: model.isAdd && pcGrid.arranging ? 0 : 1
+        enabled: !(model.isAdd && pcGrid.arranging)
         width: pcGrid.cellWidth - 12; height: pcGrid.cellHeight - 12;
         padding: 0
         background: Item {}
@@ -136,7 +196,15 @@ CenteredGridView {
 
         contentItem: DeviceCard {
             deviceName: model.name; address: model.address
-            favorite: model.favorite
+            arranging: pcGrid.arranging
+            held: arrangeArea.pressed
+            group: model.isGroup
+            addCard: model.isAdd
+            onAddDeviceRequested: navigateTo("qrc:/gui/BindView.qml", "BindView")
+            onAddGroupRequested: pcGrid.promptNewGroup()
+            memberCount: model.memberCount
+            memberSystems: model.memberSystems
+            dropTarget: pcGrid.combineIndex === index
             operatingSystem: model.operatingSystem
             onDetailsRequested: { showPcDetailsDialog.pcDetails = model.details; showPcDetailsDialog.open() }
             onSettingsRequested: stackView.push(Qt.resolvedUrl("DeviceSettings.qml"), {"preferences": StreamingPreferences.forDevice(model.hostId), "deviceName": model.name, "deviceId": model.hostId})
@@ -145,19 +213,18 @@ CenteredGridView {
             onActivateRequested: parent.clicked()
             online: model.online; paired: model.paired; unknown: model.statusUnknown
             selected: parent.hovered || parent.highlighted
-            onMoreRequested: if (pcContextMenuLoader.item) pcContextMenuLoader.item.open()
+            onMoreRequested: {
+                if (model.isGroup) groupMenu.openFor(model.groupId, parent)
+                else if (pcContextMenuLoader.item) pcContextMenuLoader.item.open()
+            }
         }
 
         Loader {
             id: pcContextMenuLoader
             asynchronous: true
+            active: !model.isGroup && !model.isAdd
             sourceComponent: NavigableMenu {
                 id: pcContextMenu
-                MenuItem {
-                    text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
-                    font.bold: true
-                    enabled: false
-                }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Disconnect")
@@ -178,8 +245,17 @@ CenteredGridView {
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
-                    text: model.favorite ? qsTr("Unpin device") : qsTr("Pin device")
-                    onTriggered: computerModel.setFavorite(index, !model.favorite)
+                    objectName: "moveOut-" + model.hostId
+                    text: qsTr("Move out of group")
+                    visible: pcGrid.inGroup
+                    onTriggered: { var from = index, model = pcGrid.computerModel; pcGrid.afterInput(function() { model.moveOutOfGroup(from) }) }
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    objectName: "moveToFront-" + model.hostId
+                    text: qsTr("Move to front")
+                    visible: index > 0
+                    onTriggered: computerModel.moveComputer(index, 0)
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
@@ -199,21 +275,15 @@ CenteredGridView {
                         pairDialog.pin = pin; pairDialog.open()
                     }
                 }
-                NavigableMenuItem {
-                    parentMenu: pcContextMenu
-                    text: qsTr("Test Network")
-                    onTriggered: {
-                        computerModel.testConnectionForComputer(index)
-                        testConnectionDialog.open()
-                    }
-                }
 
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
-                    text: qsTr("Rename device")
+                    objectName: "setAlias-" + model.hostId
+                    text: qsTr("Set alias")
                     onTriggered: {
                         renamePcDialog.pcIndex = index
-                        renamePcDialog.originalName = model.name
+                        renamePcDialog.originalName = model.reportedName
+                        renamePcDialog.currentAlias = model.alias
                         renamePcDialog.open()
                     }
                 }
@@ -230,6 +300,11 @@ CenteredGridView {
         }
 
         onClicked: {
+            if (model.isAdd) return
+            if (model.isGroup) {
+                pcGrid.openGroup(model.groupId)
+                return
+            }
             if (controlCenterForActiveSession) {
                 if (model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0) recallRemoteSession()
                 else {
@@ -258,7 +333,49 @@ CenteredGridView {
             }
         }
 
+        // While arranging, the whole card is a drag handle: it swaps places with the
+        // card under the pointer and never connects or opens its menu.
+        MouseArea {
+            id: arrangeArea
+            objectName: "arrange-" + model.hostId
+            anchors.fill: parent
+            z: 10
+            enabled: pcGrid.arranging && !model.isAdd
+            visible: enabled
+            acceptedButtons: Qt.AllButtons
+            preventStealing: true
+            hoverEnabled: true
+            cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            // Opening a group still works while editing.
+            onClicked: if (model.isGroup) pcGrid.openGroup(model.groupId)
+            onPositionChanged: function(mouse) {
+                if (!pressed) return
+                var point = mapToItem(pcGrid.contentItem, mouse.x, mouse.y)
+                var target = pcGrid.indexAt(point.x, point.y)
+                var card = target >= 0 && target !== index ? pcGrid.itemAtIndex(target) : null
+                pcGrid.combineIndex = -1
+                if (!card) return
+                var local = mapToItem(card, mouse.x, mouse.y)
+                var fx = local.x / card.width, fy = local.y / card.height
+                // Over the middle of another card a device joins it in a group.
+                // The cards swap places once the pointer reaches the far side, so
+                // passing over a card's near edge never moves it away.
+                if (!pcGrid.inGroup && !model.isGroup && fx > 0.22 && fx < 0.78 && fy > 0.22 && fy < 0.78)
+                    pcGrid.combineIndex = target
+                else if (target < index ? (fx < 0.22 || fy < 0.22) : (fx > 0.78 || fy > 0.78))
+                    computerModel.moveComputer(index, target)
+            }
+            onReleased: {
+                var target = pcGrid.combineIndex
+                pcGrid.combineIndex = -1
+                var from = index, model = pcGrid.computerModel
+                if (target >= 0) pcGrid.afterInput(function() { model.combine(from, target) })
+            }
+            onCanceled: pcGrid.combineIndex = -1
+        }
+
         onPressAndHold: {
+            if (pcGrid.arranging) return
             // popup() ensures the menu appears under the mouse cursor
             if (pcContextMenu.popup) {
                 pcContextMenu.popup()
@@ -278,6 +395,7 @@ CenteredGridView {
         }
 
         Keys.onMenuPressed: {
+            if (pcGrid.arranging) return
             // We must use open() here so the menu is positioned on
             // the ItemDelegate and not where the mouse cursor is
             pcContextMenu.open()
@@ -329,79 +447,52 @@ CenteredGridView {
         }
     }
 
-    NavigableMessageDialog {
-        id: testConnectionDialog
-        closePolicy: Popup.CloseOnEscape
-        standardButtons: Dialog.Ok
-
-        onAboutToShow: {
-            testConnectionDialog.text = qsTr("Moonlight is testing your network connection to determine if any required ports are blocked.") + "\n\n" + qsTr("This may take a few seconds…")
-            showSpinner = true
+    NavigableMenu {
+        id: groupMenu
+        objectName: "groupMenu"
+        property string groupId: ""
+        function openFor(id, anchor) {
+            groupId = id
+            if (anchor) { parent = anchor; x = 0; y = anchor.height }
+            open()
         }
-
-        function connectionTestComplete(result, blockedPorts)
-        {
-            if (result === -1) {
-                text = qsTr("The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.")
-                imageSrc = "qrc:/res/baseline-warning-24px.svg"
-            }
-            else if (result === 0) {
-                text = qsTr("This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.") + "\n\n" + qsTr("If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.")
-                imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
-            }
-            else {
-                text = qsTr("Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.") + "\n\n" + qsTr("The following network ports were blocked:") + "\n"
-                text += blockedPorts
-                imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
-            }
-
-            // Stop showing the spinner and show the image instead
-            showSpinner = false
+        NavigableMenuItem {
+            parentMenu: groupMenu
+            objectName: "renameGroup"
+            text: qsTr("Rename group")
+            onTriggered: groupNameDialog.ask(groupMenu.groupId, computerModel.groupName(groupMenu.groupId))
+        }
+        NavigableMenuItem {
+            parentMenu: groupMenu
+            objectName: "deleteGroup"
+            text: qsTr("Delete group")
+            // Devices are kept: they return to the top level where the group was.
+            onTriggered: { computerModel.deleteGroup(groupMenu.groupId); pcGrid.refreshLayout() }
         }
     }
 
     NavigableDialog {
-        id: renamePcDialog
-        property string label: qsTr("Enter the new name for this PC:")
-        property string originalName
-        property int pcIndex : -1;
-
+        id: groupNameDialog
+        objectName: "groupNameDialog"
+        // Empty for a new group.
+        property string groupId: ""
+        function ask(id, name) { groupId = id; groupNameField.text = name; open() }
         standardButtons: Dialog.Ok | Dialog.Cancel
-
-        onOpened: {
-            // Force keyboard focus on the textbox so keyboard navigation works
-            editText.forceActiveFocus()
-        }
-
-        onClosed: {
-            editText.clear()
-        }
-
+        onOpened: { groupNameField.selectAll(); groupNameField.forceActiveFocus() }
         onAccepted: {
-            if (editText.text) {
-                computerModel.renameComputer(pcIndex, editText.text)
-            }
+            if (groupId) computerModel.renameGroup(groupId, groupNameField.text)
+            else computerModel.addGroup(groupNameField.text)
+            pcGrid.refreshLayout()
         }
-
         ColumnLayout {
-            Label {
-                text: renamePcDialog.label
-                font.bold: true
-            }
-
+            Label { text: groupNameDialog.groupId ? qsTr("Rename group") : qsTr("New group"); font.bold: true }
             TextField {
-                id: editText
-                placeholderText: renamePcDialog.originalName
+                id: groupNameField
+                objectName: "groupNameField"
                 Layout.fillWidth: true
-                focus: true
-
-                Keys.onReturnPressed: {
-                    renamePcDialog.accept()
-                }
-
-                Keys.onEnterPressed: {
-                    renamePcDialog.accept()
-                }
+                maximumLength: 64
+                Keys.onReturnPressed: groupNameDialog.accept()
+                Keys.onEnterPressed: groupNameDialog.accept()
             }
         }
     }

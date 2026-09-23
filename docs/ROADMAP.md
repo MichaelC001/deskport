@@ -1,3 +1,23 @@
+## Deterministic host startup responsiveness check — 2026-09-21
+
+The fake authentication process now waits for ten UI heartbeat callbacks before
+completing. Normal and slower timer cadences exercise event-loop progress without
+assuming a fixed callback count in a 400 ms wall-clock window. Authentication has
+a bounded deadline and direct start/stop responsiveness assertions remain intact.
+
+## 0.5.1 macOS and Linux release — 2026-09-22
+
+Published the current desktop baseline with ENet startup failure handling and
+preservation of configured connection entries during authenticated refresh.
+The user-selected release scope is macOS arm64 and Linux x86_64, including all
+supported desktop package formats. Windows remains on its development branch
+and is excluded from this release. Native streaming acceptance and deployment
+remain separate from package verification and publication. Distribution signing
+retries transient Apple timestamp-service failures up to three attempts per
+object; all signature, timestamp and notarization requirements remain enforced.
+All 11 remote assets matched local SHA-256 after macOS notarization/Gatekeeper,
+the Linux installation/API/Flatpak matrix and all final-commit GitHub checks passed.
+
 ## ENet host creation failure — 2026-09-21
 
 Reason: a failed ENet host allocation was dereferenced while enabling QoS,
@@ -1525,6 +1545,8 @@ TODO — macOS self-update (deferred by user, 2026-09-21):
 
 Next action: review phase 1 in a candidate build. No automatic installation,
 release publication or deployed-service changes are included in this phase.
+
+- 2026-09-21: Preserve the configured connection entry across authenticated stream endpoint refreshes; mobile adapters adopt the shared endpoint contract. Private device acceptance remains pending.
 
 ## 2026-09-20 — Windows x64 static client evaluation package
 

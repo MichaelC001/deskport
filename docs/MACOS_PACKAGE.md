@@ -12,15 +12,12 @@ after the user confirms activation.
 
 ## Developer ID distribution
 
-Verified 2026-09-13: the 0.2.0 distribution passed Developer ID checks
-for 126 Mach-O files and 35 code bundles, with secure timestamps and hardened
-runtime. Apple accepted both the application archive and DMG without application
-notarization issues. App/DMG ticket validation, Gatekeeper assessment, extracted-ZIP
-checks passed. Download the [0.2.0 DMG](https://github.com/keithxc/deskport/releases/download/v0.2.0/DeskPort-0.2.0-macos-arm64.dmg)
-and drag DeskPort into Applications. The earlier 0.1.14 notarized additions use a
-`-notarized` suffix; all existing 0.1.14 assets retain their names/hashes.
-No installed app or privacy permissions were changed. A fresh-machine browser
-download and real permission/streaming acceptance remain separate checks.
+Public macOS packages target Apple Silicon and macOS 26 or newer. Download the
+current signed and notarized package from the [stable release page](https://github.com/keithxc/deskport/releases/latest).
+Each release includes its SHA-256 checksums and verification report. The release
+workflow verifies nested Developer ID signatures, Apple acceptance, app/DMG
+stapled tickets and Gatekeeper after ZIP extraction. Package verification is
+separate from fresh-machine permission and streaming acceptance.
 
 `scripts/package-macos.sh` still produces the existing local-development build.
 To prepare public distribution, pass that verified application to the separate
@@ -97,7 +94,7 @@ The installed app does not require Nix, Homebrew, BetterDisplay or a separately
 installed Sunshine. The current build targets Apple Silicon and macOS 26 because
 the package currently sets that deployment target. Older macOS versions and Intel Macs are not qualified.
 
-## Unattended operation (0.3.1 preview)
+## Unattended operation
 
 After installing in `/Applications/DeskPort.app`, open Sharing and turn on
 **Unattended operation**. DeskPort enables its normal login item and registers
@@ -139,8 +136,7 @@ in macOS. System authorization remains a one-time user step for a new code ident
 On the updated DeskPort iPhone/iPad client, select this computer's DeskPort
 service (initially `48989`) and approve the incoming popup on the Mac. This grants
 one-way client access, without a PIN or a host running on the mobile device.
-Desktop-to-desktop DeskPort requests retain mutual binding. Legacy Moonlight,
-Android and standalone Sunshine workflows still use their PIN pairing UI;
+Desktop-to-desktop DeskPort requests retain mutual binding. Legacy Moonlight and standalone Sunshine workflows still use their PIN pairing UI;
 DeskPort exposes it under Sharing → Compatibility & diagnostics → Legacy PIN pairing.
 Saved access persists across launches. Granting access restarts the embedded host.
 
@@ -154,13 +150,14 @@ installing in `/Applications/DeskPort.app` to register the user login launcher.
 A logged-in desktop session is required. Login startup does not unlock FileVault
 or configure macOS automatic login.
 
-The host creates its own virtual display. If macOS remembers that display as a
-mirror sink, DeskPort captures the mirror source and preserves the mirror layout.
-In that case, choose the same HiDPI pixel size as the source; a mismatched preset
-is rejected rather than changing physical displays. Otherwise it is extended. Existing windows on physical monitors
-are not automatically moved. Select a fixed size before sharing; live adaptation
-to a remote viewer's window is a separate pending feature. Stopping sharing removes
-this helper-owned display, so macOS may relocate its windows to another display.
+DeskPort manages its own virtual workspace for admitted sessions. Adaptive
+resolution follows the viewer size, subject to the platform's supported modes
+and HiDPI bounds. Session transitions restore the saved display topology and
+release remote input; the helper removes its owned virtual display when its
+lease ends. Existing windows on physical monitors are not automatically moved.
+macOS may relocate windows when an owned virtual display is removed. Physical
+monitor, mirror, resize and restoration behavior require native acceptance;
+package checks alone do not establish them.
 
 ## Isolation and diagnostics
 
@@ -189,7 +186,7 @@ UI. The upstream credentials command briefly receives the generated local secret
 as an argument during initialization; it is not a user-supplied password.
 
 The native virtual-display API is private CoreGraphics functionality. Creation and
-resize are checked at runtime and can break on a future OS release. This preview
+resize are checked at runtime and can break on a future OS release. The desktop distribution
 is not an App Store package.
 
 ## Build

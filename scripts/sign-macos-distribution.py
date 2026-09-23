@@ -4,6 +4,8 @@ import argparse
 import pathlib
 import re
 import subprocess
+import sys
+import time
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('app', type=pathlib.Path)
@@ -45,7 +47,15 @@ for index, path in enumerate(objects, 1):
                    '--timestamp', '--options', 'runtime']
         if path == root or path == root / 'Contents/Helpers/Sunshine.app':
             command += ['--entitlements', str(entitlements)]
-        subprocess.run(command + [str(path)], check=True, capture_output=True)
+        for attempt in range(3):
+            result = subprocess.run(command + [str(path)], capture_output=True, text=True)
+            if result.returncode == 0:
+                break
+            if 'timestamp service is not available' not in result.stderr or attempt == 2:
+                print(result.stderr, file=sys.stderr)
+                result.check_returncode()
+            print(f'Timestamp service unavailable; retrying {path.name}', flush=True)
+            time.sleep(5 * (attempt + 1))
     subprocess.run(['/usr/bin/codesign', '--verify', '--strict', '-R', requirement,
                     str(path)], check=True, capture_output=True)
     details = subprocess.run(['/usr/bin/codesign', '-dvv', str(path)],

@@ -3,6 +3,7 @@
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include "session.h"
+#include "backend/hostalias.h"
 #define DP_TRAFFIC_IMPLEMENTATION
 #include "../../moonlight-common-c/traffic.h"
 #include "backend/clipboardtraffic.h"
@@ -786,6 +787,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment, m_Computer->operatingSystem).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
+    m_AdaptiveDisplay->setFullScreen(m_IsFullScreen);
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline))
                 m_AdaptiveDisplay->cancel();
@@ -2940,7 +2942,7 @@ DispatchDeferredCleanup:
 }
 
 QString Session::hostId() const { QReadLocker lock(&m_Computer->lock); return m_Computer->uuid; }
-QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return m_Computer->name; }
+QString Session::hostName() const { QReadLocker lock(&m_Computer->lock); return HostAlias::displayName(m_Computer->uuid, m_Computer->name); }
 
 QVariantMap Session::traffic() const {
     return {{"received", double(DpTrafficReceived() + DeskPortTraffic::clipboardReceived().load(std::memory_order_relaxed) - m_TrafficReceivedBase)},

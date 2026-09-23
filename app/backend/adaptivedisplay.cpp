@@ -41,6 +41,7 @@ QSize AdaptiveDisplay::selectedSize(QSize requested) {
 int AdaptiveDisplay::selectedScale(int requested) { QMutexLocker lock(&m_Mutex); return m_Modes.isEmpty()?requested:1; }
 QSize AdaptiveDisplay::negotiatedSize() { QMutexLocker lock(&m_Mutex); return m_NegotiatedSize; }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
+void AdaptiveDisplay::setFullScreen(bool fullScreen) { QMutexLocker lock(&m_Mutex); m_FullScreen = fullScreen; }
 bool AdaptiveDisplay::takeLeaveFullscreen() { QMutexLocker lock(&m_Mutex); bool value = m_LeaveFullscreen; m_LeaveFullscreen = false; return value; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
 bool AdaptiveDisplay::wasTakenOver(int timeoutMs) {
@@ -175,13 +176,13 @@ void AdaptiveDisplay::run() {
     int sequence = 0;
     QElapsedTimer heartbeat; heartbeat.start();
     while (connected && !isInterruptionRequested()) {
-        QSize size; int scale; bool pending;
-        { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; }
+        QSize size; int scale; bool pending, fullScreen;
+        { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; fullScreen = m_FullScreen; }
         if (pending) {
             size=selectedSize(size);scale=selectedScale(scale);
             QJsonObject request{{"type", DP_MESSAGE_DISPLAY_RESIZE}, {"seq", ++sequence}, {"width", size.width()}, {"height", size.height()}, {"scale", scale}};
             if (policySupported) request["displayPolicy"] = m_Policy;
-            if (windowSupported) request["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
+            if (windowSupported) { request["clientWindow"] = DP_CLIENT_WINDOW_VERSION; request["clientFullScreen"] = fullScreen; }
             send(request);
             const auto reply = receive();
             connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&

@@ -255,6 +255,8 @@ SOURCES += \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
+    gui/manual.cpp \
+    gui/hostlayout.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
     backend/autoupdatechecker.cpp \
@@ -290,6 +292,9 @@ HEADERS += \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
+    gui/manual.h \
+    gui/hostlayout.h \
+    backend/hostalias.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
     streaming/streamutils.h \
@@ -660,8 +665,8 @@ INCLUDEPATH += $$OUT_PWD
 HEADERS += $$OUT_PWD/version.h
 
 macx {
-    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm backend/macclipboard.mm backend/macunattended.mm
-    HEADERS += backend/macdock.h backend/macclipboard.h backend/macunattended.h
+    OBJECTIVE_SOURCES += backend/macpermissions.mm backend/macdock.mm backend/macclipboard.mm backend/macunattended.mm backend/mactitlebar.mm
+    HEADERS += backend/macdock.h backend/macclipboard.h backend/macunattended.h backend/mactitlebar.h
     LIBS += -framework AVFoundation -framework ApplicationServices -framework AppKit -framework ServiceManagement
 }
 

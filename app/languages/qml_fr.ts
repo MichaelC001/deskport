@@ -132,6 +132,10 @@
         <translation>Non apparié</translation>
     </message>
     <message>
+        <source>Alias: %1</source>
+        <translation>Alias : %1</translation>
+    </message>
+    <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
         <translation>Nom&#x202f;: %1</translation>
@@ -190,6 +194,10 @@
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
         <translation>Port HTTPS&#x202f;: %1</translation>
+    </message>
+    <message>
+        <source>Group</source>
+        <translation>Groupe</translation>
     </message>
 </context>
 <context>
@@ -347,8 +355,8 @@
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter the new name for this PC:</source>
-        <translation>Saisissez le nouveau nom de ce PC :</translation>
+        <source>Enter an alias for this device. Leave empty to use its original name:</source>
+        <translation>Saisissez un alias pour cet appareil. Laissez vide pour utiliser son nom d'origine :</translation>
     </message>
     <message>
         <source>Devices</source>
@@ -383,8 +391,8 @@
         <translation>Associer avec un PIN classique</translation>
     </message>
     <message>
-        <source>Rename device</source>
-        <translation>Renommer l’appareil</translation>
+        <source>Set alias</source>
+        <translation>Définir un alias</translation>
     </message>
     <message>
         <source>Remove from list</source>
@@ -415,12 +423,16 @@
         <translation>Vue en liste</translation>
     </message>
     <message>
-        <source>Unpin device</source>
-        <translation>Détacher l’appareil</translation>
+        <source>Done</source>
+        <translation>Terminé</translation>
     </message>
     <message>
-        <source>Pin device</source>
-        <translation>Épingler l’appareil</translation>
+        <source>Drag devices to change their order.</source>
+        <translation>Faites glisser les appareils pour changer leur ordre.</translation>
+    </message>
+    <message>
+        <source>Move to front</source>
+        <translation>Placer en premier</translation>
     </message>
     <message>
         <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
@@ -445,6 +457,42 @@
     <message>
         <source>Reconnect</source>
         <translation>Reconnecter</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Nouveau groupe</translation>
+    </message>
+    <message>
+        <source>All devices</source>
+        <translation>Tous les appareils</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Actions du groupe</translation>
+    </message>
+    <message>
+        <source>Rename group</source>
+        <translation>Renommer le groupe</translation>
+    </message>
+    <message>
+        <source>Delete group</source>
+        <translation>Supprimer le groupe</translation>
+    </message>
+    <message>
+        <source>Move out of group</source>
+        <translation>Retirer du groupe</translation>
+    </message>
+    <message>
+        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+        <translation>Ce groupe est vide. En mode modification, faites glisser des appareils sur le groupe pour les ajouter.</translation>
+    </message>
+    <message>
+        <source>Drag cards to change their order, or onto another device to make a group.</source>
+        <translation>Faites glisser les cartes pour changer leur ordre, ou sur un autre appareil pour créer un groupe.</translation>
     </message>
 </context>
 <context>
@@ -1567,6 +1615,42 @@
         <source>Open download page</source>
         <translation>Ouvrir la page de téléchargement</translation>
     </message>
+    <message>
+        <source>Not connected</source>
+        <translation>Non connecté</translation>
+    </message>
+    <message>
+        <source>Edit</source>
+        <translation>Modifier</translation>
+    </message>
+    <message>
+        <source>Done</source>
+        <translation>Terminé</translation>
+    </message>
+    <message>
+        <source>Refresh devices</source>
+        <translation>Actualiser les appareils</translation>
+    </message>
+    <message>
+        <source>Check saved devices and look for new ones</source>
+        <translation>Vérifier les appareils enregistrés et en rechercher de nouveaux</translation>
+    </message>
+    <message>
+        <source>Ask client to leave full screen</source>
+        <translation>Demander au client de quitter le plein écran</translation>
+    </message>
+    <message>
+        <source>Ask the connected client to leave full screen</source>
+        <translation>Demander au client connecté de quitter le plein écran</translation>
+    </message>
+    <message>
+        <source>Manual</source>
+        <translation>Manuel</translation>
+    </message>
+    <message>
+        <source>How to use DeskPort</source>
+        <translation>Comment utiliser DeskPort</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -1913,8 +1997,8 @@
         <translation>Orange</translation>
     </message>
     <message>
-        <source>Show data usage in the sidebar</source>
-        <translation>Afficher les données utilisées dans la barre latérale</translation>
+        <source>Show data usage in the top bar</source>
+        <translation>Afficher l'utilisation des données dans la barre supérieure</translation>
     </message>
     <message>
         <source>Diagnostics and feedback</source>
@@ -2034,6 +2118,30 @@
     <message>
         <source>Device details</source>
         <translation>Détails de l’appareil</translation>
+    </message>
+    <message>
+        <source>Open</source>
+        <translation>Ouvrir</translation>
+    </message>
+    <message>
+        <source>Group actions</source>
+        <translation>Actions du groupe</translation>
+    </message>
+    <message>
+        <source>1 device</source>
+        <translation>1 appareil</translation>
+    </message>
+    <message>
+        <source>%1 devices</source>
+        <translation>%1 appareils</translation>
+    </message>
+    <message>
+        <source>Add a device</source>
+        <translation>Ajouter un appareil</translation>
+    </message>
+    <message>
+        <source>New group</source>
+        <translation>Nouveau groupe</translation>
     </message>
 </context>
 <context>
@@ -2758,7 +2866,15 @@
     <message><source>Use client as an extended screen</source><translation>Utiliser le client comme écran étendu</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposition précédente des écrans est automatiquement restaurée à la fin de la session.</translation></message>
     <message><source>Desktop adjustment</source><translation>Ajustement du bureau</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation. During a connection, use Desktop adjustment in the tray menu to apply immediately.</source><translation>0,5 agrandit les commandes ; 1,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, utilisez Ajustement du bureau dans le menu de la zone de notification pour appliquer immédiatement.</translation></message>
+    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0,5 agrandit les commandes ; 1,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, la modification s’applique immédiatement.</translation></message>
+    <message>
+        <source>Full screen</source>
+        <translation>Plein écran</translation>
+    </message>
+    <message>
+        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+        <translation>Pendant une connexion, Ctrl+Alt+Maj+X bascule aussi le plein écran.</translation>
+    </message>
 </context>
 <context>
     <name>DeviceAdvanced</name>

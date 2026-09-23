@@ -33,7 +33,8 @@ UiPage {
                 text: qsTr("GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.")
                 color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
-            UiButton { objectName: "feedbackButton"; text: qsTr("Create logs ZIP and open GitHub…"); onClicked: diagnostics.feedback() }
+            // One way to report: it packs the logs into a ZIP and opens a draft GitHub issue.
+            UiButton { objectName: "feedbackButton"; text: qsTr("Report a problem"); onClicked: diagnostics.feedback() }
             Label { text: diagnostics.status; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true; visible: text.length > 0 }
             Label { text: diagnostics.bundlePath; textFormat: Text.PlainText; color: ui.muted; wrapMode: Text.WrapAnywhere; Layout.fillWidth: true; visible: text.length > 0 }
             UiButton { objectName: "showDiagnosticsBundle"; text: qsTr("Show ZIP in folder"); visible: diagnostics.bundlePath.length > 0; onClicked: diagnostics.showBundle() }
@@ -61,7 +62,7 @@ UiPage {
             }
             Label { text: qsTr("Appearance changes apply immediately."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch {
-                objectName: "showTrafficSwitch"; text: qsTr("Show data usage in the sidebar")
+                objectName: "showTrafficSwitch"; text: qsTr("Show data usage in the top bar")
                 checked: preferences.showTraffic
                 onClicked: { preferences.showTraffic = checked; save() }
             }
@@ -138,7 +139,6 @@ UiPage {
         ColumnLayout {
             anchors.fill: parent; spacing: ui.gap
             Label { text: "DeskPort " + SystemProperties.versionString; color: ui.text; font.pixelSize: ui.title }
-            UiButton { text: qsTr("Report a problem"); visible: SystemProperties.hasBrowser; onClicked: Qt.openUrlExternally("https://github.com/keithxc/deskport/issues") }
         }
     }
 }

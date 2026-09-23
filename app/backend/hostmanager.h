@@ -100,7 +100,6 @@ public:
     Q_INVOKABLE void reconnectViewer() { emit reconnectRequested(); }
     Q_INVOKABLE void toggleViewerFullscreen() { emit fullscreenRequested(); }
     Q_INVOKABLE void recallViewer() { emit viewerRecallRequested(); }
-    void setViewerDesktopAdjustment(double value);
     void setResident(bool enabled) { m_Resident = enabled; }
     Q_INVOKABLE void requestExit();
     Q_INVOKABLE void requestRestart();
@@ -117,8 +116,6 @@ signals:
     void disconnectRequested();
     void reconnectRequested();
     void fullscreenRequested();
-    void viewerMenuRequested();
-    void desktopAdjustmentRequested(double value);
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
@@ -160,7 +157,6 @@ private:
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
-    QMenu* m_AdjustmentMenu = nullptr;
     bool m_TrustBusy = false;
     bool m_Starting = false;
     bool m_Stopping = false;

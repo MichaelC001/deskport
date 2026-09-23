@@ -1,4 +1,5 @@
 #include "backend/computermanager.h"
+#include "gui/hostlayout.h"
 #include "streaming/session.h"
 
 #include <QAbstractListModel>
@@ -6,6 +7,8 @@
 class ComputerModel : public QAbstractListModel
 {
     Q_OBJECT
+    // Empty for the top level; otherwise the ID of the group being shown.
+    Q_PROPERTY(QString currentGroup READ currentGroup WRITE setCurrentGroup NOTIFY currentGroupChanged)
 
     enum Roles
     {
@@ -19,10 +22,16 @@ class ComputerModel : public QAbstractListModel
         AddressRole,
         HostAddressRole,
         HostIdRole,
-        FavoriteRole,
         SourceIndexRole,
         OperatingSystemRole,
-        DetailsRole
+        DetailsRole,
+        AliasRole,
+        ReportedNameRole,
+        IsGroupRole,
+        GroupIdRole,
+        MemberCountRole,
+        MemberSystemsRole,
+        IsAddRole
     };
 
 public:
@@ -37,8 +46,23 @@ public:
 
     virtual QHash<int, QByteArray> roleNames() const override;
 
+    // Re-reads the devices and groups in the saved local layout.
     Q_INVOKABLE void refreshFavorites();
-    Q_INVOKABLE void setFavorite(int computerIndex, bool favorite);
+    // Moves one card within the shown level and saves the layout locally.
+    Q_INVOKABLE void moveComputer(int from, int to);
+    // Drops a device card on a device or group card at the top level.
+    Q_INVOKABLE QString combine(int from, int to);
+    Q_INVOKABLE QString addGroup(QString name);
+    Q_INVOKABLE void renameGroup(QString groupId, QString name);
+    // The group's devices return to the top level, where the group was.
+    Q_INVOKABLE void deleteGroup(QString groupId);
+    Q_INVOKABLE void moveOutOfGroup(int computerIndex);
+    Q_INVOKABLE QString groupName(QString groupId) const;
+    Q_INVOKABLE QString defaultGroupName() const;
+    Q_INVOKABLE bool canEdit() const;
+
+    QString currentGroup() const { return m_Group; }
+    void setCurrentGroup(const QString& group);
 
     Q_INVOKABLE void deleteComputer(int computerIndex);
 
@@ -50,11 +74,13 @@ public:
 
     Q_INVOKABLE void wakeComputer(int computerIndex);
 
-    Q_INVOKABLE void renameComputer(int computerIndex, QString name);
+    // An empty alias restores the name reported by the host.
+    Q_INVOKABLE void setAlias(int computerIndex, QString alias);
 
     Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
 
 signals:
+    void currentGroupChanged();
     void pairingCompleted(QVariant error);
     void connectionTestCompleted(int result, QString blockedPorts);
 
@@ -64,7 +90,20 @@ private slots:
     void handlePairingCompleted(NvComputer* computer, QString error);
 
 private:
-    void sortFavorites(QVector<NvComputer*>& computers) const;
-    QVector<NvComputer*> m_Computers;
+    struct Row
+    {
+        NvComputer* computer = nullptr; // null for a group or the add card
+        bool add = false;               // the trailing add card at the top level
+        HostLayout::Entry entry;
+        QStringList systems;            // group member operating systems, for the card icons
+    };
+    // Present device IDs, ordered by display name for devices the layout does not mention.
+    QStringList presentDevices(QHash<QString, NvComputer*>* byId = nullptr) const;
+    QVector<Row> buildRows() const;
+    void reload();
+    static bool sameStructure(const QVector<Row>& a, const QVector<Row>& b);
+    NvComputer* computerAt(int index) const;
+    QVector<Row> m_Rows;
+    QString m_Group;
     ComputerManager* m_ComputerManager;
 };

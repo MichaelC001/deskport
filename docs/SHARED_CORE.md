@@ -68,3 +68,10 @@ Run the normal core and device-preference tests after changing the catalog. Neve
 edit generated C/Java output directly. See core `portable/FEATURES.md` for adapter
 coverage and the rules for advancing core and consumer pins. The mobile product's
 private repository and paid/proprietary target do not relicense any PC code.
+
+## Stable entry update — 2026-09-21
+
+See core `protocol/ENDPOINTS.md`. Mobile and desktop authenticated refresh retain
+the configured connection entry independently from streaming endpoints. Mobile
+legacy stream overrides migrate their hostname to the default entry; new explicit
+entries are preserved. Run the endpoint transport and binding regressions.

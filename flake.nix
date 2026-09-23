@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  inputs.deskport-core = { url = "github:keithxc/deskport-core"; flake = false; };
+  inputs.deskport-core = { url = "github:keithxc/deskport-core/c1dd9e7ea5b698adab9a5ac9423fccddb4d37eb0"; flake = false; };
 
   outputs = { self, nixpkgs, deskport-core }:
     let
@@ -41,7 +41,7 @@
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
-          version = "0.5.0";
+          version = "0.5.6";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation, CI edits and the vendored macOS prebuilts do not
@@ -63,6 +63,10 @@
           '';
           postInstall = (old.postInstall or "") + ''
             mkdir -p "$out/libexec"
+            if [ -f TEST_BUILD_ID ]; then
+              mkdir -p "$out/share/deskport"
+              cp TEST_BUILD_ID "$out/share/deskport/TEST_BUILD_ID"
+            fi
             ln -s ${sessionHost}/bin/sunshine "$out/libexec/deskport-host"
             cat > "$out/share/applications/io.github.keithxc.DeskPort.display.desktop" <<EOF
             [Desktop Entry]
