@@ -900,6 +900,8 @@ ApplicationWindow {
         QCOMPARE(recalls,1);
         QVERIFY(QMetaObject::invokeMethod(arrange,"clicked"));
         QVERIFY(!grid->property("arranging").toBool());
+        QVERIFY(QMetaObject::invokeMethod(computers,"refreshFavorites"));
+        QCOMPARE(computers->data(computers->index(0),Qt::UserRole+1).toString(),QString("device-b"));
         QVERIFY(QMetaObject::invokeMethod(computers,"moveComputer",Q_ARG(int,1),Q_ARG(int,0)));
         QCOMPARE(computers->data(computers->index(0),Qt::UserRole+1).toString(),QString("device-a"));
         // Groups: holding a device over the middle of another device groups them.

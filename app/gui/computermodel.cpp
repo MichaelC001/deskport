@@ -408,7 +408,14 @@ void ComputerModel::moveComputer(int from, int to)
     beginMoveRows(QModelIndex(), from, from, QModelIndex(), to > from ? to + 1 : to);
     m_Rows.move(from, to);
     endMoveRows();
-    HostLayout::load().move(from, to, presentDevices(), m_Group);
+    // Persist the order now visible in the model. Replaying the same numeric
+    // move against a freshly loaded layout is ambiguous after an earlier drag
+    // has already changed delegate indexes, and can save an order different
+    // from the one the user sees.
+    QStringList shownOrder;
+    for (const Row& row : m_Rows)
+        if (!row.add) shownOrder.append(row.entry.id);
+    HostLayout::load().arrange(shownOrder, presentDevices(), m_Group);
 }
 
 QString ComputerModel::combine(int from, int to)
