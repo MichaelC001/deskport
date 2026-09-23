@@ -153,6 +153,11 @@ physical layout and disabled owned adapter between scenarios. Run it elevated
 in the interactive session, with sharing stopped; session 0 is intentionally
 rejected. Retained recovery snapshots and phase logs are administrator-only.
 A failed round is a failed acceptance gate even when manual recovery succeeds.
+The installed candidate passed all thirty scenarios with `-PortraitSwitch`,
+which changes to 1080x1920 and back to 1920x1080 before release or forced exit.
+Its helper and mode-list hashes matched the audited package; upgrading retained
+the host certificate and key. The physical tablet then passed twelve orientation
+changes and disconnect/reconnect against that installation.
 
 The installer allows only the supported application port families from the
 local subnet across Windows network profiles. Existing explicit block rules
@@ -161,5 +166,5 @@ must return a nonzero exit code without waiting on an invisible dialog.
 
 The machine's install-directory antivirus exclusion was configured by its owner.
 Testing within that exclusion does not resolve public-distribution detection.
-A final matching-package install and the remaining live matrix are still needed;
-this development checkpoint is not a stable-release certification.
+The remaining live matrix is still needed; this development checkpoint is not
+a stable-release certification.

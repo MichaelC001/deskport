@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory=$true)][string]$Executable,
     [Parameter(Mandatory=$true)][string]$OutputDirectory,
-    [ValidateRange(1, 100)][int]$Rounds = 1
+    [ValidateRange(1, 100)][int]$Rounds = 1,
+    [switch]$PortraitSwitch
 )
 
 # Explicit native acceptance: temporarily enables only DeskPort's owned VDD.
@@ -60,6 +61,16 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
         $process.StandardInput.WriteLine((@{seq=1;session=$true;displayPolicy=0;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
         $resized = Read-Reply $process
         if ($resized.seq -ne 1 -or $resized.width -ne $mode.width -or $resized.height -ne $mode.height) { throw 'Resize acknowledgement mismatch.' }
+        $sequence = 1
+        if ($PortraitSwitch) {
+            foreach ($size in @(@{width=1080;height=1920}, @{width=1920;height=1080})) {
+                if (-not ($ready.displayModes | Where-Object { $_.width -eq $size.width -and $_.height -eq $size.height })) { throw 'Required orientation mode missing.' }
+                $sequence++
+                $process.StandardInput.WriteLine((@{seq=$sequence;session=$true;displayPolicy=0;width=$size.width;height=$size.height;scale=1} | ConvertTo-Json -Compress))
+                $resized = Read-Reply $process
+                if ($resized.seq -ne $sequence -or $resized.width -ne $size.width -or $resized.height -ne $size.height) { throw 'Orientation acknowledgement mismatch.' }
+            }
+        }
         if ($scenario -eq 'forced-exit') {
             $guardInfo = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'deskport-display-recovery.exe' -and $_.CommandLine -match ('lease ' + $process.Id + ' ') } | Select-Object -First 1
             if (-not $guardInfo) { throw 'Recovery guardian missing before crash test.' }
@@ -70,9 +81,10 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
             @{exited=$guardExited; exitCode=$(if ($guardExited) {$guard.ExitCode} else {$null})} | ConvertTo-Json | Set-Content (Join-Path $state 'guardian.json')
             $guard.Dispose()
         } else {
-            $process.StandardInput.WriteLine((@{seq=2;session=$false;displayPolicy=0;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
+            $sequence++
+            $process.StandardInput.WriteLine((@{seq=$sequence;session=$false;displayPolicy=0;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))
             $released = Read-Reply $process
-            if ($released.seq -ne 2) { throw 'Release acknowledgement mismatch.' }
+            if ($released.seq -ne $sequence) { throw 'Release acknowledgement mismatch.' }
             $process.StandardInput.Close()
         }
         if (-not $process.WaitForExit(25000)) { throw 'Display cleanup timed out.' }
@@ -84,7 +96,7 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
             Start-Sleep -Milliseconds 250
         }
         if (-not $restored) { throw 'Physical layout or disabled VDD baseline was not restored.' }
-        $results += @{round=$round;scenario=$scenario;width=$resized.width;height=$resized.height;restored=$true}
+        $results += @{round=$round;scenario=$scenario;width=$resized.width;height=$resized.height;portraitSwitch=[bool]$PortraitSwitch;restored=$true}
         $results | ConvertTo-Json | Set-Content (Join-Path $OutputDirectory 'results.json')
     } finally {
         if (-not $process.HasExited) {

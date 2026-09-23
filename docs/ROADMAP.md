@@ -1676,3 +1676,23 @@ The installer checks required payload files after extraction and before
 completion, returning a failure for incomplete installs. Binding regression
 coverage passed (99 tests); installer syntax compiled with NSIS. These checks
 improve failure handling but do not resolve the Defender release blocker.
+
+## 2026-09-23 — Windows hardware recovery and client matrix
+
+The Windows development branch now includes the 0.5.6 desktop baseline. A
+closed-lid hardware test exposed a temporary driver-removal veto; the recovery
+guardian now retries removal within a fixed deadline and verifies the owned
+device is disabled before declaring restoration complete. The installed offline
+candidate passed ten rounds of resize/release, forced exit and restart after
+crash, including portrait/landscape switches in every scenario (30 scenarios).
+Installer/portable payload equivalence, static dependencies, installed helper
+hashes, silent failure behavior and credential retention were checked.
+
+A physical Apple tablet received real Windows frames as a standard user and
+passed twelve orientation changes plus disconnect/reconnect with the installed
+candidate. A macOS viewer received Windows frames and correctly reported takeover
+by the tablet. Finite advertised modes are negotiated by the private Apple client;
+its source remains separate. Windows-to-macOS viewing, full secure-desktop input,
+pre-login operation and the remaining PC feature matrix are still acceptance
+items. Testing under a pre-existing user exclusion does not close the Defender
+release blocker above. No public release is authorized by these results.
