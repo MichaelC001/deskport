@@ -2,6 +2,7 @@
 #include "connectionwait.h"
 #include "resizetrace.h"
 #include <QElapsedTimer>
+#include <QHostInfo>
 #include "session.h"
 #include "backend/hostalias.h"
 #define DP_TRAFFIC_IMPLEMENTATION
@@ -1957,9 +1958,32 @@ bool Session::startConnectionAsync()
     }
 
     QString rtspSessionUrl;
+    NvAddress streamAddress;
 
     try {
         NvHTTP http(m_Computer);
+#ifdef Q_OS_WIN
+        // Qt can resolve local names that Winsock's narrow getaddrinfo() does
+        // not resolve. Use one numeric endpoint for the authenticated launch
+        // and media connection, rather than resolving the name a second time.
+        const NvAddress endpoint = http.address();
+        if (QHostAddress(endpoint.address()).isNull()) {
+            const QHostInfo resolved = QHostInfo::fromName(endpoint.address());
+            if (resolved.error() != QHostInfo::NoError || resolved.addresses().isEmpty()) {
+                emit displayLaunchError(resolved.errorString());
+                return false;
+            }
+            QHostAddress selected = resolved.addresses().first();
+            for (const QHostAddress& candidate : resolved.addresses()) {
+                if (candidate.protocol() == QAbstractSocket::IPv4Protocol) {
+                    selected = candidate;
+                    break;
+                }
+            }
+            http.setAddress(NvAddress(selected, endpoint.port()));
+        }
+#endif
+        streamAddress = http.address();
         http.setCancellationFlag(&m_RecoveryCancelled);
         deskportResizeStage("resume-request");
         http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
@@ -1990,10 +2014,10 @@ bool Session::startConnectionAsync()
         return false;
     }
 
-    QByteArray hostnameStr = m_Computer->activeAddress.address().toLatin1();
+    QByteArray hostnameStr = streamAddress.address().toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
 
-    SERVER_INFORMATION hostInfo;
+    SERVER_INFORMATION hostInfo = {};
     hostInfo.address = hostnameStr.data();
     hostInfo.serverInfoAppVersion = siAppVersion.data();
     hostInfo.serverCodecModeSupport = m_Computer->serverCodecModeSupport;

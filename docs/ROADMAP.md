@@ -1738,3 +1738,10 @@ acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
 - Prevent computer-polling reference-count underflow, which could replace an mDNS
   server while an orphaned browser's timer still referenced it. Real reconnect
   acceptance is required in addition to this lifecycle fix.
+
+- Installed candidate: Android first frame, keyboard and click passed in all three
+  policies; rotating the client changed the live stream from 824x1644 to
+  1784x684. Extension disconnect/reconnect and restoration passed.
+- Windows outbound launch exposed a local-name resolver mismatch after successful
+  authenticated control requests. Resolve the name through Qt once and use the
+  same numeric endpoint for launch and media; live acceptance remains required.
