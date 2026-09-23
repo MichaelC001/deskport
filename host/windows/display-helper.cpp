@@ -153,11 +153,17 @@ bool applyMode(DEVMODEW target) {
     ActiveTopology after;
     const auto& before=sessionTopology;
     if(before.paths.empty()&&!headlessVirtual)return false;
-    if(ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr)!=DISP_CHANGE_SUCCESSFUL||!after.read())return false;
+    const auto changeResult=ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr);
+    if(changeResult!=DISP_CHANGE_SUCCESSFUL)
+        std::cerr<<"GDI display change rejected ("<<changeResult<<"); trying the owned CCD path"<<std::endl;
+    // An enabled indirect display can reject its initial GDI positioning even
+    // though CCD exposes a valid active path. Re-query after either result and
+    // let the topology-preserving CCD update below place the owned output.
+    if(!after.read())return false;
     // Most drivers preserve the existing outputs themselves. Re-submitting
     // their complete CCD configuration is unnecessary and can be rejected by
     // physical GPUs while the display is locked or powered down. Only repair
-    // the baseline when the GDI update actually changed a physical output.
+    // the baseline or position the owned output when GDI did not establish it.
     if(preservesPhysicalSources(before,after)) {
         DEVMODEW actual{};
         if(current(actual)&&actual.dmPelsWidth==target.dmPelsWidth&&actual.dmPelsHeight==target.dmPelsHeight&&
@@ -199,7 +205,10 @@ bool applyMode(DEVMODEW target) {
     if(rc)return false;
     ActiveTopology verified;
     if(!verified.read())return false;
-    return preservesPhysicalSources(before,verified);
+    DEVMODEW actual{};
+    return preservesPhysicalSources(before,verified) && current(actual) &&
+        actual.dmPelsWidth==target.dmPelsWidth && actual.dmPelsHeight==target.dmPelsHeight &&
+        actual.dmPosition.x==target.dmPosition.x && actual.dmPosition.y==target.dmPosition.y;
 }
 bool restore() {
     if (!changed) return true;

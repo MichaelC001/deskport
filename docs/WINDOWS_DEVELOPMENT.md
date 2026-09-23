@@ -181,3 +181,33 @@ The machine's install-directory antivirus exclusion was configured by its owner.
 Testing within that exclusion does not resolve public-distribution detection.
 The remaining live matrix is still needed; this development checkpoint is not
 a stable-release certification.
+
+## Initial indirect-display positioning — 2026-09-23
+
+A normally protected Windows 11 target returned `DISP_CHANGE_FAILED` from the
+first GDI positioning call after enabling the owned virtual adapter. CCD still
+reported both the physical screen and the owned active path. Returning early
+at this point prevented host startup with `Cannot activate the DeskPort virtual
+display`.
+
+The helper now re-queries the active topology after either GDI result and uses
+its existing CCD update when the requested owned mode/position is not already
+established. It continues to verify the physical source modes and target paths,
+and now also verifies the owned resolution and position after CCD application.
+It does not save display database defaults or relax the recovery guard.
+
+Native validation: `tests/windows-display.ps1 -Rounds 3 -PortraitSwitch` passed
+all nine scenarios, including normal release, forced exit, and reuse of crash
+state. Every scenario exercised the GDI-rejection fallback and restored the
+physical baseline with the owned adapter disabled. This is separate from
+installed-package first-frame/input acceptance.
+
+API reference: [SetDisplayConfig](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setdisplayconfig).
+
+Installed private Setup acceptance: host start, stop/start, a macOS client's
+first frame, keyboard, pointer and full screen passed. An Android client passed
+first frame, text, touch and disconnect/reconnect with automatic sizing disabled.
+The installed helper hash matched the tested helper. Defender remained enabled
+with no new detection during this acceptance. Automatic Android sizing still
+failed; a macOS discovery crash interrupted its reconnect check. These are
+separate open compatibility gates, not passes implied by this activation fix.

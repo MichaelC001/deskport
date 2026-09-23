@@ -1706,3 +1706,20 @@ executables, anonymous/low-integrity clients and session-zero requests, plus pip
 collision, timeout and shutdown checks. The temporary service was removed after
 testing. This is an IPC/permission checkpoint, not lock-screen streaming or input
 acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
+
+### Windows virtual-display activation fix — 2026-09-23
+
+- A Windows 11 target rejected initial indirect-display positioning through
+  `ChangeDisplaySettingsExW` with `DISP_CHANGE_FAILED`, despite an active owned
+  CCD path. The display helper now continues through the existing
+  topology-preserving CCD update and verifies the resulting owned mode and
+  position, instead of aborting on the GDI result alone.
+- The final helper passed three native rounds of resize/release, forced exit,
+  and restart after crash (nine scenarios), including 1080×1920 / 1920×1080
+  switches and physical-layout restoration. Installed-package streaming
+  acceptance is recorded separately; these native checks alone do not prove it.
+
+- Installed Windows activation fix: real macOS first-frame/input/full-screen and
+  Android fixed-size first-frame/input/reconnect passed. Keep Android finite-mode
+  negotiation and the observed macOS mDNS reconnect crash open; do not claim
+  complete cross-platform acceptance.
