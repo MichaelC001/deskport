@@ -290,7 +290,7 @@ private slots:
             QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property int enables: 0; function enable() { enables++ } function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("ComputerManager",1,0,"ComputerManager",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} function addBoundHost(peer) {} }",QUrl()); return c.create();
         });
         qmlRegisterType<TestPreferences>("TestPreferences",1,0,"TestPreferences");
         qmlRegisterSingletonType<TestPreferences>("StreamingPreferences",1,0,"StreamingPreferences",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
@@ -738,6 +738,7 @@ ApplicationWindow {
  function testStart() { stackView.push("qrc:/gui/StreamSegue.qml", {session:testSession, appName:"Desktop"}, StackView.Immediate) }
  function testSettings() { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
  function testSharing() { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
+ function testBinding() { showDevices(); navigateTo("qrc:/gui/BindView.qml", "BindView") }
  function testGrid() { return stackView.currentItem }
  function testDevice() { stackView.push("qrc:/gui/DeviceSettings.qml", {preferences: StreamingPreferences.forDevice("device-a"), deviceName: "Studio"}, StackView.Immediate) }
  function testCards() { StreamingPreferences.compactDevices = false }
@@ -760,6 +761,12 @@ ApplicationWindow {
         QCOMPARE(root->property("testDepth").toInt(),2);
         // Discard only initial setup navigation, which is scheduled once.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding")); QTest::qWait(100);
+        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Add a device"));
+        const QVariantMap newlyBound{{"name","New computer"}};
+        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound)));
+        QTRY_COMPARE(root->property("testDepth").toInt(),1);
+        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testStart"));
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));

@@ -274,7 +274,15 @@ ApplicationWindow {
 
     Connections {
         target: peerManager
-        function onPeerBound(peer) { ComputerManager.addBoundHost(peer) }
+        function onPeerBound(peer) {
+            ComputerManager.addBoundHost(peer)
+            // The requesting side is looking at BindView while approval is
+            // pending. Once trust is durable, return to the list where the new
+            // device is now available. Incoming approvals happen on HostView
+            // and must not change the operator's current page.
+            if (qmltypeof(stackView.currentItem, "BindView"))
+                Qt.callLater(showDevices)
+        }
     }
     BindingApproval {
         manager: peerManager
