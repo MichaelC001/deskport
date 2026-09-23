@@ -1691,8 +1691,10 @@ hashes, silent failure behavior and credential retention were checked.
 A physical Apple tablet received real Windows frames as a standard user and
 passed twelve orientation changes plus disconnect/reconnect with the installed
 candidate. A macOS viewer received Windows frames and correctly reported takeover
-by the tablet. Finite advertised modes are negotiated by the private Apple client;
-its source remains separate. Windows-to-macOS viewing, full secure-desktop input,
-pre-login operation and the remaining PC feature matrix are still acceptance
+by the tablet. The Windows viewer also rendered the current macOS desktop;
+its own window capture was inspected alongside the host and transport state.
+Finite advertised modes are negotiated by the private Apple client; its source
+remains separate. Full secure-desktop input, pre-login operation, reverse-stream
+input and the remaining PC feature matrix are still acceptance
 items. Testing under a pre-existing user exclusion does not close the Defender
 release blocker above. No public release is authorized by these results.
