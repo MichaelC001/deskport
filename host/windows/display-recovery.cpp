@@ -50,13 +50,18 @@ static DWORD deviceState(bool change=false, bool enable=false) {
         params.StateChange=enable?DICS_ENABLE:DICS_DISABLE;params.Scope=DICS_FLAG_GLOBAL;
         if (!SetupDiSetClassInstallParamsW(set,&info,&params.ClassInstallHeader,sizeof(params)) || !SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,set,&info)) {result=GetLastError();break;}
         SP_DEVINSTALL_PARAMS_W install{};install.cbSize=sizeof(install);
-        if (SetupDiGetDeviceInstallParamsW(set,&info,&install) && (install.Flags&(DI_NEEDREBOOT|DI_NEEDRESTART))) {result=ERROR_SUCCESS_REBOOT_REQUIRED;break;}
+        const bool restartRequested=SetupDiGetDeviceInstallParamsW(set,&info,&install) &&
+            (install.Flags&(DI_NEEDREBOOT|DI_NEEDRESTART));
         result=ERROR_TIMEOUT;
         for (int attempt=0;attempt<50;++attempt) {
             if (CM_Get_DevNode_Status(&status,&problem,info.DevInst,0)==CR_SUCCESS &&
                 (enable ? (!problem && (status&DN_STARTED)) : problem==CM_PROB_DISABLED)) {result=0;break;}
             Sleep(100);
         }
+        // SetupAPI can retain a restart flag while this particular enable or
+        // disable transition has already completed. Do not abandon recovery
+        // before checking Config Manager's actual device state.
+        if(result!=0&&restartRequested)result=ERROR_SUCCESS_REBOOT_REQUIRED;
         break;
     }
     SetupDiDestroyDeviceInfoList(set);return result;
@@ -115,10 +120,26 @@ static int restoreSnapshot(Snapshot before) {
     const auto disabled=deviceState(true,false);
     std::cout<<"disable_result="<<disabled<<std::endl;
     if(disabled)return int(disabled);
-    LONG rc=SetDisplayConfig(UINT32(before.paths.size()),before.paths.data(),UINT32(before.modes.size()),before.modes.data(),SDC_APPLY|SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE);
+    LONG rc=ERROR_INVALID_STATE;
+    // PnP disable completion precedes the display topology transition. First
+    // accept an already restored layout, otherwise retry the original snapshot
+    // while Windows retires the indirect output. Never persist new defaults.
+    for(int i=0;i<50;++i) {
+        Snapshot now;
+        if(capture(now)&&equivalent(before,now)&&deviceState()==CM_PROB_DISABLED){std::cout<<"RECOVERY_VERIFIED"<<std::endl;return 0;}
+        if(i%5==0) {
+            rc=SetDisplayConfig(UINT32(before.paths.size()),before.paths.data(),UINT32(before.modes.size()),before.modes.data(),SDC_APPLY|SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE);
+            // Removing an indirect adapter can invalidate saved target timing
+            // indices. Let Windows recompute them, but only accept success once
+            // the physical layout, rotation, frequency and pixel format match.
+            if(rc==ERROR_INVALID_DATA)
+                rc=SetDisplayConfig(UINT32(before.paths.size()),before.paths.data(),UINT32(before.modes.size()),before.modes.data(),SDC_APPLY|SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE|SDC_ALLOW_CHANGES);
+            if(rc==ERROR_ACCESS_DENIED||rc==ERROR_NOT_SUPPORTED)return int(rc);
+        }
+        Sleep(100);
+    }
     std::cout<<"restore_topology_result="<<rc<<std::endl;
     if(rc)return int(rc);
-    for(int i=0;i<50;++i) {Snapshot now;if(capture(now)&&equivalent(before,now)&&deviceState()==CM_PROB_DISABLED){std::cout<<"RECOVERY_VERIFIED"<<std::endl;return 0;}Sleep(100);}
     return ERROR_INVALID_STATE;
 }
 static int restore(const std::wstring& path) {

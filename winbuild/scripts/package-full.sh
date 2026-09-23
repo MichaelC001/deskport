@@ -3,6 +3,12 @@
 source "$(dirname "$0")/env.sh"
 
 VERSION="$(cat "$SRC_ROOT/app/version.txt")"
+SOURCE_REVISION="${DESKPORT_SOURCE_REVISION:-$(git -C "$SRC_ROOT" rev-parse HEAD)}"
+SOURCE_DIFF_SHA256="${DESKPORT_SOURCE_DIFF_SHA256:-$(git -C "$SRC_ROOT" diff HEAD --binary | sha256sum | cut -d ' ' -f 1)}"
+[[ "$SOURCE_REVISION" =~ ^[0-9a-f]{40}$ ]] && [[ "$SOURCE_DIFF_SHA256" =~ ^[0-9a-f]{64}$ ]] || {
+  echo "Valid source revision and diff digest are required; set DESKPORT_SOURCE_REVISION and DESKPORT_SOURCE_DIFF_SHA256 for an exported source tree." >&2
+  exit 1
+}
 PACKAGE_SUFFIX="${PACKAGE_SUFFIX:--full}"
 BUILD="$WB/build-app"
 HOST_SOURCE="${DESKPORT_HOST_SOURCE_DIR:-$WB/full/sunshine-prepared}"
@@ -55,8 +61,8 @@ cp "$WB/THIRD-PARTY-NOTICES-full.txt" "$STAGE/THIRD-PARTY-NOTICES.txt"
 {
   echo "DeskPort $VERSION Windows x64"
   echo "Build variant: ${PACKAGE_SUFFIX#-}"
-  echo "Base source revision: $(git -C "$SRC_ROOT" rev-parse HEAD)"
-  echo "Tracked source diff SHA-256: $(git -C "$SRC_ROOT" diff HEAD --binary | sha256sum | cut -d ' ' -f 1)"
+  echo "Base source revision: $SOURCE_REVISION"
+  echo "Tracked source diff SHA-256: $SOURCE_DIFF_SHA256"
   echo "Client executable SHA-256: $(sha256sum "$STAGE/DeskPort.exe" | cut -d ' ' -f 1)"
   echo "Full Windows integration candidate: client, patched host, display helper. See acceptance report."
 } > "$STAGE/BUILD-INFO.txt"

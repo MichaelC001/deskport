@@ -18,4 +18,5 @@ config.tests/*/Makefile
 /build-macos.noindex/
 /dist.noindex/
 /build-linux.noindex/
+/Build.noindex/
 __pycache__/

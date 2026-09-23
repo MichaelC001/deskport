@@ -98,6 +98,7 @@ QString output;
 DEVMODEW original{};
 bool changed = false;
 bool privateVirtual = false;
+bool headlessVirtual = false;
 bool current(DEVMODEW& mode) {
     mode = {}; mode.dmSize = sizeof(mode);
     return EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), ENUM_CURRENT_SETTINGS, &mode, 0);
@@ -130,12 +131,38 @@ struct ActiveTopology {
     }
 };
 ActiveTopology sessionTopology;
+bool preservesPhysicalSources(const ActiveTopology& before, const ActiveTopology& after) {
+    const auto sameAdapter=[](LUID a,LUID b){return a.LowPart==b.LowPart&&a.HighPart==b.HighPart;};
+    for(const auto& old:before.modes) {
+        if(old.infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)continue;
+        const auto mode=std::find_if(after.modes.begin(),after.modes.end(),[&](const DISPLAYCONFIG_MODE_INFO& m){return m.infoType==old.infoType&&m.id==old.id&&sameAdapter(m.adapterId,old.adapterId);});
+        if(mode==after.modes.end())return false;
+        const auto& a=old.sourceMode;const auto& b=mode->sourceMode;
+        if(a.width!=b.width||a.height!=b.height||a.position.x!=b.position.x||a.position.y!=b.position.y||a.pixelFormat!=b.pixelFormat)return false;
+    }
+    for(const auto& old:before.paths) {
+        const auto path=std::find_if(after.paths.begin(),after.paths.end(),[&](const DISPLAYCONFIG_PATH_INFO& p){return sameAdapter(p.sourceInfo.adapterId,old.sourceInfo.adapterId)&&p.sourceInfo.id==old.sourceInfo.id&&sameAdapter(p.targetInfo.adapterId,old.targetInfo.adapterId)&&p.targetInfo.id==old.targetInfo.id;});
+        if(path==after.paths.end())return false;
+        const auto& a=old.targetInfo;const auto& b=path->targetInfo;
+        if(a.rotation!=b.rotation||a.scaling!=b.scaling||a.refreshRate.Numerator!=b.refreshRate.Numerator||a.refreshRate.Denominator!=b.refreshRate.Denominator||a.scanLineOrdering!=b.scanLineOrdering)return false;
+    }
+    return true;
+}
 bool applyMode(DEVMODEW target) {
     if(!privateVirtual)return ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr)==DISP_CHANGE_SUCCESSFUL;
     ActiveTopology after;
     const auto& before=sessionTopology;
-    if(before.paths.empty())return false;
+    if(before.paths.empty()&&!headlessVirtual)return false;
     if(ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr)!=DISP_CHANGE_SUCCESSFUL||!after.read())return false;
+    // Most drivers preserve the existing outputs themselves. Re-submitting
+    // their complete CCD configuration is unnecessary and can be rejected by
+    // physical GPUs while the display is locked or powered down. Only repair
+    // the baseline when the GDI update actually changed a physical output.
+    if(preservesPhysicalSources(before,after)) {
+        DEVMODEW actual{};
+        if(current(actual)&&actual.dmPelsWidth==target.dmPelsWidth&&actual.dmPelsHeight==target.dmPelsHeight&&
+           actual.dmPosition.x==target.dmPosition.x&&actual.dmPosition.y==target.dmPosition.y)return true;
+    }
     auto sameAdapter=[](LUID a,LUID b){return a.LowPart==b.LowPart&&a.HighPart==b.HighPart;};
     bool found=false;
     for(auto& path:after.paths) {
@@ -172,14 +199,7 @@ bool applyMode(DEVMODEW target) {
     if(rc)return false;
     ActiveTopology verified;
     if(!verified.read())return false;
-    for(const auto& old:before.modes) {
-        if(old.infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)continue;
-        const auto mode=std::find_if(verified.modes.begin(),verified.modes.end(),[&](const DISPLAYCONFIG_MODE_INFO& m){return m.infoType==old.infoType&&m.id==old.id&&sameAdapter(m.adapterId,old.adapterId);});
-        if(mode==verified.modes.end())return false;
-        const auto& a=old.sourceMode;const auto& b=mode->sourceMode;
-        if(a.width!=b.width||a.height!=b.height||a.position.x!=b.position.x||a.position.y!=b.position.y||a.pixelFormat!=b.pixelFormat)return false;
-    }
-    return true;
+    return preservesPhysicalSources(before,verified);
 }
 bool restore() {
     if (!changed) return true;
@@ -206,6 +226,8 @@ int main(int argc, char** argv) {
         if (lease) CloseHandle(lease);
         send({{"error", "Another DeskPort display owner is active in this Windows session"}}); return 1;
     }
+    QSettings machine("HKEY_LOCAL_MACHINE\\Software\\DeskPort", QSettings::NativeFormat);
+    const auto ownedInstance = machine.value("VirtualDisplayDevice").toString();
     QFile previous(path);
     if (previous.exists()) {
         if (!previous.open(QIODevice::ReadOnly)) { send({{"error", "Cannot read display recovery state"}}); return 1; }
@@ -221,14 +243,20 @@ int main(int argc, char** argv) {
             if (original.dmSize != sizeof(original) || original.dmDriverExtra != 0) {
                 send({{"error", "Invalid saved display mode"}}); return 1;
             }
-            changed = true;
-            if (!restore()) { send({{"error", "Previous display restoration failed; reconnect the display and retry"}}); return 1; }
+            if (saved["virtual"].toBool()) {
+                // The independent guardian restores the physical topology and
+                // disables this device even when the helper is killed. Replaying
+                // a stale GDI mode here would re-enable it outside that guard.
+                // The new lease below must verify the disabled device baseline.
+                if (ownedInstance.isEmpty()) { send({{"error", "The virtual display recovery owner is missing"}}); return 1; }
+            } else {
+                changed = true;
+                if (!restore()) { send({{"error", "Previous display restoration failed; reconnect the display and retry"}}); return 1; }
+            }
         }
     }
     // Bind only the device instance created by DeskPort, never an independently
     // installed VDD adapter with the same vendor or friendly name.
-    QSettings machine("HKEY_LOCAL_MACHINE\\Software\\DeskPort", QSettings::NativeFormat);
-    const auto ownedInstance = machine.value("VirtualDisplayDevice").toString();
     if(!ownedInstance.isEmpty()&&!sessionTopology.read()){send({{"error", "Cannot capture the pre-sharing display topology"}});return 1;}
     if (!ownedInstance.isEmpty() && !recovery.start()) { send({{"error", recovery.error}}); return 1; }
     const auto owned = ownedAdapterHardware(ownedInstance);
@@ -237,8 +265,13 @@ int main(int argc, char** argv) {
     }
     output.clear();
     QString physical;
-    DISPLAY_DEVICEW device{}; device.cb = sizeof(device);
-    for (DWORD i = 0; EnumDisplayDevicesW(nullptr, i, &device, 0); ++i) {
+    // PnP reports DN_STARTED before the indirect display publishes its output.
+    // Reconnects must wait for that output instead of treating the short gap as
+    // a missing adapter. Never fall back to a different adapter during the wait.
+    for (int attempt = 0; attempt < 50; ++attempt) {
+      output.clear(); physical.clear();
+      DISPLAY_DEVICEW device{}; device.cb = sizeof(device);
+      for (DWORD i = 0; EnumDisplayDevicesW(nullptr, i, &device, 0); ++i) {
         if (!owned.isEmpty() && QString::fromWCharArray(device.DeviceID).compare(owned, Qt::CaseInsensitive) == 0) {
             output = QString::fromWCharArray(device.DeviceName);
             privateVirtual = true;
@@ -246,6 +279,11 @@ int main(int argc, char** argv) {
         if ((device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) && (device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP))
             physical = QString::fromWCharArray(device.DeviceName);
         device = {}; device.cb = sizeof(device);
+      }
+      DEVMODEW readyMode{}; readyMode.dmSize = sizeof(readyMode);
+      if (owned.isEmpty() || (!output.isEmpty() &&
+          EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), ENUM_CURRENT_SETTINGS, &readyMode, 0))) break;
+      Sleep(100);
     }
     if (!owned.isEmpty() && output.isEmpty()) {
         send({{"error", "The owned virtual adapter has no available display output"}}); return 1;
@@ -259,30 +297,50 @@ int main(int argc, char** argv) {
     }
     if (privateVirtual) {
         std::cerr << "Display lease: positioning owned output" << std::endl;
-        DEVMODEW primary{}; primary.dmSize = sizeof(primary);
-        if (!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(physical.utf16()), ENUM_CURRENT_SETTINGS, &primary, 0)) {
-            send({{"error", "Cannot determine the physical desktop layout"}}); return 1;
+        // Enabling an indirect display can make Windows retire the closed
+        // laptop panel. A sole remaining source must be placed at (0, 0), not
+        // to the right of the no-longer-active panel. The independent guardian
+        // still owns the complete pre-enable snapshot for final restoration.
+        QString activePhysical;
+        DISPLAY_DEVICEW active{};active.cb=sizeof(active);
+        for(DWORD i=0;EnumDisplayDevicesW(nullptr,i,&active,0);++i) {
+            const auto name=QString::fromWCharArray(active.DeviceName);
+            if((active.StateFlags&DISPLAY_DEVICE_ATTACHED_TO_DESKTOP)&&name!=output&&
+               (activePhysical.isEmpty()||(active.StateFlags&DISPLAY_DEVICE_PRIMARY_DEVICE)))activePhysical=name;
+            active={};active.cb=sizeof(active);
         }
-        LONG right = primary.dmPosition.x + LONG(primary.dmPelsWidth);
-        DISPLAY_DEVICEW other{}; other.cb = sizeof(other);
-        for (DWORD i=0; EnumDisplayDevicesW(nullptr,i,&other,0); ++i) {
-            if ((other.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) &&
-                output != QString::fromWCharArray(other.DeviceName)) {
-                DEVMODEW mode{}; mode.dmSize=sizeof(mode);
-                if (EnumDisplaySettingsExW(other.DeviceName,ENUM_CURRENT_SETTINGS,&mode,0))
-                    right=qMax(right,mode.dmPosition.x+LONG(mode.dmPelsWidth));
+        headlessVirtual=activePhysical.isEmpty();
+        if(headlessVirtual) {
+            original.dmPosition={0,0};
+            sessionTopology.paths.clear();sessionTopology.modes.clear();
+            std::cerr<<"Display lease: owned output is the only active display"<<std::endl;
+        } else {
+            physical=activePhysical;
+            DEVMODEW primary{}; primary.dmSize = sizeof(primary);
+            if (!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(physical.utf16()), ENUM_CURRENT_SETTINGS, &primary, 0)) {
+                send({{"error", "Cannot determine the physical desktop layout"}}); return 1;
             }
-            other={}; other.cb=sizeof(other);
+            LONG right = primary.dmPosition.x + LONG(primary.dmPelsWidth);
+            DISPLAY_DEVICEW other{}; other.cb = sizeof(other);
+            for (DWORD i=0; EnumDisplayDevicesW(nullptr,i,&other,0); ++i) {
+                if ((other.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) &&
+                    output != QString::fromWCharArray(other.DeviceName)) {
+                    DEVMODEW mode{}; mode.dmSize=sizeof(mode);
+                    if (EnumDisplaySettingsExW(other.DeviceName,ENUM_CURRENT_SETTINGS,&mode,0))
+                        right=qMax(right,mode.dmPosition.x+LONG(mode.dmPelsWidth));
+                }
+                other={}; other.cb=sizeof(other);
+            }
+            for(const auto& mode:sessionTopology.modes) {
+                if(mode.infoType==DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
+                    right=qMax(right,mode.sourceMode.position.x+LONG(mode.sourceMode.width));
+            }
+            // Windows may reactivate a remembered placement above the primary.
+            // Always place this session's owned output to the right of all existing
+            // outputs; the external lease restores the actual pre-session topology.
+            original.dmPosition.x = right;
+            original.dmPosition.y = primary.dmPosition.y;
         }
-        for(const auto& mode:sessionTopology.modes) {
-            if(mode.infoType==DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
-                right=qMax(right,mode.sourceMode.position.x+LONG(mode.sourceMode.width));
-        }
-        // Windows may reactivate a remembered placement above the primary.
-        // Always place this session's owned output to the right of all existing
-        // outputs; the external lease restores the actual pre-session topology.
-        original.dmPosition.x = right;
-        original.dmPosition.y = primary.dmPosition.y;
         original.dmFields |= DM_POSITION | DM_PELSWIDTH | DM_PELSHEIGHT;
         if (!writeState(true) || !applyMode(original)) {
             send({{"error", "Cannot activate the DeskPort virtual display"}}); return 1;
