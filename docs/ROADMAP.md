@@ -1745,3 +1745,7 @@ acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
 - Windows outbound launch exposed a local-name resolver mismatch after successful
   authenticated control requests. Resolve the name through Qt once and use the
   same numeric endpoint for launch and media; live acceptance remains required.
+- Windows-to-macOS first frame passed with the resolved endpoint. One reconnect
+  received capture-initialization 503, then succeeded on retry. Windows now
+  retries only that specific pre-stream failure up to three times while keeping
+  the authenticated lease, with cancellation and recovery-deadline checks.

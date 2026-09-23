@@ -1986,16 +1986,37 @@ bool Session::startConnectionAsync()
         streamAddress = http.address();
         http.setCancellationFlag(&m_RecoveryCancelled);
         deskportResizeStage("resume-request");
-        http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
-                      m_Computer->isNvidiaServerSoftware,
-                      m_App.id, &m_StreamConfig,
-                      enableGameOptimizations,
-                      m_Preferences->playAudioOnHost,
-                      m_InputHandler->getAttachedGamepadMask(),
-                      !m_Preferences->multiController,
-                      rtspSessionUrl,
-                      m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
-                      m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
+        for (int attempt = 0; ; ++attempt) {
+            try {
+                http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
+                              m_Computer->isNvidiaServerSoftware,
+                              m_App.id, &m_StreamConfig,
+                              enableGameOptimizations,
+                              m_Preferences->playAudioOnHost,
+                              m_InputHandler->getAttachedGamepadMask(),
+                              !m_Preferences->multiController,
+                              rtspSessionUrl,
+                              m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
+                              m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
+                break;
+            } catch (const GfeHttpResponseException& e) {
+#ifdef Q_OS_WIN
+                // A newly recreated host display may be acknowledged before
+                // its capture backend is ready. Only retry this pre-stream
+                // failure, preserving the same authenticated display lease.
+                if (attempt >= 3 || !m_AdaptiveDisplay || m_RecoveryCancelled ||
+                    e.getStatusCode() != 503 ||
+                    !e.toQString().startsWith("Failed to initialize video capture/encoding.")) throw;
+                for (int tick = 0; tick < 5; ++tick) {
+                    if (m_RecoveryCancelled || (m_RecoveryDeadline &&
+                        QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) throw;
+                    QThread::msleep(100);
+                }
+#else
+                throw;
+#endif
+            }
+        }
         deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         if (m_RecoveryCancelled) return false;
