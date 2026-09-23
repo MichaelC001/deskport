@@ -13,6 +13,10 @@
 - Do not publish personal hostnames, addresses, credentials, real clipboard data,
   employer material or screenshots of work applications.
 - Keep `docs/ROADMAP.md` current; do not implement deferred features without a reason.
+- Shared workspace policy and display contracts belong in the pinned
+  `shared/deskport-core`, not a second local implementation. Read
+  `docs/SHARED_CORE.md` before changing policy or wire behavior; update the Git and
+  Nix pins together and run `scripts/test-core.py` plus the affected adapter tests.
 - Prefer the locked project devShell for macOS build dependencies; run packaging
   through `nix develop`. See `docs/MACOS_PACKAGE.md` for commands and validation.
   Keep Apple's SDK/compiler/signing and pinned upstream media prebuilts in place.
@@ -35,8 +39,16 @@
 
 ## DeskPort release and activation workflow — 2026-09-14
 
-- Required order: build and verify DeskPort, publish a GitHub prerelease, then
-  update and push mynix with the release URL/version/hash and pinned source.
+- Default delivery is a mynix update for pk4 (NixOS x86_64) and mm4 (macOS
+  arm64), followed by the user's manual activation and live verification.
+- Only run a formal/stable release workflow when the user explicitly requests a
+  formal release. Other distribution installers (DEB, RPM, Arch, AppImage and
+  Flatpak) are packaged only for an explicitly requested formal release.
+  Do not expand to other platforms/distribution formats, publish
+  mobile clients, or merge the DeskPort main branch by default.
+- Build and verify the two required targets; publish the prerelease assets needed
+  by mynix, then update and push its release URL/version/hash and pinned source.
+  A prerelease needed for mynix does not authorize a formal/stable release.
 - The user manually runs `rebuild switch` to activate the update. Wait for the
   user to confirm activation before checking the deployed version or live behavior.
 - Never directly replace `/Applications/DeskPort.app`, use administrator prompts

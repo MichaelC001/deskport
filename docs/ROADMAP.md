@@ -1749,3 +1749,16 @@ acceptance; see [the service boundary](WINDOWS_SESSION_SERVICE.md).
   received capture-initialization 503, then succeeded on retry. Windows now
   retries only that specific pre-stream failure up to three times while keeping
   the authenticated lease, with cancellation and recovery-deadline checks.
+||||||| 85a0dfeb
+## 2026-09-23 — Windows runtime detection reproduced; user notice added
+
+Reason: repeated user-requested uninstall/reinstall and two-minute runtime tests
+with Defender real-time/cloud protection enabled and no exclusions reproduced
+`Trojan:Win32/Bearfoos.A!ml` quarantine of `deskport-display.exe` in 0.5.6 r4 on
+round three; the first two rounds passed. Windows release clearance remains
+blocked. The exact sample was submitted to Microsoft as
+`e28ba5f4-9624-46ec-938a-1e6430c89f89` (Submitted / Pending at verification).
+English and Simplified Chinese README platform sections now link to the
+[Windows antivirus notice](WINDOWS_DEVELOPMENT.md#windows-antivirus-notice).
+Next checkpoint: obtain Microsoft's determination, then repeat exact-package
+installation and runtime checks with protection enabled and no exclusions.
