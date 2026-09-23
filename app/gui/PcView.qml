@@ -16,6 +16,17 @@ CenteredGridView {
     // group to group them, like folders on a phone home screen. The layout is
     // saved locally.
     property bool arranging: false
+    // Native macOS resizing delivers a width change for nearly every pixel.
+    // Recomputing GridView columns and running displaced transitions for each
+    // event makes cards flash between partially completed layouts.
+    property real settledWidth: width
+    property bool resizing: false
+    onWidthChanged: { resizing = true; resizeSettle.restart() }
+    Timer {
+        id: resizeSettle
+        interval: 70
+        onTriggered: { pcGrid.settledWidth = pcGrid.width; pcGrid.resizing = false }
+    }
     // Index of the card a held device would join, or -1.
     property int combineIndex: -1
     // Bumped after group changes so group names and the edit button refresh.
@@ -27,7 +38,9 @@ CenteredGridView {
     // Layout changes reset the model, which destroys the card that asked for them.
     // Run them after the card's input handler has returned, never inside it.
     function afterInput(change) { Qt.callLater(function() { change(); pcGrid.refreshLayout() }) }
-    function openGroup(groupId) { afterInput(function() { computerModel.currentGroup = groupId }) }
+    function openGroup(groupId) {
+        folderDialog.openGroup(groupId)
+    }
     Keys.onEscapePressed: function(event) {
         if (inGroup) { openGroup(""); event.accepted = true } else event.accepted = false
     }
@@ -40,6 +53,127 @@ CenteredGridView {
         return null
     }
     property Dialog addressEditor: PeerEditor { id: peerEditor }
+
+    property ComputerModel folderModel: {
+        var model = createModel()
+        model.objectName = "groupFolderModel"
+        return model
+    }
+
+    Dialog {
+        id: folderDialog
+        objectName: "groupFolderDialog"
+        modal: true
+        closePolicy: Popup.CloseOnEscape
+        width: Math.min(pcGrid.width - 48, 460)
+        height: Math.min(pcGrid.height - 64, 380)
+        x: Math.max(24, (pcGrid.width - width) / 2)
+        y: Math.max(32, (pcGrid.height - height) / 2)
+        padding: 0
+        property bool editing: false
+        property string groupId: ""
+        function openGroup(id) {
+            groupId = id
+            folderModel.currentGroup = id
+            editing = pcGrid.arranging
+            open()
+        }
+        onClosed: {
+            editing = false
+            folderModel.currentGroup = ""
+            computerModel.refreshFavorites()
+            pcGrid.refreshLayout()
+        }
+        header: Rectangle {
+            height: 58; color: ui.surface
+            Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 1; color: ui.line }
+            RowLayout {
+                anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 12
+                Label { text: computerModel.groupName(folderDialog.groupId); textFormat: Text.PlainText; color: ui.text; font.pixelSize: ui.title; font.weight: Font.DemiBold; Layout.fillWidth: true; elide: Text.ElideRight }
+                UiButton { objectName: "editGroupFolder"; text: folderDialog.editing ? qsTr("Done") : qsTr("Edit"); highlighted: folderDialog.editing; onClicked: folderDialog.editing = !folderDialog.editing }
+                ToolButton { text: "×"; Accessible.name: qsTr("Close"); onClicked: folderDialog.close() }
+            }
+        }
+        contentItem: Rectangle {
+            id: folderPanel
+            color: ui.canvas
+            GridView {
+                id: folderGrid
+                objectName: "groupFolderGrid"
+                anchors.fill: parent; anchors.margins: 18
+                clip: true
+                model: folderModel
+                cellWidth: 126; cellHeight: 132
+                move: Transition { NumberAnimation { properties: "x,y"; duration: 150; easing.type: Easing.OutQuad } }
+                displaced: Transition { NumberAnimation { properties: "x,y"; duration: 150; easing.type: Easing.OutQuad } }
+                delegate: ItemDelegate {
+                    id: folderItem
+                    objectName: "folderDevice-" + model.hostId
+                    width: folderGrid.cellWidth - 10; height: folderGrid.cellHeight - 10
+                    padding: 8
+                    function osKeyFor(system) {
+                        var os = (system || "").toLowerCase()
+                        if (/mac|darwin|osx/.test(os)) return "apple"
+                        if (/windows/.test(os)) return "windows"
+                        for (var i = 0, names = ["nixos", "ubuntu", "debian", "fedora", "arch"]; i < names.length; ++i)
+                            if (os.indexOf(names[i]) >= 0) return names[i]
+                        return /linux/.test(os) ? "linux" : "computer"
+                    }
+                    background: Rectangle { radius: 16; color: folderItem.hovered || folderDrag.pressed ? ui.raised : ui.surface; border.color: folderDrag.pressed ? ui.accent : ui.line; border.width: folderDrag.pressed ? 2 : 1 }
+                    contentItem: Column {
+                        spacing: 7
+                        Image { anchors.horizontalCenter: parent.horizontalCenter; width: 56; height: 56; sourceSize.width: 144; sourceSize.height: 144; source: "qrc:/res/os/" + folderItem.osKeyFor(model.operatingSystem) + ".svg"; fillMode: Image.PreserveAspectFit }
+                        Label { width: parent.width; text: model.name; textFormat: Text.PlainText; color: ui.text; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; font.pixelSize: 13; font.weight: Font.DemiBold }
+                        Label { width: parent.width; text: model.online ? qsTr("Online") : qsTr("Offline"); color: model.online ? "#2FA66A" : ui.muted; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 11 }
+                    }
+                    SequentialAnimation on rotation {
+                        running: folderDialog.editing && !folderDrag.pressed
+                        loops: Animation.Infinite
+                        NumberAnimation { to: -0.7; duration: 130 }
+                        NumberAnimation { to: 0.7; duration: 130 }
+                    }
+                    MouseArea {
+                        id: folderDrag
+                        anchors.fill: parent
+                        preventStealing: true
+                        cursorShape: folderDialog.editing ? (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : Qt.PointingHandCursor
+                        onPositionChanged: function(mouse) {
+                            if (!pressed || !folderDialog.editing) return
+                            var point = mapToItem(folderGrid.contentItem, mouse.x, mouse.y)
+                            var target = folderGrid.indexAt(point.x, point.y)
+                            if (target >= 0 && target !== index) folderModel.moveComputer(index, target)
+                        }
+                        onReleased: function(mouse) {
+                            if (!folderDialog.editing) {
+                                if (model.isGroup || model.isAdd) return
+                                folderDialog.close()
+                                if (pcGrid.controlCenterForActiveSession) {
+                                    if (model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0) recallRemoteSession()
+                                    else { showPcDetailsDialog.pcDetails = qsTr("A session with %1 is open. Disconnect it before connecting to another computer.").arg(pcGrid.sessionHostName); showPcDetailsDialog.open() }
+                                } else if (model.online && model.serverSupported && model.paired) {
+                                    stackView.push(Qt.resolvedUrl("DesktopSegue.qml"), {"computerIndex": model.sourceIndex, "objectName": model.name})
+                                } else if (model.online) {
+                                    navigateTo("qrc:/gui/BindView.qml", "BindView")
+                                    stackView.currentItem.setAddress(model.hostAddress)
+                                } else {
+                                    showPcDetailsDialog.pcDetails = model.details
+                                    showPcDetailsDialog.open()
+                                }
+                                return
+                            }
+                            var point = mapToItem(folderPanel, mouse.x, mouse.y)
+                            if (point.x < 0 || point.y < 0 || point.x > folderPanel.width || point.y > folderPanel.height) {
+                                folderModel.moveOutOfGroup(index)
+                                computerModel.refreshFavorites()
+                                pcGrid.refreshLayout()
+                            }
+                        }
+                    }
+                }
+                Label { anchors.centerIn: parent; visible: folderGrid.count === 0; text: qsTr("This group is empty."); color: ui.muted }
+            }
+        }
+    }
 
     Dialog {
         id: deviceSettingsDialog
@@ -102,7 +236,7 @@ CenteredGridView {
     minMargin: 0
     topMargin: 16
     bottomMargin: 5
-    cellWidth: width / Math.max(1, Math.floor(width / 235))
+    cellWidth: settledWidth / Math.max(1, Math.floor(settledWidth / 235))
     cellHeight: 268
     objectName: qsTr("Devices")
 
@@ -230,8 +364,8 @@ CenteredGridView {
     }
 
     model: computerModel
-    move: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
-    displaced: Transition { NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+    move: Transition { enabled: !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+    displaced: Transition { enabled: !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
 
     function promptNewGroup() { groupNameDialog.ask("", computerModel.defaultGroupName()) }
 

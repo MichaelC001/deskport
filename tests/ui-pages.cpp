@@ -873,7 +873,12 @@ ApplicationWindow {
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
-            window->resize(width, 620); QTest::qWait(100);
+            const qreal previousSettledWidth=grid->property("settledWidth").toReal();
+            window->resize(width, 620); QTest::qWait(10);
+            QVERIFY(grid->property("resizing").toBool());
+            QCOMPARE(grid->property("settledWidth").toReal(),previousSettledWidth);
+            QTRY_VERIFY_WITH_TIMEOUT(!grid->property("resizing").toBool(),250);
+            QCOMPARE(grid->property("settledWidth").toReal(),grid->property("width").toReal());
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
         }
@@ -936,15 +941,18 @@ ApplicationWindow {
         if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-group-card.png"));
         QVERIFY(QMetaObject::invokeMethod(groupCard,"clicked"));
-        QTRY_COMPARE(computers->property("currentGroup").toString(),groupId);
-        QTRY_COMPARE(computers->rowCount(),2);
+        auto folderDialog=grid->findChild<QObject*>("groupFolderDialog"); QVERIFY(folderDialog);
+        QTRY_VERIFY(folderDialog->property("visible").toBool());
+        QCOMPARE(folderDialog->property("groupId").toString(),groupId);
+        auto folderModel=qobject_cast<QAbstractListModel*>(grid->findChild<QObject*>("groupFolderModel")); QVERIFY(folderModel);
+        auto editFolder=findVisual(window->contentItem(),"editGroupFolder"); QVERIFY(editFolder);
+        QVERIFY(QMetaObject::invokeMethod(editFolder,"clicked"));
+        QVERIFY(folderDialog->property("editing").toBool());
         QTest::qWait(150);
-        auto back=findVisual(gridItem,"groupBack"); QVERIFY(back && back->isVisible());
-        QCOMPARE(findVisual(gridItem,"groupTitle")->property("text").toString(),QString("Group"));
         if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-group-open.png"));
-        QVERIFY(QMetaObject::invokeMethod(back,"clicked"));
-        QTRY_COMPARE(computers->property("currentGroup").toString(),QString());
+        QVERIFY(QMetaObject::invokeMethod(folderDialog,"close"));
+        QTRY_VERIFY(!folderDialog->property("visible").toBool());
         // Deleting a group keeps its devices: they return where the group was.
         auto groupMenu=grid->findChild<QObject*>("groupMenu"); QVERIFY(groupMenu);
         QVERIFY(groupMenu->setProperty("groupId",groupId));
