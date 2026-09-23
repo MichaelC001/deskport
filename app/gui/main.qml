@@ -29,7 +29,6 @@ ApplicationWindow {
     flags: unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint) : Qt.Window
     // The content, top bar included, starts at the very top instead of below the
     // title-bar safe area; the bar leaves room for the window buttons itself.
-    topPadding: 0; leftPadding: 0; rightPadding: 0; bottomPadding: 0
     onClosing: function(event) {
         event.accepted = false; window.hide();
     }
@@ -47,6 +46,14 @@ ApplicationWindow {
     color: ui.canvas
 
     Component.onCompleted: {
+        // Safe-area padding was added after Qt 6.4, used by the Linux package.
+        // Set it dynamically so older Qt versions can still load this window.
+        if ("topPadding" in window) {
+            window.topPadding = 0
+            window.leftPadding = 0
+            window.rightPadding = 0
+            window.bottomPadding = 0
+        }
         AutoUpdateChecker.start()
         peerManager.restoreHosts()
         if (initialView === "qrc:/gui/PcView.qml") Qt.callLater(function() {
