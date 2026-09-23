@@ -2404,8 +2404,8 @@
         <translation>Verwendet diesen Windows-Desktop. Nach dem Trennen wird die ursprüngliche Auflösung wiederhergestellt. Nicht unterstützte Größen werden gemeldet, ohne die Anzeige zu ändern.</translation>
     </message>
     <message>
-        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
-        <translation>Gibt einen separaten SDR-Desktop mit unterstützten 60-Hz-Modi frei. Neue Clients wählen die nächstgelegene unterstützte Größe. Beim Beenden der Freigabe wird diese Anzeige entfernt und die ursprüngliche Bildschirmanordnung wiederhergestellt.</translation>
+        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

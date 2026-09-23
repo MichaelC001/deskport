@@ -2407,8 +2407,8 @@
         <translation>この Windows デスクトップを使用します。切断すると元の解像度に戻ります。未対応のサイズはディスプレイを変更せずに通知されます。</translation>
     </message>
     <message>
-        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
-        <translation>対応する 60 Hz モードで独立した SDR デスクトップを共有します。新しいクライアントは最も近い対応サイズを選択します。共有を停止するとこのディスプレイを削除し、元の画面配置を復元します。</translation>
+        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

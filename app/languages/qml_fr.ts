@@ -2404,8 +2404,8 @@
         <translation>Utilise ce bureau Windows. La déconnexion restaure la résolution d’origine. Les tailles non prises en charge sont signalées sans modifier l’affichage.</translation>
     </message>
     <message>
-        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
-        <translation>Partage un bureau SDR séparé avec les modes 60 Hz pris en charge. Les nouveaux clients choisissent la taille prise en charge la plus proche. L’arrêt du partage supprime cet écran et restaure la disposition d’origine.</translation>
+        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

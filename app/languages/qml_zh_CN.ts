@@ -2406,8 +2406,8 @@
         <translation>使用此 Windows 桌面。断开连接后恢复原始分辨率。不支持的尺寸只会提示，不会更改显示设置。</translation>
     </message>
     <message>
-        <source>Shares a separate SDR desktop using supported 60 Hz modes. New clients choose the nearest supported size. Stopping sharing removes this display and restores the original screen layout.</source>
-        <translation>使用支持的 60 Hz 模式共享独立的 SDR 桌面。新客户端会选择最接近的支持尺寸。停止共享后会移除此显示器并恢复原始屏幕布局。</translation>
+        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+        <translation>创建跟随客户端窗口尺寸的虚拟桌面。在客户端选择镜像、独占或扩展；断开连接后恢复原来的屏幕布局。</translation>
     </message>
 </context>
 <context>
