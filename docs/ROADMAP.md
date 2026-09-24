@@ -1,3 +1,12 @@
+## Desktop 0.6.0 release — 2026-09-24
+
+Reason: user-authorized macOS/Linux/Windows formal release. macOS notarization,
+Linux distro/Flatpak checks, Windows final-installer three protected runtime
+rounds and release CI passed. Public source/relink materials were scanned.
+Final-artifact physical streaming acceptance and Windows clipboard parity are
+not established by these package checks; see [release notes](RELEASE_0.6.0.md).
+Mobile 2.0 is distributed separately; Apple build 19 is waiting for review.
+
 ## Deterministic host startup responsiveness check — 2026-09-21
 
 The fake authentication process now waits for ten UI heartbeat callbacks before

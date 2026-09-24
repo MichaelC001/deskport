@@ -31,10 +31,9 @@ not certify the final combined installer on real GPU hardware.
 
 ## Windows antivirus notice
 
-Updated 2026-09-23 after repeated tests with protection enabled. Windows
+Updated 2026-09-24 after reviewing the Microsoft case and final 0.6.0 runtime results. Windows
 **development/test builds may be detected and quarantined by Microsoft Defender**,
-including after the application starts. This is a suspected false positive under
-review, not a confirmed Microsoft clearance or a guarantee that a build is safe.
+including after the application starts. The old sample received the decision below; it is not a guarantee for other builds.
 
 The 0.5.6 r4 test package was uninstalled and reinstalled three times with an empty
 installation directory, real-time and cloud protection enabled, and no path,
@@ -49,9 +48,17 @@ Definitions were `1.459.343.0`, engine `1.1.26080.3`.
 The exact helper sample (SHA-256
 `d74533cf246c648311fd54ffedce19c7004a542422f6071d5a58f82ea1ff6567`) was submitted
 for Microsoft review on 2026-09-23. Submission
-`e28ba5f4-9624-46ec-938a-1e6430c89f89` was verified as **Submitted**, with the final
-determination **Pending**. The earlier 0.5.0 submission concerns a different
-binary and does not clear this sample. Review status is a dated observation.
+`e28ba5f4-9624-46ec-938a-1e6430c89f89` now shows final determination **Not malware** and **No malware detected**.
+The analyst states that the submitted files do not meet malware/PUA criteria and
+that the detection was removed. The case header still reads In progress; the
+per-file determination and analyst response are the verified result.
+
+The final 0.6.0 installer (SHA-256
+`78f4363c05cbaeb85cdfdab4e2ac7e3bd28d0eabac0a5acffdd9d258779c8322`)
+passed three clean-install/startup/runtime/Defender-scan rounds with protection
+enabled. It has not received a Microsoft determination. The developer submission
+form offers malware/false-positive classifications; no detection was invented
+to request proactive clearance.
 
 If affected, keep Defender enabled and leave the file quarantined. Open
 **Windows Security > Virus & threat protection > Protection history** to identify
@@ -61,7 +68,7 @@ DeskPort version, detection name and security intelligence version; redact
 personal information from screenshots or logs. Wait for a reviewed replacement
 and documented retesting with protection enabled before retrying the affected
 build. A successful installation or a single clean scan does not resolve this
-runtime detection. Windows release qualification remains blocked on this issue.
+runtime detection. These results remain sample-specific.
 
 ## Outstanding acceptance
 

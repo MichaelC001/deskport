@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.5.1"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.5.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.6.0"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.6.0-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -50,40 +50,38 @@
 | 项目 | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
 | --- | --- | --- | --- | --- |
 | 主要用途 | 持续远程工作区、自适应大小、跨设备接管 | 游戏和桌面串流 | 远程控制与支持 | 交互式远程桌面与协作 |
-| 桌面主机 | macOS Apple Silicon、Linux x86_64 | Windows、macOS、Linux、FreeBSD | Windows、macOS、Linux | Windows、macOS；Linux 不能作为主机 |
-| 桌面客户端 | macOS Apple Silicon、Linux x86_64 | Windows、macOS、Linux 等 | Windows、macOS、Linux | Windows、macOS、Linux、兼容 Chromium 浏览器 |
+| 桌面主机 | macOS Apple Silicon、Linux x86_64、Windows x64 | Windows、macOS、Linux、FreeBSD | Windows、macOS、Linux | Windows、macOS；Linux 不能作为主机 |
+| 桌面客户端 | macOS Apple Silicon、Linux x86_64、Windows x64 | Windows、macOS、Linux 等 | Windows、macOS、Linux | Windows、macOS、Linux、兼容 Chromium 浏览器 |
 | 移动客户端 | iPhone/iPad 已发布；Android 开发中 | iOS/iPadOS、Android | iOS/iPadOS、Android | Android；不支持 iOS/iPadOS |
 | 配置方式 | 原生桌面包内置主机，设备端请求授权 | 单独配置 Sunshine 后配对 Moonlight | 公共服务器或自建服务器 | Parsec 账号与应用 |
 | 网络路径 | 自备局域网/VPN，无 DeskPort 中继服务 | 自建串流，配置网络可达性 | 公共服务或自建 OSS/Pro 服务 | Parsec 账号/服务体系 |
 
-官方来源和完整说明见[英文对比表](../../README.md#comparison-with-similar-products)。Windows、Intel Mac 和 ARM Linux 尚不属于 DeskPort 已验证发布平台；Flatpak 仅为客户端。
+官方来源和完整说明见[英文对比表](../../README.md#comparison-with-similar-products)。Intel Mac 和 ARM Linux 尚不属于 DeskPort 已验证发布平台；Flatpak 仅为客户端。
 
 ## 平台进度
 
 | 平台 | 角色 | 进度 | 获取 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.5.1，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.5.1/DeskPort-0.5.1-macos-arm64.dmg) |
-| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.5.1：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.6.0，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
+| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.6.0：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | 查看端 + 主机端 | 🧪 仅有 Nix 包定义，构建与运行尚未验证 | — |
-| **Windows** | 查看端 + 主机端开发中 | 独立开发分支；不包含在 0.5.1 发布中 | — |
+| **Windows x64** | 查看端 + 主机端 + 虚拟显示器 | 0.6.0 安装包及便携 ZIP | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | **Android**（8.0+） | 📱 仅客户端 | 🚧 开发中 — 原生界面与 MediaCodec；Google Play 同为 4.99 美元 | — |
 
-> **Windows 杀毒软件提示（2026-09-23）：** Windows 开发测试版中的
-> `deskport-display.exe` 可能被 Microsoft Defender 报毒并隔离，也可能在软件启动后才触发。
-> 已在 0.5.6 r4 测试包复现 `Trojan:Win32/Bearfoos.A!ml` 检测，现已按疑似误报提交微软复核，
-> **尚未确认解除**。如遇到此问题，请保持防护开启、保留隔离状态，并查看 Windows 安全中心的
-> “保护历史记录”。请勿通过添加排除项或恢复文件来绕过检测。
-> [详情与申诉状态](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
+> **Windows 杀毒软件提示（2026-09-24）：** 0.6.0 最终安装包已通过三轮保持防护开启的安装、启动和扫描。
+> 微软另已将此前提交的 0.5.6 r4 显示助手判定为 **Not malware**，并注明检测已移除。
+> 该结论只对应送检的旧样本，不代表所有新版已获微软确认。请保持防护开启，不添加排除项或恢复隔离文件绕过检测。
+> [样本详情与申诉状态](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
 
 > **移动端范围：** iOS/iPadOS 与 Android 目前**只规划做客户端功能**。它们连接已授权的
-> DeskPort/Sunshine 主机，不提供任何主机端能力——没有屏幕采集、虚拟显示器或本地输入注入。
-> 主机端仍然由 macOS、Linux 以及（今后的）Windows 承担。移动端客户端在另一个仓库开发。
+> DeskPort 主机，不提供任何主机端能力——没有屏幕采集、虚拟显示器或本地输入注入。
+> 主机端仍然由 macOS、Linux 以及 Windows 承担。移动端客户端在另一个仓库开发。
 
 ## 安装
 
 **iPhone / iPad** — [App Store 上的 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)，
-**售价 4.99 美元，一次买断**。面向已授权 DeskPort/Sunshine 主机的原生客户端，支持直接触控、
+**售价 4.99 美元，一次买断**。面向已授权 DeskPort 主机的原生客户端，支持直接触控、
 办公键盘模式，并可在已绑定的主机上自适应工作区尺寸。Android 客户端上架 Google Play 后
 也会是同样的 4.99 美元。
 
@@ -92,15 +90,15 @@
 > 时间上。如果你已经购买——真心感谢。如果还没有，提 issue、参与翻译和给出反馈同样珍贵。
 
 **macOS** — 面向 macOS 26 及以上 Apple Silicon 的
-[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.5.1/DeskPort-0.5.1-macos-arm64.dmg)。
+[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg)。
 打开 DMG，把 DeskPort 拖入「应用程序」，然后启动即可。主机端功能会在首次使用时请求
 「屏幕录制」和「辅助功能」授权。无需另外安装 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.5.1 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.5.1`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.5.1/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.5.1/VERIFICATION.txt)。
+**Linux** — 0.6.0 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.0`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.6.0/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.6.0/VERIFICATION.txt)。
 
 ## DeskPort 是什么
 
-**稳定版本：0.5.1 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
+**稳定版本：0.6.0 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
 应用里，共用设备列表、双向绑定与权限控制。macOS 安装包内含 Sunshine 和原生虚拟显示器；
 Linux 原生包与 AppImage 内含面向现有桌面的 Sunshine 主机端。Flatpak 只提供客户端；Nix 依然支持。
 
@@ -108,10 +106,10 @@ macOS 上的专用工作区会跟随客户端窗口的可绘制像素尺寸。�
 2× HiDPI 工作区以获得清晰文字。调整尺寸时视频会短暂重连，期间保留客户端窗口并显示加载动画。
 这不是无缝的编码器重配置。
 
-参见[发行说明](../RELEASE_0.5.1.md)、[架构说明](../ARCHITECTURE.md)与
+参见[发行说明](../RELEASE_0.6.0.md)、[架构说明](../ARCHITECTURE.md)与
 [macOS 安装指南](../MACOS_PACKAGE.md)。持久化的隐藏/显示已经实现；原生长时间会话的验收仍未完成。
 共享显示策略支持具备条件的 macOS 与 KDE 主机。选择加入的已绑定 DeskPort 设备会立即共享文本，
-并按需获取图片与文件。Windows 仍在独立分支开发，不包含在本次发布中。已知限制见发行说明。
+并按需获取图片与文件。Windows 已提供安装包，剪贴板及最终包实机串流验收范围见发行说明。已知限制见发行说明。
 
 ## 在 Linux 上构建与运行
 

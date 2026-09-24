@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.6.0"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.6.0-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="授權" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -41,21 +41,21 @@
 
 | 平台 | 角色 | 進度 | 取得 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.4.2，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
-| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.4.2：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.6.0，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
+| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.6.0：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | 檢視端 + 主機端 | 🧪 僅有 Nix 套件定義，建置與執行尚未驗證 | — |
-| **Windows** | 檢視端（沿用上游原始碼） | 🚧 建置與封裝尚未完成 | — |
+| **Windows x64** | 檢視端 + 主機端 + 虛擬顯示器 | 0.6.0 安裝程式與可攜式 ZIP | [發佈頁](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 僅客戶端 | ✅ 已上架 — App Store 售價 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | **Android**（8.0+） | 📱 僅客戶端 | 🚧 開發中 — 原生介面與 MediaCodec；Google Play 同為 4.99 美元 | — |
 
 > **行動平台範圍：** iOS/iPadOS 與 Android 目前**只規劃客戶端功能**。它們連線到已授權的
-> DeskPort/Sunshine 主機，不提供任何主機端能力——沒有螢幕擷取、虛擬顯示器或本機輸入注入。
-> 主機端仍由 macOS、Linux 以及（日後的）Windows 負責。行動端客戶端在另一個儲存庫開發。
+> DeskPort 主機，不提供任何主機端能力——沒有螢幕擷取、虛擬顯示器或本機輸入注入。
+> 主機端仍由 macOS、Linux 以及 Windows 負責。行動端客戶端在另一個儲存庫開發。
 
 ## 安裝
 
 **iPhone / iPad** — [App Store 上的 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)，
-**售價 4.99 美元，一次買斷**。這是連線到已授權 DeskPort/Sunshine 主機的原生客戶端，支援直接觸控、
+**售價 4.99 美元，一次買斷**。這是連線到已授權 DeskPort 主機的原生客戶端，支援直接觸控、
 辦公鍵盤模式，並可在已綁定的主機上自動調整工作區尺寸。Android 客戶端上架 Google Play 後
 也會是同樣的 4.99 美元。
 
@@ -64,15 +64,15 @@
 > 如果你已經購買——由衷感謝。如果還沒有，提出 issue、參與翻譯與給予回饋同樣可貴。
 
 **macOS** — 適用於 macOS 26 以上 Apple Silicon 的
-[Apple 公證 DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg)。
+[Apple 公證 DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg)。
 開啟 DMG，把 DeskPort 拖進「應用程式」後啟動即可。主機端功能會在首次使用時要求
 「螢幕錄製」與「輔助使用」授權。不需要另外安裝 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.4.2 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.4.2`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
+**Linux** — 0.6.0 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.0`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
 
 ## DeskPort 是什麼
 
-**穩定版本：0.4.2 — 可直接安裝的桌面套件。** DeskPort 把檢視端與選用的主機端整合在同一個
+**穩定版本：0.6.0 — 可直接安裝的桌面套件。** DeskPort 把檢視端與選用的主機端整合在同一個
 應用程式中，共用裝置清單、雙向綁定與權限控制。macOS 套件內含 Sunshine 與原生虛擬顯示器；
 Linux 原生套件與 AppImage 內含供現有桌面使用的 Sunshine 主機端。Flatpak 只提供客戶端；Nix 持續支援。
 
@@ -80,10 +80,10 @@ macOS 上的專用工作區會跟隨客戶端視窗的可繪製像素尺寸。�
 2× HiDPI 工作區，讓文字更銳利。調整尺寸時視訊會短暫重新連線，期間保留客戶端視窗並顯示載入動畫。
 這並不是無縫的編碼器重新設定。
 
-請見[發佈說明](../RELEASE_0.4.2.md)、[架構說明](../ARCHITECTURE.md)與
+請見[發佈說明](../RELEASE_0.6.0.md)、[架構說明](../ARCHITECTURE.md)與
 [macOS 安裝指南](../MACOS_PACKAGE.md)。持續性的隱藏/顯示已經實作；原生長時間工作階段的驗收仍未完成。
 共用顯示策略支援條件符合的 macOS 與 KDE 主機。選擇加入的已綁定 DeskPort 裝置會立即共用文字，
-並在需要時取得圖片與檔案。Windows 封裝尚未完成。已知限制請見發佈說明。
+並在需要時取得圖片與檔案。Windows 已提供安裝程式；剪貼簿與最終套件實機驗收範圍請見發佈說明。已知限制請見發佈說明。
 
 ## 在 Linux 上建置與執行
 

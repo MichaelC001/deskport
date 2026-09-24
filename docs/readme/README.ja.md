@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.4.2"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.4.2-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.6.0"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.6.0-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="ライセンス" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -41,22 +41,22 @@
 
 | プラットフォーム | 役割 | 進捗 | 入手 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.4.2、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg) |
-| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.4.2：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](../LINUX_PACKAGES.md) |
+| **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.6.0、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
+| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.6.0：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | ビューア + ホスト | 🧪 Nix パッケージ定義のみ。ビルドと動作は未検証 | — |
-| **Windows** | ビューア（上流ソースを継承） | 🚧 ビルドとパッケージングは未完了 | — |
+| **Windows x64** | ビューア + ホスト + 仮想ディスプレイ | 0.6.0 インストーラーとポータブル ZIP | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 クライアントのみ | ✅ 公開済み — App Store で 4.99 米ドル | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | **Android**（8.0 以降） | 📱 クライアントのみ | 🚧 開発中 — ネイティブ UI と MediaCodec、Google Play でも同じ 4.99 米ドル | — |
 
 > **モバイルの範囲：** iOS/iPadOS と Android は**クライアント機能のみ**を予定しています。
-> 認可された DeskPort/Sunshine ホストに接続するだけで、画面キャプチャ・仮想ディスプレイ・
+> 認可された DeskPort ホストに接続するだけで、画面キャプチャ・仮想ディスプレイ・
 > ローカル入力注入といったホスト機能は提供しません。ホストの役割は macOS、Linux、
-> そして将来的には Windows が担います。モバイルクライアントは別リポジトリで開発しています。
+> Windows が担います。モバイルクライアントは別リポジトリで開発しています。
 
 ## インストール
 
 **iPhone / iPad** — [App Store の DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)、
-**4.99 米ドルの買い切り**です。認可された DeskPort/Sunshine ホスト向けのネイティブクライアントで、
+**4.99 米ドルの買い切り**です。認可された DeskPort ホスト向けのネイティブクライアントで、
 ダイレクトタッチ、オフィス向けキーボードモード、バインド済みホストでのワークスペース自動サイズ調整に
 対応します。Android クライアントも Google Play 公開時は同じ 4.99 米ドルになります。
 
@@ -66,15 +66,15 @@
 > まだの方も、Issue・翻訳・フィードバックは同じくらいありがたい支援です。
 
 **macOS** — macOS 26 以降の Apple Silicon 向け
-[Apple 公証済み DMG](https://github.com/keithxc/deskport/releases/download/v0.4.2/DeskPort-0.4.2-macos-arm64.dmg)。
+[Apple 公証済み DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg)。
 DMG を開き、DeskPort を「アプリケーション」にドラッグして起動します。ホスト機能は初回使用時に
 「画面収録」と「アクセシビリティ」の許可を求めます。Sunshine、Qt、Nix、Homebrew を別途入れる必要はありません。
 
-**Linux** — 0.4.2 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.4.2` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
+**Linux** — 0.6.0 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.6.0` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
 
 ## DeskPort とは
 
-**安定版：0.4.2 — そのままインストールできるデスクトップパッケージ。** DeskPort はビューアと
+**安定版：0.6.0 — そのままインストールできるデスクトップパッケージ。** DeskPort はビューアと
 任意のホストを 1 つのアプリにまとめ、デバイス一覧・相互バインド・権限管理を共有します。
 macOS パッケージには Sunshine とネイティブ仮想ディスプレイが含まれ、Linux のネイティブパッケージと
 AppImage には既存デスクトップ向けの Sunshine ホストが含まれます。Flatpak はクライアントのみ、
@@ -85,11 +85,11 @@ macOS の専用ワークスペースはクライアントウィンドウの描�
 サイズ変更時は映像が一時的に再接続され、その間クライアントウィンドウは保持されローディング表示になります。
 シームレスなエンコーダ再構成ではありません。
 
-[リリースノート](../RELEASE_0.4.2.md)、[アーキテクチャ](../ARCHITECTURE.md)、
+[リリースノート](../RELEASE_0.6.0.md)、[アーキテクチャ](../ARCHITECTURE.md)、
 [macOS インストールガイド](../MACOS_PACKAGE.md) を参照してください。永続的な非表示/表示は実装済みですが、
 ネイティブでの長時間セッション受け入れ試験は未完了です。共有ディスプレイポリシーは条件を満たす
 macOS と KDE のホストに対応します。オプトインしたバインド済み DeskPort デバイスはテキストを即座に共有し、
-画像とファイルは必要に応じて取得します。Windows のパッケージングは未完了です。既知の制限はリリースノートにあります。
+画像とファイルは必要に応じて取得します。Windows パッケージを提供しています。クリップボードと最終パッケージの実機検証範囲はリリースノートを参照してください。既知の制限はリリースノートにあります。
 
 ## Linux でのビルドと実行
 
