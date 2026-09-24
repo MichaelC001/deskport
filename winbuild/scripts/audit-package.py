@@ -55,6 +55,7 @@ for p in [exe, uninstaller]+sorted(extracted.rglob('*')):
     delay=struct.unpack_from('<II',data,directory+13*8)
     summary.append({'file':str(p.relative_to(art)), 'machine':hex(machine), 'sha256':hashlib.sha256(data).hexdigest(),'imports':imports,'security_directory':security,'delay_import_directory':delay})
     if p.name=='DeskPort.exe':
+        subprocess.run([sys.executable, str(Path(__file__).with_name('verify-version.py')), str(p), version], check=True)
         assert machine==0x8664
         assert not any(external_runtime.search(dll) for dll in imports)
         start=data.find(b'<assembly ')

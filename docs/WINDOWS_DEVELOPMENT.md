@@ -29,6 +29,26 @@ The latest display helper preserved the physical primary through startup,
 mode changes and restoration in targeted VM checks. These observations do
 not certify the final combined installer on real GPU hardware.
 
+## Windows 0.6.1 correction — 2026-09-24
+
+The original 0.6.0 client payload reported 0.5.7 in both its PE resources and
+runtime version. The package label was taken from source while the cached qmake
+subproject still used the old generated version header. `build-app.sh` now runs
+recursive qmake generation, and both packaging paths and the extracted installer
+audit reject mismatched PE file/product versions. Run `tests/windows-cli.ps1`
+with the final executable and `-Version 0.6.1` to check redirected runtime output
+as well as PE metadata.
+
+On the affected Windows machine, display startup failed after the recovery guard
+was ready: GDI rejected positioning, then CCD returned error 87. Moving the owned
+source while retaining its old desktop-image geometry produced an inconsistent
+configuration. Invalidate only that derived desktop-image index, validate CCD's
+resolved configuration, and verify all physical source modes after application.
+The native display harness passed normal release, forced exit and restart after
+crash, with dynamic sizes and mirror/extended/exclusive policy reuse. These
+checks used the interactive elevated test session; they do not establish locked
+session or unattended UAC acceptance.
+
 ## Windows antivirus notice
 
 Updated 2026-09-24 after reviewing the Microsoft case and final 0.6.0 runtime results. Windows

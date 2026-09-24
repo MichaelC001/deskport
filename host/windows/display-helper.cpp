@@ -206,6 +206,11 @@ bool applyMode(DEVMODEW target) {
             if(index>=after.modes.size()||after.modes[index].infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)return false;
             auto& source=after.modes[index].sourceMode;
             source.position=target.dmPosition;source.width=target.dmPelsWidth;source.height=target.dmPelsHeight;
+            // The queried desktop-image rectangle describes the old source
+            // geometry. Let CCD derive it again after moving/resizing our VDD;
+            // retaining it can make SetDisplayConfig reject the path with 87.
+            if(path.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE)
+                path.targetInfo.desktopModeInfoIdx=DISPLAYCONFIG_PATH_DESKTOP_IMAGE_IDX_INVALID;
             found=true;
         } else {
             const auto oldPath=std::find_if(before.paths.begin(),before.paths.end(),[&](const DISPLAYCONFIG_PATH_INFO& p){return sameAdapter(p.sourceInfo.adapterId,path.sourceInfo.adapterId)&&p.sourceInfo.id==path.sourceInfo.id&&sameAdapter(p.targetInfo.adapterId,path.targetInfo.adapterId)&&p.targetInfo.id==path.targetInfo.id;});
@@ -224,7 +229,9 @@ bool applyMode(DEVMODEW target) {
         }
     }
     if(!found)return false;
-    const auto rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_APPLY|SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE);
+    const auto flags=SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE|SDC_ALLOW_CHANGES;
+    auto rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_VALIDATE|flags);
+    if(!rc)rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_APPLY|flags);
     if(rc)std::cerr<<"Preserving display topology failed: "<<rc<<std::endl;
     if(rc)return false;
     ActiveTopology verified;

@@ -16,6 +16,7 @@ HOST_BUILD="${DESKPORT_HOST_BUILD_DIR:-$WB/full/host-build-prepared}"
 EXE="$BUILD/app/release/DeskPort.exe"
 [ -f "$EXE" ] || EXE="$BUILD/app/release/Moonlight.exe"
 [ -f "$EXE" ] || { echo "application binary not found under $BUILD/app/release"; exit 1; }
+python3 "$WB/scripts/verify-version.py" "$EXE" "$VERSION"
 
 STAGE="${PACKAGE_STAGE:-$WB/stage-full}"
 OUT="${PACKAGE_OUT:-$WB/out-full}"

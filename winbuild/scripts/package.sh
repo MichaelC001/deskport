@@ -8,6 +8,7 @@ BUILD="$WB/build-app"
 EXE="$BUILD/app/release/DeskPort.exe"
 [ -f "$EXE" ] || EXE="$BUILD/app/release/Moonlight.exe"
 [ -f "$EXE" ] || { echo "application binary not found under $BUILD/app/release"; exit 1; }
+python3 "$WB/scripts/verify-version.py" "$EXE" "$VERSION"
 
 STAGE="${PACKAGE_STAGE:-$WB/stage-audited}"
 OUT="${PACKAGE_OUT:-$WB/out-audited}"

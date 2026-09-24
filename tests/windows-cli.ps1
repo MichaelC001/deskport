@@ -4,6 +4,10 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $Executable = (Resolve-Path $Executable).Path
+$metadata = (Get-Item $Executable).VersionInfo
+foreach ($actual in @($metadata.FileVersion, $metadata.ProductVersion)) {
+    if ($actual -ne "$Version.0") { throw "PE version mismatch: $actual != $Version.0" }
+}
 $temporary = Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid().ToString())
 New-Item -ItemType Directory $temporary | Out-Null
 try {

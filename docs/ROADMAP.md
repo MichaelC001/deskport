@@ -1787,3 +1787,17 @@ installation and runtime checks with protection enabled and no exclusions.
   device reaches the disabled state. Failed transitions still fail installation.
 - Exact rebuilt-package installation, protected runtime and live streaming
   acceptance remain required before Windows publication.
+## Windows 0.6.1 correction — 2026-09-24
+
+Reason: the 0.6.0 Windows package contained a client reporting 0.5.7, and
+the affected Windows machine rejected initial virtual-display positioning.
+Recursively regenerate qmake subprojects and reject mismatched PE file/product
+versions during build, packaging and extracted-payload audit. Native CLI checks
+also require the requested version. Recompute the owned virtual display's CCD
+desktop-image geometry and validate the configuration before applying it, then
+verify that physical sources and the requested virtual position are preserved.
+
+The affected machine passed startup, dynamic resizing, all three display
+policies, normal restoration, forced-exit recovery and restart after a crash.
+Final installer upgrade, automatic host startup, discovery and protected-runtime
+checks are release gates; these display tests alone do not establish streaming.

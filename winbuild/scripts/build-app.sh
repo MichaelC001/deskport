@@ -36,5 +36,8 @@ QDEVICE="$QT_PREFIX/mkspecs/qdevice.pri"
 grep -q "^CROSS_COMPILE" "$QDEVICE" 2>/dev/null || echo "CROSS_COMPILE = $TRIPLE-" >> "$QDEVICE"
 
 cd "$BUILD"
-"${NICE_WRAP[@]}" "${QMAKE[@]}" "$SRC_ROOT/moonlight-qt.pro" -spec win32-g++ CONFIG+=release
+# Refresh subprojects too: changing version.txt alone does not invalidate an
+# existing app Makefile/version.h when qmake only runs at the SUBDIRS root.
+"${NICE_WRAP[@]}" "${QMAKE[@]}" -r "$SRC_ROOT/moonlight-qt.pro" -spec win32-g++ CONFIG+=release
 "${NICE_WRAP[@]}" make -j"$JOBS"
+python3 "$WB/scripts/verify-version.py" "$BUILD/app/release/DeskPort.exe" "$(cat "$SRC_ROOT/app/version.txt")"
