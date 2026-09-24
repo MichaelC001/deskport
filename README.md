@@ -68,7 +68,7 @@ for the full-size image; these previews do not imply store or release availabili
 | Linux x86_64 Flatpak | Viewer only | **0.6.0 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
-| Windows x64 | Viewer + host + virtual display | **0.6.0** installer and portable ZIP; see verification scope below | [Installer](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-windows-x64-setup-full.exe) |
+| Windows x64 | Viewer + host + virtual display | **0.6.1** Windows correction; installer and portable ZIP; see verification scope below | [Installer](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.1-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 > **Windows antivirus notice (2026-09-24):** The exact 0.6.0 installer passed

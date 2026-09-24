@@ -39,7 +39,11 @@ try {
                 $port = (Get-ItemProperty 'HKCU:\Software\DeskPort\DeskPort\host').port
                 try {
                     $response = Invoke-WebRequest "http://127.0.0.1:$port/serverinfo" -UseBasicParsing -TimeoutSec 3
-                    $ready = $response.StatusCode -eq 200 -and $response.Content -match '<hostname>'
+                    # Windows PowerShell returns byte[] for this XML content type.
+                    $body = if ($response.Content -is [byte[]]) {
+                        [Text.Encoding]::UTF8.GetString($response.Content)
+                    } else { [string]$response.Content }
+                    $ready = $response.StatusCode -eq 200 -and $body -match '<hostname>'
                 } catch { $ready = $false }
             }
         } while (!$ready -and (Get-Date) -lt $deadline)

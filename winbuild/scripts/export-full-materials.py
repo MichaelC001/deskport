@@ -89,7 +89,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
 (out/('source-inputs'+suffix+'.json')).write_text(json.dumps(manifest,indent=2)+'\n')
 print('Source archive complete',flush=True)
 if '--source-only' in sys.argv: sys.exit(0)
-with tarfile.open(out/('relink-materials'+suffix+'.tar.gz'),'w:gz',compresslevel=1) as tar:
+with tarfile.open(out/('relink-materials'+suffix+'.tar.gz'),'w:gz',compresslevel=1, dereference=True) as tar:
     for name in ('build-app','prefix','qt-static','compat-include','toolshim','full/media-prefix','full/prefix','full/ffmpeg-build','full/cbs-build','full/deskport-display-recovery.exe','full/deskport-driver-setup.exe','full/deskport-maintenance.exe'):
         tar.add(wb/name,arcname='deskport/winbuild/'+name,filter=filter_source)
     tar.add(host_build, arcname=host_build_arcname, filter=filter_source)

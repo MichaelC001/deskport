@@ -1799,5 +1799,7 @@ verify that physical sources and the requested virtual position are preserved.
 
 The affected machine passed startup, dynamic resizing, all three display
 policies, normal restoration, forced-exit recovery and restart after a crash.
-Final installer upgrade, automatic host startup, discovery and protected-runtime
-checks are release gates; these display tests alone do not establish streaming.
+The final installer upgraded the affected machine to 0.6.1; the GUI and CLI
+reported 0.6.1, another device discovered the Windows host, and the user confirmed
+a successful iPad connection. Protected-runtime scanning is recorded separately.
+Repeated unattended relaunch and locked-session acceptance remain unverified.
