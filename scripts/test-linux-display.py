@@ -142,9 +142,13 @@ try:
                 assert actual[key] == expected[key], (name, key, expected, actual)
         assert set(outputs()) == {owned}, 'Physical outputs still expose an extended workspace'
 
+    # Keep portable Qt libraries out of the compositor/probe environment.
+    helper_env = dict(os.environ)
+    if os.environ.get('DESKPORT_TEST_HELPER_LIBRARY_PATH'):
+        helper_env['LD_LIBRARY_PATH'] = os.environ['DESKPORT_TEST_HELPER_LIBRARY_PATH']
     # Production startup mode: no encoder-probe display before admission.
     idle = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                            text=True, env=dict(os.environ, DESKPORT_DISPLAY_ON_DEMAND='1'))
+                            text=True, env=dict(helper_env, DESKPORT_DISPLAY_ON_DEMAND='1'))
     children.append(idle)
     assert select.select([idle.stdout], [], [], 10)[0]
     ready = json.loads(idle.stdout.readline())
@@ -167,7 +171,7 @@ try:
         assert len(registered) == 1, registered
         def check_start(executable, extra_env=None):
             proc = subprocess.Popen([str(executable), '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                    text=True, env=dict(os.environ, DESKPORT_DISPLAY_ON_DEMAND='1', **(extra_env or {})))
+                                    text=True, env=dict(helper_env, DESKPORT_DISPLAY_ON_DEMAND='1', **(extra_env or {})))
             children.append(proc)
             assert select.select([proc.stdout], [], [], 12)[0], 'Permission setup timed out'
             result = json.loads(proc.stdout.readline())
@@ -202,7 +206,7 @@ try:
         data_file = fallback / 'not-a-directory'
         data_file.write_text('blocked')
         failure = subprocess.run([str(executable), '1280', '720'], input='', capture_output=True,
-                                 text=True, timeout=12, env=dict(os.environ, XDG_DATA_HOME=str(data_file)))
+                                 text=True, timeout=12, env=dict(helper_env, XDG_DATA_HOME=str(data_file)))
         assert failure.returncode == 1, failure
         assert 'cannot create its KWin permission entry' in json.loads(failure.stdout)['error'], failure
         assert restored()
@@ -214,7 +218,7 @@ try:
         check_start(executable, {'PATH': str(fallback) + os.pathsep + os.environ['PATH']})
         print('PASS first-use permission, repeated sharing, remount, spaces, canonical symlink paths and stale-entry cleanup', flush=True)
         print('PASS actionable setup-write failure and automatic cache-discovery fallback', flush=True)
-    p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
     children.append(p)
     def receive(allow_error=False):
         assert select.select([p.stdout], [], [], 10)[0], 'helper acknowledgment timed out'
@@ -320,7 +324,7 @@ try:
         time.sleep(.05)
     assert restored(), 'Layout was not restored after helper EOF'
     capture(1280, 720, 1, missing=True)
-    p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
     children.append(p)
     initial = receive()
     if not gnome:
@@ -333,7 +337,7 @@ try:
         time.sleep(.05)
     assert restored(), 'Layout was not restored after helper crash'
     if not gnome and '--disabled-output' in sys.argv:
-        p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
         children.append(p); receive()
         p.stdin.write(json.dumps(dict(displayPolicy=policy, seq=1, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
         assert restored()

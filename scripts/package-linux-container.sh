@@ -86,7 +86,7 @@ chmod +x "$appdir/usr/libexec/deskport-host"
 mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
-ARCH=x86_64 "$work/cache/appimagetool.dir/AppRun" "$appdir" "$work/output/DeskPort-$version-x86_64.AppImage"
+ARCH=x86_64 "$work/cache/appimagetool.dir/AppRun" --runtime-file "$work/cache/appimage-runtime" "$appdir" "$work/output/DeskPort-$version-x86_64.AppImage"
 if [ "$format" = all ]; then
     python3 "$repo/scripts/package-linux-native.py" "$appdir" "$work" "$version"
 fi
