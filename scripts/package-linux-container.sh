@@ -3,6 +3,8 @@
 set -euo pipefail
 repo=${DESKPORT_SOURCE:-/src}
 work=${DESKPORT_WORK:-/work}
+format=${DESKPORT_LINUX_FORMAT:-all}
+case "$format" in all|appimage) ;; *) echo "DESKPORT_LINUX_FORMAT must be all or appimage" >&2; exit 2 ;; esac
 version=$(cat "$repo/app/version.txt")
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
@@ -85,7 +87,13 @@ mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
 ARCH=x86_64 "$work/cache/appimagetool.dir/AppRun" "$appdir" "$work/output/DeskPort-$version-x86_64.AppImage"
-python3 "$repo/scripts/package-linux-native.py" "$appdir" "$work" "$version"
+if [ "$format" = all ]; then
+    python3 "$repo/scripts/package-linux-native.py" "$appdir" "$work" "$version"
+fi
 dpkg-query -W > "$work/output/build-packages.txt"
 cd "$work/output"
-sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst > SHA256SUMS-linux.txt
+if [ "$format" = appimage ]; then
+    sha256sum "DeskPort-$version-x86_64.AppImage" > SHA256SUMS-linux.txt
+else
+    sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst > SHA256SUMS-linux.txt
+fi

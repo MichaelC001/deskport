@@ -146,6 +146,11 @@ bash scripts/package-flatpak.sh build-linux.noindex/DeskPort.AppDir \
   build-linux.noindex/flatpak-output "$(cat app/version.txt)"
 ```
 
+For an AppImage-only candidate, use
+`DESKPORT_LINUX_FORMAT=appimage bash scripts/package-linux.sh`.
+This skips native installer creation and writes checksums only for the candidate
+AppImage. It still builds the viewer and bundled host and runs the package checks.
+
 The rootless Podman build uses a pinned Ubuntu 24.04 image and checksum-pinned
 packaging tools/Sunshine assets. The portable host is compiled from the exact
 Sunshine revision in `scripts/build-linux-host.sh`, with the same session-settings,
