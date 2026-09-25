@@ -60,9 +60,10 @@ installing DeskPort does not create an Internet tunnel.
 
 For Linux hosting, KDE and GNOME require their supported virtual-display APIs;
 see [adaptive display requirements](LINUX_ADAPTIVE_DISPLAY.md). Native installers
-include KWin permission entries for the display helper and bundled host. AppImage mount paths
-are transient and do not install that permission entry; use a native or Nix
-package for KDE virtual-display hosting. Remote keyboard/mouse input requires
+include KWin permission entries for the display helper and bundled host.
+The source fix for [issue #2](https://github.com/keithxc/deskport/issues/2)
+adds automatic display-helper permission setup for portable builds; the published
+0.6.0 AppImage still requires the workaround below. Remote keyboard/mouse input requires
 permission to access `/dev/uinput`. The application shows when input setup is
 needed. This release does not silently install privileged device rules, grant
 capabilities, join the user to input groups or replace a standalone Sunshine
@@ -73,6 +74,66 @@ Close hides the application; its tray menu can reopen it or quit. Native package
 can register DeskPort's own user login service when enabled. Existing Nix-managed
 startup entries retain ownership. The bundled host uses DeskPort's private
 configuration and port selection, independently of standalone Sunshine.
+
+## KDE permissions in portable builds
+
+On KWin 6.6+, starting sharing registers the display helper's screencast permission
+if it is missing, refreshes the KDE application cache, and opens a new Wayland
+connection. This runs only when sharing is requested, not when the viewer opens.
+It needs no root access, manual permission-file editing or session logout.
+Installed native/Nix grants continue to work without writing a user entry.
+
+For a fixed executable path the grant is reused on later sharing starts and
+logins. AppImages use different temporary mount paths: DeskPort automatically
+registers the current resolved executable each time it encounters a new path.
+It does not need a stable extraction directory. Generated entries for vanished
+executables are cleaned during the next permission setup; existing installations
+and user-written entries are preserved. Entries are hidden from application menus
+and request only `zkde_screencast_unstable_v1` for `deskport-display`, not the main
+viewer. Sunshine maintains its own capture grant.
+
+The files live in `${XDG_DATA_HOME:-$HOME/.local/share}/applications/` with names
+`io.github.keithxc.DeskPort.kwin-display-*.desktop`. To revoke the generated grant,
+stop sharing and remove these entries; explicitly starting sharing again recreates
+the needed entry. KWin's global permission checks remain enabled.
+
+If the data directory is not writable or desktop cache discovery fails, sharing
+reports the failing helper and setup step. Check that directory, run
+`kbuildsycoca6 --noincremental`, and restart sharing. Unsupported KWin versions
+produce a separate protocol-requirement error. This does not grant `/dev/uinput`
+access or change input-device permissions.
+
+### Workaround for the released 0.6.0 AppImage
+
+Extract the AppImage into a permanent directory using `--appimage-extract`, then
+launch its `AppRun`. Create a hidden desktop entry under
+`~/.local/share/applications/` (or `$XDG_DATA_HOME/applications/`):
+
+```ini
+[Desktop Entry]
+Type=Application
+Name=DeskPort display permission
+NoDisplay=true
+Exec="/absolute/resolved/path/DeskPort.AppDir/usr/libexec/deskport-display"
+X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
+```
+
+Replace the example with the executable's `realpath`, including `/var/home` on
+systems where `/home` is a symlink. Run `kbuildsycoca6 --noincremental`, then restart
+sharing. The reporter also logged out/in; this is not required by the new automatic
+setup, which reconnects after refreshing the cache. Moving the extracted directory
+requires updating this manual entry.
+
+Implementation references:
+- [KWin executable matching](https://github.com/KDE/kwin/blob/Plasma/6.6/src/utils/serviceutils.h)
+- [KWin per-connection interface checks](https://github.com/KDE/kwin/blob/Plasma/6.6/src/wayland_server.cpp)
+- [Sunshine runtime permission registration](https://github.com/LizardByte/Sunshine/blob/master/src/platform/linux/kwingrab.cpp)
+
+The XDG ScreenCast portal also supports persistent restore tokens, subject to
+compositor policy and revocation. That is a different capture route; adopting it
+would require separately validating DeskPort's virtual-output resizing and
+session layout contract, rather than just replacing this permission setup.
+See the [portal API](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.ScreenCast.html).
 
 ## Build and validate
 
@@ -108,6 +169,19 @@ Use separate test configuration for AppImage/Flatpak and disable network during
 GUI automation to avoid discovering personal hosts. Native GPU decoding, live
 Wayland input, desktop permissions and long sessions require hardware acceptance;
 headless installation/GUI checks do not establish those results.
+
+For the KDE portable-permission regression, build the unwrapped helper with
+`qmake /path/to/source/host/linux/linux.pro` in a separate build directory using the locked
+devShell, then run `python3 scripts/test-linux-display.py /absolute/path/to/deskport-display --auto-permission`.
+This starts an isolated KWin/PipeWire/D-Bus session with permission checks enabled
+and no initial helper grant. It checks first-use recovery, grant reuse, changing
+mount paths, canonical paths, Unicode/space/quote handling, stale-entry cleanup,
+setup-write errors and cache-refresh fallback, followed by the regular virtual
+display lifecycle checks. The normal test without the flag covers preinstalled
+permissions. On 2026-09-25 both modes passed with KWin 6.6.6; the unmodified helper
+failed in the empty-permission fixture with the exact issue #2 error. This models
+AppImage mount identities; it is not physical Bazzite or packaged AppImage
+streaming acceptance.
 
 Verify downloads with the release's SHA-256 file. Keep upstream notices and exact
 source references; see [bundled components](BUNDLED_COMPONENTS.md). Deeper source

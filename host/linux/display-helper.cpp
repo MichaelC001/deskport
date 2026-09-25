@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // A connection-owned KWin primary output with temporary physical-screen mirroring.
 #include "gnome-display.h"
+#include "kwin-permission.h"
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDir>
@@ -13,6 +14,7 @@
 #include <QProcess>
 #include <QSize>
 #include <QUuid>
+#include <QThread>
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
@@ -105,7 +107,39 @@ public:
         wl_callback_destroy(callback);
         return ok;
     }
+    void resetConnection() {
+        for (auto& pair : outputs) {
+            for (auto& mode : pair.second->modes) wl_proxy_destroy(reinterpret_cast<wl_proxy*>(mode.first));
+            wl_proxy_destroy(reinterpret_cast<wl_proxy*>(pair.second->proxy));
+        }
+        outputs.clear();
+        if (screencast) { zkde_screencast_unstable_v1_destroy(screencast); screencast = nullptr; }
+        if (management) { kde_output_management_v2_destroy(management); management = nullptr; }
+        if (registry) { wl_registry_destroy(registry); registry = nullptr; }
+        if (display) { wl_display_disconnect(display); display = nullptr; }
+        error.clear();
+    }
     bool connectSession() {
+        if (connectOnce()) return true;
+        // Native/Nix permissions need no writes or cache refresh. Repair only
+        // the missing screencast grant, never an unsupported compositor.
+        if (broken || screencast || !management) return false;
+        if (!KWinPermission::install(error)) return false;
+        QElapsedTimer deadline;
+        deadline.start();
+        do {
+            // KWin caches requested interfaces per ClientConnection. A new
+            // connection is essential after registering the executable.
+            resetConnection();
+            if (connectOnce()) return true;
+            if (broken || !display) return false;
+            QThread::msleep(100);
+        } while (deadline.elapsed() < 3500);
+        error = "KWin has not granted deskport-display screencast access (" + KWinPermission::executable() +
+            "). Restart sharing after running kbuildsycoca6 --noincremental; see LINUX_PACKAGES.md.";
+        return false;
+    }
+    bool connectOnce() {
         display = wl_display_connect(nullptr);
         if (!display) { error = "Cannot connect to the Wayland session"; return false; }
         registry = wl_display_get_registry(display);
@@ -137,7 +171,8 @@ public:
         wl_registry_add_listener(registry, &listener, this);
         if (!sync() || !sync()) return false;
         if (!screencast || !management) {
-            error = "KWin 6.6+ virtual output protocols or DeskPort screencast permission are unavailable";
+            error = !management ? "deskport-display requires KWin 6.6+ output-management protocols" :
+                "KWin screencast permission is unavailable for deskport-display";
             return false;
         }
         return true;

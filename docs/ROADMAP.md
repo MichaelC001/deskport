@@ -1803,3 +1803,15 @@ The final installer upgraded the affected machine to 0.6.1; the GUI and CLI
 reported 0.6.1, another device discovered the Windows host, and the user confirmed
 a successful iPad connection. Protected-runtime scanning is recorded separately.
 Repeated unattended relaunch and locked-session acceptance remain unverified.
+
+## Portable KDE sharing permissions — 2026-09-25
+
+Reason: issue #2 reports that the 0.6.0 AppImage cannot start sharing because
+KWin does not expose screencast to `deskport-display`. Automatically register a
+missing user-scoped grant for the helper's canonical executable, refresh KDE's
+cache and reconnect with bounded retries. Existing native grants take the fast
+path. AppImage remounts need no repeated manual setup or stable extraction path.
+Keep KWin permission checks enabled and grant only the helper's screencast API.
+The isolated KWin regression adds empty permissions, repeat starts, remounts,
+symlinked paths and stale generated-entry cleanup to the display lifecycle checks.
+Release publication and physical Bazzite acceptance remain separate steps.

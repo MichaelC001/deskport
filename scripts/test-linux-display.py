@@ -13,6 +13,7 @@ import time
 helper = str(Path(sys.argv[1]).resolve())
 gnome = '--gnome' in sys.argv
 policy = int(os.environ.get('DESKPORT_TEST_POLICY', '0'))
+auto_permission = '--auto-permission' in sys.argv
 if '--inside' not in sys.argv:
     with tempfile.TemporaryDirectory(prefix='deskport-display-test-') as tmp:
         project = Path(tmp) / 'probe.pro'
@@ -59,6 +60,9 @@ if '--inside' not in sys.argv:
         if str(real_helper) != helper:
             entry = applications / 'io.github.keithxc.DeskPort.display.desktop'
             (applications / 'io.github.keithxc.DeskPort.display-native.desktop').write_text(entry.read_text().replace(f'Exec={helper}', f'Exec={real_helper}'))
+        if auto_permission:
+            assert not gnome
+            for entry in applications.glob('*.desktop'): entry.unlink()
         env['DESKPORT_OUTPUT_PROBE'] = str(Path(tmp) / 'output-probe')
         env['XDG_CURRENT_DESKTOP'] = 'GNOME' if gnome else 'KDE'
         pw_config = Path(shutil.which('pipewire')).resolve().parent.parent / 'share/pipewire'
@@ -76,7 +80,7 @@ if '--inside' not in sys.argv:
         # race removal of its isolated configuration/data directories.
         bus_config = Path(tmp) / 'session-bus.conf'
         bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
-        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []),
+        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--auto-permission'] if auto_permission else []) + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []),
                        env=env, check=True, timeout=180)
     raise SystemExit(0)
 
@@ -155,6 +159,61 @@ try:
     idle.stdin.close(); assert idle.wait(timeout=5)==0
     assert restored()
     print('PASS on-demand startup, admitted creation and explicit removal', flush=True)
+    if auto_permission:
+        applications = Path(os.environ['XDG_DATA_HOME']) / 'applications'
+        def entries():
+            return {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in applications.glob('*.desktop')}
+        registered = entries()
+        assert len(registered) == 1, registered
+        def check_start(executable, extra_env=None):
+            proc = subprocess.Popen([str(executable), '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                    text=True, env=dict(os.environ, DESKPORT_DISPLAY_ON_DEMAND='1', **(extra_env or {})))
+            children.append(proc)
+            assert select.select([proc.stdout], [], [], 12)[0], 'Permission setup timed out'
+            result = json.loads(proc.stdout.readline())
+            assert result.get('ready'), result
+            proc.stdin.close()
+            assert proc.wait(timeout=5) == 0
+            assert restored()
+        check_start(helper)
+        assert entries() == registered, 'Repeated sharing rewrote a valid permission'
+        # Model AppImage remounts and Fedora's symlinked home with real binaries.
+        previous = None
+        for index, component in enumerate(['path with spaces', '路径 100% "quoted" \\ slash']):
+            mount = Path(os.environ['XDG_RUNTIME_DIR']) / f'.mount_DeskPort{index}' / component
+            mount.mkdir(parents=True)
+            relocated = mount / 'deskport-display'
+            shutil.copy2(helper, relocated)
+            link = mount.parent / 'home-link'
+            link.symlink_to(mount, target_is_directory=True)
+            check_start(link / 'deskport-display')
+            assert len(entries()) == 2, entries()
+            if previous: assert not any(str(previous).encode() in b for b, _ in entries().values())
+            previous = relocated
+            relocated.unlink()
+        check_start(helper)
+        assert len(entries()) == 2, 'Existing grants should not require another setup'
+        fallback = Path(os.environ['XDG_RUNTIME_DIR']) / 'cache-fallback'
+        fallback.mkdir()
+        executable = fallback / 'deskport-display'
+        shutil.copy2(helper, executable)
+        # Force a setup write error for a new executable, without changing the
+        # compositor's XDG environment or touching the real user configuration.
+        data_file = fallback / 'not-a-directory'
+        data_file.write_text('blocked')
+        failure = subprocess.run([str(executable), '1280', '720'], input='', capture_output=True,
+                                 text=True, timeout=12, env=dict(os.environ, XDG_DATA_HOME=str(data_file)))
+        assert failure.returncode == 1, failure
+        assert 'cannot create its KWin permission entry' in json.loads(failure.stdout)['error'], failure
+        assert restored()
+        # KService's directory watcher remains a fallback when the explicit
+        # refresh command fails (for example a system/AppImage Qt mismatch).
+        tool = fallback / 'kbuildsycoca6'
+        tool.write_text('#!/bin/sh\nexit 1\n')
+        tool.chmod(0o755)
+        check_start(executable, {'PATH': str(fallback) + os.pathsep + os.environ['PATH']})
+        print('PASS first-use permission, repeated sharing, remount, spaces, canonical symlink paths and stale-entry cleanup', flush=True)
+        print('PASS actionable setup-write failure and automatic cache-discovery fallback', flush=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
     children.append(p)
     def receive(allow_error=False):
