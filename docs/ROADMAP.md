@@ -1814,4 +1814,9 @@ path. AppImage remounts need no repeated manual setup or stable extraction path.
 Keep KWin permission checks enabled and grant only the helper's screencast API.
 The isolated KWin regression adds empty permissions, repeat starts, remounts,
 symlinked paths and stale generated-entry cleanup to the display lifecycle checks.
-Release publication and physical Bazzite acceptance remain separate steps.
+The AppImage-only `v0.6.1-rc.1` prerelease was published with package checks,
+isolated KWin regressions and CI passing. On 2026-09-26 the reporter confirmed
+that it fixes the issue on Bazzite; see [confirmation](https://github.com/keithxc/deskport/issues/2#issuecomment-5835796537).
+This confirmation validates the reported sharing-startup problem, not a separate
+full input, GPU or long-session acceptance matrix. Merge the fix into main and
+restore its development version to 0.6.1; retain the tested prerelease and tag.
