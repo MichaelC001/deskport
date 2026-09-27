@@ -96,7 +96,7 @@
 
 **Linux** — 0.6.3 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.3`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.6.3/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.6.3/VERIFICATION.txt)。
 
-**Linux 软件仓库状态（2026-09-27）：** 正式安装包与上游 Nix flake 已可用；AUR `deskport-bin` 配方已准备，AUR 暂停新账号注册，暂未发布；Nixpkgs `deskport` 已提交[草稿 PR #567358](https://github.com/NixOS/nixpkgs/pull/567358)，待完成维护者人工审阅后转为正式评审，尚未合并。现在可用 `nix run github:keithxc/deskport/v0.6.3`，或下载 Arch 包后用 `pacman -U` 安装。请勿把它们理解为已经支持 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。本地构建配方、NixOS 配置以及主机输入／防火墙要求见 [Linux 安装指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
+**Linux 软件仓库状态（2026-09-27）：** 正式安装包与上游 Nix flake 已可用；AUR `deskport-bin` 配方已准备，AUR 暂停新账号注册，暂未发布；Nixpkgs `deskport` 已提交[PR #567358](https://github.com/NixOS/nixpkgs/pull/567358)，维护者已审阅，等待上游评审，尚未合并。现在可用 `nix run github:keithxc/deskport/v0.6.3`，或下载 Arch 包后用 `pacman -U` 安装。请勿把它们理解为已经支持 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。本地构建配方、NixOS 配置以及主机输入／防火墙要求见 [Linux 安装指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
 
 ## DeskPort 是什么
 

@@ -115,7 +115,7 @@ or a network tunnel. Legacy Sunshine PIN pairing remains available.
 | GitHub release packages | Available, 0.6.3 | Download the package for your distribution above |
 | Upstream Nix flake | Available, 0.6.3 | `nix run github:keithxc/deskport/v0.6.3` |
 | AUR `deskport-bin` | Recipe tested; publication blocked by new-account registration pause | [Build the recipe locally](docs/LINUX_PACKAGES.md#arch-linux-and-aur) |
-| Nixpkgs `deskport` | [Draft PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) submitted; not merged | Use the upstream flake until inclusion |
+| Nixpkgs `deskport` | [PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) submitted for review; not merged | Use the upstream flake until inclusion |
 | Arch official repositories / Flathub | Not listed | Use the release downloads; Flatpak is viewer-only |
 
 The downloadable Arch package is installed with `pacman -U`; it does not make

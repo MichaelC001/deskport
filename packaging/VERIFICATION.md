@@ -71,5 +71,14 @@ These checks do not establish physical capture, hardware encoding/decoding,
 streaming latency, remote input, reconnect or desktop-session acceptance. Existing
 personal hosts and services were not installed, replaced, activated or restarted.
 
-AUR publication awaits account-registration availability. Nixpkgs [draft PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) has been submitted with AI-assistance disclosure. Full maintainer self-review remains required before marking it ready; compilation alone is not repository acceptance. README status must
+AUR publication awaits account-registration availability. Nixpkgs [PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) has been submitted with AI-assistance disclosure. The maintainer confirmed review and the PR is ready for upstream review; compilation alone is not repository acceptance. README status must
 change only after actual publication/merge and channel verification.
+
+## Upstream CI follow-up (2026-09-27)
+
+Enabled `strictDeps` and `__structuredAttrs` as required for new Nixpkgs packages, moved Vulkan headers into target build inputs, and set the maintainer-provided reachable contact address. Nix formatting and the upstream maintainer validation passed. The sandboxed x86_64 Linux package build and all three package tests passed again:
+
+- Package: `/nix/store/hgsnncxmdmjk2jg0s1i41wbf84glblff-deskport-0.6.3`
+- Version: `/nix/store/k08xfnd13ad5jc6fkwqq4s77fm1qp4j3-deskport-0.6.3-test-version`
+- Host isolation: `/nix/store/xlrn6ip4d22mzb92hk7ryqmgw9mj3acf-deskport-host-config-isolation`
+- Headless startup: `/nix/store/j3i6vwsiw0d4fdfbk841f2r7k02xhysn-deskport-headless-startup`

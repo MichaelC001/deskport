@@ -2149,3 +2149,8 @@ click anchor alone cannot follow typing in a Linux or Windows editor.
   browser, IME and mixed-DPI validation. User will package and activate separately.
 
 See `docs/ADAPTIVE_DISPLAY.md` for provider limitations and fallback behavior.
+
+### 2026-09-27: Nixpkgs upstream review
+
+- Submitted https://github.com/NixOS/nixpkgs/pull/567358 and marked it ready after maintainer review. Upstream merge remains pending.
+- Addressed new-package strict dependency/structured attribute checks and maintainer contact validation. The sandboxed package rebuild, three package tests and maintainer check passed.
