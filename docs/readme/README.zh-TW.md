@@ -70,7 +70,7 @@
 
 **Linux** — 0.6.3 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.3`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
 
-**Linux 軟體倉庫狀態（2026-09-27）：** 正式安裝包與上游 Nix flake 已可用；AUR `deskport-bin` 配方已準備，AUR 暫停新帳號註冊，暫未發佈；Nixpkgs `deskport` 候選包已準備，尚未提交或合併。目前可使用 `nix run github:keithxc/deskport/v0.6.3`，或下載 Arch 包後用 `pacman -U` 安裝。這不表示已支援 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。配方、NixOS 設定及主機權限見 [Linux 安裝指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
+**Linux 軟體倉庫狀態（2026-09-27）：** 正式安裝包與上游 Nix flake 已可用；AUR `deskport-bin` 配方已準備，AUR 暫停新帳號註冊，暫未發佈；Nixpkgs `deskport` 已提交[草稿 PR #567358](https://github.com/NixOS/nixpkgs/pull/567358)，待完成維護者人工審閱後轉為正式評審，尚未合併。目前可使用 `nix run github:keithxc/deskport/v0.6.3`，或下載 Arch 包後用 `pacman -U` 安裝。這不表示已支援 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。配方、NixOS 設定及主機權限見 [Linux 安裝指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
 
 ## DeskPort 是什麼
 

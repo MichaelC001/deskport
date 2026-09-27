@@ -36,6 +36,8 @@ checks before pushing. Increment `pkgrel` for packaging-only changes.
 
 ## Nixpkgs
 
+Submitted as [draft PR #567358](https://github.com/NixOS/nixpkgs/pull/567358). Full maintainer self-review remains required before marking the PR ready. It is not merged or available in Nixpkgs channels.
+
 `nixpkgs/deskport/package.nix` is a standalone `callPackage` expression. It builds
 the viewer from the release tag and the shared core from its exact public commit.
 `host.nix` builds the private session host from DeskPort's vendored source archive,

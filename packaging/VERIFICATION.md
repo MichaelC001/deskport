@@ -71,7 +71,5 @@ These checks do not establish physical capture, hardware encoding/decoding,
 streaming latency, remote input, reconnect or desktop-session acceptance. Existing
 personal hosts and services were not installed, replaced, activated or restarted.
 
-AUR publication awaits account-registration availability. Nixpkgs submission
-awaits the responsible maintainer's review and the required AI-assistance
-disclosure; compilation alone is not repository acceptance. README status must
+AUR publication awaits account-registration availability. Nixpkgs [draft PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) has been submitted with AI-assistance disclosure. Full maintainer self-review remains required before marking it ready; compilation alone is not repository acceptance. README status must
 change only after actual publication/merge and channel verification.

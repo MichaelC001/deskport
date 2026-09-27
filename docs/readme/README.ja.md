@@ -72,7 +72,7 @@ DMG を開き、DeskPort を「アプリケーション」にドラッグして�
 
 **Linux** — 0.6.3 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.6.3` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
 
-**Linux リポジトリの状況（2026-09-27）：** リリースパッケージと upstream Nix flake は利用可能です。AUR `deskport-bin` のレシピは準備済みですが新規アカウント登録の一時停止により未公開、Nixpkgs `deskport` は候補を準備済みですが未提出・未マージです。現在は `nix run github:keithxc/deskport/v0.6.3`、またはダウンロードした Arch パッケージを `pacman -U` でインストールしてください。`yay -S deskport-bin`、`pacman -S deskport`、`pkgs.deskport` はまだ利用案内ではありません。手順とホスト権限は [Linux インストールガイド](../LINUX_PACKAGES.md#arch-linux-and-aur) を参照してください。
+**Linux リポジトリの状況（2026-09-27）：** リリースパッケージと upstream Nix flake は利用可能です。AUR `deskport-bin` のレシピは準備済みですが新規アカウント登録の一時停止により未公開、Nixpkgs `deskport` は[ドラフト PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) を提出済みです。正式レビュー前にメンテナーの自己レビューが必要で、まだマージされていません。現在は `nix run github:keithxc/deskport/v0.6.3`、またはダウンロードした Arch パッケージを `pacman -U` でインストールしてください。`yay -S deskport-bin`、`pacman -S deskport`、`pkgs.deskport` はまだ利用案内ではありません。手順とホスト権限は [Linux インストールガイド](../LINUX_PACKAGES.md#arch-linux-and-aur) を参照してください。
 
 ## DeskPort とは
 

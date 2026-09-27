@@ -116,7 +116,7 @@ qualified for the released flake. Change the tag and update your lock file when
 upgrading. Build and review your configuration before activating it yourself.
 
 **Nixpkgs status (2026-09-27):** a standalone source-package candidate is prepared
-under [`packaging/nixpkgs`](../packaging/nixpkgs). It is not yet submitted or merged;
+under [`packaging/nixpkgs`](../packaging/nixpkgs). [Draft PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) is submitted and awaits full maintainer self-review before being marked ready. It is not merged;
 `pkgs.deskport` and `nix run nixpkgs#deskport` are not installation instructions
 for the current release. Upstream review and channel propagation are separate
 steps. Initial candidate scope is Linux x86_64, viewer plus private session host.
