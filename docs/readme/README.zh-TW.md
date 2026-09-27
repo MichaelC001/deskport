@@ -42,7 +42,7 @@
 | 平台 | 角色 | 進度 | 取得 |
 | --- | --- | --- | --- |
 | **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.6.0，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
-| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.6.0：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
+| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.6.3：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | 檢視端 + 主機端 | 🧪 僅有 Nix 套件定義，建置與執行尚未驗證 | — |
 | **Windows x64** | 檢視端 + 主機端 + 虛擬顯示器 | 0.6.0 安裝程式與可攜式 ZIP | [發佈頁](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 僅客戶端 | ✅ 已上架 — App Store 售價 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -68,7 +68,9 @@
 開啟 DMG，把 DeskPort 拖進「應用程式」後啟動即可。主機端功能會在首次使用時要求
 「螢幕錄製」與「輔助使用」授權。不需要另外安裝 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.6.0 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.0`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
+**Linux** — 0.6.3 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.3`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
+
+**Linux 軟體倉庫狀態（2026-09-27）：** 正式安裝包與上游 Nix flake 已可用；AUR `deskport-bin` 配方已準備，AUR 暫停新帳號註冊，暫未發佈；Nixpkgs `deskport` 候選包已準備，尚未提交或合併。目前可使用 `nix run github:keithxc/deskport/v0.6.3`，或下載 Arch 包後用 `pacman -U` 安裝。這不表示已支援 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。配方、NixOS 設定及主機權限見 [Linux 安裝指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
 
 ## DeskPort 是什麼
 

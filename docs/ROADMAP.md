@@ -1,3 +1,19 @@
+## Linux repository packaging — 2026-09-27
+
+Prepare AUR `deskport-bin` from the stable portable archive and a standalone
+Nixpkgs source candidate with the release's private Sunshine host and FFmpeg ABI.
+Track publication separately: AUR new-account registration is temporarily closed; Nixpkgs
+requires maintainer review and disclosure before submission. README installation
+instructions keep the existing release and upstream flake available while these
+channels are pending. Checkpoints: isolated Arch install/upgrade/removal, sandboxed
+Nix build and version test, then actual publication/review and channel availability.
+The candidate also isolates the session host's default configuration even for
+CLI version queries, matching the portable launcher's behavior. A capability
+probe now skips Vulkan on fallback windows without SDL_WINDOW_VULKAN, avoiding
+a null SDL2-compat Vulkan entry point during headless startup; a packaging
+backport and Nix headless-startup regression test cover the released source. These packaging
+checks do not add physical streaming/input acceptance.
+
 ## Desktop 0.6.3 release preparation — 2026-09-26
 
 Prepare the integrated main branch for a formal PC release: Linux x86_64

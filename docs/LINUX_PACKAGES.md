@@ -51,6 +51,97 @@ Host sharing and desktop login service integration are not supported by this
 client-only package. Use a native package or AppImage when this Linux computer
 must also act as a host.
 
+## Arch Linux and AUR
+
+**Status (2026-09-27):** the `deskport-bin` recipe is prepared in
+[`packaging/aur/deskport-bin`](../packaging/aur/deskport-bin), but has not been
+published to AUR. The maintainer encountered AUR's temporary new-account
+registration closure on 2026-09-27. Its notice states there is no manual
+registration queue and asks users not to script retries. Follow
+[Arch news](https://archlinux.org/news/) and
+[aur-general](https://lists.archlinux.org/mailman3/lists/aur-general.lists.archlinux.org/)
+for reopening updates. Publication awaits an AUR account with a registered SSH key;
+the release package and local recipe remain usable.
+Do not use `yay -S deskport-bin` until this page confirms publication.
+
+For the existing release package:
+
+```sh
+sudo pacman -U ./deskport-0.6.3-1-x86_64.pkg.tar.zst
+```
+
+To build the candidate locally, from a checkout containing the recipe:
+
+```sh
+cd packaging/aur/deskport-bin
+makepkg -si
+```
+
+Read `PKGBUILD` first and run `makepkg` as a normal user. The recipe downloads the
+upstream portable release, verifies SHA-256, and packages its private runtime in
+`/opt/deskport`; it does not compile the application. `deskport-bin` provides and
+conflicts with `deskport`, so remove/replace the old package through pacman rather
+than forcing file overwrites. No device rules, group changes or running services
+are modified by the recipe. Updates will follow stable upstream releases.
+
+AUR is a community recipe repository, separate from Arch's official binary
+repositories. Future AUR publication will not enable `pacman -S deskport`.
+
+## NixOS and Nix
+
+**Available now:** the upstream flake, pinned to a released tag:
+
+```sh
+nix run github:keithxc/deskport/v0.6.3
+```
+
+For a flake-based NixOS configuration, add the input and install its package in a
+module that receives `inputs` through your existing `specialArgs` configuration:
+
+```nix
+# flake.nix inputs
+inputs.deskport.url = "github:keithxc/deskport/v0.6.3";
+
+# NixOS module
+{ inputs, pkgs, ... }: {
+  environment.systemPackages = [
+    inputs.deskport.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+}
+```
+
+These are snippets for your existing configuration, not a complete flake. Keep
+DeskPort's own locked nixpkgs input; overriding it with `follows` has not been
+qualified for the released flake. Change the tag and update your lock file when
+upgrading. Build and review your configuration before activating it yourself.
+
+**Nixpkgs status (2026-09-27):** a standalone source-package candidate is prepared
+under [`packaging/nixpkgs`](../packaging/nixpkgs). It is not yet submitted or merged;
+`pkgs.deskport` and `nix run nixpkgs#deskport` are not installation instructions
+for the current release. Upstream review and channel propagation are separate
+steps. Initial candidate scope is Linux x86_64, viewer plus private session host.
+
+For hosting, use a logged-in supported graphical session and configure access to
+`/dev/uinput`. For example, in a NixOS module (replace `YOUR_USER`):
+
+```nix
+hardware.uinput.enable = true;
+users.users.YOUR_USER.extraGroups = [ "uinput" ];
+```
+
+This grants input-injection capability to that user. Review and activate the
+configuration yourself, then log in again for group changes. The package alone
+does not grant this access. KDE capture entries are supplied by the package. Do not
+enable a separate Sunshine service to launch DeskPort's private host.
+
+For the default host port group, allow TCP **48984, 48989, 48991, 49010** and UDP
+**48998, 48999, 49000, 49002** only on the trusted LAN/VPN interfaces you use.
+If DeskPort selects another group because of port conflicts, use the ports shown
+by the application instead. Keep the host administration port 48990 private.
+LAN discovery additionally needs Avahi/mDNS and user-service publication;
+manually entering a reachable address does not require discovery. Installing
+DeskPort does not configure a VPN, router forwarding or public Internet access.
+
 ## First connection and hosting
 
 Open DeskPort and add the other device's reachable address. Approved DeskPort

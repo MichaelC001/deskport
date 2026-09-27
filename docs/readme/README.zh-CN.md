@@ -63,7 +63,7 @@
 | 平台 | 角色 | 进度 | 获取 |
 | --- | --- | --- | --- |
 | **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.6.0，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
-| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.6.0：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
+| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.6.3：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | 查看端 + 主机端 | 🧪 仅有 Nix 包定义，构建与运行尚未验证 | — |
 | **Windows x64** | 查看端 + 主机端 + 虚拟显示器 | 0.6.0 安装包及便携 ZIP | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -94,7 +94,9 @@
 打开 DMG，把 DeskPort 拖入「应用程序」，然后启动即可。主机端功能会在首次使用时请求
 「屏幕录制」和「辅助功能」授权。无需另外安装 Sunshine、Qt、Nix 或 Homebrew。
 
-**Linux** — 0.6.0 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.0`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.6.0/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.6.0/VERIFICATION.txt)。
+**Linux** — 0.6.3 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.6.3`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.6.3/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.6.3/VERIFICATION.txt)。
+
+**Linux 软件仓库状态（2026-09-27）：** 正式安装包与上游 Nix flake 已可用；AUR `deskport-bin` 配方已准备，AUR 暂停新账号注册，暂未发布；Nixpkgs `deskport` 候选包已准备，尚未提交或合并。现在可用 `nix run github:keithxc/deskport/v0.6.3`，或下载 Arch 包后用 `pacman -U` 安装。请勿把它们理解为已经支持 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。本地构建配方、NixOS 配置以及主机输入／防火墙要求见 [Linux 安装指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
 
 ## DeskPort 是什么
 

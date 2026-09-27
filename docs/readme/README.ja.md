@@ -42,7 +42,7 @@
 | プラットフォーム | 役割 | 進捗 | 入手 |
 | --- | --- | --- | --- |
 | **macOS**（Apple Silicon、macOS 26 以降） | ビューア + ホスト + 仮想ディスプレイ | ✅ 安定版 — 0.6.0、Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
-| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.6.0：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](../LINUX_PACKAGES.md) |
+| **Linux x86-64** | ビューア + ホスト | ✅ 公開済み — 0.6.3：Nix / DEB / RPM / Arch / AppImage、Flatpak はクライアント専用 | [リリース](https://github.com/keithxc/deskport/releases) · [ガイド](../LINUX_PACKAGES.md) |
 | **Linux ARM64** | ビューア + ホスト | 🧪 Nix パッケージ定義のみ。ビルドと動作は未検証 | — |
 | **Windows x64** | ビューア + ホスト + 仮想ディスプレイ | 0.6.0 インストーラーとポータブル ZIP | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
 | **iOS / iPadOS** | 📱 クライアントのみ | ✅ 公開済み — App Store で 4.99 米ドル | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
@@ -70,7 +70,9 @@
 DMG を開き、DeskPort を「アプリケーション」にドラッグして起動します。ホスト機能は初回使用時に
 「画面収録」と「アクセシビリティ」の許可を求めます。Sunshine、Qt、Nix、Homebrew を別途入れる必要はありません。
 
-**Linux** — 0.6.0 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.6.0` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
+**Linux** — 0.6.3 は DEB、RPM、Arch、AppImage、クライアント専用 Flatpak、Nix/NixOS を提供します。`nix run github:keithxc/deskport/v0.6.3` または [Linux インストールガイド](../LINUX_PACKAGES.md)をご利用ください。ネイティブパッケージには x86_64 と glibc 2.39+ が必要です。
+
+**Linux リポジトリの状況（2026-09-27）：** リリースパッケージと upstream Nix flake は利用可能です。AUR `deskport-bin` のレシピは準備済みですが新規アカウント登録の一時停止により未公開、Nixpkgs `deskport` は候補を準備済みですが未提出・未マージです。現在は `nix run github:keithxc/deskport/v0.6.3`、またはダウンロードした Arch パッケージを `pacman -U` でインストールしてください。`yay -S deskport-bin`、`pacman -S deskport`、`pkgs.deskport` はまだ利用案内ではありません。手順とホスト権限は [Linux インストールガイド](../LINUX_PACKAGES.md#arch-linux-and-aur) を参照してください。
 
 ## DeskPort とは
 
