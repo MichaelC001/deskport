@@ -1,0 +1,43 @@
+pkgbase = deskport-bin
+	pkgdesc = Remote desktop viewer and host with adaptive virtual workspaces
+	pkgver = 0.6.3
+	pkgrel = 1
+	url = https://github.com/keithxc/deskport
+	arch = x86_64
+	license = GPL-3.0-or-later
+	depends = glibc>=2.39
+	depends = gcc-libs
+	depends = libglvnd
+	depends = libx11
+	depends = libdrm
+	depends = libxcb
+	depends = libxkbcommon
+	depends = systemd-libs
+	depends = libpulse
+	depends = alsa-lib
+	depends = dbus
+	depends = fontconfig
+	depends = freetype2
+	depends = pipewire
+	depends = harfbuzz
+	depends = fribidi
+	depends = libsm
+	depends = libice
+	depends = bash
+	depends = coreutils
+	depends = hicolor-icon-theme
+	depends = zlib
+	depends = e2fsprogs
+	depends = libgpg-error
+	optdepends = vulkan-icd-loader: Vulkan graphics support
+	optdepends = libva: VA-API hardware acceleration
+	optdepends = libvdpau: VDPAU hardware decoding
+	optdepends = kservice: refresh KDE virtual-display permission entries
+	provides = deskport=0.6.3
+	conflicts = deskport
+	options = !strip
+	options = !debug
+	source = https://github.com/keithxc/deskport/releases/download/v0.6.3/DeskPort-0.6.3-linux-x86_64.tar.gz
+	sha256sums = 04c2e732655b9d939ae606477fe07484e63e534964ed4d6ff277867bff00a50c
+
+pkgname = deskport-bin

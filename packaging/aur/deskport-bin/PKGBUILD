@@ -1,0 +1,51 @@
+# Maintainer: Keith <keithxc@users.noreply.github.com>
+pkgname=deskport-bin
+pkgver=0.6.3
+pkgrel=1
+pkgdesc='Remote desktop viewer and host with adaptive virtual workspaces'
+arch=('x86_64')
+url='https://github.com/keithxc/deskport'
+license=('GPL-3.0-or-later')
+depends=('glibc>=2.39' 'gcc-libs' 'libglvnd' 'libx11' 'libdrm'
+         'libxcb' 'libxkbcommon' 'systemd-libs' 'libpulse' 'alsa-lib'
+         'dbus' 'fontconfig' 'freetype2' 'pipewire' 'harfbuzz' 'fribidi'
+         'libsm' 'libice' 'bash' 'coreutils' 'hicolor-icon-theme' 'zlib' 'e2fsprogs' 'libgpg-error')
+optdepends=('vulkan-icd-loader: Vulkan graphics support'
+            'libva: VA-API hardware acceleration'
+            'libvdpau: VDPAU hardware decoding'
+            'kservice: refresh KDE virtual-display permission entries')
+provides=("deskport=${pkgver}")
+conflicts=('deskport')
+options=('!strip' '!debug')
+source=("${url}/releases/download/v${pkgver}/DeskPort-${pkgver}-linux-${CARCH}.tar.gz")
+sha256sums=('04c2e732655b9d939ae606477fe07484e63e534964ed4d6ff277867bff00a50c')
+
+package() {
+    install -d "${pkgdir}/opt/deskport" "${pkgdir}/usr/bin"
+    cp -a DeskPort.AppDir/. "${pkgdir}/opt/deskport/"
+    printf '#!/bin/sh\nexec /opt/deskport/AppRun "$@"\n' > "${pkgdir}/usr/bin/deskport"
+    chmod 755 "${pkgdir}/usr/bin/deskport"
+
+    install -Dm644 DeskPort.AppDir/usr/share/applications/io.github.keithxc.DeskPort.desktop \
+        "${pkgdir}/usr/share/applications/io.github.keithxc.DeskPort.desktop"
+    install -Dm644 DeskPort.AppDir/usr/share/icons/hicolor/scalable/apps/deskport.svg \
+        "${pkgdir}/usr/share/icons/hicolor/scalable/apps/deskport.svg"
+    install -Dm644 DeskPort.AppDir/usr/share/metainfo/io.github.keithxc.DeskPort.appdata.xml \
+        "${pkgdir}/usr/share/metainfo/io.github.keithxc.DeskPort.appdata.xml"
+
+    local helper executable
+    for helper in display host; do
+        executable=/opt/deskport/usr/libexec/deskport-display
+        if [[ ${helper} == host ]]; then
+            executable=/opt/deskport/usr/libexec/sunshine/usr/bin/sunshine
+        fi
+        cat > "${pkgdir}/usr/share/applications/io.github.keithxc.DeskPort.${helper}.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=DeskPort ${helper} capture permission
+Exec=${executable}
+NoDisplay=true
+X-KDE-Wayland-Interfaces=zkde_screencast_unstable_v1
+EOF
+    done
+}

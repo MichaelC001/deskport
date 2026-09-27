@@ -108,6 +108,22 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
+### Linux repository availability
+
+| Channel | Status | Installation |
+| --- | --- | --- |
+| GitHub release packages | Available, 0.6.3 | Download the package for your distribution above |
+| Upstream Nix flake | Available, 0.6.3 | `nix run github:keithxc/deskport/v0.6.3` |
+| AUR `deskport-bin` | Recipe tested; publication blocked by new-account registration pause | [Build the recipe locally](docs/LINUX_PACKAGES.md#arch-linux-and-aur) |
+| Nixpkgs `deskport` | Candidate prepared; not submitted or merged | Use the upstream flake until inclusion |
+| Arch official repositories / Flathub | Not listed | Use the release downloads; Flatpak is viewer-only |
+
+The downloadable Arch package is installed with `pacman -U`; it does not make
+`pacman -S deskport` available. Likewise, the upstream flake does not make
+`pkgs.deskport` available in Nixpkgs. Host input, capture permissions and firewall
+setup are separate from installing the application; see the
+[Linux installation guide](docs/LINUX_PACKAGES.md#nixos-and-nix).
+
 ## Comparison with similar products
 
 This is a workflow and platform comparison, checked against the linked official
