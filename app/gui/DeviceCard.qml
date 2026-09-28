@@ -24,6 +24,10 @@ Rectangle {
     signal addDeviceRequested()
     signal addGroupRequested()
     property bool activeSession: false
+    property string sessionState: ""
+    readonly property string sessionStatus: sessionState === "starting" ? qsTranslate("main", "Connecting…")
+        : sessionState === "stopping" ? qsTranslate("main", "Disconnecting…")
+        : sessionState === "error" ? qsTranslate("main", "Failed") : ""
     property bool anotherSession: false
     // The system icon opens the device panel; the button does the card's action.
     signal detailsRequested()
@@ -37,9 +41,8 @@ Rectangle {
         return /linux/.test(os) ? "linux" : "computer"
     }
     readonly property string osKey: osKeyFor(operatingSystem)
-    // Another device's session does not change what this card offers; its
-    // action explains that the session must end first.
-    readonly property string actionText: group ? qsTr("Open") : activeSession ? qsTr("Return to desktop") : unknown ? qsTr("Checking…") : !online ? qsTr("Troubleshoot") : paired ? qsTr("Connect") : qsTr("Set up access")
+    // Each card reflects only its own backend session.
+    readonly property string actionText: group ? qsTr("Open") : sessionState === "starting" || sessionState === "stopping" ? sessionStatus : activeSession ? qsTr("Return to desktop") : unknown ? qsTr("Checking…") : !online ? qsTr("Troubleshoot") : paired ? qsTr("Connect") : qsTr("Set up access")
     readonly property bool primaryAction: activeSession || (!group && !unknown && online && paired)
     // Arrange mode: a gentle wiggle marks cards as movable; the held card lifts.
     scale: held ? 1.04 : dropTarget ? 1.06 : 1
@@ -52,7 +55,7 @@ Rectangle {
         NumberAnimation { to: -0.6; duration: 130 }
         NumberAnimation { to: 0.6; duration: 130 }
     }
-    readonly property string statusText: activeSession ? qsTr("Connected") : unknown ? qsTr("Checking…") : online ? qsTr("Online") : qsTr("Offline")
+    readonly property string statusText: sessionStatus.length > 0 ? sessionStatus : activeSession ? qsTr("Connected") : unknown ? qsTr("Checking…") : online ? qsTr("Online") : qsTr("Offline")
     readonly property color statusColor: online || activeSession ? ui.online : unknown ? ui.checking : ui.offline
     // Online and checking devices are washed with their status colour; offline
     // devices, groups and the add card stay plain.
@@ -156,7 +159,7 @@ Rectangle {
             text: card.actionText
             highlighted: card.primaryAction
             tinted: !card.primaryAction
-            enabled: !card.unknown || card.activeSession
+            enabled: card.sessionState !== "stopping" && (!card.unknown || card.activeSession || card.sessionState === "starting")
             Layout.fillWidth: true; Layout.topMargin: 10
             onClicked: card.activateRequested()
             Accessible.name: text + " · " + card.deviceName

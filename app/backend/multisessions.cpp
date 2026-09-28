@@ -45,6 +45,11 @@ QVariantList MultiSessions::sessions() const {
         {"error",entry->error},{"selected",entry->id == m_Selected},{"visible",entry->id == m_Visible}});
     return rows;
 }
+QVariantMap MultiSessions::states() const {
+    QVariantMap result;
+    for (auto entry : m_Entries) result.insert(entry->id, entry->state);
+    return result;
+}
 void MultiSessions::open(QString id, QString name, QString address, QString app) {
     if (m_Shutdown || id.isEmpty()) return;
     id = id.toLower();
@@ -52,7 +57,7 @@ void MultiSessions::open(QString id, QString name, QString address, QString app)
     if (entry && (entry->state == "starting" || (entry->process && entry->process->state() != QProcess::NotRunning))) { select(id); return; }
     if (!entry) { entry = new Entry; entry->id = id; m_Entries.insert(id, entry); }
     entry->name = name; entry->address = address; entry->app = app;
-    entry->error.clear(); entry->state = "starting";
+    entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false;
     entry->token = QUuid::createUuid().toString(QUuid::WithoutBraces);
     select(id);
     emit devicesRequested(); emit changed();
@@ -144,22 +149,42 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     } else if (type == "devices") { showDevices(); emit devicesRequested(); }
     else if (type == "ready") { present(); }
     else if (type == "connected") { entry->state = "connected"; entry->error.clear(); }
-    else if (type == "shown" && m_Wanted == entry->id && m_Hiding.isEmpty()) { m_Visible = entry->id; emit viewerShown(); }
+    else if (type == "shown" && m_Wanted == entry->id && m_Hiding.isEmpty()) {
+        m_Visible = entry->id;
+        if (entry->fullscreenPending) { entry->fullscreenPending = false; send(entry, {{"command","fullscreen"}}); }
+        emit viewerShown();
+    }
     else if (type == "error") { entry->error = message.value("message").toString().left(1024); entry->state = "error"; }
     else if (type == "connecting") { entry->state = "starting"; entry->error.clear(); }
     emit changed();
 }
 void MultiSessions::select(QString id) {
+    id = id.toLower();
     if (!m_Entries.contains(id) || m_Shutdown) return;
     const auto selected=m_Entries.value(id);
     if (selected->state != "starting" && selected->state != "connected") { emit devicesRequested(); return; }
     m_Selected = id; m_Wanted = id;
     ++m_Epoch;
     for (auto entry : m_Entries) if (entry->id != id && entry->socket) {
-        m_Hiding.insert(entry->id); entry->hideEpoch = m_Epoch;
-        send(entry, {{"command","hide"},{"epoch",double(m_Epoch)}});
+        hide(entry);
     }
     present(); emit changed();
+}
+void MultiSessions::hide(Entry* entry) {
+    // Repeated selections must not keep postponing an unresponsive worker's
+    // deadline. Only process exit or an acknowledgement releases input ownership.
+    const bool pending = m_Hiding.contains(entry->id);
+    m_Hiding.insert(entry->id); entry->hideEpoch = m_Epoch;
+    send(entry, {{"command","hide"},{"epoch",double(m_Epoch)}});
+    if (pending || !entry->process) return;
+    auto process = entry->process;
+    const auto request = ++entry->hideRequest;
+    QTimer::singleShot(2000, process, [this, entry, process, request] {
+        if (entry->process == process && entry->hideRequest == request && m_Hiding.contains(entry->id)) {
+            entry->error = tr("The desktop worker did not respond.");
+            process->kill();
+        }
+    });
 }
 void MultiSessions::present() {
     if (m_Shutdown || !m_Hiding.isEmpty() || m_Wanted.isEmpty()) return;
@@ -169,13 +194,13 @@ void MultiSessions::present() {
 void MultiSessions::showDevices() {
     m_Wanted.clear(); ++m_Epoch;
     for (auto entry : m_Entries) if (entry->socket) {
-        m_Hiding.insert(entry->id); entry->hideEpoch = m_Epoch;
-        send(entry, {{"command","hide"},{"epoch",double(m_Epoch)}});
+        hide(entry);
     }
     emit changed();
 }
 void MultiSessions::disconnectSession(QString id) {
-    auto entry = m_Entries.value(id); if (!entry) return;
+    auto entry = m_Entries.value(id.toLower()); if (!entry) return;
+    id = entry->id;
     const bool leavingViewer = m_Wanted == id || m_Visible == id;
     entry->state = "stopping";
     if (leavingViewer) showDevices();
@@ -187,8 +212,18 @@ void MultiSessions::disconnectSession(QString id) {
     if (leavingViewer) emit devicesRequested();
     emit changed();
 }
-void MultiSessions::reconnect(QString id) { auto entry=m_Entries.value(id); if (entry) send(entry,{{"command","reconnect"}}); }
-void MultiSessions::fullscreen() { send(m_Entries.value(m_Selected),{{"command","fullscreen"}}); }
+void MultiSessions::reconnect(QString id) { auto entry=m_Entries.value(id.toLower()); if (entry) send(entry,{{"command","reconnect"}}); }
+void MultiSessions::fullscreen(QString id) {
+    if (id.isEmpty()) id = m_Selected;
+    auto entry = m_Entries.value(id.toLower());
+    if (!entry || (entry->state != "starting" && entry->state != "connected")) return;
+    if (m_Visible == entry->id && m_Wanted == entry->id && m_Hiding.isEmpty()) {
+        send(entry, {{"command","fullscreen"}});
+    } else {
+        entry->fullscreenPending = true;
+        select(entry->id);
+    }
+}
 void MultiSessions::suspend() { for (auto entry : m_Entries) disconnectSession(entry->id); }
 void MultiSessions::shutdown() { m_Shutdown=true; for (auto entry : m_Entries) disconnectSession(entry->id); }
 void MultiSessions::ended(Entry* entry, const QString& error) {

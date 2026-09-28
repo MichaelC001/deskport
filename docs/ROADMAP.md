@@ -2234,7 +2234,7 @@ workers preserve its single-session contract while the shell owns the device
 list, tray, session selection and lifecycle. Devices and tray actions do not wait
 for a media worker to stop. Returning to Devices retains all connections.
 
-- Session tabs and the Connections tray menu select an existing desktop. Closing
+- Existing device cards and the Connections tray menu select an existing desktop. Closing
   one session stops only its worker. A worker crash leaves other sessions alive.
 - Presentation handoff releases the previous viewer's input and clipboard before
   showing the next; background viewers retain transport but mute audio and reject
@@ -2250,3 +2250,60 @@ for a media worker to stop. Returning to Devices retains all connections.
   selection, list return, independent crash/cancel, fanout/cycle admission, and
   real production worker startup with isolated settings. Physical simultaneous
   video/audio/input and native compositor switch latency remain acceptance work.
+
+### Preserve the existing desktop UI — 2026-09-28
+
+Removed the newly introduced session tab strip and restored the original page
+spacing at the user's request. Session isolation is a backend concern; the
+existing device cards remain the entry point. Future separation of presentation
+and session services must preserve the current UI unless explicitly requested.
+
+### Per-device session state and responsive handoff — 2026-09-28
+
+The existing device cards consume backend session state keyed by host identity.
+Every connected device shows Return to desktop, including background sessions.
+Reconnect, fullscreen and disconnect commands address that card's session.
+The UI does not wait for transport startup, shutdown or input handoff. A worker
+that cannot acknowledge input release is terminated after a bounded deadline;
+only its exit releases ownership to the next viewer. Repeated selections do not
+extend that deadline. Fullscreen requests wait for the target viewer to appear.
+
+Validation: the macOS and Linux Qt UI suites pass all 26 cases; the final
+per-device navigation check also passes on Linux. Subprocess regressions cover
+rapid selection, background disconnect, fullscreen handoff and failed workers;
+heartbeat gaps during the stalled-handoff fixture were 11–20 ms. Two Linux
+machines independently built the same final candidate with Nix and produced
+matching executable SHA-256 hashes. Both candidates pass 20 switches between
+two real worker processes, independent cancellation and IPC-loss exit with
+isolated settings and no server connection. UI tests now use temporary settings
+on macOS as well as Linux, preventing setup preferences leaking across runs.
+
+Authorized live integration used a physical Linux viewer with macOS and Linux
+servers. A disposable in-process driver invoked the real card actions; it is
+not included in production source. Both streams submitted their first video
+frames, and a private screenshot confirmed both original cards offered Return
+to desktop with no session tabs.
+
+The initial rapid-switch run exposed stale resize debounce state across hidden
+windows: transient compositor geometry could trigger a transport restart on
+recall. Hiding/minimizing and recalling a viewer now reset that interval. The
+new desktop-state regression passes on macOS and Linux (10 cases), and the
+production Linux candidate builds with the repair.
+
+After repair, ten rapid switches and ten switches with one-second dwell both
+passed while retaining both connections. Maximum card-to-viewer acknowledgement
+was 58 ms and 52 ms respectively, measured with a 50 ms polling interval; these
+are window acknowledgement times, not display-to-photon latency. The Qt heartbeat
+maximum was 170–171 ms, including test screenshot capture. Each run independently
+disconnected one device and recalled the other. The four viewer logs contain
+first-render submissions and no adaptive transport restarts. The temporary
+viewer service and workers exited, and its original deployed service was
+restored. Physical keyboard/mouse routing and audio acceptance remain untested;
+this does not install or publish the repaired candidate.
+
+Scope confirmed by the user: implement presentation/input switching first;
+retain background media connections and defer resource optimization. The
+vendored RTSP client has no PAUSE command. Suspending remote video transmission
+is separate protocol work; it must not turn a presentation switch into
+disconnect/reconnect. Backend decode throttling also needs keyframe recovery
+validation before enabling it.

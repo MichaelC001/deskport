@@ -18,6 +18,10 @@ NavigableDialog {
     property bool paired: false
     property bool unknown: false
     property bool activeSession: false
+    property string sessionState: ""
+    readonly property string sessionStatus: sessionState === "starting" ? qsTranslate("main", "Connecting…")
+        : sessionState === "stopping" ? qsTranslate("main", "Disconnecting…")
+        : sessionState === "error" ? qsTranslate("main", "Failed") : ""
     // A DeskPort binding rather than legacy pairing; its address can change.
     property bool bound: false
     property bool canChangeAddress: false
@@ -42,7 +46,7 @@ NavigableDialog {
             if (os.indexOf(names[i]) >= 0) return names[i]
         return /linux/.test(os) ? "linux" : "computer"
     }
-    readonly property string statusText: activeSession ? qsTr("Connected") : unknown ? qsTr("Checking…")
+    readonly property string statusText: sessionStatus.length > 0 ? sessionStatus : activeSession ? qsTr("Connected") : unknown ? qsTr("Checking…")
         : online ? (paired ? qsTr("Online") : qsTr("Online · access not set up")) : qsTr("Offline")
     readonly property color statusColor: online || activeSession ? ui.online : unknown ? ui.checking : ui.muted
     property bool showTechnical: false
@@ -112,7 +116,7 @@ NavigableDialog {
                 }
             }
             UiGroup {
-                visible: panel.activeSession
+                visible: panel.activeSession || panel.sessionState === "starting"
                 UiRow { objectName: "panel-reconnect-" + panel.hostId; iconSource: "qrc:/res/ui/reconnect.svg"; title: qsTr("Reconnect"); onClicked: panel.run(function() { panel.reconnectRequested() }) }
                 UiRow { objectName: "panel-fullscreen-" + panel.hostId; iconSource: "qrc:/res/ui/fullscreen.svg"; title: qsTr("Toggle full screen"); onClicked: panel.run(function() { panel.fullscreenRequested() }) }
                 UiRow { objectName: "panel-disconnect-" + panel.hostId; iconSource: "qrc:/res/ui/disconnect.svg"; title: qsTr("Disconnect"); divider: false; onClicked: panel.run(function() { panel.disconnectRequested() }) }

@@ -84,18 +84,30 @@ GridView {
         showPcDetailsDialog.pcDetails = qsTr("A session with %1 is open. Disconnect it before connecting to another computer.").arg(pcGrid.sessionHostName)
         showPcDetailsDialog.open()
     }
+    // Render backend state; every command names the device it belongs to.
+    readonly property var sessionStates: typeof sessionManager !== "undefined" ? sessionManager.states : ({})
+    function stateFor(hostId) { return sessionStates[hostId.toLowerCase()] || "" }
+    function connected(hostId) {
+        return typeof sessionManager !== "undefined" ? stateFor(hostId) === "connected"
+            : sessionHostId.length > 0 && hostId === sessionHostId
+    }
+    function reconnectDevice(hostId) {
+        if (typeof sessionManager !== "undefined") sessionManager.reconnect(hostId)
+        else hostManager.reconnectViewer()
+    }
+    function fullscreenDevice(hostId) {
+        if (typeof sessionManager !== "undefined") sessionManager.fullscreen(hostId)
+        else hostManager.toggleViewerFullscreen()
+    }
+    function disconnectDevice(hostId) {
+        if (typeof sessionManager !== "undefined") sessionManager.disconnectSession(hostId)
+        else hostManager.disconnectViewer()
+    }
     // What a card's button or a click on it does.
     function activate(row) {
-        if (typeof sessionManager !== "undefined") {
-            for (var i=0; i<sessionManager.sessions.length; ++i) {
-                var existing=sessionManager.sessions[i]
-                if (existing.id === row.hostId.toLowerCase() && (existing.state === "starting" || existing.state === "connected")) {
-                    sessionManager.select(existing.id)
-                    return true
-                }
-            }
-        }
-        if (typeof sessionManager !== "undefined" && row.paired && row.online && row.serverSupported) {
+        if (typeof sessionManager !== "undefined" &&
+                (stateFor(row.hostId) === "starting" || stateFor(row.hostId) === "connected" ||
+                 (row.paired && row.online && row.serverSupported))) {
             sessionManager.open(row.hostId, row.name, row.hostAddress)
             return true
         }
@@ -220,7 +232,8 @@ GridView {
                         alias: model.alias || ""; reportedName: model.reportedName || ""
                         operatingSystem: model.operatingSystem; address: model.address; details: model.details
                         online: model.online; paired: model.paired; unknown: model.statusUnknown
-                        activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
+                        activeSession: pcGrid.connected(model.hostId)
+                        sessionState: pcGrid.stateFor(model.hostId)
                         bound: pcGrid.savedPeer(model.hostId) !== null
                         canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
                         inGroup: true
@@ -230,9 +243,9 @@ GridView {
                         onPairRequested: pcGrid.pairWithPin(folderModel, index)
                         onRemoveRequested: pcGrid.confirmRemove(folderModel, index, model.name)
                         onMoveOutRequested: { folderModel.moveOutOfGroup(index); computerModel.refreshFavorites(); pcGrid.refreshLayout() }
-                        onReconnectRequested: hostManager.reconnectViewer()
-                        onFullscreenRequested: hostManager.toggleViewerFullscreen()
-                        onDisconnectRequested: hostManager.disconnectViewer()
+                        onReconnectRequested: pcGrid.reconnectDevice(model.hostId)
+                        onFullscreenRequested: pcGrid.fullscreenDevice(model.hostId)
+                        onDisconnectRequested: pcGrid.disconnectDevice(model.hostId)
                     }
                     MouseArea {
                         id: folderDrag
@@ -255,7 +268,7 @@ GridView {
                                 if (model.isGroup || model.isAdd) return
                                 var row = {hostId: model.hostId, name: model.name, online: model.online, paired: model.paired,
                                            serverSupported: model.serverSupported, sourceIndex: model.sourceIndex, hostAddress: model.hostAddress}
-                                if (!model.online) { folderDevicePanel.open(); return }
+                                if (!model.online && !pcGrid.connected(model.hostId) && pcGrid.stateFor(model.hostId) !== "starting") { folderDevicePanel.open(); return }
                                 folderDialog.close()
                                 pcGrid.activate(row)
                                 return
@@ -453,7 +466,8 @@ GridView {
             dropTarget: pcGrid.combineIndex === index
             operatingSystem: model.operatingSystem
             onDetailsRequested: devicePanel.open()
-            activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
+            activeSession: pcGrid.connected(model.hostId)
+            sessionState: pcGrid.stateFor(model.hostId)
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
             onActivateRequested: parent.clicked()
             online: model.online; paired: model.paired; unknown: model.statusUnknown
@@ -467,7 +481,8 @@ GridView {
             alias: model.alias || ""; reportedName: model.reportedName || ""
             operatingSystem: model.operatingSystem; address: model.address; details: model.details
             online: model.online; paired: model.paired; unknown: model.statusUnknown
-            activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
+            activeSession: pcGrid.connected(model.hostId)
+            sessionState: pcGrid.stateFor(model.hostId)
             bound: !model.isGroup && !model.isAdd && pcGrid.savedPeer(model.hostId) !== null
             canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
             inGroup: false
@@ -476,9 +491,9 @@ GridView {
             onAliasRequested: pcGrid.openAlias(computerModel, index, model.reportedName || model.name, model.alias)
             onPairRequested: pcGrid.pairWithPin(computerModel, index)
             onRemoveRequested: pcGrid.confirmRemove(computerModel, index, model.name)
-            onReconnectRequested: hostManager.reconnectViewer()
-            onFullscreenRequested: hostManager.toggleViewerFullscreen()
-            onDisconnectRequested: hostManager.disconnectViewer()
+            onReconnectRequested: pcGrid.reconnectDevice(model.hostId)
+            onFullscreenRequested: pcGrid.fullscreenDevice(model.hostId)
+            onDisconnectRequested: pcGrid.disconnectDevice(model.hostId)
         }
 
         onClicked: {

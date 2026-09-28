@@ -2,6 +2,8 @@
 #include <QDesktopServices>
 #include <cmath>
 #include <QtTest>
+#include <QApplication>
+#include <QSettings>
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQmlComponent>
@@ -18,9 +20,9 @@
 #include "singleinstance.h"
 #include "../shared/deskport-core/portable/include/deskport/catalog.h"
 
-static QQuickItem* findVisual(QQuickItem* item, const QString& name) {
-    if (item->objectName() == name) return item;
-    for (auto child : item->childItems()) if (auto found = findVisual(child, name)) return found;
+static QQuickItem* findVisual(QQuickItem* item, const QString& name, bool visibleOnly = false) {
+    if (item->objectName() == name && (!visibleOnly || item->isVisible())) return item;
+    for (auto child : item->childItems()) if (auto found = findVisual(child, name, visibleOnly)) return found;
     return nullptr;
 }
 static QByteArray credential(const char* name) {
@@ -232,6 +234,15 @@ public:
         return {QVariantMap{{"key","screen"},{"title","Screen recording"},{"purpose","Synthetic screen permission"},{"state","allowed"}},
                 QVariantMap{{"key","input"},{"title","Keyboard and pointer"},{"purpose","Synthetic input permission"},{"state","needsSetup"}}};
     }
+};
+// Session fixtures already have saved devices. Avoid writing shared setup
+// preferences, which would change subsequent first-run navigation tests.
+class SessionPreviewHost : public PreviewHost {
+    Q_OBJECT
+    Q_PROPERTY(bool setupComplete READ sessionSetupComplete CONSTANT)
+public:
+    using PreviewHost::PreviewHost;
+    bool sessionSetupComplete() const { return true; }
 };
 class UiPages : public QObject {
     Q_OBJECT
@@ -794,18 +805,25 @@ ApplicationWindow {
     void managedSessionNavigation() {
         TestComputers::resetLayout();
         QTemporaryDir directory;
-        PreviewHost host(nullptr,directory.path()+"/host");
+        SessionPreviewHost host(nullptr,directory.path()+"/host");
         PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
         QQmlEngine engine;
         QQmlComponent fixture(&engine);
         fixture.setData(R"(import QtQuick 2.9
 QtObject {
  property bool busy: true
- property string selectedId: "a"
+ property string selectedId: "device-a"
  property var selectedTraffic: ({received:100, sent:20})
  property int listRequests: 0
  property string disconnected: ""
- property var sessions: [ {id:"a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"b", name:"Second desktop", state:"connected", selected:false, error:""} ]
+ property string reconnected: ""
+ property string fullscreenId: ""
+ property var states: ({"device-a":"connected", "device-b":"connected"})
+ function open(id, name, address) { select(id) }
+ function reconnect(id) { reconnected=id }
+ function fullscreen(id) { fullscreenId=id }
+ function setSecondState(state) { states={"device-a":"connected", "device-b":state} }
+ property var sessions: [ {id:"device-a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"device-b", name:"Second desktop", state:"connected", selected:false, error:""} ]
  function select(id) { selectedId=id }
  function showDevices() { listRequests++ }
  function disconnectSession(id) { disconnected=id }
@@ -824,17 +842,43 @@ QtObject {
         QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
         auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
         window->resize(800,620); window->show(); QTest::qWait(100);
-        auto second=findVisual(window->contentItem(),"sessionSelect-b"); QVERIFY(second);
-        QVERIFY(second->isVisible()); QVERIFY(QMetaObject::invokeMethod(second,"clicked"));
-        QCOMPARE(manager->property("selectedId").toString(),QString("b"));
+        QVERIFY(!findVisual(window->contentItem(),"sessionStrip"));
+        QVERIFY(!findVisual(window->contentItem(),"sessionSelect-b"));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"recallRemoteSession"));
+        QCOMPARE(manager->property("selectedId").toString(),QString("device-a"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
         QCOMPARE(manager->property("listRequests").toInt(),1);
         QCOMPARE(manager->property("sessions").value<QJSValue>().toVariant().toList().size(),2);
-        auto close=findVisual(window->contentItem(),"sessionDisconnect-a"); QVERIFY(close);
-        QVERIFY(QMetaObject::invokeMethod(close,"clicked"));
-        QCOMPARE(manager->property("disconnected").toString(),QString("a"));
+        QVERIFY(!findVisual(window->contentItem(),"sessionDisconnect-a"));
+        QCOMPARE(manager->property("disconnected").toString(),QString());
+        auto first=findVisual(window->contentItem(),"device-device-a",true); QVERIFY(first);
+        auto second=findVisual(window->contentItem(),"device-device-b",true); QVERIFY(second);
+        auto firstCard=first->property("contentItem").value<QObject*>(); QVERIFY(firstCard);
+        auto secondCard=second->property("contentItem").value<QObject*>(); QVERIFY(secondCard);
+        QCOMPARE(firstCard->property("actionText").toString(),QString("Return to desktop"));
+        QCOMPARE(secondCard->property("actionText").toString(),QString("Return to desktop"));
+        for (auto card : {secondCard,firstCard,secondCard}) {
+            QVERIFY(QMetaObject::invokeMethod(card,"activateRequested"));
+            QCOMPARE(manager->property("selectedId").toString(), card == firstCard ? QString("device-a") : QString("device-b"));
+        }
+        auto firstPanel=first->findChild<QObject*>("devicePanel-device-a"); QVERIFY(firstPanel);
+        // A background card's actions must never affect the selected B session.
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"reconnectRequested"));
+        QCOMPARE(manager->property("reconnected").toString(),QString("device-a"));
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"fullscreenRequested"));
+        QCOMPARE(manager->property("fullscreenId").toString(),QString("device-a"));
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"disconnectRequested"));
+        QCOMPARE(manager->property("disconnected").toString(),QString("device-a"));
+        QCOMPARE(manager->property("selectedId").toString(),QString("device-b"));
+        for (const auto& state : {"starting", "stopping", "error", "connected"}) {
+            QVERIFY(QMetaObject::invokeMethod(manager.data(),"setSecondState",Q_ARG(QVariant,QString(state))));
+            QCOMPARE(secondCard->property("activeSession").toBool(),QString(state)=="connected");
+            QCOMPARE(root->property("activeHostId").toString(),QString(state)=="connected" ? QString("device-b") : QString());
+            QVERIFY(firstCard->property("activeSession").toBool());
+            QVERIFY(!secondCard->property("statusText").toString().isEmpty());
+        }
         const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
-        if (!shots.isEmpty()) { QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
+        if (!shots.isEmpty()) { QTest::qWait(250); QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }
     void navigationAndDeviceIdentity_data() {
@@ -1415,5 +1459,15 @@ QtObject {
         }
     }
 };
-QTEST_MAIN(UiPages)
+int main(int argc, char** argv) {
+    QApplication app(argc, argv);
+    QTemporaryDir settings;
+    if (!settings.isValid()) return 1;
+    QCoreApplication::setOrganizationName("DeskPortTests");
+    QCoreApplication::setApplicationName("UiPages");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
+    UiPages tests;
+    return QTest::qExec(&tests, argc, argv);
+}
 #include "ui-pages.moc"

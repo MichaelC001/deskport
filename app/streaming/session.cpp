@@ -859,7 +859,13 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
 }
 bool Session::checkAdaptiveResize() {
-    if (!m_ViewerRequested || !m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) return false;
+    if (!m_ViewerRequested || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) {
+        // Hidden time does not establish a stable visible size. Compositors can
+        // report transient frame geometry while a retained window is remapped.
+        m_ResizeSettler.reset();
+        return false;
+    }
+    if (!m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination) return false;
     const auto workspace = workspaceForWindow(m_Window);
     const auto size = workspace.pixels;
     const int scale = workspace.scale;
@@ -2622,6 +2628,7 @@ void Session::execInternal()
                 showControlCenter();
                 break;
             case DeskPortRecallWindow:
+                m_ResizeSettler.reset();
                 if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
                 if (!m_ViewerRequested) break;
                 if (!m_Clipboard) initializeClipboard();

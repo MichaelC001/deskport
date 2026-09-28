@@ -17,6 +17,7 @@ class ComputerManager;
 class MultiSessions : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantList sessions READ sessions NOTIFY changed)
+    Q_PROPERTY(QVariantMap states READ states NOTIFY changed)
     Q_PROPERTY(QString selectedId READ selectedId NOTIFY changed)
     Q_PROPERTY(QVariantMap selectedTraffic READ selectedTraffic NOTIFY trafficChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
@@ -24,6 +25,7 @@ public:
     explicit MultiSessions(PeerManager* peers, QByteArray certificate, QByteArray key, QObject* parent = nullptr);
     ~MultiSessions();
     QVariantList sessions() const;
+    QVariantMap states() const;
     QString selectedId() const { return m_Selected; }
     bool busy() const;
     QVariantMap selectedTraffic() const;
@@ -33,7 +35,7 @@ public:
     Q_INVOKABLE void showDevices();
     Q_INVOKABLE void disconnectSession(QString id);
     Q_INVOKABLE void reconnect(QString id);
-    Q_INVOKABLE void fullscreen();
+    Q_INVOKABLE void fullscreen(QString id = QString());
     void shutdown();
     void suspend();
 signals:
@@ -48,13 +50,15 @@ private:
         QPointer<QLocalSocket> socket;
         QVariantMap traffic;
         bool reserved = false;
-        quint64 hideEpoch = 0;
+        bool fullscreenPending = false;
+        quint64 hideEpoch = 0, hideRequest = 0;
     };
     void launch(const QString& id);
     void accept();
     void send(Entry* entry, const QJsonObject& message);
     void receive(Entry* entry, const QJsonObject& message);
     void present();
+    void hide(Entry* entry);
     void ended(Entry* entry, const QString& error);
     QByteArray m_Certificate, m_Key;
     PeerManager* m_Peers;

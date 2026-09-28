@@ -101,7 +101,11 @@ ApplicationWindow {
         var top = stackView.currentItem // Replacements can preserve depth.
         return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
-    readonly property string activeHostId: typeof sessionManager !== "undefined" && sessionManager.busy ? sessionManager.selectedId : activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
+    readonly property string activeHostId: {
+        if (typeof sessionManager !== "undefined")
+            return sessionManager.states[sessionManager.selectedId] === "connected" ? sessionManager.selectedId : ""
+        return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
+    }
     readonly property string activeHostName: {
         if (typeof sessionManager !== "undefined" && sessionManager.busy) {
             var rows=sessionManager.sessions
@@ -193,7 +197,7 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.leftMargin: navigationVisible ? 16 : 0
         anchors.rightMargin: navigationVisible ? 16 : 0
-        anchors.topMargin: navigationVisible ? topBar.height + sessionStrip.height : 0
+        anchors.topMargin: navigationVisible ? topBar.height : 0
         focus: true
 
         onCurrentItemChanged: {
@@ -230,43 +234,6 @@ ApplicationWindow {
         // when Menu is consumed by a focused control.
         Keys.onHangupPressed: {
             navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome")
-        }
-    }
-
-    Flickable {
-        id: sessionStrip
-        objectName: "sessionStrip"
-        anchors.top: parent.top
-        anchors.topMargin: topBar.height
-        anchors.left: parent.left; anchors.right: parent.right
-        height: visible ? 44 : 0
-        visible: navigationVisible && typeof sessionManager !== "undefined" && sessionManager.sessions.length > 0
-        contentWidth: sessionButtons.width + 32
-        clip: true
-        Row {
-            id: sessionButtons; spacing: 6; x: 16
-            Repeater {
-                model: typeof sessionManager !== "undefined" ? sessionManager.sessions : []
-                Row {
-                    spacing: 2
-                    UiButton {
-                        objectName: "sessionSelect-" + modelData.id
-                        text: modelData.name + " · " + (modelData.state === "starting" ? qsTr("Connecting…") : modelData.state === "connected" ? qsTr("Connected") : modelData.state === "stopping" ? qsTr("Disconnecting…") : modelData.state === "error" ? qsTr("Failed") : qsTr("Disconnected"))
-                        highlighted: modelData.selected
-                        enabled: modelData.state === "connected" || modelData.state === "starting"
-                        onClicked: sessionManager.select(modelData.id)
-                        ToolTip.visible: hovered && modelData.error.length > 0
-                        ToolTip.text: modelData.error
-                    }
-                    UiButton {
-                        objectName: "sessionDisconnect-" + modelData.id
-                        text: "×"; flat: true
-                        enabled: modelData.state === "connected" || modelData.state === "starting"
-                        Accessible.name: qsTr("Disconnect") + " " + modelData.name
-                        onClicked: sessionManager.disconnectSession(modelData.id)
-                    }
-                }
-            }
         }
     }
 
