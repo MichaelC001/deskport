@@ -131,7 +131,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-live-trust-') as tmp:
                 assert status == 200 and result['status'] and result['paused'] is paused
                 assert result['framesSent'] == 0 and result['framesSuppressed'] == 0
                 _, after = request('sessions')
-                assert after == reserved, 'Video command changed admission or stream count'
+                assert after['video']['paused'] is paused
+                assert {k:v for k,v in after.items() if k != 'video'} == {k:v for k,v in reserved.items() if k != 'video'}, 'Video command changed admission or stream count'
             grant = {'uuid': 'added', 'name': 'Added test client', 'cert': (work / 'added.pem').read_text()}
             for headers, auth in [({}, False), ({'Origin': 'https://example.invalid'}, True),
                                    ({'Referer': 'https://example.invalid'}, True)]:

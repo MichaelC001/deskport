@@ -28,6 +28,7 @@ edit('rtsp.h', '  inline std::recursive_mutex mutex;', '''  // Separate from adm
   inline bool video_paused = false, video_needs_idr = false;
   inline std::chrono::steady_clock::time_point video_resume_time;
   inline unsigned long long video_frames_sent = 0, video_frames_suppressed = 0;
+  inline unsigned long long video_key_frames_sent = 0, video_last_frame = 0;
   inline void reset_video() {
     std::lock_guard lock {video_mutex};
     video_paused = false; video_needs_idr = false;
@@ -54,6 +55,17 @@ edit('confighttp.cpp', '        if (action == "release") {', '''        if (acti
         } else if (action == "release") {''')
 edit('confighttp.cpp', '            deskport_admission::certificate.clear(); deskport_admission::lease.clear();', '            deskport_admission::reset_video();\n            deskport_admission::certificate.clear(); deskport_admission::lease.clear();')
 edit('confighttp.cpp', '            rtsp_stream::terminate_sessions();', '            rtsp_stream::terminate_sessions();\n            deskport_admission::reset_video();')
+edit('confighttp.cpp', '    output["reserved"] = !deskport_admission::lease.empty();', '''    output["reserved"] = !deskport_admission::lease.empty();
+    // Read-only telemetry under the same authenticated loopback API. This
+    // observes the sender without sending another state-changing command.
+    {
+      std::lock_guard lock {deskport_admission::video_mutex};
+      output["video"] = {{"paused", deskport_admission::video_paused},
+                         {"framesSent", deskport_admission::video_frames_sent},
+                         {"framesSuppressed", deskport_admission::video_frames_suppressed},
+                         {"keyFramesSent", deskport_admission::video_key_frames_sent},
+                         {"lastFrame", deskport_admission::video_last_frame}};
+    }''')
 edit('stream.cpp', '#include "stream.h"', '#include "stream.h"\n#include "rtsp.h"')
 edit('video.h', '    void *channel_data = nullptr;', '    const std::chrono::steady_clock::time_point deskport_encoded_at = std::chrono::steady_clock::now();\n    void *channel_data = nullptr;')
 edit('stream.cpp', '      auto lowseq = session->video.lowseq;', '''      // Keep the lock through the complete frame send. A successful pause
@@ -73,8 +85,11 @@ edit('stream.cpp', '      auto lowseq = session->video.lowseq;', '''      // Kee
         }
         deskport_admission::video_needs_idr = false;
       }
-      ++deskport_admission::video_frames_sent;
       auto lowseq = session->video.lowseq;''')
+edit('stream.cpp', '        session->video.lowseq = lowseq;', '''        session->video.lowseq = lowseq;
+        ++deskport_admission::video_frames_sent;
+        if (packet->is_idr()) ++deskport_admission::video_key_frames_sent;
+        deskport_admission::video_last_frame = packet->frame_index();''')
 patch = ''.join(''.join(difflib.unified_diff(original[p].splitlines(True), s.splitlines(True),
     fromfile='a/' + str(p.relative_to(root)), tofile='b/' + str(p.relative_to(root)))) for p, s in changes.items())
 for p, s in changes.items(): p.write_text(s)

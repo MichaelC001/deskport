@@ -2337,12 +2337,11 @@ state and repeated pause/resume without creating a video stream. The packaged wo
 the devShell's Qt plugin environment, which points at store plugins rather than
 bundled frameworks.
 
-Three-machine video/network acceptance is pending the server candidate run.
-Neither build success nor protocol acknowledgments prove stopped network traffic,
-new displayed frames, switching latency, physical input or audio routing. Temporary
-viewer testing is authorized; replacing running server instances requires the
-separate activation authorization described in the handoff. No deployed server
-has been replaced, and no release or mobile source has been published.
+Full multi-host video/network acceptance remains pending. Neither build success
+nor protocol acknowledgments prove stopped network traffic, new displayed frames,
+switching latency, physical input or audio routing. The separately authorized
+temporary server runs below preserve installed packages and restore original
+processes. No release or mobile source has been published.
 
 The next live legacy-host run did **not** pass: both connections reached the
 connected state and the first recall completed, then the controller stopped
@@ -2353,5 +2352,32 @@ The root cause is not established; do not attribute it to the wire extension or
 call it a resolved driver issue. Temporary Mesa threading and Qt software-renderer
 settings did not complete a full run either. These settings were not committed or
 applied to the deployed service. The original viewer service was restored and all
-test workers exited. This blocks live/UI acceptance of the candidate. No stopped
-video traffic, resumed keyframe delivery or long-pause success is claimed yet.
+test workers exited. This blocks full live/UI acceptance of the candidate; the narrower macOS host
+results below do not resolve the controller stall.
+
+
+### Temporary macOS host validation — 2026-09-29
+
+The temporary main app and embedded host preserve the installed designated code
+requirements and pass deep strict signature verification. The private test host
+suppresses automatic Screen Recording and microphone permission requests; no TCC
+reset, installed bundle replacement or permission grant was performed. Existing
+screen capture produced decoded frames. Original application instances were
+restored after testing.
+
+Read-only authenticated host telemetry now reports completed video sends,
+suppressed frames, keyframe sends and the last frame index. During a 65-second
+pause, sampled completed sends stayed at 23 while suppressed frames increased
+from 1530 to 4600; the session remained connected. Resume decoded a new keyframe
+in approximately 207 ms. Ten rapid hide/recall cycles and one longer-interval
+cycle completed; the following window-response wait timed out. The hidden
+controller heartbeat's maximum observed gap was 30 ms. These are worker/decode
+measurements, not physical display latency or interactive card-UI acceptance.
+No independent packet capture, physical input or audio acceptance is claimed.
+
+The Linux server candidate did not start its display helper successfully.
+Reusing the original launch environment did not resolve it. Multi-host switching,
+independent failure recovery and the complete dwell sequence remain blocked.
+The original Linux server/viewer instances were restored. The updated real
+loopback API tests pass on the built Linux host, including telemetry and video
+command lease/type/idempotence checks without a media stream.
