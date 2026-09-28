@@ -867,24 +867,26 @@ int main(int argc, char *argv[])
     });
     QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [] {
         if (Session::get()) {
+            Session::get()->cancelRecovery();
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
             SDL_PushEvent(&event);
         }
     });
     QObject::connect(&hostManager, &HostManager::exitRequested, &app, [&] {
-        if (Session::get()) {
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
-            SDL_PushEvent(&event);
-            auto timer = new QTimer(&app);
-            QObject::connect(timer, &QTimer::timeout, &app, [timer, &app] {
-                if (!Session::get()) { timer->stop(); timer->deleteLater(); app.quit(); }
-                else {
-                    SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
-                    SDL_PushEvent(&event); // Also reaches a session crossing an adaptive restart.
-                }
-            });
-            timer->start(100);
-        } else app.quit();
+        auto timer = new QTimer(&app);
+        QObject::connect(timer, &QTimer::timeout, &app, [timer, &app, &hostManager] {
+            if (Session::get()) {
+                Session::get()->cancelRecovery();
+                SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
+                SDL_PushEvent(&event);
+            }
+            // Keep Qt and the tray alive while both independent owners drain.
+            // Their destructors should not be the normal shutdown mechanism.
+            if (!SessionLifetime::busy() && !hostManager.running()) {
+                timer->stop(); timer->deleteLater(); app.quit();
+            }
+        });
+        timer->start(50);
     });
 #ifdef Q_OS_UNIX
     // Logout, shutdown and `systemctl stop` must end the session and host
@@ -989,6 +991,21 @@ int main(int argc, char *argv[])
     instance.activate = showDevices;
     QObject::connect(&hostManager, &HostManager::openRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);
+    const auto showOperation = [&engine, showDevices](const QString& text) {
+        showDevices();
+        if (!engine.rootObjects().isEmpty())
+            QMetaObject::invokeMethod(engine.rootObjects().first(), "showOperation", Q_ARG(QVariant, text));
+    };
+    QObject::connect(&hostManager, &HostManager::operationRequested, &app, showOperation);
+    QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [&engine, showOperation] {
+        auto session = Session::get();
+        if (!session) return;
+        showOperation(QCoreApplication::translate("MainWindow", "Disconnecting…"));
+        QObject::connect(session, &Session::transportCleanupFinished, &engine, [&engine] {
+            if (!engine.rootObjects().isEmpty())
+                QMetaObject::invokeMethod(engine.rootObjects().first(), "finishOperation");
+        });
+    });
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
 #ifdef Q_OS_DARWIN
@@ -997,7 +1014,9 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
-    engine.rootContext()->setContextProperty("startInBackground", app.arguments().contains("--background"));
+    const bool showAfterRestart = QSettings().value("ui/showAfterRestart", false).toBool();
+    QSettings().remove("ui/showAfterRestart");
+    engine.rootContext()->setContextProperty("startInBackground", app.arguments().contains("--background") && !showAfterRestart);
     engine.rootContext()->setContextProperty("startSharingPage", app.arguments().contains("--share"));
     QString initialView;
     bool hasGUI = true;

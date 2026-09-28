@@ -1,3 +1,24 @@
+## Nonblocking device actions and live revocation — 2026-09-28
+
+Reason: removing an offline binding restarted the local sharing helper and
+interrupted unrelated connections; tray actions could remain inside the
+streaming invocation or wait for shutdown destructors.
+
+- The authenticated loopback trust API atomically removes one authorization
+  while preserving other clients and the admission lease. Older helpers fail
+  the operation without a stop/restart fallback. Stopped-helper file writes run
+  on a worker; startup readiness is awaited asynchronously.
+- Device removal publishes a pending state before work and reports completion
+  or failure. Native tray actions are queued after menu dispatch returns.
+- Linux streaming returns to Qt's normal event loop while its SDL worker runs;
+  session ownership lasts until both execution and transport cleanup finish.
+- Disconnect and restart show progress. Explicit exit drains helper processes
+  asynchronously before quitting Qt; explicit restart shows the next window
+  even when the previous instance started in the background.
+- Tests cover live revocation, preserved authorization/lease, failure without
+  restart, queued tray dispatch and UI heartbeat during slow helper shutdown.
+  Physical tray latency during real streams remains a deployment acceptance check.
+
 ## Manual device entry overlay — 2026-09-28
 
 Reason: adding a device should use the same dismissible floating panel as device

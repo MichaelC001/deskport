@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>正在删除设备…</translation></message>
     <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>从本机彻底删除“%1”、已保存的绑定和设备设置？</translation></message>
     <message><source>Change address</source><translation>更改地址</translation></message>
     <message>
@@ -3292,5 +3293,8 @@
 <context>
     <name>HelpView</name>
     <message><source>Manual</source><translation>手册</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>正在断开连接…</translation></message>
 </context>
 </TS>

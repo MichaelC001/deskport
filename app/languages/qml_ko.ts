@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>기기 삭제 중…</translation></message>
     <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>이 컴퓨터에서 '%1', 저장된 연결 및 기기 설정을 삭제할까요?</translation></message>
     <message><source>Change address</source><translation>주소 변경</translation></message>
     <message>
@@ -3232,5 +3233,8 @@
 <context>
     <name>HelpView</name>
     <message><source>Manual</source><translation>설명서</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>연결 해제 중…</translation></message>
 </context>
 </TS>

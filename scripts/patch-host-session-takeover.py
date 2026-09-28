@@ -201,29 +201,31 @@ if not new_auth:
          '    https_server.verify = [add_cert](SSL *ssl) {\n      std::lock_guard auth_lock {client_auth_mutex()};')
 
 edit('nvhttp.h', '  nlohmann::json get_all_clients();', '''  nlohmann::json get_all_clients();
-  bool deskport_add_trust(const std::string& id, const std::string& name, const std::string& pem);''')
+  bool deskport_update_trust(const std::string& id, const std::string& name, const std::string& pem, bool remove);''')
 rebuild = '    rebuild_client_cert_chain();' if new_auth else '''    cert_chain.clear();
     for (const auto& item : client_root.named_devices) {
       if (item.enabled) cert_chain.add(crypto::x509(item.cert));
     }'''
-edit('nvhttp.cpp', '  nlohmann::json get_all_clients() {', '''  // Caller is authenticated local management. This only grants access; it
+edit('nvhttp.cpp', '  nlohmann::json get_all_clients() {', '''  // Caller is authenticated local management. This updates access; it
   // does not acquire a session, change admission generation, or stop streams.
-  bool deskport_add_trust(const std::string& id, const std::string& name, const std::string& pem) {
+  bool deskport_update_trust(const std::string& id, const std::string& name, const std::string& pem, bool remove) {
     if (id.empty() || id.size() > 128 || name.size() > 256 || pem.size() > 16384 ||
         config::sunshine.flags[config::flag::FRESH_STATE]) return false;
     auto certificate = crypto::x509(pem);
-    if (!certificate) return false;
-    const auto canonical = crypto::pem(certificate);
+    if (!remove && !certificate) return false;
+    const auto canonical = remove ? std::string() : crypto::pem(certificate);
     std::lock_guard auth_lock {client_auth_mutex()};
     auto candidate = client_root;
     auto& devices = candidate.named_devices;
     devices.erase(std::remove_if(devices.begin(), devices.end(), [&](const auto& item) {
       auto existing = crypto::x509(item.cert);
-      return item.uuid == id || (existing && X509_cmp(existing.get(), certificate.get()) == 0);
+      return item.uuid == id || (!remove && existing && X509_cmp(existing.get(), certificate.get()) == 0);
     }), devices.end());
-    named_cert_t added;
-    added.uuid = id; added.name = name; added.cert = canonical; added.enabled = true;
-    devices.push_back(std::move(added));
+    if (!remove) {
+      named_cert_t added;
+      added.uuid = id; added.name = name; added.cert = canonical; added.enabled = true;
+      devices.push_back(std::move(added));
+    }
     // Persist before changing live authorization. An unreadable/corrupt state
     // or failed write leaves both the old file and live authorization intact.
     const auto temporary = config::nvhttp.file_state + ".deskport-" + uuid_util::uuid_t::generate().string();
@@ -252,7 +254,7 @@ edit('nvhttp.cpp', '  nlohmann::json get_all_clients() {', '''  // Caller is aut
   }
 
   nlohmann::json get_all_clients() {''')
-edit('confighttp.cpp', '  // Machine-only API: loopback, explicit Basic credentials, no browser origins.', '''  // Add authorization without acquiring or interrupting a session.
+edit('confighttp.cpp', '  // Machine-only API: loopback, explicit Basic credentials, no browser origins.', '''  // Update authorization without acquiring or interrupting a session.
   void deskportTrust(const resp_https_t &response, const req_https_t &request) {
     auto authorization = request->header.find("Authorization");
     if (!request->remote_endpoint().address().is_loopback() ||
@@ -265,8 +267,8 @@ edit('confighttp.cpp', '  // Machine-only API: loopback, explicit Basic credenti
     nlohmann::json output {{"version", 1}, {"status", false}};
     try {
       const auto input = nlohmann::json::parse(request->content.string());
-      output["status"] = nvhttp::deskport_add_trust(input.at("uuid").get<std::string>(),
-          input.at("name").get<std::string>(), input.at("cert").get<std::string>());
+      output["status"] = nvhttp::deskport_update_trust(input.at("uuid").get<std::string>(),
+          input.at("name").get<std::string>(), input.at("cert").get<std::string>(), input.value("remove", false));
     } catch (const std::exception&) {}
     send_response(response, output);
   }

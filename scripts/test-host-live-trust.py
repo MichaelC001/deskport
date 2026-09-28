@@ -142,7 +142,16 @@ with tempfile.TemporaryDirectory(prefix='deskport-live-trust-') as tmp:
                 assert saved['extra'] == {'preserve': 'true'} or saved['extra'] == {'preserve': True}
                 assert len(saved['root']['named_devices']) == 2
                 assert process.poll() is None
-            print('PASS: live TLS trust, preserved lease/client/state, repeat grant, invalid/corrupt input, local API authorization')
+            removal = dict(uuid='added', name='', cert='', remove=True)
+            for _ in range(2):
+                status, result = request('trust', removal)
+                assert status == 200 and result['status']
+                assert authorized('existing') and not authorized('added')
+                _, after = request('sessions')
+                assert after == reserved, 'Removing trust changed the unrelated admission lease'
+                assert len(json.loads(state.read_text())['root']['named_devices']) == 1
+                assert process.poll() is None
+            print('PASS: live grant/removal, TLS revocation, preserved lease/client/state, idempotence, local API authorization')
         except Exception:
             # This log belongs only to the disposable host with synthetic data.
             print((work / 'process.log').read_text(errors='replace')[-12000:], file=sys.stderr)

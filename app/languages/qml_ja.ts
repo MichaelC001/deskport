@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>デバイスを削除中…</translation></message>
     <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>このコンピュータから「%1」と保存済みのペアリング、デバイス設定を削除しますか？</translation></message>
     <message><source>Change address</source><translation>アドレスを変更</translation></message>
     <message>
@@ -3240,5 +3241,8 @@
 <context>
     <name>HelpView</name>
     <message><source>Manual</source><translation>マニュアル</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>切断中…</translation></message>
 </context>
 </TS>

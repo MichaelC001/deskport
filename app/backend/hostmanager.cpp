@@ -35,6 +35,7 @@
 #include <QDesktopServices>
 #include <QUuid>
 #include <QTimer>
+#include <QThread>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDateTime>
@@ -295,14 +296,15 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         m_Server.start(serverPath(), {m_Directory + "/sunshine.conf"});
     });
     m_Menu = new QMenu;
-    connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested);
-    connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested);
-    connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested);
+    // Return to native menu tracking before dispatching any application work.
+    connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested, Qt::QueuedConnection);
+    connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested, Qt::QueuedConnection);
+    connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested, Qt::QueuedConnection);
     // Restarting from the tray is how a remote viewer picks up a version that a
     // package upgrade already wrote to disk: the running process keeps the old
     // binary until it exits, and a clean exit never comes back on its own.
-    connect(m_Menu->addAction(tr("Restart")), &QAction::triggered, this, &HostManager::requestRestart);
-    connect(m_Menu->addAction(tr("Quit")), &QAction::triggered, this, &HostManager::requestExit);
+    connect(m_Menu->addAction(tr("Restart")), &QAction::triggered, this, &HostManager::requestRestart, Qt::QueuedConnection);
+    connect(m_Menu->addAction(tr("Quit")), &QAction::triggered, this, &HostManager::requestExit, Qt::QueuedConnection);
     // The left button shows and hides the window; the menu belongs to the right
     // one. A menu attached to a macOS status item is opened by either button and
     // suppresses the button action entirely, so it is popped up natively there.
@@ -384,13 +386,18 @@ void HostManager::requestExit() {
     }
 #endif
     m_ExitRequested = true;
+    m_ShuttingDown = true;
+    m_RecoveryTimer.stop();
+    beginStop(tr("Sharing is off"));
     emit exitRequested();
 }
 void HostManager::requestRestart() {
-    if (m_ExitRequested) return;
+    if (m_ExitRequested || m_RestartRequested) return;
     m_RestartRequested = true;
     setStatus(tr("Restarting DeskPort"));
-    requestExit();
+    QSettings().setValue("ui/showAfterRestart", true);
+    emit operationRequested(m_Status);
+    QTimer::singleShot(100, this, &HostManager::requestExit);
 }
 void HostManager::scheduleRecovery() {
     if (!m_DesiredSharing || m_ShuttingDown || m_RecoveryTimer.isActive()) return;
@@ -461,7 +468,11 @@ void HostManager::setStatus(const QString &value) {
     m_Status = value; emit changed();
 }
 void HostManager::start(int width, int height) {
-    if (running()) return;
+    if (running() || m_ShuttingDown) return;
+    if (m_TrustBusy) {
+        QTimer::singleShot(50, this, [this, width, height] { start(width, height); });
+        return;
+    }
     if (!available()) {
         setStatus(tr("The bundled DeskPort host is missing. Repair the installation to enable sharing."));
         return;
@@ -1060,39 +1071,63 @@ QJsonObject HostManager::identity() const {
     return {{"hostId", PeerStore::read(m_Directory + "/state.json")["root"].toObject()["uniqueid"]},
             {"hostPort", m_BasePort}, {"hostCert", certs.isEmpty() ? QString() : QString::fromUtf8(certs.first().toPem())}};
 }
+void HostManager::sendTrustUpdate(const QJsonObject& body, qint64 deadline) {
+    if (!deadline) deadline = QDateTime::currentMSecsSinceEpoch() + 3000;
+    const auto generation = m_Generation;
+    managementRequest(QStringLiteral("trust"), body, this, [this, body, deadline, generation](QJsonObject result) {
+        // QProcess::started precedes the HTTPS listener becoming ready. Retry
+        // only unavailable transport, never a helper's explicit rejection.
+        if (result["code"].toString() == "unavailable" && generation == m_Generation &&
+            canPair() && QDateTime::currentMSecsSinceEpoch() < deadline) {
+            QTimer::singleShot(100, this, [this, body, deadline, generation] {
+                if (generation == m_Generation) sendTrustUpdate(body, deadline);
+                else { m_TrustBusy = false; emit trustUpdated(false); }
+            });
+            return;
+        }
+        m_TrustBusy = false;
+        emit trustUpdated(result["status"].toBool());
+    });
+}
 void HostManager::updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove) {
     if (m_TrustBusy) { emit trustUpdated(false); return; }
     m_TrustBusy = true;
-    if (!remove && running()) {
-        // Binding grants permission only. Never stop an existing stream to add
-        // trust, including when an older/mismatched helper lacks this endpoint.
-        managementRequest(QStringLiteral("trust"), {{"uuid", id}, {"name", name},
-            {"cert", QString::fromUtf8(certificate.toPem())}}, this, [this](QJsonObject result) {
+    if (running() && !canPair()) {
+        // Startup/shutdown is asynchronous. Wait for a usable helper without
+        // blocking the caller or stopping any process to edit its state file.
+        auto timer = new QTimer(this);
+        auto elapsed = std::make_shared<QElapsedTimer>(); elapsed->start();
+        connect(timer, &QTimer::timeout, this, [=] {
+            if (running() && !canPair() && elapsed->elapsed() < 10000) return;
+            timer->stop(); timer->deleteLater();
             m_TrustBusy = false;
-            emit trustUpdated(result["status"].toBool());
+            if (running() && !canPair()) emit trustUpdated(false);
+            else updatePeerTrust(id, name, certificate, remove);
         });
+        timer->start(50);
         return;
     }
-    const bool restart = running();
-    stop();
-    auto timer = new QTimer(this);
-    auto elapsed = std::make_shared<QElapsedTimer>(); elapsed->start();
-    connect(timer, &QTimer::timeout, this, [=] {
-        if (running() && elapsed->elapsed() < 7000) return;
-        timer->stop(); timer->deleteLater();
-        bool ok = false;
-        if (!running()) {
-            QLockFile lock(m_Directory + "/instance.lock"); lock.setStaleLockTime(0);
-            if (lock.tryLock(0)) ok = PeerStore::trust(m_Directory + "/state.json", id, name, certificate, remove);
-        }
-        m_TrustBusy = false;
-        if (restart) {
-            QSettings settings;
-            start(settings.value("host/width", 2560).toInt(), settings.value("host/height", 1440).toInt());
-        }
-        emit trustUpdated(ok);
+    if (running()) {
+        // Mutate authorization in the running helper. Never restart the host
+        // to edit trust, including when an older helper rejects the request.
+        sendTrustUpdate({{"uuid", id}, {"name", name},
+            {"cert", QString::fromUtf8(certificate.toPem())}, {"remove", remove}});
+        return;
+    }
+    // File I/O runs off the UI thread. Starting the helper is deferred until
+    // the mutation completes, and the instance lock excludes other owners.
+    const auto directory = m_Directory;
+    auto success = std::make_shared<bool>(false);
+    auto worker = QThread::create([directory, id, name, certificate, remove, success] {
+        QLockFile lock(directory + "/instance.lock"); lock.setStaleLockTime(0);
+        if (lock.tryLock(0)) *success = PeerStore::trust(directory + "/state.json", id, name, certificate, remove);
     });
-    timer->start(50);
+    connect(worker, &QThread::finished, this, [this, success] {
+        m_TrustBusy = false;
+        emit trustUpdated(*success);
+    });
+    connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    worker->start();
 }
 
 bool HostManager::saveLinuxDisplayState() {

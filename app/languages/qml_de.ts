@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>Gerät wird entfernt…</translation></message>
     <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>„%1“, seine gespeicherte Kopplung und Geräteeinstellungen von diesem Computer löschen?</translation></message>
     <message><source>Change address</source><translation>Adresse ändern</translation></message>
     <message>
@@ -3232,5 +3233,8 @@
 <context>
     <name>HelpView</name>
     <message><source>Manual</source><translation>Handbuch</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>Verbindung wird getrennt…</translation></message>
 </context>
 </TS>

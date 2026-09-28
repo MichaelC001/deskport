@@ -69,6 +69,7 @@ GridView {
         renamePcDialog.open()
     }
     function confirmRemove(model, index, name) {
+        if (peerManager.busy) return
         deletePcDialog.targetModel = model
         deletePcDialog.hostId = model.hostIdAt(index)
         deletePcDialog.pcName = name
@@ -581,6 +582,15 @@ GridView {
         onAccepted: {
             peerManager.removeDevice(hostId)
         }
+    }
+
+    NavigableMessageDialog {
+        visible: pcGrid.visible && typeof peerManager !== "undefined" && peerManager.removingDevice.length > 0
+        modal: false
+        showSpinner: true
+        standardButtons: Dialog.NoButton
+        closePolicy: Popup.NoAutoClose
+        text: qsTr("Removing device…")
     }
 
     // A group's actions: rename, or delete the group and keep its devices.

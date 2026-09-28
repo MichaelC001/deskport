@@ -1091,7 +1091,8 @@ void PeerManager::removeDevice(const QString& hostId) {
     for (auto it = m_Peers.constBegin(); it != m_Peers.constEnd(); ++it)
         if (it.value().toObject()["hostId"].toString().compare(hostId, Qt::CaseInsensitive) == 0)
             m_RemovingFingerprints.append(it.key());
-    continueDeviceRemoval();
+    emit changed();
+    QTimer::singleShot(0, this, [this] { continueDeviceRemoval(); });
 }
 void PeerManager::continueDeviceRemoval(bool success) {
     if (m_RemovingDevice.isEmpty()) return;

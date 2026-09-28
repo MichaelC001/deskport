@@ -111,6 +111,18 @@ ApplicationWindow {
             stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
         } else stackView.pop(null)
     }
+    function showOperation(text) {
+        operationDialog.text = text
+        operationDialog.open()
+    }
+    function finishOperation() { operationDialog.close() }
+    NavigableMessageDialog {
+        id: operationDialog
+        objectName: "operationProgress"
+        showSpinner: true
+        standardButtons: Dialog.NoButton
+        closePolicy: Popup.NoAutoClose
+    }
     function showDevicesDuringSession() {
         showDevices()
         if (window.windowState === Qt.WindowMinimized) window.showNormal()

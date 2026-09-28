@@ -17,6 +17,7 @@ class PeerManager : public QObject {
     Q_PROPERTY(QString pendingName READ pendingName NOTIFY changed)
     Q_PROPERTY(QString requestId READ requestId NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
+    Q_PROPERTY(QString removingDevice READ removingDevice NOTIFY changed)
     Q_PROPERTY(int port READ port NOTIFY changed)
     Q_PROPERTY(QVariantList peers READ peers NOTIFY changed)
 public:
@@ -34,6 +35,7 @@ public:
     bool pendingClientOnly() const;
     QString requestId() const;
     bool busy() const;
+    QString removingDevice() const { return m_RemovingDevice; }
     int port() const { return m_Server->serverPort(); }
     QVariantList peers() const;
     Q_INVOKABLE bool setConnectionPort(int port);

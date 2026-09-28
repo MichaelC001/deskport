@@ -768,6 +768,7 @@ ApplicationWindow {
  function testSettings() { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
  function testSharing() { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
  function testBinding() { showDevices(); navigateTo("qrc:/gui/BindView.qml", "BindView") }
+ function testRemove() { var p=stackView.currentItem; p.confirmRemove(p.computerModel,1,"Offline fixture") }
  function testGrid() { return stackView.currentItem }
  function testCards() { StreamingPreferences.compactDevices = false }
  function testSameSettings() { navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
@@ -818,6 +819,22 @@ ApplicationWindow {
         QTRY_COMPARE(root->property("testDepth").toInt(),1);
         QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
         QCOMPARE(session.executions, 0); // Binding never starts a stream.
+        QSignalSpy deleted(&peers,&PeerManager::deviceRemovalFinished);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"testRemove"));
+        auto removalPopup=root->property("testCurrentPage").value<QObject*>()->findChild<QObject*>("removeDeviceDialog");
+        QVERIFY(removalPopup); QTRY_VERIFY(removalPopup->property("visible").toBool());
+        QTest::qWait(250);
+        auto deleteButton=findVisual(window->contentItem(),"dialogAcceptButton"); QVERIFY(deleteButton);
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,deleteButton->mapToScene(QPointF(deleteButton->width()/2,deleteButton->height()/2)).toPoint());
+        QTRY_COMPARE_WITH_TIMEOUT(deleted.size(),1,1000);
+        QCOMPARE(deleted.first().first().toString(),QString("device-b"));
+        QVERIFY(deleted.first().at(1).toBool());
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showOperation",Q_ARG(QVariant,QString("Disconnecting…"))));
+        auto progress=root->findChild<QObject*>("operationProgress"); QVERIFY(progress);
+        QTRY_VERIFY(progress->property("visible").toBool());
+        QVERIFY(window->isVisible());
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"finishOperation"));
+        QTRY_VERIFY(!progress->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testStart"));
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));

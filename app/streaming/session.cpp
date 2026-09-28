@@ -2219,32 +2219,36 @@ void Session::exec(QWindow* qtWindow)
     // the Qt EGLFS backend, so we will restrict this to X11
     m_ThreadedExec = WMUtils::isRunningX11() || WMUtils::isRunningWayland();
 
+    const auto finished = [this] {
+        // SDL has released its window. Qt owns transition animation while
+        // transport cleanup completes; lifetime waits for both completions.
+        if (m_TransitionWindow && adaptiveRestartPending()) {
+            m_TransitionTimer = new QTimer(this);
+            connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) m_TransitionWindow->pump(); });
+            m_TransitionTimer->start(20);
+        }
+        m_Lifetime.endExec();
+    };
     if (m_ThreadedExec) {
-        // Run the streaming session on a separate thread for Linux/BSD
-        ExecThread execThread(this);
-        execThread.start();
-
-        // Keep tray and local activation requests responsive while SDL owns
-        // its window on the worker. Recall itself is queued to that owner.
-        while (!execThread.wait(10)) {
+        auto worker = new ExecThread(this);
+        auto cancellation = new QTimer(this);
+        connect(cancellation, &QTimer::timeout, this, [this] {
             if (m_RecoveryCancelled || (m_RecoveryDeadline && !m_StreamStartedAt && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
                 m_RecoveryCancelled = true; LiInterruptConnection();
             }
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
-        }
+        });
+        connect(worker, &QThread::finished, this, [finished, cancellation] {
+            cancellation->stop(); cancellation->deleteLater();
+            finished();
+        });
+        connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+        cancellation->start(10);
+        worker->start();
+        return;
     }
-    else {
-        // Run the streaming session on the main thread for Windows and macOS
-        execInternal();
-    }
-    // The SDL thread has exited. Animate the retained window on the GUI thread
-    // while asynchronous transport cleanup finishes. Stop before the next owner.
-    if (m_TransitionWindow && adaptiveRestartPending()) {
-        m_TransitionTimer = new QTimer(this);
-        connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) m_TransitionWindow->pump(); });
-        m_TransitionTimer->start(20);
-    }
-    m_Lifetime.endExec();
+    // Cocoa and Windows SDL window operations still require the UI thread.
+    execInternal();
+    finished();
 }
 
 void Session::execInternal()

@@ -1,5 +1,8 @@
 #include "diagnostics.h"
 #include <QtTest>
+#include <QMenu>
+#include <QAction>
+#include <QApplication>
 #include <QTemporaryDir>
 #include <QElapsedTimer>
 #include "hostmanager.h"
@@ -11,6 +14,58 @@ class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void trayActionsReturnBeforeDispatch() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path());
+        QSignalSpy opened(&host,&HostManager::showDevicesRequested);
+        QSignalSpy disconnected(&host,&HostManager::disconnectRequested);
+        QSignalSpy reconnected(&host,&HostManager::reconnectRequested);
+        QMenu* menu = nullptr;
+        for (auto widget : QApplication::topLevelWidgets()) {
+            auto candidate = qobject_cast<QMenu*>(widget);
+            if (candidate && candidate->actions().size() == 5 &&
+                candidate->actions().first()->text() == "Open device list") menu = candidate;
+        }
+        QVERIFY(menu);
+        menu->actions().at(0)->trigger();
+        menu->actions().at(1)->trigger();
+        menu->actions().at(2)->trigger();
+        QCOMPARE(opened.size(),0);
+        QCOMPARE(disconnected.size(),0);
+        QCOMPARE(reconnected.size(),0);
+        QTRY_COMPARE(opened.size(),1);
+        QTRY_COMPARE(disconnected.size(),1);
+        QTRY_COMPARE(reconnected.size(),1);
+    }
+    void exitKeepsEventLoopAliveWhileHelperStops() {
+        qputenv("DESKPORT_TEST_MODE","stubborn");
+        QTemporaryDir dir; HostManager host(nullptr,dir.path());
+        host.start(2560,1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.canPair() && QFile::exists(dir.filePath("host-started")),5000);
+        QSignalSpy exited(&host,&HostManager::exitRequested);
+        int heartbeats=0;
+        QTimer heartbeat;
+        connect(&heartbeat,&QTimer::timeout,this,[&] { ++heartbeats; });
+        heartbeat.start(10);
+        QElapsedTimer elapsed; elapsed.start();
+        host.requestExit();
+        QVERIFY(elapsed.elapsed()<100);
+        QCOMPARE(exited.size(),1);
+        QVERIFY(host.running());
+        QSignalSpy opened(&host,&HostManager::showDevicesRequested);
+        QMenu* menu=nullptr;
+        for (auto widget : QApplication::topLevelWidgets()) {
+            auto candidate=qobject_cast<QMenu*>(widget);
+            if (candidate && candidate->actions().size()==5 &&
+                candidate->actions().first()->text()=="Open device list") menu=candidate;
+        }
+        QVERIFY(menu);
+        menu->actions().first()->trigger();
+        QCOMPARE(opened.size(),0);
+        QTRY_COMPARE_WITH_TIMEOUT(opened.size(),1,500);
+        QVERIFY(host.running());
+        QTRY_VERIFY_WITH_TIMEOUT(!host.running(),5000);
+        QVERIFY(heartbeats>20);
+    }
     void diagnosticFilesDisabledForAllChildren() {
         Diagnostics::instance().setEnabled(false);
         QTemporaryDir dir; HostManager host(nullptr,dir.path()); host.start(2560,1440);

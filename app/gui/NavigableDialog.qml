@@ -53,6 +53,7 @@ Dialog {
         padding: 20; topPadding: 4
         background: Item {}
         delegate: UiButton {
+            objectName: accepting ? "dialogAcceptButton" : "dialogRejectButton"
             readonly property bool accepting: DialogButtonBox.buttonRole === DialogButtonBox.AcceptRole
                                               || DialogButtonBox.buttonRole === DialogButtonBox.YesRole
             filled: accepting

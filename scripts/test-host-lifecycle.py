@@ -89,8 +89,8 @@ if (state / "credentials/cert.pem").exists():
                 if output["status"]:
                     stored = json.loads((state / "state.json").read_text())
                     devices = stored["root"].get("named_devices", []) or []
-                    devices = [item for item in devices if item["uuid"] != body["uuid"] and item.get("cert") != body["cert"]]
-                    devices.append(dict(body, enabled="true"))
+                    devices = [item for item in devices if item["uuid"] != body["uuid"] and (body.get("remove") or item.get("cert") != body["cert"])]
+                    if not body.get("remove"): devices.append(dict(body, enabled="true"))
                     stored["root"]["named_devices"] = devices
                     (state / "state.json").write_text(json.dumps(stored))
                 data = json.dumps(output).encode()

@@ -116,6 +116,7 @@ signals:
     void viewerRecallRequested();
     void hideRequested();
     void exitRequested();
+    void operationRequested(const QString& text);
     void disconnectRequested();
     void reconnectRequested();
     void fullscreenRequested();
@@ -125,6 +126,7 @@ signals:
     void caretChanged(const QJsonObject& caret);
     void displayResized(int sequence, int width, int height, const QString& error);
 private:
+    void sendTrustUpdate(const QJsonObject& body, qint64 deadline = 0);
     void managementRequest(const QString& path, const QJsonObject& body, QObject* context,
                            std::function<void(QJsonObject)> completion);
     QString unattendedDirectory() const;
