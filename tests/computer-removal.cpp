@@ -39,7 +39,13 @@ int main(int argc,char** argv) {
         auto host=manager.getComputers().first();
         HostAlias::set("fixture-device","custom alias");
         auto device=prefs->forDevice("fixture-device"); device->fps=30; device->save(); delete device;
+        // A viewer can retain an older registry snapshot while the shell removes
+        // a device. It must not clear the tombstone or persist that snapshot.
+        ComputerManager viewer(prefs, true);
+        check(viewer.addBoundHost(peer,false,true),"worker imports an in-memory binding before a settings flush");
+        check(viewer.getComputers().size()==1,"worker snapshot loaded");
         manager.deleteHostById("fixture-device");
+        check(!viewer.addBoundHost(peer,true),"viewer cannot write bindings or clear deletion tombstones");
         check(manager.getComputers().isEmpty(),"manager detached host synchronously");
         for(auto model:{&first,&second}) for(int i=0;i<model->rowCount({});++i)
             check(model->data(model->index(i),model->roleNames().key("hostId")).toString()!="fixture-device","every model detached retired host");

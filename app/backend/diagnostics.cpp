@@ -25,6 +25,24 @@ QStringList names() {
         result << source + QString("-%1.jsonl").arg(i);
     return result;
 }
+QFileInfoList viewerDirectories(const QString& root) {
+    const QString path=root+"/viewers";
+    if (QFileInfo(path).isSymLink()) return {};
+    QFileInfoList result;
+    for (const auto& directory : QDir(path).entryInfoList(QDir::Dirs|QDir::NoDotAndDotDot|QDir::NoSymLinks,QDir::Time))
+        if (QRegularExpression("^[a-f0-9]{32}$").match(directory.fileName()).hasMatch()) result.append(directory);
+    return result;
+}
+void cleanViewers(const QString& root, bool all=false) {
+    const auto cutoff=QDateTime::currentDateTimeUtc().addDays(-7);
+    for (const auto& directory : viewerDirectories(root)) {
+        for (int i=0;i<3;++i) {
+            QFileInfo file(directory.filePath()+QString("/client-%1.jsonl").arg(i));
+            if (all || file.isSymLink() || file.lastModified()<cutoff) QFile::remove(file.filePath());
+        }
+        QDir().rmdir(directory.filePath()); // Remove only an empty known run directory.
+    }
+}
 QString platform() {
 #ifdef Q_OS_MACOS
     return "macOS";
@@ -63,8 +81,13 @@ Diagnostics::Diagnostics(QObject* parent, const QString& directory) : QObject(pa
     m_Directory(directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/diagnostics" : directory),
     m_Run(QUuid::createUuid().toString(QUuid::WithoutBraces).remove('-')),
     m_Enabled(directory.isEmpty() && QSettings().value("diagnostics/enabled",true).toBool()) {
+    // Each media worker has an independent run; never rotate the shell's log
+    // files concurrently from multiple processes.
+    if (directory.isEmpty() && qEnvironmentVariableIsSet("DESKPORT_SESSION_ENDPOINT"))
+        m_Directory += "/viewers/" + m_Run;
     m_Time.start();
     prune();
+    cleanViewers(m_Directory);
     startMaintenance();
 }
 void Diagnostics::startMaintenance() {
@@ -72,7 +95,7 @@ void Diagnostics::startMaintenance() {
     m_MaintenanceStarted=true;
     auto timer=new QTimer(this);
     timer->setInterval(60*60*1000);
-    connect(timer,&QTimer::timeout,this,[this] { QMutexLocker lock(&m_Mutex); prune(); });
+    connect(timer,&QTimer::timeout,this,[this] { QMutexLocker lock(&m_Mutex); prune(); cleanViewers(m_Directory); });
     timer->start();
 }
 bool Diagnostics::enabled() const { QMutexLocker lock(&m_Mutex); return m_Enabled; }
@@ -173,7 +196,7 @@ void Diagnostics::write(const QString& source, QJsonObject event) {
 }
 QString Diagnostics::createBundle() {
     QMutexLocker lock(&m_Mutex);
-    m_Status.clear(); m_Bundle.clear(); prune();
+    m_Status.clear(); m_Bundle.clear(); prune(); cleanViewers(m_Directory);
     if (QFileInfo(m_Directory).isSymLink()) { m_Status=tr("Cannot use the diagnostics directory."); return {}; }
     QMap<QString,QByteArray> files;
     for (const auto& name : names()) {
@@ -191,6 +214,25 @@ QString Diagnostics::createBundle() {
             if (!safe.isEmpty()) data+=QJsonDocument(safe).toJson(QJsonDocument::Compact)+'\n';
         }
         if (!data.isEmpty()) files.insert(name,data);
+    }
+    const auto directories=viewerDirectories(m_Directory);
+    int viewerIndex=0;
+    for (const auto& directory : directories) {
+        if (viewerIndex>=8) break;
+        if (!QRegularExpression("^[a-f0-9]{32}$").match(directory.fileName()).hasMatch()) continue;
+        for (int i=0;i<3;++i) {
+            QFileInfo info(directory.filePath()+QString("/client-%1.jsonl").arg(i));
+            if (!info.isFile() || info.isSymLink() || info.size()>FileLimit) continue;
+            QFile file(info.filePath()); if(!file.open(QIODevice::ReadOnly))continue;
+            auto lines=file.read(FileLimit).split('\n'); lines.removeLast(); QByteArray data;
+            for(const auto& line:lines) {
+                if(line.size()>16384)continue;
+                auto safe=validate(QJsonDocument::fromJson(line).object());
+                if(!safe.isEmpty())data+=QJsonDocument(safe).toJson(QJsonDocument::Compact)+'\n';
+            }
+            if(!data.isEmpty())files.insert(QString("viewer-%1-client-%2.jsonl").arg(viewerIndex).arg(i),data);
+        }
+        ++viewerIndex;
     }
     // Build version is compile-time product metadata, not host/environment inventory.
     QString version=QCoreApplication::applicationVersion();
@@ -226,7 +268,7 @@ bool Diagnostics::feedback() {
 void Diagnostics::showBundle() { if (!m_Bundle.isEmpty()) QDesktopServices::openUrl(QUrl::fromLocalFile(m_Directory)); }
 void Diagnostics::clear() {
     { QMutexLocker lock(&m_Mutex);
-      if (!QFileInfo(m_Directory).isSymLink()) { for (const auto& name : names()) QFile::remove(m_Directory+"/"+name); QFile::remove(m_Directory+"/DeskPort-diagnostics.zip"); }
+      if (!QFileInfo(m_Directory).isSymLink()) { for (const auto& name : names()) QFile::remove(m_Directory+"/"+name); QFile::remove(m_Directory+"/DeskPort-diagnostics.zip"); cleanViewers(m_Directory,true); }
       m_Bundle.clear(); m_Pending.clear(); m_Status=tr("Saved diagnostics cleared."); }
     emit changed();
 }

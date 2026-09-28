@@ -109,11 +109,16 @@ private slots:
         // Valid records with injected extra keys are reserialized from allowed fields.
         QFile altered(dir.filePath("client-0.jsonl")); QVERIFY(altered.open(QIODevice::WriteOnly|QIODevice::Append));
         altered.write("{\"source\":\"client\",\"run\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"event\":\"failed\",\"elapsed_ms\":5,\"message\":\"INJECTED_SECRET\"}\n"); altered.close();
+        const QString viewer=dir.filePath("viewers/"+QString(32,'b'));
+        QVERIFY(QDir().mkpath(viewer));
+        QVERIFY(QFile::copy(dir.filePath("client-0.jsonl"),viewer+"/client-0.jsonl"));
+        QFile privateFile(viewer+"/private.json"); QVERIFY(privateFile.open(QIODevice::WriteOnly)); privateFile.write("WORKER_SECRET"); privateFile.close();
         const auto path=logs.createBundle(); QVERIFY(!path.isEmpty()); QFile archive(path); QVERIFY(archive.open(QIODevice::ReadOnly)); const auto bytes=archive.readAll();
-        for (auto secretValue:{"PAIRING_SECRET","KEY_SECRET","OLD_SECRET","INJECTED_SECRET","state.json","credentials"}) QVERIFY(!bytes.contains(secretValue));
+        for (auto secretValue:{"PAIRING_SECRET","KEY_SECRET","OLD_SECRET","INJECTED_SECRET","state.json","credentials","WORKER_SECRET","private.json"}) QVERIFY(!bytes.contains(secretValue));
         QVERIFY(!QFile::exists(old.fileName()));
         const auto root=qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"); QFile::remove(root+"/verified.zip"); QVERIFY(QFile::copy(path,root+"/verified.zip"));
-        logs.clear(); QVERIFY(!QFile::exists(path)); QVERIFY(QFile::exists(secret.fileName()));
+        QVERIFY(bytes.contains("viewer-0-client-0.jsonl"));
+        logs.clear(); QVERIFY(!QFile::exists(viewer+"/client-0.jsonl")); QVERIFY(QFile::exists(privateFile.fileName())); QVERIFY(!QFile::exists(path)); QVERIFY(QFile::exists(secret.fileName()));
     }
     void connectionCodesAndExportFailure() {
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.filePath("logs")); logs.setEnabled(true);

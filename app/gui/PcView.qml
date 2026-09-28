@@ -86,6 +86,19 @@ GridView {
     }
     // What a card's button or a click on it does.
     function activate(row) {
+        if (typeof sessionManager !== "undefined") {
+            for (var i=0; i<sessionManager.sessions.length; ++i) {
+                var existing=sessionManager.sessions[i]
+                if (existing.id === row.hostId.toLowerCase() && (existing.state === "starting" || existing.state === "connected")) {
+                    sessionManager.select(existing.id)
+                    return true
+                }
+            }
+        }
+        if (typeof sessionManager !== "undefined" && row.paired && row.online && row.serverSupported) {
+            sessionManager.open(row.hostId, row.name, row.hostAddress)
+            return true
+        }
         if (pcGrid.controlCenterForActiveSession && row.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0) {
             recallRemoteSession()
             return true

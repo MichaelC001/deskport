@@ -218,7 +218,7 @@ class ComputerManager : public QObject
     friend class DelayedFlushThread;
 
 public:
-    explicit ComputerManager(StreamingPreferences* prefs);
+    explicit ComputerManager(StreamingPreferences* prefs, bool readOnly = false, const QString& targetHostId = QString());
 
     virtual ~ComputerManager();
 
@@ -227,7 +227,7 @@ public:
     Q_INVOKABLE void stopPollingAsync();
 
     Q_INVOKABLE void addNewHostManually(QString address);
-    Q_INVOKABLE bool addBoundHost(QVariantMap peer, bool explicitAdd = false);
+    Q_INVOKABLE bool addBoundHost(QVariantMap peer, bool explicitAdd = false, bool sessionSnapshot = false);
 
     void addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address = NvAddress());
 
@@ -274,6 +274,7 @@ private:
     void startPollingComputer(NvComputer* computer);
 
     StreamingPreferences* m_Prefs;
+    bool m_ReadOnly = false;
     int m_PollingRef;
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;

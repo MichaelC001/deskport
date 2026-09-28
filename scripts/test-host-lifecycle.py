@@ -143,7 +143,7 @@ else:
             + f'</qresource><qresource prefix="/manual"><file alias="manual.json">{manual}</file></qresource></RCC>'))
     for executable in (display, host):
         executable.chmod(0o700)
-    binding = "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
+    binding = "--sessions" in sys.argv or "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
     if "--ui" in sys.argv:
@@ -151,7 +151,10 @@ else:
         extra_headers += f' "{root}/app/gui/manual.h"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
-    suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
+    if "--sessions" in sys.argv:
+        extra_sources += f' "{root}/app/backend/multisessions.cpp"'
+        extra_headers += f' "{root}/app/backend/multisessions.h"'
+    suite = "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"
     project.write_text(f'''QT += core gui widgets network testlib qml quick quickcontrols2
 linux: QT += dbus

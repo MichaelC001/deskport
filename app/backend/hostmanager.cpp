@@ -296,6 +296,8 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         m_Server.start(serverPath(), {m_Directory + "/sunshine.conf"});
     });
     m_Menu = new QMenu;
+    m_SessionsMenu = m_Menu->addMenu(tr("Connections"));
+    m_SessionsMenu->menuAction()->setVisible(false);
     // Return to native menu tracking before dispatching any application work.
     connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested, Qt::QueuedConnection);
     connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested, Qt::QueuedConnection);
@@ -360,6 +362,31 @@ void HostManager::showTrayMenu() {
     if (auto chosen = deskPortShowStatusMenu(m_Menu)) chosen->trigger();
 }
 #endif
+void HostManager::updateSessionMenu(const QVariantList& sessions) {
+    // Do not destroy QAction objects while the native menu is tracking input.
+    m_PendingSessionRows = sessions;
+    if (m_Menu->isVisible()) {
+        if (!m_SessionMenuRefreshQueued) {
+            m_SessionMenuRefreshQueued = true;
+            QTimer::singleShot(100, this, [this] { m_SessionMenuRefreshQueued=false; updateSessionMenu(m_PendingSessionRows); });
+        }
+        return;
+    }
+    m_SessionsMenu->clear();
+    m_SessionsMenu->menuAction()->setVisible(!sessions.isEmpty());
+    for (const auto& value : sessions) {
+        const auto row = value.toMap();
+        const auto id = row.value("id").toString();
+        auto menu = m_SessionsMenu->addMenu(row.value("name").toString());
+        auto select = menu->addAction(tr("Show desktop"));
+        select->setEnabled(row.value("state") == "connected" || row.value("state") == "starting");
+        connect(select, &QAction::triggered, this, [this,id] { emit sessionSelected(id); }, Qt::QueuedConnection);
+        auto stop = menu->addAction(tr("Disconnect"));
+        stop->setEnabled(select->isEnabled());
+        connect(stop, &QAction::triggered, this, [this,id] { emit sessionDisconnectRequested(id); }, Qt::QueuedConnection);
+    }
+}
+
 void HostManager::updateTrayIcon() {
 #ifdef Q_OS_MACOS
     // AppKit renders a template image with the menu bar's current contrast,

@@ -1473,6 +1473,12 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Connecting…</source><translation>连接中…</translation></message>
+    <message><source>Disconnecting…</source><translation>正在断开…</translation></message>
+    <message><source>Failed</source><translation>失败</translation></message>
+    <message><source>Disconnected</source><translation>已断开</translation></message>
+    <message><source>Disconnect</source><translation>断开连接</translation></message>
+
     <message><source>Could not save device removal. Please retry.</source><translation>无法保存设备删除操作，请重试。</translation></message>
     <message><source>Memory %1</source><translation>内存 %1</translation></message>
     <message><source>Local memory usage</source><translation>本机内存占用</translation></message>
@@ -2680,6 +2686,9 @@
 </context>
 <context>
     <name>HostManager</name>
+    <message><source>Connections</source><translation>连接列表</translation></message>
+    <message><source>Show desktop</source><translation>显示桌面</translation></message>
+
     <message>
         <source>Restart</source>
         <translation>重启</translation>
@@ -3296,5 +3305,19 @@
 </context>
 <context><name>MainWindow</name>
     <message><source>Disconnecting…</source><translation>正在断开连接…</translation></message>
+</context>
+<context>
+    <name>MultiSessions</name>
+    <message><source>The device binding is unavailable. Refresh the device and try again.</source><translation>设备绑定不可用，请刷新设备后重试。</translation></message>
+    <message><source>This connection would create a loop.</source><translation>此连接会造成环路。</translation></message>
+    <message><source>The desktop worker could not start.</source><translation>无法启动桌面会话进程。</translation></message>
+    <message><source>The desktop worker stopped unexpectedly.</source><translation>桌面会话进程意外停止。</translation></message>
+    <message><source>The desktop worker did not respond.</source><translation>桌面会话进程未响应。</translation></message>
+</context>
+<context>
+    <name>SessionWorker</name>
+    <message><source>Another application is running on that server.</source><translation>该服务器上正在运行其他应用。</translation></message>
+    <message><source>Connection failed at %1 (%2).</source><translation>连接在 %1 阶段失败（%2）。</translation></message>
+    <message><source>The device binding is unavailable.</source><translation>设备绑定不可用。</translation></message>
 </context>
 </TS>

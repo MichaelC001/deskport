@@ -135,7 +135,7 @@ private slots:
     }
     void sessionGraph_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* item : {"chain", "reciprocal", "three-cycle", "simultaneous", "takeover-cycle", "unreachable", "old-desktop", "old-mobile", "reservation-lifetime"})
+        for (const char* item : {"chain", "fanout-safe", "fanout-cycle", "fanout-unreachable", "reciprocal", "three-cycle", "simultaneous", "takeover-cycle", "unreachable", "old-desktop", "old-mobile", "reservation-lifetime"})
             QTest::newRow(item) << QString(item);
     }
     void sessionGraph() {
@@ -150,7 +150,7 @@ private slots:
         QStringList tokens{"edge-a", "edge-b", "edge-c"};
         struct Cleanup {
             QStringList ids, tokens;
-            ~Cleanup() { for (int i=0;i<ids.size();++i) SessionGraph::release(ids[i],tokens[i]); }
+            ~Cleanup() { for (int i=0;i<ids.size();++i) { SessionGraph::release(ids[i],tokens[i]); SessionGraph::release(ids[i],"second-branch"); } }
         } cleanup{ids,tokens};
         for (int i=0;i<3;++i) {
             const auto base = dir.path()+QString("/%1").arg(i);
@@ -189,6 +189,22 @@ private slots:
             QVERIFY(!reserve(0,0)); QVERIFY(reserve(0,1)); QVERIFY(!reserve(0,2));
             SessionGraph::release(ids[0],"stale-token"); QCOMPARE(SessionGraph::snapshot(ids[0]).first.token,tokens[0]);
             SessionGraph::release(ids[0],tokens[0]); QVERIFY(reserve(0,2)); return;
+        }
+        if (scenario.startsWith("fanout-")) {
+            QVERIFY(reserve(0,1));
+            auto second=edge(0,2); second.token="second-branch";
+            if(scenario=="fanout-unreachable") second.port=1;
+            QVERIFY(SessionGraph::reserve(ids[0],second));
+            if(scenario=="fanout-cycle") QVERIFY(reserve(2,0));
+            bool complete=false; QString code;
+            QObject probes;
+            SessionGraph::check(ids[0],{QString(64,'f')},&probes,[&](QString result){code=result;complete=true;});
+            QTRY_VERIFY_WITH_TIMEOUT(complete,7000);
+            QCOMPARE(code,scenario=="fanout-safe" ? QString() : scenario=="fanout-cycle" ? QString("cycle") : QString("topology-unavailable"));
+            QCOMPARE(SessionGraph::branches(ids[0]).first.size(),2);
+            SessionGraph::release(ids[0],"second-branch");
+            QCOMPARE(SessionGraph::branches(ids[0]).first.size(),1);
+            return;
         }
         QSslSocket a,b,c;
         if (scenario=="old-desktop" || scenario=="old-mobile") {

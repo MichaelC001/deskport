@@ -276,6 +276,13 @@ QString PeerManager::pendingName() const {
     return tr("%1 (%2)\nDevice key: %3")
         .arg(m_Link->peer["name"].toString(), m_Link->socket->peerAddress().toString(), m_Link->fingerprint.left(16));
 }
+QJsonObject PeerManager::sessionPeer(const QString& hostId) const {
+    for (const auto& value : m_Peers) {
+        const auto peer = value.toObject();
+        if (peer.value("hostId").toString().compare(hostId, Qt::CaseInsensitive) == 0) return peer;
+    }
+    return {};
+}
 QVariantList PeerManager::peers() const {
     QVariantList result;
     for (auto it = m_Peers.begin(); it != m_Peers.end(); ++it) {

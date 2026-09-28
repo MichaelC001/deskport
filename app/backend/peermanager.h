@@ -38,6 +38,7 @@ public:
     QString removingDevice() const { return m_RemovingDevice; }
     int port() const { return m_Server->serverPort(); }
     QVariantList peers() const;
+    QJsonObject sessionPeer(const QString& hostId) const;
     Q_INVOKABLE bool setConnectionPort(int port);
     Q_INVOKABLE void request(const QString& address);
     Q_INVOKABLE void approve(const QString& transaction);

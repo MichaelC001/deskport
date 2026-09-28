@@ -2224,3 +2224,29 @@ click anchor alone cannot follow typing in a Linux or Windows editor.
   browser, IME and mixed-DPI validation. User will package and activate separately.
 
 See `docs/ADAPTIVE_DISPLAY.md` for provider limitations and fallback behavior.
+
+
+## Desktop concurrent viewers — 2026-09-28
+
+The desktop shell now keeps one isolated media worker per connected server. The
+existing media library has process-global transport, decoder and input state;
+workers preserve its single-session contract while the shell owns the device
+list, tray, session selection and lifecycle. Devices and tray actions do not wait
+for a media worker to stop. Returning to Devices retains all connections.
+
+- Session tabs and the Connections tray menu select an existing desktop. Closing
+  one session stops only its worker. A worker crash leaves other sessions alive.
+- Presentation handoff releases the previous viewer's input and clipboard before
+  showing the next; background viewers retain transport but mute audio and reject
+  physical input. Native SDL windows are retained and hidden/shown. This is not
+  multiple render surfaces embedded in one Qt window.
+- Workers load only their target's saved host and cannot write the host registry
+  or explicitly admit a removed host. The shell owns device removal.
+- Admission probes check every outgoing branch using the existing core v1 path
+  protocol; all branches must be safe and graph mutation fails closed.
+- Worker diagnostics use separate bounded run logs, included through the same
+  privacy allowlist when exporting diagnostics.
+- Regression coverage includes two subprocesses, delayed input handoff, rapid
+  selection, list return, independent crash/cancel, fanout/cycle admission, and
+  real production worker startup with isolated settings. Physical simultaneous
+  video/audio/input and native compositor switch latency remain acceptance work.

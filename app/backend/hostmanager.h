@@ -106,6 +106,7 @@ public:
     void setResident(bool enabled) { m_Resident = enabled; }
     Q_INVOKABLE void requestExit();
     Q_INVOKABLE void requestRestart();
+    void updateSessionMenu(const QVariantList& sessions);
     void allowExit() { m_ExitRequested = true; }
     bool restarting() const { return m_RestartRequested; }
 
@@ -120,6 +121,8 @@ signals:
     void disconnectRequested();
     void reconnectRequested();
     void fullscreenRequested();
+    void sessionSelected(QString id);
+    void sessionDisconnectRequested(QString id);
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
@@ -165,6 +168,9 @@ private:
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
+    QMenu* m_SessionsMenu = nullptr;
+    QVariantList m_PendingSessionRows;
+    bool m_SessionMenuRefreshQueued = false;
     bool m_TrustBusy = false;
     bool m_Starting = false;
     bool m_Stopping = false;

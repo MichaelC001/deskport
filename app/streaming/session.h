@@ -119,6 +119,7 @@ public:
     virtual ~Session() {};
 
     bool viewerReady() const { return m_ViewerReady.load(); }
+    bool inputDispatching() const { return m_InputDispatching.load(); }
     Q_INVOKABLE void setViewerRequested(bool visible) { m_ViewerRequested = visible; }
     QString hostId() const;
     QString hostName() const;
@@ -182,8 +183,11 @@ signals:
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
     void transportCleanupFinished();
+    void presentationHidden();
+    void presentationShown();
 
 private:
+    std::atomic<bool> m_InputDispatching{false};
     std::atomic<bool> m_ViewerReady{false}, m_ViewerRequested{true};
     void setViewerReady(bool ready) { if (m_ViewerReady.exchange(ready) != ready) emit viewerReadyChanged(); }
     ResizeSettler m_ResizeSettler;
@@ -191,6 +195,7 @@ private:
     SessionLifetime m_Lifetime{this, [this] { emit readyForDeletion(); }};
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
+    void pumpTransitionWindow();
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
     bool m_SessionAdmissionFailed = false;
     QString m_SessionTopologyError;

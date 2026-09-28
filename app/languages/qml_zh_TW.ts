@@ -1453,6 +1453,12 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Connecting…</source><translation>連線中…</translation></message>
+    <message><source>Disconnecting…</source><translation>正在中斷…</translation></message>
+    <message><source>Failed</source><translation>失敗</translation></message>
+    <message><source>Disconnected</source><translation>已中斷</translation></message>
+    <message><source>Disconnect</source><translation>中斷連線</translation></message>
+
     <message><source>Could not save device removal. Please retry.</source><translation>無法儲存裝置刪除操作，請重試。</translation></message>
     <message><source>Memory %1</source><translation>記憶體 %1</translation></message>
     <message><source>Local memory usage</source><translation>本機記憶體用量</translation></message>
@@ -2657,6 +2663,9 @@
 </context>
 <context>
     <name>HostManager</name>
+    <message><source>Connections</source><translation>連線列表</translation></message>
+    <message><source>Show desktop</source><translation>顯示桌面</translation></message>
+
     <message>
         <source>Restart</source>
         <translation>重新啟動</translation>
@@ -3267,5 +3276,19 @@
 </context>
 <context><name>MainWindow</name>
     <message><source>Disconnecting…</source><translation>正在中斷連線…</translation></message>
+</context>
+<context>
+    <name>MultiSessions</name>
+    <message><source>The device binding is unavailable. Refresh the device and try again.</source><translation>裝置綁定無法使用，請重新整理裝置後再試。</translation></message>
+    <message><source>This connection would create a loop.</source><translation>此連線會造成迴圈。</translation></message>
+    <message><source>The desktop worker could not start.</source><translation>無法啟動桌面連線程序。</translation></message>
+    <message><source>The desktop worker stopped unexpectedly.</source><translation>桌面連線程序意外停止。</translation></message>
+    <message><source>The desktop worker did not respond.</source><translation>桌面連線程序沒有回應。</translation></message>
+</context>
+<context>
+    <name>SessionWorker</name>
+    <message><source>Another application is running on that server.</source><translation>該伺服器上正在執行其他應用程式。</translation></message>
+    <message><source>Connection failed at %1 (%2).</source><translation>連線在 %1 階段失敗（%2）。</translation></message>
+    <message><source>The device binding is unavailable.</source><translation>裝置綁定無法使用。</translation></message>
 </context>
 </TS>

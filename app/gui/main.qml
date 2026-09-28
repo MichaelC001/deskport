@@ -101,9 +101,16 @@ ApplicationWindow {
         var top = stackView.currentItem // Replacements can preserve depth.
         return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
-    readonly property string activeHostId: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
-    readonly property string activeHostName: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
+    readonly property string activeHostId: typeof sessionManager !== "undefined" && sessionManager.busy ? sessionManager.selectedId : activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
+    readonly property string activeHostName: {
+        if (typeof sessionManager !== "undefined" && sessionManager.busy) {
+            var rows=sessionManager.sessions
+            for (var i=0;i<rows.length;++i) if(rows[i].id === activeHostId) return rows[i].name
+        }
+        return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
+    }
     function showDevices() {
+        if (typeof sessionManager !== "undefined") sessionManager.showDevices()
         if (activeStreamPage) {
             if (activeStreamPage.session !== undefined && activeStreamPage.session) activeStreamPage.session.setViewerRequested(false)
             if (stackView.currentItem.controlCenterForActiveSession === true) return
@@ -122,6 +129,14 @@ ApplicationWindow {
         showSpinner: true
         standardButtons: Dialog.NoButton
         closePolicy: Popup.NoAutoClose
+    }
+    // The manager already owns hide/show intent when a worker reports an event.
+    function presentDevices() {
+        if (!activeStreamPage) stackView.pop(null, StackView.Immediate)
+        if (window.windowState === Qt.WindowMinimized) window.showNormal()
+        else window.show()
+        window.raise()
+        window.requestActivate()
     }
     function showDevicesDuringSession() {
         showDevices()
@@ -145,7 +160,10 @@ ApplicationWindow {
         window.requestActivate()
         return true
     }
-    function recallRemoteSession() { hostManager.recallViewer() }
+    function recallRemoteSession() {
+        if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.select(sessionManager.selectedId)
+        else hostManager.recallViewer()
+    }
     function goBack() {
         if (activeStreamPage && stackView.currentItem.controlCenterForActiveSession === true) {
             recallRemoteSession()
@@ -175,7 +193,7 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.leftMargin: navigationVisible ? 16 : 0
         anchors.rightMargin: navigationVisible ? 16 : 0
-        anchors.topMargin: navigationVisible ? topBar.height : 0
+        anchors.topMargin: navigationVisible ? topBar.height + sessionStrip.height : 0
         focus: true
 
         onCurrentItemChanged: {
@@ -212,6 +230,43 @@ ApplicationWindow {
         // when Menu is consumed by a focused control.
         Keys.onHangupPressed: {
             navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome")
+        }
+    }
+
+    Flickable {
+        id: sessionStrip
+        objectName: "sessionStrip"
+        anchors.top: parent.top
+        anchors.topMargin: topBar.height
+        anchors.left: parent.left; anchors.right: parent.right
+        height: visible ? 44 : 0
+        visible: navigationVisible && typeof sessionManager !== "undefined" && sessionManager.sessions.length > 0
+        contentWidth: sessionButtons.width + 32
+        clip: true
+        Row {
+            id: sessionButtons; spacing: 6; x: 16
+            Repeater {
+                model: typeof sessionManager !== "undefined" ? sessionManager.sessions : []
+                Row {
+                    spacing: 2
+                    UiButton {
+                        objectName: "sessionSelect-" + modelData.id
+                        text: modelData.name + " · " + (modelData.state === "starting" ? qsTr("Connecting…") : modelData.state === "connected" ? qsTr("Connected") : modelData.state === "stopping" ? qsTr("Disconnecting…") : modelData.state === "error" ? qsTr("Failed") : qsTr("Disconnected"))
+                        highlighted: modelData.selected
+                        enabled: modelData.state === "connected" || modelData.state === "starting"
+                        onClicked: sessionManager.select(modelData.id)
+                        ToolTip.visible: hovered && modelData.error.length > 0
+                        ToolTip.text: modelData.error
+                    }
+                    UiButton {
+                        objectName: "sessionDisconnect-" + modelData.id
+                        text: "×"; flat: true
+                        enabled: modelData.state === "connected" || modelData.state === "starting"
+                        Accessible.name: qsTr("Disconnect") + " " + modelData.name
+                        onClicked: sessionManager.disconnectSession(modelData.id)
+                    }
+                }
+            }
         }
     }
 
@@ -397,8 +452,12 @@ ApplicationWindow {
                 property string sampledHost: ""
                 function amount(n) { return n >= 1000000000 ? (n / 1000000000).toFixed(2) + " GB" : n >= 1000000 ? (n / 1000000).toFixed(1) + " MB" : (n / 1000).toFixed(1) + " KB" }
                 function sample() {
-                    if (!activeStreamPage || !activeStreamPage.session) return
-                    var sample = activeStreamPage.session.traffic(), now = Date.now()
+                    var sample
+                    if (typeof sessionManager !== "undefined" && sessionManager.busy) sample = sessionManager.selectedTraffic
+                    else if (activeStreamPage && activeStreamPage.session) sample = activeStreamPage.session.traffic()
+                    else return
+                    if (sample.received === undefined || sample.sent === undefined) return
+                    var now = Date.now()
                     var elapsed = (now - sampledAt) / 1000
                     downRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.received - received) / elapsed : 0
                     upRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.sent - sent) / elapsed : 0

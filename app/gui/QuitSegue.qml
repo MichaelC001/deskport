@@ -10,6 +10,7 @@ Item {
     property var quitRunningAppFn
     property Session nextSession : null
     property string nextAppName : ""
+    property var nextManagedTarget: null
 
     property string stageText : qsTr("Quitting %1...").arg(appName)
 
@@ -23,7 +24,11 @@ Item {
         }
 
         // If we're supposed to launch another game after this, do so now
-        if (error === undefined && nextSession !== null) {
+        if (error === undefined && nextManagedTarget !== null) {
+            var target = nextManagedTarget
+            stackView.pop()
+            sessionManager.open(target.id, target.name, target.address, target.app)
+        } else if (error === undefined && nextSession !== null) {
             var component = Qt.createComponent("StreamSegue.qml")
             var segue = component.createObject(stackView, {"appName": nextAppName, "session": nextSession})
             stackView.replace(segue)

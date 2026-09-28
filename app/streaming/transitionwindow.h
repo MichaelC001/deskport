@@ -28,6 +28,7 @@ public:
     TransitionWindow(SDL_Window* window, const QString& text);
     ~TransitionWindow();
     void pump();
+    bool takePresentationShown() { const bool shown=m_PresentationShown; m_PresentationShown=false; return shown; }
     SDL_Window* window() const { return m_Window; }
     bool cancelled() const { return m_Cancelled; }
     SDL_Window* takeWindow();
@@ -42,6 +43,7 @@ private:
     QString m_Label;
     QImage m_Frame;
     bool m_Cancelled = false;
+    bool m_PresentationShown = false;
     unsigned m_PresentedFrames = 0;
     Uint32 m_LastPaint = 0;
 };

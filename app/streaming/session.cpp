@@ -766,6 +766,11 @@ void Session::initializeClipboard() {
     m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
 }
 
+void Session::pumpTransitionWindow() {
+    m_TransitionWindow->pump();
+    if (m_TransitionWindow->takePresentationShown() && m_ViewerRequested) emit presentationShown();
+}
+
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     if (!m_AdaptiveDisplay) {
         const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
@@ -791,7 +796,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         ResizeSettler settling;
         auto retained = m_TransitionWindow->window();
         while (!m_TransitionWindow->cancelled() && desktopWindowVisible(retained)) {
-            m_TransitionWindow->pump();
+            pumpTransitionWindow();
             const auto latest = workspaceForWindow(retained);
             if (settling.update(latest.pixels, latest.scale, SDL_GetTicks(),
                                 (SDL_GetGlobalMouseState(nullptr, nullptr) | SDL_GetMouseState(nullptr, nullptr)) != 0)) break;
@@ -820,7 +825,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     if (m_AdaptiveDisplay->resize(target, m_AdaptiveScale, [this] {
             if (m_RecoveryCancelled || (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline))
                 m_AdaptiveDisplay->cancel();
-            if (m_TransitionWindow) m_TransitionWindow->pump();
+            if (m_TransitionWindow) pumpTransitionWindow();
             if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
         }, [this, window] {
             if (m_RecoveryDeadline || m_RecoveryCancelled) return false;
@@ -1008,7 +1013,7 @@ bool Session::initialize()
         if (!viewer) viewer = SDL_CreateWindow(title.constData(), x, y, width, height, flags);
         if (!viewer) { SDL_QuitSubSystem(SDL_INIT_VIDEO); return false; }
         setDeskPortWindowIcon(viewer);
-        if (m_IsFullScreen) SDL_SetWindowFullscreen(viewer, m_FullScreenFlag);
+        if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(viewer, m_FullScreenFlag);
         m_TransitionWindow = std::make_shared<TransitionWindow>(viewer, tr("Connecting to desktop…"));
         if (!m_TransitionWindow->rendering()) {
             m_TransitionWindow.reset(); SDL_QuitSubSystem(SDL_INIT_VIDEO); return false;
@@ -1019,7 +1024,7 @@ bool Session::initialize()
         const auto started = SDL_GetTicks();
         while (!m_TransitionWindow->cancelled() && desktopWindowVisible(viewer) &&
                SDL_GetTicks() - started < 1500) {
-            m_TransitionWindow->pump();
+            pumpTransitionWindow();
             const auto current = workspaceForWindow(viewer);
             if (settling.update(current.pixels, current.scale, SDL_GetTicks(), false)) break;
             if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
@@ -2227,7 +2232,7 @@ void Session::exec(QWindow* qtWindow)
         // transport cleanup completes; lifetime waits for both completions.
         if (m_TransitionWindow && adaptiveRestartPending()) {
             m_TransitionTimer = new QTimer(this);
-            connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) m_TransitionWindow->pump(); });
+            connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) pumpTransitionWindow(); });
             m_TransitionTimer->start(20);
         }
         m_Lifetime.endExec();
@@ -2405,7 +2410,7 @@ void Session::execInternal()
 
     // Establish a real, recallable loading window before host launch/RTSP can
     // block. The SDL owner keeps pumping it even on Linux's exec worker.
-    if (m_IsFullScreen) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Connecting to desktop…"));
     m_Window = nullptr;
     if (!m_TransitionWindow->rendering()) {
@@ -2456,7 +2461,7 @@ void Session::execInternal()
     updateOptimalWindowDisplayMode();
 
     // Enter full screen if requested
-    if (m_IsFullScreen) {
+    if (m_IsFullScreen && m_ViewerRequested) {
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
@@ -2507,7 +2512,7 @@ void Session::execInternal()
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
-    initializeClipboard();
+    if (m_ViewerRequested) initializeClipboard();
 
     // SDL owns streaming input, but Qt must continue servicing tray actions,
     // peer TLS connections, host supervision and single-instance activation.
@@ -2515,16 +2520,19 @@ void Session::execInternal()
     QString clipboardStatus;
     SDL_Event event;
     const auto showControlCenter = [this] {
+        m_ViewerRequested = false;
+        if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "showDevicesDuringSession", Qt::AutoConnection);
         m_InputHandler->setCaptureActive(false);
         SDL_HideWindow(m_Window);
-        if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "showDevicesDuringSession", Qt::QueuedConnection);
+        m_Clipboard.reset();
     };
+    m_InputDispatching = true;
     for (;;) {
         if (!m_ThreadedExec && serviceEvents.elapsed() >= 20) {
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        if (m_Clipboard) {
+        if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();
             if (m_Clipboard->status() != clipboardStatus) {
                 clipboardStatus = m_Clipboard->status();
@@ -2574,6 +2582,15 @@ void Session::execInternal()
             continue;
         }
 #endif
+        // Background viewers keep media/transport alive but cannot forward
+        // physical input, including globally delivered controller events.
+        if (!m_ViewerRequested && ((event.type >= SDL_KEYDOWN && event.type <= SDL_MOUSEWHEEL) ||
+            (event.type >= SDL_CONTROLLERAXISMOTION && event.type <= SDL_CONTROLLERBUTTONUP) ||
+            (event.type >= SDL_FINGERDOWN && event.type <= SDL_MULTIGESTURE)
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+            || (event.type >= SDL_CONTROLLERTOUCHPADDOWN && event.type <= SDL_CONTROLLERSENSORUPDATE)
+#endif
+            )) continue;
         switch (event.type) {
         case SDL_QUIT:
             showControlCenter();
@@ -2597,13 +2614,19 @@ void Session::execInternal()
                 goto DispatchDeferredCleanup;
             case DeskPortHideWindow:
                 m_InputHandler->setCaptureActive(false);
+                m_Clipboard.reset();
                 SDL_HideWindow(m_Window);
+                emit presentationHidden();
                 break;
             case DeskPortShowDevices:
                 showControlCenter();
                 break;
             case DeskPortRecallWindow:
+                if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+                if (!m_ViewerRequested) break;
+                if (!m_Clipboard) initializeClipboard();
                 recallDesktopWindow(m_Window);
+                emit presentationShown();
                 break;
             case DeskPortToggleWindow:
                 // The control center and the remote window are never shown at
@@ -2666,12 +2689,14 @@ void Session::execInternal()
                 m_InputHandler->notifyFocusLost();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
+                if (!m_ViewerRequested) break;
                 m_InputHandler->notifyFocusGained();
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = false;
                 }
                 break;
             case SDL_WINDOWEVENT_ENTER:
+                if (!m_ViewerRequested) break;
                 m_InputHandler->notifyPointerPosition();
                 break;
             case SDL_WINDOWEVENT_LEAVE:
@@ -2848,7 +2873,7 @@ void Session::execInternal()
                 // is set up, this ensures the window re-creation is already done.
                 if (needsPostDecoderCreationCapture) {
                     const auto flags = SDL_GetWindowFlags(m_Window);
-                    if ((flags & SDL_WINDOW_INPUT_FOCUS) && !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)))
+                    if (m_ViewerRequested && (flags & SDL_WINDOW_INPUT_FOCUS) && !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)))
                         m_InputHandler->setCaptureActive(true);
                     needsPostDecoderCreationCapture = false;
                 }
@@ -2946,6 +2971,8 @@ DispatchDeferredCleanup:
     // interfere with SDLGamepadKeyNavigation.
     delete m_InputHandler;
     m_InputHandler = nullptr;
+    m_InputDispatching = false;
+    emit presentationHidden();
 
     // Destroy the decoder, since this must be done on the main thread
     // NB: This must happen before LiStopConnection() for pull-based

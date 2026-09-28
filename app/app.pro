@@ -1,3 +1,5 @@
+SOURCES += backend/multisessions.cpp backend/sessionworker.cpp
+HEADERS += backend/multisessions.h backend/sessionworker.h
 SOURCES += backend/diagnostics.cpp
 HEADERS += backend/diagnostics.h
 HEADERS += backend/smalltcp.h backend/smalltcptunnel.h

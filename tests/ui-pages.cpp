@@ -791,6 +791,52 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
         QVERIFY(page->property("advancedOpen").toBool());
     }
+    void managedSessionNavigation() {
+        TestComputers::resetLayout();
+        QTemporaryDir directory;
+        PreviewHost host(nullptr,directory.path()+"/host");
+        PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
+        QQmlEngine engine;
+        QQmlComponent fixture(&engine);
+        fixture.setData(R"(import QtQuick 2.9
+QtObject {
+ property bool busy: true
+ property string selectedId: "a"
+ property var selectedTraffic: ({received:100, sent:20})
+ property int listRequests: 0
+ property string disconnected: ""
+ property var sessions: [ {id:"a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"b", name:"Second desktop", state:"connected", selected:false, error:""} ]
+ function select(id) { selectedId=id }
+ function showDevices() { listRequests++ }
+ function disconnectSession(id) { disconnected=id }
+})",QUrl());
+        QScopedPointer<QObject> manager(fixture.create()); QVERIFY(manager);
+        engine.rootContext()->setContextProperty("sessionManager",manager.data());
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
+        engine.rootContext()->setContextProperty("hostManager", &host);
+        engine.rootContext()->setContextProperty("peerManager", &peers);
+        engine.rootContext()->setContextProperty("initialView", QString("qrc:/gui/PcView.qml"));
+        engine.rootContext()->setContextProperty("startInBackground", true);
+        engine.rootContext()->setContextProperty("startSharingPage", false);
+        QStringList warnings;
+        connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
+        QQmlComponent component(&engine,QUrl("qrc:/gui/main.qml"));
+        QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
+        auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
+        window->resize(800,620); window->show(); QTest::qWait(100);
+        auto second=findVisual(window->contentItem(),"sessionSelect-b"); QVERIFY(second);
+        QVERIFY(second->isVisible()); QVERIFY(QMetaObject::invokeMethod(second,"clicked"));
+        QCOMPARE(manager->property("selectedId").toString(),QString("b"));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
+        QCOMPARE(manager->property("listRequests").toInt(),1);
+        QCOMPARE(manager->property("sessions").value<QJSValue>().toVariant().toList().size(),2);
+        auto close=findVisual(window->contentItem(),"sessionDisconnect-a"); QVERIFY(close);
+        QVERIFY(QMetaObject::invokeMethod(close,"clicked"));
+        QCOMPARE(manager->property("disconnected").toString(),QString("a"));
+        const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!shots.isEmpty()) { QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
+        QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
+    }
     void navigationAndDeviceIdentity_data() {
         QTest::addColumn<QString>("outcome");
         for (auto name : {"streaming", "failure", "cancel"}) QTest::newRow(name) << QString(name);
