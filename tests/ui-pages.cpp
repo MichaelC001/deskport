@@ -852,6 +852,15 @@ ApplicationWindow {
             QTest::qWait(200);
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/device-panel.png"));
         }
+        auto panelAlias = findVisual(window->contentItem(),"panel-setAlias-device-a");
+        QVERIFY(panelAlias); QVERIFY(panelAlias->isVisible()); QVERIFY(panelAlias->isEnabled());
+        QVERIFY(QMetaObject::invokeMethod(panelAlias,"clicked"));
+        auto renameDialog = grid->findChild<QObject*>("renameDeviceDialog"); QVERIFY(renameDialog);
+        QTRY_VERIFY(renameDialog->property("visible").toBool());
+        QTRY_VERIFY(!devicePanel->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(renameDialog,"reject"));
+        QVERIFY(QMetaObject::invokeMethod(cardA,"detailsRequested"));
+        QTRY_VERIFY(devicePanel->property("visible").toBool());
         auto panelGear = devicePanel->findChild<QObject*>("panelDeviceSettings"); QVERIFY(panelGear);
         QVERIFY(QMetaObject::invokeMethod(panelGear,"clicked"));
         QTRY_VERIFY(!devicePanel->property("visible").toBool());

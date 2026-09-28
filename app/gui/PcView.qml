@@ -449,14 +449,14 @@ CenteredGridView {
                             destructive: menuAction !== null && menuAction.text === qsTr("Remove from list")
                             readonly property var menuAction: pcContextMenuLoader.item ? pcContextMenuLoader.item.itemAt(index) : null
                             Layout.fillWidth: true
-                            visible: menuAction !== null && menuAction.visible
+                            visible: menuAction !== null && menuAction.offered
                             enabled: menuAction !== null && menuAction.enabled
                             text: menuAction ? menuAction.text : ""
                             onClicked: {
                                 var chosen = menuAction
                                 devicePanel.close()
                                 // Model mutations may destroy this delegate; dispatch after input.
-                                Qt.callLater(function() { if (chosen) chosen.trigger() })
+                                Qt.callLater(function() { if (chosen && chosen.enabled) chosen.triggered() })
                             }
                         }
                     }
@@ -473,47 +473,47 @@ CenteredGridView {
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Disconnect")
-                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    offered: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
                     onTriggered: hostManager.disconnectViewer()
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Reconnect")
-                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    offered: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
                     onTriggered: hostManager.reconnectViewer()
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Toggle fullscreen")
-                    visible: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
+                    offered: model.hostId === pcGrid.sessionHostId && pcGrid.sessionHostId.length > 0
                     onTriggered: hostManager.toggleViewerFullscreen()
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     objectName: "moveOut-" + model.hostId
                     text: qsTr("Move out of group")
-                    visible: pcGrid.inGroup
+                    offered: pcGrid.inGroup
                     onTriggered: { var from = index, model = pcGrid.computerModel; pcGrid.afterInput(function() { model.moveOutOfGroup(from) }) }
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     objectName: "moveToFront-" + model.hostId
                     text: qsTr("Move to front")
-                    visible: index > 0
+                    offered: index > 0
                     onTriggered: computerModel.moveComputer(index, 0)
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     objectName: "changeAddress-" + model.hostId
                     text: qsTr("Change address")
-                    visible: pcGrid.savedPeer(model.hostId) !== null
+                    offered: pcGrid.savedPeer(model.hostId) !== null
                     enabled: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
                     onTriggered: peerEditor.edit(pcGrid.savedPeer(model.hostId))
                 }
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Pair with a legacy PIN")
-                    visible: model.online && !model.paired
+                    offered: model.online && !model.paired
                     onTriggered: {
                         var pin = computerModel.generatePinString()
                         computerModel.pairComputer(index, pin)
@@ -527,8 +527,8 @@ CenteredGridView {
                     text: qsTr("Set alias")
                     onTriggered: {
                         renamePcDialog.pcIndex = index
-                        renamePcDialog.originalName = model.reportedName
-                        renamePcDialog.currentAlias = model.alias
+                        renamePcDialog.originalName = model.reportedName || model.name
+                        renamePcDialog.currentAlias = model.alias || ""
                         renamePcDialog.open()
                     }
                 }
@@ -708,6 +708,27 @@ CenteredGridView {
             text: qsTr("Delete group")
             // Devices are kept: they return to the top level where the group was.
             onTriggered: { computerModel.deleteGroup(groupMenu.groupId); pcGrid.refreshLayout() }
+        }
+    }
+
+    NavigableDialog {
+        id: renamePcDialog
+        objectName: "renameDeviceDialog"
+        property int pcIndex: -1
+        property string originalName: ""
+        property string currentAlias: ""
+        title: qsTr("Set alias")
+        width: Math.min(parent ? parent.width - 32 : 420, 420)
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onOpened: { aliasField.text = currentAlias; aliasField.selectAll(); aliasField.forceActiveFocus() }
+        onAccepted: computerModel.setAlias(pcIndex, aliasField.text.trim())
+        contentItem: TextField {
+            id: aliasField
+            objectName: "deviceAliasField"
+            placeholderText: renamePcDialog.originalName
+            maximumLength: 64
+            Keys.onReturnPressed: renamePcDialog.accept()
+            Keys.onEnterPressed: renamePcDialog.accept()
         }
     }
 
