@@ -10,6 +10,13 @@
 #include "localhostfilter.h"
 #include "peerstore.h"
 
+static QAction* trayAction(const QString& title) {
+    for (auto widget : QApplication::topLevelWidgets())
+        if (auto menu=qobject_cast<QMenu*>(widget))
+            for (auto action : menu->actions()) if (action->text()==title) return action;
+    return nullptr;
+}
+
 class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
@@ -19,16 +26,9 @@ private slots:
         QSignalSpy opened(&host,&HostManager::showDevicesRequested);
         QSignalSpy disconnected(&host,&HostManager::disconnectRequested);
         QSignalSpy reconnected(&host,&HostManager::reconnectRequested);
-        QMenu* menu = nullptr;
-        for (auto widget : QApplication::topLevelWidgets()) {
-            auto candidate = qobject_cast<QMenu*>(widget);
-            if (candidate && candidate->actions().size() == 5 &&
-                candidate->actions().first()->text() == "Open device list") menu = candidate;
-        }
-        QVERIFY(menu);
-        menu->actions().at(0)->trigger();
-        menu->actions().at(1)->trigger();
-        menu->actions().at(2)->trigger();
+        auto open=trayAction("Open device list"), disconnect=trayAction("Disconnect"), reconnect=trayAction("Reconnect");
+        QVERIFY(open); QVERIFY(disconnect); QVERIFY(reconnect);
+        open->trigger(); disconnect->trigger(); reconnect->trigger();
         QCOMPARE(opened.size(),0);
         QCOMPARE(disconnected.size(),0);
         QCOMPARE(reconnected.size(),0);
@@ -52,14 +52,8 @@ private slots:
         QCOMPARE(exited.size(),1);
         QVERIFY(host.running());
         QSignalSpy opened(&host,&HostManager::showDevicesRequested);
-        QMenu* menu=nullptr;
-        for (auto widget : QApplication::topLevelWidgets()) {
-            auto candidate=qobject_cast<QMenu*>(widget);
-            if (candidate && candidate->actions().size()==5 &&
-                candidate->actions().first()->text()=="Open device list") menu=candidate;
-        }
-        QVERIFY(menu);
-        menu->actions().first()->trigger();
+        auto open=trayAction("Open device list"); QVERIFY(open);
+        open->trigger();
         QCOMPARE(opened.size(),0);
         QTRY_COMPARE_WITH_TIMEOUT(opened.size(),1,500);
         QVERIFY(host.running());
