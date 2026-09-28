@@ -2343,3 +2343,15 @@ new displayed frames, switching latency, physical input or audio routing. Tempor
 viewer testing is authorized; replacing running server instances requires the
 separate activation authorization described in the handoff. No deployed server
 has been replaced, and no release or mobile source has been published.
+
+The next live legacy-host run did **not** pass: both connections reached the
+connected state and the first recall completed, then the controller stopped
+advancing. Removing synchronous screenshots reproduced the stall. A disposable
+parent-debugger run captured the controller's main thread in Mesa
+`_mesa_glthread_finish -> eglSwapBuffers -> QSGGuiThreadRenderLoop::renderWindow`.
+The root cause is not established; do not attribute it to the wire extension or
+call it a resolved driver issue. Temporary Mesa threading and Qt software-renderer
+settings did not complete a full run either. These settings were not committed or
+applied to the deployed service. The original viewer service was restored and all
+test workers exited. This blocks live/UI acceptance of the candidate. No stopped
+video traffic, resumed keyframe delivery or long-pause success is claimed yet.
