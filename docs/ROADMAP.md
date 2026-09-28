@@ -22,9 +22,10 @@ Reason: bring the current mobile visual design to the desktop client.
   reading panels. Manual: chapter cards with icon tile, first-step preview,
   rotating chevron and numbered steps.
 
-Pending: the shared-core pin to the translated manual (core `dev` e1d3e3e
-merged with main) needs the core branch pushed before the Git and Nix pins
-move together. Activation and real streaming/input checks remain with the
+2026-09-28 review: pinned the translated manual at public core commit
+`78fe2897` in both the Git submodule and Nix lock. Core contract checks, seven
+translation catalogs and all 24 macOS isolated UI tests pass, including
+light/dark panels and narrow-window screenshots. Activation and real streaming/input checks remain with the
 user; this does not request a public release or mobile upload.
 
 ## Desktop 0.6.3 release preparation — 2026-09-26
