@@ -15,7 +15,7 @@ public slots:
     void captureUrl(const QUrl& url) { opened=url; }
 private slots:
     void initTestCase() {
-        QCoreApplication::setApplicationVersion("0.5.0");
+        QCoreApplication::setApplicationVersion(qEnvironmentVariable("TEST_DESKPORT_VERSION", "development"));
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
     }
@@ -45,7 +45,7 @@ private slots:
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.path());
         QFile archive(logs.createBundle()); QVERIFY(archive.open(QIODevice::ReadOnly));
         QVERIFY(archive.readAll().contains("\"version\": \"" + expected.toUtf8() + "\""));
-        QCoreApplication::setApplicationVersion("0.5.0");
+        QCoreApplication::setApplicationVersion(qEnvironmentVariable("TEST_DESKPORT_VERSION", "development"));
     }
     void privacy_data() {
         QTest::addColumn<QString>("secret");
@@ -84,6 +84,16 @@ private slots:
         auto validated=Diagnostics::validate(object); QVERIFY(!validated.contains("private")); QVERIFY(!validated.contains("token"));
         object["run"]="my-host"; QVERIFY(Diagnostics::validate(object).isEmpty());
         object["run"]=QString(32,'a'); object["source"]="private.example"; QVERIFY(Diagnostics::validate(object).isEmpty());
+    }
+    void navigationTimingKeepsOnlyFixedStages() {
+        for (const auto& stage : {"devices-request", "devices-ready", "devices-frame", "event-loop-delay"}) {
+            auto record = Diagnostics::project(QString("DeskPort navigation stage=%1 duration_ms=875").arg(stage));
+            QCOMPARE(record.value("event").toString(), QString("navigation"));
+            QCOMPARE(record.value("duration_ms").toInt(), 875);
+            record["source"] = "client"; record["run"] = QString(32, 'a'); record["elapsed_ms"] = 100;
+            QCOMPARE(Diagnostics::validate(record).value("stage").toString(), QString(stage));
+        }
+        QVERIFY(Diagnostics::project("DeskPort navigation stage=private-host duration_ms=875").isEmpty());
     }
     void rotationRetentionAndExportAllowlist() {
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.path()); logs.setEnabled(true);

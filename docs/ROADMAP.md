@@ -1,3 +1,20 @@
+## Presentation-independent session continuation — 2026-09-28
+
+Reason: opening Devices during a connection must be a presentation change.
+Replacing the StreamSegue stack entry during transport recovery or resolution
+changes could remove the control center above it and reveal the viewer again.
+
+- Retain the stream page and reconnect its signals to the next transport owner.
+  Preserve the viewer visibility request across every continuation path.
+- Retain the control-center page and its models across tray switches. Suppress
+  adaptive resize decisions as soon as the viewer is no longer requested.
+- Record fixed navigation stages, first-frame delay and Qt event-loop stalls;
+  no device identity or UI contents enter these timing records.
+- Live latency and connection continuity remain unverified until tested on the
+  target compositor. Multiple simultaneous servers are a future requirement:
+  they need independent transport ownership and a separate active-view selector;
+  the current singleton transport is not multi-session support.
+
 ## Nonblocking device actions and live revocation — 2026-09-28
 
 Reason: removing an offline binding restarted the local sharing helper and

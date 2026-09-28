@@ -18,7 +18,6 @@ Item {
                                            qsTr("Starting %1...").arg(appName)
     property bool isResume : false
     property bool quitAfter : false
-    property bool adaptiveReplacing: false
 
     function stageStarting(stage)
     {
@@ -126,14 +125,25 @@ Item {
         // merely null here: naming it at all throws a ReferenceError.
         if (typeof session === 'undefined' || !session) return
         if (session.adaptiveRestartPending()) {
-            var next = session.adaptiveContinuation()
-            var properties = {"session": next, "appName": appName, "isResume": true, "quitAfter": quitAfter}
-            adaptiveReplacing = true
-            session = null
-            // A page created from this context loses its scope (including the
-            // root window) and its pending Loader when replace() destroys us.
-            stackView.replace(streamPage, Qt.resolvedUrl("StreamSegue.qml"), properties, StackView.Immediate)
-            gc()
+            var previous = session
+            var next = previous.adaptiveContinuation()
+            // Keep the navigation stack intact: Devices may be above this page.
+            // Transport replacement must not dismiss it or steal window focus.
+            previous.stageStarting.disconnect(stageStarting)
+            previous.stageFailed.disconnect(stageFailed)
+            previous.connectionStarted.disconnect(connectionStarted)
+            previous.viewerReadyChanged.disconnect(viewerReadyChanged)
+            previous.displayLaunchError.disconnect(displayLaunchError)
+            previous.displayLaunchWarning.disconnect(displayLaunchWarning)
+            previous.quitStarting.disconnect(quitStarting)
+            previous.sessionFinished.disconnect(sessionFinished)
+            previous.readyForDeletion.disconnect(sessionReadyForDeletion)
+            streamLoader.active = false
+            retryTimer.stop()
+            session = next
+            isResume = true
+            sessionHooked = false
+            startSession()
             return
         }
         // Drop the page reference. C++ releases the Session after both exec()
@@ -144,7 +154,9 @@ Item {
 
     property bool sessionHooked: false
 
-    StackView.onActivated: {
+    StackView.onActivated: startSession()
+
+    function startSession() {
         // The control center can be pushed above this page and popped again.
         // Reconnecting would deliver every session signal several times.
         if (sessionHooked) return
@@ -166,7 +178,7 @@ Item {
         if (session.retryDelay() > 0) {
             streamSegueErrorDialog.text = ""
             stageText = qsTr("Connection interrupted. Reconnecting…")
-            window.visible = true
+            if (stackView.currentItem === streamPage) window.visible = true
             retryTimer.interval = session.retryDelay()
             retryTimer.start()
         } else streamLoader.active = true
@@ -210,9 +222,8 @@ Item {
             gc()
 
             // Run the streaming session to completion
-            // Finish Loader incubation before entering the nested streaming
-            // event loop. Adaptive continuation replaces this page; doing so
-            // inside onLoaded destroys the incubator that is still executing.
+            // Finish Loader incubation before running the session. A transport
+            // continuation can deactivate this Loader during a nested event loop.
             Qt.callLater(function() {
                 // StackView pages can be detached from the visual window
                 // during deferred loading. Use the root window context,

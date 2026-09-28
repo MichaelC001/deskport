@@ -691,6 +691,7 @@ Session* Session::adaptiveContinuation() {
         next->m_ManualResume = true;
         next->m_AdaptiveGeometry = m_AdaptiveGeometry;
         next->m_IsFullScreen = m_IsFullScreen;
+        next->m_ViewerRequested = m_ViewerRequested.load();
         next->m_TrafficReceivedBase = m_TrafficReceivedBase;
         next->m_TrafficSentBase = m_TrafficSentBase;
         // A media-only interruption may retain its authenticated controller.
@@ -702,6 +703,7 @@ Session* Session::adaptiveContinuation() {
     if (m_ManualReconnect) {
         // Read the saved device profile only after the old transport is stopped.
         auto next = new Session(m_Computer, m_App);
+        next->m_ViewerRequested = m_ViewerRequested.load();
         next->m_TrafficReceivedBase = m_TrafficReceivedBase;
         next->m_TrafficSentBase = m_TrafficSentBase;
         next->m_ManualResume = true;
@@ -711,6 +713,7 @@ Session* Session::adaptiveContinuation() {
         return next;
     }
     auto next = new Session(m_Computer, m_App, m_Preferences);
+    next->m_ViewerRequested = m_ViewerRequested.load();
     if (m_TransitionTimer) m_TransitionTimer->stop();
     // The old transport has stopped; discard its queued decoder/rumble callbacks.
     SDL_FlushEvents(SDL_USEREVENT, SDL_LASTEVENT);
@@ -851,7 +854,7 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
 }
 bool Session::checkAdaptiveResize() {
-    if (!m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) return false;
+    if (!m_ViewerRequested || !m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) return false;
     const auto workspace = workspaceForWindow(m_Window);
     const auto size = workspace.pixels;
     const int scale = workspace.scale;

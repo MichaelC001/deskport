@@ -17,7 +17,7 @@ HEADERS += "{root}/app/backend/diagnostics.h"
 INCLUDEPATH += "{root}/app/backend"
 TARGET = diagnostics-test
 ''')
-    env = dict(os.environ, TEST_DIAGNOSTICS_ROOT=temporary, QT_QPA_PLATFORM='offscreen')
+    env = dict(os.environ, TEST_DIAGNOSTICS_ROOT=temporary, TEST_DESKPORT_VERSION=(root / 'app/version.txt').read_text().strip(), QT_QPA_PLATFORM='offscreen')
     env.setdefault('DEVELOPER_DIR', '/Applications/Xcode.app/Contents/Developer')
     subprocess.run([os.environ.get('DESKPORT_QMAKE', 'qmake'), 'test.pro'], cwd=work, env=env, check=True)
     subprocess.run(['make', '-j4'], cwd=work, env=env, check=True, stdout=subprocess.DEVNULL)
@@ -32,5 +32,5 @@ TARGET = diagnostics-test
             if name.endswith('.jsonl'):
                 records = [json.loads(line) for line in archive.read(name).splitlines()]
                 assert records
-                assert all(set(r) <= {'source', 'run', 'event', 'elapsed_ms', 'stage', 'tick_ms', 'width', 'height', 'phase', 'state', 'error'} for r in records)
+                assert all(set(r) <= {'source', 'run', 'event', 'elapsed_ms', 'stage', 'tick_ms', 'width', 'height', 'phase', 'state', 'error', 'duration_ms'} for r in records)
     print('Independent ZIP CRC, allowlist, metadata and record validation passed')

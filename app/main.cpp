@@ -928,17 +928,33 @@ int main(int argc, char *argv[])
     if (app.arguments().contains("--share")) {
         QTimer::singleShot(0, &hostManager, [&hostManager] { hostManager.start(2560, 1440); });
     }
+    // Record stalls independently of transport state; never record UI contents.
+    QTimer uiHeartbeat;
+    QElapsedTimer uiTick; uiTick.start();
+    QObject::connect(&uiHeartbeat, &QTimer::timeout, &app, [&uiTick] {
+        const auto elapsed = uiTick.restart();
+        if (elapsed > 350)
+            qInfo("DeskPort navigation stage=event-loop-delay duration_ms=%lld", static_cast<long long>(elapsed));
+    });
+    uiHeartbeat.start(100);
     QQmlApplicationEngine engine;
     auto showDevices = [&engine, &pendingActivation] {
-        // Present Qt immediately, including while the transport is connecting.
-        // Only the SDL owner handles hiding/releasing the remote window.
-        if (SessionLifetime::busy()) {
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortShowDevices;
-            SDL_PushEvent(&event);
-        }
+        QElapsedTimer presentation;
+        presentation.start();
+        qInfo("DeskPort navigation stage=devices-request duration_ms=0");
         if (engine.rootObjects().isEmpty()) { pendingActivation = true; return; }
         QMetaObject::invokeMethod(engine.rootObjects().first(), "showDevices");
         if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) {
+            if (auto quickWindow = qobject_cast<QQuickWindow*>(window)) {
+                // A context object makes this a one-shot connection and also
+                // cancels it if the window closes without submitting a frame.
+                auto frame = new QObject(quickWindow);
+                QObject::connect(quickWindow, &QQuickWindow::frameSwapped, frame, [frame, presentation] {
+                    qInfo("DeskPort navigation stage=devices-frame duration_ms=%lld", static_cast<long long>(presentation.elapsed()));
+                    delete frame;
+                }, Qt::QueuedConnection);
+                QTimer::singleShot(5000, frame, &QObject::deleteLater);
+            }
             if (window->windowState() == Qt::WindowMinimized) window->showNormal();
             else window->show();
             window->raise(); window->requestActivate();
@@ -946,6 +962,13 @@ int main(int argc, char *argv[])
             // Ordering a window front does not activate an accessory application.
             deskPortActivateApplication();
 #endif
+        }
+        qInfo("DeskPort navigation stage=devices-ready duration_ms=%lld", static_cast<long long>(presentation.elapsed()));
+        // Window presentation must precede the command to the media owner.
+        // The command only releases input and hides video; it never ends a session.
+        if (SessionLifetime::busy()) {
+            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortShowDevices;
+            SDL_PushEvent(&event);
         }
     };
     auto recallViewer = [&engine, &showDevices] {

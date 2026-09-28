@@ -435,7 +435,7 @@ ApplicationWindow {
         emit session.readyForDeletion();
         QTRY_COMPARE(continuation.executions,1);
         QVERIFY(!root->property("navigationVisible").toBool());
-        QVERIFY(root->property("currentPage").value<QObject*>() != page);
+        QCOMPARE(root->property("currentPage").value<QObject*>(), page);
         QVERIFY(QMetaObject::invokeMethod(root.data(),"back"));
         QVERIFY(root->property("navigationVisible").toBool());
         QVERIFY(QMetaObject::invokeMethod(root.data(),"startQuit"));
@@ -509,6 +509,56 @@ ApplicationWindow {
         QCOMPARE(root->property("depth").toInt(),3);
         QVERIFY(root->property("currentPage").value<QObject*>()->property("controlCenterForActiveSession").toBool());
         emit session.sessionFinished(0);
+        QTRY_COMPARE(root->property("depth").toInt(),1);
+        QTest::qWait(50);
+        engine.collectGarbage();
+        emit session.readyForDeletion();
+        QTest::qWait(20);
+        QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
+    }
+    void controlCenterSurvivesTransportContinuation() {
+        QQmlEngine engine;
+        QStringList warnings;
+        connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
+        TestSession session;
+        engine.rootContext()->setContextProperty("testSession", &session);
+        QQmlComponent harness(&engine);
+        harness.setData(R"(import QtQuick 2.9
+import QtQuick.Controls 2.2
+ApplicationWindow {
+ id: window; width: 800; height: 600
+ property alias depth: stackView.depth
+ property alias currentPage: stackView.currentItem
+ QtObject { id: streamSegueErrorDialog; property string text: ""; property bool quitAfter: false; function open() {} }
+ StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
+ function start() { stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {session: testSession, appName: "Test"}, StackView.Immediate) }
+ function showDevices() { stackView.push(controlPage, StackView.Immediate) }
+ Component { id: controlPage; Item { property bool controlCenterForActiveSession: true } }
+})",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/control-center-harness.qml"));
+        QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"start"));
+        QTRY_COMPARE(session.executions,1);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
+        QCOMPARE(session.receivedWindow, qobject_cast<QQuickWindow*>(root.data()));
+        root->setProperty("visible", true);
+        emit session.connectionStarted();
+        QVERIFY(root->property("visible").toBool());
+        QCOMPARE(session.executions, 1);
+        QCOMPARE(root->property("depth").toInt(),3);
+        QVERIFY(root->property("currentPage").value<QObject*>()->property("controlCenterForActiveSession").toBool());
+        auto controlPage = root->property("currentPage").value<QObject*>();
+        TestSession next;
+        QQmlEngine::setObjectOwnership(&next, QQmlEngine::CppOwnership);
+        session.next = &next;
+        emit session.sessionFinished(0);
+        emit session.readyForDeletion();
+        QTRY_COMPARE(next.executions, 1);
+        QCOMPARE(root->property("depth").toInt(), 3);
+        QCOMPARE(root->property("currentPage").value<QObject*>(), controlPage);
+        next.makeViewerReady();
+        QVERIFY(root->property("visible").toBool());
+        QCOMPARE(session.executions, 1);
+        emit next.sessionFinished(0);
         QTRY_COMPARE(root->property("depth").toInt(),1);
         QTest::qWait(50);
         engine.collectGarbage();
@@ -876,11 +926,15 @@ ApplicationWindow {
         QVERIFY(window->isVisible()); // Late readiness must not steal Devices.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
         QVERIFY(!window->isVisible());
+        QPointer<QObject> retainedDevices;
         int recalls=0;
         connect(&host,&HostManager::viewerRecallRequested,this,[&]{recalls++;});
         for(int i=0;i<50;++i) {
             QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
             QCOMPARE(root->property("testDepth").toInt(),3);
+            auto currentDevices = root->property("testCurrentPage").value<QObject*>();
+            if (i == 0) retainedDevices = currentDevices;
+            else QCOMPARE(currentDevices, retainedDevices.data());
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testSettings"));
             QCOMPARE(root->property("testDepth").toInt(),4);
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testSameSettings"));

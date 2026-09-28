@@ -17,7 +17,8 @@
 namespace {
 const QStringList sources {"client", "host", "display"};
 const QStringList stages {"decoder-setup", "continuation", "mode-request", "mode-ready", "mode-failed", "observed", "stop-begin", "viewer-geometry-ready", "probe-begin", "probe-end", "stop-end", "resume-request", "resume-response", "initialize-begin", "input-init-begin", "input-init-end", "first-render-submit"};
-const QStringList events {"started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled"};
+const QStringList navigationStages {"devices-request", "devices-ready", "devices-frame", "event-loop-delay"};
+const QStringList events {"navigation","started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled"};
 QStringList names() {
     QStringList result;
     for (const auto& source : sources) for (int i = 0; i < 3; ++i)
@@ -95,6 +96,10 @@ QJsonObject Diagnostics::project(const QString& message) {
         return {{"event","resize"},{"stage",match.captured(1)}, {"tick_ms",match.captured(2).toDouble()},
             {"width",match.captured(3).toInt()},{"height",match.captured(4).toInt()}};
     }
+    static const QRegularExpression navigation("DeskPort navigation stage=([a-z-]+) duration_ms=([0-9]{1,10})\\s*$");
+    match = navigation.match(message);
+    if (match.hasMatch() && navigationStages.contains(match.captured(1)))
+        return {{"event", "navigation"}, {"stage", match.captured(1)}, {"duration_ms", match.captured(2).toDouble()}};
     const QList<QPair<QString,QString>> classes {
         {"diagnostics enabled","enabled"},{"permission","permission"},{"timeout","timeout"},
         {"failed","failed"},{"error","failed"},{"recovery","recovery"},{"stopped","stopped"},
@@ -108,7 +113,7 @@ QJsonObject Diagnostics::validate(const QJsonObject& o) {
     static const QRegularExpression id("^[a-f0-9]{32}$");
     if (!id.match(o.value("run").toString()).hasMatch()) return {};
     QJsonObject result {{"event",o.value("event")},{"source",o.value("source")},{"run",o.value("run")}};
-    for (const auto& key : {"elapsed_ms","tick_ms","width","height"}) {
+    for (const auto& key : {"elapsed_ms","tick_ms","width","height","duration_ms"}) {
         auto v=o.value(QLatin1String(key));
         if (v.isDouble() && v.toDouble()>=0 && v.toDouble()<=4294967295.0 && v.toDouble()==double(quint64(v.toDouble()))) result[QLatin1String(key)]=v;
     }
@@ -118,7 +123,8 @@ QJsonObject Diagnostics::validate(const QJsonObject& o) {
     }
     if (QStringList{"starting","failed","terminated"}.contains(o.value("state").toString())) result["state"]=o.value("state");
     if (!result.contains("elapsed_ms")) return {};
-    if (stages.contains(o.value("stage").toString())) result["stage"]=o.value("stage");
+    if (stages.contains(o.value("stage").toString()) ||
+        (o.value("event") == "navigation" && navigationStages.contains(o.value("stage").toString()))) result["stage"]=o.value("stage");
     return result;
 }
 void Diagnostics::ingest(const QString& source, const QByteArray& bytes) {

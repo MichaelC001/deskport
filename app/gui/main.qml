@@ -108,7 +108,7 @@ ApplicationWindow {
             if (activeStreamPage.session !== undefined && activeStreamPage.session) activeStreamPage.session.setViewerRequested(false)
             if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
-            stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
+            stackView.push(sessionDeviceList, StackView.Immediate)
         } else stackView.pop(null)
     }
     function showOperation(text) {
@@ -159,6 +159,14 @@ ApplicationWindow {
         else {
             stackView.pop()
         }
+    }
+
+    // StackView does not own externally supplied items. Keep the control center
+    // and its models alive so a tray switch only changes presentation.
+    PcView {
+        id: sessionDeviceList
+        controlCenterForActiveSession: true
+        visible: StackView.status === StackView.Active
     }
 
     StackView {
