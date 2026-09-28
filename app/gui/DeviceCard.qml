@@ -49,9 +49,13 @@ Rectangle {
         NumberAnimation { to: -0.6; duration: 130 }
         NumberAnimation { to: 0.6; duration: 130 }
     }
-    radius: ui.radius
-    color: selected ? ui.raised : ui.surface
-    border.color: selected || activeSession || dropTarget ? ui.accent : ui.line
+    readonly property string statusText: activeSession ? qsTr("Connected") : unknown ? qsTr("Checking…") : online ? qsTr("Online") : qsTr("Offline")
+    readonly property color statusColor: online || activeSession ? (ui.dark ? "#70d6a1" : "#23875a") : unknown ? (ui.dark ? "#ffc66d" : "#d08a12") : (ui.dark ? "#abb3c2" : "#8a93a3")
+    readonly property bool washed: !group && !addCard && (online || activeSession || unknown)
+    readonly property color baseColor: ui.dark ? "#1f2430" : ui.surface
+    radius: 20
+    color: washed ? ui.mix(baseColor, statusColor, selected ? 0.20 : ui.dark ? 0.14 : 0.10) : selected ? ui.raised : baseColor
+    border.color: selected || dropTarget ? ui.accent : washed ? ui.mix(baseColor, statusColor, 0.30) : ui.line
     border.width: selected || dropTarget ? 2 : 1
     // Split diagonally from the bottom-left to the top-right corner: adding a
     // device on the upper-left half, a new group on the lower-right half.
@@ -98,31 +102,35 @@ Rectangle {
     ColumnLayout {
         visible: !card.addCard
         anchors.fill: parent; anchors.margins: 16; spacing: 6
-        Row {
-            id: header
+        Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 44
+            Layout.preferredHeight: 22
             Item {
                 objectName: "cardStatus"
-                opacity: card.group ? 0 : 1
-                width: header.width / 4; height: 44
-                readonly property string statusText: card.activeSession ? qsTr("Connected") : card.unknown ? qsTr("Checking…") : card.online ? qsTr("Online") : qsTr("Offline")
-                readonly property color statusColor: card.online || card.activeSession ? "#2FA66A" : card.unknown ? "#D29922" : ui.muted
+                visible: !card.group
+                width: 22; height: 22
                 Accessible.role: Accessible.StaticText
-                Accessible.name: statusText + " · " + card.deviceName
-                Column {
-                    anchors.centerIn: parent; width: parent.width; spacing: 2
-                    Rectangle { width: 6; height: 6; radius: 3; color: parent.parent.statusColor; anchors.horizontalCenter: parent.horizontalCenter }
-                    Label { width: parent.width; text: parent.parent.statusText; color: parent.parent.statusColor; font.pixelSize: 10; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight }
-                }
+                Accessible.name: card.statusText + " · " + card.deviceName
+                Rectangle { anchors.centerIn: parent; width: 22; height: 22; radius: 11; color: card.statusColor; opacity: card.washed ? 0.10 : 0 }
+                Rectangle { anchors.centerIn: parent; width: 16; height: 16; radius: 8; color: card.statusColor; opacity: card.washed ? 0.18 : 0 }
+                Rectangle { anchors.centerIn: parent; width: 9; height: 9; radius: 5; color: card.statusColor }
             }
-            ToolButton { objectName: "cardDetails"; text: "ⓘ"; opacity: card.group ? 0 : 1; enabled: !card.group; width: header.width / 4; height: 44; Accessible.name: qsTr("Device details") + " · " + card.deviceName; onClicked: card.detailsRequested() }
-            ToolButton { objectName: "cardActions"; text: "⋯"; width: header.width / 4; height: 44; Accessible.name: (card.group ? qsTr("Group actions") : qsTr("Device actions")) + " · " + card.deviceName; onClicked: card.moreRequested() }
-            ToolButton { objectName: "cardSettings"; text: "⚙"; opacity: card.group ? 0 : 1; enabled: !card.group; width: header.width / 4; height: 44; Accessible.name: qsTr("Device settings") + " · " + card.deviceName; onClicked: card.settingsRequested() }
+            ToolButton {
+                visible: card.group; anchors.right: parent.right; width: 32; height: 24
+                objectName: "cardActions"; text: "⋯"; Accessible.name: qsTr("Group actions")
+                onClicked: card.moreRequested()
+            }
         }
         Item {
             Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 55
             Image { visible: !card.group; anchors.centerIn: parent; width: 48; height: 48; sourceSize.width: 144; sourceSize.height: 144; source: "qrc:/res/os/" + card.osKey + ".svg"; fillMode: Image.PreserveAspectFit; Accessible.name: card.operatingSystem }
+            ToolButton {
+                objectName: "cardDetails"
+                visible: !card.group; anchors.fill: parent
+                background: Item {}
+                Accessible.name: qsTr("Device details") + " · " + card.deviceName
+                onClicked: card.detailsRequested()
+            }
             Rectangle {
                 visible: card.group
                 anchors.centerIn: parent; width: 58; height: 58; radius: 14
@@ -139,7 +147,7 @@ Rectangle {
         Label { text: card.deviceName; textFormat: Text.PlainText; font.pixelSize: 16; font.weight: Font.DemiBold; color: ui.text; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; Layout.fillWidth: true }
         Label { text: card.group ? (card.memberCount === 1 ? qsTr("1 device") : qsTr("%1 devices").arg(card.memberCount)) : card.operatingSystem || qsTr("Computer"); textFormat: Text.PlainText; color: ui.muted; font.pixelSize: ui.small; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; Layout.fillWidth: true }
         UiButton {
-            text: card.actionText; highlighted: card.activeSession
+            text: card.actionText; highlighted: card.activeSession || (card.online && card.paired && !card.anotherSession)
             enabled: card.group || !card.unknown || card.activeSession || card.anotherSession
             Layout.fillWidth: true; Layout.topMargin: 8
             onClicked: card.activateRequested()

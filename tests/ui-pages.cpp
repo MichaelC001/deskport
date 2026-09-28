@@ -844,7 +844,17 @@ ApplicationWindow {
         auto cardB=b->property("contentItem").value<QObject*>(); QVERIFY(cardB);
         auto cardA=a->property("contentItem").value<QObject*>(); QVERIFY(cardA);
         const int devicePageDepth = root->property("testDepth").toInt();
-        QVERIFY(QMetaObject::invokeMethod(cardA,"settingsRequested"));
+        QVERIFY(QMetaObject::invokeMethod(cardA,"detailsRequested"));
+        auto devicePanel = a->findChild<QObject*>("devicePanel-device-a"); QVERIFY(devicePanel);
+        QTRY_VERIFY(devicePanel->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),devicePageDepth);
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/device-panel.png"));
+        }
+        auto panelGear = devicePanel->findChild<QObject*>("panelDeviceSettings"); QVERIFY(panelGear);
+        QVERIFY(QMetaObject::invokeMethod(panelGear,"clicked"));
+        QTRY_VERIFY(!devicePanel->property("visible").toBool());
         auto deviceSettingsDialog = grid->findChild<QObject*>("deviceSettingsDialog"); QVERIFY(deviceSettingsDialog);
         QTRY_VERIFY(deviceSettingsDialog->property("visible").toBool());
         QCOMPARE(root->property("testDepth").toInt(),devicePageDepth);

@@ -544,7 +544,7 @@ ApplicationWindow {
         }
     }
     Timer { interval: 21600000; repeat: true; running: true; onTriggered: AutoUpdateChecker.start() }
-    Dialog {
+    NavigableDialog {
         id: updateDialog; objectName: "updateDialog"
         title: qsTr("DeskPort updates")
         modal: true; anchors.centerIn: parent
@@ -593,7 +593,7 @@ ApplicationWindow {
             }
         }
     }
-    Dialog {
+    NavigableDialog {
         id: trafficDetails; title: qsTr("Session data"); modal: true
         width: Math.min(window.width - 40, 460); anchors.centerIn: parent
         standardButtons: Dialog.Ok
@@ -604,7 +604,7 @@ ApplicationWindow {
             Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
-    Dialog {
+    NavigableDialog {
         id: memoryDetails; objectName: "memoryDetails"; title: qsTr("Local memory usage"); modal: true
         width: Math.min(window.width - 40, 460); anchors.centerIn: parent
         standardButtons: Dialog.Ok

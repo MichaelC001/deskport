@@ -1,7 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 
-Dialog {
+NavigableDialog {
     id: bindingApproval
     objectName: "bindingApproval"
     property var manager
@@ -15,6 +15,7 @@ Dialog {
     width: Math.max(280, Math.min(appWindow.width - 40, 540))
     closePolicy: Popup.NoAutoClose
     footer: DialogButtonBox {
+        background: Item {}
         UiButton { text: qsTr("Not now"); DialogButtonBox.buttonRole: DialogButtonBox.RejectRole }
         UiButton { text: qsTr("Allow & bind"); highlighted: true; DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole }
     }

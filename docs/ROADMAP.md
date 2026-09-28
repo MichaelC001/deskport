@@ -1,3 +1,16 @@
+## Desktop UI alignment — 2026-09-28
+
+Reason: bring the current mobile visual design to the desktop client. Device
+cards use a status light and tinted surface, with details and existing actions
+in a single floating panel and device settings behind its gear. Icon clicks,
+long press, right click and the menu key share this entry. Pages omit duplicate
+headings; dialogs and cards follow the same live light/dark palette. Existing
+desktop connection, address, reconnect and fullscreen behavior remains available.
+
+Checkpoint: isolated UI regression and synthetic screenshots, then private
+Linux/macOS packages and mynix pins. Activation and real streaming/input checks
+remain with the user; this does not request a public release or mobile upload.
+
 ## Desktop 0.6.3 release preparation — 2026-09-26
 
 Prepare the integrated main branch for a formal PC release: Linux x86_64

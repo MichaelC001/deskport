@@ -69,6 +69,8 @@ NavigableDialog {
     footer: DialogButtonBox {
         id: dialogButtonBox
         standardButtons: dialog.standardButtons
+        background: Item {}
+        delegate: UiButton {}
 
         onHelpRequested: {
             Qt.openUrlExternally(helpUrl)

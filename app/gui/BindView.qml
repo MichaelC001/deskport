@@ -58,7 +58,7 @@ UiPage {
         }
     }
     property Dialog editPrompt: PeerEditor { id: editDialog }
-    property Dialog removalPrompt: Dialog {
+    property Dialog removalPrompt: NavigableDialog {
         id: removeDialog
         property string fingerprint: ""
         property string deviceName: ""

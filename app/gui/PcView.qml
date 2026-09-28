@@ -60,7 +60,7 @@ CenteredGridView {
         return model
     }
 
-    Dialog {
+    NavigableDialog {
         id: folderDialog
         objectName: "groupFolderDialog"
         modal: true
@@ -175,7 +175,7 @@ CenteredGridView {
         }
     }
 
-    Dialog {
+    NavigableDialog {
         id: deviceSettingsDialog
         objectName: "deviceSettingsDialog"
         modal: true
@@ -393,7 +393,7 @@ CenteredGridView {
             memberSystems: model.memberSystems
             dropTarget: pcGrid.combineIndex === index
             operatingSystem: model.operatingSystem
-            onDetailsRequested: { showPcDetailsDialog.pcDetails = model.details; showPcDetailsDialog.open() }
+            onDetailsRequested: devicePanel.open()
             onSettingsRequested: deviceSettingsDialog.openFor(model.hostId, model.name)
             activeSession: pcGrid.sessionHostId.length > 0 && model.hostId === pcGrid.sessionHostId
             anotherSession: pcGrid.controlCenterForActiveSession && !activeSession
@@ -402,7 +402,65 @@ CenteredGridView {
             selected: parent.hovered || parent.highlighted
             onMoreRequested: {
                 if (model.isGroup) groupMenu.openFor(model.groupId, parent)
-                else if (pcContextMenuLoader.item) pcContextMenuLoader.item.open()
+                else devicePanel.open()
+            }
+        }
+
+        NavigableDialog {
+            id: devicePanel
+            objectName: "devicePanel-" + model.hostId
+            width: Math.min(parent.width - 32, 460)
+            height: Math.min(parent.height - 32, implicitHeight)
+            title: model.name
+            contentItem: ScrollView {
+                clip: true
+                implicitHeight: panelRows.implicitHeight
+                contentWidth: availableWidth
+                ColumnLayout {
+                    id: panelRows
+                    width: devicePanel.availableWidth
+                    spacing: 10
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Label {
+                            text: model.statusUnknown ? qsTr("Checking…") : model.online ? qsTr("Online") : qsTr("Offline")
+                            color: ui.muted; Layout.fillWidth: true
+                        }
+                        ToolButton {
+                            objectName: "panelDeviceSettings"
+                            text: "⚙"; Accessible.name: qsTr("Device settings")
+                            onClicked: { devicePanel.close(); deviceSettingsDialog.openFor(model.hostId, model.name) }
+                        }
+                    }
+                    UiCard {
+                        padding: 14
+                        contentHeight: deviceFacts.implicitHeight
+                        Label {
+                            id: deviceFacts
+                            width: parent.width; text: model.details
+                            textFormat: Text.PlainText; wrapMode: Text.WrapAnywhere
+                            color: ui.muted
+                        }
+                    }
+                    Repeater {
+                        model: pcContextMenuLoader.item ? pcContextMenuLoader.item.count : 0
+                        UiButton {
+                            objectName: menuAction ? "panel-" + menuAction.objectName : ""
+                            destructive: menuAction !== null && menuAction.text === qsTr("Remove from list")
+                            readonly property var menuAction: pcContextMenuLoader.item ? pcContextMenuLoader.item.itemAt(index) : null
+                            Layout.fillWidth: true
+                            visible: menuAction !== null && menuAction.visible
+                            enabled: menuAction !== null && menuAction.enabled
+                            text: menuAction ? menuAction.text : ""
+                            onClicked: {
+                                var chosen = menuAction
+                                devicePanel.close()
+                                // Model mutations may destroy this delegate; dispatch after input.
+                                Qt.callLater(function() { if (chosen) chosen.trigger() })
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -516,7 +574,7 @@ CenteredGridView {
                 }
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard
-                pcContextMenu.open()
+                devicePanel.open()
             }
         }
 
@@ -563,14 +621,8 @@ CenteredGridView {
 
         onPressAndHold: {
             if (pcGrid.arranging) return
-            // popup() ensures the menu appears under the mouse cursor
-            if (pcContextMenu.popup) {
-                pcContextMenu.popup()
-            }
-            else {
-                // Qt 5.9 doesn't have popup()
-                pcContextMenu.open()
-            }
+            if (model.isGroup) groupMenu.openFor(model.groupId, this)
+            else if (!model.isAdd) devicePanel.open()
         }
 
         MouseArea {
@@ -585,7 +637,8 @@ CenteredGridView {
             if (pcGrid.arranging) return
             // We must use open() here so the menu is positioned on
             // the ItemDelegate and not where the mouse cursor is
-            pcContextMenu.open()
+            if (model.isGroup) groupMenu.openFor(model.groupId, this)
+            else if (!model.isAdd) devicePanel.open()
         }
 
         Keys.onDeletePressed: {

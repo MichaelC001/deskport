@@ -14,14 +14,14 @@ ScrollView {
         ColumnLayout {
         id: pageColumn
         width: page.availableWidth
-        spacing: 22
+        spacing: 12
         Item { height: 4; Layout.fillWidth: true }
         ColumnLayout {
-            Layout.fillWidth: true; Layout.leftMargin: 28; Layout.rightMargin: 28; spacing: 8
-            Label { text: page.heading; font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; spacing: 8
+            Label { visible: false; text: page.heading; font.pixelSize: ui.heading; font.weight: Font.DemiBold; color: ui.text; Layout.fillWidth: true; wrapMode: Text.WordWrap }
             Label { text: page.description; color: ui.muted; font.pixelSize: ui.body; Layout.fillWidth: true; wrapMode: Text.WordWrap; visible: text.length > 0 }
         }
-        ColumnLayout { id: bodyColumn; spacing: 16; Layout.fillWidth: true; Layout.leftMargin: 28; Layout.rightMargin: 28 }
+        ColumnLayout { id: bodyColumn; spacing: 16; Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16 }
         Item { height: 24; Layout.fillWidth: true }
     }
     }
