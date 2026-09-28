@@ -78,7 +78,12 @@ class TestComputers : public QAbstractListModel {
 public:
     using QAbstractListModel::QAbstractListModel;
     // Synthetic devices arranged by the real layout rules, stored in memory only.
-    const QStringList devices{"device-a","device-b"};
+    QStringList devices{"device-a","device-b"};
+    Q_INVOKABLE void setDeviceCount(int count) {
+        beginResetModel(); devices = {"device-a", "device-b"};
+        for (int i=2; i<count; ++i) devices.append(QString("fixture-%1").arg(i));
+        endResetModel();
+    }
     // Shared by every model instance, like the saved layout, so a group's
     // folder model sees groups made on the device list.
     static inline QVariantList stored; static inline bool hasStored = false;
@@ -93,6 +98,7 @@ public:
     Q_INVOKABLE void setShowAdd(bool value) { beginResetModel(); showAdd = value; endResetModel(); }
     HostLayout layout() { return HostLayout(stored, hasStored, {}, [this](const QVariantList& items){ stored = items; hasStored = true; }); }
     QVector<HostLayout::Entry> rows() const { return const_cast<TestComputers*>(this)->layout().entries(devices, group); }
+    Q_INVOKABLE QString hostIdAt(int index) const { const auto list=rows(); return index>=0 && index<list.size() ? list[index].id : QString(); }
     Q_INVOKABLE void initialize(QObject*) {}
     Q_INVOKABLE void refreshFavorites() {}
     QString currentGroup() const { return group; }
@@ -156,7 +162,7 @@ public:
         const bool first = entry.id == "device-a";
         switch(role-Qt::UserRole) {
         case 0: return first ? "Studio" : "Travel laptop";
-        case 1: return first ? "device-a" : "device-b";
+        case 1: return entry.id;
         case 2: return first || secondState == 0;
         case 3: case 9: return true;
         case 4: return !first && secondState == 1;
@@ -304,7 +310,7 @@ private slots:
             QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property int enables: 0; function enable() { enables++ } function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("ComputerManager",1,0,"ComputerManager",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} function addBoundHost(peer) {} }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} function addBoundHost(peer, explicitAdd) {} function deleteHostById(hostId) { return true } }",QUrl()); return c.create();
         });
         qmlRegisterType<TestPreferences>("TestPreferences",1,0,"TestPreferences");
         qmlRegisterSingletonType<TestPreferences>("StreamingPreferences",1,0,"StreamingPreferences",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
@@ -794,14 +800,14 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding")); QTest::qWait(100);
         QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Add a device"));
         const QVariantMap newlyBound{{"name","New computer"}};
-        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound)));
+        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound),Q_ARG(bool,true)));
         QTRY_COMPARE(root->property("testDepth").toInt(),1);
         QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
         QCOMPARE(session.executions, 0); // Binding never starts a stream.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testStart"));
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));
-        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound)));
+        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound),Q_ARG(bool,true)));
         QTest::qWait(100);
         QCOMPARE(session.executions, 1); // An incoming binding cannot replace it.
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));
@@ -927,16 +933,37 @@ ApplicationWindow {
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
-            const qreal previousSettledWidth=grid->property("settledWidth").toReal();
             window->resize(width, 620); QTest::qWait(10);
             QVERIFY(grid->property("resizing").toBool());
-            QCOMPARE(grid->property("settledWidth").toReal(),previousSettledWidth);
+            QCOMPARE(grid->property("cellWidth").toInt(),int(grid->property("width").toReal()) / grid->property("columns").toInt());
             QTRY_VERIFY_WITH_TIMEOUT(!grid->property("resizing").toBool(),250);
-            QCOMPARE(grid->property("settledWidth").toReal(),grid->property("width").toReal());
+            QCOMPARE(grid->property("leftMargin").toReal(),0.0);
+            QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
         }
+        // Exercise full rows across fractional widths and every column boundary.
+        auto resizeModel=qobject_cast<TestComputers*>(grid->property("model").value<QObject*>());
+        QVERIFY(resizeModel); resizeModel->setDeviceCount(12);
+        for (int width : {940, 941, 1021, 1174, 1175, 1176, 1410, 1409, 939, 705, 704}) {
+            window->resize(width,620); QTest::qWait(25);
+            const int columns=grid->property("columns").toInt();
+            const qreal cell=grid->property("cellWidth").toReal();
+            for(int i=0; i<columns+1; ++i) {
+                auto item=findVisual(gridItem,"device-"+resizeModel->devices[i]); QVERIFY(item);
+                QVERIFY2(std::abs(item->x()-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
+                QVERIFY2(std::abs(item->y()-(i/columns)*268)<1.0,"card must occupy its expected row during resize");
+                QVERIFY(item->isVisible());
+            }
+        }
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            window->resize(1021,800); QTest::qWait(100);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-resize.png"));
+        }
+        resizeModel->setDeviceCount(2);
         window->resize(800,620); QTest::qWait(100);
+        a=findVisual(gridItem,"device-device-a"); b=findVisual(gridItem,"device-device-b");
+        first=qobject_cast<QQuickItem*>(a); QVERIFY(first && b);
         QVERIFY(arrange->isVisible());
         QVERIFY(QMetaObject::invokeMethod(arrange,"clicked"));
         QVERIFY(grid->property("arranging").toBool());

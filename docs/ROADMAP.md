@@ -1,3 +1,18 @@
+## Device removal and responsive grid — 2026-09-28
+
+Reason: offline devices returned after restart, and resizing could leave an empty
+column or animate cards between inconsistent layouts.
+
+- Remove device now revokes locally stored binding access and clears its saved
+  device profile, alias and layout membership. A hashed removal marker blocks
+  automatic discovery/replay until an explicit new add or binding.
+- All device models detach removed hosts before asynchronous disposal; queued
+  callbacks and the delayed settings writer cannot access retired rows.
+- Desktop grid columns and integer cell widths follow the same current viewport.
+  Resize does not run reorder animations or delayed-width layout calculations.
+- Isolated regressions cover restart, binding cleanup, multiple models and grid
+  column boundaries. Native resize and live streaming remain activation checks.
+
 ## Desktop UI alignment — 2026-09-28
 
 Reason: bring the current mobile visual design to the desktop client.

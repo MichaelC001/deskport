@@ -147,7 +147,8 @@ NavigableDialog {
                 UiRow {
                     objectName: "panel-remove-" + panel.hostId
                     destructive: true; divider: false
-                    iconSource: "qrc:/res/ui/trash.svg"; title: qsTr("Remove from list")
+                    enabled: !panel.activeSession && !peerManager.busy
+                    iconSource: "qrc:/res/ui/trash.svg"; title: qsTr("Remove device")
                     onClicked: panel.run(function() { panel.removeRequested() })
                 }
             }

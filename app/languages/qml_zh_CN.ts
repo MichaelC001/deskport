@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>从本机彻底删除“%1”、已保存的绑定和设备设置？</translation></message>
     <message><source>Change address</source><translation>更改地址</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -1471,6 +1472,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Could not save device removal. Please retry.</source><translation>无法保存设备删除操作，请重试。</translation></message>
     <message><source>Memory %1</source><translation>内存 %1</translation></message>
     <message><source>Local memory usage</source><translation>本机内存占用</translation></message>
     <message><source>Unavailable</source><translation>不可用</translation></message>
@@ -3260,6 +3262,7 @@
 </context>
 <context>
     <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>删除设备</translation></message>
     <message><source>Connected</source><translation>已连接</translation></message>
     <message><source>Checking…</source><translation>正在检查…</translation></message>
     <message><source>Online</source><translation>在线</translation></message>

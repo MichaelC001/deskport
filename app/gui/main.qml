@@ -281,8 +281,14 @@ ApplicationWindow {
 
     Connections {
         target: peerManager
-        function onPeerBound(peer) {
-            ComputerManager.addBoundHost(peer)
+        function onDeviceRemovalFinished(hostId, success) {
+            if (success && ComputerManager.deleteHostById(hostId)) return
+            errorDialog.text = success ? qsTr("Could not save device removal. Please retry.") : peerManager.status
+            errorDialog.helpText = ""
+            errorDialog.open()
+        }
+        function onPeerBound(peer, explicitAdd) {
+            ComputerManager.addBoundHost(peer, explicitAdd)
             // The requesting side is looking at BindView while approval is
             // pending. Once trust is durable, return to the list where the new
             // device is now available. Incoming approvals happen on HostView

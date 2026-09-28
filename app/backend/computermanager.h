@@ -227,7 +227,7 @@ public:
     Q_INVOKABLE void stopPollingAsync();
 
     Q_INVOKABLE void addNewHostManually(QString address);
-    Q_INVOKABLE bool addBoundHost(QVariantMap peer);
+    Q_INVOKABLE bool addBoundHost(QVariantMap peer, bool explicitAdd = false);
 
     void addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address = NvAddress());
 
@@ -241,6 +241,7 @@ public:
 
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
+    Q_INVOKABLE bool deleteHostById(const QString& hostId);
 
     void renameHost(NvComputer* computer, QString name);
 
@@ -248,6 +249,7 @@ public:
 
 signals:
     void computerStateChanged(NvComputer* computer);
+    void computerRemoved(NvComputer* computer);
 
     void pairingCompleted(NvComputer* computer, QString error);
 

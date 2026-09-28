@@ -9,7 +9,7 @@ import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
-CenteredGridView {
+GridView {
     property ComputerModel computerModel : createModel()
     property bool controlCenterForActiveSession: false
     // Edit mode drags cards to reorder them, or drops a device on a device or
@@ -19,13 +19,12 @@ CenteredGridView {
     // Native macOS resizing delivers a width change for nearly every pixel.
     // Recomputing GridView columns and running displaced transitions for each
     // event makes cards flash between partially completed layouts.
-    property real settledWidth: width
     property bool resizing: false
     onWidthChanged: { resizing = true; resizeSettle.restart() }
     Timer {
         id: resizeSettle
         interval: 70
-        onTriggered: { pcGrid.settledWidth = pcGrid.width; pcGrid.resizing = false }
+        onTriggered: { pcGrid.resizing = false }
     }
     // Index of the card a held device would join, or -1.
     property int combineIndex: -1
@@ -71,7 +70,7 @@ CenteredGridView {
     }
     function confirmRemove(model, index, name) {
         deletePcDialog.targetModel = model
-        deletePcDialog.pcIndex = index
+        deletePcDialog.hostId = model.hostIdAt(index)
         deletePcDialog.pcName = name
         deletePcDialog.open()
     }
@@ -298,10 +297,12 @@ CenteredGridView {
     readonly property bool compact: false
     readonly property string sessionHostId: typeof window !== "undefined" ? window.activeHostId : ""
     readonly property string sessionHostName: typeof window !== "undefined" ? window.activeHostName : ""
-    minMargin: 0
+    boundsBehavior: Flickable.OvershootBounds
     topMargin: 16
     bottomMargin: 5
-    cellWidth: settledWidth / Math.max(1, Math.floor(settledWidth / 235))
+    // Integer cells avoid rounding a full row into one fewer column.
+    readonly property int columns: Math.max(1, Math.floor(width / 235))
+    cellWidth: Math.max(1, Math.floor(width / columns))
     cellHeight: 268
     objectName: qsTr("Devices")
 
@@ -403,8 +404,8 @@ CenteredGridView {
     }
 
     model: computerModel
-    move: Transition { enabled: !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
-    displaced: Transition { enabled: !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+    move: Transition { enabled: pcGrid.arranging && !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
+    displaced: Transition { enabled: pcGrid.arranging && !pcGrid.resizing; NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.OutQuad } }
 
     function promptNewGroup() { groupNameDialog.ask("", computerModel.defaultGroupName()) }
 
@@ -570,17 +571,16 @@ CenteredGridView {
         id: deletePcDialog
         objectName: "removeDeviceDialog"
         property var targetModel: null
-        property int pcIndex : -1
+        property string hostId: ""
         property string pcName : ""
         title: qsTr("Remove device?")
-        text: qsTr("Are you sure you want to remove '%1'?").arg(pcName)
+        text: qsTr("Delete '%1', its saved binding and device settings from this computer?").arg(pcName)
         standardButtons: Dialog.Ok | Dialog.Cancel
         destructive: true
         acceptText: qsTr("Remove")
 
         onAccepted: {
-            targetModel.deleteComputer(pcIndex)
-            if (targetModel !== computerModel) { computerModel.refreshFavorites(); pcGrid.refreshLayout() }
+            peerManager.removeDevice(hostId)
         }
     }
 

@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>„%1“, seine gespeicherte Kopplung und Geräteeinstellungen von diesem Computer löschen?</translation></message>
     <message><source>Change address</source><translation>Adresse ändern</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -1439,6 +1440,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Could not save device removal. Please retry.</source><translation>Das Löschen des Geräts konnte nicht gespeichert werden. Bitte erneut versuchen.</translation></message>
     <message><source>Editing</source><translation>Bearbeiten</translation></message>
     <message><source>Memory %1</source><translation>Speicher %1</translation></message>
     <message><source>Local memory usage</source><translation>Lokaler Speicherverbrauch</translation></message>
@@ -3200,6 +3202,7 @@
 </context>
 <context>
     <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>Gerät löschen</translation></message>
     <message><source>Connected</source><translation>Verbunden</translation></message>
     <message><source>Checking…</source><translation>Wird geprüft…</translation></message>
     <message><source>Online</source><translation>Online</translation></message>

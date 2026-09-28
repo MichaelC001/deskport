@@ -600,6 +600,7 @@ private slots:
             dir.path()+"/client", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
         QSignalSpy reimported(&restored, &PeerManager::peerBound); restored.restoreHosts();
         QCOMPARE(reimported.size(), 1);
+        QVERIFY(!reimported.first().at(1).toBool());
         const auto restoredPeer = reimported.first().first().toMap();
         QCOMPARE(restoredPeer.keys(), peer.keys());
         for (const auto& key : peer.keys())
@@ -1099,6 +1100,8 @@ private slots:
             b.approve(b.requestId());
             QTRY_COMPARE_WITH_TIMEOUT(aDone.size(),1,7000);
             QTRY_COMPARE_WITH_TIMEOUT(bDone.size(),1,7000);
+            QVERIFY(aDone.first().at(1).toBool());
+            QVERIFY(bDone.first().at(1).toBool());
             // Check at the peerBound emission itself, before any later event
             // loop turn can make the host ready.
             QVERIFY(!completedBeforeHostReady);
@@ -1130,8 +1133,14 @@ private slots:
             QTRY_VERIFY_WITH_TIMEOUT(!a.busy(),5000);
             QCOMPARE(substituted.size(),0); QVERIFY(c.peers().isEmpty());
             QVERIFY(a.status().contains("different device key"));
-            a.revoke(a.peers().first().toMap()["fingerprint"].toString());
+            QSignalSpy removed(&a, &PeerManager::deviceRemovalFinished);
+            a.removeDevice(bId);
+            QTRY_COMPARE_WITH_TIMEOUT(removed.size(),1,5000);
+            QCOMPARE(removed.first().first().toString(),bId);
+            QVERIFY(removed.first().at(1).toBool());
             QTRY_VERIFY_WITH_TIMEOUT(!a.busy(),5000); QVERIFY(a.peers().isEmpty());
+            restored.clear(); a.restoreHosts(); QCOMPARE(restored.size(),0);
+            QVERIFY(PeerStore::read(dir.path()+"/ab/peers.json")["peers"].toObject().isEmpty());
             QCOMPARE(PeerStore::read(dir.path()+"/ah/state.json")["root"].toObject()["named_devices"].toArray().size(),0);
         }
     }

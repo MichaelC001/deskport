@@ -222,6 +222,7 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>이 컴퓨터에서 '%1', 저장된 연결 및 기기 설정을 삭제할까요?</translation></message>
     <message><source>Change address</source><translation>주소 변경</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -1439,6 +1440,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Could not save device removal. Please retry.</source><translation>기기 삭제를 저장하지 못했습니다. 다시 시도하세요.</translation></message>
     <message><source>Editing</source><translation>편집 중</translation></message>
     <message><source>Memory %1</source><translation>메모리 %1</translation></message>
     <message><source>Local memory usage</source><translation>로컬 메모리 사용량</translation></message>
@@ -3200,6 +3202,7 @@
 </context>
 <context>
     <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>기기 삭제</translation></message>
     <message><source>Connected</source><translation>연결됨</translation></message>
     <message><source>Checking…</source><translation>확인 중…</translation></message>
     <message><source>Online</source><translation>온라인</translation></message>

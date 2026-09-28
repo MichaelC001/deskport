@@ -264,7 +264,7 @@ PeerManager::~PeerManager() {
     // QObject destroys children after derived members have gone away.
     for (auto link : m_IncomingLinks) disconnect(link, &QObject::destroyed, this, nullptr);
 }
-bool PeerManager::busy() const { return m_Link || m_TrustInFlight || !m_Revoking.isEmpty(); }
+bool PeerManager::busy() const { return m_Link || m_TrustInFlight || !m_Revoking.isEmpty() || !m_RemovingDevice.isEmpty(); }
 QString PeerManager::requestId() const {
     return m_Link && m_Link->incoming && m_Link->requested && !m_Link->accepted ? m_Link->transaction : QString();
 }
@@ -779,7 +779,8 @@ void PeerManager::granted(bool success) {
             m_Peers.remove(m_Revoking);
             if (!save()) { m_Peers = old; success = false; }
         }
-        m_Revoking.clear(); m_Status = success ? tr("This device's access to this computer was removed") : tr("Could not remove access; retry"); emit changed(); return;
+        m_Revoking.clear(); m_Status = success ? tr("This device's access to this computer was removed") : tr("Could not remove access; retry");
+        emit changed(); continueDeviceRemoval(success); return;
     }
     auto link = m_Link;
     if (!link || link->ended) { m_Status = tr("Binding interrupted. Review saved device access before retrying."); emit changed(); return; }
@@ -817,7 +818,7 @@ void PeerManager::finish(Link* link) {
     }
     const bool clientOnly = link->peer.value("role").toString() == "client";
     if (clientOnly) send(link, {{"type","bound"},{"tx",link->transaction}});
-    else emit peerBound(link->peer.toVariantMap());
+    else emit peerBound(link->peer.toVariantMap(), true);
     m_Status = m_ClientOnly ? tr("Host access saved. This computer can connect to the approved host.") :
         clientOnly ? tr("Client access approved. This device can connect to this computer.") : tr("Bound in both directions. Desktop availability depends on sharing and system permissions.");
     link->ended = true; m_Link = nullptr;
@@ -1077,15 +1078,41 @@ bool PeerManager::editPeer(const QString& fp, const QString& nameValue,
 }
 void PeerManager::revoke(const QString& fp) {
     if (busy() || !m_Peers.contains(fp)) return;
+    beginRevocation(fp);
+}
+void PeerManager::removeDevice(const QString& hostId) {
+    if (hostId.isEmpty()) return;
+    if (!m_Healthy) { emit deviceRemovalFinished(hostId, false); return; }
+    if (busy()) {
+        m_Status = tr("Finish the current connection before editing this device.");
+        emit changed(); emit deviceRemovalFinished(hostId, false); return;
+    }
+    m_RemovingDevice = hostId;
+    for (auto it = m_Peers.constBegin(); it != m_Peers.constEnd(); ++it)
+        if (it.value().toObject()["hostId"].toString().compare(hostId, Qt::CaseInsensitive) == 0)
+            m_RemovingFingerprints.append(it.key());
+    continueDeviceRemoval();
+}
+void PeerManager::continueDeviceRemoval(bool success) {
+    if (m_RemovingDevice.isEmpty()) return;
+    if (success && !m_RemovingFingerprints.isEmpty()) {
+        beginRevocation(m_RemovingFingerprints.takeFirst()); return;
+    }
+    const auto hostId = m_RemovingDevice;
+    m_RemovingDevice.clear(); m_RemovingFingerprints.clear();
+    emit changed(); emit deviceRemovalFinished(hostId, success);
+}
+void PeerManager::beginRevocation(const QString& fp) {
     if (m_ClientOnly) {
         // Forget only this local record. The remote host remains the authority
         // for revocation; never provision or restart a nonexistent local host.
         const auto previous = m_Peers;
         m_Peers.remove(fp);
-        if (!save()) {
+        const bool success = save();
+        if (!success) {
             m_Peers = previous; m_Status = tr("Could not remove the saved binding; retry");
         } else m_Status = tr("Saved binding removed. Remove the device from Devices separately; revoke access on the host to deny this client's certificate.");
-        emit changed(); return;
+        emit changed(); continueDeviceRemoval(success); return;
     }
     if (m_SessionLink && m_SessionLink->fingerprint == fp) fail(m_SessionLink, tr("Device access removed"));
     if (m_ClipboardLink && m_ClipboardLink->fingerprint == fp) fail(m_ClipboardLink, tr("Device access removed"));
