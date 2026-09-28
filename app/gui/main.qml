@@ -342,7 +342,8 @@ ApplicationWindow {
             }
             UiButton {
                 id: trafficSummary; objectName: "trafficSummary"
-                Layout.maximumWidth: Math.max(120, window.width - (topBar.compact ? 560 : 850))
+                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 560 : 850)))
+                Layout.fillWidth: true; Layout.minimumWidth: Math.min(implicitWidth, 120)
                 visible: !topBar.narrow
                 Layout.leftMargin: 4
                 flat: true; font.pixelSize: ui.small
@@ -391,11 +392,6 @@ ApplicationWindow {
                     onTriggered: memorySummary.sample()
                 }
             }
-            Label {
-                visible: stackView.depth > 1 && topBar.devicesPage === null && !topBar.compact
-                text: stackView.currentItem ? stackView.currentItem.objectName : ""
-                color: ui.muted; elide: Text.ElideRight; Layout.leftMargin: 8
-            }
             Item { Layout.fillWidth: true }
             // Shown while the connected client is in full screen; asks it to leave,
             // never to enter.
@@ -407,6 +403,17 @@ ApplicationWindow {
                 Accessible.name: qsTr("Ask client to leave full screen")
                 ToolTip.visible: hovered; ToolTip.text: qsTr("Ask the connected client to leave full screen")
                 onClicked: peerManager.releaseClientFullscreen()
+            }
+            // The name of the current page sits beside the buttons, so a click on
+            // any of them shows its effect right where the pointer is.
+            Label {
+                objectName: "pageName"
+                visible: !topBar.compact && text.length > 0
+                text: topBar.devicesPage !== null ? (topBar.devicesPage.arranging ? qsTr("Editing") : topBar.devicesPage.objectName)
+                    : stackView.currentItem ? stackView.currentItem.objectName : ""
+                color: ui.muted; elide: Text.ElideRight
+                // Shown whole; the traffic chip gives way first when the bar runs out of room.
+                Layout.maximumWidth: 220; Layout.rightMargin: 4
             }
             // Devices, manual, edit, refresh, sharing and settings. The selection
             // slides to the section the current page belongs to; nothing moves.

@@ -1024,7 +1024,16 @@ ApplicationWindow {
                 QCOMPARE(page->objectName(),QString("Manual"));
                 QVERIFY(findVisual(qobject_cast<QQuickItem*>(page),"chapter0"));
                 QVERIFY(window->grabWindow().save(shots+"/manual-dark.png"));
+                // The page name sits right beside the section buttons and follows them.
+                auto name=findVisual(window->contentItem(),"pageName"); QVERIFY(name);
+                QVERIFY(name->isVisible());
+                QCOMPARE(name->property("text").toString(),QString("Manual"));
+                const QPointF nameEnd=name->mapToScene(QPointF(name->width(),0));
+                const QPointF buttonsStart=qobject_cast<QQuickItem*>(manual)->mapToScene(QPointF(0,0));
+                QVERIFY(nameEnd.x() <= buttonsStart.x());
+                QVERIFY(buttonsStart.x()-nameEnd.x() < 24);
                 QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession")); QTest::qWait(150);
+                QCOMPARE(name->property("text").toString(),QString("Devices"));
             }
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testCards"));
             QTest::qWait(100);

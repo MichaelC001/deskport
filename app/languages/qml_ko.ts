@@ -1428,6 +1428,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Editing</source><translation>편집 중</translation></message>
     <message><source>Memory %1</source><translation>메모리 %1</translation></message>
     <message><source>Local memory usage</source><translation>로컬 메모리 사용량</translation></message>
     <message><source>Unavailable</source><translation>사용 불가</translation></message>

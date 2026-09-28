@@ -1431,6 +1431,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Editing</source><translation>編集中</translation></message>
     <message><source>Memory %1</source><translation>メモリ %1</translation></message>
     <message><source>Local memory usage</source><translation>この端末のメモリ使用量</translation></message>
     <message><source>Unavailable</source><translation>取得できません</translation></message>

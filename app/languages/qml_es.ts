@@ -1428,6 +1428,7 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Editing</source><translation>Edición</translation></message>
     <message><source>Memory %1</source><translation>Memoria %1</translation></message>
     <message><source>Local memory usage</source><translation>Uso de memoria local</translation></message>
     <message><source>Unavailable</source><translation>No disponible</translation></message>
