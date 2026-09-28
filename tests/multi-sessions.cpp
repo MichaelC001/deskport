@@ -82,6 +82,15 @@ private slots:
         QCOMPARE(row("a").value("state").toString(),QString("connected"));
         QCOMPARE(SessionGraph::branches(identity).first.size(),1);
         manager.select("a"); QTRY_VERIFY(row("a").value("visible").toBool());
+        manager.open("c","Third","127.0.0.1");
+        QTRY_COMPARE(row("c").value("state").toString(),QString("connected"));
+        QTRY_VERIFY(row("c").value("visible").toBool());
+        QSignalSpy devices(&manager,&MultiSessions::devicesRequested);
+        manager.disconnectSession("a");
+        QTRY_COMPARE(row("a").value("state").toString(),QString("disconnected"));
+        QCOMPARE(devices.count(),0);
+        QVERIFY(row("c").value("visible").toBool());
+        QCOMPARE(row("c").value("state").toString(),QString("connected"));
         manager.shutdown(); QTRY_VERIFY(!manager.busy());
         QCOMPARE(SessionGraph::branches(identity).first.size(),0);
     }

@@ -176,14 +176,16 @@ void MultiSessions::showDevices() {
 }
 void MultiSessions::disconnectSession(QString id) {
     auto entry = m_Entries.value(id); if (!entry) return;
+    const bool leavingViewer = m_Wanted == id || m_Visible == id;
     entry->state = "stopping";
-    if (m_Wanted == id) m_Wanted.clear();
+    if (leavingViewer) showDevices();
     send(entry, {{"command","disconnect"}});
     if (entry->process) {
         auto process = entry->process;
         QTimer::singleShot(7000, process, [entry,process] { if (entry->process == process && process->state() != QProcess::NotRunning) process->kill(); });
     } else ended(entry, {});
-    emit devicesRequested(); emit changed();
+    if (leavingViewer) emit devicesRequested();
+    emit changed();
 }
 void MultiSessions::reconnect(QString id) { auto entry=m_Entries.value(id); if (entry) send(entry,{{"command","reconnect"}}); }
 void MultiSessions::fullscreen() { send(m_Entries.value(m_Selected),{{"command","fullscreen"}}); }

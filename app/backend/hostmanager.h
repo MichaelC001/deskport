@@ -168,6 +168,7 @@ private:
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
+    bool m_NativeMenuTracking = false;
     QMenu* m_SessionsMenu = nullptr;
     QVariantList m_PendingSessionRows;
     bool m_SessionMenuRefreshQueued = false;

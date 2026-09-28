@@ -359,13 +359,17 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 }
 #ifdef Q_OS_MACOS
 void HostManager::showTrayMenu() {
-    if (auto chosen = deskPortShowStatusMenu(m_Menu)) chosen->trigger();
+    m_NativeMenuTracking = true;
+    const auto chosen = deskPortShowStatusMenu(m_Menu);
+    if (chosen) chosen->trigger();
+    m_NativeMenuTracking = false;
+    updateSessionMenu(m_PendingSessionRows);
 }
 #endif
 void HostManager::updateSessionMenu(const QVariantList& sessions) {
     // Do not destroy QAction objects while the native menu is tracking input.
     m_PendingSessionRows = sessions;
-    if (m_Menu->isVisible()) {
+    if (m_NativeMenuTracking || m_Menu->isVisible()) {
         if (!m_SessionMenuRefreshQueued) {
             m_SessionMenuRefreshQueued = true;
             QTimer::singleShot(100, this, [this] { m_SessionMenuRefreshQueued=false; updateSessionMenu(m_PendingSessionRows); });
