@@ -92,3 +92,11 @@ The public main branch now uses the reachable GitHub revision
 `e71b21808e15c8bcd55d4af3f7c0cbc769ef0bcb` in both the Git submodule
 and flake.lock. The private snapshot instructions above are historical;
 public releases must retain the matching public pins.
+
+## Local video pause candidate — 2026-09-28
+
+This development candidate pins core `a71542a` and its matching immutable NAR
+snapshot for optional video transmission pause. See core `protocol/VIDEO_PAUSE.md`.
+The local snapshot is preloaded on test machines; no signature bypass is used.
+Before public consumer integration, publish the reviewed core and restore a
+reachable GitHub pin. The current local path pin is not a public release input.

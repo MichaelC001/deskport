@@ -2307,3 +2307,39 @@ vendored RTSP client has no PAUSE command. Suspending remote video transmission
 is separate protocol work; it must not turn a presentation switch into
 disconnect/reconnect. Backend decode throttling also needs keyframe recovery
 validation before enabling it.
+
+### Optional video transmission pause candidate — 2026-09-28
+
+The desktop candidate negotiates `videoPause: 1` on the existing admitted TLS
+connection. Original UI/card actions remain unchanged. Background presentation
+requests stop video UDP at the host after the initial key frame; audio, control
+and the session lease remain alive. Legacy hosts continue streaming. The sender
+fences pause acknowledgments against frame sends, drops pre-resume encoded
+packets and requests a new IDR before forwarding video again. Capture/encoding
+suspension is outside this version. Input release and focus-based audio muting
+retain their existing implementation.
+
+Only macOS and Linux adapters advertise the capability. Ordered commands,
+completed duplicates, rapid desired-state coalescing, lease checks, timeout
+failure and resumed-control state normalization are covered by isolated tests.
+The wire contract is in core `protocol/VIDEO_PAUSE.md`; this local candidate uses
+an immutable NAR snapshot matching its core Git commit. It is not a public
+release pin and must be replaced with a reachable reviewed core pin before public
+integration.
+
+Validation so far: core tests, 117 existing binding cases, 11 additional protocol
+cases (13 including setup/cleanup), 26 UI cases, 10 desktop-state cases, and two
+real worker processes with 20 isolated switches pass on macOS. The signed macOS
+candidate and Linux Nix candidate both build. The 13 protocol checks and isolated
+worker checks also pass on Linux. The built Linux Sunshine passes the real
+loopback management endpoint tests for authentication, lease isolation, malformed
+state and repeated pause/resume without creating a video stream. The packaged worker test must run outside
+the devShell's Qt plugin environment, which points at store plugins rather than
+bundled frameworks.
+
+Three-machine video/network acceptance is pending the server candidate run.
+Neither build success nor protocol acknowledgments prove stopped network traffic,
+new displayed frames, switching latency, physical input or audio routing. Temporary
+viewer testing is authorized; replacing running server instances requires the
+separate activation authorization described in the handoff. No deployed server
+has been replaced, and no release or mobile source has been published.

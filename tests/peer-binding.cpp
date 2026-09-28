@@ -251,7 +251,7 @@ private slots:
     }
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -322,6 +322,30 @@ private slots:
                 QCOMPARE(state()["takeovers"].toInt(),0);
             }
             incoming.abort(); host.stop(); return;
+        }
+        if (scenario.startsWith("video-")) {
+            auto videoQuery = query;
+            if (scenario != "video-legacy") videoQuery["videoPause"] = 1;
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,videoQuery); QVERIFY(receive(old)["admitted"].toBool());
+            auto active = state(); active["sessions"] = 1; writeState(active);
+            QJsonObject pause{{"type","video-state"},{"seq",1},{"paused",true}};
+            if (scenario == "video-intruder") {
+                connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,pause);
+                QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),0);
+                send(old,{{"type","display-ping"}}); QCOMPARE(receive(old)["type"].toString(),QString("display-pong"));
+            } else if (scenario == "video-legacy") {
+                send(old,pause); QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),0);
+            } else {
+                send(old,pause); const auto first = receive(old);
+                QCOMPARE(first["type"].toString(),QString("video-result")); QVERIFY(!first.contains("error"));
+                QVERIFY(state()["paused"].toBool());
+                send(old,pause); QCOMPARE(receive(old),first); QCOMPARE(state()["videoCommands"].toInt(),1);
+                pause["paused"] = false; pause["seq"] = scenario == "video-stale" ? 1 : 2;
+                send(old,pause);
+                if (scenario == "video-stale") { QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),1); }
+                else { QVERIFY(!receive(old).contains("error")); QVERIFY(!state()["paused"].toBool()); QCOMPARE(state()["videoCommands"].toInt(),2); }
+            }
+            old.abort(); incoming.abort(); host.stop(); return;
         }
         if (scenario == "client-window") {
             // The host offers "leave full screen" only while an opted-in client reports it.
@@ -964,6 +988,62 @@ private slots:
         for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
         QCOMPARE(clientReplies, 6);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void videoPauseNegotiation_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* value : {"legacy", "supported", "error", "wrong-sequence", "disconnect", "timeout", "recovered"})
+            QTest::newRow(value) << QString(value);
+    }
+    void videoPauseNegotiation() {
+        QFETCH(QString, scenario);
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"), 0, scenario == "recovered" ? "lease" : QString());
+        auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280,720), 1); });
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
+        QJsonObject meta{{"adaptiveDisplay",1},{"sessionTakeover",1},{"sessionTopology",1}};
+        if (scenario != "legacy") meta["videoPause"] = 1;
+        server.send({{"type","hello"},{"meta",meta}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        const auto query = server.messages.takeFirst();
+        QCOMPARE(query["videoPause"].toInt(), scenario == "legacy" ? 0 : 1);
+        server.send({{"type","session-state"},{"admitted",true}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        auto request = server.messages.takeFirst();
+        server.send({{"type","display-result"},{"seq",request["seq"]},{"width",1280},{"height",720}});
+        QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready,5000);
+        QVERIFY(result.get());
+        int firstSequence = 1;
+        if (scenario == "recovered") {
+            QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+            request = server.messages.takeFirst();
+            QCOMPARE(request["type"].toString(),QString("video-state"));
+            QVERIFY(!request["paused"].toBool());
+            server.send({{"type","video-result"},{"seq",1},{"paused",false}});
+            firstSequence = 2;
+        }
+        channel.setVideoPaused(true);
+        if (scenario == "legacy") {
+            QTest::qWait(300); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed()); return;
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["type"].toString(),QString("video-state"));
+        QCOMPARE(request["seq"].toInt(),firstSequence); QVERIFY(request["paused"].toBool());
+        // Coalesce several switches while the first command is in flight.
+        channel.setVideoPaused(false); channel.setVideoPaused(true); channel.setVideoPaused(false);
+        QTest::qWait(100); QVERIFY(server.messages.isEmpty());
+        QJsonObject reply{{"type","video-result"},{"seq",firstSequence},{"paused",true}};
+        if (scenario == "error") reply["error"] = "unavailable";
+        if (scenario == "wrong-sequence") reply["seq"] = 2;
+        if (scenario == "disconnect") server.socket->abort(); else if (scenario != "timeout") server.send(reply);
+        if (scenario != "supported" && scenario != "recovered") { QTRY_VERIFY_WITH_TIMEOUT(channel.failed(),14000); return; }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["seq"].toInt(),firstSequence+1); QVERIFY(!request["paused"].toBool());
+        server.send({{"type","video-result"},{"seq",firstSequence+1},{"paused",false}});
+        QTest::qWait(150); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed());
     }
     void adaptiveDisplayNegotiatesFiniteModes() {
         const auto aCert=credential("TEST_CERT_A"),bCert=credential("TEST_CERT_B");

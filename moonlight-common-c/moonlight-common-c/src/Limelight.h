@@ -838,6 +838,9 @@ int LiFindExternalAddressIP4(const char* stunServer, unsigned short stunPort, un
 // if CAPABILITY_DIRECT_SUBMIT is not set for the video renderer.
 int LiGetPendingVideoFrames(void);
 
+// True after a complete key frame in the current stream; safe from any thread.
+bool LiHasVideoKeyFrame(void);
+
 // Returns the number of queued audio frames ready for delivery. Only relevant
 // if CAPABILITY_DIRECT_SUBMIT is not set for the audio renderer. For most uses,
 // LiGetPendingAudioDuration() is probably a better option than this function.

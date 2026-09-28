@@ -116,6 +116,22 @@ with tempfile.TemporaryDirectory(prefix='deskport-live-trust-') as tmp:
             status, reserved = request('sessions', {'action': 'acquire', 'uuid': 'existing',
                 'lease': 'isolated-lease', 'snapshot': initial['snapshot']})
             assert status == 200 and reserved['status'] and reserved['reserved']
+            # The reserved lease may normalize video state before RTSP starts.
+            # This tests the real endpoint and gate, not video delivery.
+            command = dict(action='video', lease='isolated-lease', paused=True)
+            for headers, auth in [({}, False), ({'Origin': 'https://example.invalid'}, True),
+                                   ({'Referer': 'https://example.invalid'}, True)]:
+                status, _ = request('sessions', command, headers=headers, authenticated=auth)
+                assert status != 200
+            for bad in (dict(command, lease='wrong-lease'), dict(command, paused='true')):
+                status, result = request('sessions', bad)
+                assert status == 200 and not result['status']
+            for paused in (True, True, False, False, True, False):
+                status, result = request('sessions', dict(command, paused=paused))
+                assert status == 200 and result['status'] and result['paused'] is paused
+                assert result['framesSent'] == 0 and result['framesSuppressed'] == 0
+                _, after = request('sessions')
+                assert after == reserved, 'Video command changed admission or stream count'
             grant = {'uuid': 'added', 'name': 'Added test client', 'cert': (work / 'added.pem').read_text()}
             for headers, auth in [({}, False), ({'Origin': 'https://example.invalid'}, True),
                                    ({'Referer': 'https://example.invalid'}, True)]:
@@ -151,7 +167,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-live-trust-') as tmp:
                 assert after == reserved, 'Removing trust changed the unrelated admission lease'
                 assert len(json.loads(state.read_text())['root']['named_devices']) == 1
                 assert process.poll() is None
-            print('PASS: live grant/removal, TLS revocation, preserved lease/client/state, idempotence, local API authorization')
+            print('PASS: live grant/removal, TLS revocation, preserved lease/client/state, idempotence, local API authorization, video gate lease/type/idempotence (no stream)')
         except Exception:
             # This log belongs only to the disposable host with synthetic data.
             print((work / 'process.log').read_text(errors='replace')[-12000:], file=sys.stderr)

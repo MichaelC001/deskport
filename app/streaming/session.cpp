@@ -2538,6 +2538,7 @@ void Session::execInternal()
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
+        if (m_AdaptiveDisplay && LiHasVideoKeyFrame()) m_AdaptiveDisplay->setVideoPaused(!m_ViewerRequested);
         if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();
             if (m_Clipboard->status() != clipboardStatus) {

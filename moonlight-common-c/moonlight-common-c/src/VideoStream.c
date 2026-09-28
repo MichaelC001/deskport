@@ -1,4 +1,5 @@
 #include "Limelight-internal.h"
+#include <stdatomic.h>
 
 #define FIRST_FRAME_MAX 1500
 #define FIRST_FRAME_TIMEOUT_SEC 10
@@ -18,7 +19,9 @@ static PLT_THREAD decoderThread;
 
 static bool receivedDataFromPeer;
 static uint64_t firstDataTimeMs;
-static bool receivedFullFrame;
+static atomic_bool receivedFullFrame;
+
+bool LiHasVideoKeyFrame(void) { return atomic_load(&receivedFullFrame); }
 
 // We can't request an IDR frame until the depacketizer knows
 // that a packet was lost. This timeout bounds the time that

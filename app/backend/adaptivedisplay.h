@@ -35,6 +35,7 @@ public:
     void cancel();
     bool wasTakenOver(int timeoutMs = 0);
     bool admissionRequired();
+    void setVideoPaused(bool paused);
 private:
     void run() override;
     QString m_Address;
@@ -54,5 +55,6 @@ private:
     QString m_GraphIdentity, m_GraphToken, m_TopologyError;
     bool m_GraphReserved = false;
     bool m_AdmissionRequired = true, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;
+    bool m_VideoPaused = false;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };

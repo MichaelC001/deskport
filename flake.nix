@@ -57,6 +57,7 @@
               python3 ${./scripts/patch-host-memory-diagnostics.py} . ${./host/common/memorydiagnostics.h}
               cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
               python3 ${./scripts/patch-host-encoder-policy.py} .
+              python3 ${./scripts/patch-host-video-pause.py} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {

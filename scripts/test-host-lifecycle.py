@@ -101,7 +101,12 @@ if (state / "credentials/cert.pem").exists():
             output = dict(status=True, version=1)
             if self.command == "POST":
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                if body.get("action") == "release":
+                if body.get("action") == "video":
+                    output["status"] = bool(current["lease"]) and current["lease"] == body.get("lease") and current["sessions"] <= 1
+                    if output["status"]:
+                        current["paused"] = body["paused"]
+                        current["videoCommands"] = current.get("videoCommands", 0) + 1
+                elif body.get("action") == "release":
                     if current["lease"] == body.get("lease"):
                         current.update(lease="", generation=current["generation"] + 1)
                 elif body.get("action") == "acquire":

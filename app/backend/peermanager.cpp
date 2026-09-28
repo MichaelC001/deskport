@@ -86,6 +86,9 @@ struct PeerManager::Link : QObject {
     // Last full-screen state reported with display-resize; older clients do not
     // report it and keep the request available.
     bool clientFullScreen = true;
+    bool videoPause = false, videoPending = false;
+    int videoSequence = 0;
+    QJsonObject videoResult;
     bool lifecycle = false, recovering = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
@@ -313,6 +316,9 @@ QJsonObject PeerManager::metadata() const {
     meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
     meta["sessionTopology"] = DP_SESSION_TOPOLOGY_VERSION;
     meta["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+    meta["videoPause"] = DP_VIDEO_PAUSE_VERSION;
+#endif
     meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     meta["clipboardV2"] = 1;
@@ -664,6 +670,31 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         send(link, reply); return;
     }
     if (link->clipboardControl) { fail(link, tr("Unexpected clipboard message")); return; }
+    if (type == DP_MESSAGE_VIDEO_STATE) {
+        const auto peer = m_Peers.value(link->fingerprint).toObject();
+        const int seq = message["seq"].toInt();
+        if (!link->incoming || !link->videoPause || !link->sessionAdmitted || link != m_SessionLink ||
+            link->recovering || m_SessionOperation || !peer["ready"].toBool() || !peer["granted"].toBool() ||
+            m_Revoking == link->fingerprint || !message["paused"].isBool() || seq <= 0 ||
+            message["seq"].toDouble() != seq) { fail(link, tr("Invalid video state request")); return; }
+        if (seq == link->videoSequence && !link->videoResult.isEmpty() &&
+            message["paused"] == link->videoResult["paused"]) { send(link, link->videoResult); return; }
+        if (link->videoPending || seq != link->videoSequence + 1) { fail(link, tr("Invalid video state sequence")); return; }
+        link->videoPending = true;
+        link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+        const QString lease = link->sessionLease;
+        const bool paused = message["paused"].toBool();
+        m_Host->sessionControl({{"action", "video"}, {"lease", lease}, {"paused", paused}}, link,
+            [this, link, lease, paused, seq](QJsonObject result) {
+                if (link->ended || link != m_SessionLink || lease != link->sessionLease) return;
+                link->videoPending = false;
+                QJsonObject reply{{"type", DP_MESSAGE_VIDEO_RESULT}, {"seq", seq}, {"paused", paused}};
+                if (!result["status"].toBool()) reply["error"] = "unavailable";
+                link->videoSequence = seq; link->videoResult = reply;
+                send(link, reply);
+            });
+        return;
+    }
     if (type == DP_MESSAGE_DISPLAY_RESIZE || type == DP_MESSAGE_DISPLAY_PING) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || !peer["ready"].toBool() || !peer["granted"].toBool() ||
@@ -887,6 +918,7 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
         m_Revoking == link->fingerprint) { sessionError(link, "unauthorized"); return; }
     const bool takeover = message["type"] == DP_MESSAGE_SESSION_TAKEOVER;
     if (takeover && !link->sessionOptIn) { sessionError(link, "unauthorized"); return; }
+    if (!takeover) link->videoPause = message["videoPause"].toInt() == DP_VIDEO_PAUSE_VERSION;
     if (!takeover) link->topologyOptIn = message["sessionTopology"].toInt() == DP_SESSION_TOPOLOGY_VERSION;
     // Old client-only mobile peers cannot be a host in a return path. Desktop
     // peers must register pending edges; otherwise concurrent cycles are unsafe.
