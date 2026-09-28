@@ -262,9 +262,27 @@ ApplicationWindow {
         return str.startsWith(className + "(") || str.startsWith(className + "_QML");
     }
 
+    function showAddDevice(address) {
+        bindingPage.setAddress(address || "")
+        addDeviceDialog.open()
+    }
+
+    NavigableDialog {
+        id: addDeviceDialog
+        objectName: "addDeviceDialog"
+        title: qsTranslate("BindView", "Add a device")
+        height: Math.min(maximumHeight, 600)
+        padding: 0
+        topPadding: 0
+        bottomPadding: 12
+        contentItem: BindView { id: bindingPage }
+        onOpened: bindingPage.focusAddress()
+    }
+
     function navigateTo(url, objectType)
     {
         if (objectType === "PcView") { showDevices(); return }
+        if (objectType === "BindView") { showAddDevice(); return }
         var existingItem = stackView.find(function(item, index) {
             return qmltypeof(item, objectType) && (!activeStreamPage || index > activeStreamPage.StackView.index)
         })
@@ -289,12 +307,8 @@ ApplicationWindow {
         }
         function onPeerBound(peer, explicitAdd) {
             ComputerManager.addBoundHost(peer, explicitAdd)
-            // The requesting side is looking at BindView while approval is
-            // pending. Once trust is durable, return to the list where the new
-            // device is now available. Incoming approvals happen on HostView
-            // and must not change the operator's current page.
-            if (qmltypeof(stackView.currentItem, "BindView"))
-                Qt.callLater(showDevices)
+            // Automatic saved-peer refresh must not dismiss a form being edited.
+            if (explicitAdd && addDeviceDialog.visible) addDeviceDialog.close()
         }
     }
     BindingApproval {

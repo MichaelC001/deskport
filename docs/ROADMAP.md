@@ -1,3 +1,11 @@
+## Manual device entry overlay — 2026-09-28
+
+Reason: adding a device should use the same dismissible floating panel as device
+settings and details. Every add entry point now opens the shared centered dialog
+without changing the underlying page. Its body scrolls, its close button stays
+visible, and clicking outside or pressing Escape dismisses it. A successful new
+binding closes the panel; background peer refresh does not interrupt text entry.
+
 ## Device removal and responsive grid — 2026-09-28
 
 Reason: offline devices returned after restart, and resizing could leave an empty

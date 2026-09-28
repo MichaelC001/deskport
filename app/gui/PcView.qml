@@ -99,8 +99,7 @@ GridView {
         } else if (row.paired) {
             stackView.push(Qt.resolvedUrl("DesktopSegue.qml"), {"computerIndex": row.sourceIndex, "objectName": row.name})
         } else {
-            navigateTo("qrc:/gui/BindView.qml", "BindView")
-            stackView.currentItem.setAddress(row.hostAddress)
+            showAddDevice(row.hostAddress)
         }
         return true
     }

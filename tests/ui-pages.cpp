@@ -798,9 +798,23 @@ ApplicationWindow {
         // Discard only initial setup navigation, which is scheduled once.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding")); QTest::qWait(100);
-        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Add a device"));
+        auto addDevicePopup=root->findChild<QObject*>("addDeviceDialog"); QVERIFY(addDevicePopup);
+        QTRY_VERIFY(addDevicePopup->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),1);
+        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
+        QVERIFY(addDevicePopup->property("modal").toBool());
+        QVERIFY(addDevicePopup->property("width").toReal() <= 460);
+        QTest::qWait(200);
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/add-device-popup.png"));
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,QPoint(5,window->height()/2));
+        QTRY_VERIFY(!addDevicePopup->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),1);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding"));
+        QTRY_VERIFY(addDevicePopup->property("visible").toBool());
         const QVariantMap newlyBound{{"name","New computer"}};
         QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound),Q_ARG(bool,true)));
+        QTRY_VERIFY(!addDevicePopup->property("visible").toBool());
         QTRY_COMPARE(root->property("testDepth").toInt(),1);
         QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
         QCOMPARE(session.executions, 0); // Binding never starts a stream.

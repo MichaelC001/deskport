@@ -9,6 +9,7 @@ UiPage {
     heading: peerManager.clientOnly ? qsTr("Request access to a computer") : qsTr("One confirmation. Both directions.")
     description: qsTr("Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.")
     function setAddress(value) { address.text = value }
+    function focusAddress() { address.forceActiveFocus() }
     UiCard {
         ColumnLayout {
             anchors.fill: parent; spacing: 14
