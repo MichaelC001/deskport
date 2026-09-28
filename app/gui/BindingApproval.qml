@@ -10,18 +10,22 @@ NavigableDialog {
     property string peerText: ""
     property bool clientOnly: false
     title: qsTr("Bind with this device?")
-    modal: true
-    anchors.centerIn: parent
-    width: Math.max(280, Math.min(appWindow.width - 40, 540))
-    closePolicy: Popup.NoAutoClose
+    // Closing the panel any other way answers "Not now".
+    property bool answered: false
     footer: DialogButtonBox {
+        alignment: Qt.AlignRight
+        spacing: 8
+        padding: 20; topPadding: 4
         background: Item {}
         UiButton { text: qsTr("Not now"); DialogButtonBox.buttonRole: DialogButtonBox.RejectRole }
-        UiButton { text: qsTr("Allow & bind"); highlighted: true; DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole }
+        UiButton { text: qsTr("Allow & bind"); filled: true; DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole }
     }
-    onAccepted: manager.approve(transaction)
-    onRejected: manager.reject(transaction)
+    onAboutToShow: answered = false
+    onAccepted: { answered = true; manager.approve(transaction) }
+    onRejected: { answered = true; manager.reject(transaction) }
+    onClosed: if (!answered) { answered = true; manager.reject(transaction) }
     contentItem: Label {
+        color: ui.text
         textFormat: Text.PlainText
         text: bindingApproval.peerText + "\n\n" + (clientOnly ? qsTr("Allow this device to view and control this computer? Binding saves permission without starting a connection or interrupting existing sessions. This does not grant access to the requesting device. Accept only a request you are expecting.") : qsTr("Allow this device and this computer to view and control each other? Binding saves permission without starting a connection or interrupting existing sessions. Choose Connect when you are ready. Accept only a request you are expecting."))
         wrapMode: Text.WordWrap
@@ -39,8 +43,11 @@ NavigableDialog {
             bindingApproval.appWindow.requestActivate()
         }
         function onChanged() {
-            if (bindingApproval.visible && bindingApproval.manager.requestId !== bindingApproval.transaction)
+            if (bindingApproval.visible && bindingApproval.manager.requestId !== bindingApproval.transaction) {
+                // The request ended elsewhere; closing must not answer it.
+                bindingApproval.answered = true
                 bindingApproval.close()
+            }
         }
     }
 }

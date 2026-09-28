@@ -494,6 +494,17 @@
         <source>Drag cards to change their order, or onto another device to make a group.</source>
         <translation>카드를 끌어 순서를 바꾸고, 다른 기기 위에 놓으면 그룹이 됩니다.</translation>
     </message>
+    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>%1와(과)의 세션이 열려 있습니다. 다른 컴퓨터에 연결하려면 먼저 연결을 끊으세요.</translation></message>
+    <message><source>Finish editing</source><translation>편집 마치기</translation></message>
+    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>기기를 끌어 순서를 바꾸거나, 패널 밖으로 끌어 그룹에서 뺍니다.</translation></message>
+    <message><source>Checking…</source><translation>확인 중…</translation></message>
+    <message><source>Computer</source><translation>컴퓨터</translation></message>
+    <message><source>This group is empty.</source><translation>이 그룹은 비어 있습니다.</translation></message>
+    <message><source>Remove device?</source><translation>기기를 제거할까요?</translation></message>
+    <message><source>Remove</source><translation>제거</translation></message>
+    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>그룹을 삭제해도 기기는 남아 기기 목록으로 돌아갑니다.</translation></message>
+    <message><source>Open group</source><translation>그룹 열기</translation></message>
+    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>이 컴퓨터에서만 표시됩니다. 비워 두면 원래 이름을 사용합니다.</translation></message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1673,6 +1684,7 @@
         <source>How to use DeskPort</source>
         <translation>DeskPort 사용법</translation>
     </message>
+    <message><source>Add a legacy host</source><translation>기존 방식 호스트 추가</translation></message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2058,6 +2070,19 @@
         <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
         <translation>로그를 끄면 새 기록이 중지됩니다. 진단 데이터를 삭제하면 기존 로그와 ZIP이 제거됩니다. 이전 버전의 원시 로그는 포함하지 않습니다.</translation>
     </message>
+    <message><source>System</source><translation>시스템</translation></message>
+    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>기본적으로 꺼져 있습니다. 로그는 직접 공유하기 전까지 이 컴퓨터에만 남습니다. 기록 내용은 '개인정보 보호'를 참조하세요.</translation></message>
+    <message><source>About</source><translation>정보</translation></message>
+    <message><source>Version</source><translation>버전</translation></message>
+    <message><source>Privacy</source><translation>개인정보 보호</translation></message>
+    <message><source>Licenses</source><translation>라이선스</translation></message>
+    <message><source>Create ZIP and open issue</source><translation>ZIP 만들고 이슈 열기</translation></message>
+    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort에는 계정도 DeskPort 서버도 없습니다. 기기끼리 직접 연결됩니다. 설정, 저장된 기기, 승인은 이 컴퓨터에만 저장됩니다.</translation></message>
+    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>업데이트를 확인할 때 DeskPort는 GitHub에 최신 릴리스를 조회합니다. Moonlight와 마찬가지로 moonlight-stream.org에서 공개된 호스트 호환성 데이터와 컨트롤러 매핑을 내려받습니다. 문제 신고는 브라우저에서 이슈 초안만 열며, 무엇을 제출할지는 직접 결정합니다.</translation></message>
+    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort는 GNU General Public License 버전 3 이상에 따른 자유 소프트웨어입니다. Moonlight Qt에서 파생되었으며 수정된 Sunshine 호스트를 포함합니다.</translation></message>
+    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>공유 DeskPort 카탈로그는 MIT 라이선스로 제공됩니다. 운영 체제 아이콘은 퍼블릭 도메인(CC0 1.0)입니다.</translation></message>
+    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt, FFmpeg, SDL 및 기타 포함된 라이브러리는 각자의 라이선스를 따릅니다. 해당 고지는 각 패키지에 포함되어 있습니다.</translation></message>
+    <message><source>Source code and modifications: %1</source><translation>소스 코드 및 수정 사항: %1</translation></message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2544,6 +2569,7 @@
         <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
         <translation>이 기기에 저장된 %1 연결 승인을 삭제할까요? 기기 목록에서는 별도로 제거해야 합니다. 이 기기의 접근 권한을 취소하려면 호스트에서도 제거하세요.</translation>
     </message>
+    <message><source>Remove</source><translation>제거</translation></message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2819,6 +2845,8 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>데스크톱 로딩 시간이 초과되었습니다. 기기 목록에서 다시 시도하세요.</translation></message>
 <message><source>Connecting to desktop…</source><translation>데스크톱에 연결 중…</translation></message>
 <message><source>Back to devices</source><translation>기기 목록으로 돌아가기</translation></message>
+    <message><source>Close</source><translation>닫기</translation></message>
+    <message><source>Cancel</source><translation>취소</translation></message>
 </context>
 <context>
     <name>DeviceSettings</name>
@@ -2897,6 +2925,13 @@
         <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
         <translation>연결 중에는 Ctrl+Alt+Shift+X로도 전체 화면을 전환할 수 있습니다.</translation>
     </message>
+    <message><source>Desktop fine tuning</source><translation>데스크톱 미세 조정</translation></message>
+    <message><source>Main + mirror</source><translation>기본 + 복제</translation></message>
+    <message><source>Main only</source><translation>기본 화면만</translation></message>
+    <message><source>Extended</source><translation>확장</translation></message>
+    <message><source>Fit to window</source><translation>창에 맞추기</translation></message>
+    <message><source>Sound</source><translation>소리</translation></message>
+    <message><source>Input</source><translation>입력</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
@@ -3136,6 +3171,17 @@
         <source>Report a problem</source>
         <translation>문제 신고</translation>
     </message>
+    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>자동은 해상도에 따라 대역폭 상한을 선택합니다. 데이터 절약은 30 fps, 영상 상한 5 Mbps입니다.</translation></message>
+    <message><source>Picture mode</source><translation>화면 모드</translation></message>
+    <message><source>Automatic (recommended)</source><translation>자동(권장)</translation></message>
+    <message><source>Clear</source><translation>선명도 우선</translation></message>
+    <message><source>Smooth</source><translation>부드러움 우선</translation></message>
+    <message><source>Save data</source><translation>데이터 절약</translation></message>
+    <message><source>Custom</source><translation>사용자 정의</translation></message>
+    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>연결 중에는 Ctrl+Alt+Shift+X로도 전체 화면을 전환할 수 있습니다.</translation></message>
+    <message><source>Bandwidth</source><translation>대역폭</translation></message>
+    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
+    <message><source>All streaming options</source><translation>모든 스트리밍 옵션</translation></message>
 </context>
 <context>
     <name>SdlInputHandler</name>
@@ -3147,5 +3193,41 @@
     <name>ClipboardChannel</name>
     <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>클립보드 공유가 중지되었습니다. 다시 연결해 보세요.</translation></message>
     <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>클립보드 공유를 사용할 수 없습니다. 다시 연결해 보세요. 데스크톱 제어에는 영향이 없습니다.</translation></message>
+</context>
+<context>
+    <name>NavigableDialog</name>
+    <message><source>Close</source><translation>닫기</translation></message>
+</context>
+<context>
+    <name>DevicePanel</name>
+    <message><source>Connected</source><translation>연결됨</translation></message>
+    <message><source>Checking…</source><translation>확인 중…</translation></message>
+    <message><source>Online</source><translation>온라인</translation></message>
+    <message><source>Online · access not set up</source><translation>온라인 · 접근 미설정</translation></message>
+    <message><source>Offline</source><translation>오프라인</translation></message>
+    <message><source>Device settings</source><translation>기기 설정</translation></message>
+    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>%1에서 DeskPort 또는 호스트가 실행 중이고 두 기기가 서로 연결될 수 있는지 확인하세요. 상단 바의 새로고침으로 다시 확인합니다.</translation></message>
+    <message><source>Original name</source><translation>원래 이름</translation></message>
+    <message><source>System</source><translation>시스템</translation></message>
+    <message><source>Unknown</source><translation>알 수 없음</translation></message>
+    <message><source>Connection</source><translation>연결 방식</translation></message>
+    <message><source>DeskPort binding</source><translation>DeskPort 연결 승인</translation></message>
+    <message><source>Legacy pairing</source><translation>기존 방식 페어링</translation></message>
+    <message><source>Not set up</source><translation>설정 안 됨</translation></message>
+    <message><source>Address</source><translation>주소</translation></message>
+    <message><source>Technical details</source><translation>기술 정보</translation></message>
+    <message><source>Reconnect</source><translation>다시 연결</translation></message>
+    <message><source>Toggle full screen</source><translation>전체 화면 전환</translation></message>
+    <message><source>Disconnect</source><translation>연결 끊기</translation></message>
+    <message><source>Change address</source><translation>주소 변경</translation></message>
+    <message><source>Set alias</source><translation>별칭 설정</translation></message>
+    <message><source>Pair with a legacy PIN</source><translation>기존 PIN 방식으로 페어링</translation></message>
+    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>Sunshine 등 DeskPort 연결 승인을 지원하지 않는 호스트용입니다.</translation></message>
+    <message><source>Move out of group</source><translation>그룹에서 빼기</translation></message>
+    <message><source>Remove from list</source><translation>목록에서 제거</translation></message>
+</context>
+<context>
+    <name>HelpView</name>
+    <message><source>Manual</source><translation>설명서</translation></message>
 </context>
 </TS>

@@ -29,7 +29,15 @@ QtObject {
         return c
     }
     readonly property color accentText: luminance(accent) > 0.179 ? "#000000" : "#ffffff"
+    // Accent at 12% (light) or 16% (dark): selections, tint buttons, icon tiles.
+    readonly property color tint: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.16 : 0.12)
     readonly property color danger: dark ? "#ff6b6b" : "#d64545"
+    // Device status lights: online, checking, offline.
+    readonly property color online: dark ? "#5fd394" : "#23875a"
+    readonly property color checking: dark ? "#ffc66d" : "#c7810c"
+    readonly property color offline: dark ? "#8d97a8" : "#98a1b0"
+    // Dimmed backdrop behind floating panels.
+    readonly property color scrim: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.32)
     function mix(base, tint, amount) {
         return Qt.rgba(base.r * (1 - amount) + tint.r * amount,
                        base.g * (1 - amount) + tint.g * amount,

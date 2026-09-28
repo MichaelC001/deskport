@@ -547,9 +547,6 @@ ApplicationWindow {
     NavigableDialog {
         id: updateDialog; objectName: "updateDialog"
         title: qsTr("DeskPort updates")
-        modal: true; anchors.centerIn: parent
-        width: Math.min(window.width - 40, 560)
-        standardButtons: Dialog.Close
         contentItem: ColumnLayout {
             spacing: 12
             Label {
@@ -573,6 +570,7 @@ ApplicationWindow {
                     readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap
                     textFormat: TextEdit.PlainText
                     color: ui.text
+                    background: Rectangle { radius: 10; color: ui.raised }
                 }
             }
             Label {
@@ -580,13 +578,16 @@ ApplicationWindow {
                 color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
             RowLayout {
+                Layout.fillWidth: true
                 UiButton {
                     text: qsTr("Check again")
                     enabled: AutoUpdateChecker.status !== "checking"
                     onClicked: AutoUpdateChecker.start()
                 }
+                Item { Layout.fillWidth: true }
                 UiButton {
                     text: qsTr("Open download page")
+                    highlighted: true
                     enabled: AutoUpdateChecker.releaseUrl.length > 0
                     onClicked: Qt.openUrlExternally(AutoUpdateChecker.releaseUrl)
                 }
@@ -594,27 +595,23 @@ ApplicationWindow {
         }
     }
     NavigableDialog {
-        id: trafficDetails; title: qsTr("Session data"); modal: true
-        width: Math.min(window.width - 40, 460); anchors.centerIn: parent
-        standardButtons: Dialog.Ok
+        id: trafficDetails; title: qsTr("Session data")
         contentItem: ColumnLayout {
             spacing: 12
             Label { text: qsTr("Received: %1").arg(trafficSummary.amount(trafficSummary.received)); color: ui.text }
             Label { text: qsTr("Sent: %1").arg(trafficSummary.amount(trafficSummary.sent)); color: ui.text }
-            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     NavigableDialog {
-        id: memoryDetails; objectName: "memoryDetails"; title: qsTr("Local memory usage"); modal: true
-        width: Math.min(window.width - 40, 460); anchors.centerIn: parent
-        standardButtons: Dialog.Ok
+        id: memoryDetails; objectName: "memoryDetails"; title: qsTr("Local memory usage")
         contentItem: ColumnLayout {
             spacing: 12
             Label { text: qsTr("Client: %1").arg(memorySummary.amount(memorySummary.usage.client)); color: ui.text }
             Label { text: qsTr("Sharing host: %1").arg(memorySummary.amount(memorySummary.usage.host)); color: ui.text }
             Label { text: qsTr("Helpers: %1").arg(memorySummary.amount(memorySummary.usage.helpers)); color: ui.text }
             Label { visible: !memorySummary.usage.complete; text: qsTr("Some processes could not be sampled."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: qsTr("Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     Shortcut { enabled: navigationVisible; sequences: [StandardKey.New]; onActivated: navigateTo("qrc:/gui/BindView.qml", "BindView") }
@@ -689,6 +686,8 @@ ApplicationWindow {
 
     NavigableDialog {
         id: addPcDialog
+        objectName: "addLegacyHost"
+        title: qsTr("Add a legacy host")
         property string label: qsTr("Enter the host IP address or hostname:")
 
         standardButtons: Dialog.Ok | Dialog.Cancel
@@ -708,15 +707,19 @@ ApplicationWindow {
             }
         }
 
-        ColumnLayout {
+        contentItem: ColumnLayout {
+            spacing: 8
             Label {
                 text: addPcDialog.label
-                font.bold: true
+                color: ui.text
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
             }
 
             Label {
                 text: qsTr("DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.")
-                Layout.preferredWidth: 420
+                color: ui.muted
+                font.pixelSize: ui.small
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }

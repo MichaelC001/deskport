@@ -494,6 +494,17 @@
         <source>Drag cards to change their order, or onto another device to make a group.</source>
         <translation>Faites glisser les cartes pour changer leur ordre, ou sur un autre appareil pour créer un groupe.</translation>
     </message>
+    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>Une session avec %1 est ouverte. Déconnectez-la avant de vous connecter à un autre ordinateur.</translation></message>
+    <message><source>Finish editing</source><translation>Terminer la modification</translation></message>
+    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>Faites glisser les appareils pour les réorganiser, ou hors de ce panneau pour les retirer du groupe.</translation></message>
+    <message><source>Checking…</source><translation>Vérification…</translation></message>
+    <message><source>Computer</source><translation>Ordinateur</translation></message>
+    <message><source>This group is empty.</source><translation>Ce groupe est vide.</translation></message>
+    <message><source>Remove device?</source><translation>Retirer l’appareil ?</translation></message>
+    <message><source>Remove</source><translation>Retirer</translation></message>
+    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>Supprimer un groupe conserve ses appareils ; ils reviennent dans la liste des appareils.</translation></message>
+    <message><source>Open group</source><translation>Ouvrir le groupe</translation></message>
+    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>Affiché uniquement sur cet ordinateur. Laissez vide pour utiliser le nom d’origine.</translation></message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -1673,6 +1684,7 @@
         <source>How to use DeskPort</source>
         <translation>Comment utiliser DeskPort</translation>
     </message>
+    <message><source>Add a legacy host</source><translation>Ajouter un hôte classique</translation></message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2058,6 +2070,19 @@
         <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
         <translation>Désactiver arrête les nouveaux enregistrements. Effacer supprime les journaux et le ZIP existants. Les journaux bruts des anciennes versions sont exclus.</translation>
     </message>
+    <message><source>System</source><translation>Système</translation></message>
+    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>Désactivé par défaut. Les journaux restent sur cet ordinateur tant que vous ne les partagez pas. Consultez Confidentialité pour savoir ce qui est enregistré.</translation></message>
+    <message><source>About</source><translation>À propos</translation></message>
+    <message><source>Version</source><translation>Version</translation></message>
+    <message><source>Privacy</source><translation>Confidentialité</translation></message>
+    <message><source>Licenses</source><translation>Licences</translation></message>
+    <message><source>Create ZIP and open issue</source><translation>Créer le ZIP et ouvrir le ticket</translation></message>
+    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort n’a ni compte ni serveur DeskPort. Vos appareils se connectent directement entre eux. Les réglages, les appareils enregistrés et les autorisations restent sur cet ordinateur.</translation></message>
+    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>Pour vérifier les mises à jour, DeskPort interroge GitHub sur la dernière version. Comme Moonlight, il télécharge depuis moonlight-stream.org des données publiques de compatibilité des hôtes et des correspondances de manettes. Signaler un problème ouvre seulement un brouillon de ticket dans votre navigateur ; vous décidez de ce que vous envoyez.</translation></message>
+    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort est un logiciel libre sous licence publique générale GNU, version 3 ou ultérieure. Il est dérivé de Moonlight Qt et inclut un hôte Sunshine modifié.</translation></message>
+    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>Le catalogue DeskPort partagé est disponible sous licence MIT. Les icônes des systèmes d’exploitation sont dans le domaine public (CC0 1.0).</translation></message>
+    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt, FFmpeg, SDL et les autres bibliothèques incluses conservent leurs propres licences. Leurs mentions accompagnent chaque paquet.</translation></message>
+    <message><source>Source code and modifications: %1</source><translation>Code source et modifications : %1</translation></message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2544,6 +2569,7 @@
         <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
         <translation>Oublier l’association enregistrée pour %1 sur cet appareil ? Supprimez-la séparément dans Appareils. Pour révoquer l’accès de cet appareil, supprimez-le également sur l’hôte.</translation>
     </message>
+    <message><source>Remove</source><translation>Retirer</translation></message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2819,6 +2845,8 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>Le chargement du bureau a expiré. Revenez à la liste des appareils et réessayez.</translation></message>
 <message><source>Connecting to desktop…</source><translation>Connexion au bureau…</translation></message>
 <message><source>Back to devices</source><translation>Retour aux appareils</translation></message>
+    <message><source>Close</source><translation>Fermer</translation></message>
+    <message><source>Cancel</source><translation>Annuler</translation></message>
 </context>
 <context>
     <name>DeviceSettings</name>
@@ -2897,6 +2925,13 @@
         <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
         <translation>Pendant une connexion, Ctrl+Alt+Maj+X bascule aussi le plein écran.</translation>
     </message>
+    <message><source>Desktop fine tuning</source><translation>Réglage fin du bureau</translation></message>
+    <message><source>Main + mirror</source><translation>Principal + duplication</translation></message>
+    <message><source>Main only</source><translation>Principal seul</translation></message>
+    <message><source>Extended</source><translation>Étendu</translation></message>
+    <message><source>Fit to window</source><translation>Adapter à la fenêtre</translation></message>
+    <message><source>Sound</source><translation>Son</translation></message>
+    <message><source>Input</source><translation>Saisie</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
@@ -3136,6 +3171,17 @@
         <source>Report a problem</source>
         <translation>Signaler un problème</translation>
     </message>
+    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>Le mode automatique adapte la limite à la résolution. L’économie utilise 30 ips et limite la vidéo à 5 Mbps.</translation></message>
+    <message><source>Picture mode</source><translation>Mode d’image</translation></message>
+    <message><source>Automatic (recommended)</source><translation>Automatique (recommandé)</translation></message>
+    <message><source>Clear</source><translation>Netteté</translation></message>
+    <message><source>Smooth</source><translation>Fluidité</translation></message>
+    <message><source>Save data</source><translation>Économiser les données</translation></message>
+    <message><source>Custom</source><translation>Personnalisé</translation></message>
+    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>Pendant une connexion, Ctrl+Alt+Maj+X bascule aussi le plein écran.</translation></message>
+    <message><source>Bandwidth</source><translation>Bande passante</translation></message>
+    <message><source>%1 Mbps</source><translation>%1 Mbit/s</translation></message>
+    <message><source>All streaming options</source><translation>Toutes les options de streaming</translation></message>
 </context>
 <context>
     <name>SdlInputHandler</name>
@@ -3147,5 +3193,41 @@
     <name>ClipboardChannel</name>
     <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>Le partage du presse-papiers s’est arrêté. Reconnectez-vous pour réessayer.</translation></message>
     <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>Le partage du presse-papiers est indisponible. Reconnectez-vous pour réessayer ; le contrôle du bureau n’est pas affecté.</translation></message>
+</context>
+<context>
+    <name>NavigableDialog</name>
+    <message><source>Close</source><translation>Fermer</translation></message>
+</context>
+<context>
+    <name>DevicePanel</name>
+    <message><source>Connected</source><translation>Connecté</translation></message>
+    <message><source>Checking…</source><translation>Vérification…</translation></message>
+    <message><source>Online</source><translation>En ligne</translation></message>
+    <message><source>Online · access not set up</source><translation>En ligne · accès non configuré</translation></message>
+    <message><source>Offline</source><translation>Hors ligne</translation></message>
+    <message><source>Device settings</source><translation>Réglages de l’appareil</translation></message>
+    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>Vérifiez que DeskPort ou l’hôte est lancé sur %1 et que les deux appareils peuvent se joindre. Actualiser dans la barre du haut vérifie à nouveau.</translation></message>
+    <message><source>Original name</source><translation>Nom d’origine</translation></message>
+    <message><source>System</source><translation>Système</translation></message>
+    <message><source>Unknown</source><translation>Inconnu</translation></message>
+    <message><source>Connection</source><translation>Connexion</translation></message>
+    <message><source>DeskPort binding</source><translation>Association DeskPort</translation></message>
+    <message><source>Legacy pairing</source><translation>Association classique</translation></message>
+    <message><source>Not set up</source><translation>Non configuré</translation></message>
+    <message><source>Address</source><translation>Adresse</translation></message>
+    <message><source>Technical details</source><translation>Détails techniques</translation></message>
+    <message><source>Reconnect</source><translation>Reconnecter</translation></message>
+    <message><source>Toggle full screen</source><translation>Basculer en plein écran</translation></message>
+    <message><source>Disconnect</source><translation>Déconnecter</translation></message>
+    <message><source>Change address</source><translation>Modifier l’adresse</translation></message>
+    <message><source>Set alias</source><translation>Définir un alias</translation></message>
+    <message><source>Pair with a legacy PIN</source><translation>Associer avec un PIN classique</translation></message>
+    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>Pour Sunshine ou d’autres hôtes sans association DeskPort.</translation></message>
+    <message><source>Move out of group</source><translation>Retirer du groupe</translation></message>
+    <message><source>Remove from list</source><translation>Retirer de la liste</translation></message>
+</context>
+<context>
+    <name>HelpView</name>
+    <message><source>Manual</source><translation>Manuel</translation></message>
 </context>
 </TS>

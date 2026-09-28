@@ -6,6 +6,9 @@ import ComputerManager 1.0
 
 Item {
     id: page
+    // Isolated harnesses run without the window theme.
+    readonly property var theme: typeof ui !== "undefined" ? ui : fallbackTheme
+    UiTheme { id: fallbackTheme }
     readonly property bool connectionPending: true
     property int computerIndex
     property bool initialized: false
@@ -70,21 +73,34 @@ Item {
     Timer { id: retry; interval: 200; repeat: true; onTriggered: page.tryConnect() }
     Timer { id: deadline; interval: 20000; onTriggered: page.fail(qsTr("Loading the desktop timed out. Return to Devices and try again.")) }
 
-    ColumnLayout {
+    // The wait is a centred panel; Cancel returns to Devices.
+    Rectangle {
+        objectName: "desktopWait"
         anchors.centerIn: parent
-        width: Math.min(parent.width - 64, 520)
-        spacing: 16
-        BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: !page.finished; visible: running }
-        Label {
-            Layout.fillWidth: true
-            text: page.errorText.length ? page.errorText : qsTr("Connecting to desktop…")
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignHCenter
-        }
-        Button {
-            Layout.alignment: Qt.AlignHCenter
-            text: qsTr("Back to devices")
-            onClicked: stackView.pop()
+        width: Math.min(parent.width - 32, 460)
+        implicitHeight: waitColumn.implicitHeight + 48
+        height: implicitHeight
+        radius: 20
+        color: page.theme.surface
+        border.color: page.theme.line
+        ColumnLayout {
+            id: waitColumn
+            x: 24; y: 24; width: parent.width - 48
+            spacing: 16
+            BusyIndicator { Layout.alignment: Qt.AlignHCenter; running: !page.finished; visible: running }
+            Label {
+                Layout.fillWidth: true
+                text: page.errorText.length ? page.errorText : qsTr("Connecting to desktop…")
+                color: page.theme.text
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+            }
+            UiButton {
+                objectName: "cancelDesktop"
+                Layout.alignment: Qt.AlignHCenter
+                text: page.finished ? qsTr("Close") : qsTr("Cancel")
+                onClicked: stackView.pop()
+            }
         }
     }
 }

@@ -1,12 +1,16 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.2
+import QtQuick.Layouts 1.3
 
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
 Item {
     id: streamPage
+    // Isolated harnesses run without the window theme.
+    readonly property var theme: typeof ui !== "undefined" ? ui : fallbackTheme
+    UiTheme { id: fallbackTheme }
     readonly property bool hidesNavigation: true
     property Session session
     property string appName
@@ -172,20 +176,6 @@ Item {
         id: retryTimer
         onTriggered: streamLoader.active = true
     }
-    Button {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: hintText.top; anchors.bottomMargin: 20
-        visible: session && !session.viewerReady
-        objectName: "cancelReconnect"
-        text: session && session.retryDelay() > 0 ? qsTr("Cancel reconnect") : qsTr("Cancel connection")
-        onClicked: {
-            streamSegueErrorDialog.text = ""
-            session.cancelRecovery()
-            retryTimer.stop()
-            // Run cancellation through Session's normal lifetime barrier.
-            if (!streamLoader.active) streamLoader.active = true
-        }
-    }
     Timer {
         id: spinnerTimer
 
@@ -239,23 +229,49 @@ Item {
         sourceComponent: Item {}
     }
 
-    Row {
+    // The wait is a centred panel with its cancel action.
+    Rectangle {
+        objectName: "streamWait"
         anchors.centerIn: parent
-        spacing: 5
+        width: Math.min(parent.width - 32, 460)
+        height: waitColumn.implicitHeight + 48
+        radius: 20
+        color: streamPage.theme.surface
+        border.color: streamPage.theme.line
+        ColumnLayout {
+            id: waitColumn
+            x: 24; y: 24; width: parent.width - 48
+            spacing: 16
 
-        BusyIndicator {
-            id: stageSpinner
-            running: false
-        }
+            BusyIndicator {
+                id: stageSpinner
+                Layout.alignment: Qt.AlignHCenter
+                running: false
+            }
 
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            text: stageText
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
+            Label {
+                id: stageLabel
+                Layout.fillWidth: true
+                text: stageText
+                color: streamPage.theme.text
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+            }
 
-            wrapMode: Text.Wrap
+            UiButton {
+                Layout.alignment: Qt.AlignHCenter
+                visible: session && !session.viewerReady
+                objectName: "cancelReconnect"
+                text: session && session.retryDelay() > 0 ? qsTr("Cancel reconnect") : qsTr("Cancel connection")
+                onClicked: {
+                    streamSegueErrorDialog.text = ""
+                    session.cancelRecovery()
+                    retryTimer.stop()
+                    // Run cancellation through Session's normal lifetime barrier.
+                    if (!streamLoader.active) streamLoader.active = true
+                }
+            }
         }
     }
 
@@ -264,7 +280,10 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: 18
+        width: Math.min(implicitWidth, parent.width - 32)
+        color: streamPage.theme.muted
+        font.pixelSize: 15
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
         wrapMode: Text.Wrap

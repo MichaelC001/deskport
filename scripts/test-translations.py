@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
 languages = ("zh_CN", "zh_TW", "ja", "ko", "de", "fr", "es")
-pages = ("main", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "DeviceCard", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue", "StreamSegue")
+pages = ("main", "PcView", "DeviceCard", "DevicePanel", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "HelpView", "NavigableDialog", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue", "StreamSegue")
 for language in languages:
     tree = ET.parse(root / "app/languages" / f"qml_{language}.ts")
     contexts = {

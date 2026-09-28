@@ -20,18 +20,15 @@ NavigableDialog {
     property string fingerprint: ""
     property string peerName: ""
     title: qsTranslate("BindView", "Edit device")
-    anchors.centerIn: parent
-    width: Math.max(280, Math.min(parent ? parent.width - 32 : 460, 460))
-    modal: true
     contentItem: ColumnLayout {
         spacing: 10
-        Label { text: qsTranslate("BindView", "Domain name or IP address") }
+        Label { text: qsTranslate("BindView", "Domain name or IP address"); color: ui.text }
         TextField { id: deviceAddress; objectName: "editPeerAddress"; Layout.fillWidth: true; placeholderText: qsTranslate("BindView", "Computer name or IP, without port") }
-        Label { text: qsTranslate("BindView", "A domain name is saved as entered and resolved again when connecting."); wrapMode: Text.WordWrap; Layout.fillWidth: true }
+        Label { text: qsTranslate("BindView", "A domain name is saved as entered and resolved again when connecting."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         CheckBox { id: advancedPorts; text: qsTranslate("BindView", "Advanced port overrides"); checked: false }
-        Label { text: qsTranslate("BindView", "Host port"); visible: advancedPorts.checked }
+        Label { text: qsTranslate("BindView", "Host port"); color: ui.text; visible: advancedPorts.checked }
         SpinBox { id: hostPort; visible: advancedPorts.checked; from: 1024; to: 65514; editable: true; Layout.fillWidth: true }
-        Label { text: qsTranslate("BindView", "Binding port"); visible: advancedPorts.checked }
+        Label { text: qsTranslate("BindView", "Binding port"); color: ui.text; visible: advancedPorts.checked }
         SpinBox { id: bindingPort; visible: advancedPorts.checked; from: 1; to: 65535; editable: true; Layout.fillWidth: true }
         Label { id: editError; textFormat: Text.PlainText; color: ui.warning; visible: text.length > 0; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         RowLayout {

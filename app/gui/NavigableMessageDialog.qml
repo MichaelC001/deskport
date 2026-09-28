@@ -2,12 +2,14 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.2
 
+// A message, question or wait in the shared floating panel.
 NavigableDialog {
     id: dialog
 
     property alias text: dialogLabel.dialogText
     property alias showSpinner: dialogSpinner.visible
-    property alias imageSrc: dialogImage.source
+    // Kept for callers that set it; panels follow the theme instead of an image.
+    property url imageSrc
 
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
@@ -18,25 +20,13 @@ NavigableDialog {
         dialogLabel.forceActiveFocus()
     }
 
-    RowLayout {
-        spacing: 10
+    contentItem: RowLayout {
+        spacing: 14
 
         BusyIndicator {
             id: dialogSpinner
             visible: false
-        }
-
-        Image {
-            id: dialogImage
-            source: (standardButtons & Dialog.Yes) ?
-                        "qrc:/res/baseline-help_outline-24px.svg" :
-                        "qrc:/res/baseline-error_outline-24px.svg"
-            sourceSize {
-                // The icon should be square so use the height as the width too
-                width: 50
-                height: 50
-            }
-            visible: !showSpinner
+            implicitWidth: 36; implicitHeight: 36
         }
 
         Label {
@@ -44,12 +34,10 @@ NavigableDialog {
 
             id: dialogLabel
             text: dialogText + ((helpText && (standardButtons & Dialog.Help)) ? (helpTextSeparator + helpText) : "")
+            color: dialog.panelTheme.text
             wrapMode: Text.Wrap
             elide: Label.ElideRight
-
-            // Cap the width so the dialog doesn't grow horizontally forever. This
-            // will cause word wrap to kick in.
-            Layout.maximumWidth: 400
+            Layout.fillWidth: true
             Layout.maximumHeight: 400
 
             Keys.onReturnPressed: {
@@ -68,9 +56,18 @@ NavigableDialog {
 
     footer: DialogButtonBox {
         id: dialogButtonBox
+        visible: count > 0
         standardButtons: dialog.standardButtons
+        alignment: Qt.AlignRight
+        spacing: 8
+        padding: 20; topPadding: 4
         background: Item {}
-        delegate: UiButton {}
+        delegate: UiButton {
+            readonly property bool accepting: DialogButtonBox.buttonRole === DialogButtonBox.AcceptRole
+                                              || DialogButtonBox.buttonRole === DialogButtonBox.YesRole
+            filled: accepting
+            destructive: accepting && dialog.destructive
+        }
 
         onHelpRequested: {
             Qt.openUrlExternally(helpUrl)

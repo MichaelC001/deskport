@@ -1,15 +1,31 @@
 ## Desktop UI alignment — 2026-09-28
 
-Reason: bring the current mobile visual design to the desktop client. Device
-cards use a status light and tinted surface, with details and existing actions
-in a single floating panel and device settings behind its gear. Icon clicks,
-long press, right click and the menu key share this entry. Pages omit duplicate
-headings; dialogs and cards follow the same live light/dark palette. Existing
-desktop connection, address, reconnect and fullscreen behavior remains available.
+Reason: bring the current mobile visual design to the desktop client.
 
-Checkpoint: isolated UI regression and synthetic screenshots, then private
-Linux/macOS packages and mynix pins. Activation and real streaming/input checks
-remain with the user; this does not request a public release or mobile upload.
+- Theme tokens (canvas, surface, raised, line, text, muted, accent, tint and
+  status colours) drive every card, panel and control and switch live.
+- One floating panel style for every choice, device menu, device settings,
+  confirmation, message, text entry and wait: centred, at most 460 wide and
+  82% tall, dimmed backdrop, fixed title row with a close button. Outside
+  clicks, Esc and Cancel close it; destructive actions are red. Combo-box
+  drop-downs and context menus are replaced by option panels.
+- Device cards: static status light, status-tinted surface, system icon opens
+  the device panel, one action button (Connect, Set up access, Checking…,
+  Troubleshoot, Return to desktop; groups Open). The add card has a dashed
+  outline, a large plus and two tint buttons.
+- Device panel: icon, name, coloured status and gear in the header; facts and
+  each device action once. Session controls (reconnect, full screen,
+  disconnect) appear only for the connected device.
+- Device settings: basic rows, then advanced streaming settings expanding in
+  place; the full upstream option list opens as a panel. No page is pushed.
+- Settings: grouped rows with a three-way theme control and privacy/licence
+  reading panels. Manual: chapter cards with icon tile, first-step preview,
+  rotating chevron and numbered steps.
+
+Pending: the shared-core pin to the translated manual (core `dev` e1d3e3e
+merged with main) needs the core branch pushed before the Git and Nix pins
+move together. Activation and real streaming/input checks remain with the
+user; this does not request a public release or mobile upload.
 
 ## Desktop 0.6.3 release preparation — 2026-09-26
 

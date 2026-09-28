@@ -33,7 +33,8 @@ QVariantList Manual::chapters(const QString& language)
         QStringList steps;
         for (const QJsonValue& step : chapter["steps"].toArray())
             steps.append(localized(step.toObject()["text"].toObject(), language));
-        result.append(QVariantMap{{"title", localized(chapter["title"].toObject(), language)},
+        result.append(QVariantMap{{"id", chapter["id"].toString()},
+                                  {"title", localized(chapter["title"].toObject(), language)},
                                   {"steps", steps}});
     }
     return result;
