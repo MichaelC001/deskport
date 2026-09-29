@@ -97,3 +97,24 @@ The DeskPort application mark remains the existing project asset.
 The generated product catalog is independently MIT-licensed. Its full notice is
 embedded at `:/licenses/deskport-catalog.txt` and retained in the pinned core
 `portable/LICENSE`. Existing GPL workspace and upstream licenses are unchanged.
+
+## AppImage private runtime (0.6.4 prerelease)
+
+The AppImage-only packaging step adds sharun 0.8.1 (MIT) from
+https://github.com/VHSgunzo/sharun/tree/v0.8.1. Its pinned binary checksum is in
+`scripts/linux-tools.json`; the license is retained as `packaging/SHARUN-LICENSE`
+and inside the AppImage. It loads the private glibc interpreter without changing
+the public executable identity used by Qt and KDE capture permissions.
+
+The viewer and private Sunshine host have separate `usr/shared/lib` runtimes,
+including glibc, libstdc++, dependency closures, gconv modules and a Mesa software
+fallback. Ubuntu package copyright notices and exact binary/source versions are
+under each tree's `usr/share/doc/deskport/runtime-licenses`. The release asset
+`AppImage-runtime-sources.json` gives the corresponding Ubuntu source archives
+for the added runtime libraries; it is also included inside the AppImage.
+The libraries remain dynamically linked and replaceable. Native packages retain
+their original runtime layout and system glibc requirements.
+
+Kernel interfaces, display/audio servers and hardware/vendor drivers remain host
+facilities. Bundling glibc does not establish support for every kernel, GPU or
+compositor. No personal configuration, credentials or device state is bundled.

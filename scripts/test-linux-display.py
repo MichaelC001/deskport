@@ -166,6 +166,22 @@ try:
     print('PASS on-demand startup, admitted creation and explicit removal', flush=True)
     if auto_permission:
         applications = Path(os.environ['XDG_DATA_HOME']) / 'applications'
+        def link_or_copy(source, target):
+            try:
+                return os.link(source, target)
+            except OSError:
+                return shutil.copy2(source, target)
+        def relocate_helper(destination):
+            prefix = Path(helper).parent.parent
+            if (prefix / 'sharun').exists():
+                # sharun needs its sibling runtime, just as after an AppImage
+                # remount. Hardlink the read-only fixture to avoid copying it.
+                shutil.copytree(prefix, destination / 'usr', symlinks=True,
+                                copy_function=link_or_copy)
+                return destination / 'usr/bin/deskport-display'
+            executable = destination / 'deskport-display'
+            shutil.copy2(helper, executable)
+            return executable
         def entries():
             return {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in applications.glob('*.desktop')}
         registered = entries()
@@ -177,6 +193,8 @@ try:
             assert select.select([proc.stdout], [], [], 12)[0], 'Permission setup timed out'
             result = json.loads(proc.stdout.readline())
             assert result.get('ready'), result
+            if (Path(executable).resolve().parent.parent / 'sharun').exists():
+                assert Path(f'/proc/{proc.pid}/exe').resolve() == Path(executable).resolve()
             proc.stdin.close()
             assert proc.wait(timeout=5) == 0
             assert restored()
@@ -187,11 +205,10 @@ try:
         for index, component in enumerate(['path with spaces', '路径 100% "quoted" \\ slash']):
             mount = Path(os.environ['XDG_RUNTIME_DIR']) / f'.mount_DeskPort{index}' / component
             mount.mkdir(parents=True)
-            relocated = mount / 'deskport-display'
-            shutil.copy2(helper, relocated)
+            relocated = relocate_helper(mount)
             link = mount.parent / 'home-link'
             link.symlink_to(mount, target_is_directory=True)
-            check_start(link / 'deskport-display')
+            check_start(link / relocated.relative_to(mount))
             assert len(entries()) == 2, entries()
             if previous: assert not any(str(previous).encode() in b for b, _ in entries().values())
             previous = relocated
@@ -200,8 +217,7 @@ try:
         assert len(entries()) == 2, 'Existing grants should not require another setup'
         fallback = Path(os.environ['XDG_RUNTIME_DIR']) / 'cache-fallback'
         fallback.mkdir()
-        executable = fallback / 'deskport-display'
-        shutil.copy2(helper, executable)
+        executable = relocate_helper(fallback)
         # Force a setup write error for a new executable, without changing the
         # compositor's XDG environment or touching the real user configuration.
         data_file = fallback / 'not-a-directory'

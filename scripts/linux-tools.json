@@ -34,5 +34,9 @@
   "vulkan-headers.tar.gz": {
     "url": "https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/refs/tags/vulkan-sdk-1.4.341.0",
     "sha256": "d73bc5036b6556b741f6985ff600ca720308c5f2850e4a43ceb498bd3de069e7"
+  },
+  "sharun": {
+    "url": "https://github.com/VHSgunzo/sharun/releases/download/v0.8.1/sharun-x86_64",
+    "sha256": "18d970f56eca2c527ffd3993b161b6bc340055129db14b394a77cb67d8bbfff9"
   }
 }

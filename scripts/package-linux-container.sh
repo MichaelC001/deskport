@@ -95,7 +95,20 @@ chmod +x "$appdir/usr/libexec/deskport-host"
 mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
-ARCH=x86_64 "$work/cache/appimagetool.dir/AppRun" --runtime-file "$work/cache/appimage-runtime" "$appdir" "$work/output/DeskPort-$version-x86_64.AppImage"
+# Keep the native-package runtime unchanged; only AppImage bundles glibc.
+appimage_dir="$work/DeskPort-AppImage.AppDir"
+rm -rf "$appimage_dir"
+cp -a "$appdir" "$appimage_dir"
+python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun"
+cp "$repo/packaging/SHARUN-LICENSE" "$appimage_dir/usr/share/doc/deskport/"
+# Exact source URLs and Ubuntu copyright notices accompany the runtime binaries.
+sed 's/^Types: deb$/Types: deb-src/' /etc/apt/sources.list.d/ubuntu.sources > /etc/apt/sources.list.d/deskport-source.sources
+apt-get update -qq
+python3 "$repo/scripts/appimage-source-index.py" "$appimage_dir" "$work/output/AppImage-runtime-sources.json"
+cp "$work/output/AppImage-runtime-sources.json" "$appimage_dir/usr/share/doc/deskport/"
+
+python3 "$repo/scripts/check-linux-package.py" "$appimage_dir" "$version"
+ARCH=x86_64 "$work/cache/appimagetool.dir/AppRun" --runtime-file "$work/cache/appimage-runtime" "$appimage_dir" "$work/output/DeskPort-$version-x86_64.AppImage"
 if [ "$format" = all ]; then
     python3 "$repo/scripts/package-linux-native.py" "$appdir" "$work" "$version"
 fi

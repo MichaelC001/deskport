@@ -4,6 +4,19 @@ DeskPort 0.6.3 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package.
 
+## 0.6.4 AppImage prerelease
+
+The [0.6.4 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.6.4)
+is an x86_64 AppImage compatibility candidate. It bundles a private glibc loader
+and runtime for both the viewer and Sunshine host, using pinned sharun 0.8.1.
+The goal is to run on Ubuntu 22.04 without replacing system libraries. This does
+not lower the minimum requirements of the 0.6.3 native packages below.
+
+Run it as your normal desktop user. It requires a working graphical session and
+appropriate host input/capture permissions as documented below. Hardware encoding,
+decoding and virtual-display support still depend on the host kernel, drivers
+and compositor. See [verification and limitations](APPIMAGE_064.md).
+
 ## Choose a download
 
 | Format | Target | Install |

@@ -2154,3 +2154,15 @@ See `docs/ADAPTIVE_DISPLAY.md` for provider limitations and fallback behavior.
 
 - Submitted https://github.com/NixOS/nixpkgs/pull/567358 and marked it ready after maintainer review. Upstream merge remains pending.
 - Addressed new-package strict dependency/structured attribute checks and maintainer contact validation. The sandboxed package rebuild, three package tests and maintainer check passed.
+
+### 2026-09-29: AppImage 0.6.4 compatibility preview
+
+Reason: AppImageHub requires older Ubuntu LTS startup; the user authorized an
+AppImage-only prerelease following the maintainer's private-runtime suggestion.
+Bundle separate viewer/host glibc runtimes with checksum-pinned sharun, preserve
+Qt/KDE executable identity, and include runtime notices and exact source links.
+The final payload passes Ubuntu 22.04 CLI/QML/X11/API/state-isolation checks and
+isolated KWin permission/remount/display lifecycle regressions. Keep 0.6.3 stable
+assets and native-package requirements unchanged. Physical GPU/input/audio and
+streaming acceptance, and AppImageHub catalog review, remain separate gates.
+See [the verification record](APPIMAGE_064.md).

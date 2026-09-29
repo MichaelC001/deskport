@@ -85,6 +85,12 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                             host_log.seek(0)
                             raise AssertionError('Packaged session API unavailable: ' + host_log.read())
                         time.sleep(0.25)
+                private_libc = root / 'usr/libexec/sunshine/usr/shared/lib/libc.so.6'
+                if private_libc.exists():
+                    maps = pathlib.Path(f'/proc/{server.pid}/maps').read_text()
+                    assert str(private_libc) in maps, 'Host did not use its private glibc'
+                    expected = root / 'usr/libexec/sunshine/usr/bin/sunshine'
+                    assert pathlib.Path(f'/proc/{server.pid}/exe').resolve() == expected
                 assert snapshot['status'] is True and snapshot['version'] == 1, snapshot
                 assert snapshot['sessions'] == 0 and snapshot['reserved'] is False, snapshot
                 assert isinstance(snapshot['snapshot'], str), snapshot
