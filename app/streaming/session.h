@@ -193,6 +193,11 @@ private:
     std::atomic<bool> m_ViewerReady{false}, m_ViewerRequested{true};
     void setViewerReady(bool ready) { if (m_ViewerReady.exchange(ready) != ready) emit viewerReadyChanged(); }
     ResizeSettler m_ResizeSettler;
+    // Window state before a presentation hide. Wayland compositors can map a
+    // re-shown window unmaximized; restoring it must not look like a resize.
+    Uint32 m_HiddenWindowFlags = 0;
+    Uint32 m_RecallGraceUntil = 0;
+    void hideViewerWindow();
     bool m_ExecRequested = false;
     SessionLifetime m_Lifetime{this, [this] { emit readyForDeletion(); }};
     std::unique_ptr<ClipboardSync> m_Clipboard;

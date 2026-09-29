@@ -858,13 +858,21 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
         qWarning() << "Using fixed-resolution streaming; adaptive display negotiation was unavailable";
     }
 }
+void Session::hideViewerWindow() {
+    const auto flags = SDL_GetWindowFlags(m_Window);
+    if (!(flags & SDL_WINDOW_HIDDEN)) m_HiddenWindowFlags = flags;
+    SDL_HideWindow(m_Window);
+}
 bool Session::checkAdaptiveResize() {
-    if (!m_ViewerRequested || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN))) {
+    if (!m_ViewerRequested || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) ||
+        (m_RecallGraceUntil && !SDL_TICKS_PASSED(SDL_GetTicks(), m_RecallGraceUntil))) {
         // Hidden time does not establish a stable visible size. Compositors can
-        // report transient frame geometry while a retained window is remapped.
+        // report transient frame geometry while a retained window is remapped,
+        // so a recalled window gets time to regain its previous state.
         m_ResizeSettler.reset();
         return false;
     }
+    m_RecallGraceUntil = 0;
     if (!m_Preferences->adaptiveResolution || !m_AdaptiveDisplay || m_UnexpectedTermination) return false;
     const auto workspace = workspaceForWindow(m_Window);
     const auto size = workspace.pixels;
@@ -2535,7 +2543,7 @@ void Session::execInternal()
         m_ViewerRequested = false;
         if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "showDevicesDuringSession", Qt::AutoConnection);
         m_InputHandler->setCaptureActive(false);
-        SDL_HideWindow(m_Window);
+        hideViewerWindow();
         m_Clipboard.reset();
     };
     m_InputDispatching = true;
@@ -2628,7 +2636,7 @@ void Session::execInternal()
             case DeskPortHideWindow:
                 m_InputHandler->setCaptureActive(false);
                 m_Clipboard.reset();
-                SDL_HideWindow(m_Window);
+                hideViewerWindow();
                 emit presentationHidden();
                 break;
             case DeskPortShowDevices:
@@ -2640,6 +2648,11 @@ void Session::execInternal()
                 if (!m_ViewerRequested) break;
                 if (!m_Clipboard) initializeClipboard();
                 recallDesktopWindow(m_Window);
+                // Showing is a presentation change, never a new desktop size.
+                if (!m_IsFullScreen && (m_HiddenWindowFlags & SDL_WINDOW_MAXIMIZED) &&
+                    !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MAXIMIZED)) SDL_MaximizeWindow(m_Window);
+                m_RecallGraceUntil = SDL_GetTicks() + 1500;
+                if (!m_RecallGraceUntil) m_RecallGraceUntil = 1;
                 emit presentationShown();
                 break;
             case DeskPortToggleWindow:
