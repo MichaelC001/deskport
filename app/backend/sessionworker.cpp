@@ -94,6 +94,7 @@ void SessionWorker::command(const QJsonObject& message) {
 }
 void SessionWorker::showDevicesDuringSession() { m_Visible=false; if(m_Session)m_Session->setViewerRequested(false); send({{"type","devices"}}); }
 void SessionWorker::prepareViewerRecall() { send({{"type","devices"}}); }
+void SessionWorker::showNextSession() { if(m_Visible) send({{"type","next"}}); }
 void SessionWorker::finish(const QString& error) {
     if(m_Finished)return; m_Finished=true;
     if(!error.isEmpty())send({{"type","error"},{"message",error}});

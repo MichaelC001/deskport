@@ -134,6 +134,8 @@ public:
     void endForSystemSleep();
     void requestReconnect();
     bool leaveFullscreen();
+    // Asks a multi-session shell to present its next connected desktop.
+    void requestNextViewer();
     Q_INVOKABLE int retryDelay() const { return m_RecoveryDeadline ? qMin(4000, 1000 << qMin(m_RecoveryAttempt, 2)) : 0; }
     Q_INVOKABLE void cancelRecovery() { m_RecoveryCancelled = true; m_NetworkRetry = false; }
 private:

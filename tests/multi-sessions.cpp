@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QLocalSocket>
 #include <QTimer>
+#include <QSettings>
 #include "multisessions.h"
 #include "peermanager.h"
 #include "peerstore.h"
@@ -16,6 +17,7 @@ static int worker(QApplication& app) {
     QLocalSocket socket;
     QByteArray buffer;
     int fullscreenRequests = 0;
+    bool presenting = false;
     const QString id=app.arguments().value(2);
     const auto mode=app.arguments().value(3);
     auto send=[&](QJsonObject o) { socket.write(QJsonDocument(o).toJson(QJsonDocument::Compact)+'\n'); };
@@ -28,13 +30,17 @@ static int worker(QApplication& app) {
         while (buffer.contains('\n')) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
-            if(action=="show") send({{"type","shown"}});
+            if(action=="show") { presenting=true; send({{"type","shown"}}); }
             else if(action=="fullscreen") send({{"type","traffic"},{"received",0},{"sent",++fullscreenRequests}});
             else if(action=="hide") {
                 if (mode=="hung") continue;
+                // Models a busy background viewer: it only answers while presenting.
+                if (mode=="lazy" && !presenting) continue;
+                presenting=false;
                 QTimer::singleShot(mode=="slow" ? 300 : 0,&app,[&,o] { send({{"type","hidden"},{"epoch",o.value("epoch")}}); });
             } else if(action=="disconnect") QTimer::singleShot(0,&app,&QCoreApplication::quit);
             else if(action=="reconnect" && mode=="crash") QCoreApplication::exit(7);
+            else if(action=="reconnect" && mode=="next") send({{"type","next"}}); // The viewer's chord.
         }
     });
     QObject::connect(&socket,&QLocalSocket::disconnected,&app,&QCoreApplication::quit);
@@ -128,6 +134,60 @@ private slots:
         QTRY_COMPARE_WITH_TIMEOUT(manager.states().value("a").toString(),QString("error"),1500);
         QTRY_VERIFY(visible("b"));
         QCOMPARE(manager.states().value("b").toString(),QString("connected"));
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
+    }
+    void hiddenViewersDoNotDelaySwitchingAndNextCycles() {
+        QTemporaryDir dir;
+        auto cert=credential("TEST_CERT_A"), key=credential("TEST_KEY_A");
+        auto remote=credential("TEST_CERT_B");
+        QJsonObject records;
+        for(auto id : {"a","b","c"}) records[id]=QJsonObject{{"hostId",id},{"clientCert",QString::fromUtf8(remote)},
+            {"bindingPort",48991},{"ready",true},{"granted",true}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        MultiSessions manager(&peers,cert,key);
+        auto visible=[&](QString id) { for (auto item:manager.sessions()) if(item.toMap().value("id")==id)return item.toMap().value("visible").toBool(); return false; };
+        manager.open("a","Lazy background","127.0.0.1","lazy");
+        QTRY_VERIFY(visible("a"));
+        manager.open("b","Second","127.0.0.1","next");
+        QTRY_VERIFY(visible("b"));
+        // A is hidden and ignores further hides; switching must not wait for or kill it.
+        QElapsedTimer handoff; handoff.start();
+        manager.open("c","Third","127.0.0.1","next");
+        QTRY_VERIFY_WITH_TIMEOUT(visible("c"),1000);
+        QVERIFY2(handoff.elapsed()<1000,qPrintable(QString("handoff took %1 ms").arg(handoff.elapsed())));
+        manager.showDevices(); QTRY_VERIFY(!visible("c"));
+        manager.showDevices(); // Idempotent: nothing is presenting.
+        manager.select("c"); QTRY_VERIFY(visible("c"));
+        QTest::qWait(2300);
+        QCOMPARE(manager.states().value("a").toString(),QString("connected"));
+        // Background viewers cannot switch presentation.
+        manager.reconnect("b"); QTest::qWait(200);
+        QVERIFY(visible("c"));
+        // The presenting viewer's chord cycles in connection order.
+        manager.reconnect("c"); QTRY_VERIFY(visible("a"));
+        manager.selectNext(); QTRY_VERIFY(visible("b"));
+        QCOMPARE(manager.states().value("a").toString(),QString("connected"));
+        // Rows, next and recall follow the device list's saved order.
+        QSettings().setValue("ui/hostLayout",QVariantList{QVariantMap{{"type","device"},{"id","c"}},
+            QVariantMap{{"type","group"},{"id","g"},{"name","Group"},{"devices",QStringList{"b","a"}}}});
+        QStringList order; for (auto item:manager.sessions()) order << item.toMap().value("id").toString();
+        QCOMPARE(order,QStringList({"c","b","a"}));
+        manager.selectNext(); QTRY_VERIFY(visible("a")); // b → a
+        manager.selectNext(); QTRY_VERIFY(visible("c")); // wraps to the first
+        QSettings().remove("ui/hostLayout");
+        manager.select("b"); QTRY_VERIFY(visible("b"));
+        manager.disconnectSession("c"); QTRY_COMPARE(manager.states().value("c").toString(),QString("disconnected"));
+        manager.selectNext(); QTRY_VERIFY(visible("a")); // Skips the ended session.
+        // Recall prefers the last viewed desktop, then the first connected one.
+        manager.showDevices(); QTRY_VERIFY(!visible("a"));
+        QVERIFY(manager.recall()); QTRY_VERIFY(visible("a"));
+        manager.disconnectSession("a"); QTRY_COMPARE(manager.states().value("a").toString(),QString("disconnected"));
+        QVERIFY(manager.recall()); QTRY_VERIFY(visible("b"));
+        manager.disconnectSession("b"); QTRY_COMPARE(manager.states().value("b").toString(),QString("disconnected"));
+        QVERIFY(!manager.recall());
         manager.shutdown(); QTRY_VERIFY(!manager.busy());
     }
     void cancellationBeforeLaunch() {

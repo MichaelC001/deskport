@@ -1,6 +1,7 @@
 #include "multisessions.h"
 #include "peermanager.h"
 #include "sessiongraph.h"
+#include "gui/hostlayout.h"
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -39,9 +40,13 @@ QVariantMap MultiSessions::selectedTraffic() const {
 void MultiSessions::setDiagnosticsEnabled(bool enabled) {
     for (auto entry : m_Entries) send(entry, {{"command","diagnostics"},{"enabled",enabled}});
 }
+QStringList MultiSessions::ordered() const {
+    // Devices the saved layout does not mention follow in connection order.
+    return HostLayout::load().flattened(m_Order);
+}
 QVariantList MultiSessions::sessions() const {
     QVariantList rows;
-    for (auto entry : m_Entries) rows.append(QVariantMap{{"id",entry->id},{"name",entry->name},{"state",entry->state},
+    for (const auto& id : ordered()) if (auto entry = m_Entries.value(id)) rows.append(QVariantMap{{"id",entry->id},{"name",entry->name},{"state",entry->state},
         {"error",entry->error},{"selected",entry->id == m_Selected},{"visible",entry->id == m_Visible}});
     return rows;
 }
@@ -56,8 +61,9 @@ void MultiSessions::open(QString id, QString name, QString address, QString app)
     auto entry = m_Entries.value(id);
     if (entry && (entry->state == "starting" || (entry->process && entry->process->state() != QProcess::NotRunning))) { select(id); return; }
     if (!entry) { entry = new Entry; entry->id = id; m_Entries.insert(id, entry); }
+    m_Order.removeAll(id); m_Order.append(id);
     entry->name = name; entry->address = address; entry->app = app;
-    entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false;
+    entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false; entry->exposed = false;
     entry->token = QUuid::createUuid().toString(QUuid::WithoutBraces);
     select(id);
     emit devicesRequested(); emit changed();
@@ -145,8 +151,15 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
         emit trafficChanged(); return;
     }
     if (type == "hidden" && quint64(message.value("epoch").toDouble()) == entry->hideEpoch) {
-        m_Hiding.remove(entry->id); if (m_Visible == entry->id) m_Visible.clear(); present();
+        if (m_Hiding.remove(entry->id)) entry->exposed = false;
+        if (m_Visible == entry->id) m_Visible.clear();
+        present();
     } else if (type == "devices") { showDevices(); emit devicesRequested(); }
+    else if (type == "next") {
+        // Only the viewer that currently owns presentation may switch it.
+        if (m_Wanted == entry->id || m_Visible == entry->id) selectNext();
+        return;
+    }
     else if (type == "ready") { present(); }
     else if (type == "connected") { entry->state = "connected"; entry->error.clear(); }
     else if (type == "shown" && m_Wanted == entry->id && m_Hiding.isEmpty()) {
@@ -165,10 +178,28 @@ void MultiSessions::select(QString id) {
     if (selected->state != "starting" && selected->state != "connected") { emit devicesRequested(); return; }
     m_Selected = id; m_Wanted = id;
     ++m_Epoch;
-    for (auto entry : m_Entries) if (entry->id != id && entry->socket) {
+    // Only a viewer that may be presenting has to release input first; waiting
+    // on hidden background viewers would add their latency to every switch.
+    for (auto entry : m_Entries) if (entry->id != id && entry->socket && entry->exposed) {
         hide(entry);
     }
     present(); emit changed();
+}
+void MultiSessions::selectNext() {
+    const auto order = ordered();
+    if (m_Shutdown || order.isEmpty()) return;
+    const auto current = order.indexOf(m_Wanted.isEmpty() ? m_Selected : m_Wanted);
+    for (int step = 1; step <= order.size(); ++step) {
+        const auto entry = m_Entries.value(order.at((qMax(current, 0) + step) % order.size()));
+        if (entry && entry->state == "connected" && entry->id != m_Wanted) { select(entry->id); return; }
+    }
+}
+bool MultiSessions::recall() {
+    if (m_Shutdown) return false;
+    const auto last = m_Entries.value(m_Selected);
+    if (last && (last->state == "connected" || last->state == "starting")) { select(last->id); return true; }
+    for (const auto& id : ordered()) if (m_Entries.value(id)->state == "connected") { select(id); return true; }
+    return false;
 }
 void MultiSessions::hide(Entry* entry) {
     // Repeated selections must not keep postponing an unresponsive worker's
@@ -189,11 +220,18 @@ void MultiSessions::hide(Entry* entry) {
 void MultiSessions::present() {
     if (m_Shutdown || !m_Hiding.isEmpty() || m_Wanted.isEmpty()) return;
     auto entry = m_Entries.value(m_Wanted);
-    if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") send(entry, {{"command","show"}});
+    if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") {
+        entry->exposed = true;
+        send(entry, {{"command","show"}});
+    }
 }
 void MultiSessions::showDevices() {
+    bool exposed = false;
+    for (auto entry : m_Entries) exposed |= entry->socket && entry->exposed;
+    // Repeated Devices requests (tray, top bar and worker) are idempotent.
+    if (m_Wanted.isEmpty() && !exposed) return;
     m_Wanted.clear(); ++m_Epoch;
-    for (auto entry : m_Entries) if (entry->socket) {
+    for (auto entry : m_Entries) if (entry->socket && entry->exposed) {
         hide(entry);
     }
     emit changed();
@@ -230,7 +268,7 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     if (entry->reserved) { SessionGraph::release(m_Identity,entry->token); entry->reserved=false; }
     if (entry->socket) { entry->socket->abort(); entry->socket=nullptr; }
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
-    m_Hiding.remove(entry->id);
+    m_Hiding.remove(entry->id); entry->exposed=false;
     if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }
     if (m_Wanted==entry->id) { m_Wanted.clear(); emit devicesRequested(); }
     present(); emit changed();

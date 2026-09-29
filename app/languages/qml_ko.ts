@@ -1688,6 +1688,18 @@
         <translation>DeskPort 사용법</translation>
     </message>
     <message><source>Add a legacy host</source><translation>기존 방식 호스트 추가</translation></message>
+    <message>
+        <source>Connecting…</source>
+        <translation>연결 중…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>연결 해제 중…</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>실패</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

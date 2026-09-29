@@ -2381,3 +2381,55 @@ independent failure recovery and the complete dwell sequence remain blocked.
 The original Linux server/viewer instances were restored. The updated real
 loopback API tests pass on the built Linux host, including telemetry and video
 command lease/type/idempotence checks without a media stream.
+
+### Responsive shell and direct desktop switching — 2026-09-29
+
+Reason: review of the concurrent-viewer UI work. The shell still ran the Qt
+Quick scene graph on its GUI thread, every switch waited for all background
+viewers, and switching required a detour through Devices.
+
+- The device shell no longer forces the upstream non-threaded Qt Quick render
+  loop, which only the in-process stream needed; Qt's platform default applies.
+  Command-line stream mode and workers keep the previous setting, and an
+  explicit `QSG_RENDER_LOOP` is still honoured. This targets the recorded
+  controller stall in `eglSwapBuffers` on the GUI thread; that root cause is
+  still unconfirmed and live compositor acceptance remains pending.
+- A switch hides only a viewer that may be presenting. Hidden background viewers
+  are not asked again, so they add no latency and are no longer terminated when
+  slow to acknowledge a redundant hide. Repeated Devices requests are idempotent.
+  Input handoff ordering for the presenting viewer is unchanged.
+- Ctrl+Alt+Shift+N in the presented viewer asks the shell for the next
+  connected desktop (connection order). Background viewers cannot switch.
+- The tray Connections menu is rebuilt only when a row's name or state changes,
+  not on every selection or visibility acknowledgement. The legacy control-center
+  grid used only by command-line streaming is created on first use.
+
+Validation: macOS multi-session (6 cases, including a new case that fails on
+the previous hide policy with a 2.1 s handoff), UI (26) and host lifecycle
+(33, 2 platform skips) suites pass. Physical switch latency, focus/activation on
+KDE Wayland, keyboard/mouse routing and audio remain live acceptance checks.
+
+### Tray menu for concurrent desktops — 2026-09-29
+
+Reason: switching desktops from the tray took three menu levels, the menu did
+not show which desktop was presented, and the top-level reconnect/disconnect
+items silently addressed an invisible selection.
+
+- Live connections are listed at the top of the tray menu in the device list's
+  saved order (groups flattened in place); the presented desktop is checked and
+  connecting ones are labelled. One click presents that desktop. At most seven
+  are listed; "All connections (N)…" opens the device list.
+- Disconnect and More → Reconnect name their desktop: the presented one, else
+  the last one shown. They are hidden when there is none. Restart moved to More.
+- Menu items are fixed slots updated in place, refreshed before the menu opens,
+  and never destroyed while a native menu is tracking.
+- The tooltip reports connected desktops and the presented one.
+- Left click keeps alternating between the device list and the remote desktop.
+  If the last viewed desktop has ended, it presents the first connected one in
+  device-list order; with none left it hides the device list instead of doing
+  nothing. Ctrl+Alt+Shift+N follows the same order.
+
+Validation (macOS, isolated): tray actions, the seven-item cap and targets;
+session order, wrap-around and recall; UI (26), host lifecycle (33, 2 platform
+skips) and multi-session (6) suites. KDE StatusNotifier and macOS status-menu
+rendering remain live acceptance checks. Linux builds run on pk4 or wmn.

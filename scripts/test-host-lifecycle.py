@@ -157,7 +157,7 @@ else:
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     if "--sessions" in sys.argv:
-        extra_sources += f' "{root}/app/backend/multisessions.cpp"'
+        extra_sources += f' "{root}/app/backend/multisessions.cpp" "{root}/app/gui/hostlayout.cpp"'
         extra_headers += f' "{root}/app/backend/multisessions.h"'
     suite = "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"

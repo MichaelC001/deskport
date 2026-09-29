@@ -112,6 +112,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].scanCode = SDL_SCANCODE_L;
     m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].enabled = true;
 
+    m_SpecialKeyCombos[KeyComboNextSession].keyCombo = KeyComboNextSession;
+    m_SpecialKeyCombos[KeyComboNextSession].keyCode = SDLK_n;
+    m_SpecialKeyCombos[KeyComboNextSession].scanCode = SDL_SCANCODE_N;
+    m_SpecialKeyCombos[KeyComboNextSession].enabled = true;
+
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
 

@@ -13,7 +13,7 @@
 static QAction* trayAction(const QString& title) {
     for (auto widget : QApplication::topLevelWidgets())
         if (auto menu=qobject_cast<QMenu*>(widget))
-            for (auto action : menu->actions()) if (action->text()==title) return action;
+            for (auto action : menu->actions()) if (action->isVisible() && action->text()==title) return action;
     return nullptr;
 }
 
@@ -24,17 +24,39 @@ private slots:
     void trayActionsReturnBeforeDispatch() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path());
         QSignalSpy opened(&host,&HostManager::showDevicesRequested);
-        QSignalSpy disconnected(&host,&HostManager::disconnectRequested);
-        QSignalSpy reconnected(&host,&HostManager::reconnectRequested);
-        auto open=trayAction("Open device list"), disconnect=trayAction("Disconnect"), reconnect=trayAction("Reconnect");
-        QVERIFY(open); QVERIFY(disconnect); QVERIFY(reconnect);
-        open->trigger(); disconnect->trigger(); reconnect->trigger();
-        QCOMPARE(opened.size(),0);
-        QCOMPARE(disconnected.size(),0);
-        QCOMPARE(reconnected.size(),0);
+        QSignalSpy selected(&host,&HostManager::sessionSelected);
+        QSignalSpy disconnected(&host,&HostManager::sessionDisconnectRequested);
+        QSignalSpy reconnected(&host,&HostManager::sessionReconnectRequested);
+        auto row=[](QString id, QString name, QString state, bool visible=false, bool selected=false) {
+            return QVariantMap{{"id",id},{"name",name},{"state",state},{"visible",visible},{"selected",selected}}; };
+        QVERIFY(trayAction("Open device list"));
+        QVERIFY(!trayAction("Disconnect “Alpha”"));
+        host.updateSessionMenu({row("a","Alpha","connected",true,true),row("b","Beta & Co","starting"),row("c","Gone","disconnected")});
+        auto open=trayAction("Open device list"), alpha=trayAction("Alpha"), beta=trayAction("Beta && Co · Connecting…");
+        auto disconnect=trayAction("Disconnect “Alpha”"), reconnect=trayAction("Reconnect “Alpha”");
+        QVERIFY(open); QVERIFY(alpha); QVERIFY(beta); QVERIFY(disconnect); QVERIFY(reconnect);
+        QVERIFY(!trayAction("Gone")); // Ended sessions are not listed.
+        QVERIFY(alpha->isChecked()); QVERIFY(!beta->isChecked());
+        alpha->trigger(); QVERIFY(alpha->isChecked()); // Only the viewer changes the checkmark.
+        beta->trigger(); open->trigger(); disconnect->trigger(); reconnect->trigger();
+        QCOMPARE(opened.size(),0); QCOMPARE(selected.size(),0);
+        QCOMPARE(disconnected.size(),0); QCOMPARE(reconnected.size(),0);
         QTRY_COMPARE(opened.size(),1);
-        QTRY_COMPARE(disconnected.size(),1);
-        QTRY_COMPARE(reconnected.size(),1);
+        QTRY_COMPARE(selected.size(),2);
+        QCOMPARE(selected.at(1).at(0).toString(),QString("b"));
+        QTRY_COMPARE(disconnected.size(),1); QCOMPARE(disconnected.first().at(0).toString(),QString("a"));
+        QTRY_COMPARE(reconnected.size(),1); QCOMPARE(reconnected.first().at(0).toString(),QString("a"));
+        // No viewer shown: actions address the last viewed desktop; the list is capped at seven.
+        QVariantList many;
+        for (int i=0;i<9;++i) many.append(row(QString::number(i),QString("Desk %1").arg(i),"connected",false,i==8));
+        host.updateSessionMenu(many);
+        QVERIFY(trayAction("Desk 6")); QVERIFY(!trayAction("Desk 7")); QVERIFY(!trayAction("Desk 8"));
+        QVERIFY(trayAction("Disconnect “Desk 8”"));
+        auto all=trayAction("All connections (9)…"); QVERIFY(all);
+        all->trigger(); QTRY_COMPARE(opened.size(),2);
+        host.updateSessionMenu({});
+        QVERIFY(!trayAction("Desk 0")); QVERIFY(!trayAction("Disconnect “Desk 8”")); QVERIFY(!trayAction("Reconnect “Desk 8”"));
+        QVERIFY(trayAction("Open device list"));
     }
     void exitKeepsEventLoopAliveWhileHelperStops() {
         qputenv("DESKPORT_TEST_MODE","stubborn");

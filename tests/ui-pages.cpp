@@ -825,6 +825,8 @@ QtObject {
  function setSecondState(state) { states={"device-a":"connected", "device-b":state} }
  property var sessions: [ {id:"device-a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"device-b", name:"Second desktop", state:"connected", selected:false, error:""} ]
  function select(id) { selectedId=id }
+ property int recalls: 0
+ function recall() { recalls++; select(selectedId); return true }
  function showDevices() { listRequests++ }
  function disconnectSession(id) { disconnected=id }
 })",QUrl());
@@ -845,6 +847,7 @@ QtObject {
         QVERIFY(!findVisual(window->contentItem(),"sessionStrip"));
         QVERIFY(!findVisual(window->contentItem(),"sessionSelect-b"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"recallRemoteSession"));
+        QCOMPARE(manager->property("recalls").toInt(),1);
         QCOMPARE(manager->property("selectedId").toString(),QString("device-a"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
         QCOMPARE(manager->property("listRequests").toInt(),1);

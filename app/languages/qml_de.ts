@@ -1688,6 +1688,18 @@
         <translation>So verwenden Sie DeskPort</translation>
     </message>
     <message><source>Add a legacy host</source><translation>Klassischen Host hinzufügen</translation></message>
+    <message>
+        <source>Connecting…</source>
+        <translation>Verbinden…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>Trennen…</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>Fehlgeschlagen</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

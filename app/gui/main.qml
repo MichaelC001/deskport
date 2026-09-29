@@ -119,7 +119,8 @@ ApplicationWindow {
             if (activeStreamPage.session !== undefined && activeStreamPage.session) activeStreamPage.session.setViewerRequested(false)
             if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
-            stackView.push(sessionDeviceList, StackView.Immediate)
+            sessionDeviceList.active = true
+            stackView.push(sessionDeviceList.item, StackView.Immediate)
         } else stackView.pop(null)
     }
     function showOperation(text) {
@@ -165,8 +166,8 @@ ApplicationWindow {
         return true
     }
     function recallRemoteSession() {
-        if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.select(sessionManager.selectedId)
-        else hostManager.recallViewer()
+        if (typeof sessionManager !== "undefined" && sessionManager.busy && sessionManager.recall()) return
+        hostManager.recallViewer()
     }
     function goBack() {
         if (activeStreamPage && stackView.currentItem.controlCenterForActiveSession === true) {
@@ -184,11 +185,16 @@ ApplicationWindow {
     }
 
     // StackView does not own externally supplied items. Keep the control center
-    // and its models alive so a tray switch only changes presentation.
-    PcView {
+    // and its models alive so a tray switch only changes presentation. Only the
+    // in-process command-line stream uses it; create it on first use so the
+    // device shell does not maintain a second hidden grid and its models.
+    Loader {
         id: sessionDeviceList
-        controlCenterForActiveSession: true
-        visible: StackView.status === StackView.Active
+        active: false
+        sourceComponent: PcView {
+            controlCenterForActiveSession: true
+            visible: StackView.status === StackView.Active
+        }
     }
 
     StackView {

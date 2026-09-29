@@ -11,7 +11,9 @@ records. See [the local update route](LOCAL_UPDATE.md). The wire contract is in 
 - Desktop cards expose Details, Actions and Settings. Active-session actions
   include disconnect, reconnect and fullscreen.
 - The native Ctrl+Alt+Shift+Q shortcut leaves fullscreen first. Pressing it while
-  windowed disconnects. Ctrl+Alt+Shift+X still toggles fullscreen. The Sharing page
+  windowed disconnects. Ctrl+Alt+Shift+X still toggles fullscreen. With several
+  desktops connected, Ctrl+Alt+Shift+N in the presented viewer switches directly
+  to the next connected desktop in connection order. The Sharing page
   can request that the admitted desktop client leave fullscreen without stopping
   its stream. This requires negotiated capability and an authenticated session.
 - macOS and Linux helpers start without a virtual display. Display admission

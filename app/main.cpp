@@ -494,7 +494,14 @@ int main(int argc, char *argv[])
     //
     // NB: Windows defaults to the "windows" non-threaded render loop on
     // Qt 5 and the threaded render loop on Qt 6.
-    qputenv("QSG_RENDER_LOOP", "basic");
+    //
+    // DeskPort: only the command-line stream mode still runs a session inside
+    // the Qt UI process. The device shell restores Qt's default below, once the
+    // command line is known, so a blocking swap cannot stall its event loop.
+    const bool renderLoopOverridden = qEnvironmentVariableIsSet("QSG_RENDER_LOOP");
+    if (!renderLoopOverridden) qputenv("QSG_RENDER_LOOP", "basic");
+#else
+    const bool renderLoopOverridden = true;
 #endif
 
 #if defined(Q_OS_DARWIN) && defined(QT_DEBUG)
@@ -952,6 +959,8 @@ int main(int argc, char *argv[])
     QObject::connect(&managedSessions, &MultiSessions::changed, &hostManager, [&] { hostManager.updateSessionMenu(managedSessions.sessions()); });
     QObject::connect(&hostManager, &HostManager::sessionSelected, &managedSessions, &MultiSessions::select);
     QObject::connect(&hostManager, &HostManager::sessionDisconnectRequested, &managedSessions, &MultiSessions::disconnectSession);
+    QObject::connect(&hostManager, &HostManager::sessionReconnectRequested, &managedSessions, &MultiSessions::reconnect);
+    QObject::connect(&hostManager, &HostManager::trayMenuAboutToShow, &managedSessions, [&] { hostManager.updateSessionMenu(managedSessions.sessions()); });
     QObject::connect(&peerManager, &PeerManager::deviceRemovalFinished, &managedSessions, [&managedSessions](QString id, bool success) {
         if (success) managedSessions.disconnectSession(id.toLower());
     });
@@ -1003,7 +1012,7 @@ int main(int argc, char *argv[])
         }
     };
     auto recallViewer = [&engine, &showDevices, &managedSessions] {
-        if (managedSessions.busy()) { managedSessions.select(managedSessions.selectedId()); return; }
+        if (managedSessions.busy() && managedSessions.recall()) return;
         QVariant handled;
         if (!engine.rootObjects().isEmpty())
             QMetaObject::invokeMethod(engine.rootObjects().first(), "prepareViewerRecall", Q_RETURN_ARG(QVariant, handled));
@@ -1029,8 +1038,11 @@ int main(int argc, char *argv[])
     // remote desktop or the device list, and hides whichever of them is up.
     auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions] {
         if (managedSessions.busy()) {
+            // Device list and remote desktop alternate. With no desktop left to
+            // show, the click still toggles the device list instead of doing nothing.
             auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-            if (window && window->isVisible()) recallViewer(); else showDevices();
+            if (!window || !window->isVisible()) showDevices();
+            else if (!managedSessions.recall()) window->hide();
             return;
         }
         if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
@@ -1092,6 +1104,9 @@ int main(int argc, char *argv[])
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
         initialView = "qrc:/gui/PcView.qml";
+        // Media runs in session workers; the shell renders off its GUI thread
+        // wherever Qt supports it. No Qt Quick window exists before this point.
+        if (!renderLoopOverridden) qunsetenv("QSG_RENDER_LOOP");
         break;
     case GlobalCommandLineParser::StreamRequested:
         {

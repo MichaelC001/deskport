@@ -36,6 +36,11 @@ public:
     Q_INVOKABLE void disconnectSession(QString id);
     Q_INVOKABLE void reconnect(QString id);
     Q_INVOKABLE void fullscreen(QString id = QString());
+    // Cycles the viewer to the next connected desktop, in connection order.
+    Q_INVOKABLE void selectNext();
+    // Shows the last viewed desktop, else the first connected one. False when
+    // no desktop can be shown.
+    Q_INVOKABLE bool recall();
     void shutdown();
     void suspend();
 signals:
@@ -51,8 +56,13 @@ private:
         QVariantMap traffic;
         bool reserved = false;
         bool fullscreenPending = false;
+        // False only after the worker acknowledged hiding at the current epoch.
+        // Workers start hidden; a hidden worker never owns input.
+        bool exposed = false;
         quint64 hideEpoch = 0, hideRequest = 0;
     };
+    // Session IDs in the device list's order (groups flattened in place).
+    QStringList ordered() const;
     void launch(const QString& id);
     void accept();
     void send(Entry* entry, const QJsonObject& message);
@@ -64,6 +74,7 @@ private:
     PeerManager* m_Peers;
     QLocalServer m_Server;
     QMap<QString, Entry*> m_Entries;
+    QStringList m_Order;
     QString m_Selected, m_Wanted, m_Visible, m_Identity;
     QSet<QString> m_Hiding;
     quint64 m_Epoch = 0;

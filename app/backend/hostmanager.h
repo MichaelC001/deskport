@@ -123,6 +123,9 @@ signals:
     void fullscreenRequested();
     void sessionSelected(QString id);
     void sessionDisconnectRequested(QString id);
+    void sessionReconnectRequested(QString id);
+    // Emitted synchronously before the tray menu opens so it can be refreshed.
+    void trayMenuAboutToShow();
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
@@ -169,8 +172,17 @@ private:
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
     bool m_NativeMenuTracking = false;
-    QMenu* m_SessionsMenu = nullptr;
+    // Connected desktops are listed at the top of the tray menu, in device-list
+    // order. Fixed slots are updated in place; actions are never destroyed.
+    static constexpr int MaxTraySessions = 7;
+    QList<QAction*> m_SessionSlots;
+    QAction* m_AllSessions = nullptr;
+    QAction* m_SessionSeparator = nullptr;
+    QAction* m_DisconnectSession = nullptr;
+    QAction* m_ReconnectSession = nullptr;
+    QString m_CurrentSession;
     QVariantList m_PendingSessionRows;
+    QString m_SessionMenuKey;
     bool m_SessionMenuRefreshQueued = false;
     bool m_TrustBusy = false;
     bool m_Starting = false;

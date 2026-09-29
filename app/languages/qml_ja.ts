@@ -1691,6 +1691,18 @@
         <translation>DeskPort の使い方</translation>
     </message>
     <message><source>Add a legacy host</source><translation>従来のホストを追加</translation></message>
+    <message>
+        <source>Connecting…</source>
+        <translation>接続中…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>切断中…</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>失敗</translation>
+    </message>
 </context>
 <context>
     <name>SettingsHome</name>

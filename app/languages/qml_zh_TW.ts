@@ -2834,6 +2834,38 @@
         <source>Cannot enable login startup.</source>
         <translation>無法開啟登入啟動。</translation>
     </message>
+    <message>
+        <source>More</source>
+        <translation>更多</translation>
+    </message>
+    <message>
+        <source>Connecting…</source>
+        <translation>連線中…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>正在中斷…</translation>
+    </message>
+    <message>
+        <source>All connections (%1)…</source>
+        <translation>全部連線（%1）…</translation>
+    </message>
+    <message>
+        <source>Disconnect “%1”</source>
+        <translation>中斷「%1」</translation>
+    </message>
+    <message>
+        <source>Reconnect “%1”</source>
+        <translation>重新連線「%1」</translation>
+    </message>
+    <message>
+        <source>DeskPort · %1 connected</source>
+        <translation>DeskPort · 已連線 %1 台</translation>
+    </message>
+    <message>
+        <source>DeskPort · %1 connected · showing %2</source>
+        <translation>DeskPort · 已連線 %1 台 · 正在顯示 %2</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>

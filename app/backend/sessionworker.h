@@ -14,6 +14,7 @@ public:
     int run();
     Q_INVOKABLE void showDevicesDuringSession();
     Q_INVOKABLE void prepareViewerRecall();
+    Q_INVOKABLE void showNextSession();
 private:
     void attach(Session* session);
     void command(const QJsonObject& message);

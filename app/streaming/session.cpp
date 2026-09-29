@@ -1883,6 +1883,12 @@ void Session::updateOptimalWindowDisplayMode()
     SDL_SetWindowDisplayMode(m_Window, &bestMode);
 }
 
+void Session::requestNextViewer() {
+    // Only an isolated session worker has a shell to switch; the legacy
+    // in-process viewer has no other desktop and ignores the chord.
+    if (m_QtWindow && m_QtWindow->metaObject()->indexOfMethod("showNextSession()") >= 0)
+        QMetaObject::invokeMethod(m_QtWindow, "showNextSession", Qt::QueuedConnection);
+}
 bool Session::leaveFullscreen() {
     if (!m_Window || !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) return false;
     toggleFullscreen();
