@@ -100,3 +100,12 @@ snapshot for optional video transmission pause. See core `protocol/VIDEO_PAUSE.m
 The local snapshot is preloaded on test machines; no signature bypass is used.
 Before public consumer integration, publish the reviewed core and restore a
 reachable GitHub pin. The current local path pin is not a public release input.
+
+## Reachable dev core pin — 2026-09-29
+
+The video pause core change is now published on the core `dev` branch as
+`2ebf5c9` (the local `a71542a` with corrected authorship and an identical
+tree). The Git submodule and flake.lock both pin that GitHub revision; its NAR
+hash equals the earlier local snapshot. Consumers can fetch DeskPort and its core
+without preloaded store paths. Core `main` is unchanged: merging the video
+pause specification there still requires review.

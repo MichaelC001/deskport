@@ -2433,3 +2433,13 @@ Validation (macOS, isolated): tray actions, the seven-item cap and targets;
 session order, wrap-around and recall; UI (26), host lifecycle (33, 2 platform
 skips) and multi-session (6) suites. KDE StatusNotifier and macOS status-menu
 rendering remain live acceptance checks. Linux builds run on pk4 or wmn.
+
+### Reachable development inputs — 2026-09-29
+
+Reason: every test host needed private source and core snapshots preloaded
+before a configuration could build. The `dev/pcui` branch is published, and
+the video pause core change is published on the core `dev` branch
+(`2ebf5c9`, identical tree and NAR to the local snapshot). Both Nix and Git
+pin that revision, so a consumer can pin a public DeskPort commit and build
+from source. `TEST_BUILD_ID` now names the development line instead of an old
+private build. Core `main` and the public release pins are unchanged.
