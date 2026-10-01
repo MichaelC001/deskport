@@ -2940,6 +2940,7 @@
     <message><source>Save</source><translation>保存</translation></message>
     <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
     <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 では操作項目を大きく、0.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>macOS の最小デスクトップ（800 × 600）に達したため、このウィンドウではこれ以上拡大できません。全画面表示か、より大きなウィンドウを使用してください。</translation></message>
     <message>
         <source>Full screen</source>
         <translation>フルスクリーン</translation>

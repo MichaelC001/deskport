@@ -2932,6 +2932,7 @@
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>Nach Sitzungsende wird die vorherige Bildschirmanordnung automatisch wiederhergestellt.</translation></message>
     <message><source>Desktop adjustment</source><translation>Desktop-Anpassung</translation></message>
     <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1,5 vergrößert Bedienelemente; 0,5 zeigt mehr Inhalt. Wird nach der automatischen Berechnung der Desktop-Größe angewendet. Während einer Verbindung wirkt die Änderung sofort.</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>Minimale macOS-Desktopgröße (800 × 600) erreicht: In diesem Fenster ist keine weitere Vergrößerung möglich. Verwende den Vollbildmodus oder ein größeres Fenster.</translation></message>
     <message>
         <source>Full screen</source>
         <translation>Vollbild</translation>

@@ -2983,6 +2983,10 @@
         <translation>1.5 显示更大的控件；0.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
     </message>
     <message>
+        <source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source>
+        <translation>已达到 macOS 最小桌面（800 × 600），当前窗口无法再放大。可改用全屏或更大的窗口。</translation>
+    </message>
+    <message>
         <source>Full screen</source>
         <translation>全屏</translation>
     </message>

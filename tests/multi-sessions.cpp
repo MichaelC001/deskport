@@ -31,7 +31,8 @@ static int worker(QApplication& app) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
             if(action=="show") { presenting=true; send({{"type","shown"}}); }
-            else if(action=="fullscreen") send({{"type","traffic"},{"received",0},{"sent",++fullscreenRequests}});
+            else if(action=="fullscreen") { ++fullscreenRequests;
+                send({{"type","traffic"},{"received",0},{"sent",fullscreenRequests},{"tuningLimited",fullscreenRequests==1}}); }
             else if(action=="hide") {
                 if (mode=="hung") continue;
                 // Models a busy background viewer: it only answers while presenting.
@@ -80,6 +81,8 @@ private slots:
         manager.fullscreen("a");
         QTRY_VERIFY(row("a").value("visible").toBool());
         QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        // The worker's host-capped enlargement reaches the device settings.
+        QTRY_COMPARE(manager.tuningLimited(),QStringList{"a"});
         // Rapid switching supersedes older hide acknowledgements.
         for(int i=0;i<12;++i) { manager.select(i%2 ? "a":"b"); QTest::qWait(5); }
         manager.select("b"); QTRY_VERIFY(row("b").value("visible").toBool());
@@ -100,6 +103,7 @@ private slots:
         QSignalSpy devices(&manager,&MultiSessions::devicesRequested);
         manager.disconnectSession("a");
         QTRY_COMPARE(row("a").value("state").toString(),QString("disconnected"));
+        QVERIFY(manager.tuningLimited().isEmpty());
         QCOMPARE(devices.count(),0);
         QVERIFY(row("c").value("visible").toBool());
         QCOMPARE(row("c").value("state").toString(),QString("connected"));

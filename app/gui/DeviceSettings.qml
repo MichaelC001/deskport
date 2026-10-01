@@ -26,7 +26,10 @@ UiPage {
             objectName: "deviceDesktopAdjustment"
             iconSource: "qrc:/res/ui/tuning.svg"
             title: qsTr("Desktop fine tuning")
-            note: qsTr("1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.")
+            // Session IDs are lower case; device IDs keep the host's spelling.
+            readonly property bool limited: typeof sessionManager !== "undefined" && sessionManager.tuningLimited.indexOf(page.deviceId.toLowerCase()) >= 0
+            note: limited ? qsTr("Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.")
+                          : qsTr("1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.")
             readonly property var factors: preferences.desktopAdjustmentChoices
             options: preferences.desktopAdjustmentLabels
             currentIndex: Math.max(0, factors.indexOf(preferences.desktopAdjustment))
@@ -34,6 +37,9 @@ UiPage {
                 preferences.desktopAdjustment = factors[index]; save()
                 if (typeof window !== "undefined" && window.activeHostId === page.deviceId && window.activeStreamPage)
                     window.activeStreamPage.session.setDesktopAdjustment(factors[index])
+                // Desktop workers reread the saved profile when they reconnect.
+                else if (typeof sessionManager !== "undefined" && sessionManager.states[page.deviceId.toLowerCase()] === "connected")
+                    sessionManager.reconnect(page.deviceId)
             }
         }
         UiChoiceRow {

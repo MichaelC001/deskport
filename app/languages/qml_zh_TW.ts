@@ -2953,6 +2953,7 @@
     <message><source>Save</source><translation>儲存</translation></message>
     <message><source>Desktop adjustment</source><translation>桌面微調</translation></message>
     <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 顯示較大的控制項；0.5 顯示更多內容。在自動計算的桌面大小上微調。連線中修改會立即生效。</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>已達到 macOS 最小桌面（800 × 600），目前視窗無法再放大。可改用全螢幕或更大的視窗。</translation></message>
     <message>
         <source>Full screen</source>
         <translation>全螢幕</translation>

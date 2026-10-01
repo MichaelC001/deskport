@@ -21,6 +21,8 @@ class MultiSessions : public QObject {
     Q_PROPERTY(QString selectedId READ selectedId NOTIFY changed)
     Q_PROPERTY(QVariantMap selectedTraffic READ selectedTraffic NOTIFY trafficChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
+    // Sessions whose requested desktop enlargement is capped by the host.
+    Q_PROPERTY(QStringList tuningLimited READ tuningLimited NOTIFY changed)
 public:
     explicit MultiSessions(PeerManager* peers, QByteArray certificate, QByteArray key, QObject* parent = nullptr);
     ~MultiSessions();
@@ -29,6 +31,7 @@ public:
     QString selectedId() const { return m_Selected; }
     bool busy() const;
     QVariantMap selectedTraffic() const;
+    QStringList tuningLimited() const;
     void setDiagnosticsEnabled(bool enabled);
     Q_INVOKABLE void open(QString id, QString name, QString address, QString app = QStringLiteral("Desktop"));
     Q_INVOKABLE void select(QString id);
@@ -56,6 +59,7 @@ private:
         QVariantMap traffic;
         bool reserved = false;
         bool fullscreenPending = false;
+        bool tuningLimited = false;
         // False only after the worker acknowledged hiding at the current epoch.
         // Workers start hidden; a hidden worker never owns input.
         bool exposed = false;

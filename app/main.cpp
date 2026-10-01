@@ -1035,14 +1035,15 @@ int main(int argc, char *argv[])
         }
     });
     // The tray's left button is the one-action route to the window: it shows the
-    // remote desktop or the device list, and hides whichever of them is up.
+    // remote desktop when one is connected, otherwise it toggles the device list.
     auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions] {
         if (managedSessions.busy()) {
-            // Device list and remote desktop alternate. With no desktop left to
-            // show, the click still toggles the device list instead of doing nothing.
+            // Go straight to the last viewed desktop, never through the device
+            // list; the list stays available from the tray menu.
+            if (managedSessions.recall()) return;
             auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
             if (!window || !window->isVisible()) showDevices();
-            else if (!managedSessions.recall()) window->hide();
+            else window->hide();
             return;
         }
         if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {

@@ -18,7 +18,10 @@ void SessionWorker::send(QJsonObject message) { if (m_Socket.state()==QLocalSock
 int SessionWorker::run() {
     QTimer traffic;
     connect(&traffic, &QTimer::timeout, this, [this] {
-        if (m_Session) { auto state=QJsonObject::fromVariantMap(m_Session->traffic()); state["type"]="traffic"; send(state); }
+        if (m_Session) {
+            auto state=QJsonObject::fromVariantMap(m_Session->traffic()); state["type"]="traffic";
+            state["tuningLimited"]=m_Session->desktopTuningLimited(); send(state);
+        }
     });
     traffic.start(1000);
     connect(&m_Socket,&QLocalSocket::connected,this,[this] {

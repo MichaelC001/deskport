@@ -2443,3 +2443,26 @@ the video pause core change is published on the core `dev` branch
 pin that revision, so a consumer can pin a public DeskPort commit and build
 from source. `TEST_BUILD_ID` now names the development line instead of an old
 private build. Core `main` and the public release pins are unchanged.
+
+### Desktop tuning feedback and tray recall — 2026-10-01
+
+Reason: desktop fine tuning enlarged the wrong way and, from a small client
+window, larger values silently hit the macOS 800×600 logical floor. Changing it
+during a connection no longer applied after desktops moved to worker processes,
+and the tray's left click showed the device list before the desktop.
+
+- Larger tuning values enlarge remote content (core `a107606`).
+- A worker reports, with its traffic sample, when the host's minimum desktop
+  overrides part of a requested enlargement. Device settings then explain the
+  limit instead of the usual note.
+- Choosing a tuning value while that device is connected reconnects its worker,
+  which rereads the saved profile.
+- Left click presents the last viewed connected desktop (else the first in
+  device-list order) without passing through the device list. With no desktop
+  connected it toggles the device list. The list stays in the tray menu. This
+  supersedes the alternating left click described for 2026-09-29.
+
+Validation (macOS, isolated): multi-session (6, including the limit report and
+its removal on disconnect), UI (26), core workspace and Qt adapter vectors, and
+an incremental full app compile. Live tray, KDE and limit-hint rendering remain
+acceptance checks.

@@ -664,6 +664,7 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
         }
     }
     const auto workspace = DeskPortDisplay::adjusted(DeskPortDisplay::forClient(pixels, scale), m_Preferences->desktopAdjustment, m_Computer->operatingSystem);
+    if (m_Preferences->adaptiveResolution) m_DesktopTuningLimited = workspace.limited;
     if (initialFullscreen || window != m_Window)
         qInfo() << "Client display pixels:" << pixels << "system scale:" << scale << "workspace backing:" << workspace.pixels << "host scale:" << workspace.scale;
     return workspace;
@@ -818,7 +819,9 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     const auto workspace = workspaceForWindow(window, m_IsFullScreen && !m_AdaptiveResume);
     if (!m_AdaptiveResume) m_AdaptiveScale = m_Preferences->adaptiveResolution ? workspace.scale : 1;
     // Restore window geometry, not a stream size negotiated by an older policy.
-    const QSize target = !m_Preferences->adaptiveResolution ? DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment, m_Computer->operatingSystem).pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
+    const auto fixed = DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width,m_Preferences->height)), 1}, m_Preferences->desktopAdjustment, m_Computer->operatingSystem);
+    if (!m_Preferences->adaptiveResolution) m_DesktopTuningLimited = fixed.limited;
+    const QSize target = !m_Preferences->adaptiveResolution ? fixed.pixels : m_AdaptiveResume ? m_AdaptiveNextSize : workspace.pixels;
     m_AdaptiveNextSize = {};
     deskportResizeStage("mode-request", target.width(), target.height());
     m_AdaptiveDisplay->setFullScreen(m_IsFullScreen);

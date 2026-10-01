@@ -37,6 +37,11 @@ QVariantMap MultiSessions::selectedTraffic() const {
     const auto entry = m_Entries.value(m_Selected);
     return entry ? entry->traffic : QVariantMap{};
 }
+QStringList MultiSessions::tuningLimited() const {
+    QStringList ids;
+    for (auto entry : m_Entries) if (entry->tuningLimited && entry->state == "connected") ids << entry->id;
+    return ids;
+}
 void MultiSessions::setDiagnosticsEnabled(bool enabled) {
     for (auto entry : m_Entries) send(entry, {{"command","diagnostics"},{"enabled",enabled}});
 }
@@ -148,7 +153,10 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
             const auto value=message.value(key).toDouble(-1);
             if (value >= 0 && value < 1e18) entry->traffic[key]=value;
         }
-        emit trafficChanged(); return;
+        emit trafficChanged();
+        const bool limited = message.value("tuningLimited").toBool();
+        if (limited != entry->tuningLimited) { entry->tuningLimited = limited; emit changed(); }
+        return;
     }
     if (type == "hidden" && quint64(message.value("epoch").toDouble()) == entry->hideEpoch) {
         if (m_Hiding.remove(entry->id)) entry->exposed = false;

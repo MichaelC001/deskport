@@ -2932,6 +2932,7 @@
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>세션이 종료되면 이전 화면 배치가 자동으로 복원됩니다.</translation></message>
     <message><source>Desktop adjustment</source><translation>데스크톱 크기 조정</translation></message>
     <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5는 컨트롤을 더 크게 표시하고 0.5는 더 많은 내용을 표시합니다. 자동 계산된 데스크톱 크기에 적용됩니다. 연결 중에는 즉시 적용됩니다.</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>macOS 최소 데스크톱(800 × 600)에 도달하여 이 창에서는 더 확대할 수 없습니다. 전체 화면이나 더 큰 창을 사용하세요.</translation></message>
     <message>
         <source>Full screen</source>
         <translation>전체 화면</translation>

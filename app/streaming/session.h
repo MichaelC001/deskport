@@ -148,6 +148,11 @@ private:
 public:
     double desktopAdjustment() const { return m_Preferences->desktopAdjustment; }
     Q_INVOKABLE void setDesktopAdjustment(double value);
+    // True while the host's minimum desktop prevents the requested enlargement.
+    bool desktopTuningLimited() const { return m_DesktopTuningLimited.load(); }
+private:
+    mutable std::atomic<bool> m_DesktopTuningLimited{false};
+public:
 
     static
     void getDecoderInfo(SDL_Window* window,
