@@ -2931,7 +2931,7 @@
     <message><source>Use client as an extended screen</source><translation>Utiliser le client comme écran étendu</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposition précédente des écrans est automatiquement restaurée à la fin de la session.</translation></message>
     <message><source>Desktop adjustment</source><translation>Ajustement du bureau</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0,5 agrandit les commandes ; 1,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, la modification s’applique immédiatement.</translation></message>
+    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1,5 agrandit les commandes ; 0,5 affiche plus de contenu. Appliqué après le calcul automatique de la taille du bureau. Pendant une connexion, la modification s’applique immédiatement.</translation></message>
     <message>
         <source>Full screen</source>
         <translation>Plein écran</translation>

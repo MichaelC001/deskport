@@ -2939,7 +2939,7 @@
     <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
     <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 では操作項目を大きく、0.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
     <message>
         <source>Full screen</source>
         <translation>フルスクリーン</translation>

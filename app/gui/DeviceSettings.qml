@@ -26,7 +26,7 @@ UiPage {
             objectName: "deviceDesktopAdjustment"
             iconSource: "qrc:/res/ui/tuning.svg"
             title: qsTr("Desktop fine tuning")
-            note: qsTr("0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.")
+            note: qsTr("1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.")
             readonly property var factors: preferences.desktopAdjustmentChoices
             options: preferences.desktopAdjustmentLabels
             currentIndex: Math.max(0, factors.indexOf(preferences.desktopAdjustment))

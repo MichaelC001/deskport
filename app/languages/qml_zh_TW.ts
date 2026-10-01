@@ -2952,7 +2952,7 @@
     <message><source>Computer name or IP, without port</source><translation>電腦名稱或 IP，不含連接埠</translation></message>
     <message><source>Save</source><translation>儲存</translation></message>
     <message><source>Desktop adjustment</source><translation>桌面微調</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5 顯示較大的控制項；1.5 顯示更多內容。在自動計算的桌面大小上微調。連線中修改會立即生效。</translation></message>
+    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 顯示較大的控制項；0.5 顯示更多內容。在自動計算的桌面大小上微調。連線中修改會立即生效。</translation></message>
     <message>
         <source>Full screen</source>
         <translation>全螢幕</translation>

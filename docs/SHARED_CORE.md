@@ -109,3 +109,12 @@ tree). The Git submodule and flake.lock both pin that GitHub revision; its NAR
 hash equals the earlier local snapshot. Consumers can fetch DeskPort and its core
 without preloaded store paths. Core `main` is unchanged: merging the video
 pause specification there still requires review.
+
+## Desktop tuning direction — 2026-10-01
+
+Core `a107606` (on `dev`) inverts desktop fine tuning: larger values now enlarge
+remote content by dividing the workspace, so 1.5 shows larger controls and 0.5
+fits more content. Saved per-device values keep their number and therefore flip
+meaning. Other consumers adopt the new direction when they advance their pins.
+The macOS 800×600 logical floor still applies after tuning, so small client
+windows can reach the floor at 1.0 and show no further enlargement.

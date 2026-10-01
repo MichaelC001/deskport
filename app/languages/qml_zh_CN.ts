@@ -2979,8 +2979,8 @@
         <translation>桌面微调</translation>
     </message>
     <message>
-        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
-        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
+        <source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+        <translation>1.5 显示更大的控件；0.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
     </message>
     <message>
         <source>Full screen</source>
