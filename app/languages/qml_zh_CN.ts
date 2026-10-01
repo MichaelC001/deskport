@@ -629,6 +629,7 @@
     <name>Session</name>
     <message><source>This connection was taken over by another device.</source><translation>连接已被其他客户端接管。</translation></message>
     <message><source>Adjusting resolution…</source><translation>正在调整分辨率…</translation></message>
+    <message><source>Connection interrupted. Reconnecting…</source><translation>连接中断，正在重新连接…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>

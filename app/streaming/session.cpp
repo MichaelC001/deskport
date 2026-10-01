@@ -695,6 +695,10 @@ Session* Session::adaptiveContinuation() {
         next->m_ViewerRequested = m_ViewerRequested.load();
         next->m_TrafficReceivedBase = m_TrafficReceivedBase;
         next->m_TrafficSentBase = m_TrafficSentBase;
+        // Keep the retained window responsive through the retry delay.
+        if (m_TransitionTimer) m_TransitionTimer->stop();
+        next->m_TransitionWindow = std::move(m_TransitionWindow);
+        if (next->m_TransitionWindow) next->pumpTransitionWindowBetweenSessions();
         // A media-only interruption may retain its authenticated controller.
         if (m_AdaptiveDisplay && !m_AdaptiveDisplay->failed()) next->m_AdaptiveDisplay = std::move(m_AdaptiveDisplay);
         else m_AdaptiveDisplay.reset();
@@ -767,6 +771,13 @@ void Session::initializeClipboard() {
     m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
 }
 
+void Session::pumpTransitionWindowBetweenSessions() {
+    if (!m_TransitionTimer) {
+        m_TransitionTimer = new QTimer(this);
+        connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) pumpTransitionWindow(); });
+    }
+    m_TransitionTimer->start(20);
+}
 void Session::pumpTransitionWindow() {
     m_TransitionWindow->pump();
     if (m_TransitionWindow->takePresentationShown() && m_ViewerRequested) emit presentationShown();
@@ -2230,6 +2241,8 @@ void Session::exec(QWindow* qtWindow)
 {
     if (m_ExecRequested) return;
     m_ExecRequested = true;
+    // The SDL owner pumps a retained window from here on.
+    if (m_TransitionTimer) { m_TransitionTimer->stop(); m_TransitionTimer->deleteLater(); m_TransitionTimer = nullptr; }
     if (!m_Lifetime.beginExec()) {
         emit displayLaunchError(tr("Another connection is still active. Wait for it to finish."));
         emit sessionFinished(0);
@@ -2253,11 +2266,7 @@ void Session::exec(QWindow* qtWindow)
     const auto finished = [this] {
         // SDL has released its window. Qt owns transition animation while
         // transport cleanup completes; lifetime waits for both completions.
-        if (m_TransitionWindow && adaptiveRestartPending()) {
-            m_TransitionTimer = new QTimer(this);
-            connect(m_TransitionTimer, &QTimer::timeout, this, [this] { if (m_TransitionWindow) pumpTransitionWindow(); });
-            m_TransitionTimer->start(20);
-        }
+        if (m_TransitionWindow && adaptiveRestartPending()) pumpTransitionWindowBetweenSessions();
         m_Lifetime.endExec();
     };
     if (m_ThreadedExec) {
@@ -2658,6 +2667,12 @@ void Session::execInternal()
                 if (!m_RecallGraceUntil) m_RecallGraceUntil = 1;
                 emit presentationShown();
                 break;
+            case DeskPortRestoreViewer:
+                // Background recovery: keep the window exactly where the user left it.
+                if (!m_ViewerRequested) break;
+                if (!m_Clipboard) initializeClipboard();
+                emit presentationShown();
+                break;
             case DeskPortToggleWindow:
                 // The control center and the remote window are never shown at
                 // the same time, so a hidden remote window means the tray click
@@ -3039,8 +3054,11 @@ DispatchDeferredCleanup:
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
-    if (adaptiveRestartPending() && !m_ManualReconnect && !m_NetworkRetry) {
-        m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Adjusting resolution…"));
+    // Network recovery keeps the window too, so reconnecting never maps a new
+    // one that the compositor would raise and focus.
+    if (m_Window && adaptiveRestartPending() && !m_ManualReconnect) {
+        m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window,
+            m_NetworkRetry ? tr("Connection interrupted. Reconnecting…") : tr("Adjusting resolution…"));
         qInfo() << "Adaptive display keeping client window:" << SDL_GetWindowID(m_Window);
     }
     else SDL_DestroyWindow(m_Window);

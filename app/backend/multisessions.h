@@ -60,6 +60,8 @@ private:
         bool reserved = false;
         bool fullscreenPending = false;
         bool tuningLimited = false;
+        // The viewer has been on screen before, so later shows are recovery.
+        bool presented = false;
         // False only after the worker acknowledged hiding at the current epoch.
         // Workers start hidden; a hidden worker never owns input.
         bool exposed = false;
@@ -71,7 +73,8 @@ private:
     void accept();
     void send(Entry* entry, const QJsonObject& message);
     void receive(Entry* entry, const QJsonObject& message);
-    void present();
+    // Raising is for user actions; background recovery presents quietly.
+    void present(bool raise = true);
     void hide(Entry* entry);
     void ended(Entry* entry, const QString& error);
     QByteArray m_Certificate, m_Key;

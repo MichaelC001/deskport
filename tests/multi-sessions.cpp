@@ -16,7 +16,7 @@ static QByteArray credential(const char* name) { QFile f(qEnvironmentVariable(na
 static int worker(QApplication& app) {
     QLocalSocket socket;
     QByteArray buffer;
-    int fullscreenRequests = 0;
+    int fullscreenRequests = 0, raisedShows = 0, quietShows = 0;
     bool presenting = false;
     const QString id=app.arguments().value(2);
     const auto mode=app.arguments().value(3);
@@ -30,7 +30,15 @@ static int worker(QApplication& app) {
         while (buffer.contains('\n')) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
-            if(action=="show") { presenting=true; send({{"type","shown"}}); }
+            if(action=="show") {
+                presenting=true; ++(o.value("raise").toBool(true) ? raisedShows : quietShows);
+                send({{"type","shown"}});
+                if (mode=="recover") send({{"type","traffic"},{"received",quietShows},{"sent",raisedShows}});
+                // Models a transport restart under a retained window: an
+                // unsolicited hide acknowledgement, then a new ready viewer.
+                if (mode=="recover" && raisedShows==1 && quietShows==0)
+                    QTimer::singleShot(300,&app,[&] { send({{"type","hidden"},{"epoch",0}}); send({{"type","ready"}}); });
+            }
             else if(action=="fullscreen") { ++fullscreenRequests;
                 send({{"type","traffic"},{"received",0},{"sent",fullscreenRequests},{"tuningLimited",fullscreenRequests==1}}); }
             else if(action=="hide") {
@@ -192,6 +200,28 @@ private slots:
         QVERIFY(manager.recall()); QTRY_VERIFY(visible("b"));
         manager.disconnectSession("b"); QTRY_COMPARE(manager.states().value("b").toString(),QString("disconnected"));
         QVERIFY(!manager.recall());
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
+    }
+    void backgroundRecoveryNeverRaisesTheViewer() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
+        QJsonObject records{{"a",QJsonObject{{"hostId","a"},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}}}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        MultiSessions manager(&peers,cert,key);
+        manager.open("a","Fixture","127.0.0.1","recover");
+        // Opening raises; the later restart's hide and ready only restore state.
+        QTRY_VERIFY(manager.selectedTraffic().value("sent").toInt() >= 1);
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),2);
+        const int opened = manager.selectedTraffic().value("sent").toInt();
+        QTest::qWait(200);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),opened);
+        // A user's explicit switch still raises.
+        manager.showDevices(); manager.select("a");
+        QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),opened+1);
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),2);
         manager.shutdown(); QTRY_VERIFY(!manager.busy());
     }
     void cancellationBeforeLaunch() {

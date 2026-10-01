@@ -620,6 +620,7 @@
 <context>
     <name>Session</name>
     <message><source>Adjusting resolution…</source><translation>해상도 조정 중…</translation></message>
+    <message><source>Connection interrupted. Reconnecting…</source><translation>연결이 끊어졌습니다. 다시 연결 중…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>

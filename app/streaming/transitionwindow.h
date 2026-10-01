@@ -11,6 +11,9 @@ constexpr int DeskPortToggleWindow = 109;
 constexpr int DeskPortReconnect = 110;
 constexpr int DeskPortFullscreen = 111;
 constexpr int DeskPortTransportEnded = 112;
+// Resumes presentation state for background recovery without showing,
+// raising or focusing the viewer window.
+constexpr int DeskPortRestoreViewer = 113;
 inline bool desktopWindowVisible(SDL_Window* window) {
     return window && !(SDL_GetWindowFlags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
 }

@@ -213,6 +213,8 @@ private:
     QString m_SessionTopologyError;
     std::shared_ptr<TransitionWindow> m_TransitionWindow;
     QTimer* m_TransitionTimer = nullptr;
+    // Services a retained window while no SDL owner is running.
+    void pumpTransitionWindowBetweenSessions();
     QSize m_AdaptiveNextSize, m_AdaptiveObservedSize;
     QByteArray m_WindowOutputs;
     QString m_LastWindowRecord;

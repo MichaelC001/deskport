@@ -2462,7 +2462,15 @@ and the tray's left click showed the device list before the desktop.
   connected it toggles the device list. The list stays in the tray menu. This
   supersedes the alternating left click described for 2026-09-29.
 
-Validation (macOS, isolated): multi-session (6, including the limit report and
-its removal on disconnect), UI (26), core workspace and Qt adapter vectors, and
-an incremental full app compile. Live tray, KDE and limit-hint rendering remain
-acceptance checks.
+- Automatic network recovery is silent. The viewer window is retained across
+  retries (showing "Connection interrupted. Reconnecting…") instead of being
+  destroyed and recreated, which made the compositor raise and focus a new
+  window. The shell raises a viewer only for a user action; a worker's restart
+  (unsolicited hide, then ready) restores presentation state without showing,
+  raising or focusing the window. Final failure still opens the device list.
+
+Validation (macOS, isolated): multi-session (7, including the limit report and
+its removal on disconnect, and quiet recovery versus explicit raising), UI
+(26), transition window (30 transitions), session navigation, core workspace
+and Qt adapter vectors, and an incremental full app compile. Live tray, KDE,
+limit-hint rendering and real network-loss recovery remain acceptance checks.

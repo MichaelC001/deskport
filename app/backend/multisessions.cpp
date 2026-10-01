@@ -159,19 +159,22 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
         return;
     }
     if (type == "hidden" && quint64(message.value("epoch").toDouble()) == entry->hideEpoch) {
-        if (m_Hiding.remove(entry->id)) entry->exposed = false;
+        // An awaited hide completes a user's switch. An unsolicited one comes
+        // from a session restarting underneath its retained window.
+        const bool awaited = m_Hiding.remove(entry->id);
+        if (awaited) entry->exposed = false;
         if (m_Visible == entry->id) m_Visible.clear();
-        present();
+        present(awaited);
     } else if (type == "devices") { showDevices(); emit devicesRequested(); }
     else if (type == "next") {
         // Only the viewer that currently owns presentation may switch it.
         if (m_Wanted == entry->id || m_Visible == entry->id) selectNext();
         return;
     }
-    else if (type == "ready") { present(); }
+    else if (type == "ready") { present(!(m_Wanted == entry->id && entry->presented)); }
     else if (type == "connected") { entry->state = "connected"; entry->error.clear(); }
     else if (type == "shown" && m_Wanted == entry->id && m_Hiding.isEmpty()) {
-        m_Visible = entry->id;
+        m_Visible = entry->id; entry->presented = true;
         if (entry->fullscreenPending) { entry->fullscreenPending = false; send(entry, {{"command","fullscreen"}}); }
         emit viewerShown();
     }
@@ -225,12 +228,12 @@ void MultiSessions::hide(Entry* entry) {
         }
     });
 }
-void MultiSessions::present() {
+void MultiSessions::present(bool raise) {
     if (m_Shutdown || !m_Hiding.isEmpty() || m_Wanted.isEmpty()) return;
     auto entry = m_Entries.value(m_Wanted);
     if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") {
         entry->exposed = true;
-        send(entry, {{"command","show"}});
+        send(entry, {{"command","show"},{"raise",raise}});
     }
 }
 void MultiSessions::showDevices() {
@@ -276,9 +279,9 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     if (entry->reserved) { SessionGraph::release(m_Identity,entry->token); entry->reserved=false; }
     if (entry->socket) { entry->socket->abort(); entry->socket=nullptr; }
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
-    m_Hiding.remove(entry->id); entry->exposed=false;
+    const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
     if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }
     if (m_Wanted==entry->id) { m_Wanted.clear(); emit devicesRequested(); }
-    present(); emit changed();
+    present(awaited); emit changed();
 }
 

@@ -84,8 +84,10 @@ void SessionWorker::command(const QJsonObject& message) {
     } else if (action=="diagnostics" && message.value("enabled").isBool()) {
         Diagnostics::instance().setEnabled(message.value("enabled").toBool());
     } else if (action=="show") {
+        // Only a user's request raises the window; recovery restores state quietly.
+        const bool raise=message.value("raise").toBool(true);
         m_Visible=true;
-        if(m_Session) { m_Session->setViewerRequested(true); if(m_Session->viewerReady()) { postEvent(DeskPortRecallWindow); } }
+        if(m_Session) { m_Session->setViewerRequested(true); if(m_Session->viewerReady()) postEvent(raise ? DeskPortRecallWindow : DeskPortRestoreViewer); }
     } else if(action=="hide") {
         m_Visible=false; m_HideEpoch=quint64(message.value("epoch").toDouble());
         if(m_Session) { m_Session->setViewerRequested(false); postEvent(DeskPortHideWindow); }
