@@ -2468,6 +2468,13 @@ and the tray's left click showed the device list before the desktop.
   window. The shell raises a viewer only for a user action; a worker's restart
   (unsolicited hide, then ready) restores presentation state without showing,
   raising or focusing the window. Final failure still opens the device list.
+- Theme switching blocked the shell for 3–5 s on wmn (NixOS/KDE). A perf
+  profile put 85% of the stall in `QQuickIconImage::load` →
+  `QIconLoader::iconEngine`: every icon load or recolor searched the desktop
+  icon theme across ~90 XDG data directories, although every DeskPort icon is
+  a bundled resource. Linux builds now limit icon theme lookup to `:/icons`.
+  With the real QML and wmn's icon paths a switch took ~960 ms in the UI
+  harness, and ~10 ms without those paths. Opening pages pays the same cost.
 
 Validation (macOS, isolated): multi-session (7, including the limit report and
 its removal on disconnect, and quiet recovery versus explicit raising), UI

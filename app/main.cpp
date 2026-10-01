@@ -812,6 +812,14 @@ int main(int argc, char *argv[])
     // modified macOS 11 style rounded corner icon.
     app.setWindowIcon(QIcon(":/res/deskport.svg"));
 #endif
+#if defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
+    // Every icon is a bundled resource. Qt Quick still consults the desktop
+    // icon theme for each icon load and recolor; on NixOS/KDE that is ~90
+    // XDG data directories, which made a theme switch block for seconds.
+    // A non-empty list keeps Qt from restoring the system defaults.
+    QIcon::setThemeSearchPaths({QStringLiteral(":/icons")});
+    QIcon::setFallbackSearchPaths({QStringLiteral(":/icons")});
+#endif
 
     // This is necessary to show our icon correctly on Wayland
     app.setDesktopFileName("io.github.keithxc.DeskPort");
