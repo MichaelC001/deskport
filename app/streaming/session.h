@@ -130,6 +130,9 @@ public:
     Q_INVOKABLE void exec(QWindow* qtWindow);
     Q_INVOKABLE bool adaptiveRestartPending() const { return !m_RecoveryCancelled && (m_NetworkRetry || m_ManualReconnect || m_AdaptiveNextSize.isValid()); }
     Q_INVOKABLE Session* adaptiveContinuation();
+private:
+    Session* continuationSession();
+public:
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
     void requestReconnect();
@@ -150,8 +153,13 @@ public:
     Q_INVOKABLE void setDesktopAdjustment(double value);
     // True while the host's minimum desktop prevents the requested enlargement.
     bool desktopTuningLimited() const { return m_DesktopTuningLimited.load(); }
+    // Applies an already saved tuning value to the running stream. The stream
+    // restarts only if the resulting desktop differs from the current one.
+    void applyDesktopAdjustment(double value) { m_PendingDesktopAdjustment = value; }
 private:
+    bool applyPendingDesktopAdjustment();
     mutable std::atomic<bool> m_DesktopTuningLimited{false};
+    std::atomic<double> m_PendingDesktopAdjustment{0};
 public:
 
     static

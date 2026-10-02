@@ -2455,8 +2455,13 @@ and the tray's left click showed the device list before the desktop.
 - A worker reports, with its traffic sample, when the host's minimum desktop
   overrides part of a requested enlargement. Device settings then explain the
   limit instead of the usual note.
-- Choosing a tuning value while that device is connected reconnects its worker,
-  which rereads the saved profile.
+- Choosing a tuning value while that device is connected sends the saved value
+  to its running stream. The adaptive check then compares the resulting desktop
+  with the current one: an unchanged size (for example any value above 1.0 once
+  the macOS floor applies) keeps the stream; a new size takes the window-keeping
+  resolution change, not a full reconnect. A fixed-resolution stream reconnects
+  only when its size changes. A value arriving between sessions is kept for the
+  next one.
 - Left click presents the last viewed connected desktop (else the first in
   device-list order) without passing through the device list. With no desktop
   connected it toggles the device list. The list stays in the tray menu. This

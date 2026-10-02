@@ -262,6 +262,9 @@ void MultiSessions::disconnectSession(QString id) {
     emit changed();
 }
 void MultiSessions::reconnect(QString id) { auto entry=m_Entries.value(id.toLower()); if (entry) send(entry,{{"command","reconnect"}}); }
+void MultiSessions::setDesktopAdjustment(QString id, double value) {
+    auto entry=m_Entries.value(id.toLower()); if (entry) send(entry,{{"command","tuning"},{"value",value}});
+}
 void MultiSessions::fullscreen(QString id) {
     if (id.isEmpty()) id = m_Selected;
     auto entry = m_Entries.value(id.toLower());

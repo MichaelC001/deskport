@@ -684,6 +684,12 @@ bool Session::scheduleNetworkRecovery() {
 }
 Session* Session::adaptiveContinuation() {
     if (!adaptiveRestartPending()) return nullptr;
+    auto next = continuationSession();
+    // A tuning change that arrived while the stream was stopping still applies.
+    next->m_PendingDesktopAdjustment = m_PendingDesktopAdjustment.load();
+    return next;
+}
+Session* Session::continuationSession() {
     if (m_NetworkRetry) {
         auto next = new Session(m_Computer, m_App, m_Preferences);
         next->m_RecoveryDeadline = m_RecoveryDeadline.load();
@@ -739,7 +745,25 @@ Session* Session::adaptiveContinuation() {
 void Session::setDesktopAdjustment(double value) {
     if (qFuzzyCompare(value, m_Preferences->desktopAdjustment)) return;
     // Save only this key; do not overwrite unrelated edits with a session snapshot.
-    if (StreamingPreferences::saveDesktopAdjustment(m_Computer->uuid, value)) requestReconnect();
+    if (StreamingPreferences::saveDesktopAdjustment(m_Computer->uuid, value)) applyDesktopAdjustment(value);
+}
+bool Session::applyPendingDesktopAdjustment() {
+    const double value = m_PendingDesktopAdjustment.exchange(0);
+    if (value <= 0 || !StreamingPreferences::validDesktopAdjustment(value)) return false;
+    m_Preferences->desktopAdjustment = value;
+    if (m_Preferences->adaptiveResolution) {
+        // The adaptive check compares the new desktop with the current stream
+        // and keeps the window for a change, exactly like a window resize.
+        m_ResizeSettler.reset();
+        return false;
+    }
+    const auto fixed = DeskPortDisplay::adjusted({AdaptiveDisplay::boundedSize(QSize(m_Preferences->width, m_Preferences->height)), 1},
+                                                 value, m_Computer->operatingSystem);
+    m_DesktopTuningLimited = fixed.limited;
+    if (fixed.pixels == QSize(m_StreamConfig.width, m_StreamConfig.height)) return false;
+    rememberAdaptiveWindow();
+    m_ManualReconnect = true;
+    return true;
 }
 void Session::requestReconnect() {
     // SDL owns session state on Linux; marshal tray requests to that thread.
@@ -2583,6 +2607,7 @@ void Session::execInternal()
             goto DispatchDeferredCleanup;
         }
         if (m_AdaptiveDisplay && m_AdaptiveDisplay->takeLeaveFullscreen()) leaveFullscreen();
+        if (applyPendingDesktopAdjustment()) goto DispatchDeferredCleanup;
         if (checkAdaptiveResize()) goto DispatchDeferredCleanup;
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform

@@ -49,6 +49,7 @@ int SessionWorker::run() {
 }
 void SessionWorker::attach(Session* session) {
     m_Session=session; session->setViewerRequested(m_Visible);
+    if (m_PendingTuning > 0) { session->applyDesktopAdjustment(m_PendingTuning); m_PendingTuning = 0; }
     if (m_Stopping) session->cancelRecovery();
     send({{"type","connecting"}});
     connect(session,&Session::connectionStarted,this,[this] { send({{"type","connected"}}); });
@@ -95,6 +96,11 @@ void SessionWorker::command(const QJsonObject& message) {
     } else if(action=="disconnect") {
         m_Stopping=true; if(m_Session) {m_Session->cancelRecovery();postEvent(DeskPortEndSession);} else finish();
     } else if(action=="reconnect" && m_Session) m_Session->requestReconnect();
+    else if(action=="tuning" && StreamingPreferences::validDesktopAdjustment(message.value("value").toDouble())) {
+        // The shell already saved it; the stream restarts only for a new desktop size.
+        const double value=message.value("value").toDouble();
+        if(m_Session) m_Session->applyDesktopAdjustment(value); else m_PendingTuning=value;
+    }
     else if(action=="fullscreen" && m_Session && m_Visible) postEvent(DeskPortFullscreen);
 }
 void SessionWorker::showDevicesDuringSession() { m_Visible=false; if(m_Session)m_Session->setViewerRequested(false); send({{"type","devices"}}); }

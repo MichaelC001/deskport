@@ -37,9 +37,9 @@ UiPage {
                 preferences.desktopAdjustment = factors[index]; save()
                 if (typeof window !== "undefined" && window.activeHostId === page.deviceId && window.activeStreamPage)
                     window.activeStreamPage.session.setDesktopAdjustment(factors[index])
-                // Desktop workers reread the saved profile when they reconnect.
+                // The desktop's worker applies it; an unchanged desktop size keeps the stream.
                 else if (typeof sessionManager !== "undefined" && sessionManager.states[page.deviceId.toLowerCase()] === "connected")
-                    sessionManager.reconnect(page.deviceId)
+                    sessionManager.setDesktopAdjustment(page.deviceId, factors[index])
             }
         }
         UiChoiceRow {

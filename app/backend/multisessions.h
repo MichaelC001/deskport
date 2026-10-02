@@ -38,6 +38,8 @@ public:
     Q_INVOKABLE void showDevices();
     Q_INVOKABLE void disconnectSession(QString id);
     Q_INVOKABLE void reconnect(QString id);
+    // Applies a saved desktop tuning value to that desktop's running stream.
+    Q_INVOKABLE void setDesktopAdjustment(QString id, double value);
     Q_INVOKABLE void fullscreen(QString id = QString());
     // Cycles the viewer to the next connected desktop, in connection order.
     Q_INVOKABLE void selectNext();

@@ -48,6 +48,8 @@ static int worker(QApplication& app) {
                 presenting=false;
                 QTimer::singleShot(mode=="slow" ? 300 : 0,&app,[&,o] { send({{"type","hidden"},{"epoch",o.value("epoch")}}); });
             } else if(action=="disconnect") QTimer::singleShot(0,&app,&QCoreApplication::quit);
+            else if(action=="tuning") // Echo the value; a tuning change never asks for a reconnect.
+                send({{"type","traffic"},{"received",qRound(o.value("value").toDouble()*100)},{"sent",fullscreenRequests}});
             else if(action=="reconnect" && mode=="crash") QCoreApplication::exit(7);
             else if(action=="reconnect" && mode=="next") send({{"type","next"}}); // The viewer's chord.
         }
@@ -91,6 +93,10 @@ private slots:
         QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),1);
         // The worker's host-capped enlargement reaches the device settings.
         QTRY_COMPARE(manager.tuningLimited(),QStringList{"a"});
+        // Tuning goes to the running stream as a value, not as a reconnect.
+        manager.setDesktopAdjustment("A",1.5);
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),150);
+        QCOMPARE(row("a").value("state").toString(),QString("connected"));
         // Rapid switching supersedes older hide acknowledgements.
         for(int i=0;i<12;++i) { manager.select(i%2 ? "a":"b"); QTest::qWait(5); }
         manager.select("b"); QTRY_VERIFY(row("b").value("visible").toBool());
