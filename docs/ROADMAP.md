@@ -2473,6 +2473,12 @@ and the tray's left click showed the device list before the desktop.
   window. The shell raises a viewer only for a user action; a worker's restart
   (unsolicited hide, then ready) restores presentation state without showing,
   raising or focusing the window. Final failure still opens the device list.
+- A hidden desktop whose connection dropped could reconnect every ~29 s for
+  minutes: the display controller retained across network retries still held
+  the host's video paused, so the new stream never received a first frame and
+  ended with "no video traffic" (-100). Each new stream now asks the host to
+  resume video first; the hidden viewer pauses it again after the first key
+  frame. Seen on wmn → mm4 on 2026-10-02 (15 cycles from 23:13 to 23:20).
 - Theme switching blocked the shell for 3–5 s on wmn (NixOS/KDE). A perf
   profile put 85% of the stall in `QQuickIconImage::load` →
   `QIconLoader::iconEngine`: every icon load or recolor searched the desktop

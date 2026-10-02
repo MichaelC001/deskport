@@ -826,6 +826,11 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     if (!m_AdaptiveDisplay) {
         m_SessionAdmissionFailed = true; m_SessionTopologyError = "topology-unsupported"; return;
     }
+    // A controller retained across a network retry may still hold the host's
+    // video paused for a hidden viewer. A new stream must receive its first
+    // frame, or it ends with no video traffic and retries forever; the
+    // viewer's paused state is applied again after the first key frame.
+    m_AdaptiveDisplay->setVideoPaused(false);
     // The retained native window has received any intervening drag events.
     // Read its newest size once before committing the next host request.
     if (m_AdaptiveResume && m_TransitionWindow) {
