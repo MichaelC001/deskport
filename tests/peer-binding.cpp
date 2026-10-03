@@ -12,6 +12,8 @@
 #include <QQmlComponent>
 #include <QQuickWindow>
 #include <QQuickItem>
+#include <QUrlQuery>
+#include <QLockFile>
 #include "peermanager.h"
 #include "sessiongraph.h"
 #include "peerstore.h"
@@ -25,6 +27,12 @@ class UnavailableHost : public HostManager {
 public:
     using HostManager::HostManager;
     bool available() const override { return false; }
+};
+class InvitationHost : public HostManager {
+public:
+    using HostManager::HostManager;
+    bool enabled = true;
+    bool available() const override { return enabled && HostManager::available(); }
 };
 class ScriptedBindingHost : public QTcpServer {
 public:
@@ -55,6 +63,160 @@ private:
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void invitationPreviewAndConfirmation() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host", false);
+        PeerManager server(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        const auto invitation = server.createInvitation("127.0.0.1");
+        QVERIFY(!invitation.isEmpty());
+        const QUrlQuery query(QUrl(invitation["uri"].toString()));
+        QCOMPARE(query.queryItems().size(), 6);
+        QCOMPARE(query.queryItemValue("entry", QUrl::FullyDecoded), QString("127.0.0.1:%1").arg(server.port()));
+        QCOMPARE(query.queryItemValue("fp"), QString::fromLatin1(QSslCertificate(credential("TEST_CERT_B")).digest(QCryptographicHash::Sha256).toHex()));
+        QCOMPARE(query.queryItemValue("id"), QUuid(host.identity()["hostId"].toString()).toString(QUuid::WithoutBraces).toLower());
+        const auto token = query.queryItemValue("token"); QCOMPARE(token.size(), 43);
+        QSignalSpy incoming(&server, &PeerManager::incomingRequest), finished(&server, &PeerManager::bindingFinished);
+        auto start = [&](QSslSocket& socket) {
+            socket.setLocalCertificate(QSslCertificate(credential("TEST_CERT_A")));
+            socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"), QSsl::Rsa));
+            connect(&socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), &socket,
+                    [&socket](const QList<QSslError>& errors) { socket.ignoreSslErrors(errors); });
+            socket.connectToHostEncrypted("127.0.0.1", server.port());
+        };
+        QSslSocket preview; start(preview);
+        QTRY_VERIFY(preview.canReadLine());
+        const auto hello = QJsonDocument::fromJson(preview.readLine()).object();
+        QCOMPARE(hello["meta"].toObject()["pairingInvite"].toInt(), 1);
+        QCOMPARE(QString::fromLatin1(preview.peerCertificate().digest(QCryptographicHash::Sha256).toHex()), query.queryItemValue("fp"));
+        preview.abort(); QTest::qWait(30);
+        QVERIFY(!server.busy()); QVERIFY(server.peers().isEmpty()); QCOMPARE(incoming.size(), 0);
+        QVERIFY(!host.running());
+        QVERIFY(PeerStore::read(dir.path()+"/host/state.json")["root"].toObject()["named_devices"].toArray().isEmpty());
+        QSslSocket confirmed; start(confirmed); QTRY_VERIFY(confirmed.canReadLine()); confirmed.readLine();
+        const auto tx = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        const QJsonObject request{{"type","request"},{"tx",tx},{"inviteToken",token},
+            {"meta",QJsonObject{{"version",1},{"clientBinding",1},{"role","client"},{"name","Invited tablet"}}}};
+        confirmed.write(QJsonDocument(request).toJson(QJsonDocument::Compact)+'\n');
+        QStringList types;
+        QTRY_VERIFY_WITH_TIMEOUT([&] {
+            while (confirmed.canReadLine()) {
+                const auto frame = QJsonDocument::fromJson(confirmed.readLine()).object();
+                types.append(frame["type"].toString());
+            }
+            return types.contains("ready");
+        }(), 7000);
+        QCOMPARE(types, QStringList({"pending", "accept", "ready"}));
+        QCOMPARE(incoming.size(), 0); QCOMPARE(finished.size(), 0);
+        QVERIFY(!server.peers().first().toMap()["ready"].toBool());
+        confirmed.write(QJsonDocument(QJsonObject{{"type","client-ready"},{"tx",tx}}).toJson(QJsonDocument::Compact)+'\n');
+        QTRY_VERIFY(confirmed.canReadLine());
+        QCOMPARE(QJsonDocument::fromJson(confirmed.readLine()).object()["type"].toString(), QString("bound"));
+        QCOMPARE(finished.size(), 1); QVERIFY(finished.first()[1].toBool()); QVERIFY(!server.busy());
+        QVERIFY(server.peers().first().toMap()["ready"].toBool());
+        const auto saved = QJsonDocument(PeerStore::read(dir.path()+"/binding/peers.json")).toJson();
+        QVERIFY(!saved.contains(token.toUtf8())); QVERIFY(!saved.contains("inviteToken"));
+        QVERIFY(!server.status().contains(token));
+        QSslSocket replay; start(replay); QTRY_VERIFY(replay.canReadLine()); replay.readLine();
+        replay.write(QJsonDocument(request).toJson(QJsonDocument::Compact)+'\n');
+        QTRY_COMPARE(replay.state(), QAbstractSocket::UnconnectedState);
+        QCOMPARE(finished.size(), 1); QCOMPARE(server.peers().size(), 1); QCOMPARE(incoming.size(), 0);
+        host.stop(); QTRY_VERIFY(!host.running());
+    }
+    void invitationFailures_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* scenario : {"wrong-token", "null-token", "expired", "revoked", "replaced", "restart", "invalid-meta", "invalid-tx", "mutual", "busy", "unavailable", "trust-failure"})
+            QTest::newRow(scenario) << QString(scenario);
+    }
+    void invitationFailures() {
+        QFETCH(QString, scenario);
+        QTemporaryDir dir;
+        InvitationHost host(nullptr, dir.path()+"/host", false);
+        auto makeServer = [&] { return std::make_unique<PeerManager>(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost); };
+        auto server = makeServer();
+        auto invitation = server->createInvitation("127.0.0.1", scenario == "expired" ? 1 : 300);
+        QVERIFY(!invitation.isEmpty());
+        QJsonValue token = QUrlQuery(QUrl(invitation["uri"].toString())).queryItemValue("token");
+        if (scenario == "wrong-token") token = QString(43, 'A');
+        if (scenario == "null-token") token = QJsonValue(QJsonValue::Null);
+        if (scenario == "expired") QTest::qWait(1100);
+        if (scenario == "revoked") QVERIFY(server->revokeInvitation());
+        if (scenario == "replaced") QVERIFY(!server->createInvitation("127.0.0.1:443").isEmpty());
+        if (scenario == "restart") { server.reset(); server = makeServer(); }
+        if (scenario == "unavailable") host.enabled = false;
+        QSignalSpy incoming(server.get(), &PeerManager::incomingRequest);
+        auto start = [&](QSslSocket& socket) {
+            socket.setLocalCertificate(QSslCertificate(credential("TEST_CERT_A")));
+            socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"), QSsl::Rsa));
+            connect(&socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), &socket,
+                    [&socket](const QList<QSslError>& errors) { socket.ignoreSslErrors(errors); });
+            socket.connectToHostEncrypted("127.0.0.1", server->port());
+        };
+        const auto tx = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        QJsonObject meta{{"version",1},{"clientBinding",1},{"role","client"},{"name","Invited tablet"}};
+        QSslSocket manual;
+        if (scenario == "busy") {
+            start(manual); QTRY_VERIFY(manual.canReadLine()); manual.readLine();
+            manual.write(QJsonDocument(QJsonObject{{"type","request"},{"tx",tx},{"meta",meta}}).toJson(QJsonDocument::Compact)+'\n');
+            QTRY_COMPARE(server->requestId(), tx); QCOMPARE(incoming.size(), 1);
+        }
+        if (scenario == "invalid-meta") meta["name"] = "";
+        if (scenario == "mutual") {
+            meta.remove("role"); meta["hostId"] = QUuid::createUuid().toString(QUuid::WithoutBraces);
+            meta["hostCert"] = QString::fromUtf8(credential("TEST_CERT_A")); meta["hostPort"] = 48989; meta["bindingPort"] = 48991;
+        }
+        QLockFile denied(dir.path()+"/host/instance.lock");
+        if (scenario == "trust-failure") QVERIFY(denied.tryLock());
+        QSslSocket socket; start(socket); QTRY_VERIFY(socket.canReadLine()); socket.readLine();
+        socket.write(QJsonDocument(QJsonObject{{"type","request"},{"tx",scenario == "invalid-tx" ? "bad" : tx},
+            {"inviteToken",token},{"meta",meta}}).toJson(QJsonDocument::Compact)+'\n');
+        QTRY_COMPARE_WITH_TIMEOUT(socket.state(), QAbstractSocket::UnconnectedState, 7000);
+        QCOMPARE(incoming.size(), scenario == "busy" ? 1 : 0);
+        if (scenario == "busy") { QCOMPARE(server->requestId(), tx); server->reject(tx); }
+        QVERIFY(!server->busy()); QVERIFY(!host.running());
+        const bool preserved = QStringList{"wrong-token","null-token","replaced","invalid-meta","invalid-tx","mutual","busy","unavailable"}.contains(scenario);
+        QCOMPARE(server->revokeInvitation(), preserved);
+        for (const auto& peer : server->peers()) QVERIFY(!peer.toMap()["ready"].toBool());
+        QVERIFY(PeerStore::read(dir.path()+"/host/state.json")["root"].toObject()["named_devices"].toArray().isEmpty());
+    }
+    void invitationConcurrentConfirmations() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host", false);
+        PeerManager server(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        const auto invitation = server.createInvitation("127.0.0.1"); QVERIFY(!invitation.isEmpty());
+        const auto token = QUrlQuery(QUrl(invitation["uri"].toString())).queryItemValue("token");
+        QSslSocket a, b;
+        for (auto socket : {&a, &b}) {
+            const bool first = socket == &a;
+            socket->setLocalCertificate(QSslCertificate(credential(first ? "TEST_CERT_A" : "TEST_CERT_C")));
+            socket->setPrivateKey(QSslKey(credential(first ? "TEST_KEY_A" : "TEST_KEY_C"), QSsl::Rsa));
+            connect(socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), socket,
+                    [socket](const QList<QSslError>& errors) { socket->ignoreSslErrors(errors); });
+            socket->connectToHostEncrypted("127.0.0.1", server.port());
+            QTRY_VERIFY(socket->canReadLine()); socket->readLine();
+        }
+        const auto tx = QUuid::createUuid().toString(QUuid::WithoutBraces);
+        const auto request = QJsonDocument(QJsonObject{{"type","request"},{"tx",tx},{"inviteToken",token},
+            {"meta",QJsonObject{{"version",1},{"clientBinding",1},{"role","client"},{"name","Racing tablet"}}}}).toJson(QJsonDocument::Compact)+'\n';
+        // Both clients enqueue confirmation before the event loop can process either.
+        a.write(request); a.flush(); b.write(request); b.flush();
+        QStringList aTypes, bTypes;
+        QTRY_VERIFY_WITH_TIMEOUT([&] {
+            for (auto socket : {&a, &b}) while (socket->canReadLine()) {
+                auto& types = socket == &a ? aTypes : bTypes;
+                types.append(QJsonDocument::fromJson(socket->readLine()).object()["type"].toString());
+            }
+            return aTypes.contains("ready") || bTypes.contains("ready");
+        }(), 7000);
+        QCOMPARE(aTypes.count("accept") + bTypes.count("accept"), 1);
+        auto winner = aTypes.contains("ready") ? &a : &b;
+        auto loser = winner == &a ? &b : &a;
+        QTRY_COMPARE(loser->state(), QAbstractSocket::UnconnectedState);
+        winner->write(QJsonDocument(QJsonObject{{"type","client-ready"},{"tx",tx}}).toJson(QJsonDocument::Compact)+'\n');
+        QTRY_VERIFY(!server.busy()); QCOMPARE(server.peers().size(), 1);
+        QVERIFY(server.peers().first().toMap()["ready"].toBool()); QVERIFY(!server.revokeInvitation());
+        QCOMPARE(PeerStore::read(dir.path()+"/host/state.json")["root"].toObject()["named_devices"].toArray().size(), 1);
+        host.stop(); QTRY_VERIFY(!host.running());
+    }
     void concurrentControlWhileBinding() {
         QTemporaryDir dir;
         const auto cert = credential("TEST_CERT_A"), key = credential("TEST_KEY_A");

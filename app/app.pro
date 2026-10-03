@@ -1,5 +1,7 @@
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp
 SOURCES += cli/hostcontrol.cpp cli/hostsetup.cpp cli/hostdaemon.cpp
+SOURCES += ../third_party/qrcodegen/qrcodegen.cpp
+HEADERS += ../third_party/qrcodegen/qrcodegen.hpp cli/terminalqr.h backend/pairinginvite.h
 HEADERS += cli/hostcontrol.h cli/hostsetup.h cli/hostdaemon.h
 HEADERS += backend/multisessions.h backend/sessionworker.h
 SOURCES += backend/diagnostics.cpp

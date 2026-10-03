@@ -152,7 +152,7 @@ else:
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
     if "--cli" in sys.argv:
-        extra_sources += f' "{root}/app/cli/hostcontrol.cpp"'
+        extra_sources += f' "{root}/app/cli/hostcontrol.cpp" "{root}/third_party/qrcodegen/qrcodegen.cpp"'
     if "--ui" in sys.argv:
         extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp"'
         extra_headers += f' "{root}/app/gui/manual.h"'

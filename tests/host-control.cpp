@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QSignalSpy>
 #include <QTemporaryDir>
+#include <QUrlQuery>
 #include <QtTest>
 #include "cli/hostcontrol.h"
 #include "hostmanager.h"
@@ -39,6 +40,58 @@ static void send(QLocalSocket& socket, const QStringList& args) {
 class HostControl : public QObject {
     Q_OBJECT
 private slots:
+    void invitationCliOutputAndRevocation() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host", false);
+        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        DeskPortCli::ControlServer server(&host, &peers); QVERIFY(server.listen());
+        QProcess child;
+        auto environment = QProcessEnvironment::systemEnvironment();
+        environment.insert("QT_QPA_PLATFORM", "does-not-exist");
+        environment.remove("DISPLAY"); environment.remove("WAYLAND_DISPLAY");
+        child.setProcessEnvironment(environment);
+        child.start(QCoreApplication::applicationFilePath(), {"--control-client","devices","invite","--address","VPS.example","--json"});
+        QTRY_COMPARE_WITH_TIMEOUT(child.state(), QProcess::NotRunning, 5000);
+        QCOMPARE(child.exitCode(), 0);
+        const auto bytes = child.readAllStandardOutput(); QVERIFY(!bytes.contains('\x1b'));
+        const auto result = QJsonDocument::fromJson(bytes).object(); QVERIFY(result["ok"].toBool());
+        const auto data = result["data"].toObject();
+        QCOMPARE(data["entry"].toString(), QString("vps.example:%1").arg(peers.port()));
+        const QUrlQuery query(QUrl(data["uri"].toString()));
+        QCOMPARE(query.queryItems().size(), 6);
+        QCOMPARE(query.queryItemValue("fp"), QString::fromLatin1(QSslCertificate(credential("TEST_CERT_A")).digest(QCryptographicHash::Sha256).toHex()));
+        const auto remaining = qint64(data["expiresAt"].toDouble()) - QDateTime::currentSecsSinceEpoch();
+        QVERIFY(remaining > 295 && remaining <= 300);
+        QLocalSocket status; send(status, {"status"}); QTRY_VERIFY(status.canReadLine());
+        QVERIFY(!status.readLine().contains(query.queryItemValue("token").toUtf8()));
+        child.start(QCoreApplication::applicationFilePath(), {"--control-client","devices","invite","--address","[2001:db8::8]:55001"});
+        QTRY_COMPARE_WITH_TIMEOUT(child.state(), QProcess::NotRunning, 5000);
+        QCOMPARE(child.exitCode(), 0);
+        const auto terminal = child.readAllStandardOutput();
+        QVERIFY(terminal.contains("\x1b[30;107m")); QVERIFY(terminal.contains("deskport://bind?"));
+        QVERIFY(terminal.contains("terminal columns"));
+        QVERIFY(terminal.contains("Expires:")); QVERIFY(terminal.contains("grants one client access"));
+        const auto evidence = qEnvironmentVariable("DESKPORT_QR_TEST_OUTPUT");
+        if (!evidence.isEmpty()) { QFile output(evidence); QVERIFY(output.open(QIODevice::WriteOnly)); QCOMPARE(output.write(terminal), qint64(terminal.size())); }
+        QLocalSocket revoke; send(revoke, {"devices","revoke-invite"}); QTRY_VERIFY(revoke.canReadLine());
+        QVERIFY(reply(revoke)["data"].toObject()["revoked"].toBool());
+        QLocalSocket again; send(again, {"devices","revoke-invite"}); QTRY_VERIFY(again.canReadLine());
+        const auto repeated = reply(again); QVERIFY(repeated["ok"].toBool()); QVERIFY(!repeated["data"].toObject()["revoked"].toBool());
+        QVERIFY(!host.running()); QVERIFY(peers.peers().isEmpty());
+    }
+    void invalidInvitationAddresses_data() {
+        QTest::addColumn<QString>("address");
+        for (const auto& value : QStringList{"", "host:0", "host:65536", "https://host", "user@host", "host/path", "host?x", "host#x", "host\n", "[fe80::1%en0]:48991", "2001:db8::1", "-bad.example", "bad..example", QString(254,'a')})
+            QTest::newRow(qPrintable(value)) << value;
+    }
+    void invalidInvitationAddresses() {
+        QFETCH(QString, address);
+        QProcess child;
+        auto environment = QProcessEnvironment::systemEnvironment(); environment.insert("QT_QPA_PLATFORM","does-not-exist"); child.setProcessEnvironment(environment);
+        child.start(QCoreApplication::applicationFilePath(), {"--control-client","devices","invite","--address",address,"--json"});
+        QVERIFY(child.waitForFinished(5000)); QCOMPARE(child.exitCode(), 2);
+        QCOMPARE(QJsonDocument::fromJson(child.readAllStandardOutput()).object()["code"].toString(), QString("usage"));
+    }
     void init() {
         QSettings().clear();
         qputenv("DESKPORT_TEST_MODE", "normal");

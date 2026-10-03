@@ -1,6 +1,8 @@
 #include "hostcontrol.h"
 #include "backend/hostmanager.h"
 #include "backend/peermanager.h"
+#include "backend/pairinginvite.h"
+#include "terminalqr.h"
 
 #include <QCoreApplication>
 #include <QCryptographicHash>
@@ -16,9 +18,11 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QTimer>
+#include <QDateTime>
 #ifdef Q_OS_UNIX
 #include <cerrno>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #endif
 
@@ -55,7 +59,12 @@ QJsonObject success(const QJsonObject& data = {}) {
 QString validate(const QStringList& args) {
     if (args == QStringList{"status"} || args == QStringList{"config", "get"} ||
         args == QStringList{"sharing", "start"} || args == QStringList{"sharing", "stop"} ||
-        args == QStringList{"devices", "list"} || args == QStringList{"devices", "pending"}) return {};
+        args == QStringList{"devices", "list"} || args == QStringList{"devices", "pending"} ||
+        args == QStringList{"devices", "revoke-invite"}) return {};
+    if (args.size() == 4 && args[0] == "devices" && args[1] == "invite" && args[2] == "--address") {
+        if (!PairingInvite::entry(args[3], 48991).isEmpty()) return {};
+        return QStringLiteral("Use --address HOST[:PORT] or [IPv6]:PORT with a reachable connection entry.");
+    }
     if (args.size() == 3 && args[0] == "devices" &&
         (args[1] == "approve" || args[1] == "reject" || args[1] == "remove") &&
         !args[2].isEmpty() && args[2].size() <= 128) return {};
@@ -138,7 +147,27 @@ QString printable(QString value) {
 }
 void printHuman(const QJsonObject& result) {
     QTextStream output(stdout);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    output.setCodec("UTF-8");
+#endif
     const auto data = result["data"].toObject();
+    if (data.contains("uri")) {
+        int columns = 0;
+        const auto qr = terminalQr(data["uri"].toString(), &columns);
+        int terminalWidth = 0;
+#ifdef Q_OS_UNIX
+        struct winsize size {};
+        if (::isatty(STDOUT_FILENO) && ::ioctl(STDOUT_FILENO, TIOCGWINSZ, &size) == 0) terminalWidth = size.ws_col;
+#endif
+        output << "QR requires " << columns << " terminal columns; keep all rows unwrapped.\n";
+        if (terminalWidth > 0 && terminalWidth < columns)
+            output << "Terminal is too narrow. Widen it and create a new invitation, or use the link below.\n";
+        else output << qr;
+        output << data["uri"].toString() << '\n';
+        output << "Expires: " << QDateTime::fromSecsSinceEpoch(qint64(data["expiresAt"].toDouble())).toUTC().toString(Qt::ISODate) << '\n';
+        output << "Scan with DeskPort, check the host, then confirm. This grants one client access.\n";
+        return;
+    }
     if (data.contains("devices") && data["devices"].isArray()) {
         const auto devices = data["devices"].toArray();
         if (devices.isEmpty()) output << "No saved devices.\n";
@@ -168,6 +197,8 @@ const char* helpText() {
            "  deskport status [--json]\n"
            "  deskport sharing start|stop [--json]\n"
            "  deskport devices list|pending [--json]\n"
+           "  deskport devices invite --address HOST[:PORT] [--json]\n"
+           "  deskport devices revoke-invite [--json]\n"
            "  deskport devices approve|reject REQUEST_ID [--json]\n"
            "  deskport devices remove DEVICE_ID [--json]\n"
            "  deskport config get [--json]\n"
@@ -175,6 +206,7 @@ const char* helpText() {
            "  deskport config set port PORT [--json]\n"
            "Use the same OS user and configuration as the running instance.\n"
            "Approve/reject requires the exact request ID shown by devices pending.\n"
+           "An invitation expires after five minutes and is consumed only on client confirmation.\n"
            "The connection port accepts 1024..65535; stop sharing before renaming.\n";
 }
 bool isControlCommand(const QStringList& arguments) {
@@ -308,6 +340,13 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
     }
     if (m_Mutation) { request->finish(failure("busy", "Another local control operation is still in progress.")); return; }
     m_Mutation = request;
+    if (args == QStringList{"devices", "revoke-invite"}) {
+        request->finish(success({{"revoked", m_Peers->revokeInvitation()}})); return;
+    }
+    if (args.size() == 4 && args[0] == "devices" && args[1] == "invite") {
+        const auto invitation = m_Peers->createInvitation(args[3]);
+        request->finish(invitation.isEmpty() ? failure("invite-failed", m_Peers->status()) : success(invitation)); return;
+    }
     if (args[0] == "sharing") {
         if (m_Host->changing() || m_Peers->busy()) { request->finish(failure("busy", "Host or device access is changing; retry after it completes.")); return; }
         const bool start = args[1] == "start";

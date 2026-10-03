@@ -6,6 +6,7 @@
 #include <QSslCertificate>
 #include <QSslKey>
 #include <QTcpServer>
+#include <QElapsedTimer>
 #include "hostmanager.h"
 
 class PeerManager : public QObject {
@@ -39,6 +40,8 @@ public:
     int port() const { return m_Server->serverPort(); }
     QVariantList peers() const;
     QJsonObject sessionPeer(const QString& hostId) const;
+    QJsonObject createInvitation(const QString& address, int lifetimeSeconds = 300);
+    bool revokeInvitation();
     Q_INVOKABLE bool setConnectionPort(int port);
     Q_INVOKABLE void request(const QString& address);
     Q_INVOKABLE void approve(const QString& transaction);
@@ -77,6 +80,7 @@ private:
     void finish(Link* link);
     QJsonObject metadata() const;
     bool save();
+    bool consumeInvitation(const QJsonValue& token);
     void sessionRequest(Link* link, const QJsonObject& message);
     void sessionRequestVerified(Link* link, const QJsonObject& message);
     int m_TopologyOperations = 0;
@@ -104,4 +108,8 @@ private:
     bool m_Healthy = false;
     bool m_IdentityHealthy = false;
     bool m_TrustInFlight = false;
+    QByteArray m_InviteTokenHash;
+    QElapsedTimer m_InviteClock;
+    int m_InviteLifetimeMs = 0;
+    qint64 m_InviteExpiresAt = 0;
 };

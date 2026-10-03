@@ -64,6 +64,45 @@ Their exit codes are `0` for success, `1` for an unavailable/rejected/failed
 operation, and `2` for invalid arguments. The setup diagnostic JSON schema below
 is separate because it reports multiple prerequisite checks.
 
+## Invite a mobile client from SSH
+
+With the GUI or host supervisor running, create a short-lived invitation:
+
+```sh
+deskport devices invite --address vps.example:48991
+deskport devices invite --address '[2001:db8::8]:55001' --json
+deskport devices revoke-invite
+```
+
+Use the DNS name or IP and binding port reachable from the phone. Omitting the
+port uses the current binding listener. DeskPort does not guess a public address
+or configure NAT, firewall rules or an SSH tunnel. An IPv6 entry still requires
+a reachable IPv6 listener or forwarder; the default host listener is IPv4.
+
+The ordinary output includes a black-on-white terminal QR, a `deskport://bind`
+link and its UTC expiry. Use a terminal wide enough to avoid wrapping the QR.
+`--json` returns the URI, entry, host ID, certificate fingerprint and `expiresAt`
+without terminal colors. Both outputs contain a bearer secret that grants one
+client access; do not paste them into logs or public issue reports.
+
+The invitation lasts five minutes, exists only in the running process, and is
+replaced by a new invitation. Revocation and process restart invalidate it.
+Scanning checks the host's TLS certificate pin and identity and shows its name;
+it does not bind, save a device, start a stream, or consume the invitation.
+The phone must explicitly confirm before sending the binding request. That
+confirmation consumes the invitation and uses the existing authorization and
+saved-device handshake without a second host approval dialog. A cancelled
+preview leaves the invitation usable until expiry. A failure after confirmation
+does not restore a consumed invitation; inspect saved devices and create a new
+invitation if necessary. Removing already granted access still uses
+`devices remove DEVICE_ID`.
+
+The mobile app must support pairing invitations and the `deskport` link scheme.
+Older clients can continue using manual requests and exact-ID host approval.
+Custom link schemes may require an app chooser or in-app scanner; a successful
+CLI/decode test does not establish physical-camera or streaming acceptance.
+See the shared [invitation contract](../shared/deskport-core/protocol/PAIRING_INVITES.md).
+
 ## Inspect the host before changing it
 
 ```sh

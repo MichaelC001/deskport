@@ -1,3 +1,19 @@
+## SSH mobile pairing invitations — 2026-10-04
+
+Reason: an SSH operator needs to offer a phone a verifiable connection entry
+without manually copying a host address and approving a separate desktop dialog.
+
+- Add a five-minute, single-use invitation and terminal QR to the existing local
+  CLI. Explicit address, TLS certificate pin and host UUID identify the host.
+- Mobile preview performs TLS/hello verification only. A user confirmation sends
+  the invitation token and begins the existing client-only binding handshake.
+- Replacement, revocation, expiry and restart invalidate unused invitations;
+  consumed tokens never return after authorization failure. Normal manual
+  requests keep their existing explicit approval flow.
+- Checkpoint: isolated host/CLI/QR decode checks, mobile cold/warm deep-link and
+  confirmation checks, then physical-camera and real-client acceptance. No
+  deployed services are changed by implementation or fixture tests.
+
 ## SSH host management and Omarchy — 2026-10-03
 
 Reason: a Linux host must be configurable and manageable through SSH, including

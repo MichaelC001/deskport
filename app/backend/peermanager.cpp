@@ -5,6 +5,7 @@
 #include <QSysInfo>
 #include <QPointer>
 #include "peerstore.h"
+#include "pairinginvite.h"
 #include "clipboardprotocol.h"
 #include "clipboard/process.h"
 #ifdef Q_OS_MACOS
@@ -28,6 +29,7 @@
 #include <functional>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QRandomGenerator>
 
 namespace {
 constexpr int MaxFrame = 32768;
@@ -302,6 +304,59 @@ void PeerManager::releaseClientFullscreen() {
         send(m_DisplayLink, {{"type", DP_MESSAGE_CLIENT_WINDOW}, {"action", "leave-fullscreen"}});
 }
 bool PeerManager::save() { return PeerStore::write(m_Path, {{"version", 1}, {"peers", m_Peers}}); }
+QJsonObject PeerManager::createInvitation(const QString& address, int lifetimeSeconds) {
+    const auto entry = PairingInvite::entry(address, port());
+    const auto hostId = QUuid(m_Host->identity()["hostId"].toString());
+    if (entry.isEmpty() || lifetimeSeconds < 1 || lifetimeSeconds > 300) {
+        m_Status = tr("Enter a hostname or IP address, optionally with a connection port. IPv6 addresses need brackets.");
+        emit changed(); return {};
+    }
+    if (!m_Healthy || m_ClientOnly || !m_Server->isListening() || hostId.isNull() || busy() ||
+        !m_Host->available() || m_Host->changing()) {
+        m_Status = tr("The binding listener is unavailable or busy. Retry when device access is idle.");
+        emit changed(); return {};
+    }
+    quint32 random[8];
+    QRandomGenerator::system()->generate(random, random + 8);
+    const QByteArray secret(reinterpret_cast<const char*>(random), sizeof(random));
+    const auto token = secret.toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
+    const auto expires = QDateTime::currentSecsSinceEpoch() + lifetimeSeconds;
+    const auto id = hostId.toString(QUuid::WithoutBraces).toLower();
+    const auto pin = fingerprint(m_Certificate);
+    const auto uri = QStringLiteral("deskport://bind?v=1&entry=%1&id=%2&fp=%3&token=%4&exp=%5")
+        .arg(QString::fromLatin1(QUrl::toPercentEncoding(entry)), id, pin, QString::fromLatin1(token), QString::number(expires));
+    m_InviteTokenHash = QCryptographicHash::hash(token, QCryptographicHash::Sha256);
+    m_InviteLifetimeMs = lifetimeSeconds * 1000;
+    m_InviteExpiresAt = expires;
+    m_InviteClock.start();
+    // The secret exists only in this response and volatile invitation state.
+    m_Status = tr("A single-use client invitation was created."); emit changed();
+    return {{"uri", uri}, {"entry", entry}, {"hostId", id}, {"fingerprint", pin}, {"expiresAt", expires}};
+}
+bool PeerManager::revokeInvitation() {
+    const bool active = !m_InviteTokenHash.isEmpty() && m_InviteClock.isValid() &&
+        m_InviteClock.elapsed() < m_InviteLifetimeMs && QDateTime::currentSecsSinceEpoch() < m_InviteExpiresAt;
+    m_InviteTokenHash.clear(); m_InviteClock.invalidate();
+    return active;
+}
+bool PeerManager::consumeInvitation(const QJsonValue& value) {
+    if (m_InviteTokenHash.isEmpty() || !m_InviteClock.isValid()) return false;
+    if (m_InviteClock.elapsed() >= m_InviteLifetimeMs || QDateTime::currentSecsSinceEpoch() >= m_InviteExpiresAt) {
+        revokeInvitation(); return false;
+    }
+    if (!value.isString()) return false;
+    const auto token = value.toString().toLatin1();
+    static const QRegularExpression syntax(QStringLiteral("^[A-Za-z0-9_-]{43}$"));
+    if (!syntax.match(value.toString()).hasMatch()) return false;
+    const auto decoded = QByteArray::fromBase64(token, QByteArray::Base64UrlEncoding);
+    if (decoded.size() != 32 || decoded.toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals) != token) return false;
+    const auto hash = QCryptographicHash::hash(token, QCryptographicHash::Sha256);
+    unsigned char difference = 0;
+    for (int i = 0; i < hash.size(); ++i) difference |= static_cast<unsigned char>(hash[i] ^ m_InviteTokenHash[i]);
+    if (difference) return false;
+    revokeInvitation(); // Never resurrect after a later trust/persistence failure.
+    return true;
+}
 QJsonObject PeerManager::metadata() const {
     if (m_ClientOnly) return {{"version", 1}, {"clientBinding", 1}, {"role", "client"},
                               {"name", m_Host->deviceName().left(64)}};
@@ -311,6 +366,7 @@ QJsonObject PeerManager::metadata() const {
     meta["os"] = QSysInfo::prettyProductName();
     meta["version"] = 1;
     meta["clientBinding"] = 1;
+    meta["pairingInvite"] = 1;
     meta["endpointRefresh"] = 1;
     meta["clipboard"] = 1;
     meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
@@ -738,9 +794,17 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         if (!acceptMetadata(link, message["meta"].toObject()) || QUuid(message["tx"].toString()).isNull()) {
             fail(link, tr("Unsupported binding request")); return;
         }
+        const bool invited = message.contains("inviteToken");
+        if (invited && (!m_Healthy || !m_Host->available() || m_Host->changing())) {
+            fail(link, tr("The host is not ready for client authorization. Retry when it is idle.")); return;
+        }
+        if (invited && (link->peer["role"].toString() != "client" || !consumeInvitation(message["inviteToken"]))) {
+            fail(link, tr("The client invitation is invalid, expired, revoked or already used.")); return;
+        }
         m_Link = link;
         link->transaction = message["tx"].toString(); link->requested = true;
         send(link, {{"type", "pending"}, {"tx", link->transaction}});
+        if (invited) { approve(link->transaction); return; }
         m_Status = pendingClientOnly() ? tr("A client is requesting access to this computer") : tr("A computer is requesting mutual desktop access"); emit changed(); emit incomingRequest();
     } else if (type == "pending" && !link->incoming && !link->requested && !link->accepted && !link->peer.isEmpty() && message["tx"].toString() == link->transaction) {
         link->requested = true;
