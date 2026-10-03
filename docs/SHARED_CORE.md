@@ -118,3 +118,10 @@ fits more content. Saved per-device values keep their number and therefore flip
 meaning. Other consumers adopt the new direction when they advance their pins.
 The macOS 800×600 logical floor still applies after tuning, so small client
 windows can reach the floor at 1.0 and show no further enlargement.
+
+## Core main alignment — 2026-10-03
+
+Core `dev` (video pause specification and the desktop tuning direction) is
+merged into core `main` as `4e80ab8`, keeping main's newer full-screen manual
+text. DeskPort `main` now pins that core `main` revision in both the Git
+submodule and flake.lock.
