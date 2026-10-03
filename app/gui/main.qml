@@ -101,15 +101,47 @@ ApplicationWindow {
         var top = stackView.currentItem // Replacements can preserve depth.
         return stackView.find(function(item) { return item.connectionPending === true || (item.session !== undefined && item.session !== null) })
     }
-    readonly property string activeHostId: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
-    readonly property string activeHostName: activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
+    readonly property string activeHostId: {
+        if (typeof sessionManager !== "undefined")
+            return sessionManager.states[sessionManager.selectedId] === "connected" ? sessionManager.selectedId : ""
+        return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostId : ""
+    }
+    readonly property string activeHostName: {
+        if (typeof sessionManager !== "undefined" && sessionManager.busy) {
+            var rows=sessionManager.sessions
+            for (var i=0;i<rows.length;++i) if(rows[i].id === activeHostId) return rows[i].name
+        }
+        return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
+    }
     function showDevices() {
+        if (typeof sessionManager !== "undefined") sessionManager.showDevices()
         if (activeStreamPage) {
             if (activeStreamPage.session !== undefined && activeStreamPage.session) activeStreamPage.session.setViewerRequested(false)
             if (stackView.currentItem.controlCenterForActiveSession === true) return
             if (stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)
-            stackView.push(Qt.resolvedUrl("PcView.qml"), {"controlCenterForActiveSession": true}, StackView.Immediate)
+            sessionDeviceList.active = true
+            stackView.push(sessionDeviceList.item, StackView.Immediate)
         } else stackView.pop(null)
+    }
+    function showOperation(text) {
+        operationDialog.text = text
+        operationDialog.open()
+    }
+    function finishOperation() { operationDialog.close() }
+    NavigableMessageDialog {
+        id: operationDialog
+        objectName: "operationProgress"
+        showSpinner: true
+        standardButtons: Dialog.NoButton
+        closePolicy: Popup.NoAutoClose
+    }
+    // The manager already owns hide/show intent when a worker reports an event.
+    function presentDevices() {
+        if (!activeStreamPage) stackView.pop(null, StackView.Immediate)
+        if (window.windowState === Qt.WindowMinimized) window.showNormal()
+        else window.show()
+        window.raise()
+        window.requestActivate()
     }
     function showDevicesDuringSession() {
         showDevices()
@@ -133,7 +165,10 @@ ApplicationWindow {
         window.requestActivate()
         return true
     }
-    function recallRemoteSession() { hostManager.recallViewer() }
+    function recallRemoteSession() {
+        if (typeof sessionManager !== "undefined" && sessionManager.busy && sessionManager.recall()) return
+        hostManager.recallViewer()
+    }
     function goBack() {
         if (activeStreamPage && stackView.currentItem.controlCenterForActiveSession === true) {
             recallRemoteSession()
@@ -146,6 +181,19 @@ ApplicationWindow {
         }
         else {
             stackView.pop()
+        }
+    }
+
+    // StackView does not own externally supplied items. Keep the control center
+    // and its models alive so a tray switch only changes presentation. Only the
+    // in-process command-line stream uses it; create it on first use so the
+    // device shell does not maintain a second hidden grid and its models.
+    Loader {
+        id: sessionDeviceList
+        active: false
+        sourceComponent: PcView {
+            controlCenterForActiveSession: true
+            visible: StackView.status === StackView.Active
         }
     }
 
@@ -262,9 +310,27 @@ ApplicationWindow {
         return str.startsWith(className + "(") || str.startsWith(className + "_QML");
     }
 
+    function showAddDevice(address) {
+        bindingPage.setAddress(address || "")
+        addDeviceDialog.open()
+    }
+
+    NavigableDialog {
+        id: addDeviceDialog
+        objectName: "addDeviceDialog"
+        title: qsTranslate("BindView", "Add a device")
+        height: Math.min(maximumHeight, 600)
+        padding: 0
+        topPadding: 0
+        bottomPadding: 12
+        contentItem: BindView { id: bindingPage }
+        onOpened: bindingPage.focusAddress()
+    }
+
     function navigateTo(url, objectType)
     {
         if (objectType === "PcView") { showDevices(); return }
+        if (objectType === "BindView") { showAddDevice(); return }
         var existingItem = stackView.find(function(item, index) {
             return qmltypeof(item, objectType) && (!activeStreamPage || index > activeStreamPage.StackView.index)
         })
@@ -281,14 +347,16 @@ ApplicationWindow {
 
     Connections {
         target: peerManager
-        function onPeerBound(peer) {
-            ComputerManager.addBoundHost(peer)
-            // The requesting side is looking at BindView while approval is
-            // pending. Once trust is durable, return to the list where the new
-            // device is now available. Incoming approvals happen on HostView
-            // and must not change the operator's current page.
-            if (qmltypeof(stackView.currentItem, "BindView"))
-                Qt.callLater(showDevices)
+        function onDeviceRemovalFinished(hostId, success) {
+            if (success && ComputerManager.deleteHostById(hostId)) return
+            errorDialog.text = success ? qsTr("Could not save device removal. Please retry.") : peerManager.status
+            errorDialog.helpText = ""
+            errorDialog.open()
+        }
+        function onPeerBound(peer, explicitAdd) {
+            ComputerManager.addBoundHost(peer, explicitAdd)
+            // Automatic saved-peer refresh must not dismiss a form being edited.
+            if (explicitAdd && addDeviceDialog.visible) addDeviceDialog.close()
         }
     }
     BindingApproval {
@@ -342,7 +410,8 @@ ApplicationWindow {
             }
             UiButton {
                 id: trafficSummary; objectName: "trafficSummary"
-                Layout.maximumWidth: Math.max(120, window.width - (topBar.compact ? 560 : 850))
+                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 560 : 850)))
+                Layout.fillWidth: true; Layout.minimumWidth: Math.min(implicitWidth, 120)
                 visible: !topBar.narrow
                 Layout.leftMargin: 4
                 flat: true; font.pixelSize: ui.small
@@ -356,8 +425,12 @@ ApplicationWindow {
                 property string sampledHost: ""
                 function amount(n) { return n >= 1000000000 ? (n / 1000000000).toFixed(2) + " GB" : n >= 1000000 ? (n / 1000000).toFixed(1) + " MB" : (n / 1000).toFixed(1) + " KB" }
                 function sample() {
-                    if (!activeStreamPage || !activeStreamPage.session) return
-                    var sample = activeStreamPage.session.traffic(), now = Date.now()
+                    var sample
+                    if (typeof sessionManager !== "undefined" && sessionManager.busy) sample = sessionManager.selectedTraffic
+                    else if (activeStreamPage && activeStreamPage.session) sample = activeStreamPage.session.traffic()
+                    else return
+                    if (sample.received === undefined || sample.sent === undefined) return
+                    var now = Date.now()
                     var elapsed = (now - sampledAt) / 1000
                     downRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.received - received) / elapsed : 0
                     upRate = sampledHost === activeHostId && sampledAt > 0 && elapsed > 0 ? Math.max(0, sample.sent - sent) / elapsed : 0
@@ -391,11 +464,6 @@ ApplicationWindow {
                     onTriggered: memorySummary.sample()
                 }
             }
-            Label {
-                visible: stackView.depth > 1 && topBar.devicesPage === null && !topBar.compact
-                text: stackView.currentItem ? stackView.currentItem.objectName : ""
-                color: ui.muted; elide: Text.ElideRight; Layout.leftMargin: 8
-            }
             Item { Layout.fillWidth: true }
             // Shown while the connected client is in full screen; asks it to leave,
             // never to enter.
@@ -407,6 +475,17 @@ ApplicationWindow {
                 Accessible.name: qsTr("Ask client to leave full screen")
                 ToolTip.visible: hovered; ToolTip.text: qsTr("Ask the connected client to leave full screen")
                 onClicked: peerManager.releaseClientFullscreen()
+            }
+            // The name of the current page sits beside the buttons, so a click on
+            // any of them shows its effect right where the pointer is.
+            Label {
+                objectName: "pageName"
+                visible: !topBar.compact && text.length > 0
+                text: topBar.devicesPage !== null ? (topBar.devicesPage.arranging ? qsTr("Editing") : topBar.devicesPage.objectName)
+                    : stackView.currentItem ? stackView.currentItem.objectName : ""
+                color: ui.muted; elide: Text.ElideRight
+                // Shown whole; the traffic chip gives way first when the bar runs out of room.
+                Layout.maximumWidth: 220; Layout.rightMargin: 4
             }
             // Devices, manual, edit, refresh, sharing and settings. The selection
             // slides to the section the current page belongs to; nothing moves.
@@ -537,12 +616,9 @@ ApplicationWindow {
         }
     }
     Timer { interval: 21600000; repeat: true; running: true; onTriggered: AutoUpdateChecker.start() }
-    Dialog {
+    NavigableDialog {
         id: updateDialog; objectName: "updateDialog"
         title: qsTr("DeskPort updates")
-        modal: true; anchors.centerIn: parent
-        width: Math.min(window.width - 40, 560)
-        standardButtons: Dialog.Close
         contentItem: ColumnLayout {
             spacing: 12
             Label {
@@ -566,6 +642,7 @@ ApplicationWindow {
                     readOnly: true; selectByMouse: true; wrapMode: TextEdit.Wrap
                     textFormat: TextEdit.PlainText
                     color: ui.text
+                    background: Rectangle { radius: 10; color: ui.raised }
                 }
             }
             Label {
@@ -573,41 +650,40 @@ ApplicationWindow {
                 color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
             RowLayout {
+                Layout.fillWidth: true
                 UiButton {
                     text: qsTr("Check again")
                     enabled: AutoUpdateChecker.status !== "checking"
                     onClicked: AutoUpdateChecker.start()
                 }
+                Item { Layout.fillWidth: true }
                 UiButton {
                     text: qsTr("Open download page")
+                    highlighted: true
                     enabled: AutoUpdateChecker.releaseUrl.length > 0
                     onClicked: Qt.openUrlExternally(AutoUpdateChecker.releaseUrl)
                 }
             }
         }
     }
-    Dialog {
-        id: trafficDetails; title: qsTr("Session data"); modal: true
-        width: Math.min(window.width - 40, 460); anchors.centerIn: parent
-        standardButtons: Dialog.Ok
+    NavigableDialog {
+        id: trafficDetails; title: qsTr("Session data")
         contentItem: ColumnLayout {
             spacing: 12
             Label { text: qsTr("Received: %1").arg(trafficSummary.amount(trafficSummary.received)); color: ui.text }
             Label { text: qsTr("Sent: %1").arg(trafficSummary.amount(trafficSummary.sent)); color: ui.text }
-            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
-    Dialog {
-        id: memoryDetails; objectName: "memoryDetails"; title: qsTr("Local memory usage"); modal: true
-        width: Math.min(window.width - 40, 460); anchors.centerIn: parent
-        standardButtons: Dialog.Ok
+    NavigableDialog {
+        id: memoryDetails; objectName: "memoryDetails"; title: qsTr("Local memory usage")
         contentItem: ColumnLayout {
             spacing: 12
             Label { text: qsTr("Client: %1").arg(memorySummary.amount(memorySummary.usage.client)); color: ui.text }
             Label { text: qsTr("Sharing host: %1").arg(memorySummary.amount(memorySummary.usage.host)); color: ui.text }
             Label { text: qsTr("Helpers: %1").arg(memorySummary.amount(memorySummary.usage.helpers)); color: ui.text }
             Label { visible: !memorySummary.usage.complete; text: qsTr("Some processes could not be sampled."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
-            Label { text: qsTr("Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { text: qsTr("Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         }
     }
     Shortcut { enabled: navigationVisible; sequences: [StandardKey.New]; onActivated: navigateTo("qrc:/gui/BindView.qml", "BindView") }
@@ -682,6 +758,8 @@ ApplicationWindow {
 
     NavigableDialog {
         id: addPcDialog
+        objectName: "addLegacyHost"
+        title: qsTr("Add a legacy host")
         property string label: qsTr("Enter the host IP address or hostname:")
 
         standardButtons: Dialog.Ok | Dialog.Cancel
@@ -701,15 +779,19 @@ ApplicationWindow {
             }
         }
 
-        ColumnLayout {
+        contentItem: ColumnLayout {
+            spacing: 8
             Label {
                 text: addPcDialog.label
-                font.bold: true
+                color: ui.text
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
             }
 
             Label {
                 text: qsTr("DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.")
-                Layout.preferredWidth: 420
+                color: ui.muted
+                font.pixelSize: ui.small
                 Layout.fillWidth: true
                 wrapMode: Text.WordWrap
             }

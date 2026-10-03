@@ -11,6 +11,8 @@
 #include <QNetworkReply>
 #include <QTcpServer>
 #include "backend/hostmanager.h"
+#include "backend/multisessions.h"
+#include "backend/sessionworker.h"
 #include "backend/peermanager.h"
 #include "backend/singleinstance.h"
 #include "version.h"
@@ -492,7 +494,14 @@ int main(int argc, char *argv[])
     //
     // NB: Windows defaults to the "windows" non-threaded render loop on
     // Qt 5 and the threaded render loop on Qt 6.
-    qputenv("QSG_RENDER_LOOP", "basic");
+    //
+    // DeskPort: only the command-line stream mode still runs a session inside
+    // the Qt UI process. The device shell restores Qt's default below, once the
+    // command line is known, so a blocking swap cannot stall its event loop.
+    const bool renderLoopOverridden = qEnvironmentVariableIsSet("QSG_RENDER_LOOP");
+    if (!renderLoopOverridden) qputenv("QSG_RENDER_LOOP", "basic");
+#else
+    const bool renderLoopOverridden = true;
 #endif
 
 #if defined(Q_OS_DARWIN) && defined(QT_DEBUG)
@@ -689,6 +698,16 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    if (app.arguments().value(1) == "--session-worker") {
+        const auto endpoint = qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT");
+        const auto token = qEnvironmentVariable("DESKPORT_SESSION_TOKEN");
+        qunsetenv("DESKPORT_SESSION_ENDPOINT"); qunsetenv("DESKPORT_SESSION_TOKEN");
+        if (endpoint.isEmpty() || token.isEmpty() || app.arguments().size() != 4) return 2;
+        app.setQuitOnLastWindowClosed(false);
+        SessionWorker worker(endpoint, token, app.arguments().at(2), app.arguments().at(3));
+        return worker.run();
+    }
+
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse([&app] { auto args = app.arguments(); args.removeAll("--background"); args.removeAll("--share"); args.removeAll("--no-host-autostart"); return args; }());
     SingleInstance instance;
@@ -793,6 +812,14 @@ int main(int argc, char *argv[])
     // modified macOS 11 style rounded corner icon.
     app.setWindowIcon(QIcon(":/res/deskport.svg"));
 #endif
+#if defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
+    // Every icon is a bundled resource. Qt Quick still consults the desktop
+    // icon theme for each icon load and recolor; on NixOS/KDE that is ~90
+    // XDG data directories, which made a theme switch block for seconds.
+    // A non-empty list keeps Qt from restoring the system defaults.
+    QIcon::setThemeSearchPaths({QStringLiteral(":/icons")});
+    QIcon::setFallbackSearchPaths({QStringLiteral(":/icons")});
+#endif
 
     // This is necessary to show our icon correctly on Wayland
     app.setDesktopFileName("io.github.keithxc.DeskPort");
@@ -848,6 +875,7 @@ int main(int argc, char *argv[])
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     }
 
+    MultiSessions* multiSessions = nullptr;
     HostManager hostManager;
 #ifdef Q_OS_WIN
     WindowsInstallShutdown installShutdown(hostManager);
@@ -856,35 +884,41 @@ int main(int argc, char *argv[])
     const bool resident = commandLineParserResult == GlobalCommandLineParser::NormalStartRequested;
     hostManager.setResident(resident);
     if (resident) app.setQuitOnLastWindowClosed(false);
-    QObject::connect(&hostManager, &HostManager::fullscreenRequested, &app, [] {
+    QObject::connect(&hostManager, &HostManager::fullscreenRequested, &app, [&] {
+        if (multiSessions && multiSessions->busy()) { multiSessions->fullscreen(); return; }
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortFullscreen;
             SDL_PushEvent(&event);
         }
     });
-    QObject::connect(&hostManager, &HostManager::reconnectRequested, &app, [] {
+    QObject::connect(&hostManager, &HostManager::reconnectRequested, &app, [&] {
+        if (multiSessions && multiSessions->busy()) { multiSessions->reconnect(multiSessions->selectedId()); return; }
         if (Session::get()) Session::get()->requestReconnect();
     });
-    QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [] {
+    QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [&] {
+        if (multiSessions && multiSessions->busy()) { multiSessions->disconnectSession(multiSessions->selectedId()); return; }
         if (Session::get()) {
+            Session::get()->cancelRecovery();
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
             SDL_PushEvent(&event);
         }
     });
     QObject::connect(&hostManager, &HostManager::exitRequested, &app, [&] {
-        if (Session::get()) {
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
-            SDL_PushEvent(&event);
-            auto timer = new QTimer(&app);
-            QObject::connect(timer, &QTimer::timeout, &app, [timer, &app] {
-                if (!Session::get()) { timer->stop(); timer->deleteLater(); app.quit(); }
-                else {
-                    SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
-                    SDL_PushEvent(&event); // Also reaches a session crossing an adaptive restart.
-                }
-            });
-            timer->start(100);
-        } else app.quit();
+        if (multiSessions) multiSessions->shutdown();
+        auto timer = new QTimer(&app);
+        QObject::connect(timer, &QTimer::timeout, &app, [timer, &app, &hostManager, &multiSessions] {
+            if (Session::get()) {
+                Session::get()->cancelRecovery();
+                SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortEndSession;
+                SDL_PushEvent(&event);
+            }
+            // Keep Qt and the tray alive while both independent owners drain.
+            // Their destructors should not be the normal shutdown mechanism.
+            if (!SessionLifetime::busy() && !hostManager.running() && (!multiSessions || !multiSessions->busy())) {
+                timer->stop(); timer->deleteLater(); app.quit();
+            }
+        });
+        timer->start(50);
     });
 #ifdef Q_OS_UNIX
     // Logout, shutdown and `systemctl stop` must end the session and host
@@ -907,36 +941,68 @@ int main(int argc, char *argv[])
 #endif
 #ifdef Q_OS_LINUX
     SleepMonitor sleepMonitor;
-    QObject::connect(&sleepMonitor, &SleepMonitor::sleeping, &app, [&sleepMonitor, &app] {
-        if (!Session::get()) { sleepMonitor.release(); return; }
+    QObject::connect(&sleepMonitor, &SleepMonitor::sleeping, &app, [&sleepMonitor, &app, &multiSessions] {
+        if (multiSessions) multiSessions->suspend();
+        if (!Session::get() && (!multiSessions || !multiSessions->busy())) { sleepMonitor.release(); return; }
         qInfo() << "System is going to sleep; ending the remote session";
-        Session::get()->endForSystemSleep();
+        if (Session::get()) Session::get()->endForSystemSleep();
         QElapsedTimer waited; waited.start();
         auto timer = new QTimer(&app);
-        QObject::connect(timer, &QTimer::timeout, &app, [timer, waited, &sleepMonitor] {
+        QObject::connect(timer, &QTimer::timeout, &app, [timer, waited, &sleepMonitor, &multiSessions] {
             // Also reaches a session crossing an adaptive restart. logind caps
             // the delay (5 s by default), so never hold sleep longer than that.
             if (Session::get() && waited.elapsed() < 3000) { Session::get()->endForSystemSleep(); return; }
+            if (multiSessions && multiSessions->busy() && waited.elapsed() < 3000) return;
             timer->stop(); timer->deleteLater(); sleepMonitor.release();
         });
         timer->start(50);
     });
 #endif
     PeerManager peerManager(&hostManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
+    MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
+    multiSessions = &managedSessions;
+    QObject::connect(&Diagnostics::instance(), &Diagnostics::changed, &managedSessions, [&managedSessions] {
+        managedSessions.setDiagnosticsEnabled(Diagnostics::instance().enabled());
+    });
+    QObject::connect(&managedSessions, &MultiSessions::changed, &hostManager, [&] { hostManager.updateSessionMenu(managedSessions.sessions()); });
+    QObject::connect(&hostManager, &HostManager::sessionSelected, &managedSessions, &MultiSessions::select);
+    QObject::connect(&hostManager, &HostManager::sessionDisconnectRequested, &managedSessions, &MultiSessions::disconnectSession);
+    QObject::connect(&hostManager, &HostManager::sessionReconnectRequested, &managedSessions, &MultiSessions::reconnect);
+    QObject::connect(&hostManager, &HostManager::trayMenuAboutToShow, &managedSessions, [&] { hostManager.updateSessionMenu(managedSessions.sessions()); });
+    QObject::connect(&peerManager, &PeerManager::deviceRemovalFinished, &managedSessions, [&managedSessions](QString id, bool success) {
+        if (success) managedSessions.disconnectSession(id.toLower());
+    });
     if (app.arguments().contains("--share")) {
         QTimer::singleShot(0, &hostManager, [&hostManager] { hostManager.start(2560, 1440); });
     }
+    // Record stalls independently of transport state; never record UI contents.
+    QTimer uiHeartbeat;
+    QElapsedTimer uiTick; uiTick.start();
+    QObject::connect(&uiHeartbeat, &QTimer::timeout, &app, [&uiTick] {
+        const auto elapsed = uiTick.restart();
+        if (elapsed > 350)
+            qInfo("DeskPort navigation stage=event-loop-delay duration_ms=%lld", static_cast<long long>(elapsed));
+    });
+    uiHeartbeat.start(100);
     QQmlApplicationEngine engine;
-    auto showDevices = [&engine, &pendingActivation] {
-        // Present Qt immediately, including while the transport is connecting.
-        // Only the SDL owner handles hiding/releasing the remote window.
-        if (SessionLifetime::busy()) {
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortShowDevices;
-            SDL_PushEvent(&event);
-        }
+    auto showDevices = [&engine, &pendingActivation, &managedSessions] {
+        managedSessions.showDevices();
+        QElapsedTimer presentation;
+        presentation.start();
+        qInfo("DeskPort navigation stage=devices-request duration_ms=0");
         if (engine.rootObjects().isEmpty()) { pendingActivation = true; return; }
         QMetaObject::invokeMethod(engine.rootObjects().first(), "showDevices");
         if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) {
+            if (auto quickWindow = qobject_cast<QQuickWindow*>(window)) {
+                // A context object makes this a one-shot connection and also
+                // cancels it if the window closes without submitting a frame.
+                auto frame = new QObject(quickWindow);
+                QObject::connect(quickWindow, &QQuickWindow::frameSwapped, frame, [frame, presentation] {
+                    qInfo("DeskPort navigation stage=devices-frame duration_ms=%lld", static_cast<long long>(presentation.elapsed()));
+                    delete frame;
+                }, Qt::QueuedConnection);
+                QTimer::singleShot(5000, frame, &QObject::deleteLater);
+            }
             if (window->windowState() == Qt::WindowMinimized) window->showNormal();
             else window->show();
             window->raise(); window->requestActivate();
@@ -945,8 +1011,16 @@ int main(int argc, char *argv[])
             deskPortActivateApplication();
 #endif
         }
+        qInfo("DeskPort navigation stage=devices-ready duration_ms=%lld", static_cast<long long>(presentation.elapsed()));
+        // Window presentation must precede the command to the media owner.
+        // The command only releases input and hides video; it never ends a session.
+        if (SessionLifetime::busy()) {
+            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortShowDevices;
+            SDL_PushEvent(&event);
+        }
     };
-    auto recallViewer = [&engine, &showDevices] {
+    auto recallViewer = [&engine, &showDevices, &managedSessions] {
+        if (managedSessions.busy() && managedSessions.recall()) return;
         QVariant handled;
         if (!engine.rootObjects().isEmpty())
             QMetaObject::invokeMethod(engine.rootObjects().first(), "prepareViewerRecall", Q_RETURN_ARG(QVariant, handled));
@@ -960,6 +1034,7 @@ int main(int argc, char *argv[])
         showDevices();
     };
     QObject::connect(&hostManager, &HostManager::hideRequested, &app, [&] {
+        if (managedSessions.busy()) managedSessions.showDevices();
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortHideWindow;
             SDL_PushEvent(&event);
@@ -968,8 +1043,17 @@ int main(int argc, char *argv[])
         }
     });
     // The tray's left button is the one-action route to the window: it shows the
-    // remote desktop or the device list, and hides whichever of them is up.
-    auto toggleWindow = [&engine, &showDevices, &recallViewer] {
+    // remote desktop when one is connected, otherwise it toggles the device list.
+    auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions] {
+        if (managedSessions.busy()) {
+            // Go straight to the last viewed desktop, never through the device
+            // list; the list stays available from the tray menu.
+            if (managedSessions.recall()) return;
+            auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
+            if (!window || !window->isVisible()) showDevices();
+            else window->hide();
+            return;
+        }
         if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
             recallViewer();
             return;
@@ -986,9 +1070,31 @@ int main(int argc, char *argv[])
         }
         showDevices();
     };
+    QObject::connect(&managedSessions, &MultiSessions::devicesRequested, &engine, [&engine] {
+        if (!engine.rootObjects().isEmpty()) QMetaObject::invokeMethod(engine.rootObjects().first(), "presentDevices");
+    });
+    QObject::connect(&managedSessions, &MultiSessions::viewerShown, &engine, [&engine] {
+        if (!engine.rootObjects().isEmpty()) if(auto window=qobject_cast<QWindow*>(engine.rootObjects().first())) window->hide();
+    });
+    engine.rootContext()->setContextProperty("sessionManager", &managedSessions);
     instance.activate = showDevices;
     QObject::connect(&hostManager, &HostManager::openRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);
+    const auto showOperation = [&engine, showDevices](const QString& text) {
+        showDevices();
+        if (!engine.rootObjects().isEmpty())
+            QMetaObject::invokeMethod(engine.rootObjects().first(), "showOperation", Q_ARG(QVariant, text));
+    };
+    QObject::connect(&hostManager, &HostManager::operationRequested, &app, showOperation);
+    QObject::connect(&hostManager, &HostManager::disconnectRequested, &app, [&engine, showOperation] {
+        auto session = Session::get();
+        if (!session) return;
+        showOperation(QCoreApplication::translate("MainWindow", "Disconnecting…"));
+        QObject::connect(session, &Session::transportCleanupFinished, &engine, [&engine] {
+            if (!engine.rootObjects().isEmpty())
+                QMetaObject::invokeMethod(engine.rootObjects().first(), "finishOperation");
+        });
+    });
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
     QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
 #ifdef Q_OS_DARWIN
@@ -997,7 +1103,9 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
-    engine.rootContext()->setContextProperty("startInBackground", app.arguments().contains("--background"));
+    const bool showAfterRestart = QSettings().value("ui/showAfterRestart", false).toBool();
+    QSettings().remove("ui/showAfterRestart");
+    engine.rootContext()->setContextProperty("startInBackground", app.arguments().contains("--background") && !showAfterRestart);
     engine.rootContext()->setContextProperty("startSharingPage", app.arguments().contains("--share"));
     QString initialView;
     bool hasGUI = true;
@@ -1005,6 +1113,9 @@ int main(int argc, char *argv[])
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
         initialView = "qrc:/gui/PcView.qml";
+        // Media runs in session workers; the shell renders off its GUI thread
+        // wherever Qt supports it. No Qt Quick window exists before this point.
+        if (!renderLoopOverridden) qunsetenv("QSG_RENDER_LOOP");
         break;
     case GlobalCommandLineParser::StreamRequested:
         {

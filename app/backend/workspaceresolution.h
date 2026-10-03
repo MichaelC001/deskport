@@ -11,6 +11,8 @@ constexpr int MaxHeight = DP_WORKSPACE_MAX_HEIGHT;
 struct Workspace {
     QSize pixels;
     int scale = 1;
+    // The host's minimum desktop overrode part of a requested enlargement.
+    bool limited = false;
 };
 // Recover compositor scale when XWayland exposes pixels while Qt exposes the
 // logical output rectangle. Reject mismatched outputs/orientations.
@@ -32,9 +34,11 @@ inline Workspace forClient(QSize drawablePixels, double clientScale) {
 inline Workspace adjusted(Workspace workspace, double factor, const QString& operatingSystem = {}) {
     const DPWorkspace base{workspace.pixels.width(), workspace.pixels.height(), workspace.scale};
     auto result = dp_workspace_adjust(base, factor);
+    const auto tuned = result;
     const auto os = operatingSystem.toLower();
     if (os.contains("mac") || os.contains("darwin") || os.contains("osx")) result = dp_workspace_for_macos(result);
-    return {QSize(result.width, result.height), result.scale};
+    const bool limited = factor > 1.0 && result.width > tuned.width;
+    return {QSize(result.width, result.height), result.scale, limited};
 }
 
 }

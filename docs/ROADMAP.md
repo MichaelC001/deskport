@@ -14,6 +14,97 @@ a null SDL2-compat Vulkan entry point during headless startup; a packaging
 backport and Nix headless-startup regression test cover the released source. These packaging
 checks do not add physical streaming/input acceptance.
 
+## Presentation-independent session continuation — 2026-09-28
+
+Reason: opening Devices during a connection must be a presentation change.
+Replacing the StreamSegue stack entry during transport recovery or resolution
+changes could remove the control center above it and reveal the viewer again.
+
+- Retain the stream page and reconnect its signals to the next transport owner.
+  Preserve the viewer visibility request across every continuation path.
+- Retain the control-center page and its models across tray switches. Suppress
+  adaptive resize decisions as soon as the viewer is no longer requested.
+- Record fixed navigation stages, first-frame delay and Qt event-loop stalls;
+  no device identity or UI contents enter these timing records.
+- Live latency and connection continuity remain unverified until tested on the
+  target compositor. Multiple simultaneous servers are a future requirement:
+  they need independent transport ownership and a separate active-view selector;
+  the current singleton transport is not multi-session support.
+
+## Nonblocking device actions and live revocation — 2026-09-28
+
+Reason: removing an offline binding restarted the local sharing helper and
+interrupted unrelated connections; tray actions could remain inside the
+streaming invocation or wait for shutdown destructors.
+
+- The authenticated loopback trust API atomically removes one authorization
+  while preserving other clients and the admission lease. Older helpers fail
+  the operation without a stop/restart fallback. Stopped-helper file writes run
+  on a worker; startup readiness is awaited asynchronously.
+- Device removal publishes a pending state before work and reports completion
+  or failure. Native tray actions are queued after menu dispatch returns.
+- Linux streaming returns to Qt's normal event loop while its SDL worker runs;
+  session ownership lasts until both execution and transport cleanup finish.
+- Disconnect and restart show progress. Explicit exit drains helper processes
+  asynchronously before quitting Qt; explicit restart shows the next window
+  even when the previous instance started in the background.
+- Tests cover live revocation, preserved authorization/lease, failure without
+  restart, queued tray dispatch and UI heartbeat during slow helper shutdown.
+  Physical tray latency during real streams remains a deployment acceptance check.
+
+## Manual device entry overlay — 2026-09-28
+
+Reason: adding a device should use the same dismissible floating panel as device
+settings and details. Every add entry point now opens the shared centered dialog
+without changing the underlying page. Its body scrolls, its close button stays
+visible, and clicking outside or pressing Escape dismisses it. A successful new
+binding closes the panel; background peer refresh does not interrupt text entry.
+
+## Device removal and responsive grid — 2026-09-28
+
+Reason: offline devices returned after restart, and resizing could leave an empty
+column or animate cards between inconsistent layouts.
+
+- Remove device now revokes locally stored binding access and clears its saved
+  device profile, alias and layout membership. A hashed removal marker blocks
+  automatic discovery/replay until an explicit new add or binding.
+- All device models detach removed hosts before asynchronous disposal; queued
+  callbacks and the delayed settings writer cannot access retired rows.
+- Desktop grid columns and integer cell widths follow the same current viewport.
+  Resize does not run reorder animations or delayed-width layout calculations.
+- Isolated regressions cover restart, binding cleanup, multiple models and grid
+  column boundaries. Native resize and live streaming remain activation checks.
+
+## Desktop UI alignment — 2026-09-28
+
+Reason: bring the current mobile visual design to the desktop client.
+
+- Theme tokens (canvas, surface, raised, line, text, muted, accent, tint and
+  status colours) drive every card, panel and control and switch live.
+- One floating panel style for every choice, device menu, device settings,
+  confirmation, message, text entry and wait: centred, at most 460 wide and
+  82% tall, dimmed backdrop, fixed title row with a close button. Outside
+  clicks, Esc and Cancel close it; destructive actions are red. Combo-box
+  drop-downs and context menus are replaced by option panels.
+- Device cards: static status light, status-tinted surface, system icon opens
+  the device panel, one action button (Connect, Set up access, Checking…,
+  Troubleshoot, Return to desktop; groups Open). The add card has a dashed
+  outline, a large plus and two tint buttons.
+- Device panel: icon, name, coloured status and gear in the header; facts and
+  each device action once. Session controls (reconnect, full screen,
+  disconnect) appear only for the connected device.
+- Device settings: basic rows, then advanced streaming settings expanding in
+  place; the full upstream option list opens as a panel. No page is pushed.
+- Settings: grouped rows with a three-way theme control and privacy/licence
+  reading panels. Manual: chapter cards with icon tile, first-step preview,
+  rotating chevron and numbered steps.
+
+2026-09-28 review: pinned the translated manual at public core commit
+`78fe2897` in both the Git submodule and Nix lock. Core contract checks, seven
+translation catalogs and all 24 macOS isolated UI tests pass, including
+light/dark panels and narrow-window screenshots. Activation and real streaming/input checks remain with the
+user; this does not request a public release or mobile upload.
+
 ## Desktop 0.6.3 release preparation — 2026-09-26
 
 Prepare the integrated main branch for a formal PC release: Linux x86_64
@@ -2166,3 +2257,270 @@ isolated KWin permission/remount/display lifecycle regressions. Keep 0.6.3 stabl
 assets and native-package requirements unchanged. Physical GPU/input/audio and
 streaming acceptance, and AppImageHub catalog review, remain separate gates.
 See [the verification record](APPIMAGE_064.md).
+
+## Desktop concurrent viewers — 2026-09-28
+
+The desktop shell now keeps one isolated media worker per connected server. The
+existing media library has process-global transport, decoder and input state;
+workers preserve its single-session contract while the shell owns the device
+list, tray, session selection and lifecycle. Devices and tray actions do not wait
+for a media worker to stop. Returning to Devices retains all connections.
+
+- Existing device cards and the Connections tray menu select an existing desktop. Closing
+  one session stops only its worker. A worker crash leaves other sessions alive.
+- Presentation handoff releases the previous viewer's input and clipboard before
+  showing the next; background viewers retain transport but mute audio and reject
+  physical input. Native SDL windows are retained and hidden/shown. This is not
+  multiple render surfaces embedded in one Qt window.
+- Workers load only their target's saved host and cannot write the host registry
+  or explicitly admit a removed host. The shell owns device removal.
+- Admission probes check every outgoing branch using the existing core v1 path
+  protocol; all branches must be safe and graph mutation fails closed.
+- Worker diagnostics use separate bounded run logs, included through the same
+  privacy allowlist when exporting diagnostics.
+- Regression coverage includes two subprocesses, delayed input handoff, rapid
+  selection, list return, independent crash/cancel, fanout/cycle admission, and
+  real production worker startup with isolated settings. Physical simultaneous
+  video/audio/input and native compositor switch latency remain acceptance work.
+
+### Preserve the existing desktop UI — 2026-09-28
+
+Removed the newly introduced session tab strip and restored the original page
+spacing at the user's request. Session isolation is a backend concern; the
+existing device cards remain the entry point. Future separation of presentation
+and session services must preserve the current UI unless explicitly requested.
+
+### Per-device session state and responsive handoff — 2026-09-28
+
+The existing device cards consume backend session state keyed by host identity.
+Every connected device shows Return to desktop, including background sessions.
+Reconnect, fullscreen and disconnect commands address that card's session.
+The UI does not wait for transport startup, shutdown or input handoff. A worker
+that cannot acknowledge input release is terminated after a bounded deadline;
+only its exit releases ownership to the next viewer. Repeated selections do not
+extend that deadline. Fullscreen requests wait for the target viewer to appear.
+
+Validation: the macOS and Linux Qt UI suites pass all 26 cases; the final
+per-device navigation check also passes on Linux. Subprocess regressions cover
+rapid selection, background disconnect, fullscreen handoff and failed workers;
+heartbeat gaps during the stalled-handoff fixture were 11–20 ms. Two Linux
+machines independently built the same final candidate with Nix and produced
+matching executable SHA-256 hashes. Both candidates pass 20 switches between
+two real worker processes, independent cancellation and IPC-loss exit with
+isolated settings and no server connection. UI tests now use temporary settings
+on macOS as well as Linux, preventing setup preferences leaking across runs.
+
+Authorized live integration used a physical Linux viewer with macOS and Linux
+servers. A disposable in-process driver invoked the real card actions; it is
+not included in production source. Both streams submitted their first video
+frames, and a private screenshot confirmed both original cards offered Return
+to desktop with no session tabs.
+
+The initial rapid-switch run exposed stale resize debounce state across hidden
+windows: transient compositor geometry could trigger a transport restart on
+recall. Hiding/minimizing and recalling a viewer now reset that interval. The
+new desktop-state regression passes on macOS and Linux (10 cases), and the
+production Linux candidate builds with the repair.
+
+After repair, ten rapid switches and ten switches with one-second dwell both
+passed while retaining both connections. Maximum card-to-viewer acknowledgement
+was 58 ms and 52 ms respectively, measured with a 50 ms polling interval; these
+are window acknowledgement times, not display-to-photon latency. The Qt heartbeat
+maximum was 170–171 ms, including test screenshot capture. Each run independently
+disconnected one device and recalled the other. The four viewer logs contain
+first-render submissions and no adaptive transport restarts. The temporary
+viewer service and workers exited, and its original deployed service was
+restored. Physical keyboard/mouse routing and audio acceptance remain untested;
+this does not install or publish the repaired candidate.
+
+Scope confirmed by the user: implement presentation/input switching first;
+retain background media connections and defer resource optimization. The
+vendored RTSP client has no PAUSE command. Suspending remote video transmission
+is separate protocol work; it must not turn a presentation switch into
+disconnect/reconnect. Backend decode throttling also needs keyframe recovery
+validation before enabling it.
+
+### Optional video transmission pause candidate — 2026-09-28
+
+The desktop candidate negotiates `videoPause: 1` on the existing admitted TLS
+connection. Original UI/card actions remain unchanged. Background presentation
+requests stop video UDP at the host after the initial key frame; audio, control
+and the session lease remain alive. Legacy hosts continue streaming. The sender
+fences pause acknowledgments against frame sends, drops pre-resume encoded
+packets and requests a new IDR before forwarding video again. Capture/encoding
+suspension is outside this version. Input release and focus-based audio muting
+retain their existing implementation.
+
+Only macOS and Linux adapters advertise the capability. Ordered commands,
+completed duplicates, rapid desired-state coalescing, lease checks, timeout
+failure and resumed-control state normalization are covered by isolated tests.
+The wire contract is in core `protocol/VIDEO_PAUSE.md`; this local candidate uses
+an immutable NAR snapshot matching its core Git commit. It is not a public
+release pin and must be replaced with a reachable reviewed core pin before public
+integration.
+
+Validation so far: core tests, 117 existing binding cases, 11 additional protocol
+cases (13 including setup/cleanup), 26 UI cases, 10 desktop-state cases, and two
+real worker processes with 20 isolated switches pass on macOS. The signed macOS
+candidate and Linux Nix candidate both build. The 13 protocol checks and isolated
+worker checks also pass on Linux. The built Linux Sunshine passes the real
+loopback management endpoint tests for authentication, lease isolation, malformed
+state and repeated pause/resume without creating a video stream. The packaged worker test must run outside
+the devShell's Qt plugin environment, which points at store plugins rather than
+bundled frameworks.
+
+Full multi-host video/network acceptance remains pending. Neither build success
+nor protocol acknowledgments prove stopped network traffic, new displayed frames,
+switching latency, physical input or audio routing. The separately authorized
+temporary server runs below preserve installed packages and restore original
+processes. No release or mobile source has been published.
+
+The next live legacy-host run did **not** pass: both connections reached the
+connected state and the first recall completed, then the controller stopped
+advancing. Removing synchronous screenshots reproduced the stall. A disposable
+parent-debugger run captured the controller's main thread in Mesa
+`_mesa_glthread_finish -> eglSwapBuffers -> QSGGuiThreadRenderLoop::renderWindow`.
+The root cause is not established; do not attribute it to the wire extension or
+call it a resolved driver issue. Temporary Mesa threading and Qt software-renderer
+settings did not complete a full run either. These settings were not committed or
+applied to the deployed service. The original viewer service was restored and all
+test workers exited. This blocks full live/UI acceptance of the candidate; the narrower macOS host
+results below do not resolve the controller stall.
+
+
+### Temporary macOS host validation — 2026-09-29
+
+The temporary main app and embedded host preserve the installed designated code
+requirements and pass deep strict signature verification. The private test host
+suppresses automatic Screen Recording and microphone permission requests; no TCC
+reset, installed bundle replacement or permission grant was performed. Existing
+screen capture produced decoded frames. Original application instances were
+restored after testing.
+
+Read-only authenticated host telemetry now reports completed video sends,
+suppressed frames, keyframe sends and the last frame index. During a 65-second
+pause, sampled completed sends stayed at 23 while suppressed frames increased
+from 1530 to 4600; the session remained connected. Resume decoded a new keyframe
+in approximately 207 ms. Ten rapid hide/recall cycles and one longer-interval
+cycle completed; the following window-response wait timed out. The hidden
+controller heartbeat's maximum observed gap was 30 ms. These are worker/decode
+measurements, not physical display latency or interactive card-UI acceptance.
+No independent packet capture, physical input or audio acceptance is claimed.
+
+The Linux server candidate did not start its display helper successfully.
+Reusing the original launch environment did not resolve it. Multi-host switching,
+independent failure recovery and the complete dwell sequence remain blocked.
+The original Linux server/viewer instances were restored. The updated real
+loopback API tests pass on the built Linux host, including telemetry and video
+command lease/type/idempotence checks without a media stream.
+
+### Responsive shell and direct desktop switching — 2026-09-29
+
+Reason: review of the concurrent-viewer UI work. The shell still ran the Qt
+Quick scene graph on its GUI thread, every switch waited for all background
+viewers, and switching required a detour through Devices.
+
+- The device shell no longer forces the upstream non-threaded Qt Quick render
+  loop, which only the in-process stream needed; Qt's platform default applies.
+  Command-line stream mode and workers keep the previous setting, and an
+  explicit `QSG_RENDER_LOOP` is still honoured. This targets the recorded
+  controller stall in `eglSwapBuffers` on the GUI thread; that root cause is
+  still unconfirmed and live compositor acceptance remains pending.
+- A switch hides only a viewer that may be presenting. Hidden background viewers
+  are not asked again, so they add no latency and are no longer terminated when
+  slow to acknowledge a redundant hide. Repeated Devices requests are idempotent.
+  Input handoff ordering for the presenting viewer is unchanged.
+- Ctrl+Alt+Shift+N in the presented viewer asks the shell for the next
+  connected desktop (connection order). Background viewers cannot switch.
+- The tray Connections menu is rebuilt only when a row's name or state changes,
+  not on every selection or visibility acknowledgement. The legacy control-center
+  grid used only by command-line streaming is created on first use.
+
+Validation: macOS multi-session (6 cases, including a new case that fails on
+the previous hide policy with a 2.1 s handoff), UI (26) and host lifecycle
+(33, 2 platform skips) suites pass. Physical switch latency, focus/activation on
+KDE Wayland, keyboard/mouse routing and audio remain live acceptance checks.
+
+### Tray menu for concurrent desktops — 2026-09-29
+
+Reason: switching desktops from the tray took three menu levels, the menu did
+not show which desktop was presented, and the top-level reconnect/disconnect
+items silently addressed an invisible selection.
+
+- Live connections are listed at the top of the tray menu in the device list's
+  saved order (groups flattened in place); the presented desktop is checked and
+  connecting ones are labelled. One click presents that desktop. At most seven
+  are listed; "All connections (N)…" opens the device list.
+- Disconnect and More → Reconnect name their desktop: the presented one, else
+  the last one shown. They are hidden when there is none. Restart moved to More.
+- Menu items are fixed slots updated in place, refreshed before the menu opens,
+  and never destroyed while a native menu is tracking.
+- The tooltip reports connected desktops and the presented one.
+- Left click keeps alternating between the device list and the remote desktop.
+  If the last viewed desktop has ended, it presents the first connected one in
+  device-list order; with none left it hides the device list instead of doing
+  nothing. Ctrl+Alt+Shift+N follows the same order.
+
+Validation (macOS, isolated): tray actions, the seven-item cap and targets;
+session order, wrap-around and recall; UI (26), host lifecycle (33, 2 platform
+skips) and multi-session (6) suites. KDE StatusNotifier and macOS status-menu
+rendering remain live acceptance checks. Linux builds run on pk4 or wmn.
+
+### Reachable development inputs — 2026-09-29
+
+Reason: every test host needed private source and core snapshots preloaded
+before a configuration could build. The `dev/pcui` branch is published, and
+the video pause core change is published on the core `dev` branch
+(`2ebf5c9`, identical tree and NAR to the local snapshot). Both Nix and Git
+pin that revision, so a consumer can pin a public DeskPort commit and build
+from source. `TEST_BUILD_ID` now names the development line instead of an old
+private build. Core `main` and the public release pins are unchanged.
+
+### Desktop tuning feedback and tray recall — 2026-10-01
+
+Reason: desktop fine tuning enlarged the wrong way and, from a small client
+window, larger values silently hit the macOS 800×600 logical floor. Changing it
+during a connection no longer applied after desktops moved to worker processes,
+and the tray's left click showed the device list before the desktop.
+
+- Larger tuning values enlarge remote content (core `a107606`).
+- A worker reports, with its traffic sample, when the host's minimum desktop
+  overrides part of a requested enlargement. Device settings then explain the
+  limit instead of the usual note.
+- Choosing a tuning value while that device is connected sends the saved value
+  to its running stream. The adaptive check then compares the resulting desktop
+  with the current one: an unchanged size (for example any value above 1.0 once
+  the macOS floor applies) keeps the stream; a new size takes the window-keeping
+  resolution change, not a full reconnect. A fixed-resolution stream reconnects
+  only when its size changes. A value arriving between sessions is kept for the
+  next one.
+- Left click presents the last viewed connected desktop (else the first in
+  device-list order) without passing through the device list. With no desktop
+  connected it toggles the device list. The list stays in the tray menu. This
+  supersedes the alternating left click described for 2026-09-29.
+
+- Automatic network recovery is silent. The viewer window is retained across
+  retries (showing "Connection interrupted. Reconnecting…") instead of being
+  destroyed and recreated, which made the compositor raise and focus a new
+  window. The shell raises a viewer only for a user action; a worker's restart
+  (unsolicited hide, then ready) restores presentation state without showing,
+  raising or focusing the window. Final failure still opens the device list.
+- A hidden desktop whose connection dropped could reconnect every ~29 s for
+  minutes: the display controller retained across network retries still held
+  the host's video paused, so the new stream never received a first frame and
+  ended with "no video traffic" (-100). Each new stream now asks the host to
+  resume video first; the hidden viewer pauses it again after the first key
+  frame. Seen on wmn → mm4 on 2026-10-02 (15 cycles from 23:13 to 23:20).
+- Theme switching blocked the shell for 3–5 s on wmn (NixOS/KDE). A perf
+  profile put 85% of the stall in `QQuickIconImage::load` →
+  `QIconLoader::iconEngine`: every icon load or recolor searched the desktop
+  icon theme across ~90 XDG data directories, although every DeskPort icon is
+  a bundled resource. Linux builds now limit icon theme lookup to `:/icons`.
+  With the real QML and wmn's icon paths a switch took ~960 ms in the UI
+  harness, and ~10 ms without those paths. Opening pages pays the same cost.
+
+Validation (macOS, isolated): multi-session (7, including the limit report and
+its removal on disconnect, and quiet recovery versus explicit raising), UI
+(26), transition window (30 transitions), session navigation, core workspace
+and Qt adapter vectors, and an incremental full app compile. Live tray, KDE,
+limit-hint rendering and real network-loss recovery remain acceptance checks.

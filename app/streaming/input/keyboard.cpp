@@ -143,6 +143,12 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         updatePointerRegionLock();
         break;
 
+    case KeyComboNextSession:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected next desktop combo");
+        Session::get()->requestNextViewer();
+        break;
+
     default:
         Q_UNREACHABLE();
     }

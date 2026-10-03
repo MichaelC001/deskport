@@ -1,12 +1,16 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.2
+import QtQuick.Layouts 1.3
 
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
 Item {
     id: streamPage
+    // Isolated harnesses run without the window theme.
+    readonly property var theme: typeof ui !== "undefined" ? ui : fallbackTheme
+    UiTheme { id: fallbackTheme }
     readonly property bool hidesNavigation: true
     property Session session
     property string appName
@@ -14,7 +18,6 @@ Item {
                                            qsTr("Starting %1...").arg(appName)
     property bool isResume : false
     property bool quitAfter : false
-    property bool adaptiveReplacing: false
 
     function stageStarting(stage)
     {
@@ -122,14 +125,25 @@ Item {
         // merely null here: naming it at all throws a ReferenceError.
         if (typeof session === 'undefined' || !session) return
         if (session.adaptiveRestartPending()) {
-            var next = session.adaptiveContinuation()
-            var properties = {"session": next, "appName": appName, "isResume": true, "quitAfter": quitAfter}
-            adaptiveReplacing = true
-            session = null
-            // A page created from this context loses its scope (including the
-            // root window) and its pending Loader when replace() destroys us.
-            stackView.replace(streamPage, Qt.resolvedUrl("StreamSegue.qml"), properties, StackView.Immediate)
-            gc()
+            var previous = session
+            var next = previous.adaptiveContinuation()
+            // Keep the navigation stack intact: Devices may be above this page.
+            // Transport replacement must not dismiss it or steal window focus.
+            previous.stageStarting.disconnect(stageStarting)
+            previous.stageFailed.disconnect(stageFailed)
+            previous.connectionStarted.disconnect(connectionStarted)
+            previous.viewerReadyChanged.disconnect(viewerReadyChanged)
+            previous.displayLaunchError.disconnect(displayLaunchError)
+            previous.displayLaunchWarning.disconnect(displayLaunchWarning)
+            previous.quitStarting.disconnect(quitStarting)
+            previous.sessionFinished.disconnect(sessionFinished)
+            previous.readyForDeletion.disconnect(sessionReadyForDeletion)
+            streamLoader.active = false
+            retryTimer.stop()
+            session = next
+            isResume = true
+            sessionHooked = false
+            startSession()
             return
         }
         // Drop the page reference. C++ releases the Session after both exec()
@@ -140,7 +154,9 @@ Item {
 
     property bool sessionHooked: false
 
-    StackView.onActivated: {
+    StackView.onActivated: startSession()
+
+    function startSession() {
         // The control center can be pushed above this page and popped again.
         // Reconnecting would deliver every session signal several times.
         if (sessionHooked) return
@@ -162,7 +178,7 @@ Item {
         if (session.retryDelay() > 0) {
             streamSegueErrorDialog.text = ""
             stageText = qsTr("Connection interrupted. Reconnecting…")
-            window.visible = true
+            if (stackView.currentItem === streamPage) window.visible = true
             retryTimer.interval = session.retryDelay()
             retryTimer.start()
         } else streamLoader.active = true
@@ -171,20 +187,6 @@ Item {
     Timer {
         id: retryTimer
         onTriggered: streamLoader.active = true
-    }
-    Button {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: hintText.top; anchors.bottomMargin: 20
-        visible: session && !session.viewerReady
-        objectName: "cancelReconnect"
-        text: session && session.retryDelay() > 0 ? qsTr("Cancel reconnect") : qsTr("Cancel connection")
-        onClicked: {
-            streamSegueErrorDialog.text = ""
-            session.cancelRecovery()
-            retryTimer.stop()
-            // Run cancellation through Session's normal lifetime barrier.
-            if (!streamLoader.active) streamLoader.active = true
-        }
     }
     Timer {
         id: spinnerTimer
@@ -220,9 +222,8 @@ Item {
             gc()
 
             // Run the streaming session to completion
-            // Finish Loader incubation before entering the nested streaming
-            // event loop. Adaptive continuation replaces this page; doing so
-            // inside onLoaded destroys the incubator that is still executing.
+            // Finish Loader incubation before running the session. A transport
+            // continuation can deactivate this Loader during a nested event loop.
             Qt.callLater(function() {
                 // StackView pages can be detached from the visual window
                 // during deferred loading. Use the root window context,
@@ -239,23 +240,49 @@ Item {
         sourceComponent: Item {}
     }
 
-    Row {
+    // The wait is a centred panel with its cancel action.
+    Rectangle {
+        objectName: "streamWait"
         anchors.centerIn: parent
-        spacing: 5
+        width: Math.min(parent.width - 32, 460)
+        height: waitColumn.implicitHeight + 48
+        radius: 20
+        color: streamPage.theme.surface
+        border.color: streamPage.theme.line
+        ColumnLayout {
+            id: waitColumn
+            x: 24; y: 24; width: parent.width - 48
+            spacing: 16
 
-        BusyIndicator {
-            id: stageSpinner
-            running: false
-        }
+            BusyIndicator {
+                id: stageSpinner
+                Layout.alignment: Qt.AlignHCenter
+                running: false
+            }
 
-        Label {
-            id: stageLabel
-            height: stageSpinner.height
-            text: stageText
-            font.pointSize: 20
-            verticalAlignment: Text.AlignVCenter
+            Label {
+                id: stageLabel
+                Layout.fillWidth: true
+                text: stageText
+                color: streamPage.theme.text
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+            }
 
-            wrapMode: Text.Wrap
+            UiButton {
+                Layout.alignment: Qt.AlignHCenter
+                visible: session && !session.viewerReady
+                objectName: "cancelReconnect"
+                text: session && session.retryDelay() > 0 ? qsTr("Cancel reconnect") : qsTr("Cancel connection")
+                onClicked: {
+                    streamSegueErrorDialog.text = ""
+                    session.cancelRecovery()
+                    retryTimer.stop()
+                    // Run cancellation through Session's normal lifetime barrier.
+                    if (!streamLoader.active) streamLoader.active = true
+                }
+            }
         }
     }
 
@@ -264,7 +291,10 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: 18
+        width: Math.min(implicitWidth, parent.width - 32)
+        color: streamPage.theme.muted
+        font.pixelSize: 15
+        horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
         wrapMode: Text.Wrap

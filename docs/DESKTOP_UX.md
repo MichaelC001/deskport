@@ -6,15 +6,20 @@ the viewer. This is not cloud synchronization of preferences or permissions.
 
 ## Main navigation
 
-- **Devices**: a card for each remote computer, with its name, endpoint and current
-  availability. Open a paired device to connect; use the card menu for details,
-  naming, removal and legacy compatibility actions.
+The top bar is the only navigation: manual, devices, edit, refresh, sharing and
+settings, with the current page name beside the buttons. There are no Back or
+Done buttons; secondary content opens as a floating panel or expands in place.
+
+- **Devices**: a card for each remote computer with a status light, system icon,
+  name and one action button. Clicking a card does its action; the icon, a right
+  click, a long press or the menu key opens the device panel with its facts,
+  actions and device settings (behind the gear).
 - **Sharing**: the local sharing switch, permission guide, saved-access management
   and sharing preferences. macOS offers a virtual display; Linux captures the
   current desktop. Compatibility PIN entry and logs are secondary controls.
-- **Settings**: Picture, Input, Sound, Connections and Advanced tabs. Common values
-  save when changed. Opening the page or changing tabs does not apply presets or
-  replace existing custom resolutions, frame rates or bitrates.
+- **Settings**: appearance, language, diagnostics and about, as grouped rows.
+  Choices open option panels; privacy and licences open as reading panels.
+  Streaming preferences belong to each device's settings.
 
 ## First use and permissions
 

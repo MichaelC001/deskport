@@ -222,6 +222,8 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>デバイスを削除中…</translation></message>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>このコンピュータから「%1」と保存済みのペアリング、デバイス設定を削除しますか？</translation></message>
     <message><source>Change address</source><translation>アドレスを変更</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -494,6 +496,17 @@
         <source>Drag cards to change their order, or onto another device to make a group.</source>
         <translation>カードをドラッグして並べ替えます。別のデバイスに重ねるとグループになります。</translation>
     </message>
+    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>%1 とのセッションが開いています。別のコンピューターに接続する前に切断してください。</translation></message>
+    <message><source>Finish editing</source><translation>編集を終了</translation></message>
+    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>デバイスをドラッグして並べ替えます。パネルの外へドラッグするとグループから外れます。</translation></message>
+    <message><source>Checking…</source><translation>確認中…</translation></message>
+    <message><source>Computer</source><translation>コンピュータ</translation></message>
+    <message><source>This group is empty.</source><translation>このグループは空です。</translation></message>
+    <message><source>Remove device?</source><translation>デバイスを削除しますか？</translation></message>
+    <message><source>Remove</source><translation>削除</translation></message>
+    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>グループを削除しても中のデバイスは残り、デバイス一覧に戻ります。</translation></message>
+    <message><source>Open group</source><translation>グループを開く</translation></message>
+    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>このコンピューターでのみ表示されます。空欄にすると元の名前を使います。</translation></message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -607,6 +620,7 @@
 <context>
     <name>Session</name>
     <message><source>Adjusting resolution…</source><translation>解像度を調整中…</translation></message>
+    <message><source>Connection interrupted. Reconnecting…</source><translation>接続が中断されました。再接続中…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
@@ -1431,6 +1445,8 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Could not save device removal. Please retry.</source><translation>デバイスの削除を保存できませんでした。再試行してください。</translation></message>
+    <message><source>Editing</source><translation>編集中</translation></message>
     <message><source>Memory %1</source><translation>メモリ %1</translation></message>
     <message><source>Local memory usage</source><translation>この端末のメモリ使用量</translation></message>
     <message><source>Unavailable</source><translation>取得できません</translation></message>
@@ -1674,6 +1690,19 @@
     <message>
         <source>How to use DeskPort</source>
         <translation>DeskPort の使い方</translation>
+    </message>
+    <message><source>Add a legacy host</source><translation>従来のホストを追加</translation></message>
+    <message>
+        <source>Connecting…</source>
+        <translation>接続中…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>切断中…</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>失敗</translation>
     </message>
 </context>
 <context>
@@ -2060,6 +2089,19 @@
         <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
         <translation>オフにすると新しい記録を停止します。診断データの削除で既存ログと ZIP を消去します。旧バージョンの生ログは含めません。</translation>
     </message>
+    <message><source>System</source><translation>システム</translation></message>
+    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>既定ではオフです。ログは共有しない限りこのコンピューターに残ります。記録内容は「プライバシー」を参照してください。</translation></message>
+    <message><source>About</source><translation>このアプリについて</translation></message>
+    <message><source>Version</source><translation>バージョン</translation></message>
+    <message><source>Privacy</source><translation>プライバシー</translation></message>
+    <message><source>Licenses</source><translation>ライセンス</translation></message>
+    <message><source>Create ZIP and open issue</source><translation>ZIP を作成して Issue を開く</translation></message>
+    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort にはアカウントも DeskPort のサーバーもありません。デバイス同士が直接接続します。設定、保存したデバイス、許可はこのコンピューターにのみ保存されます。</translation></message>
+    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>更新の確認では、DeskPort が GitHub に最新リリースを問い合わせます。Moonlight と同様に、公開されているホスト互換性データとコントローラーのマッピングを moonlight-stream.org からダウンロードします。問題の報告はブラウザーで Issue の下書きを開くだけで、送信内容はご自身で決めます。</translation></message>
+    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort は GNU General Public License バージョン 3 以降のもとで提供されるフリーソフトウェアです。Moonlight Qt から派生し、改変した Sunshine ホストを含みます。</translation></message>
+    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>共有の DeskPort カタログは MIT ライセンスで提供されます。OS アイコンはパブリックドメイン（CC0 1.0）です。</translation></message>
+    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt、FFmpeg、SDL などの同梱ライブラリにはそれぞれのライセンスが適用されます。各パッケージにその告知が含まれています。</translation></message>
+    <message><source>Source code and modifications: %1</source><translation>ソースコードと変更内容：%1</translation></message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2546,6 +2588,7 @@
         <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
         <translation>このデバイスに保存された %1 の連携を削除しますか？デバイス一覧からは別途削除してください。このデバイスのアクセス権を取り消すには、ホスト側でも削除してください。</translation>
     </message>
+    <message><source>Remove</source><translation>削除</translation></message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2821,6 +2864,8 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>デスクトップの読み込みがタイムアウトしました。デバイス一覧から再試行してください。</translation></message>
 <message><source>Connecting to desktop…</source><translation>デスクトップに接続中…</translation></message>
 <message><source>Back to devices</source><translation>デバイス一覧に戻る</translation></message>
+    <message><source>Close</source><translation>閉じる</translation></message>
+    <message><source>Cancel</source><translation>キャンセル</translation></message>
 </context>
 <context>
     <name>DeviceSettings</name>
@@ -2895,7 +2940,8 @@
     <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
     <message><source>Save</source><translation>保存</translation></message>
     <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0.5 では操作項目を大きく、1.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 では操作項目を大きく、0.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>macOS の最小デスクトップ（800 × 600）に達したため、このウィンドウではこれ以上拡大できません。全画面表示か、より大きなウィンドウを使用してください。</translation></message>
     <message>
         <source>Full screen</source>
         <translation>フルスクリーン</translation>
@@ -2904,6 +2950,13 @@
         <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
         <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
     </message>
+    <message><source>Desktop fine tuning</source><translation>デスクトップの微調整</translation></message>
+    <message><source>Main + mirror</source><translation>メイン + ミラー</translation></message>
+    <message><source>Main only</source><translation>メインのみ</translation></message>
+    <message><source>Extended</source><translation>拡張</translation></message>
+    <message><source>Fit to window</source><translation>ウィンドウに合わせる</translation></message>
+    <message><source>Sound</source><translation>サウンド</translation></message>
+    <message><source>Input</source><translation>入力</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
@@ -3143,6 +3196,17 @@
         <source>Report a problem</source>
         <translation>問題を報告</translation>
     </message>
+    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>自動は解像度に応じた帯域上限を使用します。データ節約は30 fps、映像上限5 Mbpsです。</translation></message>
+    <message><source>Picture mode</source><translation>画質モード</translation></message>
+    <message><source>Automatic (recommended)</source><translation>自動（推奨）</translation></message>
+    <message><source>Clear</source><translation>鮮明さ優先</translation></message>
+    <message><source>Smooth</source><translation>滑らかさ優先</translation></message>
+    <message><source>Save data</source><translation>データ節約</translation></message>
+    <message><source>Custom</source><translation>カスタム</translation></message>
+    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation></message>
+    <message><source>Bandwidth</source><translation>帯域幅</translation></message>
+    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
+    <message><source>All streaming options</source><translation>すべての配信オプション</translation></message>
 </context>
 <context>
     <name>SdlInputHandler</name>
@@ -3154,5 +3218,45 @@
     <name>ClipboardChannel</name>
     <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>クリップボード共有が停止しました。再接続してお試しください。</translation></message>
     <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>クリップボード共有を利用できません。再接続してお試しください。デスクトップ操作には影響しません。</translation></message>
+</context>
+<context>
+    <name>NavigableDialog</name>
+    <message><source>Close</source><translation>閉じる</translation></message>
+</context>
+<context>
+    <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>デバイスを削除</translation></message>
+    <message><source>Connected</source><translation>接続済み</translation></message>
+    <message><source>Checking…</source><translation>確認中…</translation></message>
+    <message><source>Online</source><translation>オンライン</translation></message>
+    <message><source>Online · access not set up</source><translation>オンライン · アクセス未設定</translation></message>
+    <message><source>Offline</source><translation>オフライン</translation></message>
+    <message><source>Device settings</source><translation>デバイス設定</translation></message>
+    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>%1 で DeskPort またはホストが動作していて、両方のデバイスが互いに到達できることを確認してください。上部バーの更新で再確認します。</translation></message>
+    <message><source>Original name</source><translation>元の名前</translation></message>
+    <message><source>System</source><translation>システム</translation></message>
+    <message><source>Unknown</source><translation>不明</translation></message>
+    <message><source>Connection</source><translation>接続方法</translation></message>
+    <message><source>DeskPort binding</source><translation>DeskPort 連携</translation></message>
+    <message><source>Legacy pairing</source><translation>従来のペアリング</translation></message>
+    <message><source>Not set up</source><translation>未設定</translation></message>
+    <message><source>Address</source><translation>アドレス</translation></message>
+    <message><source>Technical details</source><translation>技術的な詳細</translation></message>
+    <message><source>Reconnect</source><translation>再接続</translation></message>
+    <message><source>Toggle full screen</source><translation>フルスクリーンの切り替え</translation></message>
+    <message><source>Disconnect</source><translation>切断</translation></message>
+    <message><source>Change address</source><translation>アドレスを変更</translation></message>
+    <message><source>Set alias</source><translation>別名を設定</translation></message>
+    <message><source>Pair with a legacy PIN</source><translation>従来の PIN でペアリング</translation></message>
+    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>Sunshine など、DeskPort 連携に対応していないホスト向けです。</translation></message>
+    <message><source>Move out of group</source><translation>グループから出す</translation></message>
+    <message><source>Remove from list</source><translation>リストから削除</translation></message>
+</context>
+<context>
+    <name>HelpView</name>
+    <message><source>Manual</source><translation>マニュアル</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>切断中…</translation></message>
 </context>
 </TS>

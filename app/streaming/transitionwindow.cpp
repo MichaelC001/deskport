@@ -42,7 +42,8 @@ void TransitionWindow::pump() {
     SDL_PumpEvents();
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_USEREVENT) > 0)
-        if (event.user.code == DeskPortRecallWindow) recallDesktopWindow(m_Window);
+        if (event.user.code == DeskPortRecallWindow) { recallDesktopWindow(m_Window); m_PresentationShown=true; }
+        else if (event.user.code == DeskPortRestoreViewer) m_PresentationShown=true;
         else if (event.user.code == DeskPortEndSession) m_Cancelled = true;
         else if (event.user.code == DeskPortHideWindow || event.user.code == DeskPortShowDevices) SDL_HideWindow(m_Window);
         else if (event.user.code == DeskPortToggleWindow) {

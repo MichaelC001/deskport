@@ -9,6 +9,7 @@ UiPage {
     heading: peerManager.clientOnly ? qsTr("Request access to a computer") : qsTr("One confirmation. Both directions.")
     description: qsTr("Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.")
     function setAddress(value) { address.text = value }
+    function focusAddress() { address.forceActiveFocus() }
     UiCard {
         ColumnLayout {
             anchors.fill: parent; spacing: 14
@@ -58,16 +59,17 @@ UiPage {
         }
     }
     property Dialog editPrompt: PeerEditor { id: editDialog }
-    property Dialog removalPrompt: Dialog {
+    property Dialog removalPrompt: NavigableDialog {
         id: removeDialog
         property string fingerprint: ""
         property string deviceName: ""
+        objectName: "removeAccessDialog"
         title: qsTr("Remove device access?")
-        anchors.centerIn: parent
-        width: Math.max(280, Math.min(page.width - 32, 460))
-        implicitHeight: contentItem.implicitHeight + 150
-        modal: true; standardButtons: Dialog.Yes | Dialog.No
-        contentItem: Label { text: peerManager.clientOnly ? qsTr("Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.").arg(removeDialog.deviceName) : qsTr("%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.").arg(removeDialog.deviceName); textFormat: Text.PlainText; wrapMode: Text.WordWrap }
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        destructive: true
+        acceptText: qsTr("Remove")
+        contentItem: Label {
+            color: ui.text; text: peerManager.clientOnly ? qsTr("Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.").arg(removeDialog.deviceName) : qsTr("%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.").arg(removeDialog.deviceName); textFormat: Text.PlainText; wrapMode: Text.WordWrap }
         onAccepted: peerManager.revoke(fingerprint)
     }
 }

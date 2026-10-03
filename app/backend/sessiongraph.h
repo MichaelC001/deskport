@@ -14,6 +14,7 @@
 #include <QSslError>
 #include <QTimer>
 #include <functional>
+#include <memory>
 
 // Shared between the GUI's host admission and viewer control threads. Register
 // before any admission request; remove only after the viewer control is joined.
@@ -28,24 +29,30 @@ struct Edge {
     QByteArray certificate, key;
 };
 inline QMutex mutex;
-inline QMap<QString, Edge> edges;
+inline QMap<QString, QMap<QString, Edge>> edges;
 inline QMap<QString, QSet<QString>> owners;
 inline QMap<QString, quint64> revisions;
 inline bool reserve(const QString& self, const Edge& edge) {
     QMutexLocker lock(&mutex);
     if (identity(edge.peer) == self || owners.value(self).contains(edge.token)) return false;
-    if (edges.contains(self) && identity(edges.value(self).peer) != identity(edge.peer)) return false;
     owners[self].insert(edge.token);
-    edges[self] = edge; ++revisions[self]; return true;
+    edges[self].insert(edge.token, edge); ++revisions[self]; return true;
 }
 inline void release(const QString& self, const QString& token) {
     QMutexLocker lock(&mutex);
     if (!owners[self].remove(token)) return;
-    if (owners[self].isEmpty()) { owners.remove(self); edges.remove(self); ++revisions[self]; }
-    else if (edges[self].token == token) edges[self].token = *owners[self].begin();
+    edges[self].remove(token); ++revisions[self];
+    if (owners[self].isEmpty()) { owners.remove(self); edges.remove(self); }
 }
 inline QPair<Edge, quint64> snapshot(const QString& self) {
-    QMutexLocker lock(&mutex); return {edges.value(self), revisions.value(self)};
+    QMutexLocker lock(&mutex);
+    Edge edge;
+    if (!edges.value(self).isEmpty()) edge = edges.value(self).first();
+    return {edge, revisions.value(self)};
+}
+inline QPair<QList<Edge>, quint64> branches(const QString& self) {
+    QMutexLocker lock(&mutex); return {edges.value(self).values(), revisions.value(self)};
+
 }
 
 // A one-shot authenticated probe. No UI thread waits on network I/O, and no
@@ -75,6 +82,7 @@ public:
         m_Deadline.start(4500);
         m_Socket.connectToHostEncrypted(edge.address, edge.port);
     }
+    ~Probe() override { m_Socket.disconnect(this); m_Deadline.stop(); }
 private:
     void finish(const QString& code) {
         if (m_Finished) return;
@@ -117,12 +125,17 @@ inline void check(const QString& self, QJsonArray path, QObject* context, std::f
     for (const auto& item : storage) pointers.append(item.constData());
     const auto result = dp_session_path_check(pointers.constData(), size_t(pointers.size()), self.toLatin1().constData());
     if (result) { done(result == 1 ? "cycle" : "topology-unavailable"); return; }
-    const auto current = snapshot(self);
-    if (current.first.token.isEmpty()) { done({}); return; }
+    const auto current = branches(self);
+    if (current.first.isEmpty()) { done({}); return; }
     path.append(self);
-    new Probe(current.first, path, context, [self, current, done](QString code) {
-        if (snapshot(self).second != current.second) code = "topology-unavailable";
-        done(code);
+    struct Pending { int remaining; bool finished = false; };
+    auto pending = std::make_shared<Pending>(); pending->remaining = current.first.size();
+    // Every outgoing branch must be safe. One safe server cannot conceal a
+    // cycle through another simultaneous connection. Mutation fails closed.
+    for (const auto& edge : current.first) new Probe(edge, path, context, [self,current,pending,done](QString code) {
+        if (pending->finished) return;
+        if (branches(self).second != current.second) code = "topology-unavailable";
+        if (!code.isEmpty() || --pending->remaining == 0) { pending->finished = true; done(code); }
     });
 }
 }

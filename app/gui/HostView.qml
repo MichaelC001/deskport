@@ -74,8 +74,17 @@ UiPage {
         ColumnLayout {
             anchors.fill: parent; spacing: 12
             Label { text: qsTr("Sharing preferences"); color: ui.text; font.pixelSize: 18; font.weight: Font.DemiBold }
-            Label { visible: Qt.platform.os === "osx"; text: qsTr("Virtual display size"); color: ui.muted }
-            ComboBox { id: size; currentIndex: Math.max(0, [2560,2880,3840].indexOf(hostManager.sharingWidth)); visible: Qt.platform.os === "osx"; model: ["2560 × 1440", "2880 × 1800", "3840 × 2160"]; enabled: !hostManager.running && !hostManager.changing; Layout.preferredWidth: 250 }
+            UiChoiceRow {
+                id: size; objectName: "virtualDisplaySize"
+                visible: Qt.platform.os === "osx"
+                Layout.fillWidth: true; leftPadding: 0; rightPadding: 0; divider: false
+                iconSource: "qrc:/res/ui/screen.svg"
+                title: qsTr("Virtual display size")
+                options: ["2560 × 1440", "2880 × 1800", "3840 × 2160"]
+                currentIndex: Math.max(0, [2560,2880,3840].indexOf(hostManager.sharingWidth))
+                enabled: !hostManager.running && !hostManager.changing
+                onActivated: function(index) { currentIndex = index }
+            }
             Label { visible: Qt.platform.os === "osx"; text: qsTr("Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Label { text: qsTr("Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting."); color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
             Switch { text: qsTr("Start sharing when I log in"); enabled: hostManager.available && !hostManager.loginStartManaged && !hostManager.unattendedEnabled; checked: hostManager.loginStart; onClicked: hostManager.setLoginStart(checked) }

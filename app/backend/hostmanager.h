@@ -106,6 +106,7 @@ public:
     void setResident(bool enabled) { m_Resident = enabled; }
     Q_INVOKABLE void requestExit();
     Q_INVOKABLE void requestRestart();
+    void updateSessionMenu(const QVariantList& sessions);
     void allowExit() { m_ExitRequested = true; }
     bool restarting() const { return m_RestartRequested; }
 
@@ -116,15 +117,22 @@ signals:
     void viewerRecallRequested();
     void hideRequested();
     void exitRequested();
+    void operationRequested(const QString& text);
     void disconnectRequested();
     void reconnectRequested();
     void fullscreenRequested();
+    void sessionSelected(QString id);
+    void sessionDisconnectRequested(QString id);
+    void sessionReconnectRequested(QString id);
+    // Emitted synchronously before the tray menu opens so it can be refreshed.
+    void trayMenuAboutToShow();
     void changed();
     void permissionsChanged();
     void trustUpdated(bool success);
     void caretChanged(const QJsonObject& caret);
     void displayResized(int sequence, int width, int height, const QString& error);
 private:
+    void sendTrustUpdate(const QJsonObject& body, qint64 deadline = 0);
     void managementRequest(const QString& path, const QJsonObject& body, QObject* context,
                            std::function<void(QJsonObject)> completion);
     QString unattendedDirectory() const;
@@ -163,6 +171,19 @@ private:
     QNetworkAccessManager m_Network;
     QSystemTrayIcon m_Tray;
     QMenu* m_Menu = nullptr;
+    bool m_NativeMenuTracking = false;
+    // Connected desktops are listed at the top of the tray menu, in device-list
+    // order. Fixed slots are updated in place; actions are never destroyed.
+    static constexpr int MaxTraySessions = 7;
+    QList<QAction*> m_SessionSlots;
+    QAction* m_AllSessions = nullptr;
+    QAction* m_SessionSeparator = nullptr;
+    QAction* m_DisconnectSession = nullptr;
+    QAction* m_ReconnectSession = nullptr;
+    QString m_CurrentSession;
+    QVariantList m_PendingSessionRows;
+    QString m_SessionMenuKey;
+    bool m_SessionMenuRefreshQueued = false;
     bool m_TrustBusy = false;
     bool m_Starting = false;
     bool m_Stopping = false;

@@ -51,6 +51,7 @@ QSize AdaptiveDisplay::selectedSize(QSize requested) {
 int AdaptiveDisplay::selectedScale(int requested) { QMutexLocker lock(&m_Mutex); return m_Modes.isEmpty()?requested:1; }
 QSize AdaptiveDisplay::negotiatedSize() { QMutexLocker lock(&m_Mutex); return m_NegotiatedSize; }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
+void AdaptiveDisplay::setVideoPaused(bool paused) { QMutexLocker lock(&m_Mutex); m_VideoPaused = paused; }
 void AdaptiveDisplay::setFullScreen(bool fullScreen) { QMutexLocker lock(&m_Mutex); m_FullScreen = fullScreen; }
 bool AdaptiveDisplay::takeLeaveFullscreen() { QMutexLocker lock(&m_Mutex); bool value = m_LeaveFullscreen; m_LeaveFullscreen = false; return value; }
 bool AdaptiveDisplay::failed() { QMutexLocker lock(&m_Mutex); return m_Failed; }
@@ -136,11 +137,13 @@ void AdaptiveDisplay::run() {
     };
     bool connected = SmallTcp::connectBlocking(socket, m_Address, m_Port, 4000) && socket.peerCertificate() == m_Peer;
     if (connected) SmallTcp::accepted(socket, m_Address, m_Port);
-    bool policySupported = false;
+    bool policySupported = false, videoPauseSupported = false;
+    bool videoStateUnknown = !m_ResumeToken.isEmpty();
     if (connected) {
         const auto hello = receive();
         connected = hello["type"].toString() == "hello" && hello["meta"].toObject()["adaptiveDisplay"].toInt() == 1;
         { QMutexLocker lock(&m_Mutex); m_Lifecycle = hello["meta"].toObject()["sessionLifecycle"].toInt() == DP_SESSION_LIFECYCLE_VERSION; }
+        videoPauseSupported = hello["meta"].toObject()["videoPause"].toInt() == DP_VIDEO_PAUSE_VERSION;
         windowSupported = hello["meta"].toObject()["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
         policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
         const auto advertised=hello["meta"].toObject()["displayModes"].toArray();
@@ -160,6 +163,7 @@ void AdaptiveDisplay::run() {
         if (connected && admission) {
             QJsonObject query{{"type", DP_MESSAGE_SESSION_STATUS}, {"sessionTakeover", DP_SESSION_TAKEOVER_VERSION},
                               {"sessionTopology", DP_SESSION_TOPOLOGY_VERSION}};
+            if (videoPauseSupported) query["videoPause"] = DP_VIDEO_PAUSE_VERSION;
             if (m_Lifecycle) { query["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION; query["resumeToken"] = m_ResumeToken; }
             send(query);
             auto state = receive();
@@ -189,7 +193,8 @@ void AdaptiveDisplay::run() {
         connected = connected && DPDisplayPolicyValid(m_Policy) && (policySupported || m_Policy == DP_DISPLAY_PRIMARY_MIRROR);
         if (!connected) qWarning() << "The host does not support the selected virtual screen policy";
     }
-    int sequence = 0;
+    int sequence = 0, videoSequence = 0;
+    bool videoPaused = false;
     QElapsedTimer heartbeat; heartbeat.start();
     while (connected && !isInterruptionRequested()) {
         QSize size; int scale; bool pending, fullScreen;
@@ -206,6 +211,19 @@ void AdaptiveDisplay::run() {
             if (!connected && !reply.isEmpty()) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
             { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; if (connected) m_NegotiatedSize = size; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
+            heartbeat.restart();
+        } else if (videoPauseSupported && [&] { QMutexLocker lock(&m_Mutex); return videoStateUnknown || m_VideoPaused != videoPaused; }()) {
+            bool desired;
+            { QMutexLocker lock(&m_Mutex); desired = m_VideoPaused; }
+            send({{"type", DP_MESSAGE_VIDEO_STATE}, {"seq", ++videoSequence}, {"paused", desired}});
+            const auto reply = receive(12000);
+            connected = reply["type"].toString() == DP_MESSAGE_VIDEO_RESULT &&
+                reply["seq"].toInt() == videoSequence && reply["paused"].isBool() &&
+                reply["paused"].toBool() == desired && !reply.contains("error");
+            if (connected) { videoPaused = desired; videoStateUnknown = false; }
+            // A lost acknowledgment leaves remote state uncertain. End control
+            // rather than silently treating a paused server as a running one.
+            if (!connected) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
             heartbeat.restart();
         } else if (heartbeat.elapsed() >= 5000) {
             send({{"type", DP_MESSAGE_DISPLAY_PING}});

@@ -35,6 +35,7 @@
 #include <QDesktopServices>
 #include <QUuid>
 #include <QTimer>
+#include <QThread>
 #include <QMessageBox>
 #include <QPushButton>
 #include <QDateTime>
@@ -295,14 +296,47 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         m_Server.start(serverPath(), {m_Directory + "/sunshine.conf"});
     });
     m_Menu = new QMenu;
-    connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested);
-    connect(m_Menu->addAction(tr("Reconnect")), &QAction::triggered, this, &HostManager::reconnectRequested);
-    connect(m_Menu->addAction(tr("Disconnect")), &QAction::triggered, this, &HostManager::disconnectRequested);
+    // Return to native menu tracking before dispatching any application work.
+    // The target is captured when the item is chosen, not when work runs.
+    const auto later = [this](std::function<void()> work) { QMetaObject::invokeMethod(this, std::move(work), Qt::QueuedConnection); };
+    for (int i = 0; i < MaxTraySessions; ++i) {
+        auto slot = m_Menu->addAction(QString());
+        slot->setCheckable(true); slot->setVisible(false);
+        connect(slot, &QAction::triggered, this, [this, slot, later] {
+            slot->setChecked(slot->property("presenting").toBool()); // A checkmark reflects the viewer only.
+            const auto id = slot->data().toString();
+            if (!id.isEmpty()) later([this, id] { emit sessionSelected(id); });
+        });
+        m_SessionSlots.append(slot);
+    }
+    m_AllSessions = m_Menu->addAction(QString());
+    m_AllSessions->setVisible(false);
+    connect(m_AllSessions, &QAction::triggered, this, &HostManager::showDevicesRequested, Qt::QueuedConnection);
+    m_SessionSeparator = m_Menu->addSeparator();
+    m_SessionSeparator->setVisible(false);
+    connect(m_Menu->addAction(tr("Open device list")), &QAction::triggered, this, &HostManager::showDevicesRequested, Qt::QueuedConnection);
+    m_DisconnectSession = m_Menu->addAction(QString());
+    m_DisconnectSession->setVisible(false);
+    connect(m_DisconnectSession, &QAction::triggered, this, [this, later] {
+        const auto id = m_CurrentSession;
+        if (!id.isEmpty()) later([this, id] { emit sessionDisconnectRequested(id); });
+    });
+    m_Menu->addSeparator();
+    auto more = m_Menu->addMenu(tr("More"));
+    m_ReconnectSession = more->addAction(QString());
+    m_ReconnectSession->setVisible(false);
+    connect(m_ReconnectSession, &QAction::triggered, this, [this, later] {
+        const auto id = m_CurrentSession;
+        if (!id.isEmpty()) later([this, id] { emit sessionReconnectRequested(id); });
+    });
     // Restarting from the tray is how a remote viewer picks up a version that a
     // package upgrade already wrote to disk: the running process keeps the old
     // binary until it exits, and a clean exit never comes back on its own.
-    connect(m_Menu->addAction(tr("Restart")), &QAction::triggered, this, &HostManager::requestRestart);
-    connect(m_Menu->addAction(tr("Quit")), &QAction::triggered, this, &HostManager::requestExit);
+    connect(more->addAction(tr("Restart DeskPort")), &QAction::triggered, this, &HostManager::requestRestart, Qt::QueuedConnection);
+    m_Menu->addSeparator();
+    connect(m_Menu->addAction(tr("Quit")), &QAction::triggered, this, &HostManager::requestExit, Qt::QueuedConnection);
+    // The device-list order can change while the menu is closed.
+    connect(m_Menu, &QMenu::aboutToShow, this, &HostManager::trayMenuAboutToShow);
     // The left button shows and hides the window; the menu belongs to the right
     // one. A menu attached to a macOS status item is opened by either button and
     // suppresses the button action entirely, so it is popped up natively there.
@@ -355,9 +389,76 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 }
 #ifdef Q_OS_MACOS
 void HostManager::showTrayMenu() {
-    if (auto chosen = deskPortShowStatusMenu(m_Menu)) chosen->trigger();
+    emit trayMenuAboutToShow();
+    m_NativeMenuTracking = true;
+    const auto chosen = deskPortShowStatusMenu(m_Menu);
+    if (chosen) chosen->trigger();
+    m_NativeMenuTracking = false;
+    updateSessionMenu(m_PendingSessionRows);
 }
 #endif
+void HostManager::updateSessionMenu(const QVariantList& sessions) {
+    m_PendingSessionRows = sessions;
+    if (m_NativeMenuTracking || m_Menu->isVisible()) {
+        if (!m_SessionMenuRefreshQueued) {
+            m_SessionMenuRefreshQueued = true;
+            QTimer::singleShot(100, this, [this] { m_SessionMenuRefreshQueued=false; updateSessionMenu(m_PendingSessionRows); });
+        }
+        return;
+    }
+    // Rows arrive in device-list order. Only live connections are listed.
+    QList<QVariantMap> live;
+    for (const auto& value : sessions) {
+        const auto row = value.toMap();
+        const auto state = row.value("state").toString();
+        if (state == "connected" || state == "starting" || state == "stopping") live.append(row);
+    }
+    // Actions address the presented desktop, else the last one shown if still live.
+    QVariantMap current;
+    for (const auto& row : live) if (row.value("visible").toBool()) current = row;
+    if (current.isEmpty())
+        for (const auto& row : live) if (row.value("selected").toBool() && row.value("state") != "stopping") current = row;
+    QString key = current.value("id").toString();
+    for (const auto& row : live)
+        key += '\n' + row.value("id").toString() + '\t' + row.value("name").toString() + '\t' +
+               row.value("state").toString() + '\t' + (row.value("visible").toBool() ? "1" : "0");
+    if (key == m_SessionMenuKey && !m_SessionMenuKey.isNull()) return;
+    m_SessionMenuKey = key;
+    const auto label = [](QString name) { return name.replace('&', QStringLiteral("&&")); };
+    for (int i = 0; i < m_SessionSlots.size(); ++i) {
+        auto slot = m_SessionSlots.at(i);
+        if (i >= live.size()) { slot->setVisible(false); slot->setData(QString()); continue; }
+        const auto& row = live.at(i);
+        const auto state = row.value("state").toString();
+        const bool presenting = row.value("visible").toBool();
+        slot->setText(label(row.value("name").toString()) + (state == "starting" ? QStringLiteral(" · ") + tr("Connecting…")
+            : state == "stopping" ? QStringLiteral(" · ") + tr("Disconnecting…") : QString()));
+        slot->setData(row.value("id").toString());
+        slot->setProperty("presenting", presenting);
+        slot->setChecked(presenting);
+        slot->setEnabled(state != "stopping");
+        slot->setVisible(true);
+    }
+    m_AllSessions->setText(tr("All connections (%1)…").arg(live.size()));
+    m_AllSessions->setVisible(live.size() > MaxTraySessions);
+    m_SessionSeparator->setVisible(!live.isEmpty());
+    m_CurrentSession = current.value("id").toString();
+    const auto name = label(current.value("name").toString());
+    m_DisconnectSession->setText(tr("Disconnect “%1”").arg(name));
+    m_DisconnectSession->setVisible(!m_CurrentSession.isEmpty());
+    m_ReconnectSession->setText(tr("Reconnect “%1”").arg(name));
+    m_ReconnectSession->setVisible(current.value("state") == "connected");
+    int connected = 0;
+    QString presented;
+    for (const auto& row : live) {
+        if (row.value("state") == "connected") ++connected;
+        if (row.value("visible").toBool()) presented = row.value("name").toString();
+    }
+    m_Tray.setToolTip(!connected ? QStringLiteral("DeskPort")
+        : presented.isEmpty() ? tr("DeskPort · %1 connected").arg(connected)
+        : tr("DeskPort · %1 connected · showing %2").arg(connected).arg(presented));
+}
+
 void HostManager::updateTrayIcon() {
 #ifdef Q_OS_MACOS
     // AppKit renders a template image with the menu bar's current contrast,
@@ -384,13 +485,18 @@ void HostManager::requestExit() {
     }
 #endif
     m_ExitRequested = true;
+    m_ShuttingDown = true;
+    m_RecoveryTimer.stop();
+    beginStop(tr("Sharing is off"));
     emit exitRequested();
 }
 void HostManager::requestRestart() {
-    if (m_ExitRequested) return;
+    if (m_ExitRequested || m_RestartRequested) return;
     m_RestartRequested = true;
     setStatus(tr("Restarting DeskPort"));
-    requestExit();
+    QSettings().setValue("ui/showAfterRestart", true);
+    emit operationRequested(m_Status);
+    QTimer::singleShot(100, this, &HostManager::requestExit);
 }
 void HostManager::scheduleRecovery() {
     if (!m_DesiredSharing || m_ShuttingDown || m_RecoveryTimer.isActive()) return;
@@ -461,7 +567,11 @@ void HostManager::setStatus(const QString &value) {
     m_Status = value; emit changed();
 }
 void HostManager::start(int width, int height) {
-    if (running()) return;
+    if (running() || m_ShuttingDown) return;
+    if (m_TrustBusy) {
+        QTimer::singleShot(50, this, [this, width, height] { start(width, height); });
+        return;
+    }
     if (!available()) {
         setStatus(tr("The bundled DeskPort host is missing. Repair the installation to enable sharing."));
         return;
@@ -1060,39 +1170,63 @@ QJsonObject HostManager::identity() const {
     return {{"hostId", PeerStore::read(m_Directory + "/state.json")["root"].toObject()["uniqueid"]},
             {"hostPort", m_BasePort}, {"hostCert", certs.isEmpty() ? QString() : QString::fromUtf8(certs.first().toPem())}};
 }
+void HostManager::sendTrustUpdate(const QJsonObject& body, qint64 deadline) {
+    if (!deadline) deadline = QDateTime::currentMSecsSinceEpoch() + 3000;
+    const auto generation = m_Generation;
+    managementRequest(QStringLiteral("trust"), body, this, [this, body, deadline, generation](QJsonObject result) {
+        // QProcess::started precedes the HTTPS listener becoming ready. Retry
+        // only unavailable transport, never a helper's explicit rejection.
+        if (result["code"].toString() == "unavailable" && generation == m_Generation &&
+            canPair() && QDateTime::currentMSecsSinceEpoch() < deadline) {
+            QTimer::singleShot(100, this, [this, body, deadline, generation] {
+                if (generation == m_Generation) sendTrustUpdate(body, deadline);
+                else { m_TrustBusy = false; emit trustUpdated(false); }
+            });
+            return;
+        }
+        m_TrustBusy = false;
+        emit trustUpdated(result["status"].toBool());
+    });
+}
 void HostManager::updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove) {
     if (m_TrustBusy) { emit trustUpdated(false); return; }
     m_TrustBusy = true;
-    if (!remove && running()) {
-        // Binding grants permission only. Never stop an existing stream to add
-        // trust, including when an older/mismatched helper lacks this endpoint.
-        managementRequest(QStringLiteral("trust"), {{"uuid", id}, {"name", name},
-            {"cert", QString::fromUtf8(certificate.toPem())}}, this, [this](QJsonObject result) {
+    if (running() && !canPair()) {
+        // Startup/shutdown is asynchronous. Wait for a usable helper without
+        // blocking the caller or stopping any process to edit its state file.
+        auto timer = new QTimer(this);
+        auto elapsed = std::make_shared<QElapsedTimer>(); elapsed->start();
+        connect(timer, &QTimer::timeout, this, [=] {
+            if (running() && !canPair() && elapsed->elapsed() < 10000) return;
+            timer->stop(); timer->deleteLater();
             m_TrustBusy = false;
-            emit trustUpdated(result["status"].toBool());
+            if (running() && !canPair()) emit trustUpdated(false);
+            else updatePeerTrust(id, name, certificate, remove);
         });
+        timer->start(50);
         return;
     }
-    const bool restart = running();
-    stop();
-    auto timer = new QTimer(this);
-    auto elapsed = std::make_shared<QElapsedTimer>(); elapsed->start();
-    connect(timer, &QTimer::timeout, this, [=] {
-        if (running() && elapsed->elapsed() < 7000) return;
-        timer->stop(); timer->deleteLater();
-        bool ok = false;
-        if (!running()) {
-            QLockFile lock(m_Directory + "/instance.lock"); lock.setStaleLockTime(0);
-            if (lock.tryLock(0)) ok = PeerStore::trust(m_Directory + "/state.json", id, name, certificate, remove);
-        }
-        m_TrustBusy = false;
-        if (restart) {
-            QSettings settings;
-            start(settings.value("host/width", 2560).toInt(), settings.value("host/height", 1440).toInt());
-        }
-        emit trustUpdated(ok);
+    if (running()) {
+        // Mutate authorization in the running helper. Never restart the host
+        // to edit trust, including when an older helper rejects the request.
+        sendTrustUpdate({{"uuid", id}, {"name", name},
+            {"cert", QString::fromUtf8(certificate.toPem())}, {"remove", remove}});
+        return;
+    }
+    // File I/O runs off the UI thread. Starting the helper is deferred until
+    // the mutation completes, and the instance lock excludes other owners.
+    const auto directory = m_Directory;
+    auto success = std::make_shared<bool>(false);
+    auto worker = QThread::create([directory, id, name, certificate, remove, success] {
+        QLockFile lock(directory + "/instance.lock"); lock.setStaleLockTime(0);
+        if (lock.tryLock(0)) *success = PeerStore::trust(directory + "/state.json", id, name, certificate, remove);
     });
-    timer->start(50);
+    connect(worker, &QThread::finished, this, [this, success] {
+        m_TrustBusy = false;
+        emit trustUpdated(*success);
+    });
+    connect(worker, &QThread::finished, worker, &QObject::deleteLater);
+    worker->start();
 }
 
 bool HostManager::saveLinuxDisplayState() {

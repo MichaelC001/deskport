@@ -19,6 +19,7 @@ if git -C "$hid" apply --check "$patch"; then
 else
     git -C "$hid" apply --reverse --check "$patch"
 fi
+python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir" --revert
 # Undo our final overlay before checking the earlier pinned patches on rebuilds.
@@ -64,6 +65,7 @@ cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
 cp "$repo/host/common/framecadence.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-sync-cadence.py" "$source_dir"
+python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

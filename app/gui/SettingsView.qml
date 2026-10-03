@@ -17,9 +17,13 @@ Flickable {
     signal languageChanged()
 
     boundsBehavior: Flickable.OvershootBounds
+    clip: true
 
-    contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
-    contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height
+    // Narrow hosts, such as the floating settings panel, stack the two columns.
+    readonly property bool singleColumn: width < 720
+    contentWidth: width
+    contentHeight: singleColumn ? settingsColumn1.height + settingsColumn2.height
+                                : Math.max(settingsColumn1.height, settingsColumn2.height)
 
     ScrollBar.vertical: ScrollBar {
         anchors {
@@ -98,7 +102,7 @@ Flickable {
     Column {
         padding: 10
         id: settingsColumn1
-        width: settingsPage.width / 2
+        width: settingsPage.singleColumn ? settingsPage.width : settingsPage.width / 2
         spacing: 15
         Label {
             width: parent.width - 20
@@ -1025,9 +1029,10 @@ Flickable {
     Column {
         padding: 10
         rightPadding: 20
-        anchors.left: settingsColumn1.right
+        x: settingsPage.singleColumn ? 0 : settingsColumn1.width
+        y: settingsPage.singleColumn ? settingsColumn1.height : 0
         id: settingsColumn2
-        width: settingsPage.width / 2
+        width: settingsPage.singleColumn ? settingsPage.width : settingsPage.width / 2
         spacing: 15
 
         GroupBox {

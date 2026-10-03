@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  inputs.deskport-core = { url = "github:keithxc/deskport-core/e71b21808e15c8bcd55d4af3f7c0cbc769ef0bcb"; flake = false; };
+  inputs.deskport-core = { url = "github:keithxc/deskport-core/a107606c2feeced21e5d0df80dd831ac14d4d10d"; flake = false; };
 
   outputs = { self, nixpkgs, deskport-core }:
     let
@@ -57,6 +57,7 @@
               python3 ${./scripts/patch-host-memory-diagnostics.py} . ${./host/common/memorydiagnostics.h}
               cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
               python3 ${./scripts/patch-host-encoder-policy.py} .
+              python3 ${./scripts/patch-host-video-pause.py} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {

@@ -17,6 +17,7 @@ class PeerManager : public QObject {
     Q_PROPERTY(QString pendingName READ pendingName NOTIFY changed)
     Q_PROPERTY(QString requestId READ requestId NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
+    Q_PROPERTY(QString removingDevice READ removingDevice NOTIFY changed)
     Q_PROPERTY(int port READ port NOTIFY changed)
     Q_PROPERTY(QVariantList peers READ peers NOTIFY changed)
 public:
@@ -34,8 +35,10 @@ public:
     bool pendingClientOnly() const;
     QString requestId() const;
     bool busy() const;
+    QString removingDevice() const { return m_RemovingDevice; }
     int port() const { return m_Server->serverPort(); }
     QVariantList peers() const;
+    QJsonObject sessionPeer(const QString& hostId) const;
     Q_INVOKABLE bool setConnectionPort(int port);
     Q_INVOKABLE void request(const QString& address);
     Q_INVOKABLE void approve(const QString& transaction);
@@ -43,16 +46,22 @@ public:
     Q_INVOKABLE void cancel();
     Q_INVOKABLE void restoreHosts();
     Q_INVOKABLE void refreshEndpoints();
+    Q_INVOKABLE void removeDevice(const QString& hostId);
     Q_INVOKABLE void revoke(const QString& fingerprint);
     Q_INVOKABLE bool editPeer(const QString& fingerprint, const QString& name,
                               const QString& address, int hostPort, int bindingPort);
 signals:
     void changed();
     void incomingRequest();
-    void peerBound(QVariantMap peer);
+    void peerBound(QVariantMap peer, bool explicitAdd = false);
+    void deviceRemovalFinished(QString hostId, bool success);
 protected:
     virtual qint64 nativeClipboardRevision() const;
 private:
+    void beginRevocation(const QString& fingerprint);
+    void continueDeviceRemoval(bool success = true);
+    QString m_RemovingDevice;
+    QStringList m_RemovingFingerprints;
     struct Link;
     void attach(Link* link);
     void transportLost(Link* link);

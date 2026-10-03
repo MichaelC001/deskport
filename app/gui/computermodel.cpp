@@ -14,6 +14,8 @@ void ComputerModel::initialize(ComputerManager* computerManager)
     m_ComputerManager = computerManager;
     connect(m_ComputerManager, &ComputerManager::computerStateChanged,
             this, &ComputerModel::handleComputerStateChanged);
+    connect(m_ComputerManager, &ComputerManager::computerRemoved,
+            this, &ComputerModel::handleComputerStateChanged);
     connect(m_ComputerManager, &ComputerManager::pairingCompleted,
             this, &ComputerModel::handlePairingCompleted);
 
@@ -195,6 +197,12 @@ Session* ComputerModel::createSessionForCurrentGame(int computerIndex)
     return nullptr;
 }
 
+QString ComputerModel::hostIdAt(int computerIndex) const
+{
+    auto computer = computerAt(computerIndex);
+    return computer ? computer->uuid : QString();
+}
+
 void ComputerModel::deleteComputer(int computerIndex)
 {
     NvComputer* computer = computerAt(computerIndex);
@@ -206,15 +214,8 @@ void ComputerModel::deleteComputer(int computerIndex)
         HostLayout::load().forget(computer->uuid);
     }
 
-    beginRemoveRows(QModelIndex(), computerIndex, computerIndex);
-
-    // The computer will be deleted by this call
+    // The manager synchronously notifies every model before disposing the host.
     m_ComputerManager->deleteHost(computer);
-
-    // Remove the now invalid item
-    m_Rows.removeAt(computerIndex);
-
-    endRemoveRows();
 }
 
 class DeferredWakeHostTask : public QRunnable

@@ -92,3 +92,29 @@ The public main branch now uses the reachable GitHub revision
 `e71b21808e15c8bcd55d4af3f7c0cbc769ef0bcb` in both the Git submodule
 and flake.lock. The private snapshot instructions above are historical;
 public releases must retain the matching public pins.
+
+## Local video pause candidate — 2026-09-28
+
+This development candidate pins core `a71542a` and its matching immutable NAR
+snapshot for optional video transmission pause. See core `protocol/VIDEO_PAUSE.md`.
+The local snapshot is preloaded on test machines; no signature bypass is used.
+Before public consumer integration, publish the reviewed core and restore a
+reachable GitHub pin. The current local path pin is not a public release input.
+
+## Reachable dev core pin — 2026-09-29
+
+The video pause core change is now published on the core `dev` branch as
+`2ebf5c9` (the local `a71542a` with corrected authorship and an identical
+tree). The Git submodule and flake.lock both pin that GitHub revision; its NAR
+hash equals the earlier local snapshot. Consumers can fetch DeskPort and its core
+without preloaded store paths. Core `main` is unchanged: merging the video
+pause specification there still requires review.
+
+## Desktop tuning direction — 2026-10-01
+
+Core `a107606` (on `dev`) inverts desktop fine tuning: larger values now enlarge
+remote content by dividing the workspace, so 1.5 shows larger controls and 0.5
+fits more content. Saved per-device values keep their number and therefore flip
+meaning. Other consumers adopt the new direction when they advance their pins.
+The macOS 800×600 logical floor still applies after tuning, so small client
+windows can reach the floor at 1.0 and show no further enlargement.

@@ -11,6 +11,9 @@ constexpr int DeskPortToggleWindow = 109;
 constexpr int DeskPortReconnect = 110;
 constexpr int DeskPortFullscreen = 111;
 constexpr int DeskPortTransportEnded = 112;
+// Resumes presentation state for background recovery without showing,
+// raising or focusing the viewer window.
+constexpr int DeskPortRestoreViewer = 113;
 inline bool desktopWindowVisible(SDL_Window* window) {
     return window && !(SDL_GetWindowFlags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
 }
@@ -28,6 +31,7 @@ public:
     TransitionWindow(SDL_Window* window, const QString& text);
     ~TransitionWindow();
     void pump();
+    bool takePresentationShown() { const bool shown=m_PresentationShown; m_PresentationShown=false; return shown; }
     SDL_Window* window() const { return m_Window; }
     bool cancelled() const { return m_Cancelled; }
     SDL_Window* takeWindow();
@@ -42,6 +46,7 @@ private:
     QString m_Label;
     QImage m_Frame;
     bool m_Cancelled = false;
+    bool m_PresentationShown = false;
     unsigned m_PresentedFrames = 0;
     Uint32 m_LastPaint = 0;
 };

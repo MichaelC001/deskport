@@ -135,7 +135,7 @@ private slots:
     }
     void sessionGraph_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* item : {"chain", "reciprocal", "three-cycle", "simultaneous", "takeover-cycle", "unreachable", "old-desktop", "old-mobile", "reservation-lifetime"})
+        for (const char* item : {"chain", "fanout-safe", "fanout-cycle", "fanout-unreachable", "reciprocal", "three-cycle", "simultaneous", "takeover-cycle", "unreachable", "old-desktop", "old-mobile", "reservation-lifetime"})
             QTest::newRow(item) << QString(item);
     }
     void sessionGraph() {
@@ -150,7 +150,7 @@ private slots:
         QStringList tokens{"edge-a", "edge-b", "edge-c"};
         struct Cleanup {
             QStringList ids, tokens;
-            ~Cleanup() { for (int i=0;i<ids.size();++i) SessionGraph::release(ids[i],tokens[i]); }
+            ~Cleanup() { for (int i=0;i<ids.size();++i) { SessionGraph::release(ids[i],tokens[i]); SessionGraph::release(ids[i],"second-branch"); } }
         } cleanup{ids,tokens};
         for (int i=0;i<3;++i) {
             const auto base = dir.path()+QString("/%1").arg(i);
@@ -189,6 +189,22 @@ private slots:
             QVERIFY(!reserve(0,0)); QVERIFY(reserve(0,1)); QVERIFY(!reserve(0,2));
             SessionGraph::release(ids[0],"stale-token"); QCOMPARE(SessionGraph::snapshot(ids[0]).first.token,tokens[0]);
             SessionGraph::release(ids[0],tokens[0]); QVERIFY(reserve(0,2)); return;
+        }
+        if (scenario.startsWith("fanout-")) {
+            QVERIFY(reserve(0,1));
+            auto second=edge(0,2); second.token="second-branch";
+            if(scenario=="fanout-unreachable") second.port=1;
+            QVERIFY(SessionGraph::reserve(ids[0],second));
+            if(scenario=="fanout-cycle") QVERIFY(reserve(2,0));
+            bool complete=false; QString code;
+            QObject probes;
+            SessionGraph::check(ids[0],{QString(64,'f')},&probes,[&](QString result){code=result;complete=true;});
+            QTRY_VERIFY_WITH_TIMEOUT(complete,7000);
+            QCOMPARE(code,scenario=="fanout-safe" ? QString() : scenario=="fanout-cycle" ? QString("cycle") : QString("topology-unavailable"));
+            QCOMPARE(SessionGraph::branches(ids[0]).first.size(),2);
+            SessionGraph::release(ids[0],"second-branch");
+            QCOMPARE(SessionGraph::branches(ids[0]).first.size(),1);
+            return;
         }
         QSslSocket a,b,c;
         if (scenario=="old-desktop" || scenario=="old-mobile") {
@@ -235,7 +251,7 @@ private slots:
     }
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -306,6 +322,30 @@ private slots:
                 QCOMPARE(state()["takeovers"].toInt(),0);
             }
             incoming.abort(); host.stop(); return;
+        }
+        if (scenario.startsWith("video-")) {
+            auto videoQuery = query;
+            if (scenario != "video-legacy") videoQuery["videoPause"] = 1;
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,videoQuery); QVERIFY(receive(old)["admitted"].toBool());
+            auto active = state(); active["sessions"] = 1; writeState(active);
+            QJsonObject pause{{"type","video-state"},{"seq",1},{"paused",true}};
+            if (scenario == "video-intruder") {
+                connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,pause);
+                QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),0);
+                send(old,{{"type","display-ping"}}); QCOMPARE(receive(old)["type"].toString(),QString("display-pong"));
+            } else if (scenario == "video-legacy") {
+                send(old,pause); QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),0);
+            } else {
+                send(old,pause); const auto first = receive(old);
+                QCOMPARE(first["type"].toString(),QString("video-result")); QVERIFY(!first.contains("error"));
+                QVERIFY(state()["paused"].toBool());
+                send(old,pause); QCOMPARE(receive(old),first); QCOMPARE(state()["videoCommands"].toInt(),1);
+                pause["paused"] = false; pause["seq"] = scenario == "video-stale" ? 1 : 2;
+                send(old,pause);
+                if (scenario == "video-stale") { QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),1); }
+                else { QVERIFY(!receive(old).contains("error")); QVERIFY(!state()["paused"].toBool()); QCOMPARE(state()["videoCommands"].toInt(),2); }
+            }
+            old.abort(); incoming.abort(); host.stop(); return;
         }
         if (scenario == "client-window") {
             // The host offers "leave full screen" only while an opted-in client reports it.
@@ -600,6 +640,7 @@ private slots:
             dir.path()+"/client", 0, QHostAddress::LocalHost, PeerManager::Mode::ClientOnly);
         QSignalSpy reimported(&restored, &PeerManager::peerBound); restored.restoreHosts();
         QCOMPARE(reimported.size(), 1);
+        QVERIFY(!reimported.first().at(1).toBool());
         const auto restoredPeer = reimported.first().first().toMap();
         QCOMPARE(restoredPeer.keys(), peer.keys());
         for (const auto& key : peer.keys())
@@ -948,6 +989,62 @@ private slots:
         QCOMPARE(clientReplies, 6);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
     }
+    void videoPauseNegotiation_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* value : {"legacy", "supported", "error", "wrong-sequence", "disconnect", "timeout", "recovered"})
+            QTest::newRow(value) << QString(value);
+    }
+    void videoPauseNegotiation() {
+        QFETCH(QString, scenario);
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"), 0, scenario == "recovered" ? "lease" : QString());
+        auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280,720), 1); });
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
+        QJsonObject meta{{"adaptiveDisplay",1},{"sessionTakeover",1},{"sessionTopology",1}};
+        if (scenario != "legacy") meta["videoPause"] = 1;
+        server.send({{"type","hello"},{"meta",meta}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        const auto query = server.messages.takeFirst();
+        QCOMPARE(query["videoPause"].toInt(), scenario == "legacy" ? 0 : 1);
+        server.send({{"type","session-state"},{"admitted",true}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        auto request = server.messages.takeFirst();
+        server.send({{"type","display-result"},{"seq",request["seq"]},{"width",1280},{"height",720}});
+        QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready,5000);
+        QVERIFY(result.get());
+        int firstSequence = 1;
+        if (scenario == "recovered") {
+            QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+            request = server.messages.takeFirst();
+            QCOMPARE(request["type"].toString(),QString("video-state"));
+            QVERIFY(!request["paused"].toBool());
+            server.send({{"type","video-result"},{"seq",1},{"paused",false}});
+            firstSequence = 2;
+        }
+        channel.setVideoPaused(true);
+        if (scenario == "legacy") {
+            QTest::qWait(300); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed()); return;
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["type"].toString(),QString("video-state"));
+        QCOMPARE(request["seq"].toInt(),firstSequence); QVERIFY(request["paused"].toBool());
+        // Coalesce several switches while the first command is in flight.
+        channel.setVideoPaused(false); channel.setVideoPaused(true); channel.setVideoPaused(false);
+        QTest::qWait(100); QVERIFY(server.messages.isEmpty());
+        QJsonObject reply{{"type","video-result"},{"seq",firstSequence},{"paused",true}};
+        if (scenario == "error") reply["error"] = "unavailable";
+        if (scenario == "wrong-sequence") reply["seq"] = 2;
+        if (scenario == "disconnect") server.socket->abort(); else if (scenario != "timeout") server.send(reply);
+        if (scenario != "supported" && scenario != "recovered") { QTRY_VERIFY_WITH_TIMEOUT(channel.failed(),14000); return; }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["seq"].toInt(),firstSequence+1); QVERIFY(!request["paused"].toBool());
+        server.send({{"type","video-result"},{"seq",firstSequence+1},{"paused",false}});
+        QTest::qWait(150); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed());
+    }
     void adaptiveDisplayNegotiatesFiniteModes() {
         const auto aCert=credential("TEST_CERT_A"),bCert=credential("TEST_CERT_B");
         ScriptedBindingHost server(bCert,credential("TEST_KEY_B"));
@@ -1099,6 +1196,8 @@ private slots:
             b.approve(b.requestId());
             QTRY_COMPARE_WITH_TIMEOUT(aDone.size(),1,7000);
             QTRY_COMPARE_WITH_TIMEOUT(bDone.size(),1,7000);
+            QVERIFY(aDone.first().at(1).toBool());
+            QVERIFY(bDone.first().at(1).toBool());
             // Check at the peerBound emission itself, before any later event
             // loop turn can make the host ready.
             QVERIFY(!completedBeforeHostReady);
@@ -1130,8 +1229,14 @@ private slots:
             QTRY_VERIFY_WITH_TIMEOUT(!a.busy(),5000);
             QCOMPARE(substituted.size(),0); QVERIFY(c.peers().isEmpty());
             QVERIFY(a.status().contains("different device key"));
-            a.revoke(a.peers().first().toMap()["fingerprint"].toString());
+            QSignalSpy removed(&a, &PeerManager::deviceRemovalFinished);
+            a.removeDevice(bId);
+            QTRY_COMPARE_WITH_TIMEOUT(removed.size(),1,5000);
+            QCOMPARE(removed.first().first().toString(),bId);
+            QVERIFY(removed.first().at(1).toBool());
             QTRY_VERIFY_WITH_TIMEOUT(!a.busy(),5000); QVERIFY(a.peers().isEmpty());
+            restored.clear(); a.restoreHosts(); QCOMPARE(restored.size(),0);
+            QVERIFY(PeerStore::read(dir.path()+"/ab/peers.json")["peers"].toObject().isEmpty());
             QCOMPARE(PeerStore::read(dir.path()+"/ah/state.json")["root"].toObject()["named_devices"].toArray().size(),0);
         }
     }
@@ -1167,6 +1272,42 @@ private slots:
         QCOMPARE(PeerStore::read(statePath),active);
         const auto records = PeerStore::read(dir.path()+"/bh/state.json")["root"].toObject()["named_devices"].toArray();
         QCOMPARE(records.size(),reject ? 0 : 1);
+    }
+    void removalPreservesRunningHostAndLease_data() {
+        QTest::addColumn<bool>("reject");
+        QTest::newRow("live-remove") << false;
+        QTest::newRow("unsupported-helper-no-restart") << true;
+    }
+    void removalPreservesRunningHostAndLease() {
+        QFETCH(bool, reject);
+        QTemporaryDir dir;
+        HostManager ah(nullptr,dir.path()+"/ah"), bh(nullptr,dir.path()+"/bh");
+        PeerManager a(&ah,credential("TEST_CERT_A"),credential("TEST_KEY_A"),dir.path()+"/ab",0,QHostAddress::LocalHost);
+        PeerManager b(&bh,credential("TEST_CERT_B"),credential("TEST_KEY_B"),dir.path()+"/bb",0,QHostAddress::LocalHost);
+        a.request(QString("127.0.0.1:%1").arg(b.port()));
+        QTRY_VERIFY_WITH_TIMEOUT(!b.requestId().isEmpty(),5000);
+        b.approve(b.requestId());
+        QTRY_VERIFY_WITH_TIMEOUT(!a.busy() && !b.busy() && b.peers().size()==1,7000);
+        bh.start(2560,1440);
+        const auto statePath = dir.path()+"/bh/test-sessions.json";
+        QTRY_VERIFY_WITH_TIMEOUT(bh.canPair() && QFile::exists(statePath),5000);
+        const QJsonObject active{{"generation",17},{"sessions",1},{"lease","unrelated-controller"}};
+        QVERIFY(PeerStore::write(statePath,active));
+        if (reject) { QFile marker(dir.path()+"/bh/reject-live-trust"); QVERIFY(marker.open(QIODevice::WriteOnly)); }
+        bool interrupted=false;
+        connect(&bh,&HostManager::changed,&bh,[&] { if (!bh.canPair()) interrupted=true; });
+        QSignalSpy removed(&b,&PeerManager::deviceRemovalFinished);
+        b.removeDevice(ah.identity()["hostId"].toString());
+        QVERIFY(b.busy());
+        QCOMPARE(removed.size(),0);
+        QTRY_COMPARE_WITH_TIMEOUT(removed.size(),1,5000);
+        QCOMPARE(removed.first().at(1).toBool(),!reject);
+        QVERIFY(!interrupted);
+        QVERIFY(bh.canPair());
+        QCOMPARE(PeerStore::read(statePath),active);
+        QCOMPARE(b.peers().size(),reject ? 1 : 0);
+        QCOMPARE(PeerStore::read(dir.path()+"/bb/peers.json")["peers"].toObject().size(),reject ? 1 : 0);
+        QCOMPARE(PeerStore::read(dir.path()+"/bh/state.json")["root"].toObject()["named_devices"].toArray().size(),reject ? 1 : 0);
     }
     void invalidOversizedAndReplayedMessagesCannotGrant() {
         QTemporaryDir dir;

@@ -15,7 +15,7 @@ public slots:
     void captureUrl(const QUrl& url) { opened=url; }
 private slots:
     void initTestCase() {
-        QCoreApplication::setApplicationVersion("0.5.0");
+        QCoreApplication::setApplicationVersion(qEnvironmentVariable("TEST_DESKPORT_VERSION", "development"));
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
     }
@@ -45,7 +45,7 @@ private slots:
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.path());
         QFile archive(logs.createBundle()); QVERIFY(archive.open(QIODevice::ReadOnly));
         QVERIFY(archive.readAll().contains("\"version\": \"" + expected.toUtf8() + "\""));
-        QCoreApplication::setApplicationVersion("0.5.0");
+        QCoreApplication::setApplicationVersion(qEnvironmentVariable("TEST_DESKPORT_VERSION", "development"));
     }
     void privacy_data() {
         QTest::addColumn<QString>("secret");
@@ -85,6 +85,16 @@ private slots:
         object["run"]="my-host"; QVERIFY(Diagnostics::validate(object).isEmpty());
         object["run"]=QString(32,'a'); object["source"]="private.example"; QVERIFY(Diagnostics::validate(object).isEmpty());
     }
+    void navigationTimingKeepsOnlyFixedStages() {
+        for (const auto& stage : {"devices-request", "devices-ready", "devices-frame", "event-loop-delay"}) {
+            auto record = Diagnostics::project(QString("DeskPort navigation stage=%1 duration_ms=875").arg(stage));
+            QCOMPARE(record.value("event").toString(), QString("navigation"));
+            QCOMPARE(record.value("duration_ms").toInt(), 875);
+            record["source"] = "client"; record["run"] = QString(32, 'a'); record["elapsed_ms"] = 100;
+            QCOMPARE(Diagnostics::validate(record).value("stage").toString(), QString(stage));
+        }
+        QVERIFY(Diagnostics::project("DeskPort navigation stage=private-host duration_ms=875").isEmpty());
+    }
     void rotationRetentionAndExportAllowlist() {
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.path()); logs.setEnabled(true);
         for (int i=0;i<28000;++i) logs.record("host","Connection failed");
@@ -99,11 +109,16 @@ private slots:
         // Valid records with injected extra keys are reserialized from allowed fields.
         QFile altered(dir.filePath("client-0.jsonl")); QVERIFY(altered.open(QIODevice::WriteOnly|QIODevice::Append));
         altered.write("{\"source\":\"client\",\"run\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"event\":\"failed\",\"elapsed_ms\":5,\"message\":\"INJECTED_SECRET\"}\n"); altered.close();
+        const QString viewer=dir.filePath("viewers/"+QString(32,'b'));
+        QVERIFY(QDir().mkpath(viewer));
+        QVERIFY(QFile::copy(dir.filePath("client-0.jsonl"),viewer+"/client-0.jsonl"));
+        QFile privateFile(viewer+"/private.json"); QVERIFY(privateFile.open(QIODevice::WriteOnly)); privateFile.write("WORKER_SECRET"); privateFile.close();
         const auto path=logs.createBundle(); QVERIFY(!path.isEmpty()); QFile archive(path); QVERIFY(archive.open(QIODevice::ReadOnly)); const auto bytes=archive.readAll();
-        for (auto secretValue:{"PAIRING_SECRET","KEY_SECRET","OLD_SECRET","INJECTED_SECRET","state.json","credentials"}) QVERIFY(!bytes.contains(secretValue));
+        for (auto secretValue:{"PAIRING_SECRET","KEY_SECRET","OLD_SECRET","INJECTED_SECRET","state.json","credentials","WORKER_SECRET","private.json"}) QVERIFY(!bytes.contains(secretValue));
         QVERIFY(!QFile::exists(old.fileName()));
         const auto root=qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"); QFile::remove(root+"/verified.zip"); QVERIFY(QFile::copy(path,root+"/verified.zip"));
-        logs.clear(); QVERIFY(!QFile::exists(path)); QVERIFY(QFile::exists(secret.fileName()));
+        QVERIFY(bytes.contains("viewer-0-client-0.jsonl"));
+        logs.clear(); QVERIFY(!QFile::exists(viewer+"/client-0.jsonl")); QVERIFY(QFile::exists(privateFile.fileName())); QVERIFY(!QFile::exists(path)); QVERIFY(QFile::exists(secret.fileName()));
     }
     void connectionCodesAndExportFailure() {
         QTemporaryDir dir; Diagnostics logs(nullptr,dir.filePath("logs")); logs.setEnabled(true);

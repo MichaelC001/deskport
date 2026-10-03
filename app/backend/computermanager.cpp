@@ -1,4 +1,8 @@
 #include "computermanager.h"
+#include "hostliststate.h"
+#include "hostalias.h"
+#include "sessionwindowstate.h"
+#include "gui/hostlayout.h"
 #include "localhostfilter.h"
 #include "hostports.h"
 #include "boxartmanager.h"
@@ -158,8 +162,9 @@ private:
     NvComputer* m_Computer;
 };
 
-ComputerManager::ComputerManager(StreamingPreferences* prefs)
+ComputerManager::ComputerManager(StreamingPreferences* prefs, bool readOnly, const QString& targetHostId)
     : m_Prefs(prefs),
+      m_ReadOnly(readOnly),
       m_PollingRef(0),
       m_MdnsBrowser(nullptr),
       m_CompatFetcher(nullptr),
@@ -180,6 +185,7 @@ ComputerManager::ComputerManager(StreamingPreferences* prefs)
     for (int i = 0; i < hosts; i++) {
         settings.setArrayIndex(i);
         NvComputer* computer = new NvComputer(settings);
+        if ((readOnly && !targetHostId.isEmpty() && computer->uuid.compare(targetHostId, Qt::CaseInsensitive) != 0) || HostListState::removed(computer->uuid)) { delete computer; continue; }
         m_KnownHosts[computer->uuid] = computer;
         m_LastSerializedHosts[computer->uuid] = *computer;
     }
@@ -267,6 +273,7 @@ void DelayedFlushThread::run() {
             m_ComputerManager->m_NeedsDelayedFlush = false;
 
             // Update the last serialized hosts map under the delayed flush mutex
+            QReadLocker hostsLock(&m_ComputerManager->m_Lock);
             m_ComputerManager->m_LastSerializedHosts.clear();
             for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
                 // Copy the current state of the NvComputer to allow us to check later if we need
@@ -313,6 +320,9 @@ void DelayedFlushThread::run() {
 
 void ComputerManager::saveHosts()
 {
+    // Only the shell owns the persistent device registry. A background viewer
+    // must never restore a removed device from its older in-memory snapshot.
+    if (m_ReadOnly) return;
     Q_ASSERT(m_DelayedFlushThread != nullptr && m_DelayedFlushThread->isRunning());
 
     // Punt to a worker thread because QSettings on macOS can take ages (> 500 ms)
@@ -366,7 +376,7 @@ void ComputerManager::startPolling()
         return;
     }
 
-    if (m_Prefs->enableMdns) {
+    if (m_Prefs->enableMdns && !m_ReadOnly) {
         // Start an MDNS query for GameStream hosts
         m_MdnsServer.reset(new QMdnsEngine::Server());
         m_MdnsBrowser = new QMdnsEngine::Browser(m_MdnsServer.data(), "_nvstream._tcp.local.");
@@ -475,6 +485,10 @@ void ComputerManager::saveHost(NvComputer *computer)
 
 void ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
+    // A queued polling/add notification may arrive after removal and disposal.
+    // Compare identity without dereferencing a potentially retired pointer.
+    { QReadLocker lock(&m_Lock);
+      if (!m_KnownHosts.values().contains(computer)) return; }
     emit computerStateChanged(computer);
 
     if (computer->pendingQuit && computer->currentGameId == 0) {
@@ -509,48 +523,53 @@ QVector<NvComputer*> ComputerManager::getComputers()
 class DeferredHostDeletionTask : public QRunnable
 {
 public:
-    DeferredHostDeletionTask(ComputerManager* cm, NvComputer* computer)
-        : m_Computer(computer),
-          m_ComputerManager(cm) {}
-
-    void run()
-    {
-        ComputerPollingEntry* pollingEntry;
-
-        // Only do the minimum amount of work while holding the writer lock.
-        // We must release it before calling saveHosts().
-        {
-            QWriteLocker lock(&m_ComputerManager->m_Lock);
-
-            pollingEntry = m_ComputerManager->m_PollEntries.take(m_Computer->uuid);
-
-            m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
-        }
-
-        // Persist the new host list with this computer deleted
-        m_ComputerManager->saveHosts();
-
-        // Delete the polling entry first. This will stop all polling threads too.
-        delete pollingEntry;
-
-        // Delete cached box art
+    DeferredHostDeletionTask(NvComputer* computer, ComputerPollingEntry* pollingEntry)
+        : m_Computer(computer), m_PollingEntry(pollingEntry) {}
+    void run() override {
+        // The manager and every model have already detached this object.
+        delete m_PollingEntry;
         BoxArtManager::deleteBoxArt(m_Computer);
-
-        // Finally, delete the computer itself. This must be done
-        // last because the polling thread might be using it.
         delete m_Computer;
     }
-
 private:
     NvComputer* m_Computer;
-    ComputerManager* m_ComputerManager;
+    ComputerPollingEntry* m_PollingEntry;
 };
+
+bool ComputerManager::deleteHostById(const QString& hostId)
+{
+    if (hostId.isEmpty() || !HostListState::setRemoved(hostId, true)) return false;
+    NvComputer* computer = nullptr;
+    { QReadLocker lock(&m_Lock);
+      for (auto host : m_KnownHosts)
+          if (host->uuid.compare(hostId, Qt::CaseInsensitive) == 0) { computer = host; break; } }
+    if (computer) deleteHost(computer);
+    HostAlias::set(hostId, {});
+    HostLayout::load().forget(hostId);
+    QSettings settings;
+    settings.remove("devices/" + QString::fromLatin1(QCryptographicHash::hash(hostId.toLower().toUtf8(), QCryptographicHash::Sha256).toHex()));
+    settings.remove(DeskPortDisplay::sessionWindowKey(hostId));
+    settings.sync();
+    return settings.status() == QSettings::NoError;
+}
 
 void ComputerManager::deleteHost(NvComputer* computer)
 {
-    // Punt to a worker thread to avoid stalling the
-    // UI while waiting for the polling thread to die
-    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
+    ComputerPollingEntry* pollingEntry;
+    {
+        QWriteLocker lock(&m_Lock);
+        if (!m_KnownHosts.values().contains(computer)) return;
+        if (!HostListState::setRemoved(computer->uuid, true)) {
+            qWarning() << "Could not persist device list removal";
+            return;
+        }
+        pollingEntry = m_PollEntries.take(computer->uuid);
+        m_KnownHosts.remove(computer->uuid);
+    }
+    // Detach all grid/folder models before any worker can release the object.
+    emit computerRemoved(computer);
+    saveHosts();
+    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(computer, pollingEntry));
 }
 
 void ComputerManager::renameHost(NvComputer* computer, QString name)
@@ -743,6 +762,7 @@ void ComputerManager::stopPollingAsync()
 
 void ComputerManager::addNewHostManually(QString address)
 {
+    if (m_ReadOnly) return;
     const NvAddress endpoint = NvAddress::fromUserInput(address);
     if (!endpoint.isNull()) {
         // New manual entries target DeskPort. Explicit ports and saved hosts retain their endpoints.
@@ -934,6 +954,12 @@ private:
                 existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
             }
 
+            if (!HostListState::admit(newComputer->uuid, !m_Mdns && !m_ComputerManager->m_ReadOnly)) {
+                m_ComputerManager->m_Lock.unlock();
+                delete newComputer;
+                return;
+            }
+
             if (existingComputer != nullptr) {
                 // Fold it into the existing PC
                 bool changed = existingComputer->update(*newComputer);
@@ -1014,7 +1040,8 @@ QString ComputerManager::generatePinString()
 
 #include "computermanager.moc"
 
-bool ComputerManager::addBoundHost(QVariantMap peer) {
+bool ComputerManager::addBoundHost(QVariantMap peer, bool explicitAdd, bool sessionSnapshot) {
+    if (m_ReadOnly && !sessionSnapshot) return false;
     const QString uuid = peer.value("hostId").toString();
     const QString address = peer.value("address").toString();
     const int port = peer.value("hostPort").toInt();
@@ -1027,6 +1054,7 @@ bool ComputerManager::addBoundHost(QVariantMap peer) {
     NvComputer* host;
     {
         QWriteLocker lock(&m_Lock);
+        if (m_ReadOnly ? HostListState::removed(uuid) : !HostListState::admit(uuid, explicitAdd)) return false;
         host = m_KnownHosts.value(uuid);
         if (host) {
             QWriteLocker hostLock(&host->lock);

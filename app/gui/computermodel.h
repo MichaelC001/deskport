@@ -65,6 +65,7 @@ public:
     void setCurrentGroup(const QString& group);
 
     Q_INVOKABLE void deleteComputer(int computerIndex);
+    Q_INVOKABLE QString hostIdAt(int computerIndex) const;
 
     Q_INVOKABLE QString generatePinString();
 

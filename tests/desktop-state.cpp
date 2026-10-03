@@ -77,6 +77,18 @@ private slots:
         QVERIFY(wrap.update({1280, 720}, 1, 244, false));
     }
 
+    void hiddenTimeDoesNotSettleARecalledWindow() {
+        ResizeSettler settle;
+        QVERIFY(!settle.update({2420, 1200}, 1, 0, false));
+        settle.reset(); // Switch to another connected desktop.
+        QVERIFY(!settle.update({2420, 1200}, 1, 5000, false));
+        QVERIFY(!settle.update({2436, 1200}, 1, 5050, false));
+        QVERIFY(!settle.update({2436, 1200}, 1, 5549, false));
+        QVERIFY(settle.update({2436, 1200}, 1, 5550, false));
+        settle.reset(); // Another fast hide/show must start a fresh interval.
+        QVERIFY(!settle.update({2436, 1200}, 1, 6000, false));
+    }
+
     void defaultsAndExplicitInputChoicesPersist() {
         QTemporaryDir directory;
         QSettings::setDefaultFormat(QSettings::IniFormat);

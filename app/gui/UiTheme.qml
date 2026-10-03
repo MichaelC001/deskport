@@ -5,10 +5,10 @@ QtObject {
     property SystemPalette systemPalette: SystemPalette { colorGroup: SystemPalette.Active }
     property bool systemDark: systemPalette.window.hslLightness < 0.5
     readonly property bool dark: mode === 2 || (mode === 0 && systemDark)
-    readonly property color canvas: dark ? "#141719" : "#f7f8fa"
-    readonly property color surface: dark ? "#1e2326" : "#ffffff"
-    readonly property color raised: dark ? "#272e32" : "#eef1f6"
-    readonly property color line: dark ? "#343d42" : "#dce2ea"
+    readonly property color canvas: dark ? "#141c28" : "#f6f7f9"
+    readonly property color surface: dark ? "#1c2533" : "#ffffff"
+    readonly property color raised: dark ? "#253042" : "#eef1f6"
+    readonly property color line: dark ? "#2f3b4d" : "#dce2ea"
     readonly property color text: dark ? "#f1f4f3" : "#222b3a"
     readonly property color muted: dark ? "#a4b1b5" : "#586579"
     function luminance(c) {
@@ -29,6 +29,20 @@ QtObject {
         return c
     }
     readonly property color accentText: luminance(accent) > 0.179 ? "#000000" : "#ffffff"
+    // Accent at 12% (light) or 16% (dark): selections, tint buttons, icon tiles.
+    readonly property color tint: Qt.rgba(accent.r, accent.g, accent.b, dark ? 0.16 : 0.12)
+    readonly property color danger: dark ? "#ff6b6b" : "#d64545"
+    // Device status lights: online, checking, offline.
+    readonly property color online: dark ? "#5fd394" : "#23875a"
+    readonly property color checking: dark ? "#ffc66d" : "#c7810c"
+    readonly property color offline: dark ? "#8d97a8" : "#98a1b0"
+    // Dimmed backdrop behind floating panels.
+    readonly property color scrim: Qt.rgba(0, 0, 0, dark ? 0.55 : 0.32)
+    function mix(base, tint, amount) {
+        return Qt.rgba(base.r * (1 - amount) + tint.r * amount,
+                       base.g * (1 - amount) + tint.g * amount,
+                       base.b * (1 - amount) + tint.b * amount, 1)
+    }
     readonly property color warning: dark ? "#f0c987" : "#855300"
     readonly property int small: 12
     readonly property int body: 14

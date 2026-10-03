@@ -86,6 +86,9 @@ struct PeerManager::Link : QObject {
     // Last full-screen state reported with display-resize; older clients do not
     // report it and keep the request available.
     bool clientFullScreen = true;
+    bool videoPause = false, videoPending = false;
+    int videoSequence = 0;
+    QJsonObject videoResult;
     bool lifecycle = false, recovering = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
@@ -264,7 +267,7 @@ PeerManager::~PeerManager() {
     // QObject destroys children after derived members have gone away.
     for (auto link : m_IncomingLinks) disconnect(link, &QObject::destroyed, this, nullptr);
 }
-bool PeerManager::busy() const { return m_Link || m_TrustInFlight || !m_Revoking.isEmpty(); }
+bool PeerManager::busy() const { return m_Link || m_TrustInFlight || !m_Revoking.isEmpty() || !m_RemovingDevice.isEmpty(); }
 QString PeerManager::requestId() const {
     return m_Link && m_Link->incoming && m_Link->requested && !m_Link->accepted ? m_Link->transaction : QString();
 }
@@ -275,6 +278,13 @@ QString PeerManager::pendingName() const {
     if (requestId().isEmpty()) return {};
     return tr("%1 (%2)\nDevice key: %3")
         .arg(m_Link->peer["name"].toString(), m_Link->socket->peerAddress().toString(), m_Link->fingerprint.left(16));
+}
+QJsonObject PeerManager::sessionPeer(const QString& hostId) const {
+    for (const auto& value : m_Peers) {
+        const auto peer = value.toObject();
+        if (peer.value("hostId").toString().compare(hostId, Qt::CaseInsensitive) == 0) return peer;
+    }
+    return {};
 }
 QVariantList PeerManager::peers() const {
     QVariantList result;
@@ -306,6 +316,9 @@ QJsonObject PeerManager::metadata() const {
     meta["sessionTakeover"] = DP_SESSION_TAKEOVER_VERSION;
     meta["sessionTopology"] = DP_SESSION_TOPOLOGY_VERSION;
     meta["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
+#if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
+    meta["videoPause"] = DP_VIDEO_PAUSE_VERSION;
+#endif
     meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     meta["clipboardV2"] = 1;
@@ -657,6 +670,31 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         send(link, reply); return;
     }
     if (link->clipboardControl) { fail(link, tr("Unexpected clipboard message")); return; }
+    if (type == DP_MESSAGE_VIDEO_STATE) {
+        const auto peer = m_Peers.value(link->fingerprint).toObject();
+        const int seq = message["seq"].toInt();
+        if (!link->incoming || !link->videoPause || !link->sessionAdmitted || link != m_SessionLink ||
+            link->recovering || m_SessionOperation || !peer["ready"].toBool() || !peer["granted"].toBool() ||
+            m_Revoking == link->fingerprint || !message["paused"].isBool() || seq <= 0 ||
+            message["seq"].toDouble() != seq) { fail(link, tr("Invalid video state request")); return; }
+        if (seq == link->videoSequence && !link->videoResult.isEmpty() &&
+            message["paused"] == link->videoResult["paused"]) { send(link, link->videoResult); return; }
+        if (link->videoPending || seq != link->videoSequence + 1) { fail(link, tr("Invalid video state sequence")); return; }
+        link->videoPending = true;
+        link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+        const QString lease = link->sessionLease;
+        const bool paused = message["paused"].toBool();
+        m_Host->sessionControl({{"action", "video"}, {"lease", lease}, {"paused", paused}}, link,
+            [this, link, lease, paused, seq](QJsonObject result) {
+                if (link->ended || link != m_SessionLink || lease != link->sessionLease) return;
+                link->videoPending = false;
+                QJsonObject reply{{"type", DP_MESSAGE_VIDEO_RESULT}, {"seq", seq}, {"paused", paused}};
+                if (!result["status"].toBool()) reply["error"] = "unavailable";
+                link->videoSequence = seq; link->videoResult = reply;
+                send(link, reply);
+            });
+        return;
+    }
     if (type == DP_MESSAGE_DISPLAY_RESIZE || type == DP_MESSAGE_DISPLAY_PING) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || !peer["ready"].toBool() || !peer["granted"].toBool() ||
@@ -779,7 +817,8 @@ void PeerManager::granted(bool success) {
             m_Peers.remove(m_Revoking);
             if (!save()) { m_Peers = old; success = false; }
         }
-        m_Revoking.clear(); m_Status = success ? tr("This device's access to this computer was removed") : tr("Could not remove access; retry"); emit changed(); return;
+        m_Revoking.clear(); m_Status = success ? tr("This device's access to this computer was removed") : tr("Could not remove access; retry");
+        emit changed(); continueDeviceRemoval(success); return;
     }
     auto link = m_Link;
     if (!link || link->ended) { m_Status = tr("Binding interrupted. Review saved device access before retrying."); emit changed(); return; }
@@ -817,7 +856,7 @@ void PeerManager::finish(Link* link) {
     }
     const bool clientOnly = link->peer.value("role").toString() == "client";
     if (clientOnly) send(link, {{"type","bound"},{"tx",link->transaction}});
-    else emit peerBound(link->peer.toVariantMap());
+    else emit peerBound(link->peer.toVariantMap(), true);
     m_Status = m_ClientOnly ? tr("Host access saved. This computer can connect to the approved host.") :
         clientOnly ? tr("Client access approved. This device can connect to this computer.") : tr("Bound in both directions. Desktop availability depends on sharing and system permissions.");
     link->ended = true; m_Link = nullptr;
@@ -879,6 +918,7 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
         m_Revoking == link->fingerprint) { sessionError(link, "unauthorized"); return; }
     const bool takeover = message["type"] == DP_MESSAGE_SESSION_TAKEOVER;
     if (takeover && !link->sessionOptIn) { sessionError(link, "unauthorized"); return; }
+    if (!takeover) link->videoPause = message["videoPause"].toInt() == DP_VIDEO_PAUSE_VERSION;
     if (!takeover) link->topologyOptIn = message["sessionTopology"].toInt() == DP_SESSION_TOPOLOGY_VERSION;
     // Old client-only mobile peers cannot be a host in a return path. Desktop
     // peers must register pending edges; otherwise concurrent cycles are unsafe.
@@ -1077,15 +1117,42 @@ bool PeerManager::editPeer(const QString& fp, const QString& nameValue,
 }
 void PeerManager::revoke(const QString& fp) {
     if (busy() || !m_Peers.contains(fp)) return;
+    beginRevocation(fp);
+}
+void PeerManager::removeDevice(const QString& hostId) {
+    if (hostId.isEmpty()) return;
+    if (!m_Healthy) { emit deviceRemovalFinished(hostId, false); return; }
+    if (busy()) {
+        m_Status = tr("Finish the current connection before editing this device.");
+        emit changed(); emit deviceRemovalFinished(hostId, false); return;
+    }
+    m_RemovingDevice = hostId;
+    for (auto it = m_Peers.constBegin(); it != m_Peers.constEnd(); ++it)
+        if (it.value().toObject()["hostId"].toString().compare(hostId, Qt::CaseInsensitive) == 0)
+            m_RemovingFingerprints.append(it.key());
+    emit changed();
+    QTimer::singleShot(0, this, [this] { continueDeviceRemoval(); });
+}
+void PeerManager::continueDeviceRemoval(bool success) {
+    if (m_RemovingDevice.isEmpty()) return;
+    if (success && !m_RemovingFingerprints.isEmpty()) {
+        beginRevocation(m_RemovingFingerprints.takeFirst()); return;
+    }
+    const auto hostId = m_RemovingDevice;
+    m_RemovingDevice.clear(); m_RemovingFingerprints.clear();
+    emit changed(); emit deviceRemovalFinished(hostId, success);
+}
+void PeerManager::beginRevocation(const QString& fp) {
     if (m_ClientOnly) {
         // Forget only this local record. The remote host remains the authority
         // for revocation; never provision or restart a nonexistent local host.
         const auto previous = m_Peers;
         m_Peers.remove(fp);
-        if (!save()) {
+        const bool success = save();
+        if (!success) {
             m_Peers = previous; m_Status = tr("Could not remove the saved binding; retry");
         } else m_Status = tr("Saved binding removed. Remove the device from Devices separately; revoke access on the host to deny this client's certificate.");
-        emit changed(); return;
+        emit changed(); continueDeviceRemoval(success); return;
     }
     if (m_SessionLink && m_SessionLink->fingerprint == fp) fail(m_SessionLink, tr("Device access removed"));
     if (m_ClipboardLink && m_ClipboardLink->fingerprint == fp) fail(m_ClipboardLink, tr("Device access removed"));

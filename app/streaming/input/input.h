@@ -136,6 +136,7 @@ private:
         KeyComboToggleMinimize,
         KeyComboPasteText,
         KeyComboTogglePointerRegionLock,
+        KeyComboNextSession,
         KeyComboMax
     };
 

@@ -1,5 +1,8 @@
 #include "diagnostics.h"
 #include <QtTest>
+#include <QMenu>
+#include <QAction>
+#include <QApplication>
 #include <QTemporaryDir>
 #include <QElapsedTimer>
 #include "hostmanager.h"
@@ -7,10 +10,78 @@
 #include "localhostfilter.h"
 #include "peerstore.h"
 
+static QAction* trayAction(const QString& title) {
+    for (auto widget : QApplication::topLevelWidgets())
+        if (auto menu=qobject_cast<QMenu*>(widget))
+            for (auto action : menu->actions()) if (action->isVisible() && action->text()==title) return action;
+    return nullptr;
+}
+
 class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void trayActionsReturnBeforeDispatch() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path());
+        QSignalSpy opened(&host,&HostManager::showDevicesRequested);
+        QSignalSpy selected(&host,&HostManager::sessionSelected);
+        QSignalSpy disconnected(&host,&HostManager::sessionDisconnectRequested);
+        QSignalSpy reconnected(&host,&HostManager::sessionReconnectRequested);
+        auto row=[](QString id, QString name, QString state, bool visible=false, bool selected=false) {
+            return QVariantMap{{"id",id},{"name",name},{"state",state},{"visible",visible},{"selected",selected}}; };
+        QVERIFY(trayAction("Open device list"));
+        QVERIFY(!trayAction("Disconnect “Alpha”"));
+        host.updateSessionMenu({row("a","Alpha","connected",true,true),row("b","Beta & Co","starting"),row("c","Gone","disconnected")});
+        auto open=trayAction("Open device list"), alpha=trayAction("Alpha"), beta=trayAction("Beta && Co · Connecting…");
+        auto disconnect=trayAction("Disconnect “Alpha”"), reconnect=trayAction("Reconnect “Alpha”");
+        QVERIFY(open); QVERIFY(alpha); QVERIFY(beta); QVERIFY(disconnect); QVERIFY(reconnect);
+        QVERIFY(!trayAction("Gone")); // Ended sessions are not listed.
+        QVERIFY(alpha->isChecked()); QVERIFY(!beta->isChecked());
+        alpha->trigger(); QVERIFY(alpha->isChecked()); // Only the viewer changes the checkmark.
+        beta->trigger(); open->trigger(); disconnect->trigger(); reconnect->trigger();
+        QCOMPARE(opened.size(),0); QCOMPARE(selected.size(),0);
+        QCOMPARE(disconnected.size(),0); QCOMPARE(reconnected.size(),0);
+        QTRY_COMPARE(opened.size(),1);
+        QTRY_COMPARE(selected.size(),2);
+        QCOMPARE(selected.at(1).at(0).toString(),QString("b"));
+        QTRY_COMPARE(disconnected.size(),1); QCOMPARE(disconnected.first().at(0).toString(),QString("a"));
+        QTRY_COMPARE(reconnected.size(),1); QCOMPARE(reconnected.first().at(0).toString(),QString("a"));
+        // No viewer shown: actions address the last viewed desktop; the list is capped at seven.
+        QVariantList many;
+        for (int i=0;i<9;++i) many.append(row(QString::number(i),QString("Desk %1").arg(i),"connected",false,i==8));
+        host.updateSessionMenu(many);
+        QVERIFY(trayAction("Desk 6")); QVERIFY(!trayAction("Desk 7")); QVERIFY(!trayAction("Desk 8"));
+        QVERIFY(trayAction("Disconnect “Desk 8”"));
+        auto all=trayAction("All connections (9)…"); QVERIFY(all);
+        all->trigger(); QTRY_COMPARE(opened.size(),2);
+        host.updateSessionMenu({});
+        QVERIFY(!trayAction("Desk 0")); QVERIFY(!trayAction("Disconnect “Desk 8”")); QVERIFY(!trayAction("Reconnect “Desk 8”"));
+        QVERIFY(trayAction("Open device list"));
+    }
+    void exitKeepsEventLoopAliveWhileHelperStops() {
+        qputenv("DESKPORT_TEST_MODE","stubborn");
+        QTemporaryDir dir; HostManager host(nullptr,dir.path());
+        host.start(2560,1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.canPair() && QFile::exists(dir.filePath("host-started")),5000);
+        QSignalSpy exited(&host,&HostManager::exitRequested);
+        int heartbeats=0;
+        QTimer heartbeat;
+        connect(&heartbeat,&QTimer::timeout,this,[&] { ++heartbeats; });
+        heartbeat.start(10);
+        QElapsedTimer elapsed; elapsed.start();
+        host.requestExit();
+        QVERIFY(elapsed.elapsed()<100);
+        QCOMPARE(exited.size(),1);
+        QVERIFY(host.running());
+        QSignalSpy opened(&host,&HostManager::showDevicesRequested);
+        auto open=trayAction("Open device list"); QVERIFY(open);
+        open->trigger();
+        QCOMPARE(opened.size(),0);
+        QTRY_COMPARE_WITH_TIMEOUT(opened.size(),1,500);
+        QVERIFY(host.running());
+        QTRY_VERIFY_WITH_TIMEOUT(!host.running(),5000);
+        QVERIFY(heartbeats>20);
+    }
     void diagnosticFilesDisabledForAllChildren() {
         Diagnostics::instance().setEnabled(false);
         QTemporaryDir dir; HostManager host(nullptr,dir.path()); host.start(2560,1440);

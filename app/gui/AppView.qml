@@ -222,6 +222,11 @@ CenteredGridView {
                 return
             }
 
+            if (typeof sessionManager !== "undefined") {
+                var target = appModel.managedTarget(index)
+                sessionManager.open(target.id, target.name, target.address, target.app)
+                return
+            }
             var component = Qt.createComponent("StreamSegue.qml")
             var segue = component.createObject(stackView, {
                                                    "appName": model.name,
@@ -355,7 +360,8 @@ CenteredGridView {
                 // Store the session and app name if we're going to stream after
                 // successfully quitting the old app.
                 params.nextAppName = nextAppName
-                params.nextSession = appModel.createSessionForApp(nextAppIndex)
+                if (typeof sessionManager !== "undefined") params.nextManagedTarget = appModel.managedTarget(nextAppIndex)
+                else params.nextSession = appModel.createSessionForApp(nextAppIndex)
             }
             else {
                 params.nextAppName = null

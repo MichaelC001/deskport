@@ -2,6 +2,8 @@
 #include <QDesktopServices>
 #include <cmath>
 #include <QtTest>
+#include <QApplication>
+#include <QSettings>
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QQmlComponent>
@@ -18,9 +20,9 @@
 #include "singleinstance.h"
 #include "../shared/deskport-core/portable/include/deskport/catalog.h"
 
-static QQuickItem* findVisual(QQuickItem* item, const QString& name) {
-    if (item->objectName() == name) return item;
-    for (auto child : item->childItems()) if (auto found = findVisual(child, name)) return found;
+static QQuickItem* findVisual(QQuickItem* item, const QString& name, bool visibleOnly = false) {
+    if (item->objectName() == name && (!visibleOnly || item->isVisible())) return item;
+    for (auto child : item->childItems()) if (auto found = findVisual(child, name, visibleOnly)) return found;
     return nullptr;
 }
 static QByteArray credential(const char* name) {
@@ -78,14 +80,27 @@ class TestComputers : public QAbstractListModel {
 public:
     using QAbstractListModel::QAbstractListModel;
     // Synthetic devices arranged by the real layout rules, stored in memory only.
-    const QStringList devices{"device-a","device-b"};
-    QVariantList stored; bool hasStored = false; QString group;
+    QStringList devices{"device-a","device-b"};
+    Q_INVOKABLE void setDeviceCount(int count) {
+        beginResetModel(); devices = {"device-a", "device-b"};
+        for (int i=2; i<count; ++i) devices.append(QString("fixture-%1").arg(i));
+        endResetModel();
+    }
+    // Shared by every model instance, like the saved layout, so a group's
+    // folder model sees groups made on the device list.
+    static inline QVariantList stored; static inline bool hasStored = false;
+    static void resetLayout() { stored.clear(); hasStored = false; }
+    QString group;
     // Screenshots show the trailing add card; behavior checks run without it.
     bool showAdd = false;
+    // The second device's state for screenshots: 0 online, 1 checking, 2 offline.
+    int secondState = 0;
+    Q_INVOKABLE void setSecondState(int state) { beginResetModel(); secondState = state; endResetModel(); }
     bool hasAdd() const { return showAdd && group.isEmpty(); }
     Q_INVOKABLE void setShowAdd(bool value) { beginResetModel(); showAdd = value; endResetModel(); }
     HostLayout layout() { return HostLayout(stored, hasStored, {}, [this](const QVariantList& items){ stored = items; hasStored = true; }); }
     QVector<HostLayout::Entry> rows() const { return const_cast<TestComputers*>(this)->layout().entries(devices, group); }
+    Q_INVOKABLE QString hostIdAt(int index) const { const auto list=rows(); return index>=0 && index<list.size() ? list[index].id : QString(); }
     Q_INVOKABLE void initialize(QObject*) {}
     Q_INVOKABLE void refreshFavorites() {}
     QString currentGroup() const { return group; }
@@ -149,9 +164,11 @@ public:
         const bool first = entry.id == "device-a";
         switch(role-Qt::UserRole) {
         case 0: return first ? "Studio" : "Travel laptop";
-        case 1: return first ? "device-a" : "device-b";
-        case 2: case 3: case 9: return true;
-        case 4: case 10: return false;
+        case 1: return entry.id;
+        case 2: return first || secondState == 0;
+        case 3: case 9: return true;
+        case 4: return !first && secondState == 1;
+        case 10: return false;
         case 5: return "example.invalid";
         case 6: return first;
         case 7: return first ? 1 : 0;
@@ -218,6 +235,15 @@ public:
                 QVariantMap{{"key","input"},{"title","Keyboard and pointer"},{"purpose","Synthetic input permission"},{"state","needsSetup"}}};
     }
 };
+// Session fixtures already have saved devices. Avoid writing shared setup
+// preferences, which would change subsequent first-run navigation tests.
+class SessionPreviewHost : public PreviewHost {
+    Q_OBJECT
+    Q_PROPERTY(bool setupComplete READ sessionSetupComplete CONSTANT)
+public:
+    using PreviewHost::PreviewHost;
+    bool sessionSetupComplete() const { return true; }
+};
 class UiPages : public QObject {
     Q_OBJECT
     QUrl feedbackUrl;
@@ -244,11 +270,16 @@ private slots:
         QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,toggle->mapToScene(QPointF(toggle->width()/2,toggle->height()/2)).toPoint());
         QTRY_VERIFY(logs.enabled());
         auto button=page->findChild<QObject*>("feedbackButton"); QVERIFY(button);
-        auto notice=page->findChild<QObject*>("diagnosticsPublicNotice"); QVERIFY(notice);
-        QVERIFY(notice->property("text").toString().contains("public"));
+        // Reporting first explains, in a panel, that GitHub issues are public.
         QDesktopServices::setUrlHandler("https",this,"captureFeedback");
         QVERIFY(QMetaObject::invokeMethod(button,"clicked"));
+        auto notice=page->findChild<QObject*>("feedbackNotice"); QVERIFY(notice);
+        QTRY_VERIFY(notice->property("visible").toBool());
+        QVERIFY(notice->property("text").toString().contains("public"));
+        QVERIFY(!QFile::exists(logs.bundlePath()));
+        QVERIFY(QMetaObject::invokeMethod(notice,"accept"));
         QVERIFY(QFile::exists(logs.bundlePath()));
+        QTRY_VERIFY(!notice->property("visible").toBool()); QTest::qWait(100);
         QCOMPARE(feedbackUrl,Diagnostics::issueUrl());
         QVERIFY(!feedbackUrl.toString().contains(dir.path()));
         QDesktopServices::unsetUrlHandler("https");
@@ -290,7 +321,7 @@ private slots:
             QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property int enables: 0; function enable() { enables++ } function disable() {} function getConnectedGamepads() { return 0 } }",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("ComputerManager",1,0,"ComputerManager",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} function addBoundHost(peer) {} }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { signal quitAppCompleted(var error); signal computerAddCompleted(bool success, bool blocked); function startPolling() {} function stopPollingAsync() {} function addBoundHost(peer, explicitAdd) {} function deleteHostById(hostId) { return true } }",QUrl()); return c.create();
         });
         qmlRegisterType<TestPreferences>("TestPreferences",1,0,"TestPreferences");
         qmlRegisterSingletonType<TestPreferences>("StreamingPreferences",1,0,"StreamingPreferences",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
@@ -415,7 +446,7 @@ ApplicationWindow {
         emit session.readyForDeletion();
         QTRY_COMPARE(continuation.executions,1);
         QVERIFY(!root->property("navigationVisible").toBool());
-        QVERIFY(root->property("currentPage").value<QObject*>() != page);
+        QCOMPARE(root->property("currentPage").value<QObject*>(), page);
         QVERIFY(QMetaObject::invokeMethod(root.data(),"back"));
         QVERIFY(root->property("navigationVisible").toBool());
         QVERIFY(QMetaObject::invokeMethod(root.data(),"startQuit"));
@@ -489,6 +520,56 @@ ApplicationWindow {
         QCOMPARE(root->property("depth").toInt(),3);
         QVERIFY(root->property("currentPage").value<QObject*>()->property("controlCenterForActiveSession").toBool());
         emit session.sessionFinished(0);
+        QTRY_COMPARE(root->property("depth").toInt(),1);
+        QTest::qWait(50);
+        engine.collectGarbage();
+        emit session.readyForDeletion();
+        QTest::qWait(20);
+        QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
+    }
+    void controlCenterSurvivesTransportContinuation() {
+        QQmlEngine engine;
+        QStringList warnings;
+        connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
+        TestSession session;
+        engine.rootContext()->setContextProperty("testSession", &session);
+        QQmlComponent harness(&engine);
+        harness.setData(R"(import QtQuick 2.9
+import QtQuick.Controls 2.2
+ApplicationWindow {
+ id: window; width: 800; height: 600
+ property alias depth: stackView.depth
+ property alias currentPage: stackView.currentItem
+ QtObject { id: streamSegueErrorDialog; property string text: ""; property bool quitAfter: false; function open() {} }
+ StackView { id: stackView; anchors.fill: parent; initialItem: Item {} }
+ function start() { stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {session: testSession, appName: "Test"}, StackView.Immediate) }
+ function showDevices() { stackView.push(controlPage, StackView.Immediate) }
+ Component { id: controlPage; Item { property bool controlCenterForActiveSession: true } }
+})",QUrl::fromLocalFile(qEnvironmentVariable("TEST_GUI_DIR")+"/control-center-harness.qml"));
+        QScopedPointer<QObject> root(harness.create()); QVERIFY2(root,qPrintable(harness.errorString()));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"start"));
+        QTRY_COMPARE(session.executions,1);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
+        QCOMPARE(session.receivedWindow, qobject_cast<QQuickWindow*>(root.data()));
+        root->setProperty("visible", true);
+        emit session.connectionStarted();
+        QVERIFY(root->property("visible").toBool());
+        QCOMPARE(session.executions, 1);
+        QCOMPARE(root->property("depth").toInt(),3);
+        QVERIFY(root->property("currentPage").value<QObject*>()->property("controlCenterForActiveSession").toBool());
+        auto controlPage = root->property("currentPage").value<QObject*>();
+        TestSession next;
+        QQmlEngine::setObjectOwnership(&next, QQmlEngine::CppOwnership);
+        session.next = &next;
+        emit session.sessionFinished(0);
+        emit session.readyForDeletion();
+        QTRY_COMPARE(next.executions, 1);
+        QCOMPARE(root->property("depth").toInt(), 3);
+        QCOMPARE(root->property("currentPage").value<QObject*>(), controlPage);
+        next.makeViewerReady();
+        QVERIFY(root->property("visible").toBool());
+        QCOMPARE(session.executions, 1);
+        emit next.sessionFinished(0);
         QTRY_COMPARE(root->property("depth").toInt(),1);
         QTest::qWait(50);
         engine.collectGarbage();
@@ -593,8 +674,7 @@ ApplicationWindow {
                 QVERIFY(QMetaObject::invokeMethod(accent,"activated",Q_ARG(int,3)));
                 QCOMPARE(prefs->property("uiAccent").toInt(),3);
                 auto traffic=page->findChild<QObject*>("showTrafficSwitch"); QVERIFY(traffic);
-                traffic->setProperty("checked",false);
-                QVERIFY(QMetaObject::invokeMethod(traffic,"clicked"));
+                QVERIFY(QMetaObject::invokeMethod(traffic,"switched",Q_ARG(bool,false)));
                 QVERIFY(!prefs->property("showTraffic").toBool());
                 QCOMPARE(prefs->property("bitrateKbps").toInt(),125000);
                 QObject* languages=page->findChild<QObject*>("languageChoice"); QVERIFY(languages);
@@ -705,13 +785,104 @@ ApplicationWindow {
         QCOMPARE(prefs->property("desktopAdjustment").toDouble(),0.5);
         QVERIFY(QMetaObject::invokeMethod(adjustment,"activated",Q_ARG(int,9)));
         QCOMPARE(prefs->property("desktopAdjustment").toDouble(),1.5);
-        auto full=page->findChild<QObject*>("deviceFullScreen"); QVERIFY(full);
-        QVERIFY(!full->property("checked").toBool());
-        full->setProperty("checked",true); QVERIFY(QMetaObject::invokeMethod(full,"clicked"));
+        auto windowChoice=page->findChild<QObject*>("windowModeChoice"); QVERIFY(windowChoice);
+        QVERIFY(QMetaObject::invokeMethod(windowChoice,"activated",Q_ARG(int,1)));
         QCOMPARE(prefs->property("windowMode").toInt(),1);
-        full->setProperty("checked",false); QVERIFY(QMetaObject::invokeMethod(full,"clicked"));
+        QVERIFY(QMetaObject::invokeMethod(windowChoice,"activated",Q_ARG(int,2)));
         QCOMPARE(prefs->property("windowMode").toInt(),2);
-        QVERIFY(page->findChild<QObject*>("deviceAdvancedButton"));
+        // Basic switches: fit to window, sound and input.
+        auto fit=page->findChild<QObject*>("deviceFitWindow"); QVERIFY(fit);
+        const bool adaptive=prefs->property("adaptiveResolution").toBool();
+        QVERIFY(QMetaObject::invokeMethod(fit,"clicked"));
+        QCOMPARE(prefs->property("adaptiveResolution").toBool(),!adaptive);
+        // Advanced streaming settings expand in place; nothing is pushed.
+        auto advanced=page->findChild<QObject*>("deviceAdvancedButton"); QVERIFY(advanced);
+        auto section=page->findChild<QObject*>("deviceAdvanced"); QVERIFY(section);
+        QVERIFY(!section->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
+        QVERIFY(page->property("advancedOpen").toBool());
+    }
+    void managedSessionNavigation() {
+        TestComputers::resetLayout();
+        QTemporaryDir directory;
+        SessionPreviewHost host(nullptr,directory.path()+"/host");
+        PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
+        QQmlEngine engine;
+        QQmlComponent fixture(&engine);
+        fixture.setData(R"(import QtQuick 2.9
+QtObject {
+ property bool busy: true
+ property string selectedId: "device-a"
+ property var selectedTraffic: ({received:100, sent:20})
+ property int listRequests: 0
+ property string disconnected: ""
+ property string reconnected: ""
+ property string fullscreenId: ""
+ property var states: ({"device-a":"connected", "device-b":"connected"})
+ function open(id, name, address) { select(id) }
+ function reconnect(id) { reconnected=id }
+ function fullscreen(id) { fullscreenId=id }
+ function setSecondState(state) { states={"device-a":"connected", "device-b":state} }
+ property var sessions: [ {id:"device-a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"device-b", name:"Second desktop", state:"connected", selected:false, error:""} ]
+ function select(id) { selectedId=id }
+ property int recalls: 0
+ function recall() { recalls++; select(selectedId); return true }
+ function showDevices() { listRequests++ }
+ function disconnectSession(id) { disconnected=id }
+})",QUrl());
+        QScopedPointer<QObject> manager(fixture.create()); QVERIFY(manager);
+        engine.rootContext()->setContextProperty("sessionManager",manager.data());
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
+        engine.rootContext()->setContextProperty("hostManager", &host);
+        engine.rootContext()->setContextProperty("peerManager", &peers);
+        engine.rootContext()->setContextProperty("initialView", QString("qrc:/gui/PcView.qml"));
+        engine.rootContext()->setContextProperty("startInBackground", true);
+        engine.rootContext()->setContextProperty("startSharingPage", false);
+        QStringList warnings;
+        connect(&engine,&QQmlEngine::warnings,this,[&](const QList<QQmlError>& errors){for(const auto& e:errors) warnings<<e.toString();});
+        QQmlComponent component(&engine,QUrl("qrc:/gui/main.qml"));
+        QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
+        auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
+        window->resize(800,620); window->show(); QTest::qWait(100);
+        QVERIFY(!findVisual(window->contentItem(),"sessionStrip"));
+        QVERIFY(!findVisual(window->contentItem(),"sessionSelect-b"));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"recallRemoteSession"));
+        QCOMPARE(manager->property("recalls").toInt(),1);
+        QCOMPARE(manager->property("selectedId").toString(),QString("device-a"));
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
+        QCOMPARE(manager->property("listRequests").toInt(),1);
+        QCOMPARE(manager->property("sessions").value<QJSValue>().toVariant().toList().size(),2);
+        QVERIFY(!findVisual(window->contentItem(),"sessionDisconnect-a"));
+        QCOMPARE(manager->property("disconnected").toString(),QString());
+        auto first=findVisual(window->contentItem(),"device-device-a",true); QVERIFY(first);
+        auto second=findVisual(window->contentItem(),"device-device-b",true); QVERIFY(second);
+        auto firstCard=first->property("contentItem").value<QObject*>(); QVERIFY(firstCard);
+        auto secondCard=second->property("contentItem").value<QObject*>(); QVERIFY(secondCard);
+        QCOMPARE(firstCard->property("actionText").toString(),QString("Return to desktop"));
+        QCOMPARE(secondCard->property("actionText").toString(),QString("Return to desktop"));
+        for (auto card : {secondCard,firstCard,secondCard}) {
+            QVERIFY(QMetaObject::invokeMethod(card,"activateRequested"));
+            QCOMPARE(manager->property("selectedId").toString(), card == firstCard ? QString("device-a") : QString("device-b"));
+        }
+        auto firstPanel=first->findChild<QObject*>("devicePanel-device-a"); QVERIFY(firstPanel);
+        // A background card's actions must never affect the selected B session.
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"reconnectRequested"));
+        QCOMPARE(manager->property("reconnected").toString(),QString("device-a"));
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"fullscreenRequested"));
+        QCOMPARE(manager->property("fullscreenId").toString(),QString("device-a"));
+        QVERIFY(QMetaObject::invokeMethod(firstPanel,"disconnectRequested"));
+        QCOMPARE(manager->property("disconnected").toString(),QString("device-a"));
+        QCOMPARE(manager->property("selectedId").toString(),QString("device-b"));
+        for (const auto& state : {"starting", "stopping", "error", "connected"}) {
+            QVERIFY(QMetaObject::invokeMethod(manager.data(),"setSecondState",Q_ARG(QVariant,QString(state))));
+            QCOMPARE(secondCard->property("activeSession").toBool(),QString(state)=="connected");
+            QCOMPARE(root->property("activeHostId").toString(),QString(state)=="connected" ? QString("device-b") : QString());
+            QVERIFY(firstCard->property("activeSession").toBool());
+            QVERIFY(!secondCard->property("statusText").toString().isEmpty());
+        }
+        const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!shots.isEmpty()) { QTest::qWait(250); QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
+        QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }
     void navigationAndDeviceIdentity_data() {
         QTest::addColumn<QString>("outcome");
@@ -719,6 +890,7 @@ ApplicationWindow {
     }
     void navigationAndDeviceIdentity() {
         QFETCH(QString, outcome);
+        TestComputers::resetLayout();
         QTemporaryDir directory;
         PreviewHost host(nullptr,directory.path()+"/host");
         PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
@@ -739,10 +911,11 @@ ApplicationWindow {
  function testSettings() { showDevices(); navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
  function testSharing() { showDevices(); navigateTo("qrc:/gui/HostView.qml", "HostView") }
  function testBinding() { showDevices(); navigateTo("qrc:/gui/BindView.qml", "BindView") }
+ function testRemove() { var p=stackView.currentItem; p.confirmRemove(p.computerModel,1,"Offline fixture") }
  function testGrid() { return stackView.currentItem }
- function testDevice() { stackView.push("qrc:/gui/DeviceSettings.qml", {preferences: StreamingPreferences.forDevice("device-a"), deviceName: "Studio"}, StackView.Immediate) }
  function testCards() { StreamingPreferences.compactDevices = false }
  function testSameSettings() { navigateTo("qrc:/gui/SettingsHome.qml", "SettingsHome") }
+ function testTheme(mode) { StreamingPreferences.uiTheme = mode }
  property alias testDepth: stackView.depth
  property alias testCurrentPage: stackView.currentItem
 )");
@@ -769,16 +942,46 @@ ApplicationWindow {
         // Discard only initial setup navigation, which is scheduled once.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevices"));
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding")); QTest::qWait(100);
-        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Add a device"));
+        auto addDevicePopup=root->findChild<QObject*>("addDeviceDialog"); QVERIFY(addDevicePopup);
+        QTRY_VERIFY(addDevicePopup->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),1);
+        QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
+        QVERIFY(addDevicePopup->property("modal").toBool());
+        QVERIFY(addDevicePopup->property("width").toReal() <= 460);
+        QTest::qWait(200);
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/add-device-popup.png"));
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,QPoint(5,window->height()/2));
+        QTRY_VERIFY(!addDevicePopup->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),1);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"testBinding"));
+        QTRY_VERIFY(addDevicePopup->property("visible").toBool());
         const QVariantMap newlyBound{{"name","New computer"}};
-        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound)));
+        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound),Q_ARG(bool,true)));
+        QTRY_VERIFY(!addDevicePopup->property("visible").toBool());
         QTRY_COMPARE(root->property("testDepth").toInt(),1);
         QCOMPARE(root->property("testCurrentPage").value<QObject*>()->objectName(),QString("Devices"));
         QCOMPARE(session.executions, 0); // Binding never starts a stream.
+        QSignalSpy deleted(&peers,&PeerManager::deviceRemovalFinished);
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"testRemove"));
+        auto removalPopup=root->property("testCurrentPage").value<QObject*>()->findChild<QObject*>("removeDeviceDialog");
+        QVERIFY(removalPopup); QTRY_VERIFY(removalPopup->property("visible").toBool());
+        QTest::qWait(250);
+        auto deleteButton=findVisual(window->contentItem(),"dialogAcceptButton"); QVERIFY(deleteButton);
+        QTest::mouseClick(window,Qt::LeftButton,Qt::NoModifier,deleteButton->mapToScene(QPointF(deleteButton->width()/2,deleteButton->height()/2)).toPoint());
+        QTRY_COMPARE_WITH_TIMEOUT(deleted.size(),1,1000);
+        QCOMPARE(deleted.first().first().toString(),QString("device-b"));
+        QVERIFY(deleted.first().at(1).toBool());
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"showOperation",Q_ARG(QVariant,QString("Disconnecting…"))));
+        auto progress=root->findChild<QObject*>("operationProgress"); QVERIFY(progress);
+        QTRY_VERIFY(progress->property("visible").toBool());
+        QVERIFY(window->isVisible());
+        QVERIFY(QMetaObject::invokeMethod(root.data(),"finishOperation"));
+        QTRY_VERIFY(!progress->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(root.data(),"testStart"));
         QTRY_COMPARE(session.executions,1);
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));
-        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound)));
+        QVERIFY(QMetaObject::invokeMethod(&peers,"peerBound",Q_ARG(QVariantMap,newlyBound),Q_ARG(bool,true)));
         QTest::qWait(100);
         QCOMPARE(session.executions, 1); // An incoming binding cannot replace it.
         QCOMPARE(root->property("activeHostId").toString(),QString("device-a"));
@@ -816,11 +1019,15 @@ ApplicationWindow {
         QVERIFY(window->isVisible()); // Late readiness must not steal Devices.
         QVERIFY(QMetaObject::invokeMethod(root.data(),"prepareViewerRecall"));
         QVERIFY(!window->isVisible());
+        QPointer<QObject> retainedDevices;
         int recalls=0;
         connect(&host,&HostManager::viewerRecallRequested,this,[&]{recalls++;});
         for(int i=0;i<50;++i) {
             QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession"));
             QCOMPARE(root->property("testDepth").toInt(),3);
+            auto currentDevices = root->property("testCurrentPage").value<QObject*>();
+            if (i == 0) retainedDevices = currentDevices;
+            else QCOMPARE(currentDevices, retainedDevices.data());
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testSettings"));
             QCOMPARE(root->property("testDepth").toInt(),4);
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testSameSettings"));
@@ -844,7 +1051,26 @@ ApplicationWindow {
         auto cardB=b->property("contentItem").value<QObject*>(); QVERIFY(cardB);
         auto cardA=a->property("contentItem").value<QObject*>(); QVERIFY(cardA);
         const int devicePageDepth = root->property("testDepth").toInt();
-        QVERIFY(QMetaObject::invokeMethod(cardA,"settingsRequested"));
+        QVERIFY(QMetaObject::invokeMethod(cardA,"detailsRequested"));
+        auto devicePanel = a->findChild<QObject*>("devicePanel-device-a"); QVERIFY(devicePanel);
+        QTRY_VERIFY(devicePanel->property("visible").toBool());
+        QCOMPARE(root->property("testDepth").toInt(),devicePageDepth);
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/device-panel.png"));
+        }
+        auto panelAlias = findVisual(window->contentItem(),"panel-setAlias-device-a");
+        QVERIFY(panelAlias); QVERIFY(panelAlias->isVisible()); QVERIFY(panelAlias->isEnabled());
+        QVERIFY(QMetaObject::invokeMethod(panelAlias,"clicked"));
+        auto renameDialog = grid->findChild<QObject*>("renameDeviceDialog"); QVERIFY(renameDialog);
+        QTRY_VERIFY(renameDialog->property("visible").toBool());
+        QTRY_VERIFY(!devicePanel->property("visible").toBool());
+        QVERIFY(QMetaObject::invokeMethod(renameDialog,"reject"));
+        QVERIFY(QMetaObject::invokeMethod(cardA,"detailsRequested"));
+        QTRY_VERIFY(devicePanel->property("visible").toBool());
+        auto panelGear = devicePanel->findChild<QObject*>("panelDeviceSettings"); QVERIFY(panelGear);
+        QVERIFY(QMetaObject::invokeMethod(panelGear,"clicked"));
+        QTRY_VERIFY(!devicePanel->property("visible").toBool());
         auto deviceSettingsDialog = grid->findChild<QObject*>("deviceSettingsDialog"); QVERIFY(deviceSettingsDialog);
         QTRY_VERIFY(deviceSettingsDialog->property("visible").toBool());
         QCOMPARE(root->property("testDepth").toInt(),devicePageDepth);
@@ -853,7 +1079,7 @@ ApplicationWindow {
             QTest::qWait(200);
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/device-settings-popup.png"));
         }
-        auto closeDeviceSettings = deviceSettingsDialog->findChild<QObject*>("closeDeviceSettings"); QVERIFY(closeDeviceSettings);
+        auto closeDeviceSettings = deviceSettingsDialog->findChild<QObject*>("panelClose"); QVERIFY(closeDeviceSettings);
         QVERIFY(QMetaObject::invokeMethod(closeDeviceSettings,"clicked"));
         QTRY_VERIFY(!deviceSettingsDialog->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(cardB,"activateRequested"));
@@ -885,16 +1111,37 @@ ApplicationWindow {
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
-            const qreal previousSettledWidth=grid->property("settledWidth").toReal();
             window->resize(width, 620); QTest::qWait(10);
             QVERIFY(grid->property("resizing").toBool());
-            QCOMPARE(grid->property("settledWidth").toReal(),previousSettledWidth);
+            QCOMPARE(grid->property("cellWidth").toInt(),int(grid->property("width").toReal()) / grid->property("columns").toInt());
             QTRY_VERIFY_WITH_TIMEOUT(!grid->property("resizing").toBool(),250);
-            QCOMPARE(grid->property("settledWidth").toReal(),grid->property("width").toReal());
+            QCOMPARE(grid->property("leftMargin").toReal(),0.0);
+            QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
         }
+        // Exercise full rows across fractional widths and every column boundary.
+        auto resizeModel=qobject_cast<TestComputers*>(grid->property("model").value<QObject*>());
+        QVERIFY(resizeModel); resizeModel->setDeviceCount(12);
+        for (int width : {940, 941, 1021, 1174, 1175, 1176, 1410, 1409, 939, 705, 704}) {
+            window->resize(width,620); QTest::qWait(25);
+            const int columns=grid->property("columns").toInt();
+            const qreal cell=grid->property("cellWidth").toReal();
+            for(int i=0; i<columns+1; ++i) {
+                auto item=findVisual(gridItem,"device-"+resizeModel->devices[i]); QVERIFY(item);
+                QVERIFY2(std::abs(item->x()-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
+                QVERIFY2(std::abs(item->y()-(i/columns)*268)<1.0,"card must occupy its expected row during resize");
+                QVERIFY(item->isVisible());
+            }
+        }
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            window->resize(1021,800); QTest::qWait(100);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-resize.png"));
+        }
+        resizeModel->setDeviceCount(2);
         window->resize(800,620); QTest::qWait(100);
+        a=findVisual(gridItem,"device-device-a"); b=findVisual(gridItem,"device-device-b");
+        first=qobject_cast<QQuickItem*>(a); QVERIFY(first && b);
         QVERIFY(arrange->isVisible());
         QVERIFY(QMetaObject::invokeMethod(arrange,"clicked"));
         QVERIFY(grid->property("arranging").toBool());
@@ -966,10 +1213,14 @@ ApplicationWindow {
         QVERIFY(QMetaObject::invokeMethod(folderDialog,"close"));
         QTRY_VERIFY(!folderDialog->property("visible").toBool());
         // Deleting a group keeps its devices: they return where the group was.
-        auto groupMenu=grid->findChild<QObject*>("groupMenu"); QVERIFY(groupMenu);
-        QVERIFY(groupMenu->setProperty("groupId",groupId));
-        auto deleteGroup=grid->findChild<QObject*>("deleteGroup"); QVERIFY(deleteGroup);
-        QVERIFY(QMetaObject::invokeMethod(deleteGroup,"triggered"));
+        auto groupPanel=grid->findChild<QObject*>("groupPanel"); QVERIFY(groupPanel);
+        QVERIFY(QMetaObject::invokeMethod(groupPanel,"openFor",Q_ARG(QVariant,groupId)));
+        QTRY_VERIFY(groupPanel->property("visible").toBool());
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QTest::qWait(200); QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/group-panel.png"));
+        }
+        auto deleteGroup=groupPanel->findChild<QObject*>("deleteGroup"); QVERIFY(deleteGroup);
+        QVERIFY(QMetaObject::invokeMethod(deleteGroup,"clicked"));
         QTRY_COMPARE(computers->rowCount(),2);
         QCOMPARE(computers->data(computers->index(0),Qt::UserRole+1).toString(),QString("device-a"));
         QCOMPARE(computers->data(computers->index(1),Qt::UserRole+1).toString(),QString("device-b"));
@@ -1024,7 +1275,16 @@ ApplicationWindow {
                 QCOMPARE(page->objectName(),QString("Manual"));
                 QVERIFY(findVisual(qobject_cast<QQuickItem*>(page),"chapter0"));
                 QVERIFY(window->grabWindow().save(shots+"/manual-dark.png"));
+                // The page name sits right beside the section buttons and follows them.
+                auto name=findVisual(window->contentItem(),"pageName"); QVERIFY(name);
+                QVERIFY(name->isVisible());
+                QCOMPARE(name->property("text").toString(),QString("Manual"));
+                const QPointF nameEnd=name->mapToScene(QPointF(name->width(),0));
+                const QPointF buttonsStart=qobject_cast<QQuickItem*>(manual)->mapToScene(QPointF(0,0));
+                QVERIFY(nameEnd.x() <= buttonsStart.x());
+                QVERIFY(buttonsStart.x()-nameEnd.x() < 24);
                 QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession")); QTest::qWait(150);
+                QCOMPARE(name->property("text").toString(),QString("Devices"));
             }
             QVERIFY(QMetaObject::invokeMethod(root.data(),"testCards"));
             QTest::qWait(100);
@@ -1037,14 +1297,106 @@ ApplicationWindow {
             QVERIFY(chinese.load(qEnvironmentVariable("TEST_GUI_DIR")+"/../languages/qml_zh_CN.qm"));
             QVERIFY(QCoreApplication::installTranslator(&chinese)); engine.retranslate();
             QTest::qWait(100); QVERIFY(window->grabWindow().save(shots+"/devices-chinese-narrow.png"));
-            QVERIFY(QMetaObject::invokeMethod(root.data(),"testDevice"));
-            QTest::qWait(150); QVERIFY(window->grabWindow().save(shots+"/device-settings-chinese.png"));
-            auto devicePage=root->property("testCurrentPage").value<QObject*>(); QVERIFY(devicePage);
-            auto advanced=devicePage->findChild<QObject*>("deviceAdvancedButton"); QVERIFY(advanced);
-            QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
-            QTest::qWait(200); QVERIFY(window->grabWindow().save(shots+"/device-advanced-chinese.png"));
+            {
+                // Device settings open as a panel over Devices, in Chinese.
+                const int depth=root->property("testDepth").toInt();
+                auto device=findVisual(qobject_cast<QQuickItem*>(current),"device-device-a"); QVERIFY(device);
+                auto panel=device->findChild<QObject*>("devicePanel-device-a"); QVERIFY(panel);
+                QVERIFY(QMetaObject::invokeMethod(panel,"settingsRequested"));
+                auto settingsPanel=current->findChild<QObject*>("deviceSettingsDialog"); QVERIFY(settingsPanel);
+                QTRY_VERIFY(settingsPanel->property("visible").toBool());
+                QTest::qWait(250); QVERIFY(window->grabWindow().save(shots+"/device-settings-chinese.png"));
+                auto advanced=findVisual(window->contentItem(),"deviceAdvancedButton"); QVERIFY(advanced);
+                QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
+                QTest::qWait(250); QVERIFY(window->grabWindow().save(shots+"/device-advanced-chinese.png"));
+                QCOMPARE(root->property("testDepth").toInt(),depth);
+                QVERIFY(QMetaObject::invokeMethod(settingsPanel,"close")); QTest::qWait(250);
+            }
 
             QCoreApplication::removeTranslator(&chinese); engine.retranslate();
+            // Every redesigned surface in both themes, from synthetic data only.
+            for (int mode : {1, 2}) {
+                const QString suffix = mode == 1 ? "-light" : "-dark";
+                auto capture=[&](const QString& name) { QTest::qWait(250); QVERIFY(window->grabWindow().save(shots+"/"+name+suffix+".png")); };
+                QVERIFY(QMetaObject::invokeMethod(root.data(),"testTheme",Q_ARG(QVariant,mode)));
+                window->resize(1120,760);
+                QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession")); QTest::qWait(200);
+                auto page=root->property("testCurrentPage").value<QObject*>(); QVERIFY(page);
+                auto shown=page->property("model").value<QObject*>(); QVERIFY(shown);
+                QVERIFY(QMetaObject::invokeMethod(shown,"setShowAdd",Q_ARG(bool,true)));
+                capture("final-devices");
+                QVERIFY(QMetaObject::invokeMethod(shown,"setSecondState",Q_ARG(int,2)));
+                capture("final-devices-offline");
+                QVERIFY(QMetaObject::invokeMethod(shown,"setSecondState",Q_ARG(int,1)));
+                capture("final-devices-checking");
+                QVERIFY(QMetaObject::invokeMethod(shown,"setSecondState",Q_ARG(int,2)));
+                QTest::qWait(100);
+                {
+                    auto offline=findVisual(qobject_cast<QQuickItem*>(page),"device-device-b"); QVERIFY(offline);
+                    auto card=offline->property("contentItem").value<QObject*>(); QVERIFY(card);
+                    QCOMPARE(card->property("actionText").toString(),QString("Troubleshoot"));
+                    QVERIFY(QMetaObject::invokeMethod(card,"activateRequested"));
+                    auto panel=offline->findChild<QObject*>("devicePanel-device-b"); QVERIFY(panel);
+                    QTRY_VERIFY(panel->property("visible").toBool());
+                    capture("final-panel-offline");
+                    QVERIFY(QMetaObject::invokeMethod(panel,"close")); QTest::qWait(250);
+                }
+                QVERIFY(QMetaObject::invokeMethod(shown,"setSecondState",Q_ARG(int,0)));
+                QVERIFY(QMetaObject::invokeMethod(shown,"setShowAdd",Q_ARG(bool,false))); QTest::qWait(150);
+                auto device=findVisual(qobject_cast<QQuickItem*>(page),"device-device-a"); QVERIFY(device);
+                auto card=device->property("contentItem").value<QObject*>(); QVERIFY(card);
+                QVERIFY(QMetaObject::invokeMethod(card,"detailsRequested"));
+                auto panel=device->findChild<QObject*>("devicePanel-device-a"); QVERIFY(panel);
+                QTRY_VERIFY(panel->property("visible").toBool());
+                capture("final-panel");
+                auto gear=panel->findChild<QObject*>("panelDeviceSettings"); QVERIFY(gear);
+                QVERIFY(QMetaObject::invokeMethod(gear,"clicked"));
+                auto settingsPanel=page->findChild<QObject*>("deviceSettingsDialog"); QVERIFY(settingsPanel);
+                QTRY_VERIFY(settingsPanel->property("visible").toBool());
+                const QSizeF panelSize(settingsPanel->property("width").toReal(),settingsPanel->property("height").toReal());
+                QVERIFY(panelSize.width() <= 460); QVERIFY(panelSize.height() <= 760*0.82+1);
+                capture("final-device-settings");
+                auto policy=findVisual(window->contentItem(),"deviceDisplayPolicy"); QVERIFY(policy);
+                QCOMPARE(policy->property("value").toString(),QString("Main + mirror"));
+                QVERIFY(QMetaObject::invokeMethod(policy,"clicked"));
+                auto options=policy->findChild<QObject*>("deviceDisplayPolicyPanel"); QVERIFY(options);
+                QTRY_VERIFY(options->property("visible").toBool());
+                capture("final-option-panel");
+                QVERIFY(QMetaObject::invokeMethod(options,"close")); QTest::qWait(250);
+                auto advanced=findVisual(window->contentItem(),"deviceAdvancedButton"); QVERIFY(advanced);
+                QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
+                capture("final-device-advanced");
+                QCOMPARE(root->property("testDepth").toInt(),3);
+                QVERIFY(QMetaObject::invokeMethod(settingsPanel,"close")); QTest::qWait(250);
+                auto remove=page->findChild<QObject*>("removeDeviceDialog"); QVERIFY(remove);
+                remove->setProperty("pcName","Studio");
+                QVERIFY(QMetaObject::invokeMethod(remove,"open"));
+                capture("final-remove");
+                QVERIFY(QMetaObject::invokeMethod(remove,"close")); QTest::qWait(250);
+                // Pages below replace this device list; do not use it afterwards.
+                auto manualButton=findVisual(window->contentItem(),"manualButton"); QVERIFY(manualButton);
+                QVERIFY(QMetaObject::invokeMethod(manualButton,"clicked"));
+                capture("final-manual");
+                {
+                    auto manualPage=qobject_cast<QQuickItem*>(root->property("testCurrentPage").value<QObject*>());
+                    auto second=findVisual(manualPage,"chapterHeader1"); QVERIFY(second);
+                    QVERIFY(QMetaObject::invokeMethod(second,"clicked"));
+                    QCOMPARE(manualPage->property("openChapter").toInt(),1);
+                    capture("final-manual-second");
+                    QVERIFY(QMetaObject::invokeMethod(second,"clicked"));
+                    QCOMPARE(manualPage->property("openChapter").toInt(),-1);
+                    QVERIFY(QMetaObject::invokeMethod(findVisual(manualPage,"chapterHeader0"),"clicked"));
+                }
+                auto settingsButton=findVisual(window->contentItem(),"settingsButton"); QVERIFY(settingsButton);
+                QVERIFY(QMetaObject::invokeMethod(settingsButton,"clicked"));
+                capture("final-settings");
+                auto settingsPage=root->property("testCurrentPage").value<QObject*>(); QVERIFY(settingsPage);
+                auto privacy=settingsPage->findChild<QObject*>("privacyPanel"); QVERIFY(privacy);
+                QVERIFY(QMetaObject::invokeMethod(privacy,"open"));
+                capture("final-privacy");
+                QVERIFY(QMetaObject::invokeMethod(privacy,"close")); QTest::qWait(250);
+            }
+            QVERIFY(QMetaObject::invokeMethod(root.data(),"showDevicesDuringSession")); QTest::qWait(250);
         }
         {
             // The selection slides to the section the current page belongs to.
@@ -1110,5 +1462,15 @@ ApplicationWindow {
         }
     }
 };
-QTEST_MAIN(UiPages)
+int main(int argc, char** argv) {
+    QApplication app(argc, argv);
+    QTemporaryDir settings;
+    if (!settings.isValid()) return 1;
+    QCoreApplication::setOrganizationName("DeskPortTests");
+    QCoreApplication::setApplicationName("UiPages");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, settings.path());
+    UiPages tests;
+    return QTest::qExec(&tests, argc, argv);
+}
 #include "ui-pages.moc"

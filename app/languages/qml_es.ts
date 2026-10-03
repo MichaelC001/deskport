@@ -222,6 +222,8 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>Eliminando dispositivo…</translation></message>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>¿Eliminar «%1», su vinculación guardada y sus ajustes de este equipo?</translation></message>
     <message><source>Change address</source><translation>Cambiar dirección</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -494,6 +496,17 @@
         <source>Drag cards to change their order, or onto another device to make a group.</source>
         <translation>Arrastra las tarjetas para cambiar su orden, o sobre otro dispositivo para crear un grupo.</translation>
     </message>
+    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>Hay una sesión abierta con %1. Desconéctala antes de conectarte a otro equipo.</translation></message>
+    <message><source>Finish editing</source><translation>Terminar de editar</translation></message>
+    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>Arrastra los dispositivos para cambiar su orden, o fuera de este panel para sacarlos del grupo.</translation></message>
+    <message><source>Checking…</source><translation>Comprobando…</translation></message>
+    <message><source>Computer</source><translation>Equipo</translation></message>
+    <message><source>This group is empty.</source><translation>Este grupo está vacío.</translation></message>
+    <message><source>Remove device?</source><translation>¿Quitar el dispositivo?</translation></message>
+    <message><source>Remove</source><translation>Quitar</translation></message>
+    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>Al eliminar un grupo se conservan sus dispositivos; vuelven a la lista de dispositivos.</translation></message>
+    <message><source>Open group</source><translation>Abrir grupo</translation></message>
+    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>Solo se muestra en este equipo. Déjalo vacío para usar el nombre original.</translation></message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -607,6 +620,7 @@
 <context>
     <name>Session</name>
     <message><source>Adjusting resolution…</source><translation>Ajustando la resolución…</translation></message>
+    <message><source>Connection interrupted. Reconnecting…</source><translation>Conexión interrumpida. Reconectando…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
@@ -1428,6 +1442,8 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Could not save device removal. Please retry.</source><translation>No se pudo guardar la eliminación del dispositivo. Inténtalo de nuevo.</translation></message>
+    <message><source>Editing</source><translation>Edición</translation></message>
     <message><source>Memory %1</source><translation>Memoria %1</translation></message>
     <message><source>Local memory usage</source><translation>Uso de memoria local</translation></message>
     <message><source>Unavailable</source><translation>No disponible</translation></message>
@@ -1671,6 +1687,19 @@
     <message>
         <source>How to use DeskPort</source>
         <translation>Cómo usar DeskPort</translation>
+    </message>
+    <message><source>Add a legacy host</source><translation>Añadir anfitrión clásico</translation></message>
+    <message>
+        <source>Connecting…</source>
+        <translation>Conectando…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>Desconectando…</translation>
+    </message>
+    <message>
+        <source>Failed</source>
+        <translation>Error</translation>
     </message>
 </context>
 <context>
@@ -2057,6 +2086,19 @@
         <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
         <translation>Desactivar detiene los nuevos registros. Borrar elimina los registros existentes y el ZIP. Nunca se incluyen registros sin filtrar de versiones anteriores.</translation>
     </message>
+    <message><source>System</source><translation>Sistema</translation></message>
+    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>Desactivado de forma predeterminada. Los registros permanecen en este equipo hasta que los compartas. Consulta Privacidad para ver qué se registra.</translation></message>
+    <message><source>About</source><translation>Acerca de</translation></message>
+    <message><source>Version</source><translation>Versión</translation></message>
+    <message><source>Privacy</source><translation>Privacidad</translation></message>
+    <message><source>Licenses</source><translation>Licencias</translation></message>
+    <message><source>Create ZIP and open issue</source><translation>Crear ZIP y abrir incidencia</translation></message>
+    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort no tiene cuenta ni servidor de DeskPort. Tus dispositivos se conectan directamente entre sí. Los ajustes, los dispositivos guardados y las autorizaciones permanecen en este equipo.</translation></message>
+    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>Para buscar actualizaciones, DeskPort consulta a GitHub la versión más reciente. Como Moonlight, descarga de moonlight-stream.org datos públicos de compatibilidad de anfitriones y asignaciones de mandos. Informar de un problema solo abre un borrador de incidencia en tu navegador; tú decides qué enviar.</translation></message>
+    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort es software libre bajo la Licencia Pública General de GNU, versión 3 o posterior. Deriva de Moonlight Qt e incluye un anfitrión Sunshine modificado.</translation></message>
+    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>El catálogo compartido de DeskPort está disponible bajo la licencia MIT. Los iconos de sistemas operativos son de dominio público (CC0 1.0).</translation></message>
+    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt, FFmpeg, SDL y las demás bibliotecas incluidas conservan sus propias licencias. Sus avisos se incluyen en cada paquete.</translation></message>
+    <message><source>Source code and modifications: %1</source><translation>Código fuente y modificaciones: %1</translation></message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2543,6 +2585,7 @@
         <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
         <translation>¿Olvidar el vínculo guardado para %1 en este dispositivo? Elimínalo por separado de Dispositivos. Para revocar el acceso de este dispositivo, elimínalo también en el host.</translation>
     </message>
+    <message><source>Remove</source><translation>Quitar</translation></message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2818,6 +2861,8 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>Se agotó el tiempo de carga del escritorio. Vuelva a Dispositivos e inténtelo de nuevo.</translation></message>
 <message><source>Connecting to desktop…</source><translation>Conectando al escritorio…</translation></message>
 <message><source>Back to devices</source><translation>Volver a Dispositivos</translation></message>
+    <message><source>Close</source><translation>Cerrar</translation></message>
+    <message><source>Cancel</source><translation>Cancelar</translation></message>
 </context>
 <context>
     <name>DeviceSettings</name>
@@ -2887,7 +2932,8 @@
     <message><source>Use client as an extended screen</source><translation>Usar el cliente como pantalla extendida</translation></message>
     <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>La disposición anterior de las pantallas se restaura automáticamente al finalizar la sesión.</translation></message>
     <message><source>Desktop adjustment</source><translation>Ajuste del escritorio</translation></message>
-    <message><source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>0,5 amplía los controles; 1,5 muestra más contenido. Se aplica después de calcular automáticamente el tamaño del escritorio. Durante una conexión se aplica inmediatamente.</translation></message>
+    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1,5 amplía los controles; 0,5 muestra más contenido. Se aplica después de calcular automáticamente el tamaño del escritorio. Durante una conexión se aplica inmediatamente.</translation></message>
+    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>Se alcanzó el escritorio mínimo de macOS (800 × 600): no se puede ampliar más en esta ventana. Usa pantalla completa o una ventana más grande.</translation></message>
     <message>
         <source>Full screen</source>
         <translation>Pantalla completa</translation>
@@ -2896,6 +2942,13 @@
         <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
         <translation>Durante una conexión, Ctrl+Alt+Mayús+X también alterna la pantalla completa.</translation>
     </message>
+    <message><source>Desktop fine tuning</source><translation>Ajuste fino del escritorio</translation></message>
+    <message><source>Main + mirror</source><translation>Principal + duplicar</translation></message>
+    <message><source>Main only</source><translation>Solo principal</translation></message>
+    <message><source>Extended</source><translation>Extendida</translation></message>
+    <message><source>Fit to window</source><translation>Ajustar a la ventana</translation></message>
+    <message><source>Sound</source><translation>Sonido</translation></message>
+    <message><source>Input</source><translation>Entrada</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
@@ -3135,6 +3188,17 @@
         <source>Report a problem</source>
         <translation>Informar de un problema</translation>
     </message>
+    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>Automático ajusta el límite a la resolución. El ahorro usa 30 fps y limita el vídeo a 5 Mbps.</translation></message>
+    <message><source>Picture mode</source><translation>Modo de imagen</translation></message>
+    <message><source>Automatic (recommended)</source><translation>Automático (recomendado)</translation></message>
+    <message><source>Clear</source><translation>Nitidez</translation></message>
+    <message><source>Smooth</source><translation>Fluidez</translation></message>
+    <message><source>Save data</source><translation>Ahorrar datos</translation></message>
+    <message><source>Custom</source><translation>Personalizado</translation></message>
+    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>Durante una conexión, Ctrl+Alt+Mayús+X también alterna la pantalla completa.</translation></message>
+    <message><source>Bandwidth</source><translation>Ancho de banda</translation></message>
+    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
+    <message><source>All streaming options</source><translation>Todas las opciones de transmisión</translation></message>
 </context>
 <context>
     <name>SdlInputHandler</name>
@@ -3146,5 +3210,45 @@
     <name>ClipboardChannel</name>
     <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>Se detuvo el uso compartido del portapapeles. Vuelve a conectarte para reintentarlo.</translation></message>
     <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>El portapapeles compartido no está disponible. Vuelve a conectarte para reintentarlo; el control del escritorio no se ve afectado.</translation></message>
+</context>
+<context>
+    <name>NavigableDialog</name>
+    <message><source>Close</source><translation>Cerrar</translation></message>
+</context>
+<context>
+    <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>Eliminar dispositivo</translation></message>
+    <message><source>Connected</source><translation>Conectado</translation></message>
+    <message><source>Checking…</source><translation>Comprobando…</translation></message>
+    <message><source>Online</source><translation>En línea</translation></message>
+    <message><source>Online · access not set up</source><translation>En línea · acceso sin configurar</translation></message>
+    <message><source>Offline</source><translation>Sin conexión</translation></message>
+    <message><source>Device settings</source><translation>Ajustes del dispositivo</translation></message>
+    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>Comprueba que DeskPort o el anfitrión se estén ejecutando en %1 y que ambos dispositivos puedan comunicarse. Actualizar en la barra superior vuelve a comprobarlo.</translation></message>
+    <message><source>Original name</source><translation>Nombre original</translation></message>
+    <message><source>System</source><translation>Sistema</translation></message>
+    <message><source>Unknown</source><translation>Desconocido</translation></message>
+    <message><source>Connection</source><translation>Conexión</translation></message>
+    <message><source>DeskPort binding</source><translation>Vinculación de DeskPort</translation></message>
+    <message><source>Legacy pairing</source><translation>Emparejamiento clásico</translation></message>
+    <message><source>Not set up</source><translation>Sin configurar</translation></message>
+    <message><source>Address</source><translation>Dirección</translation></message>
+    <message><source>Technical details</source><translation>Detalles técnicos</translation></message>
+    <message><source>Reconnect</source><translation>Reconectar</translation></message>
+    <message><source>Toggle full screen</source><translation>Alternar pantalla completa</translation></message>
+    <message><source>Disconnect</source><translation>Desconectar</translation></message>
+    <message><source>Change address</source><translation>Cambiar dirección</translation></message>
+    <message><source>Set alias</source><translation>Establecer alias</translation></message>
+    <message><source>Pair with a legacy PIN</source><translation>Emparejar con PIN clásico</translation></message>
+    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>Para Sunshine u otros anfitriones sin vinculación de DeskPort.</translation></message>
+    <message><source>Move out of group</source><translation>Sacar del grupo</translation></message>
+    <message><source>Remove from list</source><translation>Quitar de la lista</translation></message>
+</context>
+<context>
+    <name>HelpView</name>
+    <message><source>Manual</source><translation>Manual</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>Desconectando…</translation></message>
 </context>
 </TS>

@@ -89,8 +89,8 @@ if (state / "credentials/cert.pem").exists():
                 if output["status"]:
                     stored = json.loads((state / "state.json").read_text())
                     devices = stored["root"].get("named_devices", []) or []
-                    devices = [item for item in devices if item["uuid"] != body["uuid"] and item.get("cert") != body["cert"]]
-                    devices.append(dict(body, enabled="true"))
+                    devices = [item for item in devices if item["uuid"] != body["uuid"] and (body.get("remove") or item.get("cert") != body["cert"])]
+                    if not body.get("remove"): devices.append(dict(body, enabled="true"))
                     stored["root"]["named_devices"] = devices
                     (state / "state.json").write_text(json.dumps(stored))
                 data = json.dumps(output).encode()
@@ -101,7 +101,12 @@ if (state / "credentials/cert.pem").exists():
             output = dict(status=True, version=1)
             if self.command == "POST":
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                if body.get("action") == "release":
+                if body.get("action") == "video":
+                    output["status"] = bool(current["lease"]) and current["lease"] == body.get("lease") and current["sessions"] <= 1
+                    if output["status"]:
+                        current["paused"] = body["paused"]
+                        current["videoCommands"] = current.get("videoCommands", 0) + 1
+                elif body.get("action") == "release":
                     if current["lease"] == body.get("lease"):
                         current.update(lease="", generation=current["generation"] + 1)
                 elif body.get("action") == "acquire":
@@ -132,7 +137,7 @@ else:
         linux_display = linux_host.parent / "deskport-display"
         linux_display.write_text(display.read_text())
         linux_display.chmod(0o700)
-    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"]
+    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"] + sorted("ui/" + p.name for p in (root / "app/res/ui").glob("*.svg"))
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
     if "--ui" in sys.argv:
@@ -143,7 +148,7 @@ else:
             + f'</qresource><qresource prefix="/manual"><file alias="manual.json">{manual}</file></qresource></RCC>'))
     for executable in (display, host):
         executable.chmod(0o700)
-    binding = "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
+    binding = "--sessions" in sys.argv or "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
     if "--ui" in sys.argv:
@@ -151,7 +156,10 @@ else:
         extra_headers += f' "{root}/app/gui/manual.h"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
-    suite = "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
+    if "--sessions" in sys.argv:
+        extra_sources += f' "{root}/app/backend/multisessions.cpp" "{root}/app/gui/hostlayout.cpp"'
+        extra_headers += f' "{root}/app/backend/multisessions.h"'
+    suite = "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"
     project.write_text(f'''QT += core gui widgets network testlib qml quick quickcontrols2
 linux: QT += dbus

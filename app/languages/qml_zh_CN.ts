@@ -222,6 +222,8 @@
 </context>
 <context>
     <name>PcView</name>
+    <message><source>Removing device…</source><translation>正在删除设备…</translation></message>
+    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>从本机彻底删除“%1”、已保存的绑定和设备设置？</translation></message>
     <message><source>Change address</source><translation>更改地址</translation></message>
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
@@ -502,6 +504,17 @@
         <source>Drag cards to change their order, or onto another device to make a group.</source>
         <translation>拖动卡片调整顺序，拖到另一台设备上即可组成分组。</translation>
     </message>
+    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>与 %1 的会话仍在进行。请先断开，再连接其他电脑。</translation></message>
+    <message><source>Finish editing</source><translation>完成编辑</translation></message>
+    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>拖动设备可调整顺序，拖出此面板即可移出分组。</translation></message>
+    <message><source>Checking…</source><translation>正在检查…</translation></message>
+    <message><source>Computer</source><translation>电脑</translation></message>
+    <message><source>This group is empty.</source><translation>此分组为空。</translation></message>
+    <message><source>Remove device?</source><translation>移除设备？</translation></message>
+    <message><source>Remove</source><translation>移除</translation></message>
+    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>删除分组不会删除其中的设备，它们会回到设备列表。</translation></message>
+    <message><source>Open group</source><translation>打开分组</translation></message>
+    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>仅在这台电脑上显示。留空则使用原名称。</translation></message>
 </context>
 <context>
     <name>PendingPairingTask</name>
@@ -616,6 +629,7 @@
     <name>Session</name>
     <message><source>This connection was taken over by another device.</source><translation>连接已被其他客户端接管。</translation></message>
     <message><source>Adjusting resolution…</source><translation>正在调整分辨率…</translation></message>
+    <message><source>Connection interrupted. Reconnecting…</source><translation>连接中断，正在重新连接…</translation></message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
@@ -1460,6 +1474,13 @@
 </context>
 <context>
     <name>main</name>
+    <message><source>Connecting…</source><translation>连接中…</translation></message>
+    <message><source>Disconnecting…</source><translation>正在断开…</translation></message>
+    <message><source>Failed</source><translation>失败</translation></message>
+    <message><source>Disconnected</source><translation>已断开</translation></message>
+    <message><source>Disconnect</source><translation>断开连接</translation></message>
+
+    <message><source>Could not save device removal. Please retry.</source><translation>无法保存设备删除操作，请重试。</translation></message>
     <message><source>Memory %1</source><translation>内存 %1</translation></message>
     <message><source>Local memory usage</source><translation>本机内存占用</translation></message>
     <message><source>Unavailable</source><translation>不可用</translation></message>
@@ -1468,6 +1489,7 @@
     <message><source>Helpers: %1</source><translation>辅助进程：%1</translation></message>
     <message><source>Some processes could not be sampled.</source><translation>部分进程无法采样。</translation></message>
     <message><source>Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak.</source><translation>本机客户端及其直接子进程的驻留内存，窗口可见时每 3 秒刷新。共享内存页可能重复计数，不包含远端机器及部分 GPU 显存。占用增加不一定意味着泄漏。</translation></message>
+    <message><source>Editing</source><translation>编辑中</translation></message>
     <message><source>Update available</source><translation>有更新</translation></message>
     <message><source>DeskPort updates</source><translation>DeskPort 更新</translation></message>
     <message><source>Checking for updates…</source><translation>正在检查更新…</translation></message>
@@ -1671,6 +1693,7 @@
         <source>How to use DeskPort</source>
         <translation>DeskPort 使用说明</translation>
     </message>
+    <message><source>Add a legacy host</source><translation>添加传统主机</translation></message>
 </context>
 <context>
     <name>SettingsHome</name>
@@ -2056,6 +2079,19 @@
         <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
         <translation>关闭日志会停止新记录。清除诊断资料会删除已有日志和生成的 ZIP。不会包含旧版产生的原始日志。</translation>
     </message>
+    <message><source>System</source><translation>系统</translation></message>
+    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>默认关闭。日志只保存在这台电脑上，除非你主动分享。记录内容见“隐私”。</translation></message>
+    <message><source>About</source><translation>关于</translation></message>
+    <message><source>Version</source><translation>版本</translation></message>
+    <message><source>Privacy</source><translation>隐私</translation></message>
+    <message><source>Licenses</source><translation>许可证</translation></message>
+    <message><source>Create ZIP and open issue</source><translation>生成 ZIP 并打开问题草稿</translation></message>
+    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort 没有账号，也没有 DeskPort 服务器。你的设备之间直接连接。设置、已保存的设备和授权都只保存在这台电脑上。</translation></message>
+    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>检查更新时，DeskPort 会向 GitHub 查询最新版本。与 Moonlight 一样，它会从 moonlight-stream.org 下载公开的主机兼容性数据和手柄映射。报告问题只会在浏览器中打开问题草稿，提交什么由你决定。</translation></message>
+    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort 是自由软件，采用 GNU 通用公共许可证第 3 版或更高版本。它衍生自 Moonlight Qt，并包含经过修改的 Sunshine 主机。</translation></message>
+    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>共享的 DeskPort 目录采用 MIT 许可证。操作系统图标已贡献至公有领域（CC0 1.0）。</translation></message>
+    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt、FFmpeg、SDL 及其他随附的库保留各自的许可证，相关声明随各安装包一同提供。</translation></message>
+    <message><source>Source code and modifications: %1</source><translation>源代码和修改：%1</translation></message>
 </context>
 <context>
     <name>DeviceCard</name>
@@ -2545,6 +2581,7 @@
         <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
         <translation>要忘记此设备上为 %1 保存的绑定吗？请另行从“设备”中移除它。若要撤销此设备的访问权限，还需在主机端将其移除。</translation>
     </message>
+    <message><source>Remove</source><translation>移除</translation></message>
 </context>
 <context>
     <name>SetupView</name>
@@ -2650,6 +2687,9 @@
 </context>
 <context>
     <name>HostManager</name>
+    <message><source>Connections</source><translation>连接列表</translation></message>
+    <message><source>Show desktop</source><translation>显示桌面</translation></message>
+
     <message>
         <source>Restart</source>
         <translation>重启</translation>
@@ -2818,6 +2858,38 @@
         <source>Cannot enable login startup.</source>
         <translation>无法开启登录启动。</translation>
     </message>
+    <message>
+        <source>More</source>
+        <translation>更多</translation>
+    </message>
+    <message>
+        <source>Connecting…</source>
+        <translation>连接中…</translation>
+    </message>
+    <message>
+        <source>Disconnecting…</source>
+        <translation>正在断开…</translation>
+    </message>
+    <message>
+        <source>All connections (%1)…</source>
+        <translation>全部连接（%1）…</translation>
+    </message>
+    <message>
+        <source>Disconnect “%1”</source>
+        <translation>断开“%1”</translation>
+    </message>
+    <message>
+        <source>Reconnect “%1”</source>
+        <translation>重新连接“%1”</translation>
+    </message>
+    <message>
+        <source>DeskPort · %1 connected</source>
+        <translation>DeskPort · 已连接 %1 台</translation>
+    </message>
+    <message>
+        <source>DeskPort · %1 connected · showing %2</source>
+        <translation>DeskPort · 已连接 %1 台 · 正在显示 %2</translation>
+    </message>
 </context>
 <context>
 <name>DesktopSegue</name>
@@ -2828,6 +2900,8 @@
 <message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>加载桌面超时。请返回设备列表重试。</translation></message>
 <message><source>Connecting to desktop…</source><translation>正在连接桌面…</translation></message>
 <message><source>Back to devices</source><translation>返回设备列表</translation></message>
+    <message><source>Close</source><translation>关闭</translation></message>
+    <message><source>Cancel</source><translation>取消</translation></message>
 </context>
 <context>
     <name>DeviceSettings</name>
@@ -2906,8 +2980,12 @@
         <translation>桌面微调</translation>
     </message>
     <message>
-        <source>0.5 makes controls larger; 1.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
-        <translation>0.5 显示更大的控件；1.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
+        <source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+        <translation>1.5 显示更大的控件；0.5 显示更多内容。在自动计算的桌面大小上微调。连接中修改会立即生效。</translation>
+    </message>
+    <message>
+        <source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source>
+        <translation>已达到 macOS 最小桌面（800 × 600），当前窗口无法再放大。可改用全屏或更大的窗口。</translation>
     </message>
     <message>
         <source>Full screen</source>
@@ -2917,6 +2995,13 @@
         <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
         <translation>连接中也可以按 Ctrl+Alt+Shift+X 切换全屏。</translation>
     </message>
+    <message><source>Desktop fine tuning</source><translation>桌面微调</translation></message>
+    <message><source>Main + mirror</source><translation>主屏 + 镜像</translation></message>
+    <message><source>Main only</source><translation>仅主屏</translation></message>
+    <message><source>Extended</source><translation>扩展</translation></message>
+    <message><source>Fit to window</source><translation>适应窗口</translation></message>
+    <message><source>Sound</source><translation>声音</translation></message>
+    <message><source>Input</source><translation>输入</translation></message>
 </context>
 <context>
     <name>DeviceAdvanced</name>
@@ -3156,6 +3241,17 @@
         <source>Report a problem</source>
         <translation>报告问题</translation>
     </message>
+    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>自动模式按分辨率选择带宽上限。节省流量模式使用 30 fps，视频上限为 5 Mbps。</translation></message>
+    <message><source>Picture mode</source><translation>画面模式</translation></message>
+    <message><source>Automatic (recommended)</source><translation>自动（推荐）</translation></message>
+    <message><source>Clear</source><translation>清晰优先</translation></message>
+    <message><source>Smooth</source><translation>流畅优先</translation></message>
+    <message><source>Save data</source><translation>节省流量</translation></message>
+    <message><source>Custom</source><translation>自定义</translation></message>
+    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>连接中也可以按 Ctrl+Alt+Shift+X 切换全屏。</translation></message>
+    <message><source>Bandwidth</source><translation>带宽</translation></message>
+    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
+    <message><source>All streaming options</source><translation>全部串流选项</translation></message>
 </context>
 <context>
     <name>Diagnostics</name>
@@ -3206,5 +3302,59 @@
     <name>ClipboardChannel</name>
     <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>剪贴板共享已停止，请重新连接后重试。</translation></message>
     <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>剪贴板共享不可用，请重新连接后重试；桌面控制不受影响。</translation></message>
+</context>
+<context>
+    <name>NavigableDialog</name>
+    <message><source>Close</source><translation>关闭</translation></message>
+</context>
+<context>
+    <name>DevicePanel</name>
+    <message><source>Remove device</source><translation>删除设备</translation></message>
+    <message><source>Connected</source><translation>已连接</translation></message>
+    <message><source>Checking…</source><translation>正在检查…</translation></message>
+    <message><source>Online</source><translation>在线</translation></message>
+    <message><source>Online · access not set up</source><translation>在线 · 未设置访问</translation></message>
+    <message><source>Offline</source><translation>离线</translation></message>
+    <message><source>Device settings</source><translation>设备设置</translation></message>
+    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>请确认 %1 上的 DeskPort 或主机正在运行，并且两台设备能互相访问。顶栏中的刷新会重新检查。</translation></message>
+    <message><source>Original name</source><translation>原名称</translation></message>
+    <message><source>System</source><translation>系统</translation></message>
+    <message><source>Unknown</source><translation>未知</translation></message>
+    <message><source>Connection</source><translation>连接方式</translation></message>
+    <message><source>DeskPort binding</source><translation>DeskPort 绑定</translation></message>
+    <message><source>Legacy pairing</source><translation>传统配对</translation></message>
+    <message><source>Not set up</source><translation>未设置</translation></message>
+    <message><source>Address</source><translation>地址</translation></message>
+    <message><source>Technical details</source><translation>技术详情</translation></message>
+    <message><source>Reconnect</source><translation>重新连接</translation></message>
+    <message><source>Toggle full screen</source><translation>切换全屏</translation></message>
+    <message><source>Disconnect</source><translation>断开连接</translation></message>
+    <message><source>Change address</source><translation>更改地址</translation></message>
+    <message><source>Set alias</source><translation>设置别名</translation></message>
+    <message><source>Pair with a legacy PIN</source><translation>使用传统 PIN 配对</translation></message>
+    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>适用于 Sunshine 或其他不支持 DeskPort 绑定的主机。</translation></message>
+    <message><source>Move out of group</source><translation>移出分组</translation></message>
+    <message><source>Remove from list</source><translation>从列表移除</translation></message>
+</context>
+<context>
+    <name>HelpView</name>
+    <message><source>Manual</source><translation>手册</translation></message>
+</context>
+<context><name>MainWindow</name>
+    <message><source>Disconnecting…</source><translation>正在断开连接…</translation></message>
+</context>
+<context>
+    <name>MultiSessions</name>
+    <message><source>The device binding is unavailable. Refresh the device and try again.</source><translation>设备绑定不可用，请刷新设备后重试。</translation></message>
+    <message><source>This connection would create a loop.</source><translation>此连接会造成环路。</translation></message>
+    <message><source>The desktop worker could not start.</source><translation>无法启动桌面会话进程。</translation></message>
+    <message><source>The desktop worker stopped unexpectedly.</source><translation>桌面会话进程意外停止。</translation></message>
+    <message><source>The desktop worker did not respond.</source><translation>桌面会话进程未响应。</translation></message>
+</context>
+<context>
+    <name>SessionWorker</name>
+    <message><source>Another application is running on that server.</source><translation>该服务器上正在运行其他应用。</translation></message>
+    <message><source>Connection failed at %1 (%2).</source><translation>连接在 %1 阶段失败（%2）。</translation></message>
+    <message><source>The device binding is unavailable.</source><translation>设备绑定不可用。</translation></message>
 </context>
 </TS>

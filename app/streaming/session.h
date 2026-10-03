@@ -119,6 +119,7 @@ public:
     virtual ~Session() {};
 
     bool viewerReady() const { return m_ViewerReady.load(); }
+    bool inputDispatching() const { return m_InputDispatching.load(); }
     Q_INVOKABLE void setViewerRequested(bool visible) { m_ViewerRequested = visible; }
     QString hostId() const;
     QString hostName() const;
@@ -127,12 +128,17 @@ private:
     quint64 m_TrafficReceivedBase = 0, m_TrafficSentBase = 0;
 public:
     Q_INVOKABLE void exec(QWindow* qtWindow);
-    Q_INVOKABLE bool adaptiveRestartPending() const { return m_NetworkRetry || m_ManualReconnect || m_AdaptiveNextSize.isValid(); }
+    Q_INVOKABLE bool adaptiveRestartPending() const { return !m_RecoveryCancelled && (m_NetworkRetry || m_ManualReconnect || m_AdaptiveNextSize.isValid()); }
     Q_INVOKABLE Session* adaptiveContinuation();
+private:
+    Session* continuationSession();
+public:
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
     void requestReconnect();
     bool leaveFullscreen();
+    // Asks a multi-session shell to present its next connected desktop.
+    void requestNextViewer();
     Q_INVOKABLE int retryDelay() const { return m_RecoveryDeadline ? qMin(4000, 1000 << qMin(m_RecoveryAttempt, 2)) : 0; }
     Q_INVOKABLE void cancelRecovery() { m_RecoveryCancelled = true; m_NetworkRetry = false; }
 private:
@@ -145,6 +151,16 @@ private:
 public:
     double desktopAdjustment() const { return m_Preferences->desktopAdjustment; }
     Q_INVOKABLE void setDesktopAdjustment(double value);
+    // True while the host's minimum desktop prevents the requested enlargement.
+    bool desktopTuningLimited() const { return m_DesktopTuningLimited.load(); }
+    // Applies an already saved tuning value to the running stream. The stream
+    // restarts only if the resulting desktop differs from the current one.
+    void applyDesktopAdjustment(double value) { m_PendingDesktopAdjustment = value; }
+private:
+    bool applyPendingDesktopAdjustment();
+    mutable std::atomic<bool> m_DesktopTuningLimited{false};
+    std::atomic<double> m_PendingDesktopAdjustment{0};
+public:
 
     static
     void getDecoderInfo(SDL_Window* window,
@@ -182,20 +198,31 @@ signals:
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
     void transportCleanupFinished();
+    void presentationHidden();
+    void presentationShown();
 
 private:
+    std::atomic<bool> m_InputDispatching{false};
     std::atomic<bool> m_ViewerReady{false}, m_ViewerRequested{true};
     void setViewerReady(bool ready) { if (m_ViewerReady.exchange(ready) != ready) emit viewerReadyChanged(); }
     ResizeSettler m_ResizeSettler;
+    // Window state before a presentation hide. Wayland compositors can map a
+    // re-shown window unmaximized; restoring it must not look like a resize.
+    Uint32 m_HiddenWindowFlags = 0;
+    Uint32 m_RecallGraceUntil = 0;
+    void hideViewerWindow();
     bool m_ExecRequested = false;
     SessionLifetime m_Lifetime{this, [this] { emit readyForDeletion(); }};
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
+    void pumpTransitionWindow();
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
     bool m_SessionAdmissionFailed = false;
     QString m_SessionTopologyError;
     std::shared_ptr<TransitionWindow> m_TransitionWindow;
     QTimer* m_TransitionTimer = nullptr;
+    // Services a retained window while no SDL owner is running.
+    void pumpTransitionWindowBetweenSessions();
     QSize m_AdaptiveNextSize, m_AdaptiveObservedSize;
     QByteArray m_WindowOutputs;
     QString m_LastWindowRecord;

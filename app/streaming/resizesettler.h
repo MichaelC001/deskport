@@ -7,6 +7,7 @@
 class ResizeSettler {
 public:
     static constexpr quint32 QuietMs = 500;
+    void reset() { m_Valid = false; }
     bool update(QSize size, int scale, quint32 now, bool dragging) {
         if (!size.isValid()) { m_Valid = false; return false; }
         if (!m_Valid || size != m_Size || scale != m_Scale || dragging) {

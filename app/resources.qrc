@@ -20,6 +20,56 @@
 <file>gui/UiTheme.qml</file>
 <file>gui/UiPage.qml</file>
 <file>gui/UiCard.qml</file>
+<file>gui/UiIconButton.qml</file>
+<file>gui/UiIconTile.qml</file>
+<file>gui/UiRow.qml</file>
+<file>gui/UiGroup.qml</file>
+<file>gui/UiOptionPanel.qml</file>
+<file>gui/UiChoiceRow.qml</file>
+<file>gui/UiSegmented.qml</file>
+<file>gui/DevicePanel.qml</file>
+        <file>res/ui/accent.svg</file>
+        <file>res/ui/address.svg</file>
+        <file>res/ui/bandwidth.svg</file>
+        <file>res/ui/check.svg</file>
+        <file>res/ui/chevron.svg</file>
+        <file>res/ui/clipboard.svg</file>
+        <file>res/ui/close.svg</file>
+        <file>res/ui/diagnostics.svg</file>
+        <file>res/ui/disconnect.svg</file>
+        <file>res/ui/edit.svg</file>
+        <file>res/ui/fit.svg</file>
+        <file>res/ui/fullscreen.svg</file>
+        <file>res/ui/group.svg</file>
+        <file>res/ui/guide.svg</file>
+        <file>res/ui/info.svg</file>
+        <file>res/ui/input.svg</file>
+        <file>res/ui/language.svg</file>
+        <file>res/ui/legacy.svg</file>
+        <file>res/ui/licenses.svg</file>
+        <file>res/ui/link.svg</file>
+        <file>res/ui/more.svg</file>
+        <file>res/ui/move-out.svg</file>
+        <file>res/ui/picture.svg</file>
+        <file>res/ui/pin.svg</file>
+        <file>res/ui/plus.svg</file>
+        <file>res/ui/pointer.svg</file>
+        <file>res/ui/power.svg</file>
+        <file>res/ui/privacy.svg</file>
+        <file>res/ui/rate.svg</file>
+        <file>res/ui/reconnect.svg</file>
+        <file>res/ui/report.svg</file>
+        <file>res/ui/screen.svg</file>
+        <file>res/ui/scroll.svg</file>
+        <file>res/ui/shortcuts.svg</file>
+        <file>res/ui/sound.svg</file>
+        <file>res/ui/stats.svg</file>
+        <file>res/ui/theme.svg</file>
+        <file>res/ui/traffic.svg</file>
+        <file>res/ui/trash.svg</file>
+        <file>res/ui/tuning.svg</file>
+        <file>res/ui/window.svg</file>
+        <file>res/ui/wrench.svg</file>
 <file>gui/UiButton.qml</file>
 <file>gui/DeviceCard.qml</file>
 <file>gui/SetupView.qml</file>

@@ -39,6 +39,13 @@ QString AppModel::getRunningAppName()
     return nullptr;
 }
 
+QVariantMap AppModel::managedTarget(int index) const {
+    if (!m_Computer || index < 0 || index >= m_VisibleApps.size()) return {};
+    QReadLocker lock(&m_Computer->lock);
+    return {{"id",m_Computer->uuid},{"name",m_Computer->name},
+        {"address",m_Computer->activeAddress.address()},{"app",m_VisibleApps.at(index).name}};
+}
+
 Session* AppModel::createSessionForApp(int appIndex)
 {
     Q_ASSERT(appIndex < m_VisibleApps.count());
