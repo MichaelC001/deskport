@@ -20,7 +20,7 @@ class HostManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantList permissions READ permissions NOTIFY permissionsChanged)
     Q_PROPERTY(bool setupComplete READ setupComplete NOTIFY permissionsChanged)
-    Q_PROPERTY(QString deviceName READ deviceName CONSTANT)
+    Q_PROPERTY(QString deviceName READ deviceName NOTIFY changed)
     Q_PROPERTY(QUrl applicationUrl READ applicationUrl CONSTANT)
     Q_PROPERTY(int displayScale READ displayScale NOTIFY changed)
     Q_PROPERTY(int displayWidth READ displayWidth NOTIFY changed)
@@ -43,7 +43,7 @@ class HostManager : public QObject {
     Q_PROPERTY(QString displayWarning READ displayWarning NOTIFY changed)
     Q_PROPERTY(QString status READ status NOTIFY changed)
 public:
-    explicit HostManager(QObject *parent = nullptr, const QString &directory = QString());
+    explicit HostManager(QObject *parent = nullptr, const QString &directory = QString(), bool interactive = true);
     ~HostManager();
     virtual bool available() const;
 #ifdef Q_OS_WIN
@@ -55,6 +55,7 @@ public:
     QVariantList permissions() const;
     bool setupComplete() const;
     QString deviceName() const;
+    bool setDeviceName(const QString& name);
     QUrl applicationUrl() const;
     int displayScale() const { return m_DisplayScale; }
     QJsonArray displayModes() const { return m_DisplayModes; }
@@ -160,6 +161,7 @@ private:
     QByteArray m_Buffer;
     QString m_LinuxOutputName;
     bool m_LinuxGnome = false;
+    bool m_LinuxHyprland = false;
     quint32 m_LinuxPipewireNode = 0;
     QString m_LinuxPipewireSerial;
     bool saveLinuxDisplayState();

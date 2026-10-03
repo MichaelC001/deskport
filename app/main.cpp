@@ -15,6 +15,9 @@
 #include "backend/sessionworker.h"
 #include "backend/peermanager.h"
 #include "backend/singleinstance.h"
+#include "cli/hostcontrol.h"
+#include "cli/hostsetup.h"
+#include "cli/hostdaemon.h"
 #include "version.h"
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
@@ -339,11 +342,14 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("deskport.keithxc.github.io");
     QCoreApplication::setApplicationName(isolatedSessionTest ? "DeskPortSessionTest" : "DeskPort");
 
+    QStringList commandArguments;
+    for (int i = 0; i < argc; ++i) commandArguments.append(QString::fromLocal8Bit(argv[i]));
+    const bool basicQuery = argc == 2 && (commandArguments[1] == "--version" || commandArguments[1] == "-v" ||
+                                        commandArguments[1] == "--help" || commandArguments[1] == "-h");
+    const bool hostHelp = commandArguments.value(1) == "host" &&
+        (commandArguments.contains("--help") || commandArguments.contains("-h"));
+    if (basicQuery || hostHelp || DeskPortCli::isControlCommand(commandArguments) || DeskPortCli::isSetupCommand(commandArguments)) {
 #ifdef Q_OS_WIN
-    // Read-only CLI queries must work in an SSH session without initializing
-    // a graphical desktop, settings, media devices, or a hosting instance.
-    if (argc == 2 && (QByteArray(argv[1]) == "--version" || QByteArray(argv[1]) == "-v" ||
-                      QByteArray(argv[1]) == "--help" || QByteArray(argv[1]) == "-h")) {
         const HANDLE cliOut = GetStdHandle(STD_OUTPUT_HANDLE);
         const HANDLE cliErr = GetStdHandle(STD_ERROR_HANDLE);
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
@@ -352,12 +358,22 @@ int main(int argc, char *argv[])
             if (!cliErr || cliErr == INVALID_HANDLE_VALUE)
                 freopen("CONOUT$", "w", stderr);
         }
+#endif
         QCoreApplication cli(argc, argv);
+        if (hostHelp) {
+            fputs("Usage: deskport host run [--no-share]\n"
+                  "Run the Linux host in the foreground without a window.\n"
+                  "--no-share starts management with sharing disabled.\n"
+                  "A compositor, capture, input, audio and encoder must already be available.\n"
+                  "Use deskport doctor to inspect prerequisites.\n", stdout);
+            return 0;
+        }
+        if (DeskPortCli::isControlCommand(commandArguments)) return DeskPortCli::runControlCommand(commandArguments);
+        if (DeskPortCli::isSetupCommand(commandArguments)) return DeskPortCli::runSetupCommand(commandArguments);
         GlobalCommandLineParser parser;
         parser.parse(cli.arguments());
         return 0;
     }
-#endif
 
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -371,6 +387,8 @@ int main(int argc, char *argv[])
         // Initialize paths for standard installation
         Path::initialize(false);
     }
+
+    if (commandArguments.value(1) == "host") return DeskPortCli::runHostDaemon(argc, argv);
 
     // Override the default QML cache directory with the one we chose
     if (qEnvironmentVariableIsEmpty("QML_DISK_CACHE_PATH")) {
@@ -959,6 +977,9 @@ int main(int argc, char *argv[])
     });
 #endif
     PeerManager peerManager(&hostManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
+    DeskPortCli::ControlServer controlServer(&hostManager, &peerManager);
+    if (resident && !controlServer.listen())
+        qWarning() << "Cannot open the local CLI endpoint:" << controlServer.errorString();
     MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
     multiSessions = &managedSessions;
     QObject::connect(&Diagnostics::instance(), &Diagnostics::changed, &managedSessions, [&managedSessions] {

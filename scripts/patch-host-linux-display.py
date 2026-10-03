@@ -77,6 +77,46 @@ edit('kwingrab.cpp', '      if (screencast->start(display_name) < 0) {', '''    
         } catch (const std::exception&) { return -1; }
       }
       if (screencast->start(target) < 0) {''')
+# Hyprland's dedicated headless output uses direct WLR screencopy. Keep the
+# admitted identity during enumeration, then verify its descriptor and pixels
+# before attaching; an absent output must never become the first physical one.
+edit('wlgrab.cpp', '#include "src/video.h"', '''#include "src/video.h"
+#include "src/config.h"
+#include <boost/property_tree/json_parser.hpp>
+#include <fstream>''')
+edit('wlgrab.cpp', '      auto monitor = interface.monitors[0].get();', '''      if (interface.monitors.empty()) return -1;
+      auto monitor = interface.monitors[0].get();
+      std::string owned_output;
+      int owned_width = 0, owned_height = 0, owned_scale = 0;
+      if (const auto path = std::getenv("DESKPORT_VIRTUAL_DISPLAY")) {
+        try {
+          boost::property_tree::ptree state;
+          boost::property_tree::read_json(path, state);
+          owned_output = state.get<std::string>("output");
+          owned_width = state.get<int>("width");
+          owned_height = state.get<int>("height");
+          owned_scale = state.get<int>("scale");
+          if (!owned_output.starts_with("DeskPort-") || owned_output != display_name ||
+              owned_width < 640 || owned_width > 7680 || owned_height < 360 || owned_height > 4320 ||
+              owned_width % 4 || owned_height % 4 || (owned_scale != 1 && owned_scale != 2)) return -1;
+        } catch (const std::exception&) {
+          BOOST_LOG(error) << "DeskPort owned Hyprland output is not admitted";
+          return -1;
+        }
+      }''')
+edit('wlgrab.cpp', '        if (!matched) {', '''        if (!matched && (!owned_output.empty() || display_name.starts_with("DeskPort-"))) {
+          BOOST_LOG(error) << "DeskPort owned Hyprland output disappeared; refusing physical display fallback";
+          return -1;
+        }
+        if (!matched) {''')
+edit('wlgrab.cpp', '      output = monitor->output;', '''      if (!owned_output.empty() && (monitor->viewport.width != owned_width || monitor->viewport.height != owned_height ||
+          monitor->viewport.logical_width * owned_scale != owned_width || monitor->viewport.logical_height * owned_scale != owned_height)) {
+        BOOST_LOG(error) << "DeskPort owned Hyprland output mode does not match its admission";
+        return -1;
+      }
+      output = monitor->output;''')
+edit('wlgrab.cpp', '    return display_names;', '''    if (config::video.output_name.starts_with("DeskPort-")) return {config::video.output_name};
+    return display_names;''')
 main = root / 'src/main.cpp'
 original = main.read_text()
 anchor = 'if (video::probe_encoders()) {'

@@ -53,7 +53,7 @@
 #include "macunattended.h"
 #endif
 
-HostManager::HostManager(QObject *parent, const QString &directory) : QObject(parent) {
+HostManager::HostManager(QObject *parent, const QString &directory, bool interactive) : QObject(parent) {
 #if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
     m_CaretMonitor=new HostCaretMonitor(this,[this](const QJsonObject& caret){emit caretChanged(caret);});
     connect(&m_Display,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this]{m_CaretMonitor->stop();});
@@ -131,6 +131,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxGnome = object["gnome"].toBool();
+                m_LinuxHyprland = object["backend"].toString() == "hyprland";
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
                     beginStop(tr("Invalid virtual display identity")); return;
                 }
@@ -233,6 +234,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
+                m_LinuxHyprland = object["backend"].toString() == "hyprland";
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
@@ -354,10 +356,10 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
     updateTrayIcon();
     qApp->installEventFilter(this);
     m_Tray.setToolTip("DeskPort");
-    if (!m_Isolated) m_Tray.show();
+    if (!m_Isolated && interactive) m_Tray.show();
     connect(qApp, &QCoreApplication::aboutToQuit, this, [this] { m_ShuttingDown = true; m_RecoveryTimer.stop(); beginStop(tr("Sharing is off")); });
 #ifdef Q_OS_MACOS
-    if (!m_Isolated) {
+    if (!m_Isolated && interactive) {
         // A manual launch resumes a prior "Pause and quit"; the paused helper
         // never launches us itself. A normal login still follows the login item.
         if (unattendedEnabled()) unattendedMarker("paused", false);
@@ -370,8 +372,10 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
         connect(qApp, &QGuiApplication::applicationStateChanged, this, [this] { refreshUnattended(); });
     }
 #endif
-    if (directory.isEmpty() && setupComplete() && !QSettings().contains("host/startAtLogin")) setLoginStart(true);
-    if (directory.isEmpty() && loginStart()) setLoginStart(true); // Refresh installed paths and older startup entries.
+    if (interactive && directory.isEmpty() && !loginStartManaged()) {
+        if (setupComplete() && !QSettings().contains("host/startAtLogin")) setLoginStart(true);
+        if (loginStart()) setLoginStart(true); // Refresh only startup entries owned by the GUI.
+    }
 #ifdef Q_OS_WIN
     // A fresh Windows profile shares on first launch, before setup is completed.
     // Keep an explicit stop authoritative, including profiles without the newer key.
@@ -379,7 +383,7 @@ HostManager::HostManager(QObject *parent, const QString &directory) : QObject(pa
 #else
     const bool defaultShareOnLaunch = false;
 #endif
-    if (directory.isEmpty() && available() && ((loginStart() && !QSettings().value("host/sharingDisabled", false).toBool()) || QSettings().value("host/shareOnLaunch", defaultShareOnLaunch).toBool()) &&
+    if (interactive && directory.isEmpty() && available() && ((loginStart() && !QSettings().value("host/sharingDisabled", false).toBool()) || QSettings().value("host/shareOnLaunch", defaultShareOnLaunch).toBool()) &&
             !QCoreApplication::arguments().contains("--no-host-autostart")) {
         QTimer::singleShot(0, this, [this] {
             QSettings settings;
@@ -634,10 +638,12 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     // stderr is consumed by the shared diagnostics sink; stdout is the control protocol.
 #ifdef Q_OS_LINUX
-    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false;
+    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxHyprland = false;
     QFile::remove(m_Directory + "/virtual-display.json");
     const auto desktops = qgetenv("XDG_CURRENT_DESKTOP").split(':');
-    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME"))) {
+    const bool hyprland = qgetenv("XDG_CURRENT_DESKTOP").toLower().split(':').contains("hyprland") ||
+        !qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE");
+    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME") && !hyprland)) {
         setStatus(tr("Starting desktop sharing…"));
         startServer(0);
     } else
@@ -701,7 +707,7 @@ void HostManager::startServer(int displayId) {
     config.setPermissions(QFile::ReadOwner | QFile::WriteOwner);
     config.write(QString("file_apps = %1/apps.json\nfile_state = %1/state.json\npkey = %1/credentials/key.pem\ncert = %1/credentials/cert.pem\ncredentials_file = %1/control.json\nlog_path = %2\n").arg(m_Directory, QProcess::nullDevice()).toUtf8());
     config.write("stream_audio = enabled\n");
-    QString deviceName = QHostInfo::localHostName().left(64);
+    QString deviceName = this->deviceName().left(64);
     deviceName.replace('\n', ' '); deviceName.replace('\r', ' ');
     if (deviceName.trimmed().isEmpty()) deviceName = "DeskPort";
     config.write(QString("sunshine_name = %2\nport = %1\naddress_family = ipv4\nupnp = disabled\nsystem_tray = disabled\nmin_log_level = 2\norigin_web_ui_allowed = pc\n").arg(m_BasePort).arg(deviceName).toUtf8());
@@ -745,7 +751,7 @@ void HostManager::startServer(int displayId) {
 #endif
 #ifdef Q_OS_LINUX
     config.write(QString("output_name = %1\n").arg(m_LinuxOutputName).toUtf8());
-    config.write(!m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
+    config.write(m_LinuxHyprland ? "capture = wlr\n" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }
 #ifdef Q_OS_WIN
@@ -902,7 +908,20 @@ void HostManager::pair(const QString &pin, const QString &name) {
 }
 int HostManager::sharingWidth() const { return QSettings().value("host/width", 2560).toInt(); }
 int HostManager::sharingHeight() const { return QSettings().value("host/height", 1440).toInt(); }
-QString HostManager::deviceName() const { return QHostInfo::localHostName(); }
+QString HostManager::deviceName() const { return QSettings().value("host/name", QHostInfo::localHostName()).toString(); }
+bool HostManager::setDeviceName(const QString& name) {
+    if (running()) { setStatus(tr("Stop sharing before changing the device name.")); return false; }
+    if (name.trimmed().isEmpty() || name.size() > 64) { setStatus(tr("Device name must contain 1 to 64 characters.")); return false; }
+    for (const QChar character : name) if (character.category() == QChar::Other_Control) {
+        setStatus(tr("Device name must not contain control characters.")); return false;
+    }
+    QSettings settings;
+    settings.setValue("host/name", name.trimmed());
+    settings.sync();
+    if (settings.status() != QSettings::NoError) { setStatus(tr("Cannot save the device name.")); return false; }
+    emit changed();
+    return true;
+}
 QUrl HostManager::applicationUrl() const {
 #ifdef Q_OS_MACOS
     return QUrl::fromLocalFile(QDir::cleanPath(QCoreApplication::applicationDirPath() + "/../.."));
@@ -973,17 +992,14 @@ void HostManager::openLogs() { Diagnostics::instance().feedback(); }
 
 bool HostManager::loginStartManaged() const {
 #ifdef Q_OS_LINUX
-    return DeskPortService::storeManaged(DeskPortService::autostartPath()) ||
-           DeskPortService::storeManaged(DeskPortService::unitPath());
+    return DeskPortService::startupManagedElsewhere(DeskPortService::unitPath(), DeskPortService::autostartPath());
 #else
     return false;
 #endif
 }
 bool HostManager::loginStart() const {
 #ifdef Q_OS_LINUX
-    // 系统配置接管时以磁盘为准: 自启由它开关, 我们自己那份 QSettings 不作数。
-    if (loginStartManaged())
-        return QFile::exists(DeskPortService::autostartPath()) || QFile::exists(DeskPortService::unitPath());
+    if (loginStartManaged()) return DeskPortService::startupEnabled();
 #endif
     return QSettings().value("host/startAtLogin", false).toBool();
 }
@@ -1105,8 +1121,7 @@ void HostManager::setLoginStart(bool enabled) {
 #elif defined(Q_OS_LINUX)
     const QString path = DeskPortService::autostartPath();
     if (loginStartManaged()) {
-        // Nix 优先: 它已经装好了自启, 这里一个字都不写, 免得两边来回覆盖。
-        setStatus(tr("Login startup is managed by your system configuration")); emit changed(); return;
+        setStatus(tr("Login startup is managed by an existing service or system configuration")); emit changed(); return;
     }
     if (enabled) {
         QDir().mkpath(QFileInfo(path).absolutePath());
@@ -1260,7 +1275,7 @@ bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
     return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
-    return adaptiveDisplayAvailable() && !m_LinuxGnome;
+    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxHyprland;
 #else
     return adaptiveDisplayAvailable();
 #endif

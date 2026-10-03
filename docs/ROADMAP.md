@@ -1,3 +1,24 @@
+## SSH host management and Omarchy — 2026-10-03
+
+Reason: a Linux host must be configurable and manageable through SSH, including
+Omarchy/Hyprland sessions and VPS desktops without a local control window.
+
+- Add a user-scoped local management endpoint for status, sharing, device
+  approvals and configuration. Keep the existing binding authorization and
+  credentials; expose no network management API or automatic approval.
+- Add a foreground Linux host, service configuration and prerequisite diagnostics.
+  A VPS still needs a compositor, capture, input, audio and encoding resources.
+- Implement Hyprland virtual output ownership and direct capture of that output.
+  Keep physical monitor layouts intact; unavailable capture must fail explicitly.
+- Native Linux builds, the packaged CLI without a display, 13 control tests,
+  12 service tests, 30 Linux setup checks and 21 Hyprland fixture checks pass.
+  A real isolated Hyprland compositor passes three pixel/scale modes, WLR
+  capture and software H.264 probing, target-loss rejection and cleanup after
+  disconnect, EOF, SIGKILL and group SIGTERM. See [CLI verification](CLI.md).
+- Next checkpoint: an Omarchy installation and a real client must verify
+  frames, input/audio, reconnect and reboot/logout behavior. The isolated
+  checks do not establish unattended acceptance on a GPU-less VPS.
+
 ## Linux repository packaging — 2026-09-27
 
 Prepare AUR `deskport-bin` from the stable portable archive and a standalone

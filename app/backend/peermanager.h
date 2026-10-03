@@ -55,6 +55,7 @@ signals:
     void incomingRequest();
     void peerBound(QVariantMap peer, bool explicitAdd = false);
     void deviceRemovalFinished(QString hostId, bool success);
+    void bindingFinished(QString requestId, bool success);
 protected:
     virtual qint64 nativeClipboardRevision() const;
 private:

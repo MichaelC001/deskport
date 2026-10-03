@@ -148,9 +148,11 @@ else:
             + f'</qresource><qresource prefix="/manual"><file alias="manual.json">{manual}</file></qresource></RCC>'))
     for executable in (display, host):
         executable.chmod(0o700)
-    binding = "--sessions" in sys.argv or "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv
+    binding = "--sessions" in sys.argv or "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv or "--cli" in sys.argv
     extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
+    if "--cli" in sys.argv:
+        extra_sources += f' "{root}/app/cli/hostcontrol.cpp"'
     if "--ui" in sys.argv:
         extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp"'
         extra_headers += f' "{root}/app/gui/manual.h"'
@@ -159,7 +161,7 @@ else:
     if "--sessions" in sys.argv:
         extra_sources += f' "{root}/app/backend/multisessions.cpp" "{root}/app/gui/hostlayout.cpp"'
         extra_headers += f' "{root}/app/backend/multisessions.h"'
-    suite = "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
+    suite = "host-control" if "--cli" in sys.argv else "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"
     project.write_text(f'''QT += core gui widgets network testlib qml quick quickcontrols2
 linux: QT += dbus
@@ -184,6 +186,10 @@ macx {{
             else:
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
     environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"), XDG_DATA_HOME=str(work / "data"))
+    if "--cli" in sys.argv:
+        environment["DESKPORT_CLI_TEST_CONFIG"] = str(work / "cli-config")
+    if "--service" in sys.argv:
+        environment["DESKPORT_SERVICE_TEST_CONFIG"] = environment["XDG_CONFIG_HOME"]
     if sys.platform != "darwin":
         environment["XDG_CURRENT_DESKTOP"] = "KDE"
         environment["WAYLAND_DISPLAY"] = "deskport-isolated-fake"

@@ -34,7 +34,7 @@ private slots:
         const auto unit = DeskPortService::systemdUnit("/tmp/path with spaces/percent%/deskport");
         QVERIFY(unit.contains("ExecStart=\"/tmp/path with spaces/percent%%/deskport\" --background"));
         QVERIFY(unit.contains("Restart=on-failure"));
-        QVERIFY(unit.contains("KillMode=control-group"));
+        QVERIFY(unit.contains("KillMode=mixed"));
         QVERIFY(DeskPortService::desktopEntry().contains("systemctl --user start"));
     }
     void declarativeConfigurationKeepsOwnershipOfLoginStartup() {
@@ -48,6 +48,93 @@ private slots:
         QVERIFY(!DeskPortService::storeManaged(dir.path() + "/missing.desktop"));
         QVERIFY(QFile::link(dir.path() + "/elsewhere", dir.path() + "/other.desktop"));
         QVERIFY(!DeskPortService::storeManaged(dir.path() + "/other.desktop"));
+    }
+    void guiStartupProtectsCliManualAndEditedUnits() {
+        QTemporaryDir dir;
+        const auto unit = dir.filePath("io.github.keithxc.DeskPort.service");
+        const auto desktop = dir.filePath("io.github.keithxc.DeskPort.desktop");
+        const auto write = [&](const QString& path, const QByteArray& bytes) {
+            QFile file(path); return file.open(QIODevice::WriteOnly) && file.write(bytes) == bytes.size();
+        };
+        QVERIFY(!DeskPortService::startupManagedElsewhere(unit, desktop));
+        auto generated = DeskPortService::systemdUnit("/old/install/deskport").toUtf8();
+        QVERIFY(write(unit, generated));
+        QVERIFY(DeskPortService::guiManagedUnit(unit));
+        QVERIFY(!DeskPortService::startupManagedElsewhere(unit, desktop));
+        const int bodyAt = generated.indexOf("[Unit]");
+        auto legacy = generated.mid(bodyAt);
+        QVERIFY(write(unit, legacy)); QVERIFY(DeskPortService::guiManagedUnit(unit));
+        legacy.replace("KillMode=mixed", "KillMode=control-group");
+        QVERIFY(write(unit, legacy)); QVERIFY(DeskPortService::guiManagedUnit(unit));
+        auto manualArguments = legacy;
+        manualArguments.replace("/old/install/deskport", "/old/install/deskport\" --custom \"/fake/deskport");
+        QVERIFY(write(unit, manualArguments)); QVERIFY(!DeskPortService::guiManagedUnit(unit));
+        QVERIFY(write(unit, generated.replace("/old/install", "/user/edited")));
+        QVERIFY(DeskPortService::startupManagedElsewhere(unit, desktop));
+        QVERIFY(write(unit, "# Managed by DeskPort CLI v1\n[Service]\nExecStart=/usr/bin/deskport host run\n"));
+        QVERIFY(DeskPortService::startupManagedElsewhere(unit, desktop));
+        QVERIFY(write(unit, "[Service]\nExecStart=/manual/deskport --background\n"));
+        QVERIFY(DeskPortService::startupManagedElsewhere(unit, desktop));
+        QVERIFY(write(unit, DeskPortService::systemdUnit("/usr/bin/deskport").toUtf8()));
+        QVERIFY(write(desktop, "[Desktop Entry]\nType=Application\nExec=/manual/deskport\n"));
+        QVERIFY(DeskPortService::startupManagedElsewhere(unit, desktop));
+        QVERIFY(write(desktop, DeskPortService::desktopEntry().toUtf8()));
+        QVERIFY(!DeskPortService::startupManagedElsewhere(unit, desktop));
+        QVERIFY(QDir().mkpath(unit + ".d"));
+        QVERIFY(write(unit + ".d/manual.conf", "[Service]\nEnvironment=EXAMPLE=1\n"));
+        QVERIFY(DeskPortService::startupManagedElsewhere(unit, desktop));
+    }
+    void installedServiceDoesNotMeanEnabledStartup() {
+        QTemporaryDir dir;
+        const auto unit = dir.filePath("io.github.keithxc.DeskPort.service");
+        const auto desktop = dir.filePath("io.github.keithxc.DeskPort.desktop");
+        QFile file(unit); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("[Service]\nExecStart=/usr/bin/deskport host run\n"); file.close();
+        QVERIFY(!DeskPortService::startupEnabled(unit, desktop, {dir.path()}));
+        QVERIFY(QDir().mkpath(dir.filePath("default.target.wants")));
+        QVERIFY(QFile::link(unit, dir.filePath("default.target.wants/io.github.keithxc.DeskPort.service")));
+        QVERIFY(DeskPortService::startupEnabled(unit, desktop, {dir.path()}));
+        QVERIFY(QFile::remove(dir.filePath("default.target.wants/io.github.keithxc.DeskPort.service")));
+        QVERIFY(!DeskPortService::startupEnabled(unit, desktop, {dir.path()}));
+        QFile entry(desktop); QVERIFY(entry.open(QIODevice::WriteOnly));
+        entry.write(DeskPortService::desktopEntry().toUtf8()); entry.close();
+        QVERIFY(DeskPortService::startupEnabled(unit, desktop, {dir.path()}));
+        QVERIFY(entry.open(QIODevice::Append)); entry.write("Hidden=true\n"); entry.close();
+        QVERIFY(!DeskPortService::startupEnabled(unit, desktop, {dir.path()}));
+    }
+    void guiConstructorPreservesInstalledCliService() {
+#ifdef Q_OS_LINUX
+        const auto fixture = qEnvironmentVariable("DESKPORT_SERVICE_TEST_CONFIG");
+        QVERIFY2(!fixture.isEmpty() && QDir(fixture).isAbsolute(), "Run via test-host-lifecycle.py --service with an isolated profile");
+        const auto unit = DeskPortService::unitPath();
+        const auto desktop = DeskPortService::autostartPath();
+        QVERIFY(unit.startsWith(fixture + '/')); QVERIFY(desktop.startsWith(fixture + '/'));
+        QVERIFY(!QFileInfo::exists(unit)); QVERIFY(!QFileInfo::exists(desktop));
+        QVERIFY(QDir().mkpath(QFileInfo(unit).absolutePath()));
+        const QByteArray cliUnit = "# Managed by DeskPort CLI v1\n[Service]\nExecStart=/usr/bin/deskport host run\n";
+        QFile file(unit); QVERIFY(file.open(QIODevice::WriteOnly)); file.write(cliUnit); file.close();
+        QSettings settings;
+        settings.setValue("setup/completed", true);
+        settings.setValue("host/startAtLogin", true);
+        settings.setValue("host/sharingDisabled", true);
+        settings.setValue("host/shareOnLaunch", false);
+        {
+            HostManager host;
+            QVERIFY(host.loginStartManaged()); QVERIFY(!host.loginStart());
+            QVERIFY(!host.running());
+            QCOMPARE(DeskPortService::startupFile(unit), cliUnit);
+            host.setLoginStart(true); host.setLoginStart(false);
+            QCOMPARE(DeskPortService::startupFile(unit), cliUnit);
+            QVERIFY(!QFileInfo::exists(desktop));
+            const auto wants = QFileInfo(unit).absolutePath() + "/default.target.wants";
+            QVERIFY(QDir().mkpath(wants));
+            const auto enabled = wants + '/' + QFileInfo(unit).fileName();
+            QVERIFY(QFile::link(unit, enabled)); QVERIFY(host.loginStart());
+            QVERIFY(QFile::remove(enabled));
+        }
+        QVERIFY(QFile::remove(unit));
+        settings.clear();
+#endif
     }
     void isolatedTestsNeverRegisterSystemServices() {
         QTemporaryDir dir; HostManager host(nullptr, dir.path());

@@ -170,7 +170,10 @@ nix build
 The viewer's third-party source dependencies are vendored; the shared core and
 Nix build inputs remain pinned external dependencies. Native builds must initialize
 `shared/deskport-core`. See [docs/VENDORED.md](docs/VENDORED.md).
-`nix run . -- --help` prints the inherited command-line interface. Start Sharing on the host and bind the devices before connecting. Legacy
+For SSH setup, local host management, VPS prerequisites and Omarchy/Hyprland,
+see the [CLI guide](docs/CLI.md). `deskport doctor` checks hosting prerequisites;
+`deskport status --json` inspects the running instance without opening a window.
+`nix run . -- --help` lists the command-line interface. Start Sharing on the host and bind the devices before connecting. Legacy
 Sunshine PIN pairing is also available. No personal host or pairing
 credential is included or imported from Moonlight.
 New manual addresses default to DeskPort's port `48989`. Include the port shown

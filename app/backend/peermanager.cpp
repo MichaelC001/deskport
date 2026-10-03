@@ -304,9 +304,9 @@ void PeerManager::releaseClientFullscreen() {
 bool PeerManager::save() { return PeerStore::write(m_Path, {{"version", 1}, {"peers", m_Peers}}); }
 QJsonObject PeerManager::metadata() const {
     if (m_ClientOnly) return {{"version", 1}, {"clientBinding", 1}, {"role", "client"},
-                              {"name", QHostInfo::localHostName().left(64)}};
+                              {"name", m_Host->deviceName().left(64)}};
     auto meta = m_Host->identity();
-    meta["name"] = QHostInfo::localHostName().left(64);
+    meta["name"] = m_Host->deviceName().left(64);
     meta["dnsName"] = dnsName(QHostInfo::localHostName());
     meta["os"] = QSysInfo::prettyProductName();
     meta["version"] = 1;
@@ -863,6 +863,7 @@ void PeerManager::finish(Link* link) {
     connect(link->socket, &QSslSocket::disconnected, link, &QObject::deleteLater);
     link->socket->disconnectFromHost();
     QTimer::singleShot(2000, link, &QObject::deleteLater); emit changed();
+    emit bindingFinished(link->transaction, true);
 }
 void PeerManager::transportLost(Link* link) {
     if (link->recovering) return;
@@ -882,6 +883,7 @@ void PeerManager::transportLost(Link* link) {
 }
 void PeerManager::fail(Link* link, const QString& message) {
     if (link->ended) return;
+    const bool binding = m_Link == link;
     const bool visible = m_Link == link || m_SessionLink == link ||
                          m_DisplayLink == link || m_ClipboardLink == link;
     if (!link->endpointRefresh) qWarning() << "Binding:" << message;
@@ -907,6 +909,7 @@ void PeerManager::fail(Link* link, const QString& message) {
     connect(link->socket, &QSslSocket::disconnected, link, &QObject::deleteLater);
     link->socket->disconnectFromHost();
     QTimer::singleShot(2000, link, &QObject::deleteLater); emit changed();
+    if (binding) emit bindingFinished(link->transaction, false);
 }
 void PeerManager::sessionError(Link* link, const QString& code) {
     send(link, {{"type", DP_MESSAGE_SESSION_RESULT}, {"admitted", false}, {"code", code},

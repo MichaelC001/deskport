@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // A connection-owned KWin primary output with temporary physical-screen mirroring.
 #include "gnome-display.h"
+#include "hyprland-display.h"
 #include "text-caret.h"
 #include "kwin-permission.h"
 #include <QCoreApplication>
@@ -481,6 +482,7 @@ private:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     const auto args = app.arguments();
+    if (args.size() == 3 && args[1] == "--restore-hyprland") return restoreHyprlandDisplay(args[2]);
     if (args.value(1)=="--text-caret") return runTextCaretProbe(args);
     if (args.size() == 3 && args[1] == "--restore-kwin") {
         Display restore;
@@ -508,6 +510,8 @@ int main(int argc, char** argv) {
         reply({{"error", "Expected width and height (640x360 through 7680x4320, aligned to four)"}}); return 2;
     }
     if (qgetenv("XDG_CURRENT_DESKTOP").split(':').contains("GNOME")) return runGnomeDisplay(args[1].toInt(), args[2].toInt());
+    if (qgetenv("XDG_CURRENT_DESKTOP").toLower().split(':').contains("hyprland") || !qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE"))
+        return runHyprlandDisplay(args[1].toInt(), args[2].toInt());
     Display display;
     if (!display.start(args[1].toInt(), args[2].toInt())) { reply({{"error", display.lastError()}}); return 1; }
     if (qEnvironmentVariableIntValue("DESKPORT_DISPLAY_ON_DEMAND") == 1)
