@@ -81,7 +81,7 @@ private slots:
     }
     void invalidInvitationAddresses_data() {
         QTest::addColumn<QString>("address");
-        for (const auto& value : QStringList{"", "host:0", "host:65536", "https://host", "user@host", "host/path", "host?x", "host#x", "host\n", "[fe80::1%en0]:48991", "2001:db8::1", "-bad.example", "bad..example", QString(254,'a')})
+        for (const auto& value : QStringList{"", "host:0", "host:65536", "https://host", "user@host", "host/path", "host?x", "host#x", "host\n", "[fe80::1%en0]:48991", "2001:db8::1", "-bad.example", "bad..example", "999.999.999.999:48991", QString(254,'a')})
             QTest::newRow(qPrintable(value)) << value;
     }
     void invalidInvitationAddresses() {
