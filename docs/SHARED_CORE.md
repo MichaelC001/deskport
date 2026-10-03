@@ -126,14 +126,15 @@ merged into core `main` as `4e80ab8`, keeping main's newer full-screen manual
 text. DeskPort `main` now pins that core `main` revision in both the Git
 submodule and flake.lock.
 
-## QR invitation development candidate — 2026-10-04
+## Reachable QR invitation dev pins — 2026-10-04
 
-This candidate pins core `e7b4a47` and an identical immutable Nix store snapshot.
+This candidate pins published core `e7b4a47` in both the Git submodule and Nix.
 Only `protocol/PAIRING_INVITES.md` and its shared URI fixtures are added relative
 to the desktop's prior core. Native adapters implement the optional invitation
 capability without changing the binding version. The mobile candidate uses the
 same contract and fixtures on its previous core base (`83235de`) to preserve
-its existing workspace behavior. These local pins are development inputs;
-publish reviewed core commits and restore a reachable immutable source before
-public consumer integration. Core/pin verification and adapter tests remain
-required. No release or host activation is performed by updating a core pin.
+its existing workspace behavior. Both commits are reachable from core `dev`
+through merge `b5472b7`, whose tree is identical to `e7b4a47`. The remote Nix
+input retains the verified local snapshot's NAR hash. Core/pin verification and
+adapter tests remain required. No release or host activation is performed by
+updating a core pin.
