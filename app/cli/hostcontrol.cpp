@@ -288,8 +288,9 @@ int runControlCommand(const QStringList& arguments) {
     return printResult(result, json);
 }
 
-ControlServer::ControlServer(HostManager* host, PeerManager* peers, QObject* parent, const QString& directory)
-    : QObject(parent), m_Host(host), m_Peers(peers), m_Name(socketName(directory)) {
+ControlServer::ControlServer(HostManager* host, PeerManager* peers, QObject* parent,
+                             const QString& directory, const QString& mode)
+    : QObject(parent), m_Host(host), m_Peers(peers), m_Name(socketName(directory)), m_Mode(mode) {
     m_Server.setSocketOptions(QLocalServer::UserAccessOption);
     m_Server.setMaxPendingConnections(16);
     connect(&m_Server, &QLocalServer::newConnection, this, [this] { acceptConnections(); });
@@ -350,6 +351,15 @@ void ControlServer::acceptConnections() {
         receive();
     }
 }
+QJsonObject ControlServer::currentStatus() const {
+    auto result = status(m_Host, m_Peers);
+    result["mode"] = m_Mode;
+    if (m_StatusExtension) {
+        const auto extension = m_StatusExtension();
+        for (auto it = extension.begin(); it != extension.end(); ++it) result[it.key()] = it.value();
+    }
+    return result;
+}
 void ControlServer::dispatch(QObject* context, const QStringList& args) {
     auto request = static_cast<Request*>(context);
     if (args == QStringList{"web", "info"}) {
@@ -361,7 +371,7 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
             failure("unavailable", "Browser pairing management is unavailable in this instance."));
         return;
     }
-    if (args[0] == "status") { request->finish(success(status(m_Host, m_Peers))); return; }
+    if (args[0] == "status") { request->finish(success(currentStatus())); return; }
     if (args == QStringList{"config", "get"}) { request->finish(success(config(m_Host, m_Peers))); return; }
     if (args == QStringList{"devices", "list"}) {
         QJsonArray devices;
@@ -394,14 +404,19 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
         request->finish(invitation.isEmpty() ? failure("invite-failed", m_Peers->status()) : success(invitation)); return;
     }
     if (args[0] == "sharing") {
+        if (m_Mode != QStringLiteral("desktop")) {
+            request->finish(failure("unsupported",
+                "Seamless sharing follows the foreground host lifetime; restart `deskport host run --mode seamless` to change it."));
+            return;
+        }
         if (m_Host->changing() || m_Peers->busy()) { request->finish(failure("busy", "Host or device access is changing; retry after it completes.")); return; }
         const bool start = args[1] == "start";
-        if (start && m_Host->canPair()) { request->finish(success(status(m_Host, m_Peers))); return; }
+        if (start && m_Host->canPair()) { request->finish(success(currentStatus())); return; }
         if (start && !m_Host->available()) { request->finish(failure("unavailable", "The bundled sharing host is unavailable.")); return; }
         const auto completed = [this, request, start] {
             if (request->finished || m_Host->changing()) return;
-            if (start && m_Host->canPair()) request->finish(success(status(m_Host, m_Peers)));
-            else if (!m_Host->running()) request->finish(start ? failure("start-failed", m_Host->status()) : success(status(m_Host, m_Peers)));
+            if (start && m_Host->canPair()) request->finish(success(currentStatus()));
+            else if (!m_Host->running()) request->finish(start ? failure("start-failed", m_Host->status()) : success(currentStatus()));
         };
         connect(m_Host, &HostManager::changed, request, completed);
         if (start) m_Host->start(QSettings().value("host/width", 2560).toInt(), QSettings().value("host/height", 1440).toInt());

@@ -26,6 +26,7 @@ qtCompileTest(EGL)
 
 linux {
     SUBDIRS += host/linux
+    SUBDIRS += host/linux/seamless
 }
 
 win32:!winrt {

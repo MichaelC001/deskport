@@ -30,6 +30,7 @@ if (core / '.git').exists():
     elif revision != pinned.get('rev'):
         raise SystemExit('Core submodule and flake.lock differ; update both pins before building')
 subprocess.run([sys.executable, str(core / 'tests/test_session_graph.py')], check=True)
+subprocess.run([sys.executable, str(core / 'tests/test_seamless_protocol.py')], check=True)
 subprocess.run([sys.executable, str((core) / 'portable/test_catalog.py')], check=True)
 subprocess.run([sys.executable, str(core / 'tests/test_workspace.py'),
                 '--qt-header', str(root / 'app/backend/workspaceresolution.h')], check=True)

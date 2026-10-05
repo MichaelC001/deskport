@@ -10,7 +10,7 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y --no-install-recommends \
     build-essential git ca-certificates curl file patchelf squashfs-tools zstd python3 \
-    qt6-base-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools qt6-wayland \
+    qt6-base-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools qt6-wayland qt6-wayland-dev \
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript \
     libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \

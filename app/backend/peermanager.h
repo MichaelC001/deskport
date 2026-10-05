@@ -22,7 +22,7 @@ class PeerManager : public QObject {
     Q_PROPERTY(int port READ port NOTIFY changed)
     Q_PROPERTY(QVariantList peers READ peers NOTIFY changed)
 public:
-    enum class Mode { PlatformDefault, ClientOnly };
+    enum class Mode { PlatformDefault, ClientOnly, SeamlessHost };
     PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                 const QString& directory = QString(), quint16 port = 48991,
                 const QHostAddress& listenAddress = QHostAddress::AnyIPv4,
@@ -42,6 +42,7 @@ public:
     QJsonObject sessionPeer(const QString& hostId) const;
     QJsonObject createInvitation(const QString& address, int lifetimeSeconds = 300);
     bool revokeInvitation();
+    void setSeamlessAvailable(bool available);
     Q_INVOKABLE bool setConnectionPort(int port);
     Q_INVOKABLE void request(const QString& address);
     Q_INVOKABLE void approve(const QString& transaction);
@@ -81,6 +82,7 @@ private:
     QJsonObject metadata() const;
     bool save();
     bool consumeInvitation(const QJsonValue& token);
+    bool authorizationHostReady() const;
     void sessionRequest(Link* link, const QJsonObject& message);
     void sessionRequestVerified(Link* link, const QJsonObject& message);
     int m_TopologyOperations = 0;
@@ -92,6 +94,8 @@ private:
     QHostAddress m_ListenAddress;
     bool m_Persistent;
     const bool m_ClientOnly;
+    const bool m_SeamlessHost;
+    bool m_SeamlessAvailable = false;
     QSslCertificate m_Certificate;
     QSslKey m_Key;
     QString m_Path, m_Status, m_Revoking;

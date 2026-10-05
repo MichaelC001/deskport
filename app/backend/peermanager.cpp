@@ -96,6 +96,7 @@ struct PeerManager::Link : QObject {
     qint64 lastDisplayRequest = 0;
     bool localReady = false, remoteReady = false, ended = false;
     bool hostReadyRequired = false, hostReadySent = false;
+    int seamlessVersionAdvertised = 0;
 };
 qint64 PeerManager::nativeClipboardRevision() const {
 #ifdef Q_OS_MACOS
@@ -109,7 +110,8 @@ qint64 PeerManager::nativeClipboardRevision() const {
 PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteArray& key,
                          const QString& directory, quint16 port, const QHostAddress& listenAddress, Mode mode)
     : m_Host(host), m_Server(nullptr), m_ListenAddress(listenAddress), m_Persistent(directory.isEmpty()),
-      m_ClientOnly(mode == Mode::ClientOnly), m_Certificate(cert), m_Key(key, QSsl::Rsa) {
+      m_ClientOnly(mode == Mode::ClientOnly), m_SeamlessHost(mode == Mode::SeamlessHost),
+      m_Certificate(cert), m_Key(key, QSsl::Rsa) {
     const QString path = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding" : directory;
     m_Path = path + "/peers.json";
     QDir().mkpath(path);
@@ -132,7 +134,7 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         }
     }
     m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && !m_Certificate.isNull() && !m_Key.isNull() &&
-        (m_ClientOnly || (m_Host->available() && m_Host->prepareIdentity(cert, key)));
+        (m_ClientOnly || ((m_SeamlessHost || m_Host->available()) && m_Host->prepareIdentity(cert, key)));
     connect(host, &HostManager::trustUpdated, this, &PeerManager::granted);
     connect(host, &HostManager::caretChanged, this, [this](const QJsonObject& caret) {
         if (m_DisplayLink && m_DisplayLink->displayControl && m_DisplayLink->caretUpdates)
@@ -304,6 +306,10 @@ void PeerManager::releaseClientFullscreen() {
         send(m_DisplayLink, {{"type", DP_MESSAGE_CLIENT_WINDOW}, {"action", "leave-fullscreen"}});
 }
 bool PeerManager::save() { return PeerStore::write(m_Path, {{"version", 1}, {"peers", m_Peers}}); }
+bool PeerManager::authorizationHostReady() const {
+    return m_SeamlessHost ? m_SeamlessAvailable :
+        (m_Host->available() && !m_Host->changing());
+}
 QJsonObject PeerManager::createInvitation(const QString& address, int lifetimeSeconds) {
     const auto entry = PairingInvite::entry(address, port());
     const auto hostId = QUuid(m_Host->identity()["hostId"].toString());
@@ -312,7 +318,7 @@ QJsonObject PeerManager::createInvitation(const QString& address, int lifetimeSe
         emit changed(); return {};
     }
     if (!m_Healthy || m_ClientOnly || !m_Server->isListening() || hostId.isNull() || busy() ||
-        !m_Host->available() || m_Host->changing()) {
+        !authorizationHostReady()) {
         m_Status = tr("The binding listener is unavailable or busy. Retry when device access is idle.");
         emit changed(); return {};
     }
@@ -338,6 +344,11 @@ bool PeerManager::revokeInvitation() {
         m_InviteClock.elapsed() < m_InviteLifetimeMs && QDateTime::currentSecsSinceEpoch() < m_InviteExpiresAt;
     m_InviteTokenHash.clear(); m_InviteClock.invalidate();
     return active;
+}
+void PeerManager::setSeamlessAvailable(bool available) {
+    if (!m_SeamlessHost || m_SeamlessAvailable == available) return;
+    m_SeamlessAvailable = available;
+    emit changed();
 }
 bool PeerManager::consumeInvitation(const QJsonValue& value) {
     if (m_InviteTokenHash.isEmpty() || !m_InviteClock.isValid()) return false;
@@ -376,6 +387,8 @@ QJsonObject PeerManager::metadata() const {
     meta["videoPause"] = DP_VIDEO_PAUSE_VERSION;
 #endif
     meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
+    if (m_SeamlessHost && m_SeamlessAvailable)
+        meta[DP_SEAMLESS_CAPABILITY] = DP_SEAMLESS_PROTOCOL_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX) || defined(Q_OS_WIN)
     meta["clipboardV2"] = 1;
 #endif
@@ -423,7 +436,11 @@ void PeerManager::attach(Link* link) {
         }
         if (!link->incoming) SmallTcp::accepted(*link->socket,
             link->endpointRefresh ? link->expectedPeer["address"].toString() : requestedHost(link->requestedAddress), link->socket->peerPort());
-        if (link->incoming) send(link, {{"type", "hello"}, {"meta", metadata()}});
+        if (link->incoming) {
+            const auto meta = metadata();
+            link->seamlessVersionAdvertised = meta[DP_SEAMLESS_CAPABILITY].toInt();
+            send(link, {{"type", "hello"}, {"meta", meta}});
+        }
         else if (!link->endpointRefresh && !m_ClientOnly) send(link, {{"type", "request"}, {"tx", link->transaction}, {"meta", metadata()}});
         drain(link);
     });
@@ -594,6 +611,68 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         return;
     }
     if (link->topologyQuery) { fail(link, tr("Connection path query already used")); return; }
+    if (type == DP_MESSAGE_SEAMLESS_NEGOTIATE) {
+        // M1 preflight is valid only on a fresh inbound connection. Never use
+        // its one-shot close path for an admitted session, display/clipboard
+        // controller, reachability refresh, or in-progress binding: those links
+        // have owner pointers and lease cleanup that must go through fail().
+        const bool pristine = link->incoming && !link->requested && !link->accepted &&
+            !link->endpointRefresh && !link->sessionOptIn && !link->sessionAdmitted &&
+            !link->topologyPending && !link->displayControl && !link->clipboardControl &&
+            !link->recovering && link != m_Link && link != m_RefreshLink &&
+            link != m_SessionLink && link != m_DisplayLink && link != m_ClipboardLink;
+        if (!pristine) {
+            fail(link, tr("Unexpected Seamless preflight on an active connection"));
+            return;
+        }
+        const auto peer = m_Peers.value(link->fingerprint).toObject();
+        QString code;
+        if (!peer["ready"].toBool() || !peer["granted"].toBool() ||
+            m_Revoking == link->fingerprint) {
+            code = QStringLiteral("unauthorized");
+        } else if (message[DP_SESSION_MODE_FIELD].toString() !=
+                   QStringLiteral(DP_SESSION_MODE_SEAMLESS)) {
+            code = message[DP_SESSION_MODE_FIELD].toString() ==
+                    QStringLiteral(DP_SESSION_MODE_DESKTOP) ?
+                QStringLiteral(DP_SEAMLESS_ERROR_WRONG_SESSION_MODE) :
+                QStringLiteral(DP_SEAMLESS_ERROR_INVALID_MESSAGE);
+        } else if (link->seamlessVersionAdvertised != DP_SEAMLESS_PROTOCOL_VERSION) {
+            code = QStringLiteral(DP_SEAMLESS_ERROR_MODE_NOT_ADVERTISED);
+        } else if (message[DP_SEAMLESS_VERSION_FIELD].toInt() !=
+                   DP_SEAMLESS_PROTOCOL_VERSION) {
+            code = QStringLiteral(DP_SEAMLESS_ERROR_UNSUPPORTED_VERSION);
+        }
+        QJsonObject result{{"type", DP_MESSAGE_SEAMLESS_RESULT},
+                           {DP_SESSION_MODE_FIELD, DP_SESSION_MODE_SEAMLESS},
+                           {DP_SEAMLESS_VERSION_FIELD, DP_SEAMLESS_PROTOCOL_VERSION},
+                           {"accepted", code.isEmpty()}};
+        if (!code.isEmpty()) result["code"] = code;
+        send(link, result);
+        // Milestone 1 negotiation is deliberately one-shot. Pixel/control
+        // streaming gets a separately framed, lease-bound channel in M3; this
+        // 32 KiB binding connection must never become a media tunnel.
+        link->ended = true;
+        if (m_Link == link) m_Link = nullptr;
+        connect(link->socket, &QAbstractSocket::bytesWritten, link, [link] {
+            if (!link->socket->bytesToWrite()) link->socket->disconnectFromHost();
+        });
+        if (!link->socket->bytesToWrite()) link->socket->disconnectFromHost();
+        QTimer::singleShot(2000, link, [link] {
+            if (link->socket->state() != QAbstractSocket::UnconnectedState) link->socket->abort();
+            link->deleteLater();
+        });
+        return;
+    }
+    if (type.startsWith(QStringLiteral("seamless-"))) {
+        // M1 reserves the remaining Seamless names but does not admit a
+        // Seamless session. Give peers the shared, machine-readable isolation
+        // error, then use the normal failure path so any Desktop lease and
+        // owner pointers are released correctly.
+        send(link, {{"type", DP_MESSAGE_SEAMLESS_PROTOCOL_ERROR},
+                    {"code", DP_SEAMLESS_ERROR_WRONG_SESSION_MODE}});
+        fail(link, tr("Seamless traffic requires an admitted Seamless session"));
+        return;
+    }
     if (type == DP_MESSAGE_SESSION_RELEASE) {
         if (link == m_SessionLink && link->lifecycle && link->sessionAdmitted)
             fail(link, tr("Client disconnected"));
@@ -795,7 +874,7 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
             fail(link, tr("Unsupported binding request")); return;
         }
         const bool invited = message.contains("inviteToken");
-        if (invited && (!m_Healthy || !m_Host->available() || m_Host->changing())) {
+        if (invited && (!m_Healthy || !authorizationHostReady())) {
             fail(link, tr("The host is not ready for client authorization. Retry when it is idle.")); return;
         }
         if (invited && (link->peer["role"].toString() != "client" || !consumeInvitation(message["inviteToken"]))) {
@@ -858,7 +937,7 @@ void PeerManager::reject(const QString& transaction) {
     fail(m_Link, tr("Binding declined"));
 }
 void PeerManager::grant(Link* link) {
-    if (!m_ClientOnly && !m_Host->available()) {
+    if (!m_ClientOnly && !m_SeamlessHost && !m_Host->available()) {
         const auto message = tr("The bundled DeskPort host is missing. Repair the installation to enable sharing.");
         m_Status = message; emit changed();
         fail(link, message);
@@ -891,8 +970,9 @@ void PeerManager::granted(bool success) {
     link->peer["granted"] = true;
     m_Peers[link->fingerprint] = link->peer;
     if (!save()) { fail(link, tr("Access was approved but device metadata could not be saved. Binding is incomplete.")); return; }
-    if (!m_Host->running()) m_Host->start(2560, 1440);
-    link->hostReadyRequired = !m_ClientOnly && link->peer.value("role").toString() != "client";
+    if (!m_SeamlessHost && !m_Host->running()) m_Host->start(2560, 1440);
+    link->hostReadyRequired = !m_ClientOnly && !m_SeamlessHost &&
+        link->peer.value("role").toString() != "client";
     const auto sendReady = [this, link] {
         if (link->ended || link->hostReadySent ||
             (link->hostReadyRequired && !m_Host->canPair())) return;

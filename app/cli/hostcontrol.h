@@ -22,7 +22,8 @@ QString socketName(const QString& directory = QString());
 class ControlServer : public QObject {
 public:
     explicit ControlServer(HostManager* host, PeerManager* peers,
-                           QObject* parent = nullptr, const QString& directory = QString());
+                           QObject* parent = nullptr, const QString& directory = QString(),
+                           const QString& mode = QStringLiteral("desktop"));
     ~ControlServer();
     // The caller must already own SingleInstance for this configuration. Only
     // that owner may remove a socket left behind by an earlier process.
@@ -33,19 +34,23 @@ public:
                             std::function<bool(const QString&)> revoke) {
         m_BrowserPairings = std::move(list); m_RevokeBrowser = std::move(revoke);
     }
+    void setStatusExtension(std::function<QJsonObject()> status) { m_StatusExtension = std::move(status); }
 private:
     void acceptConnections();
     void dispatch(QObject* request, const QStringList& arguments);
+    QJsonObject currentStatus() const;
     HostManager* m_Host;
     PeerManager* m_Peers;
     QString m_Name;
     QString m_Error;
+    QString m_Mode;
     QLocalServer m_Server;
     QPointer<QObject> m_Mutation;
     int m_Connections = 0;
     std::function<QJsonObject()> m_BrowserInfo;
     std::function<QJsonArray()> m_BrowserPairings;
     std::function<bool(const QString&)> m_RevokeBrowser;
+    std::function<QJsonObject()> m_StatusExtension;
 };
 
 }

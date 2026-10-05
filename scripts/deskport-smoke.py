@@ -2,6 +2,7 @@
 """Check the built Linux identity without a real desktop or remote host."""
 
 import configparser
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -48,6 +49,21 @@ def main():
                 assert expected_version in text.split(), text
             else:
                 assert "Usage:" in text and "deskport" in text, text
+        seamless = output / "libexec/deskport-seamless-host"
+        assert seamless.is_file(), f"Missing Seamless sidecar: {seamless}"
+        result = subprocess.run(
+            [str(seamless), "--self-test", "--width", "320", "--height", "200"],
+            env=env, cwd=root, capture_output=True, text=True, timeout=30,
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        events = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+        event_types = [event.get("type") for event in events]
+        for required in ("ready", "window-create", "frame-metadata", "window-destroy",
+                         "child-exit", "self-test-pass", "stopping"):
+            assert required in event_types, (required, events)
+        passed = next(event for event in events if event.get("type") == "self-test-pass")
+        assert passed.get("networkStreaming") is False and len(passed.get("sha256", "")) == 64
+        assert not any(Path(env["XDG_RUNTIME_DIR"]).iterdir()), "Seamless socket was not removed"
         assert not (root / "config/Moonlight Game Streaming Project").exists()
     print("PASS: DeskPort executable, desktop identity and isolated CLI startup")
 

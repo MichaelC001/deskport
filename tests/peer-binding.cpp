@@ -18,6 +18,7 @@
 #include "sessiongraph.h"
 #include "peerstore.h"
 #include "qmlcachekey.h"
+#include "../shared/deskport-core/include/deskport/protocol.h"
 
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
@@ -63,6 +64,132 @@ private:
 class PeerBinding : public QObject {
     Q_OBJECT
 private slots:
+    void seamlessNegotiation_data() {
+        QTest::addColumn<int>("mode");
+        QTest::addColumn<bool>("availableAtHello");
+        QTest::addColumn<bool>("availableAtRequest");
+        QTest::addColumn<bool>("approved");
+        QTest::addColumn<int>("version");
+        QTest::addColumn<QString>("sessionMode");
+        QTest::addColumn<bool>("accepted");
+        QTest::addColumn<QString>("code");
+        QTest::newRow("seamless-ready") << int(PeerManager::Mode::SeamlessHost) << true << true << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << true << QString();
+        QTest::newRow("desktop-isolated") << int(PeerManager::Mode::PlatformDefault) << true << true << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << false << QString(DP_SEAMLESS_ERROR_MODE_NOT_ADVERTISED);
+        QTest::newRow("helper-not-ready") << int(PeerManager::Mode::SeamlessHost) << false << false << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << false << QString(DP_SEAMLESS_ERROR_MODE_NOT_ADVERTISED);
+        QTest::newRow("ready-after-hello") << int(PeerManager::Mode::SeamlessHost) << false << true << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << false << QString(DP_SEAMLESS_ERROR_MODE_NOT_ADVERTISED);
+        QTest::newRow("stopped-after-hello") << int(PeerManager::Mode::SeamlessHost) << true << false << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << true << QString();
+        QTest::newRow("wrong-version") << int(PeerManager::Mode::SeamlessHost) << true << true << true
+            << (DP_SEAMLESS_PROTOCOL_VERSION + 1) << QString(DP_SESSION_MODE_SEAMLESS) << false << QString(DP_SEAMLESS_ERROR_UNSUPPORTED_VERSION);
+        QTest::newRow("wrong-mode") << int(PeerManager::Mode::SeamlessHost) << true << true << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_DESKTOP) << false << QString(DP_SEAMLESS_ERROR_WRONG_SESSION_MODE);
+        QTest::newRow("invalid-mode") << int(PeerManager::Mode::SeamlessHost) << true << true << true
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString("other") << false << QString(DP_SEAMLESS_ERROR_INVALID_MESSAGE);
+        QTest::newRow("unapproved") << int(PeerManager::Mode::SeamlessHost) << true << true << false
+            << DP_SEAMLESS_PROTOCOL_VERSION << QString(DP_SESSION_MODE_SEAMLESS) << false << QString("unauthorized");
+    }
+    void seamlessNegotiation() {
+        QFETCH(int, mode);
+        QFETCH(bool, availableAtHello);
+        QFETCH(bool, availableAtRequest);
+        QFETCH(bool, approved);
+        QFETCH(int, version);
+        QFETCH(QString, sessionMode);
+        QFETCH(bool, accepted);
+        QFETCH(QString, code);
+        QTemporaryDir dir;
+        const auto clientCertificate = credential("TEST_CERT_A");
+        const auto fingerprint = QString::fromLatin1(
+            QSslCertificate(clientCertificate).digest(QCryptographicHash::Sha256).toHex());
+        QDir().mkpath(dir.path() + "/binding");
+        const QJsonObject savedPeers = approved ?
+            QJsonObject{{fingerprint, QJsonObject{{"ready", true}, {"granted", true}}}} : QJsonObject();
+        QVERIFY(PeerStore::write(dir.path() + "/binding/peers.json",
+                                 {{"version", 1}, {"peers", savedPeers}}));
+        HostManager host(nullptr, dir.path() + "/host", false);
+        PeerManager manager(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"),
+            dir.path() + "/binding", 0, QHostAddress::LocalHost,
+            PeerManager::Mode(mode));
+        manager.setSeamlessAvailable(availableAtHello);
+
+        QSslSocket socket;
+        socket.setLocalCertificate(QSslCertificate(clientCertificate));
+        socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"), QSsl::Rsa));
+        connect(&socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), &socket,
+            [&socket](const QList<QSslError>& errors) { socket.ignoreSslErrors(errors); });
+        socket.connectToHostEncrypted("127.0.0.1", quint16(manager.port()));
+        QTRY_VERIFY_WITH_TIMEOUT(socket.isEncrypted(), 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(), 5000);
+        const auto hello = QJsonDocument::fromJson(socket.readLine()).object();
+        QCOMPARE(hello["type"].toString(), QString("hello"));
+        const bool advertised = hello["meta"].toObject()[DP_SEAMLESS_CAPABILITY].toInt() == DP_SEAMLESS_PROTOCOL_VERSION;
+        QCOMPARE(advertised, mode == int(PeerManager::Mode::SeamlessHost) && availableAtHello);
+        manager.setSeamlessAvailable(availableAtRequest);
+
+        socket.write(QJsonDocument(QJsonObject{
+            {"type", DP_MESSAGE_SEAMLESS_NEGOTIATE},
+            {DP_SEAMLESS_VERSION_FIELD, version}, {DP_SESSION_MODE_FIELD, sessionMode}
+        }).toJson(QJsonDocument::Compact) + '\n');
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(), 5000);
+        const auto result = QJsonDocument::fromJson(socket.readLine()).object();
+        QCOMPARE(result["type"].toString(), QString(DP_MESSAGE_SEAMLESS_RESULT));
+        QCOMPARE(result[DP_SEAMLESS_VERSION_FIELD].toInt(), DP_SEAMLESS_PROTOCOL_VERSION);
+        QCOMPARE(result[DP_SESSION_MODE_FIELD].toString(), QString(DP_SESSION_MODE_SEAMLESS));
+        QCOMPARE(result["accepted"].toBool(), accepted);
+        QCOMPARE(result["code"].toString(), code);
+        QTRY_COMPARE_WITH_TIMEOUT(socket.state(), QAbstractSocket::UnconnectedState, 5000);
+    }
+    void seamlessInvitationUsesSidecarReadiness() {
+        QTemporaryDir dir;
+        UnavailableHost host(nullptr, dir.path() + "/host", false);
+        QVERIFY(!host.available());
+        PeerManager manager(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"),
+            dir.path() + "/binding", 0, QHostAddress::LocalHost,
+            PeerManager::Mode::SeamlessHost);
+        manager.setSeamlessAvailable(false);
+        QVERIFY(manager.createInvitation(QStringLiteral("127.0.0.1")).isEmpty());
+        manager.setSeamlessAvailable(true);
+        QVERIFY(!manager.createInvitation(QStringLiteral("127.0.0.1")).isEmpty());
+        manager.setSeamlessAvailable(false);
+        QVERIFY(manager.createInvitation(QStringLiteral("127.0.0.1")).isEmpty());
+    }
+    void seamlessLifecycleRequiresAdmittedMode() {
+        QTemporaryDir dir;
+        const auto clientCertificate = credential("TEST_CERT_A");
+        const auto fingerprint = QString::fromLatin1(
+            QSslCertificate(clientCertificate).digest(QCryptographicHash::Sha256).toHex());
+        QDir().mkpath(dir.path() + "/binding");
+        QVERIFY(PeerStore::write(dir.path() + "/binding/peers.json",
+            {{"version", 1}, {"peers", QJsonObject{{fingerprint,
+                QJsonObject{{"ready", true}, {"granted", true}}}}}}));
+        HostManager host(nullptr, dir.path() + "/host", false);
+        PeerManager manager(&host, credential("TEST_CERT_B"), credential("TEST_KEY_B"),
+            dir.path() + "/binding", 0, QHostAddress::LocalHost,
+            PeerManager::Mode::SeamlessHost);
+        manager.setSeamlessAvailable(true);
+
+        QSslSocket socket;
+        socket.setLocalCertificate(QSslCertificate(clientCertificate));
+        socket.setPrivateKey(QSslKey(credential("TEST_KEY_A"), QSsl::Rsa));
+        connect(&socket, qOverload<const QList<QSslError>&>(&QSslSocket::sslErrors), &socket,
+            [&socket](const QList<QSslError>& errors) { socket.ignoreSslErrors(errors); });
+        socket.connectToHostEncrypted("127.0.0.1", quint16(manager.port()));
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(), 5000);
+        socket.readLine();
+        socket.write(QJsonDocument(QJsonObject{
+            {"type", DP_MESSAGE_SEAMLESS_WINDOW_CREATE}, {"id", 1},
+            {"width", 800}, {"height", 600}
+        }).toJson(QJsonDocument::Compact) + '\n');
+        QTRY_VERIFY_WITH_TIMEOUT(socket.canReadLine(), 5000);
+        const auto result = QJsonDocument::fromJson(socket.readLine()).object();
+        QCOMPARE(result["type"].toString(), QString(DP_MESSAGE_SEAMLESS_PROTOCOL_ERROR));
+        QCOMPARE(result["code"].toString(), QString(DP_SEAMLESS_ERROR_WRONG_SESSION_MODE));
+        QTRY_COMPARE_WITH_TIMEOUT(socket.state(), QAbstractSocket::UnconnectedState, 5000);
+    }
     void invitationPreviewAndConfirmation() {
         QTemporaryDir dir;
         HostManager host(nullptr, dir.path()+"/host", false);
@@ -413,7 +540,7 @@ private slots:
     }
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder", "seamless-preflight-active-link"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -455,6 +582,23 @@ private slots:
         const QJsonObject query{{"type","session-status"},{"sessionTakeover",1},{"sessionTopology",1}};
         const QJsonObject resize{{"type","display-resize"},{"seq",1},{"width",1920},{"height",1080},{"scale",1}};
         QSslSocket old, incoming, rival;
+        if (scenario == "seamless-preflight-active-link") {
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A");
+            send(old,query); QVERIFY(receive(old)["admitted"].toBool());
+            send(old,resize); QVERIFY(!receive(old).contains("error"));
+            QSignalSpy restored(&host,&HostManager::displayResized);
+            send(old,{{"type",DP_MESSAGE_SEAMLESS_NEGOTIATE},
+                      {DP_SESSION_MODE_FIELD,DP_SESSION_MODE_SEAMLESS},
+                      {DP_SEAMLESS_VERSION_FIELD,DP_SEAMLESS_PROTOCOL_VERSION}});
+            QTRY_COMPARE_WITH_TIMEOUT(old.state(),QAbstractSocket::UnconnectedState,5000);
+            QTRY_VERIFY_WITH_TIMEOUT(state()["lease"].toString().isEmpty(),5000);
+            QTRY_VERIFY_WITH_TIMEOUT(!restored.isEmpty(),5000);
+            // The rejected cross-mode preflight must leave no stale owner
+            // pointer: a fresh approved connection can be admitted normally.
+            connectPeer(incoming,"TEST_CERT_A","TEST_KEY_A");
+            send(incoming,query); QVERIFY(receive(incoming)["admitted"].toBool());
+            incoming.abort(); host.stop(); return;
+        }
         if (scenario.startsWith("recover-") || scenario == "release-explicit") {
             auto lifecycleQuery = query; lifecycleQuery["sessionLifecycle"] = 1;
             connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,lifecycleQuery);

@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  inputs.deskport-core = { url = "github:keithxc/deskport-core/e7b4a477cabf00d17e7805e73e852199c3bc7061"; flake = false; };
+  inputs.deskport-core = { url = "github:keithxc/deskport-core/1641f4ac9b90301f950c66022216051bfeab9b3b"; flake = false; };
 
   outputs = { self, nixpkgs, deskport-core }:
     let
@@ -63,7 +63,7 @@
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
-          buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire ];
+          buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire pkgs.qt6.qtwayland ];
           version = "0.6.4";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;

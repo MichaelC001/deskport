@@ -26,8 +26,9 @@ HEADERS += streaming/clipboardsync.h
 SOURCES += backend/clipboardchannel.cpp
 HEADERS += backend/serviceconfig.h backend/clipboardchannel.h backend/clipboardprotocol.h
 QT += core quick network quickcontrols2 svg widgets
-SOURCES += backend/hostmanager.cpp backend/peermanager.cpp
+SOURCES += backend/hostmanager.cpp backend/peermanager.cpp backend/seamlesshostmanager.cpp
 HEADERS += backend/hostcaretmonitor.h backend/hostmanager.h backend/hostports.h backend/peermanager.h backend/peerstore.h
+HEADERS += backend/seamlesshostmanager.h backend/sessionmode.h
 linux {
     QT += dbus
     SOURCES += backend/sleepmonitor.cpp

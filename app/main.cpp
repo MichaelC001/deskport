@@ -347,8 +347,10 @@ int main(int argc, char *argv[])
     for (int i = 0; i < argc; ++i) commandArguments.append(QString::fromLocal8Bit(argv[i]));
     const bool basicQuery = argc == 2 && (commandArguments[1] == "--version" || commandArguments[1] == "-v" ||
                                         commandArguments[1] == "--help" || commandArguments[1] == "-h");
+    const int optionEnd = commandArguments.indexOf(QStringLiteral("--"));
+    const QStringList hostOptions = optionEnd < 0 ? commandArguments : commandArguments.mid(0, optionEnd);
     const bool hostHelp = commandArguments.value(1) == "host" &&
-        (commandArguments.contains("--help") || commandArguments.contains("-h"));
+        (hostOptions.contains("--help") || hostOptions.contains("-h"));
     if (basicQuery || hostHelp || DeskPortCli::isControlCommand(commandArguments) || DeskPortCli::isSetupCommand(commandArguments)) {
 #ifdef Q_OS_WIN
         const HANDLE cliOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -362,11 +364,14 @@ int main(int argc, char *argv[])
 #endif
         QCoreApplication cli(argc, argv);
         if (hostHelp) {
-            fputs("Usage: deskport host run [--no-share] [--no-web-server]\n"
+            fputs("Usage: deskport host run [--mode desktop|seamless] [--no-share] [--no-web-server] [-- application [arguments...]]\n"
                   "Run the Linux host in the foreground without a window.\n"
+                  "Desktop is the default and retains the existing full-display behavior.\n"
+                  "Seamless is experimental, Linux-only, and currently provides local compositor lifecycle/capture plumbing.\n"
                   "--no-share starts management with sharing disabled.\n"
                   "--no-web-server disables browser HTTPS access for this run.\n"
-                  "A compositor, capture, input, audio and encoder must already be available.\n"
+                  "Desktop Mode requires an existing compositor, capture, input, audio and encoder.\n"
+                  "An application after -- is launched only inside the Seamless compositor.\n"
                   "Use deskport doctor to inspect prerequisites.\n", stdout);
             return 0;
         }
