@@ -24,6 +24,10 @@ devShell for CMake, pkg-config, OpenSSL, ICU, Opus, miniupnpc and Boost, plus
 Apple Xcode; see `docs/MACOS_PACKAGE.md`. Upstream source,
 dependency gitlinks, and license notices:
 https://github.com/LizardByte/Sunshine/tree/cb72dffa3233c5815cd5ba88f09f049dd679ba75
+The macOS host build uses the `Darwin-arm64-ffmpeg.tar.gz` asset from
+LizardByte/build-deps `v2026.910.121303`; its immutable URL and SHA-256 are
+recorded in `host/vendor/sunshine-macos-ffmpeg.json`. It does not use the
+upstream mutable `latest` fallback.
 The checksum-verified official package supplies same-version web assets and notices.
 The modified nested host is signed using the configured DeskPort identity, not the
 upstream publisher's signature. Independently installed Sunshine is never modified.

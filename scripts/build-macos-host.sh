@@ -81,6 +81,37 @@ if [ "${DESKPORT_NIX_DEPS:-0}" = 1 ]; then
 else
     export PKG_CONFIG_PATH="$pc:/opt/homebrew/lib/pkgconfig:/opt/homebrew/opt/openssl@3/lib/pkgconfig"
 fi
+# The vendored Sunshine source is materialized without Git metadata, so its
+# upstream CMake fallback would otherwise download a mutable "latest" FFmpeg
+# archive. Keep the known-compatible macOS archive content-addressed instead.
+if [ -z "${DESKPORT_FFMPEG_ROOT:-}" ]; then
+    ffmpeg_manifest="$repo/host/vendor/sunshine-macos-ffmpeg.json"
+    ffmpeg_url=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["url"])' "$ffmpeg_manifest")
+    ffmpeg_sha256=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$ffmpeg_manifest")
+    ffmpeg_root="$build_root/ffmpeg-$ffmpeg_sha256"
+    if [ ! -f "$ffmpeg_root/lib/libavcodec.a" ]; then
+        ffmpeg_stage=$(mktemp -d "$build_root/.ffmpeg.XXXXXX")
+        trap 'rm -rf "$ffmpeg_stage"' EXIT
+        /usr/bin/curl --fail --location --retry 3 --output "$ffmpeg_stage/ffmpeg.tar.gz" "$ffmpeg_url"
+        actual_ffmpeg_sha256=$(shasum -a 256 "$ffmpeg_stage/ffmpeg.tar.gz" | awk '{print $1}')
+        if [ "$actual_ffmpeg_sha256" != "$ffmpeg_sha256" ]; then
+            echo "Pinned macOS FFmpeg checksum mismatch" >&2
+            exit 1
+        fi
+        tar -xzf "$ffmpeg_stage/ffmpeg.tar.gz" -C "$ffmpeg_stage"
+        for library in libavcodec.a libswscale.a libavutil.a libcbs.a; do
+            test -f "$ffmpeg_stage/ffmpeg/lib/$library" || {
+                echo "Pinned macOS FFmpeg archive is missing $library" >&2
+                exit 1
+            }
+        done
+        mv "$ffmpeg_stage/ffmpeg" "$ffmpeg_root"
+        rm "$ffmpeg_stage/ffmpeg.tar.gz"
+        rmdir "$ffmpeg_stage"
+        trap - EXIT
+    fi
+    export DESKPORT_FFMPEG_ROOT="$ffmpeg_root"
+fi
 extra=()
 if [ -n "${DESKPORT_CMAKE_PREFIX_PATH:-}" ]; then
     extra+=("-DCMAKE_PREFIX_PATH=$DESKPORT_CMAKE_PREFIX_PATH" -DOPUS_USE_STATIC=OFF -DBOOST_USE_STATIC=OFF)

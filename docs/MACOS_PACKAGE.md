@@ -249,6 +249,10 @@ Build and staging apps are stored in `.noindex` directories, reached through the
 The pinned upstream dependencies, `libs/mac` included, are vendored in this
 repository; only `git submodule update --init shared/deskport-core` is needed
 before native builds. See [VENDORED.md](VENDORED.md).
+The nested Sunshine build also downloads one checksum-pinned Apple Silicon
+FFmpeg archive described by `host/vendor/sunshine-macos-ffmpeg.json`. Do not
+replace it with the upstream `latest` URL: that mutable archive can add static
+library dependencies without a corresponding change to the pinned host source.
 The Apple Silicon macOS devShell manages Qt, CMake, pkg-config, Python, Git, Make,
 OpenSSL, Opus, miniupnpc, ICU, Boost and Node.js/npm with the project's locked nixpkgs revision.
 Xcode supplies Apple's compiler and SDK; Keychain/Aqua supplies code signing.
