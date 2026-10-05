@@ -33,6 +33,9 @@ deskport devices remove DEVICE_ID
 deskport config get --json
 deskport config set name "My remote desktop"
 deskport config set port 48999
+deskport web info
+deskport web list
+deskport web remove BROWSER_ID
 ```
 
 Approve only a pending request you recognize; copy its exact `requestId` from
@@ -102,6 +105,19 @@ Older clients can continue using manual requests and exact-ID host approval.
 Custom link schemes may require an app chooser or in-app scanner; a successful
 CLI/decode test does not establish physical-camera or streaming acceptance.
 See the shared [invitation contract](../shared/deskport-core/protocol/PAIRING_INVITES.md).
+
+## Connect without installing a client
+
+`deskport web info` prints the browser HTTPS URL, its QR code, and the permanent
+six-character access code. The browser entry starts by default with the host
+supervisor; use `--no-web-server` to disable it for a run. Enter the code manually
+after opening the URL. A browser may remember its pairing for later connections.
+`deskport web list` lists remembered browsers without exposing credentials;
+`deskport web remove BROWSER_ID` removes one exact pairing and invalidates its
+sessions. Both accept `--json`. Disconnecting media alone keeps a remembered
+pairing. This browser entry is separate from native mobile pairing invitations
+and requires no installed DeskPort app. See [browser access](BROWSER_ACCESS.md)
+for certificate trust, controls, network ports and current limits.
 
 ## Inspect the host before changing it
 
@@ -268,6 +284,11 @@ nix develop -c python3 scripts/test-host-setup.py
 nix develop -c python3 scripts/test-hyprland-display.py
 python3 scripts/test-host-cli.py result/bin/deskport
 ```
+
+On 2026-10-05, the final Linux Nix package passed the display-free CLI fixture,
+including real HTTPS browser enrollment, listing and removing a remembered
+browser, and rejection of its old pairing and session credentials. The fixture
+keeps sharing disabled and uses private configuration and loopback listeners.
 
 For a real isolated compositor test, make matching `Hyprland`, `hyprctl`,
 `kwin_wayland`, and `dbus-run-session` available in the test environment:

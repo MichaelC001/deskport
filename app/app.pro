@@ -1,4 +1,9 @@
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp
+SOURCES += backend/browsergateway.cpp backend/browserhost.cpp
+HEADERS += backend/browsergateway.h backend/browserhost.h
+RESOURCES += browser/browser.qrc
+# Browser JavaScript is delivered verbatim to WebKit/Chromium, not to QML.
+QTQUICK_COMPILER_SKIPPED_RESOURCES += browser/browser.qrc
 SOURCES += cli/hostcontrol.cpp cli/hostsetup.cpp cli/hostdaemon.cpp
 SOURCES += ../third_party/qrcodegen/qrcodegen.cpp
 HEADERS += ../third_party/qrcodegen/qrcodegen.hpp cli/terminalqr.h backend/pairinginvite.h

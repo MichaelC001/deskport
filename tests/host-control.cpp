@@ -40,6 +40,58 @@ static void send(QLocalSocket& socket, const QStringList& args) {
 class HostControl : public QObject {
     Q_OBJECT
 private slots:
+    void browserPairingsCanBeListedAndRemovedByExactId() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host", false);
+        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        DeskPortCli::ControlServer server(&host, &peers); QVERIFY(server.listen());
+        QJsonArray browsers{QJsonObject{{"id", "browser-one"}, {"name", "Chrome"}},
+                            QJsonObject{{"id", "browser-two"}, {"name", "Safari"}}};
+        bool writable = false;
+        QString removed;
+        server.setBrowserPairings([&] { return browsers; }, [&](const QString& id) {
+            if (!writable) return false;
+            removed = id;
+            for (int i = 0; i < browsers.size(); ++i)
+                if (browsers[i].toObject()["id"].toString() == id) { browsers.removeAt(i); return true; }
+            return false;
+        });
+        QLocalSocket list; send(list, {"web", "list"}); QTRY_VERIFY(list.canReadLine());
+        const auto result = reply(list);
+        QVERIFY(result["ok"].toBool()); QCOMPARE(result["data"].toObject()["browsers"].toArray(), browsers);
+        QVERIFY(!result["data"].toObject().contains("accessCode"));
+        QLocalSocket stale; send(stale, {"web", "remove", "browser"}); QTRY_VERIFY(stale.canReadLine());
+        QCOMPARE(reply(stale)["code"].toString(), QString("not-found")); QVERIFY(removed.isEmpty());
+        QLocalSocket denied; send(denied, {"web", "remove", "browser-one"}); QTRY_VERIFY(denied.canReadLine());
+        QCOMPARE(reply(denied)["code"].toString(), QString("remove-failed")); QCOMPARE(browsers.size(), 2);
+        writable = true;
+        QLocalSocket remove; send(remove, {"web", "remove", "browser-one"}); QTRY_VERIFY(remove.canReadLine());
+        const auto done = reply(remove); QVERIFY(done["ok"].toBool());
+        QCOMPARE(done["data"].toObject()["removed"].toString(), QString("browser-one"));
+        QCOMPARE(removed, QString("browser-one")); QCOMPARE(browsers.size(), 1);
+        QCOMPARE(browsers.first().toObject()["id"].toString(), QString("browser-two"));
+    }
+    void browserAccessIsExplicitLocalQuery() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host", false);
+        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), dir.path()+"/binding", 0, QHostAddress::LocalHost);
+        DeskPortCli::ControlServer server(&host, &peers); QVERIFY(server.listen());
+        server.setBrowserInfo([] { return QJsonObject{{"enabled", true}, {"accessCode", "TEST42"},
+            {"urls", QJsonArray{"https://127.0.0.1:48992/"}}}; });
+        QLocalSocket regular;
+        send(regular, {"status"});
+        QTRY_VERIFY(regular.canReadLine());
+        const auto state = reply(regular);
+        QVERIFY(state["ok"].toBool());
+        QVERIFY(!state["data"].toObject().contains("accessCode"));
+        QLocalSocket browser;
+        send(browser, {"web", "info"});
+        QTRY_VERIFY(browser.canReadLine());
+        const auto web = reply(browser);
+        QVERIFY(web["ok"].toBool());
+        QCOMPARE(web["data"].toObject()["accessCode"].toString(), QString("TEST42"));
+        QVERIFY(!web["data"].toObject()["urls"].toArray().first().toString().contains("TEST42"));
+    }
     void invitationCliOutputAndRevocation() {
         QTemporaryDir dir;
         HostManager host(nullptr, dir.path()+"/host", false);

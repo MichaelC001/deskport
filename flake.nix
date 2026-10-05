@@ -34,7 +34,7 @@
               mkdir -p "$out"
               tar -xzf ${./host/vendor/sunshine-nix.tar.gz} --strip-components=1 -C "$out"
             '';
-            buildInputs = (old.buildInputs or []) ++ [ pkgs.vulkan-headers ];
+            buildInputs = (old.buildInputs or []) ++ [ pkgs.vulkan-headers pkgs.libdatachannel ];
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
             postPatch = (old.postPatch or "") + ''
               python3 ${./scripts/patch-host-diagnostics.py} .
@@ -58,6 +58,7 @@
               cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
               python3 ${./scripts/patch-host-encoder-policy.py} .
               python3 ${./scripts/patch-host-video-pause.py} .
+              python3 ${./scripts/patch-host-browser.py} . ${./host/browser}
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {
@@ -141,7 +142,7 @@
             in pkgs.mkShellNoCC {
               packages = with pkgs; [
                 qt6.qtbase qt6.qtdeclarative qt6.qtshadertools qt6.qtsvg qt6.qttools
-                cmake pkg-config python3 git gnumake nodejs openssl libopus miniupnpc icu boost
+                cmake pkg-config python3 git gnumake nodejs openssl libopus miniupnpc icu boost libdatachannel
               ];
               # Apple SDK/compiler and signing use the installed Xcode/Aqua
               # session. Third-party tools and libraries come from this lock.
@@ -159,7 +160,7 @@
                 export DESKPORT_OPENSSL_ROOT=${pkgs.openssl.dev}
                 export DESKPORT_OPUS_ROOT=${pkgs.libopus.dev}
                 export DESKPORT_ICU_ROOT=${pkgs.icu.dev}
-                export DESKPORT_CMAKE_PREFIX_PATH="${pkgs.openssl.dev};${pkgs.openssl.out};${pkgs.libopus.dev};${pkgs.libopus};${pkgs.miniupnpc};${pkgs.icu.dev};${pkgs.icu};${pkgs.boost.dev};${pkgs.boost}"
+                export DESKPORT_CMAKE_PREFIX_PATH="${pkgs.openssl.dev};${pkgs.openssl.out};${pkgs.libopus.dev};${pkgs.libopus};${pkgs.miniupnpc};${pkgs.icu.dev};${pkgs.icu};${pkgs.boost.dev};${pkgs.boost};${pkgs.libdatachannel}"
               '';
             };
         };

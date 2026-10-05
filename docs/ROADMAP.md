@@ -1,3 +1,62 @@
+## Persistent browser pairing — 2026-10-05
+
+Reason: the user requested native-client-like reconnects in ordinary Chrome and
+iPad Safari, without an installed web app or repeated manual code entry.
+
+- Keep the permanent six-character code for initial enrollment and temporary
+  access. Remembered browsers receive independent HttpOnly cookie credentials;
+  the server atomically persists only their hashes and device metadata.
+- Restore a short-lived session after page, browser or server restart.
+  Starting media remains an explicit click. Disconnect keeps the pairing;
+  forgetting or locally removing it invalidates the browser's sessions.
+- Add the paired-browser list and removal inside the existing Sharing section,
+  plus `deskport web list` / `deskport web remove BROWSER_ID` for SSH operators.
+- Verified: 130 HTTPS/authentication checks, 21 browser lifecycle checks,
+  31 local CLI checks, 27 UI checks and 53 Chrome interaction regressions.
+  Ordinary Google Chrome 154 passes 71 production-HTTPS pairing checks, including
+  full browser/server process restarts, temporary mode, independent profiles,
+  forgetting, and replay rejection after local revocation. No PWA is required.
+- The final native Linux host passes 72 real capture/audio/pairing checks:
+  closing an idle paired tab preserves the active owner; revocation stops media
+  and releases admission; new enrollment starts changing video and audio again.
+  All fixture processes exit. macOS and Linux Nix application builds and the
+  final packaged Linux CLI enrollment/list/removal checks pass.
+- Browser automation explicitly accepts its isolated self-signed certificate.
+  An additional WebKitGTK probe did not reach the initial pairing state and
+  completed no product assertions; its cause remains unresolved.
+  Physical iPad Safari, initial certificate trust, native input, compositor
+  display restoration and deployment remain separate acceptance checkpoints.
+
+## Browser client — 2026-10-05
+
+Reason: devices without DeskPort, including an iPad browser, need a direct URL
+or QR entry. The requested first authentication version is one permanent
+server-generated six-character code; rotating codes and key enrollment are
+deferred.
+
+- Add a default local HTTPS entry, embedded touch-oriented web client, local QR
+  and code display, and `deskport web info`.
+- Reuse native capture/encoding and shared session admission through a direct
+  H.264/Opus WebRTC transport. Stop media/input, restore display, then release
+  the exclusive session reservation.
+- Provide touchpad/direct touch, keyboard, composed text, explicit paste, audio,
+  fullscreen and disconnect/re-entry. The initial version required manual code
+  entry for each new page; persistent pairing is tracked above.
+- Verified: macOS application/host and native Linux Nix builds; 68 HTTPS checks,
+  21 browser lifecycle checks, 30 local CLI checks, 26 existing UI checks, and
+  31 Chrome interactions with the production WebRTC transport and encoded test
+  media. The final packaged Linux CLI also passes without a display.
+- Native media checkpoint: isolated Xvfb capture and a private PulseAudio tone
+  pass 25 browser checks over the production HTTPS gateway, web client and final
+  host. Both connections decode changing 1280 × 720 frames at 30 fps, receive
+  nonzero Opus audio, stop cleanly, and require the same permanent code again.
+  The fixture verifies admission is free after disconnect and cleans up every
+  owned process. It uses a test management adapter and disables native input;
+  it does not exercise the production compositor/display manager.
+- Physical iPad Safari certificate/audio/touch acceptance, native OS input,
+  compositor display restoration, installed host activation and distribution
+  remain separate checkpoints. See [browser access](BROWSER_ACCESS.md).
+
 ## SSH mobile pairing invitations — 2026-10-04
 
 Reason: an SSH operator needs to offer a phone a verifiable connection entry

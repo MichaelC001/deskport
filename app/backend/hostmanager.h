@@ -72,16 +72,18 @@ public:
     QJsonObject identity() const;
     void updatePeerTrust(const QString& id, const QString& name, const QSslCertificate& certificate, bool remove = false);
     bool physicalDisplaySharing() const;
-    bool adaptiveDisplayAvailable() const;
+    virtual bool adaptiveDisplayAvailable() const;
     bool virtualDisplayActive() const { return adaptiveDisplayAvailable() && m_DisplayWidth > 0 && m_DisplayHeight > 0; }
     bool displayPoliciesAvailable() const;
-    bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
+    virtual bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
     void restoreDisplay();
-    void settleSessionDisplay(QObject* context, std::function<void(bool)> completion);
+    virtual void settleSessionDisplay(QObject* context, std::function<void(bool)> completion);
     virtual void sessionControl(const QJsonObject& request, QObject* context,
                                 std::function<void(QJsonObject)> completion);
-    bool running() const;
-    bool canPair() const;
+    virtual void browserControl(const QJsonObject& request, QObject* context,
+                                std::function<void(QJsonObject)> completion);
+    virtual bool running() const;
+    virtual bool canPair() const;
     int basePort() const { return m_BasePort; }
     bool loginStart() const;
     bool loginStartManaged() const;

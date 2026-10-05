@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.3
 
 UiPage {
     id: page
+    readonly property var webHost: typeof browserHost === "undefined" ? null : browserHost
+    property string browserPairingError: ""
     Component.onCompleted: hostManager.refreshPermissions()
     Timer { interval: 3000; repeat: true; running: page.visible; onTriggered: hostManager.refreshPermissions() }
     objectName: qsTr("Sharing")
@@ -27,6 +29,81 @@ UiPage {
                 }
             }
             Label { visible: text.length > 0 && text !== sharingState.text; text: hostManager.status; color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            UiButton {
+                id: browserDetails
+                objectName: "browserAccessDetails"
+                text: qsTr("Browser access")
+                checkable: true
+                visible: page.webHost !== null && hostManager.available
+            }
+            ColumnLayout {
+                visible: browserDetails.checked && page.webHost !== null
+                Layout.fillWidth: true; spacing: 10
+                Label {
+                    text: qsTr("Scan or open the URL on your other device, then enter this access code.")
+                    color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Image {
+                    source: page.webHost ? page.webHost.qrSource : ""
+                    visible: source.toString().length > 0
+                    sourceSize: Qt.size(192, 192)
+                    Layout.preferredWidth: 192; Layout.preferredHeight: 192
+                    smooth: false
+                }
+                TextField {
+                    text: page.webHost ? page.webHost.accessCode : ""
+                    readOnly: true; selectByMouse: true
+                    font.pixelSize: 28; font.letterSpacing: 5
+                    Layout.preferredWidth: 240
+                    Accessible.name: qsTr("Browser access code")
+                }
+                Repeater {
+                    model: page.webHost ? page.webHost.urls : []
+                    TextField {
+                        text: modelData; readOnly: true; selectByMouse: true
+                        Layout.fillWidth: true
+                        Accessible.name: qsTr("Browser URL")
+                    }
+                }
+                Label {
+                    text: page.webHost ? page.webHost.errorString : ""
+                    visible: text.length > 0
+                    color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Label {
+                    text: qsTr("The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.")
+                    color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Label {
+                    text: qsTr("Paired browsers")
+                    color: ui.text; font.bold: true; Layout.fillWidth: true
+                }
+                Label {
+                    visible: page.webHost !== null && page.webHost.pairedBrowsers.length === 0
+                    text: qsTr("Choose Remember this browser when connecting to keep its pairing.")
+                    color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Repeater {
+                    model: page.webHost ? page.webHost.pairedBrowsers : []
+                    RowLayout {
+                        Layout.fillWidth: true; spacing: 10
+                        Label {
+                            text: modelData.name; textFormat: Text.PlainText
+                            color: ui.text; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                        }
+                        UiButton {
+                            objectName: "revokeBrowserPairing-" + modelData.id
+                            text: qsTr("Remove pairing")
+                            onClicked: page.browserPairingError = page.webHost.revokeBrowser(modelData.id) ? "" : qsTr("Could not save the pairing removal. Please try again.")
+                        }
+                    }
+                }
+                Label {
+                    visible: page.browserPairingError.length > 0
+                    text: page.browserPairingError; color: ui.warning
+                    wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+            }
         }
     }
     UiCard {

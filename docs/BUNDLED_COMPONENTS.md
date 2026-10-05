@@ -74,6 +74,18 @@ Apple notarization, stapled-ticket validation and Gatekeeper assessment. Public
 release packaging must include corresponding sources, exact dependency versions
 and license notices.
 
+## Browser media transport (development)
+
+The browser-enabled Nix Linux and macOS host builds dynamically link
+[libdatachannel 0.24.1](https://github.com/paullouisageneau/libdatachannel/tree/v0.24.1)
+under MPL-2.0, from the existing pinned nixpkgs revision. Its WebRTC dependency
+closure is resolved by that pin, including ICE, SRTP and SCTP libraries; release
+packaging must retain their corresponding notices and source/version records.
+DeskPort's transport adapter and host overlay are in `host/browser/` and
+`scripts/patch-host-browser.py`. No upstream library source is modified by this
+integration. The adapter reuses the host's existing capture, encoders and input
+implementation.
+
 ## ScreenCaptureKit overlay (0.1.13)
 
 `host/macos/patches/sunshine-screen-capture-kit.patch` follows the smart-streaming

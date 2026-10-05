@@ -1,6 +1,7 @@
 #include "hostdaemon.h"
 #include "hostcontrol.h"
 #include "backend/hostmanager.h"
+#include "backend/browserhost.h"
 #include "backend/peermanager.h"
 #include "backend/identitymanager.h"
 #include "backend/singleinstance.h"
@@ -42,6 +43,7 @@ int DeskPortCli::runHostDaemon(int& argc, char** argv) {
     parser.addPositionalArgument("host", "Local host commands");
     parser.addPositionalArgument("run", "Run the foreground host");
     parser.addOption({"no-share", "Start the management endpoint with sharing disabled."});
+    parser.addOption({"no-web-server", "Disable the browser HTTPS listener for this run."});
     if (!parser.parse(app.arguments()) || parser.positionalArguments() != QStringList({"host", "run"})) {
         fprintf(stderr, "%s\n%s", qPrintable(parser.errorText()), qPrintable(parser.helpText()));
         return 2;
@@ -60,6 +62,11 @@ int DeskPortCli::runHostDaemon(int& argc, char** argv) {
     auto identity = IdentityManager::get();
     PeerManager peers(&host, identity->getCertificate(), identity->getPrivateKey());
     ControlServer control(&host, &peers);
+    BrowserHost browserHost(&host);
+    if (!parser.isSet("no-web-server")) browserHost.start();
+    control.setBrowserInfo([&browserHost] { return browserHost.localInfo(); });
+    control.setBrowserPairings([&browserHost] { return QJsonArray::fromVariantList(browserHost.pairedBrowsers()); },
+                              [&browserHost](const QString& id) { return browserHost.revokeBrowser(id); });
     if (!control.listen()) {
         fprintf(stderr, "Cannot open the local management endpoint: %s\n", qPrintable(control.errorString()));
         return 3;

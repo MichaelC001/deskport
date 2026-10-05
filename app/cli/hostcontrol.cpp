@@ -60,7 +60,10 @@ QString validate(const QStringList& args) {
     if (args == QStringList{"status"} || args == QStringList{"config", "get"} ||
         args == QStringList{"sharing", "start"} || args == QStringList{"sharing", "stop"} ||
         args == QStringList{"devices", "list"} || args == QStringList{"devices", "pending"} ||
-        args == QStringList{"devices", "revoke-invite"}) return {};
+        args == QStringList{"devices", "revoke-invite"} || args == QStringList{"web", "info"} ||
+        args == QStringList{"web", "list"}) return {};
+    if (args.size() == 3 && args[0] == "web" && args[1] == "remove" &&
+        !args[2].isEmpty() && args[2].size() <= 128) return {};
     if (args.size() == 4 && args[0] == "devices" && args[1] == "invite" && args[2] == "--address") {
         if (!PairingInvite::entry(args[3], 48991).isEmpty()) return {};
         return QStringLiteral("Use --address HOST[:PORT] or [IPv6]:PORT with a reachable connection entry.");
@@ -151,6 +154,25 @@ void printHuman(const QJsonObject& result) {
     output.setCodec("UTF-8");
 #endif
     const auto data = result["data"].toObject();
+    if (data.contains("accessCode") && data.contains("urls")) {
+        output << "Browser access: " << (data["enabled"].toBool() ? "enabled" : "unavailable") << '\n';
+        const auto urls = data["urls"].toArray();
+        if (!urls.isEmpty()) output << terminalQr(urls.first().toString());
+        for (const auto& url : urls) output << printable(url.toString()) << '\n';
+        output << "Access code: " << printable(data["accessCode"].toString()) << '\n';
+        output << "Enter this code in the browser. It stays valid across restarts.\n";
+        if (!data["error"].toString().isEmpty()) output << printable(data["error"].toString()) << '\n';
+        return;
+    }
+    if (data.contains("browsers")) {
+        const auto browsers = data["browsers"].toArray();
+        if (browsers.isEmpty()) output << "No paired browsers.\n";
+        for (const auto& value : browsers) {
+            const auto row = value.toObject();
+            output << printable(row["id"].toString()) << '\t' << printable(row["name"].toString()) << '\n';
+        }
+        return;
+    }
     if (data.contains("uri")) {
         int columns = 0;
         const auto qr = terminalQr(data["uri"].toString(), &columns);
@@ -196,6 +218,9 @@ const char* helpText() {
     return "Local SSH control (the DeskPort GUI or daemon must already be running):\n"
            "  deskport status [--json]\n"
            "  deskport sharing start|stop [--json]\n"
+           "  deskport web info [--json]\n"
+           "  deskport web list [--json]\n"
+           "  deskport web remove BROWSER_ID [--json]\n"
            "  deskport devices list|pending [--json]\n"
            "  deskport devices invite --address HOST[:PORT] [--json]\n"
            "  deskport devices revoke-invite [--json]\n"
@@ -210,7 +235,7 @@ const char* helpText() {
            "The connection port accepts 1024..65535; stop sharing before renaming.\n";
 }
 bool isControlCommand(const QStringList& arguments) {
-    return arguments.size() > 1 && QStringList{"status", "sharing", "devices", "config"}.contains(arguments[1]);
+    return arguments.size() > 1 && QStringList{"status", "sharing", "devices", "config", "web"}.contains(arguments[1]);
 }
 QString socketName(const QString& directory) {
     const auto path = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) : directory;
@@ -327,6 +352,15 @@ void ControlServer::acceptConnections() {
 }
 void ControlServer::dispatch(QObject* context, const QStringList& args) {
     auto request = static_cast<Request*>(context);
+    if (args == QStringList{"web", "info"}) {
+        request->finish(m_BrowserInfo ? success(m_BrowserInfo()) : failure("unavailable", "Browser access is unavailable in this instance."));
+        return;
+    }
+    if (args == QStringList{"web", "list"}) {
+        request->finish(m_BrowserPairings ? success({{"browsers", m_BrowserPairings()}}) :
+            failure("unavailable", "Browser pairing management is unavailable in this instance."));
+        return;
+    }
     if (args[0] == "status") { request->finish(success(status(m_Host, m_Peers))); return; }
     if (args == QStringList{"config", "get"}) { request->finish(success(config(m_Host, m_Peers))); return; }
     if (args == QStringList{"devices", "list"}) {
@@ -340,6 +374,18 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
     }
     if (m_Mutation) { request->finish(failure("busy", "Another local control operation is still in progress.")); return; }
     m_Mutation = request;
+    if (args.size() == 3 && args[0] == "web" && args[1] == "remove") {
+        if (!m_BrowserPairings || !m_RevokeBrowser) {
+            request->finish(failure("unavailable", "Browser pairing management is unavailable in this instance.")); return;
+        }
+        bool found = false;
+        for (const auto& browser : m_BrowserPairings())
+            if (browser.toObject()["id"].toString() == args[2]) { found = true; break; }
+        if (!found) { request->finish(failure("not-found", "No paired browser matches that exact ID. Run web list again.")); return; }
+        request->finish(m_RevokeBrowser(args[2]) ? success({{"removed", args[2]}}) :
+            failure("remove-failed", "Cannot save the browser pairing removal. Check the local browser settings directory and retry."));
+        return;
+    }
     if (args == QStringList{"devices", "revoke-invite"}) {
         request->finish(success({{"revoked", m_Peers->revokeInvitation()}})); return;
     }

@@ -2,14 +2,12 @@
 # Build the pinned DeskPort host with virtual-display input routing.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
-source_dir="${DESKPORT_HOST_SOURCE_DIR:-$repo/build-macos.noindex/sunshine-vendored-source}"
-if [ "${DESKPORT_NIX_DEPS:-0}" = 1 ]; then
-    build_root=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex/nix}
-else
-    build_root=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex}
-fi
+source "$repo/scripts/build-paths.sh"
+source_dir="$DESKPORT_HOST_SOURCE_DIR"
+build_root="$DESKPORT_MACOS_BUILD_DIR"
 build_dir="$build_root/sunshine-vendored-build"
 python3 "$repo/scripts/prepare-host-source.py" "$source_dir"
+python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser" --revert
 python3 "$repo/scripts/patch-host-diagnostics.py" "$source_dir"
 python3 "$repo/scripts/patch-host-network.py" "$source_dir"
 hid="$source_dir/third-party/libvirtualhid"
@@ -66,6 +64,7 @@ python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
 cp "$repo/host/common/framecadence.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-sync-cadence.py" "$source_dir"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir"
+python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

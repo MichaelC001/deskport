@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="referrer" content="no-referrer">
+  <title>DeskPort · 浏览器连接</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main id="app">
+    <header class="app-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">D</span><div><strong>DeskPort</strong><span id="host-name">浏览器连接</span></div></div>
+      <span id="connection-status" class="status" role="status" aria-live="polite">未连接</span>
+      <button id="disconnect" class="quiet" hidden>断开连接</button>
+    </header>
+    <section id="login-panel" class="login-panel" aria-labelledby="login-title">
+      <div class="login-card">
+        <span class="eyebrow">你的电脑，随手可用</span>
+        <h1 id="login-title">连接到 DeskPort</h1>
+        <p id="login-intro" class="intro">输入这台电脑上显示的 6 位访问码。</p>
+        <form id="login-form" autocomplete="off">
+          <div id="credential-fields">
+          <label for="access-code">访问码</label>
+          <input id="access-code" name="access-code" type="password" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="6 位字母或数字" aria-describedby="code-note">
+          <p id="code-note" class="hint">访问码不会保存在浏览器。</p>
+          <label class="check"><input id="remember-browser" type="checkbox" checked>记住此浏览器</label>
+          <p class="hint remember-note">仅在自己的设备上勾选。配对后，下次打开即可连接。</p>
+          <label id="device-name-label" for="device-name">设备名称（可选）</label>
+          <input id="device-name" name="device-name" type="text" maxlength="64" autocomplete="off" spellcheck="false" placeholder="用于在电脑端识别此浏览器">
+          </div>
+          <div id="paired-ready" class="paired-ready" hidden>
+            <span class="paired-label">此浏览器已配对</span>
+            <strong id="paired-name"></strong>
+            <button id="forget-pairing" type="button" class="quiet">取消配对</button>
+          </div>
+          <button id="retry-pairing" type="button" class="quiet" hidden>重新检查配对</button>
+          <details class="connection-options">
+            <summary>连接选项</summary>
+            <div class="option-grid">
+              <label>画面质量<select id="quality"><option value="balanced">均衡 · 720p / 30 帧</option><option value="smooth">流畅 · 720p / 30 帧</option><option value="sharp">清晰 · 720p / 30 帧</option></select></label>
+              <label class="check"><input id="request-audio" type="checkbox" checked>播放电脑声音</label>
+            </div>
+          </details>
+          <button id="connect" class="primary" type="submit">连接电脑<span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="privacy-note">无需注册账号。请只输入目标电脑上显示的访问码。</p>
+      </div>
+    </section>
+    <section id="session-panel" class="session-panel" aria-label="远程电脑" hidden>
+      <div id="viewport" class="viewport" tabindex="0" role="application" aria-label="远程桌面。点按画面后可使用键盘，长按触控板可拖动。">
+        <video id="desktop-video" playsinline autoplay muted disablepictureinpicture aria-label="远程桌面画面"></video>
+        <div id="video-placeholder" class="video-placeholder"><span class="spinner" aria-hidden="true"></span><strong>正在连接电脑…</strong><span>第一帧画面就绪后即可操作</span></div>
+        <button id="resume-audio" class="audio-prompt" hidden>点按开启声音</button>
+      </div>
+      <nav class="toolbar" aria-label="远程操作">
+        <label class="mode-label"><span class="sr-only">触摸模式</span><select id="touch-mode"><option value="trackpad">触控板</option><option value="direct">直接点按</option></select></label>
+        <button id="left-click" title="鼠标左键">左键</button>
+        <button id="right-click" title="鼠标右键">右键</button>
+        <button id="keyboard-toggle" aria-expanded="false" aria-controls="text-panel">文字</button>
+        <button id="shortcuts-toggle" aria-expanded="false" aria-controls="shortcuts-panel">快捷键</button>
+        <span class="toolbar-spacer"></span>
+        <button id="sound-toggle" aria-pressed="false">声音关</button>
+        <button id="fullscreen-toggle">全屏</button>
+      </nav>
+      <div id="shortcuts-panel" class="aux-panel shortcut-row" hidden aria-label="快捷键">
+        <button data-keys="27">Esc</button><button data-keys="9">Tab</button><button data-keys="13">Enter</button><button data-keys="8">退格</button><button data-keys="46">Delete</button><button data-keys="17,67">Ctrl C</button><button data-keys="17,86">Ctrl V</button><button data-keys="17,65">Ctrl A</button><button data-keys="91,67">⌘ C</button><button data-keys="91,86">⌘ V</button><button data-keys="18,9">Alt Tab</button><button data-keys="37">←</button><button data-keys="38">↑</button><button data-keys="40">↓</button><button data-keys="39">→</button>
+      </div>
+      <form id="text-panel" class="aux-panel text-panel" hidden>
+        <label class="sr-only" for="remote-text">向电脑输入文字，支持中文输入法</label>
+        <textarea id="remote-text" rows="2" maxlength="2048" placeholder="在这里输入中文或粘贴文字，再点发送" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="text-actions"><button id="paste-text" type="button">粘贴</button><button id="send-text" type="submit" class="primary">发送文字</button></div>
+      </form>
+      <footer class="session-footer"><span id="input-hint">单指移动 · 点按左键 · 双指滚动 · 长按拖动</span><span id="stream-info"></span></footer>
+    </section>
+    <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+    <noscript>请启用 JavaScript 以连接 DeskPort。</noscript>
+  </main>
+</body>
+</html>

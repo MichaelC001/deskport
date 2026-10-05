@@ -632,6 +632,66 @@ ApplicationWindow {
         QTest::qWait(250);
         QCOMPARE(desktopCreateCalls,1);
     }
+    void browserPairingRemovalKeepsOtherBrowsersAndReportsFailure() {
+        QTemporaryDir dir;
+        HostManager host(nullptr, dir.path()+"/host");
+        PeerManager peers(&host, credential("TEST_CERT_A"), credential("TEST_KEY_A"), dir.path()+"/peers", 0, QHostAddress::LocalHost);
+        QQmlEngine engine;
+        const QString gui = qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine, QUrl::fromLocalFile(gui+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        QQmlComponent fixture(&engine);
+        fixture.setData(R"(import QtQuick 2.9
+QtObject {
+ property string accessCode: "TEST42"
+ property string qrSource: ""
+ property string errorString: ""
+ property var urls: []
+ property var pairedBrowsers: [{id: "one", name: "Chrome fixture"}, {id: "two", name: "Safari fixture"}]
+ property string removed: ""
+ property bool writable: false
+ function revokeBrowser(id) {
+   removed = id
+   if (!writable) return false
+   pairedBrowsers = pairedBrowsers.filter(function(browser) { return browser.id !== id })
+   return true
+ }
+})", QUrl());
+        QScopedPointer<QObject> browser(fixture.create()); QVERIFY2(browser, qPrintable(fixture.errorString()));
+        browser->setProperty("urls", QStringList{"https://example.invalid:48992/"});
+        engine.rootContext()->setContextProperty("ui", theme.data());
+        engine.rootContext()->setContextProperty("hostManager", &host);
+        engine.rootContext()->setContextProperty("peerManager", &peers);
+        engine.rootContext()->setContextProperty("browserHost", browser.data());
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
+        QStringList warnings;
+        connect(&engine, &QQmlEngine::warnings, this, [&](const QList<QQmlError>& errors) {
+            for (const auto& error : errors) warnings << error.toString();
+        });
+        QQmlComponent component(&engine, QUrl::fromLocalFile(gui+"/HostView.qml"));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page, qPrintable(component.errorString()));
+        auto item = qobject_cast<QQuickItem*>(page.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(820, 1100);
+        item->setParentItem(window.contentItem()); item->setSize(QSizeF(820, 1100));
+        auto details = findVisual(item, "browserAccessDetails"); QVERIFY(details);
+        details->setProperty("checked", true); window.show(); QTest::qWait(80);
+        auto first = findVisual(item, "revokeBrowserPairing-one"); QVERIFY(first);
+        QVERIFY(findVisual(item, "revokeBrowserPairing-two"));
+        const auto screenshot = qEnvironmentVariable("DESKPORT_PAIRING_UI_SHOT");
+        if (!screenshot.isEmpty()) QVERIFY(window.grabWindow().save(screenshot));
+        QVERIFY(QMetaObject::invokeMethod(first, "clicked"));
+        QCOMPARE(browser->property("removed").toString(), QString("one"));
+        QVERIFY(!page->property("browserPairingError").toString().isEmpty());
+        QVERIFY(findVisual(item, "revokeBrowserPairing-one"));
+        browser->setProperty("writable", true);
+        QVERIFY(QMetaObject::invokeMethod(first, "clicked"));
+        QTRY_VERIFY(!findVisual(item, "revokeBrowserPairing-one"));
+        QVERIFY(findVisual(item, "revokeBrowserPairing-two"));
+        QVERIFY(page->property("browserPairingError").toString().isEmpty());
+        QVERIFY(!host.running()); QVERIFY(peers.peers().isEmpty());
+        const auto bad = warnings.filter(QRegularExpression("ReferenceError|TypeError|binding loop|Binding loop|Cannot assign|Unable to assign"));
+        QVERIFY2(bad.isEmpty(), qPrintable(bad.join('\n')));
+    }
     void pagesLoadWithoutChangingAccessOrSettings() {
         QTemporaryDir dir;
         HostManager host(nullptr,dir.path()+"/host");

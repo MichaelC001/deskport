@@ -832,6 +832,11 @@ void HostManager::sessionControl(const QJsonObject& body, QObject* context,
     managementRequest(QStringLiteral("sessions"), body, context, std::move(completion));
 }
 
+void HostManager::browserControl(const QJsonObject& body, QObject* context,
+                                std::function<void(QJsonObject)> completion) {
+    managementRequest(QStringLiteral("browser"), body, context, std::move(completion));
+}
+
 void HostManager::managementRequest(const QString& path, const QJsonObject& body, QObject* context,
                                     std::function<void(QJsonObject)> completion) {
     const auto certificates = QSslCertificate::fromPath(m_Directory + "/credentials/cert.pem");

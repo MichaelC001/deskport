@@ -4,6 +4,9 @@
 #include <QLocalServer>
 #include <QPointer>
 #include <QStringList>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <functional>
 
 class HostManager;
 class PeerManager;
@@ -25,6 +28,11 @@ public:
     // that owner may remove a socket left behind by an earlier process.
     bool listen();
     QString errorString() const { return m_Error.isEmpty() ? m_Server.errorString() : m_Error; }
+    void setBrowserInfo(std::function<QJsonObject()> info) { m_BrowserInfo = std::move(info); }
+    void setBrowserPairings(std::function<QJsonArray()> list,
+                            std::function<bool(const QString&)> revoke) {
+        m_BrowserPairings = std::move(list); m_RevokeBrowser = std::move(revoke);
+    }
 private:
     void acceptConnections();
     void dispatch(QObject* request, const QStringList& arguments);
@@ -35,6 +43,9 @@ private:
     QLocalServer m_Server;
     QPointer<QObject> m_Mutation;
     int m_Connections = 0;
+    std::function<QJsonObject()> m_BrowserInfo;
+    std::function<QJsonArray()> m_BrowserPairings;
+    std::function<bool(const QString&)> m_RevokeBrowser;
 };
 
 }

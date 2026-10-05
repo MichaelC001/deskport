@@ -1,0 +1,412 @@
+#!/usr/bin/env node
+// Isolated browser UI/WebRTC contract test. Never connects to a DeskPort host or injects OS input.
+// Install playwright-core in a disposable build directory, then set DESKPORT_PLAYWRIGHT_MODULE
+// to its module path and DESKPORT_TEST_CHROME to a Chromium executable. Set DESKPORT_TEST_RTC
+// to rtc-transport-test and DESKPORT_TEST_H264 to a Constrained Baseline Level 3.1
+// 1280x720 at 30 fps AUD-delimited test pattern. ffprobe verifies the actual bitstream.
+// No production Node dependency, native capture, or native input backend is involved.
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import https from 'node:https';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
+
+const require = createRequire(import.meta.url);
+const { chromium } = require(process.env.DESKPORT_PLAYWRIGHT_MODULE || 'playwright-core');
+const nativeExecutable = process.env.DESKPORT_TEST_RTC;
+const h264Fixture = process.env.DESKPORT_TEST_H264;
+assert.ok(nativeExecutable && h264Fixture, 'Set DESKPORT_TEST_RTC to the isolated rtc-transport-test and DESKPORT_TEST_H264 to an AUD-delimited H.264 test pattern.');
+const fixtureProbe = JSON.parse(execFileSync(process.env.DESKPORT_TEST_FFPROBE || 'ffprobe', [
+  '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=codec_name,profile,level,width,height', '-of', 'json', h264Fixture
+], { encoding: 'utf8' })).streams[0];
+assert.equal(fixtureProbe?.codec_name, 'h264', 'The native fixture must contain actual H.264.');
+assert.equal(fixtureProbe?.profile, 'Constrained Baseline', 'Do not feed a High-profile bitstream under a Baseline SDP.');
+assert.equal(fixtureProbe?.level, 31, 'The validated fixture targets H.264 level 3.1.');
+assert.equal(fixtureProbe?.width, 1280, 'The validated fixture width is 1280.');
+assert.equal(fixtureProbe?.height, 720, 'The validated fixture height is 720.');
+// Raw Annex B has no container timestamps; verify its progressive SPS timing instead
+// of ffprobe's demuxer rate guess (some FFmpeg versions report twice the frame rate).
+const headers = spawnSync(process.env.DESKPORT_TEST_FFMPEG || 'ffmpeg', [
+  '-hide_banner', '-i', h264Fixture, '-c:v', 'copy', '-bsf:v', 'trace_headers', '-frames:v', '1', '-f', 'null', '-'
+], { encoding: 'utf8' });
+assert.equal(headers.status, 0, 'The fixture SPS must be readable.');
+const tickUnits = Number(headers.stderr.match(/num_units_in_tick[^\n]*=\s*(\d+)/)?.[1]);
+const timeScale = Number(headers.stderr.match(/time_scale[^\n]*=\s*(\d+)/)?.[1]);
+assert.equal(timeScale / (2 * tickUnits), 30, 'The validated progressive H.264 fixture timing is 30 fps.');
+fixtureProbe.framesPerSecond = 30;
+const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const output = process.env.DESKPORT_FRONTEND_TEST_OUTPUT || path.join(process.env.DESKPORT_BUILD_ROOT || path.join(process.env.HOME, 'mygit/build/deskport'), 'browser-client/frontend');
+await mkdir(output, { recursive: true });
+const cert = path.join(output, 'fixture-cert.pem');
+const key = path.join(output, 'fixture-key.pem');
+execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
+const resources = new Map(await Promise.all(['index.html', 'app.js', 'style.css'].map(async name => [name, await readFile(path.join(repo, 'app/browser', name))])));
+const server = https.createServer({ key: await readFile(key), cert: await readFile(cert) }, (request, response) => {
+  const name = request.url === '/' ? 'index.html' : request.url.slice(1);
+  if (!resources.has(name)) { response.writeHead(404); response.end(); return; }
+  response.setHeader('Content-Type', { 'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8', 'style.css': 'text/css' }[name]);
+  response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'");
+  response.end(resources.get(name));
+});
+await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+const origin = `https://127.0.0.1:${server.address().port}`;
+const browser = await chromium.launch({ headless: true, ...(process.env.DESKPORT_TEST_CHROME ? { executablePath: process.env.DESKPORT_TEST_CHROME } : {}) });
+// Trust override is confined to this disposable test context. Production has no bypass.
+const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1180, height: 820 }, hasTouch: true });
+await context.grantPermissions(['local-network-access'], { origin });
+const page = await context.newPage();
+await context.addInitScript(() => {
+  const NativePeer = window.RTCPeerConnection;
+  window.fixturePeers = [];
+  window.RTCPeerConnection = class extends NativePeer {
+    constructor(...args) {
+      super(...args);
+      window.fixturePeers.push(this);
+      this.fixtureStates = [];
+      this.addEventListener('iceconnectionstatechange', () => this.fixtureStates.push(this.iceConnectionState));
+      this.addEventListener('datachannel', event => { window.fixtureChannel = event.channel; });
+    }
+  };
+  const nativeSend = RTCDataChannel.prototype.send;
+  RTCDataChannel.prototype.send = function(message) {
+    window.fixtureHost?.events.push(JSON.parse(message));
+    return nativeSend.call(this, message);
+  };
+});
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+const requests = [];
+let mode = 'bad-code';
+let serverPairing = null;
+let sessionToken = '';
+let sessionCounter = 0;
+let offer;
+let native;
+let signalDirectory;
+let nativeOutput = '';
+let heldStop = null;
+const checks = [];
+const check = (name, value = true) => { assert.ok(value, name); checks.push(name); };
+
+await context.route('**/api/**', async route => {
+  const request = route.request();
+  const endpoint = new URL(request.url()).pathname;
+  const body = request.postDataJSON();
+  requests.push({ endpoint, body, token: request.headers()['x-deskport-session'] || '' });
+  const respond = (status, json) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(json) });
+  const authenticated = (paired, reuse = false) => {
+    if (!reuse || !sessionToken) sessionToken = `fixture-only-memory-token-${++sessionCounter}`;
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: {
+      'Set-Cookie': `__Host-deskport-session=fixture-${sessionCounter}; Secure; HttpOnly; SameSite=Strict; Path=/`
+    }, body: JSON.stringify({ ok: true, csrfToken: sessionToken, paired, pairing: paired ? serverPairing : null }) });
+  };
+  if (endpoint === '/api/resume') {
+    if (mode === 'resume-offline') return route.abort('failed');
+    if (mode === 'slow-resume') await new Promise(resolve => setTimeout(resolve, 350));
+    if (!serverPairing) return respond(401, { ok: false, code: 'unpaired' });
+    return authenticated(true, true);
+  }
+  if (endpoint === '/api/login') {
+    if (mode === 'bad-code') return respond(401, { ok: false, code: 'unauthorized' });
+    if (body.remember) serverPairing = { id: 'fixture-pairing', name: body.deviceName || '测试浏览器' };
+    return authenticated(Boolean(body.remember));
+  }
+  if (!sessionToken || request.headers()['x-deskport-session'] !== sessionToken) return respond(401, { ok: false, code: 'unauthorized' });
+  if (endpoint === '/api/forget') {
+    if (mode === 'forget-failed') return respond(503, { ok: false, code: 'storage-unavailable' });
+    serverPairing = null; sessionToken = '';
+    return respond(200, { ok: true });
+  }
+  if (endpoint === '/api/logout') {
+    if (mode === 'slow-logout') await new Promise(resolve => setTimeout(resolve, 350));
+    sessionToken = ''; return respond(200, { ok: true });
+  }
+  if (endpoint === '/api/status') return respond(200, { ok: true, authenticated: true, sharing: true, busy: mode === 'busy', mediaAvailable: true, hostName: '测试电脑' });
+  if (endpoint === '/api/session/start') {
+    if (mode === 'slow-start') await new Promise(resolve => setTimeout(resolve, 500));
+    return respond(200, { ok: true, ...offer });
+  }
+  if (endpoint === '/api/session/answer') {
+    await writeFile(path.join(signalDirectory, 'answer.json'), JSON.stringify(body));
+    return respond(200, { ok: true });
+  }
+  if (endpoint === '/api/session/heartbeat' && mode === 'expired') {
+    serverPairing = null; sessionToken = '';
+    return respond(401, { ok: false, code: 'unauthorized' });
+  }
+  if (endpoint === '/api/session/input') await page.evaluate(event => window.fixtureHost?.events.push(event), body.event);
+  if (endpoint === '/api/session/stop') {
+    if (native) { native.kill('SIGTERM'); native = null; }
+    if (heldStop) { heldStop.processed(); await heldStop.promise; }
+  }
+  return respond(200, { ok: true });
+});
+
+async function waitVisible(selector) { await page.locator(selector).waitFor({ state: 'visible' }); }
+async function login() { await page.locator('#access-code').fill('ABC234'); await page.locator('#connect').click(); }
+async function inputEvents() { return page.evaluate(() => window.fixtureHost.events); }
+async function waitEvent(type, predicate = {}) {
+  await page.waitForFunction(({ type, predicate }) => window.fixtureHost.events.some(event => event.type === type && Object.entries(predicate).every(([key, value]) => event[key] === value)), { type, predicate });
+}
+async function prepareHost() {
+  signalDirectory = path.join(output, `client-signal-${Date.now()}`);
+  await mkdir(signalDirectory, { recursive: true });
+  native = spawn(nativeExecutable, ['--browser', signalDirectory, h264Fixture]);
+  native.stdout.on('data', data => { nativeOutput += data; });
+  native.stderr.on('data', data => { nativeOutput += data; });
+  offer = null;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    try { offer = JSON.parse(await readFile(path.join(signalDirectory, 'offer.json'), 'utf8')); break; } catch (_) { /* Wait for complete ICE offer. */ }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  assert.ok(offer, `Native fixture did not produce an offer: ${nativeOutput}`);
+  assert.match(offer.sdp, /profile-level-id=42e01f/i, 'The current native transport must advertise Constrained Baseline level 3.1.');
+  await page.evaluate(() => { window.fixtureHost = { events: [] }; });
+}
+
+try {
+  await page.goto(origin);
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  check('first visit checks pairing without starting media', requests.some(request => request.endpoint === '/api/resume') && !requests.some(request => request.endpoint === '/api/session/start'));
+  check('remember browser is checked by default', await page.locator('#remember-browser').isChecked());
+  const codecs = await page.evaluate(() => RTCRtpReceiver.getCapabilities('video').codecs.filter(codec => codec.mimeType.toLowerCase() === 'video/h264'));
+  await writeFile(path.join(output, 'chrome-h264-capabilities.json'), JSON.stringify({ browser: browser.version(), codecs }, null, 2));
+  await page.screenshot({ path: path.join(output, 'login-desktop.png') });
+  await login();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('访问码不正确'));
+  check('incorrect access code shows an actionable error');
+  check('failed login clears the code', await page.locator('#access-code').inputValue() === '');
+  mode = 'busy';
+  await page.locator('#remember-browser').uncheck();
+  await login();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('其他连接'));
+  check('busy host does not start or take over a session', !requests.some(request => request.endpoint === '/api/session/start'));
+  mode = 'success';
+  await page.locator('#remember-browser').check();
+  await page.locator('#device-name').fill('我的测试浏览器');
+  await prepareHost();
+  await login();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
+  await page.waitForFunction(() => window.fixtureChannel.readyState === 'open');
+  check('actual native WebRTC H.264 video renders', await page.evaluate(() => document.getElementById('desktop-video').videoWidth === 1280 && document.getElementById('desktop-video').videoHeight === 720));
+  const codecStats = await page.evaluate(async () => {
+    const stats = await window.fixturePeers[0].getStats();
+    const result = [];
+    stats.forEach(report => { if (report.type === 'inbound-rtp' && report.packetsReceived > 0) result.push(stats.get(report.codecId)?.mimeType); });
+    return result;
+  });
+  check('native test-pattern stream negotiates H.264', codecStats.includes('video/H264'));
+  check('receive-only audio negotiates Opus', codecStats.includes('audio/opus'));
+  const start = requests.find(request => request.endpoint === '/api/session/start').body;
+  check('stream hint stays inside validated dimensions', start.width <= 1280 && start.height <= 720 && start.fps === 30 && start.bitrateKbps <= 14000 && start.width % 4 === 0 && start.height % 4 === 0);
+  check('H.264 capabilities sent for server negotiation', start.videoCapabilities.length > 0);
+  check('code does not enter URL', !page.url().includes('ABC234'));
+  check('credentials not persisted in web storage', await page.evaluate(() => localStorage.length === 0 && sessionStorage.length === 0));
+  const otherTab = await context.newPage();
+  await otherTab.goto(origin);
+  await otherTab.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  const stopsBeforeIdleTab = requests.filter(request => ['/api/session/stop', '/api/logout'].includes(request.endpoint)).length;
+  const tokenBeforeOtherConnect = sessionToken;
+  mode = 'busy';
+  await otherTab.locator('#connect').click();
+  await otherTab.waitForFunction(() => document.getElementById('notice').textContent.includes('其他连接'));
+  check('busy paired tab cannot stop or log out the owner', requests.filter(request => ['/api/session/stop', '/api/logout'].includes(request.endpoint)).length === stopsBeforeIdleTab && sessionToken === tokenBeforeOtherConnect);
+  mode = 'success';
+  await otherTab.reload();
+  await otherTab.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  await otherTab.goto('about:blank');
+  await otherTab.close({ runBeforeUnload: true });
+  await page.waitForTimeout(150);
+  check('closing a restored idle tab leaves owner session intact', requests.filter(request => ['/api/session/stop', '/api/logout'].includes(request.endpoint)).length === stopsBeforeIdleTab && Boolean(native));
+  check('other-tab restore does not interrupt video', await page.locator('#connection-status').getAttribute('data-state') === 'streaming');
+  await page.locator('#right-click').click();
+  await waitEvent('button', { button: 3, down: false });
+  check('right click reaches ordered data channel');
+  await page.locator('#viewport').focus();
+  await page.keyboard.down('Control'); await page.keyboard.press('KeyA'); await page.keyboard.up('Control');
+  await waitEvent('key', { key: 65, down: true, modifiers: 2 });
+  await waitEvent('key', { key: 17, down: false });
+  check('hardware key and modifier press/release reach the host');
+  await page.keyboard.down('Shift');
+  await page.locator('#keyboard-toggle').click();
+  await page.keyboard.up('Shift');
+  await waitEvent('release');
+  check('leaving desktop focus releases held input');
+  await page.locator('#remote-text').dispatchEvent('compositionstart', { data: '中' });
+  await page.locator('#remote-text').fill('中文输入测试');
+  await page.locator('#send-text').click();
+  check('unfinished IME composition is not sent', !(await inputEvents()).some(event => event.type === 'text'));
+  await page.locator('#remote-text').dispatchEvent('compositionend', { data: '中文输入测试' });
+  await page.locator('#send-text').click();
+  await waitEvent('text', { text: '中文输入测试' });
+  check('Chinese text sends once after composition');
+  await page.locator('#keyboard-toggle').click();
+  await page.locator('#shortcuts-toggle').click();
+  await page.locator('[data-keys="91,67"]').click();
+  await waitEvent('key', { key: 67, down: true, modifiers: 8 });
+  check('on-screen system shortcut reaches host');
+  await page.locator('#shortcuts-toggle').click();
+  const area = await page.locator('#viewport').boundingBox();
+  await page.mouse.move(area.x + area.width / 2, area.y + area.height / 2);
+  await page.mouse.wheel(0, 120);
+  await waitEvent('scroll', { y: -120 });
+  check('wheel delta maps to host direction and units');
+  const cdp = await context.newCDPSession(page);
+  const point = { x: area.x + 180, y: area.y + 160 };
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [point] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: point.x + 35, y: point.y + 18 }] });
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await waitEvent('relative');
+  check('touch trackpad moves remote pointer');
+  await page.locator('#touch-mode').selectOption('direct');
+  await page.touchscreen.tap(point.x, point.y);
+  await waitEvent('button', { button: 1, down: false });
+  check('direct touch sends balanced button events');
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  check('tablet toolbar remains inside viewport', await page.locator('.toolbar').evaluate(element => element.getBoundingClientRect().bottom <= innerHeight));
+  await page.screenshot({ path: path.join(output, 'session-ipad-layout.png') });
+  check('tablet layout has no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  check('phone toolbar remains inside viewport', await page.locator('.toolbar').evaluate(element => element.getBoundingClientRect().bottom <= innerHeight));
+  check('narrow layout has no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming');
+  await new Promise(resolve => setTimeout(resolve, 5200));
+  check('static sessions send authenticated heartbeat', requests.some(request => request.endpoint === '/api/session/heartbeat'));
+  const mediaStats = await page.evaluate(async () => {
+    const stats = await window.fixturePeers[0].getStats();
+    return [...stats.values()].filter(report => report.type === 'inbound-rtp').map(report => ({
+      kind: report.kind, packetsReceived: report.packetsReceived, framesDecoded: report.framesDecoded,
+      framesPerSecond: report.framesPerSecond, bytesReceived: report.bytesReceived, codec: stats.get(report.codecId)
+    }));
+  });
+  check('H.264 decode continues beyond the first frame', mediaStats.some(report => report.kind === 'video' && report.framesDecoded > 30));
+  await page.evaluate(() => window.fixtureChannel.close());
+  await page.waitForFunction(() => window.fixtureChannel.readyState === 'closed');
+  await page.locator('#right-click').click();
+  await page.waitForFunction(() => window.fixtureHost.events.filter(event => event.type === 'button' && event.button === 3 && !event.down).length >= 2);
+  const fallbackButtons = requests.filter(request => request.endpoint === '/api/session/input' && request.body.event.type === 'button').map(request => request.body.event.down);
+  check('HTTP input fallback preserves down/up ordering', fallbackButtons.length >= 2 && fallbackButtons.at(-2) === true && fallbackButtons.at(-1) === false);
+  const nextOwner = await context.newPage();
+  await nextOwner.goto(origin);
+  await nextOwner.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  let stopProcessed;
+  let releaseStop;
+  const stopProcessedPromise = new Promise(resolve => { stopProcessed = resolve; });
+  heldStop = { processed: stopProcessed, promise: new Promise(resolve => { releaseStop = resolve; }) };
+  const logoutsBeforeDisconnect = requests.filter(request => request.endpoint === '/api/logout').length;
+  await page.locator('#disconnect').click();
+  await stopProcessedPromise;
+  check('disconnect waits for its own stop response', await page.locator('#connect').isDisabled());
+  await prepareHost();
+  await nextOwner.locator('#connect').click();
+  await nextOwner.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
+  const nextOwnerFrames = () => nextOwner.evaluate(async () => {
+    const stats = await window.fixturePeers[0].getStats();
+    return [...stats.values()].find(report => report.type === 'inbound-rtp' && report.kind === 'video')?.framesDecoded || 0;
+  });
+  const framesBeforeLateCleanup = await nextOwnerFrames();
+  releaseStop(); heldStop = null;
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  await nextOwner.waitForTimeout(450);
+  check('paired disconnect stops only owned media and never logs out shared session', requests.some(request => request.endpoint === '/api/session/stop') && requests.filter(request => request.endpoint === '/api/logout').length === logoutsBeforeDisconnect);
+  check('late first-tab cleanup leaves the new owner streaming', await nextOwnerFrames() > framesBeforeLateCleanup && await nextOwner.locator('#connection-status').getAttribute('data-state') === 'streaming');
+  await nextOwner.locator('#disconnect').click();
+  await nextOwner.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  // Short-session expiry is distinct from persistent pairing revocation.
+  const previousToken = sessionToken;
+  sessionToken = '';
+  mode = 'busy';
+  await nextOwner.locator('#connect').click();
+  await nextOwner.waitForFunction(() => document.getElementById('notice').textContent.includes('其他连接'));
+  check('idle paired tab resumes after short-session expiry', Boolean(sessionToken) && sessionToken !== previousToken);
+  await nextOwner.close();
+  mode = 'success';
+  check('disconnect keeps paired ready without requiring a code', await page.locator('#paired-ready').isVisible() && await page.locator('#credential-fields').isHidden());
+  check('remember and safe device name are sent only at pairing', requests.filter(request => request.endpoint === '/api/login').at(-1).body.remember === true && serverPairing.name === '我的测试浏览器');
+  mode = 'forget-failed';
+  const resumesBeforeForget = requests.filter(request => request.endpoint === '/api/resume').length;
+  await page.locator('#forget-pairing').click();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('未能确认取消'));
+  check('forget after disconnect resumes a fresh short session first', requests.filter(request => request.endpoint === '/api/resume').length === resumesBeforeForget + 1);
+  check('failed forget retains pairing and reports failure', await page.locator('#paired-ready').isVisible() && Boolean(serverPairing));
+  mode = 'success';
+  const startsBeforeReload = requests.filter(request => request.endpoint === '/api/session/start').length;
+  await page.reload();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  check('refresh restores pairing without automatically streaming', requests.filter(request => request.endpoint === '/api/session/start').length === startsBeforeReload);
+  check('remembered device name is safely rendered', await page.locator('#paired-name').textContent() === '我的测试浏览器');
+  mode = 'resume-offline';
+  await page.reload();
+  await page.waitForFunction(() => !document.getElementById('retry-pairing').hidden);
+  check('offline resume does not claim that pairing was cancelled', !(await page.locator('#notice').textContent()).includes('取消') && Boolean(serverPairing));
+  mode = 'slow-resume';
+  await page.locator('#retry-pairing').click();
+  check('pending resume blocks overlapping connect and forget', await page.locator('#connect').isDisabled());
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  check('retry recovers existing pairing without new code', await page.locator('#access-code').inputValue() === '' && await page.locator('#credential-fields').isHidden());
+  mode = 'success';
+  await prepareHost();
+  await page.locator('#connect').click();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
+  check('paired reconnect starts media without re-entering a code', await page.locator('#access-code').inputValue() === '');
+  mode = 'expired';
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle', null, { timeout: 15000 });
+  await page.waitForFunction(() => !document.getElementById('credential-fields').hidden);
+  check('host-revoked pairing stops playback and returns to code entry', await page.locator('#notice').textContent().then(text => text.includes('配对')));
+  mode = 'busy';
+  await login();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
+  mode = 'success';
+  await page.locator('#forget-pairing').click();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('已取消此浏览器配对'));
+  check('successful forget returns to code entry', !serverPairing && await page.locator('#credential-fields').isVisible() && await page.locator('#paired-ready').isHidden());
+  await page.reload();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  check('forgotten browser cannot resume on refresh', await page.locator('#credential-fields').isVisible() && await page.locator('#access-code').inputValue() === '');
+  mode = 'slow-start';
+  await login();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'connecting');
+  const stopsBeforeCancel = requests.filter(request => request.endpoint === '/api/session/stop').length;
+  await page.locator('#disconnect').click();
+  check('cancelling pending media start blocks a new overlapping connection', await page.locator('#connect').isDisabled());
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  check('cancelled start is stopped after its successful reservation', requests.filter(request => request.endpoint === '/api/session/stop').length === stopsBeforeCancel + 1 && await page.locator('#paired-ready').isVisible());
+  mode = 'success';
+  await page.locator('#forget-pairing').click();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && document.getElementById('paired-ready').hidden);
+  await page.locator('#remember-browser').uncheck();
+  mode = 'busy';
+  await login();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('其他连接'));
+  check('temporary login does not retain paired UI', !serverPairing && await page.locator('#credential-fields').isVisible() && requests.filter(request => request.endpoint === '/api/login').at(-1).body.remember === false);
+  mode = 'slow-start';
+  await login();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'connecting');
+  const temporaryLogoutsBefore = requests.filter(request => request.endpoint === '/api/logout').length;
+  await page.locator('#disconnect').click();
+  mode = 'slow-logout';
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  check('temporary owned session still logs out after stopping', requests.filter(request => request.endpoint === '/api/logout').length === temporaryLogoutsBefore + 1 && await page.locator('#credential-fields').isVisible());
+  check('browser reports no uncaught application errors', errors.length === 0);
+  const report = { browser: browser.version(), checks, count: checks.length, fixtureProbe, media: 'Real production RtcSession/libdatachannel Constrained Baseline H.264/Opus and DataChannel with a verified test pattern; mocked authentication/server HTTP API. No native capture/input injection or physical iPad validation.', mediaStats, errors };
+  await writeFile(path.join(output, 'frontend-test-results.json'), JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
+} catch (error) {
+  console.error(JSON.stringify({ checks, errors, browserState: await page.evaluate(() => ({
+    status: document.getElementById('connection-status').textContent,
+    notice: document.getElementById('notice').textContent,
+    peers: window.fixturePeers.map(peer => ({ states: peer.fixtureStates, local: peer.localDescription?.sdp, remote: peer.remoteDescription?.sdp })),
+    video: { width: document.getElementById('desktop-video').videoWidth, paused: document.getElementById('desktop-video').paused }
+  })), endpoints: requests.map(request => request.endpoint) }, null, 2));
+  await page.screenshot({ path: path.join(output, 'failure.png') });
+  throw error;
+} finally {
+  if (native) native.kill('SIGTERM');
+  await context.close();
+  await browser.close();
+  await new Promise(resolve => server.close(resolve));
+}

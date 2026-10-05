@@ -1,0 +1,107 @@
+#pragma once
+
+#include <QObject>
+#include <QHostAddress>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QSslCertificate>
+#include <QSslKey>
+#include <QHash>
+#include <QSet>
+#include <QTimer>
+#include <functional>
+
+class QTcpServer;
+
+// A deliberately small, same-origin HTTPS adapter. Host/session policy stays in
+// the host adapter; this class owns web credentials and transport admission only.
+class BrowserGateway : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString accessCode READ accessCode NOTIFY changed)
+    Q_PROPERTY(QStringList urls READ urls NOTIFY changed)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY changed)
+    Q_PROPERTY(int port READ port NOTIFY changed)
+    Q_PROPERTY(bool active READ active NOTIFY changed)
+public:
+    struct Options {
+        QString stateDirectory;
+        quint16 port = 48992;
+        QList<QHostAddress> listenAddresses;
+        QStringList allowedHosts;
+        QString certificatePath;
+        QString privateKeyPath;
+        int sessionIdleSeconds = 900;
+        int mediaIdleSeconds = 20;
+    };
+    struct Hooks {
+        std::function<QJsonObject()> state;
+        std::function<void(const QJsonObject&, QObject*, std::function<void(QJsonObject)>)> request;
+    };
+    explicit BrowserGateway(const Hooks& hooks, QObject* parent = nullptr);
+    BrowserGateway(const Hooks& hooks, const Options& options, QObject* parent = nullptr);
+    ~BrowserGateway() override;
+    bool start();
+    void stop();
+    bool active() const { return !m_Listeners.isEmpty(); }
+    QString accessCode() const { return m_Code; } // Local UI/CLI only, never an HTTP response.
+    QStringList urls() const { return m_Urls; }
+    QString errorString() const { return m_Error; }
+    int port() const { return m_Port; }
+    Q_INVOKABLE bool resetAccessCode();
+    QJsonArray pairedBrowsers() const;
+    bool revokeBrowser(const QString& id);
+    void hostStateChanged();
+signals:
+    void changed();
+private:
+    struct Connection;
+    struct Session {
+        QString id, csrf, pairingId;
+        qint64 created = 0, lastSeen = 0, lastHeartbeat = 0;
+        quint64 generation = 0;
+        bool media = false, pending = false;
+    };
+    struct Rate {
+        double credits = 5.0;
+        qint64 updated = 0;
+    };
+    struct Pairing {
+        QString id, name, hash;
+        qint64 createdAt = 0, lastSeenAt = 0, expiresAt = 0;
+    };
+    void accept(qintptr descriptor);
+    void receive(Connection* connection);
+    void dispatch(Connection* connection);
+    void respond(Connection* connection, int status, const QByteArray& body,
+                 const QByteArray& contentType = "application/json", const QList<QByteArray>& cookies = {});
+    void error(Connection* connection, int status, const QString& code, const QString& message,
+               const QList<QByteArray>& cookies = {});
+    void createSession(Connection* connection, const QString& pairingId, const QList<QByteArray>& cookies = {}, bool reuse = false);
+    bool sessionAvailable(Connection* connection);
+    bool loadPairings();
+    bool savePairings(const QHash<QString, Pairing>& pairings);
+    QString pairingFor(Connection* connection) const;
+    void releasePairing(const QString& id);
+    void forward(Connection* connection, const QString& key, const QString& action, QJsonObject body);
+    void release(const QString& key);
+    void cleanup();
+    bool loadCredentials(const QList<QHostAddress>& addresses);
+    bool saveCode(const QString& code);
+    bool permittedHost(const QByteArray& host) const;
+    bool loginAllowed(const QString& address);
+    QString authenticated(Connection* connection) const;
+    Hooks m_Hooks;
+    Options m_Options;
+    QList<QTcpServer*> m_Listeners;
+    QSet<Connection*> m_Connections;
+    QHash<QString, Session> m_Sessions;
+    QHash<QString, Pairing> m_Pairings;
+    QHash<QString, Rate> m_Rates;
+    Rate m_GlobalRate;
+    QList<QSslCertificate> m_Certificates;
+    QSslKey m_PrivateKey;
+    QTimer m_Cleanup;
+    QString m_Directory, m_Code, m_Error;
+    QStringList m_Urls, m_Hosts;
+    int m_Port = 0;
+};

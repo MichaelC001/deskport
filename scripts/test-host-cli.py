@@ -6,10 +6,12 @@ The binding listener uses an unused high port; the local control socket is
 derived from this fixture's private configuration directory.
 """
 import json
+import http.client
 import os
 from pathlib import Path
 import signal
 import socket
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -31,6 +33,10 @@ with tempfile.TemporaryDirectory(prefix="deskport-cli-") as temporary:
     # Every short command must work even with an intentionally invalid GUI
     # platform; host run explicitly chooses its own offscreen platform.
     environment["QT_QPA_PLATFORM"] = "deskport-test-no-gui-platform"
+    environment["DESKPORT_WEB_BIND"] = "127.0.0.1"
+    with socket.socket() as web_reservation:
+        web_reservation.bind(("127.0.0.1", 0))
+        environment["DESKPORT_WEB_PORT"] = str(web_reservation.getsockname()[1])
 
     def command(*arguments, code=0):
         result = subprocess.run([binary, *arguments], cwd=work, env=environment,
@@ -41,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix="deskport-cli-") as temporary:
     command("--version")
     assert "host run" in command("--help")
     command("host", "run", "--help")
-    for verb in ("status", "sharing", "devices", "config", "doctor", "service"):
+    for verb in ("status", "sharing", "devices", "config", "web", "doctor", "service"):
         command(verb, "--help")
     assert not json.loads(command("status", "--json", code=1))["ok"]
     assert not list((work / "config").rglob("*.conf")), "Read-only commands created settings"
@@ -68,6 +74,33 @@ with tempfile.TemporaryDirectory(prefix="deskport-cli-") as temporary:
                 time.sleep(0.1)
             assert not state["running"] and not state["ready"]
             assert state["port"] == binding_port
+            web = json.loads(command("web", "info", "--json"))["data"]
+            assert web["enabled"] and len(web["accessCode"]) == 6
+            assert web["urls"] == [f'https://127.0.0.1:{environment["DESKPORT_WEB_PORT"]}/']
+            certificate, = (work / "data").rglob("browser/https-cert.pem")
+            tls = ssl.create_default_context(cafile=str(certificate))
+            def browser_request(path, body, cookies="", csrf=""):
+                connection = http.client.HTTPSConnection("127.0.0.1", int(environment["DESKPORT_WEB_PORT"]), context=tls, timeout=10)
+                connection.request("POST", path, json.dumps(body), {
+                    "Origin": web["urls"][0].rstrip("/"), "Content-Type": "application/json",
+                    "Cookie": cookies, "X-DeskPort-Session": csrf})
+                response = connection.getresponse()
+                data = json.loads(response.read())
+                saved = "; ".join(value.split(";", 1)[0] for key, value in response.getheaders() if key.lower() == "set-cookie")
+                status = response.status
+                connection.close()
+                return status, data, saved
+            assert json.loads(command("web", "list", "--json"))["data"]["browsers"] == []
+            status, pairing, cookies = browser_request("/api/login", {"code": web["accessCode"], "remember": True, "deviceName": "CLI browser fixture"})
+            assert status == 200 and pairing["paired"]
+            browser_id = pairing["pairing"]["id"]
+            listed = json.loads(command("web", "list", "--json"))["data"]["browsers"]
+            assert len(listed) == 1 and listed[0]["id"] == browser_id and "hash" not in listed[0]
+            assert not json.loads(command("web", "remove", "missing-browser", "--json", code=1))["ok"]
+            assert json.loads(command("web", "remove", browser_id, "--json"))["data"]["removed"] == browser_id
+            assert browser_request("/api/resume", {}, cookies)[0] == 401
+            assert browser_request("/api/logout", {}, cookies, pairing["csrfToken"])[0] == 401
+            assert json.loads(command("web", "list", "--json"))["data"]["browsers"] == []
             command("host", "run", "--no-share", code=3)
             assert json.loads(command("config", "set", "name", "CLI fixture", "--json"))["ok"]
             assert json.loads(command("config", "get", "--json"))["data"]["name"] == "CLI fixture"
@@ -90,4 +123,4 @@ with tempfile.TemporaryDirectory(prefix="deskport-cli-") as temporary:
             if sys.exc_info()[0]:
                 log.seek(0)
                 print(log.read(), file=sys.stderr)
-print("PASS: packaged CLI works without a display; isolated daemon, config, ownership, stale approval and SIGTERM")
+print("PASS: packaged CLI works without a display; real HTTPS browser enrollment/list/removal/old-credential rejection, isolated daemon, config, ownership, stale approval and SIGTERM")

@@ -11,6 +11,7 @@
 #include <QNetworkReply>
 #include <QTcpServer>
 #include "backend/hostmanager.h"
+#include "backend/browserhost.h"
 #include "backend/multisessions.h"
 #include "backend/sessionworker.h"
 #include "backend/peermanager.h"
@@ -361,9 +362,10 @@ int main(int argc, char *argv[])
 #endif
         QCoreApplication cli(argc, argv);
         if (hostHelp) {
-            fputs("Usage: deskport host run [--no-share]\n"
+            fputs("Usage: deskport host run [--no-share] [--no-web-server]\n"
                   "Run the Linux host in the foreground without a window.\n"
                   "--no-share starts management with sharing disabled.\n"
+                  "--no-web-server disables browser HTTPS access for this run.\n"
                   "A compositor, capture, input, audio and encoder must already be available.\n"
                   "Use deskport doctor to inspect prerequisites.\n", stdout);
             return 0;
@@ -647,6 +649,8 @@ int main(int argc, char *argv[])
         const int testBindingPort = qEnvironmentVariableIntValue("DESKPORT_TEST_BINDING_PORT");
         if (testBindingPort && (testBindingPort < 1024 || testBindingPort > 65535)) return 2;
         PeerManager peers(&host, cert, key, QDir::currentPath()+"/binding", quint16(testBindingPort));
+        BrowserHost browserHost(&host, nullptr, QDir::currentPath()+"/browser");
+        browserHost.start();
         QDialog window;
         window.setWindowTitle("DeskPort temporary session test");
         auto layout = new QVBoxLayout(&window);
@@ -669,10 +673,14 @@ int main(int argc, char *argv[])
             status->setText(QString("Isolated host; extended workspace only; expires after 15 minutes.\nBinding port: %1   Video base port: %2\n%3\n%4")
                             .arg(peers.port()).arg(host.basePort()).arg(host.status(), peers.status()));
             pending->setText(peers.pendingName());
+            if (browserHost.listening())
+                pending->setText(pending->text() + "\nBrowser: " + browserHost.urls().join("  ") +
+                                 "\nAccess code: " + browserHost.accessCode());
             approve->setEnabled(!peers.requestId().isEmpty()); reject->setEnabled(!peers.requestId().isEmpty());
         };
         QObject::connect(&peers, &PeerManager::changed, &window, refresh);
         QObject::connect(&host, &HostManager::changed, &window, refresh);
+        QObject::connect(&browserHost, &BrowserHost::changed, &window, refresh);
         QObject::connect(approve, &QPushButton::clicked, &window, [&] { peers.approve(peers.requestId()); });
         QObject::connect(reject, &QPushButton::clicked, &window, [&] { peers.reject(peers.requestId()); });
         QObject::connect(stop, &QPushButton::clicked, &app, &QApplication::quit);
@@ -727,7 +735,7 @@ int main(int argc, char *argv[])
     }
 
     GlobalCommandLineParser parser;
-    GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse([&app] { auto args = app.arguments(); args.removeAll("--background"); args.removeAll("--share"); args.removeAll("--no-host-autostart"); return args; }());
+    GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse([&app] { auto args = app.arguments(); args.removeAll("--background"); args.removeAll("--share"); args.removeAll("--no-host-autostart"); args.removeAll("--no-web-server"); return args; }());
     SingleInstance instance;
     bool pendingActivation = false;
     instance.activate = [&] { pendingActivation = true; };
@@ -978,6 +986,11 @@ int main(int argc, char *argv[])
 #endif
     PeerManager peerManager(&hostManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
     DeskPortCli::ControlServer controlServer(&hostManager, &peerManager);
+    BrowserHost browserHost(&hostManager);
+    if (resident && !app.arguments().contains("--no-web-server")) browserHost.start();
+    controlServer.setBrowserInfo([&browserHost] { return browserHost.localInfo(); });
+    controlServer.setBrowserPairings([&browserHost] { return QJsonArray::fromVariantList(browserHost.pairedBrowsers()); },
+                                    [&browserHost](const QString& id) { return browserHost.revokeBrowser(id); });
     if (resident && !controlServer.listen())
         qWarning() << "Cannot open the local CLI endpoint:" << controlServer.errorString();
     MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
@@ -1123,6 +1136,7 @@ int main(int argc, char *argv[])
 #endif
     engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
     engine.rootContext()->setContextProperty("hostManager", &hostManager);
+    engine.rootContext()->setContextProperty("browserHost", &browserHost);
     engine.rootContext()->setContextProperty("peerManager", &peerManager);
     const bool showAfterRestart = QSettings().value("ui/showAfterRestart", false).toBool();
     QSettings().remove("ui/showAfterRestart");
