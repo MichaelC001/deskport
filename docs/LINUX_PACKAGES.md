@@ -246,9 +246,17 @@ then run:
 
 ```sh
 bash scripts/package-linux.sh
-bash scripts/package-flatpak.sh build-linux.noindex/DeskPort.AppDir \
-  build-linux.noindex/flatpak-output "$(cat app/version.txt)"
+linux_work=$(bash scripts/build-paths.sh linux-work)
+bash scripts/package-flatpak.sh "$linux_work/DeskPort.AppDir" \
+  "$linux_work/flatpak-output" "$(cat app/version.txt)"
 ```
+
+Generated files default to `$HOME/mygit/build/deskport/<checkout>-<path-checksum>/linux-x86_64.noindex/portable`.
+Set `DESKPORT_BUILD_ROOT` to relocate the shared root, or `DESKPORT_LINUX_WORK`
+to override this work directory. Use paths under the shared build root for
+packaging outputs and logs. Native Nix builds still use the Nix store; use
+`--no-link` or an explicit `--out-link` below the checkout build directory to
+avoid creating `result` links in the source tree.
 
 For an AppImage-only candidate, use
 `DESKPORT_LINUX_FORMAT=appimage bash scripts/package-linux.sh`.

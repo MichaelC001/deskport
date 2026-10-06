@@ -37,6 +37,26 @@
   and pk4 (NixOS x86_64 flake build). Do not build or upload other platform or
   distribution formats for these prereleases unless the user explicitly requests them.
 
+## Build output location — 2026-10-03
+
+- Keep DeskPort generated files under `$HOME/mygit/build/deskport` on each host
+  (`DESKPORT_BUILD_ROOT` overrides it). Use `bash scripts/build-paths.sh checkout`
+  for this checkout's directory; the path includes a checksum of the absolute
+  checkout path to separate worktrees. Do not create new build, staging, log,
+  archive, or package directories beside the repositories in `mygit`.
+- macOS and portable Linux package scripts resolve their paths automatically.
+  macOS caches and staging bundles remain inside `.noindex` directories, with
+  separate Nix/Homebrew directories. Existing per-path environment overrides
+  remain supported; put explicit overrides under the shared build root as well.
+- Give each test/release its immutable ID under the `releases` path returned by
+  `scripts/build-paths.sh`; use that directory for candidates, downloaded assets,
+  source snapshots and verification logs. Keep source worktrees independent.
+- For native Nix builds, use `--no-link` or an explicit `--out-link` under the
+  checkout build directory. Never relocate `/nix/store` or reuse a moved CMake
+  or qmake cache. Older Windows cross-build scripts require explicit relocation
+  of their work/output paths when used; do not launch them in the source checkout
+  and assume they honor `DESKPORT_BUILD_ROOT`.
+
 ## DeskPort release and activation workflow — 2026-09-14
 
 - Default delivery is a mynix update for pk4 (NixOS x86_64) and mm4 (macOS

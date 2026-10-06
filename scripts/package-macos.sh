@@ -3,6 +3,7 @@
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
 cd "$repo"
+source "$repo/scripts/build-paths.sh"
 version=$(cat app/version.txt)
 : "${DESKPORT_SIGN_IDENTITY:?Set a stable local code-signing identity; use - only for disposable development builds}"
 if [ "$DESKPORT_SIGN_IDENTITY" = - ] && [ "${DESKPORT_ALLOW_ADHOC:-0}" != 1 ]; then
@@ -11,34 +12,13 @@ if [ "$DESKPORT_SIGN_IDENTITY" = - ] && [ "${DESKPORT_ALLOW_ADHOC:-0}" != 1 ]; t
 fi
 export DEVELOPER_DIR=${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}
 qt_bin=${DESKPORT_QT_BIN:-/opt/homebrew/bin}
-# Keep dependency-provider builds and artifacts separate, including qmake's
-# cached SDK/tool paths. Never overwrite a published Homebrew-built artifact.
-if [ "${DESKPORT_NIX_DEPS:-0}" = 1 ]; then
-    export DESKPORT_MACOS_BUILD_DIR=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex/nix}
-    dist_dir=${DESKPORT_MACOS_DIST_DIR:-$repo/dist.noindex/nix}
-else
-    export DESKPORT_MACOS_BUILD_DIR=${DESKPORT_MACOS_BUILD_DIR:-$repo/build-macos.noindex}
-    dist_dir=${DESKPORT_MACOS_DIST_DIR:-$repo/dist.noindex}
-fi
+# Checkout and dependency-provider paths keep qmake's SDK/tool caches isolated.
 build_dir=$DESKPORT_MACOS_BUILD_DIR
+dist_dir=$DESKPORT_MACOS_DIST_DIR
 qml_args=()
 if [ -n "${DESKPORT_QML_CACHEGEN:-}" ]; then
     qml_args+=("QT_TOOL.qmlcachegen.binary=$DESKPORT_QML_CACHEGEN")
 fi
-# Keep intermediate .app bundles out of Spotlight's Applications list. Perform
-# the legacy migration before creating the default .noindex directories.
-for directory in build-macos dist; do
-    if [ -d "$directory" ] && [ ! -L "$directory" ]; then
-        if [ -e "$directory.noindex" ]; then
-            echo "Refusing to overwrite $directory.noindex" >&2; exit 1
-        fi
-        mv "$directory" "$directory.noindex"
-    fi
-    if [ ! -e "$directory" ]; then
-        mkdir -p "$directory.noindex"
-        ln -s "$directory.noindex" "$directory"
-    fi
-done
 mkdir -p "$build_dir" "$dist_dir"
 # Check the actual signing session before spending time building and staging.
 # Listing identities or signing in another terminal does not prove key access here.
@@ -117,7 +97,7 @@ cp host/macos/patches/sunshine-smart-streaming.patch host/macos/patches/sunshine
 mkdir -p "$host_app/Contents/Resources/deskport-smart-source/common" "$host_app/Contents/Resources/deskport-smart-source/macos"
 cp host/common/smartstream.h host/common/inputactivity.h host/common/framecadence.h host/common/encoderpolicy.h "$host_app/Contents/Resources/deskport-smart-source/common/"
 cp host/macos/admitted-display.h host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m "$host_app/Contents/Resources/deskport-smart-source/macos/"
-cp scripts/build-macos-host.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py scripts/patch-host-encoder-policy.py "$host_app/Contents/Resources/"
+cp scripts/build-macos-host.sh scripts/build-paths.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py scripts/patch-host-encoder-policy.py "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime "$app/Contents/Helpers/deskport-recovery"

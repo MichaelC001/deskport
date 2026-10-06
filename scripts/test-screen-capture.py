@@ -2,7 +2,8 @@
 """Build and exercise the actual SCK bridge with synthetic frames, no capture."""
 import pathlib, subprocess, tempfile
 root = pathlib.Path(__file__).resolve().parents[1]
-source = root / "build-macos.noindex/sunshine-vendored-source"
+source = pathlib.Path(subprocess.check_output(
+    ["bash", str(root / "scripts/build-paths.sh"), "macos-host-source"], text=True).strip())
 with tempfile.TemporaryDirectory(prefix="deskport-sck-test-") as temp:
     legacy = pathlib.Path(temp) / "legacy.o"
     binary = pathlib.Path(temp) / "test"

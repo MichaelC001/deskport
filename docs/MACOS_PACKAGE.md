@@ -40,8 +40,10 @@ keys only in a protected keychain/backup, never in this repository.
 ```sh
 export DESKPORT_SIGN_IDENTITY='DEVELOPER_ID_CERTIFICATE_SHA1'
 export DESKPORT_SIGN_TEAM='APPLE_TEAM_ID'
+source_app=$(DESKPORT_NIX_DEPS=1 bash scripts/build-paths.sh macos-dist)/DeskPort.app
+candidate=$(bash scripts/build-paths.sh releases)/developer-id-candidate
 nix develop -c bash scripts/release-macos.sh prepare \
-  "$PWD/dist.noindex/nix/DeskPort.app" "$PWD/dist.noindex/developer-id-candidate"
+  "$source_app" "$candidate"
 ```
 
 The same-session signing preflight must pass before copying/signing the candidate.
@@ -67,7 +69,7 @@ credential method; Xcode/Transporter login is not itself a notarytool profile.
 ```sh
 export DESKPORT_NOTARY_PROFILE=deskport-notary
 nix develop -c bash scripts/release-macos.sh notarize \
-  "$PWD/dist.noindex/developer-id-candidate"
+  "$candidate"
 ```
 
 The workflow saves submission IDs and polls them, allowing interrupted runs to
@@ -219,11 +221,15 @@ executables, strict verification, dependency checks and DMG creation. From the
 repository root with the desired identity exported:
 
 ```sh
+package_logs=$(bash scripts/build-paths.sh logs)
+mkdir -p "$package_logs"
 launchctl submit -l io.github.keithxc.deskport.package-once \
-  -o "$PWD/build-macos.noindex/package-install.log" \
-  -e "$PWD/build-macos.noindex/package-install.err" \
+  -o "$package_logs/package-install.log" \
+  -e "$package_logs/package-install.err" \
   -- /usr/bin/env "PATH=$PATH" "DESKPORT_SIGN_IDENTITY=$DESKPORT_SIGN_IDENTITY" \
-  /bin/bash -c "cd '$PWD' && nix develop -c bash scripts/package-macos.sh; echo \$? > '$PWD/build-macos.noindex/package-install.rc'; exec sleep 86400"
+  "DESKPORT_BUILD_ROOT=$(bash scripts/build-paths.sh root)" \
+  /bin/bash -c 'cd "$1" && nix develop -c bash scripts/package-macos.sh; echo $? > "$2/package-install.rc"; exec sleep 86400' \
+  deskport-package "$PWD" "$package_logs"
 # launchctl submit jobs are KeepAlive: a bare packager call reruns forever,
 # including after failure. Wait for package-install.rc, then remove the job.
 launchctl list io.github.keithxc.deskport.package-once
@@ -243,8 +249,9 @@ peer. If its agent is removed, restore the nix-darwin copy from
 `/run/current-system/user/Library/LaunchAgents/` and bootstrap it. An ad-hoc
 installed DeskPort also loses the stable identity's privacy grants.
 
-Build and staging apps are stored in `.noindex` directories, reached through the
-`build-macos` and `dist` convenience symlinks, to avoid duplicate application icons.
+Build and staging apps are stored in `.noindex` directories under the shared
+build root to avoid duplicate application icons. Packaging does not create
+`build-macos` or `dist` symlinks in the source checkout.
 
 The pinned upstream dependencies, `libs/mac` included, are vendored in this
 repository; only `git submodule update --init shared/deskport-core` is needed
@@ -272,10 +279,35 @@ DESKPORT_SIGN_IDENTITY='your local signing identity' \
 nix develop -c python3 scripts/test-host-lifecycle.py --ui
 ```
 
-Nix builds use `build-macos.noindex/nix` and `dist.noindex/nix`, separate from
-Homebrew builds and published artifacts. `DESKPORT_MACOS_BUILD_DIR` and
-`DESKPORT_MACOS_DIST_DIR` override these locations. Use
+Since 2026-10-03, generated files default to `$HOME/mygit/build/deskport` to keep
+the workspace root and source checkout clean. `DESKPORT_BUILD_ROOT` overrides
+that root. Each checkout gets a directory named from its basename and an
+absolute-path checksum, so separate worktrees have independent caches. Nix and
+Homebrew builds use `macos-arm64.noindex/nix/{build,dist}` and
+`macos-arm64.noindex/homebrew/{build,dist}` within that checkout directory.
+`DESKPORT_MACOS_BUILD_DIR`, `DESKPORT_MACOS_DIST_DIR` and
+`DESKPORT_HOST_SOURCE_DIR` override individual paths; by default the prepared
+host source is inside the selected build directory. Use absolute override paths
+under the shared root. Use
 `DESKPORT_DEVELOPER_DIR` to override the devShell's Xcode location.
+
+Resolve paths without creating any output directories:
+
+```sh
+bash scripts/build-paths.sh checkout
+DESKPORT_NIX_DEPS=1 bash scripts/build-paths.sh macos-build
+DESKPORT_NIX_DEPS=1 bash scripts/build-paths.sh macos-dist
+bash scripts/build-paths.sh releases
+```
+
+Put each signed candidate in a fresh directory under `releases.noindex`, named
+with its immutable release/test ID. Put logs, exported sources, downloaded
+assets and validation output under the same checkout build directory. Do not
+move old CMake/qmake caches to reuse them: they contain absolute paths. Source
+worktrees remain separate from generated build output. Native `nix build` uses
+the Nix store as usual; choose `--no-link` or an explicit `--out-link` beneath
+the checkout build directory.
+
 The shell selects split Nix Qt tool, QML and plugin paths explicitly. Packaging
 makes copied store files writable before relocation and signing, and verifies
 that no linked library requires `/nix/store`, Homebrew or a user directory.

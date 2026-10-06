@@ -66,8 +66,12 @@ def supervised(args):
 def package_test(arguments):
     guard()
     version = LOCK['package_version']
-    package = Path(arguments[0]).resolve() if arguments else (
-        ROOT / f'dist.noindex/v{version}-release/DeskPort-{version}-macos-arm64.zip')
+    if arguments:
+        package = Path(arguments[0]).resolve()
+    else:
+        release_root = Path(subprocess.check_output(
+            ['bash', str(ROOT / 'scripts/build-paths.sh'), 'releases'], text=True).strip())
+        package = release_root / f'v{version}-release/DeskPort-{version}-macos-arm64.zip'
     if not package.is_file():
         raise RuntimeError('Pass the published ZIP path to the test command')
     if hashlib.sha256(package.read_bytes()).hexdigest() != LOCK['package_sha256']:
