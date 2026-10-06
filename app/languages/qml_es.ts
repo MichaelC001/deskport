@@ -2247,6 +2247,42 @@
         <translation>Empezar a compartir</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>Acceso desde el navegador</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>Escanea o abre la URL en el otro dispositivo y, después, introduce este código de acceso.</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>Código de acceso del navegador</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>URL del navegador</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>El código sigue siendo válido después de reiniciar DeskPort. Inicia el uso compartido antes de conectarte. El dispositivo que se conecta debe confiar en un certificado HTTPS local.</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>Navegadores emparejados</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>Al conectarte, elige «Recordar este navegador» para conservar el emparejamiento.</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>Eliminar emparejamiento</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>No se pudo guardar la eliminación del emparejamiento. Inténtalo de nuevo.</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>Acceso y permisos</translation>
     </message>

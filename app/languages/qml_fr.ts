@@ -2247,6 +2247,42 @@
         <translation>Démarrer le partage</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>Accès par navigateur</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>Scannez ou ouvrez l’URL sur votre autre appareil, puis saisissez ce code d’accès.</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>Code d’accès du navigateur</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>URL du navigateur</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>Le code reste valide après le redémarrage de DeskPort. Démarrez le partage avant de vous connecter. Un certificat HTTPS local doit être approuvé sur l’appareil qui se connecte.</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>Navigateurs associés</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>Choisissez « Mémoriser ce navigateur » lors de la connexion pour conserver son association.</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>Supprimer l’association</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>Impossible d’enregistrer la suppression de l’association. Réessayez.</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>Accès et autorisations</translation>
     </message>

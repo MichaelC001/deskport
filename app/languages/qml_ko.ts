@@ -2247,6 +2247,42 @@
         <translation>공유 시작</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>브라우저 접근</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>다른 기기에서 QR 코드를 스캔하거나 URL을 연 다음 이 액세스 코드를 입력하세요.</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>브라우저 액세스 코드</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>브라우저 URL</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>DeskPort를 다시 시작해도 코드는 계속 유효합니다. 연결하기 전에 공유를 시작하세요. 연결하는 기기에서 로컬 HTTPS 인증서를 신뢰해야 합니다.</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>페어링된 브라우저</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>연결할 때 ‘이 브라우저 기억’을 선택하면 페어링이 유지됩니다.</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>페어링 제거</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>페어링 제거를 저장할 수 없습니다. 다시 시도하세요.</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>접근 및 권한</translation>
     </message>

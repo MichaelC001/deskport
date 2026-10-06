@@ -2250,6 +2250,42 @@
         <translation>共有を開始</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>ブラウザーアクセス</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>別のデバイスでQRコードを読み取るかURLを開き、このアクセスコードを入力してください。</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>ブラウザーアクセスコード</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>ブラウザーURL</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>DeskPortを再起動してもコードは有効です。接続する前に共有を開始してください。接続するデバイスでローカルHTTPS証明書を信頼する必要があります。</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>ペアリング済みブラウザー</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>接続時に「このブラウザーを記憶」を選ぶと、ペアリングが保持されます。</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>ペアリングを解除</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>ペアリングの解除を保存できませんでした。もう一度お試しください。</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>アクセスと権限</translation>
     </message>

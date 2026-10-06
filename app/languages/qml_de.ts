@@ -2247,6 +2247,42 @@
         <translation>Freigabe starten</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>Browserzugriff</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>Scannen oder öffnen Sie die URL auf Ihrem anderen Gerät und geben Sie dann diesen Zugriffscode ein.</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>Browser-Zugriffscode</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>Browser-URL</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>Der Code bleibt nach einem Neustart von DeskPort gültig. Starten Sie vor dem Verbinden die Freigabe. Auf dem verbindenden Gerät muss einem lokalen HTTPS-Zertifikat vertraut werden.</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>Gekoppelte Browser</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>Wählen Sie beim Verbinden „Diesen Browser merken“, um die Kopplung beizubehalten.</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>Kopplung entfernen</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>Das Entfernen der Kopplung konnte nicht gespeichert werden. Versuchen Sie es erneut.</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>Zugriff und Berechtigungen</translation>
     </message>

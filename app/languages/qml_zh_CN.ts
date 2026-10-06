@@ -2243,6 +2243,42 @@
         <translation>开始共享</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>浏览器访问</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>在另一台设备上扫描或打开此网址，然后输入此访问码。</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>浏览器访问码</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>浏览器网址</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>重启 DeskPort 后，此访问码仍然有效。请先开启共享再连接。连接设备需要信任本地 HTTPS 证书。</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>已配对的浏览器</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>连接时选择“记住此浏览器”，即可保留配对。</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>移除配对</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>无法保存配对移除操作，请重试。</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>访问与权限</translation>
     </message>

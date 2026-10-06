@@ -2220,6 +2220,42 @@
         <translation>開始共享</translation>
     </message>
     <message>
+        <source>Browser access</source>
+        <translation>瀏覽器存取</translation>
+    </message>
+    <message>
+        <source>Scan or open the URL on your other device, then enter this access code.</source>
+        <translation>在另一部裝置上掃描或開啟此網址，然後輸入此存取碼。</translation>
+    </message>
+    <message>
+        <source>Browser access code</source>
+        <translation>瀏覽器存取碼</translation>
+    </message>
+    <message>
+        <source>Browser URL</source>
+        <translation>瀏覽器網址</translation>
+    </message>
+    <message>
+        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>重新啟動 DeskPort 後，此存取碼仍然有效。請先開啟共享再連線。連線裝置需要信任本機 HTTPS 憑證。</translation>
+    </message>
+    <message>
+        <source>Paired browsers</source>
+        <translation>已配對的瀏覽器</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser when connecting to keep its pairing.</source>
+        <translation>連線時選擇「記住此瀏覽器」，即可保留配對。</translation>
+    </message>
+    <message>
+        <source>Remove pairing</source>
+        <translation>移除配對</translation>
+    </message>
+    <message>
+        <source>Could not save the pairing removal. Please try again.</source>
+        <translation>無法儲存移除配對的操作，請再試一次。</translation>
+    </message>
+    <message>
         <source>Access &amp; permissions</source>
         <translation>存取與權限</translation>
     </message>
