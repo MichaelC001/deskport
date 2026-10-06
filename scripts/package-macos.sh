@@ -25,19 +25,8 @@ qml_args=()
 if [ -n "${DESKPORT_QML_CACHEGEN:-}" ]; then
     qml_args+=("QT_TOOL.qmlcachegen.binary=$DESKPORT_QML_CACHEGEN")
 fi
-# Check the actual signing session before spending time building and staging.
-# Listing identities or signing in another terminal does not prove key access here.
-probe_dir=$(mktemp -d "${TMPDIR:-/tmp}/deskport-signing.XXXXXX")
-cp /usr/bin/true "$probe_dir/probe"
-if ! codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none "$probe_dir/probe"; then
-    rm -f "$probe_dir/probe"
-    rmdir "$probe_dir"
-    echo "Signing preflight failed in this execution session. See docs/MACOS_PACKAGE.md; do not retry the full build or switch identities." >&2
-    exit 1
-fi
-rm -f "$probe_dir/probe"
-rmdir "$probe_dir"
-# Keep intermediate .app bundles out of Spotlight's Applications list.
+# Keep intermediate .app bundles out of Spotlight's Applications list. Perform
+# the legacy migration before creating the default .noindex directories.
 for directory in build-macos dist; do
     if [ -d "$directory" ] && [ ! -L "$directory" ]; then
         if [ -e "$directory.noindex" ]; then
@@ -50,6 +39,19 @@ for directory in build-macos dist; do
         ln -s "$directory.noindex" "$directory"
     fi
 done
+mkdir -p "$build_dir" "$dist_dir"
+# Check the actual signing session before spending time building and staging.
+# Listing identities or signing in another terminal does not prove key access here.
+probe_dir=$(mktemp -d "$build_dir/.signing-probe.XXXXXX")
+cp /usr/bin/true "$probe_dir/probe"
+if ! codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none "$probe_dir/probe"; then
+    rm -f "$probe_dir/probe"
+    rmdir "$probe_dir"
+    echo "Signing preflight failed in this execution session. See docs/MACOS_PACKAGE.md; do not retry the full build or switch identities." >&2
+    exit 1
+fi
+rm -f "$probe_dir/probe"
+rmdir "$probe_dir"
 (
     mkdir -p "$build_dir/app" "$dist_dir"
     touch "$build_dir/.qmake.stash"
@@ -66,7 +68,8 @@ xcrun clang -mmacosx-version-min=26.0 -fobjc-arc -framework Foundation -framewor
     host/macos/display-helper.m -o "$build_dir/deskport-display"
 xcrun clang++ -std=c++17 -Wall -Wextra -Werror host/macos/recovery-helper.cpp -o "$build_dir/deskport-recovery"
 stage=$(mktemp -d "$dist_dir/.package.XXXXXX")
-trap 'chmod -R u+w "$stage" 2>/dev/null || true; rm -rf "$stage"' EXIT
+zip_check=
+trap 'chmod -R u+w "$stage" 2>/dev/null || true; rm -rf "$stage"; if [ -n "${zip_check:-}" ]; then rm -rf "$zip_check"; fi' EXIT
 app="$stage/DeskPort.app"
 ditto "$build_dir/app/DeskPort.app" "$app"
 chmod -R u+w "$app"
@@ -137,8 +140,10 @@ shasum -a 256 "$dist_dir/DeskPort-${version}-macos-arm64.dmg"
 zip="$dist_dir/DeskPort-${version}-macos-arm64.zip"
 rm -f "$zip"
 ditto -c -k --norsrc --noextattr --noacl --keepParent "$dist_dir/DeskPort.app" "$zip"
-zip_check=$(mktemp -d)
+zip_check=$(mktemp -d "$dist_dir/.zip-check.XXXXXX")
 /usr/bin/unzip -q "$zip" -d "$zip_check"
 codesign --verify --deep --strict "$zip_check/DeskPort.app"
+python3 scripts/check-macos-bundle.py "$zip_check/DeskPort.app"
 rm -rf "$zip_check"
+zip_check=
 shasum -a 256 "$zip"

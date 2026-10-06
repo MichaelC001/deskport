@@ -253,6 +253,12 @@ The nested Sunshine build also downloads one checksum-pinned Apple Silicon
 FFmpeg archive described by `host/vendor/sunshine-macos-ffmpeg.json`. Do not
 replace it with the upstream `latest` URL: that mutable archive can add static
 library dependencies without a corresponding change to the pinned host source.
+macOS dependency relocation preserves libraries with the same basename when
+their contents differ and rewrites each consumer to its exact source ABI. Run
+`python3 scripts/test-fix-macos-dependencies.py` after changing relocation.
+The bundle checker executes the packaged nested Sunshine with `--help` inside a
+write- and network-denied sandbox; this dynamic-loader smoke is required in
+addition to signing, notarization, stapling and Gatekeeper checks.
 The Apple Silicon macOS devShell manages Qt, CMake, pkg-config, Python, Git, Make,
 OpenSSL, Opus, miniupnpc, ICU, Boost and Node.js/npm with the project's locked nixpkgs revision.
 Xcode supplies Apple's compiler and SDK; Keychain/Aqua supplies code signing.

@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """Reject runtime references to the build machine, including nested components."""
+import os
 import pathlib
 import plistlib
+import signal
 import subprocess
 import sys
+import tempfile
 
-root = pathlib.Path(sys.argv[1])
+root = pathlib.Path(sys.argv[1]).resolve()
 errors = []
+scratch = pathlib.Path(os.environ.get(
+    'DESKPORT_BUILD_ROOT', pathlib.Path.home() / 'mygit/build/deskport')) / 'bundle-checks'
+scratch.mkdir(parents=True, exist_ok=True)
 with (root / 'Contents/Info.plist').open('rb') as stream:
     info = plistlib.load(stream)
 if not info.get('NSMicrophoneUsageDescription', '').strip():
@@ -40,6 +46,43 @@ for path in root.rglob('*'):
         dependency = line.strip().split(' (')[0]
         if dependency.startswith(('/opt/homebrew/', '/usr/local/', '/nix/', '/Users/')):
             errors.append(f'{path.relative_to(root)}: {dependency}')
+host = root / 'Contents/Helpers/Sunshine.app/Contents/MacOS/Sunshine'
+if not host.is_file():
+    errors.append('Bundled Sunshine executable is missing')
+elif not errors:
+    # Signing and notarization do not resolve dependent symbols. Load the exact
+    # nested executable from a write- and network-denied sandbox so dyld catches
+    # ABI collisions without touching Sunshine, DeskPort or network state.
+    with tempfile.TemporaryDirectory(prefix='deskport-host-help-', dir=scratch) as temporary:
+        state = pathlib.Path(temporary)
+        environment = {'HOME': temporary, 'TMPDIR': temporary,
+                       'PATH': '/usr/bin:/bin', 'LC_ALL': 'C'}
+        process = subprocess.Popen([
+            '/usr/bin/sandbox-exec', '-p',
+            '(version 1) (allow default) (deny network*) (deny file-write*)',
+            str(host), '--help'], cwd=state, env=environment,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            start_new_session=True)
+        stdout = stderr = ''
+        try:
+            stdout, stderr = process.communicate(timeout=30)
+        except subprocess.TimeoutExpired:
+            errors.append('Bundled Sunshine dynamic-loader smoke timed out')
+        finally:
+            if process.poll() is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                remaining_stdout, remaining_stderr = process.communicate()
+                stdout += remaining_stdout
+                stderr += remaining_stderr
+        output = stdout + stderr
+        if process.returncode != 0 or 'Usage:' not in output:
+            errors.append('Bundled Sunshine failed isolated dynamic-loader smoke: '
+                          + output[-2000:].strip())
+        if any(state.iterdir()):
+            errors.append('Bundled Sunshine help smoke touched isolated state')
 if errors:
     raise SystemExit('\n'.join(errors))
-print('PASS: every Mach-O signature verified; no Homebrew, Nix or user-directory linked libraries in bundle')
+print('PASS: every Mach-O signature verified; no build-machine links; bundled Sunshine loads in isolated state')

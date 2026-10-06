@@ -6,6 +6,10 @@ export DEVELOPER_DIR=${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer
 mode=${1:?Usage: release-macos.sh prepare SOURCE_APP OUTPUT_DIR | notarize OUTPUT_DIR}
 : "${DESKPORT_SIGN_IDENTITY:?Set the exact Developer ID Application certificate SHA-1}"
 : "${DESKPORT_SIGN_TEAM:?Set the Developer ID team}"
+scratch_root=${DESKPORT_BUILD_ROOT:-$HOME/mygit/build/deskport}/release-macos
+mkdir -p "$scratch_root"
+stage=
+check=
 if [ "$mode" = prepare ]; then
     source_app=${2:?Source application required}
     output=${3:?New output directory required}
@@ -14,7 +18,7 @@ if [ "$mode" = prepare ]; then
         exit 1
     fi
     # Exercise this exact session's key access and timestamp service first.
-    probe=$(mktemp -d)
+    probe=$(mktemp -d "$scratch_root/.signing-probe.XXXXXX")
     trap 'rm -rf "$probe"' EXIT
     cp /usr/bin/true "$probe/probe"
     codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp --options runtime "$probe/probe"
@@ -77,7 +81,7 @@ version=$(/usr/libexec/PlistBuddy -c 'Print :DeskPortDisplayVersion' "$app/Conte
 dmg="$output/DeskPort-$version-macos-arm64.dmg"
 zip="$output/DeskPort-$version-macos-arm64.zip"
 if [ ! -s "$output/dmg-submit.json" ]; then
-    stage=$(mktemp -d)
+    stage=$(mktemp -d "$scratch_root/.dmg-stage.XXXXXX")
     trap 'rm -rf "$stage"' EXIT
     ditto "$app" "$stage/DeskPort.app"
     ln -s /Applications "$stage/Applications"
@@ -90,12 +94,13 @@ xcrun stapler validate "$dmg"
 spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
 rm -f "$zip"
 ditto -c -k --norsrc --noextattr --noacl --keepParent "$app" "$zip"
-check=$(mktemp -d)
+check=$(mktemp -d "$scratch_root/.zip-check.XXXXXX")
 trap 'rm -rf "${stage:-}" "$check"' EXIT
 /usr/bin/unzip -q "$zip" -d "$check"
 codesign --verify --deep --strict "$check/DeskPort.app"
 xcrun stapler validate "$check/DeskPort.app"
 spctl --assess --type execute --verbose=2 "$check/DeskPort.app"
+python3 "$repo/scripts/check-macos-bundle.py" "$check/DeskPort.app"
 shasum -a 256 "$dmg" "$zip" > "$output/SHA256SUMS"
-echo 'NOTARIZED: app and DMG tickets validated; extracted ZIP passed Gatekeeper.' > "$output/STATUS.txt"
+echo 'NOTARIZED: app and DMG tickets validated; extracted ZIP passed Gatekeeper and bundled Sunshine loader smoke.' > "$output/STATUS.txt"
 cat "$output/STATUS.txt" "$output/SHA256SUMS"
