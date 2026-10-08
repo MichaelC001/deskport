@@ -7,6 +7,7 @@
 #include <QFileInfo>
 #include <QHostInfo>
 #include <QJsonDocument>
+#include <QMessageAuthenticationCode>
 #include <QNetworkInterface>
 #include <QNetworkProxy>
 #include <QPointer>
@@ -22,6 +23,7 @@
 #include <QTcpServer>
 #include <QUrl>
 #include <algorithm>
+#include <cstring>
 #include <cmath>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
@@ -37,7 +39,12 @@ constexpr int MaxHeaders = 16384;
 constexpr int MaxBody = 262144;
 const QByteArray CookieName("__Host-deskport-session");
 const QByteArray PairingCookieName("__Host-deskport-pairing");
-constexpr qint64 PairingLifetimeSeconds = 365LL * 24 * 60 * 60;
+constexpr qint64 PairingLifetimeSeconds = BrowserGateway::RememberSeconds;
+// Pairings saved before the time-based code (version 1, one year) are dropped.
+constexpr int PairingFileVersion = 2;
+constexpr int CodeStepSeconds = 30;
+constexpr qint64 CodeFailureWindowMs = 15 * 60 * 1000;
+constexpr qint64 CodeLockMs = 15 * 60 * 1000;
 constexpr int MaxPairings = 32;
 constexpr int MaxPairingFile = 32768;
 QByteArray cookie(const QByteArray& name, const QByteArray& token, qint64 age = -1) {
@@ -61,11 +68,31 @@ QByteArray randomToken() {
     return QByteArray(reinterpret_cast<const char*>(words), sizeof(words))
         .toBase64(QByteArray::Base64UrlEncoding | QByteArray::OmitTrailingEquals);
 }
-QString newCode() {
-    const char alphabet[] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-    QString code;
-    for (int i = 0; i < 6; ++i) code += QLatin1Char(alphabet[QRandomGenerator::system()->bounded(32u)]);
-    return code;
+const char Base32[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+QString base32(const QByteArray& data) {
+    QString out; quint32 buffer = 0; int bits = 0;
+    for (const char byte : data) {
+        buffer = (buffer << 8) | quint8(byte); bits += 8;
+        while (bits >= 5) { out += QLatin1Char(Base32[(buffer >> (bits - 5)) & 31]); bits -= 5; }
+    }
+    if (bits > 0) out += QLatin1Char(Base32[(buffer << (5 - bits)) & 31]);
+    return out;
+}
+QByteArray fromBase32(const QString& text) {
+    QByteArray out; quint32 buffer = 0; int bits = 0;
+    for (const QChar c : text) {
+        const char* found = std::strchr(Base32, c.toLatin1());
+        if (!c.toLatin1() || !found) return {};
+        buffer = (buffer << 5) | quint32(found - Base32); bits += 5;
+        if (bits >= 8) { out += char((buffer >> (bits - 8)) & 0xff); bits -= 8; }
+    }
+    return out;
+}
+QByteArray newSecret() {
+    QByteArray secret(20, Qt::Uninitialized);
+    QRandomGenerator::system()->generate(reinterpret_cast<quint32*>(secret.data()),
+                                         reinterpret_cast<quint32*>(secret.data()) + 5);
+    return secret;
 }
 QString tokenKey(const QByteArray& token) {
     return QString::fromLatin1(QCryptographicHash::hash(token, QCryptographicHash::Sha256).toHex());
@@ -293,16 +320,23 @@ BrowserGateway::BrowserGateway(const Hooks& hooks, const Options& options, QObje
     m_GlobalRate.credits = 12;
     m_Cleanup.setInterval(1000);
     connect(&m_Cleanup, &QTimer::timeout, this, &BrowserGateway::cleanup);
+    m_CodeTick.setSingleShot(true);
+    connect(&m_CodeTick, &QTimer::timeout, this, [this] {
+        if (m_LockedUntil && m_LockedUntil <= now()) m_LockedUntil = 0;
+        if (active()) scheduleCodeTick();
+        emit changed();
+    });
 }
 BrowserGateway::~BrowserGateway() { stop(); }
 
-bool BrowserGateway::saveCode(const QString& code) {
+bool BrowserGateway::saveSecret(const QByteArray& secret) {
     const QString path = m_Directory + "/browser.ini";
     if (QFileInfo(path).isSymLink()) return false;
     if (!QFileInfo::exists(path) && !privateWrite(path, {})) return false;
     if (!QFile::setPermissions(path, QFile::ReadOwner | QFile::WriteOwner)) return false;
     QSettings settings(path, QSettings::IniFormat);
-    settings.setValue("access/code", code);
+    settings.remove("access/code"); // The fixed code is retired by the time-based code.
+    settings.setValue("access/secret", base32(secret));
     settings.sync();
     return settings.status() == QSettings::NoError && QFile::setPermissions(path, QFile::ReadOwner | QFile::WriteOwner);
 }
@@ -321,7 +355,7 @@ bool BrowserGateway::savePairings(const QHash<QString, Pairing>& pairings) {
         entries.append(QJsonObject{{"id", entry.id}, {"name", entry.name}, {"hash", entry.hash},
             {"createdAt", entry.createdAt}, {"lastSeenAt", entry.lastSeenAt}, {"expiresAt", entry.expiresAt}});
     }
-    const auto bytes = QJsonDocument(QJsonObject{{"version", 1}, {"devices", entries}}).toJson(QJsonDocument::Compact);
+    const auto bytes = QJsonDocument(QJsonObject{{"version", PairingFileVersion}, {"devices", entries}}).toJson(QJsonDocument::Compact);
     if (!permitted || bytes.size() > MaxPairingFile || !privateWrite(file.filePath(), bytes)) {
         m_Error = tr("Cannot save browser pairings. The requested change was not applied.");
         emit changed(); return false;
@@ -349,8 +383,11 @@ bool BrowserGateway::loadPairings() {
     QJsonParseError error;
     const auto document = QJsonDocument::fromJson(bytes, &error);
     const auto object = document.object();
+    // Upgrading from fixed-code pairings forgets every remembered browser once.
+    if (error.error == QJsonParseError::NoError && document.isObject() && object.value("version") == QJsonValue(1))
+        return savePairings({});
     if (error.error != QJsonParseError::NoError || !document.isObject() || object.size() != 2 ||
-        object.value("version") != QJsonValue(1) || !object.value("devices").isArray() ||
+        object.value("version") != QJsonValue(PairingFileVersion) || !object.value("devices").isArray() ||
         object.value("devices").toArray().size() > MaxPairings) return invalid();
     QHash<QString, Pairing> loaded;
     QSet<QString> hashes;
@@ -367,7 +404,7 @@ bool BrowserGateway::loadPairings() {
             !QRegularExpression("^[a-f0-9]{32}$").match(entry.id).hasMatch() ||
             !QRegularExpression("^[a-f0-9]{64}$").match(entry.hash).hasMatch() ||
             !validDeviceName(entry.name) || entry.createdAt <= 0 || entry.lastSeenAt < entry.createdAt ||
-            entry.expiresAt - entry.lastSeenAt != PairingLifetimeSeconds * 1000 ||
+            entry.lastSeenAt > entry.expiresAt || entry.expiresAt - entry.createdAt != PairingLifetimeSeconds * 1000 ||
             loaded.contains(entry.id) || hashes.contains(entry.hash)) return invalid();
         loaded.insert(entry.id, entry); hashes.insert(entry.hash);
     }
@@ -461,13 +498,13 @@ bool BrowserGateway::loadCredentials(const QList<QHostAddress>& addresses) {
     const QString settingsPath = m_Directory + "/browser.ini";
     if (QFileInfo(settingsPath).isSymLink()) { m_Error = tr("Browser settings cannot be a symbolic link."); return false; }
     QSettings settings(settingsPath, QSettings::IniFormat);
-    m_Code = settings.value("access/code").toString();
-    if (settings.status() != QSettings::NoError || (!m_Code.isEmpty() &&
-        !QRegularExpression("^[0-9A-HJKMNP-TV-Z]{6}$").match(m_Code).hasMatch())) {
+    const auto stored = settings.value("access/secret").toString();
+    if (settings.status() != QSettings::NoError || (!stored.isEmpty() &&
+        (!QRegularExpression("^[A-Z2-7]{32}$").match(stored).hasMatch() || fromBase32(stored).size() != 20))) {
         m_Error = tr("Browser access settings are invalid; restore or explicitly reset them."); return false;
     }
-    if (m_Code.isEmpty()) m_Code = newCode();
-    if (!saveCode(m_Code)) { m_Error = tr("Cannot save the browser access code."); return false; }
+    m_Secret = stored.isEmpty() ? newSecret() : fromBase32(stored);
+    if (!saveSecret(m_Secret)) { m_Error = tr("Cannot save the browser access code."); return false; }
     return loadCertificate();
 }
 bool BrowserGateway::loadCertificate() {
@@ -557,7 +594,7 @@ bool BrowserGateway::start() {
         }
         m_Urls = preferred + m_Urls;
     }
-    m_Cleanup.start(); emit changed(); return true;
+    m_Cleanup.start(); scheduleCodeTick(); emit changed(); return true;
 }
 bool BrowserGateway::addListener(const QHostAddress& address) {
     auto listener = new Listener(this);
@@ -614,7 +651,7 @@ void BrowserGateway::refreshAddresses() {
     if (updated) emit changed();
 }
 void BrowserGateway::stop() {
-    m_Cleanup.stop();
+    m_Cleanup.stop(); m_CodeTick.stop();
     const auto sessions = m_Sessions.keys();
     for (const auto& key : sessions) release(key);
     m_Sessions.clear();
@@ -626,10 +663,10 @@ void BrowserGateway::stop() {
     emit changed();
 }
 bool BrowserGateway::resetAccessCode() {
-    auto code = newCode();
-    while (code == m_Code) code = newCode();
-    if (!saveCode(code)) { m_Error = tr("Cannot save a new browser access code."); emit changed(); return false; }
-    m_Code = code;
+    // A new secret also disconnects authenticator apps that held the old one.
+    const auto secret = newSecret();
+    if (!saveSecret(secret)) { m_Error = tr("Cannot save a new browser access code."); emit changed(); return false; }
+    m_Secret = secret; m_LastStep = -1;
     const auto keys = m_Sessions.keys();
     for (const auto& key : keys) release(key);
     m_Sessions.clear(); emit changed(); return true;
@@ -734,6 +771,61 @@ bool BrowserGateway::permittedHost(const QByteArray& host) const {
     return url.isValid() && url.userInfo().isEmpty() && url.path().isEmpty() && url.query().isEmpty() &&
         url.fragment().isEmpty() && url.port(443) == m_Port && m_Hosts.contains(url.host().toLower());
 }
+qint64 BrowserGateway::wallSeconds() const {
+    return m_Options.clock ? m_Options.clock() : QDateTime::currentSecsSinceEpoch();
+}
+QString BrowserGateway::totp(const QByteArray& secret, qint64 step) {
+    QByteArray counter(8, 0);
+    for (int i = 7; i >= 0; --i) { counter[i] = char(step & 0xff); step >>= 8; }
+    const auto digest = QMessageAuthenticationCode::hash(counter, secret, QCryptographicHash::Sha1);
+    const int offset = digest.at(19) & 0x0f;
+    const quint32 value = (quint32(quint8(digest.at(offset)) & 0x7f) << 24) | (quint32(quint8(digest.at(offset + 1))) << 16) |
+        (quint32(quint8(digest.at(offset + 2))) << 8) | quint32(quint8(digest.at(offset + 3)));
+    return QStringLiteral("%1").arg(value % 1000000, 6, 10, QLatin1Char('0'));
+}
+QString BrowserGateway::accessCode() const {
+    return m_Secret.isEmpty() ? QString() : totp(m_Secret, wallSeconds() / CodeStepSeconds);
+}
+qint64 BrowserGateway::accessCodeExpiresAt() const {
+    return (wallSeconds() / CodeStepSeconds + 1) * CodeStepSeconds * 1000LL;
+}
+QString BrowserGateway::authenticatorUri(const QString& account) const {
+    if (m_Secret.isEmpty()) return {};
+    const auto label = QString::fromLatin1(QUrl::toPercentEncoding("DeskPort:" + (account.isEmpty() ? QStringLiteral("computer") : account), ":"));
+    return "otpauth://totp/" + label + "?secret=" + base32(m_Secret) +
+        "&issuer=DeskPort&algorithm=SHA1&digits=6&period=" + QString::number(CodeStepSeconds);
+}
+qint64 BrowserGateway::codeLockedUntil() const {
+    const auto left = m_LockedUntil - now();
+    return left > 0 ? QDateTime::currentMSecsSinceEpoch() + left : 0;
+}
+void BrowserGateway::scheduleCodeTick() {
+    // Refresh local displays when the code changes; never part of any response.
+    const qint64 current = m_Options.clock ? wallSeconds() * 1000LL : QDateTime::currentMSecsSinceEpoch();
+    const qint64 wait = accessCodeExpiresAt() - current + 50;
+    m_CodeTick.start(int(std::clamp<qint64>(wait, 200, CodeStepSeconds * 1000LL + 50)));
+}
+// One step either side covers clock drift between this computer and an
+// authenticator app. Each step is accepted once, and repeated wrong codes pause
+// code sign-in so six digits cannot be guessed at the per-address rate.
+bool BrowserGateway::acceptCode(const QByteArray& input) {
+    QByteArray code; for (const char c : input) if (c != ' ' && c != '-') code += c;
+    const qint64 step = wallSeconds() / CodeStepSeconds;
+    if (QRegularExpression("^[0-9]{6}$").match(QString::fromLatin1(code)).hasMatch() && !m_Secret.isEmpty()) {
+        for (qint64 candidate = step - 1; candidate <= step + 1; ++candidate) {
+            if (candidate > m_LastStep && equal(code, totp(m_Secret, candidate).toLatin1())) {
+                m_LastStep = candidate; m_CodeFailures.clear(); return true;
+            }
+        }
+    }
+    const qint64 current = now();
+    m_CodeFailures.append(current);
+    while (!m_CodeFailures.isEmpty() && current - m_CodeFailures.first() > CodeFailureWindowMs) m_CodeFailures.removeFirst();
+    if (m_CodeFailures.size() >= qMax(1, m_Options.codeFailureLimit)) {
+        m_LockedUntil = current + CodeLockMs; m_CodeFailures.clear(); emit changed();
+    }
+    return false;
+}
 bool BrowserGateway::loginAllowed(const QString& address) {
     const qint64 current = now();
     const auto take = [current](Rate& rate, double maximum, double refill) {
@@ -789,14 +881,15 @@ void BrowserGateway::dispatch(Connection* connection) {
         body = json.object();
     } else if (!connection->body.isEmpty()) { error(connection, 400, "invalid-request", "Unexpected request body."); return; }
     if (connection->path == "/api/login/tailnet" && connection->method == "POST") {
-        if (!loginAllowed(connection->socket->peerAddress().toString())) {
-            error(connection, 429, "rate-limited", "Too many attempts. Wait before trying again."); return;
-        }
         if (body.contains("probe") && !body.value("probe").isBool()) {
             error(connection, 400, "invalid-request", "Expected a probe flag."); return;
         }
+        // Every page load probes once; a LAN page must not spend code sign-in attempts.
         if (!tailnetEligible(connection)) {
             error(connection, 403, "tailnet-unavailable", "Enter the computer's access code on this network."); return;
+        }
+        if (!loginAllowed(connection->socket->peerAddress().toString())) {
+            error(connection, 429, "rate-limited", "Too many attempts. Wait before trying again."); return;
         }
         const bool probe = body.value("probe").toBool();
         const QPointer<Connection> guarded(connection);
@@ -817,8 +910,12 @@ void BrowserGateway::dispatch(Connection* connection) {
         if (!loginAllowed(connection->socket->peerAddress().toString())) {
             error(connection, 429, "rate-limited", "Too many attempts. Wait before trying again."); return;
         }
-        const auto code = body.value("code").toString().trimmed().toUpper().toLatin1();
-        if (!equal(code, m_Code.toLatin1())) { error(connection, 401, "unauthorized", "The access code is incorrect."); return; }
+        if (m_LockedUntil > now()) {
+            error(connection, 429, "code-locked", "Too many wrong codes. Code sign-in is paused for 15 minutes."); return;
+        }
+        if (!acceptCode(body.value("code").toString().trimmed().toLatin1())) {
+            error(connection, 401, "unauthorized", "The access code is incorrect or has expired."); return;
+        }
         if ((body.contains("remember") && !body.value("remember").isBool()) ||
             (body.contains("deviceName") && (!body.value("deviceName").isString() ||
                 !validDeviceName(body.value("deviceName").toString().trimmed())))) {
@@ -841,11 +938,12 @@ void BrowserGateway::dispatch(Connection* connection) {
         }
         auto& entry = updated[id];
         if (body.contains("deviceName")) entry.name = body.value("deviceName").toString().trimmed();
-        entry.lastSeenAt = qMax(current, entry.lastSeenAt);
-        entry.expiresAt = entry.lastSeenAt + PairingLifetimeSeconds * 1000;
+        // Entering a code (re)starts the seven days; using the browser does not extend them.
+        entry.createdAt = entry.lastSeenAt = qMax(current, entry.lastSeenAt);
+        entry.expiresAt = entry.createdAt + PairingLifetimeSeconds * 1000;
         if (!savePairings(updated)) { error(connection, 503, "storage-unavailable", "The browser pairing could not be saved."); return; }
         m_Pairings = updated;
-        createSession(connection, id, {cookie(PairingCookieName, token, PairingLifetimeSeconds)});
+        createSession(connection, id, {cookie(PairingCookieName, token, (entry.expiresAt - current) / 1000)});
         emit changed(); return;
     }
     if (connection->path == "/api/resume" && connection->method == "POST") {
@@ -861,12 +959,12 @@ void BrowserGateway::dispatch(Connection* connection) {
         if (!sessionAvailable(connection)) return;
         auto updated = m_Pairings;
         auto& entry = updated[id];
-        entry.lastSeenAt = qMax(QDateTime::currentMSecsSinceEpoch(), entry.lastSeenAt);
-        entry.expiresAt = entry.lastSeenAt + PairingLifetimeSeconds * 1000;
+        const auto current = QDateTime::currentMSecsSinceEpoch();
+        entry.lastSeenAt = qMin(entry.expiresAt, qMax(current, entry.lastSeenAt));
         if (!savePairings(updated)) { error(connection, 503, "storage-unavailable", "The browser pairing could not be refreshed."); return; }
         m_Pairings = updated;
         createSession(connection, id, {cookie(PairingCookieName,
-            cookieToken(connection->headers.value("cookie"), PairingCookieName), PairingLifetimeSeconds)}, true);
+            cookieToken(connection->headers.value("cookie"), PairingCookieName), qMax<qint64>(1, (entry.expiresAt - current) / 1000))}, true);
         emit changed(); return;
     }
     const auto key = authenticated(connection);

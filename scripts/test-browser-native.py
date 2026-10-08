@@ -186,7 +186,7 @@ for frame in range(10000):
                 gateway = spawn('gateway-restarted', [args.gateway,'--fixture',private,'--state',output/'gateway-state',
                     '--bind','127.0.0.1','--port',str(ready['port'])], stdout=subprocess.PIPE,stdin=subprocess.PIPE)
                 restarted = json.loads(line(gateway))
-                if restarted.get('port') != ready['port'] or restarted.get('code') != ready['code']:
+                if restarted.get('port') != ready['port'] or restarted.get('authenticator') != ready['authenticator']:
                     raise RuntimeError('Restart did not preserve the gateway identity and port')
                 return {'ok':True,'port':restarted['port']}
             gateway.stdin.write(json.dumps(body).encode()+b'\n'); gateway.stdin.flush()

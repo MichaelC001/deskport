@@ -2,6 +2,7 @@
 // Its upstream is an explicitly configured loopback Sunshine fixture, while
 // Xvfb owns the test display. Production display policy lives in BrowserHost.
 #include "browsergateway.h"
+#include <QDateTime>
 #include <QCoreApplication>
 #include <QCommandLineParser>
 #include <QFile>
@@ -171,6 +172,9 @@ int main(int argc, char** argv) {
         report({{"error", "Fixture requires an absolute state directory and a valid port."}}); return 2;
     }
     options.port = quint16(port);
+    // Each code works once; drivers ask for "next-code" to step this clock.
+    qint64 clockOffset = 0;
+    options.clock = [&clockOffset] { return QDateTime::currentSecsSinceEpoch() + clockOffset; };
     BrowserGateway::Hooks hooks;
     hooks.state = [&bridge] { return QJsonObject{{"sharing", true}, {"hostName", "DeskPort isolated Xvfb fixture"},
         {"mediaAvailable", true}, {"busy", !bridge.owner.isEmpty()}}; };
@@ -178,7 +182,7 @@ int main(int argc, char** argv) {
     BrowserGateway gateway(hooks, options);
     if (!gateway.start()) { report({{"error", gateway.errorString()}}); return 2; }
     const auto info = [&gateway] { report({{"port", gateway.port()}, {"code", gateway.accessCode()},
-        {"urls", QJsonArray::fromStringList(gateway.urls())}}); };
+        {"authenticator", gateway.authenticatorUri("fixture")}, {"urls", QJsonArray::fromStringList(gateway.urls())}}); };
     info();
     QSocketNotifier notifier(STDIN_FILENO, QSocketNotifier::Read);
     QByteArray input;
@@ -196,6 +200,7 @@ int main(int argc, char** argv) {
                 const auto action = request.value("action").toString();
                 QJsonObject result{{"requestId", request.value("requestId")}, {"ok", true}};
                 if (action == "list") result["pairedBrowsers"] = gateway.pairedBrowsers();
+                else if (action == "next-code") { clockOffset += 30; result["code"] = gateway.accessCode(); }
                 else if (action == "revoke") {
                     result["ok"] = gateway.revokeBrowser(request.value("id").toString());
                     if (!result.value("ok").toBool()) result["error"] = gateway.errorString();

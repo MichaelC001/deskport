@@ -2,6 +2,8 @@
 #include <QDesktopServices>
 #include <cmath>
 #include <QtTest>
+#include <QRegularExpression>
+#include <QDateTime>
 #include <QApplication>
 #include <QSettings>
 #include <QQmlEngine>
@@ -643,7 +645,13 @@ ApplicationWindow {
         QQmlComponent fixture(&engine);
         fixture.setData(R"(import QtQuick 2.9
 QtObject {
- property string accessCode: "TEST42"
+ property string accessCode: "123456"
+ property real accessCodeExpiresAt: Date.now() + 17500
+ property real codeLockedUntil: 0
+ property int qrRequests: 0
+ property int resets: 0
+ function authenticatorQr() { qrRequests += 1; return "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxIDEnLz4=" }
+ function resetAuthenticator() { resets += 1; return true }
  property bool listening: true
  property bool tailnetListening: true
  property bool tailnetIdentity: true
@@ -680,12 +688,30 @@ QtObject {
         details->setProperty("checked", true); window.show(); QTest::qWait(80);
         // The access code stays hidden until the operator asks to see it.
         auto code = findVisual(item, "browserAccessCode"); QVERIFY(code);
-        QVERIFY(!code->property("text").toString().contains("TEST42"));
+        QVERIFY(!code->property("text").toString().contains("123456"));
         auto showCode = findVisual(item, "browserAccessShowCode"); QVERIFY(showCode);
         showCode->setProperty("checked", true);
-        QTRY_COMPARE(code->property("text").toString(), QString("TEST42"));
+        QTRY_COMPARE(code->property("text").toString(), QString("123456"));
         showCode->setProperty("checked", false);
-        QTRY_VERIFY(!code->property("text").toString().contains("TEST42"));
+        QTRY_VERIFY(!code->property("text").toString().contains("123456"));
+        // The 30-second code shows its remaining time; lockout is announced.
+        auto countdown = findVisual(item, "browserAccessCodeCountdown"); QVERIFY(countdown);
+        QTRY_VERIFY(QRegularExpression("\\b1[5-8]\\b").match(countdown->property("text").toString()).hasMatch());
+        auto locked = findVisual(item, "browserAccessCodeLocked"); QVERIFY(locked);
+        QVERIFY(!locked->property("visible").toBool());
+        browser->setProperty("codeLockedUntil", double(QDateTime::currentMSecsSinceEpoch() + 600000));
+        QTRY_VERIFY(locked->property("visible").toBool());
+        // The authenticator QR carries the secret, so it is generated only on request.
+        auto authenticator = findVisual(item, "browserAuthenticatorToggle"); QVERIFY(authenticator);
+        auto qr = findVisual(item, "browserAuthenticatorQr"); QVERIFY(qr);
+        QCOMPARE(browser->property("qrRequests").toInt(), 0); QVERIFY(!qr->property("visible").toBool());
+        authenticator->setProperty("checked", true);
+        QTRY_VERIFY(qr->property("visible").toBool()); QCOMPARE(browser->property("qrRequests").toInt(), 1);
+        auto reset = findVisual(item, "browserAuthenticatorReset"); QVERIFY(reset);
+        QVERIFY(QMetaObject::invokeMethod(reset, "clicked"));
+        QCOMPARE(browser->property("resets").toInt(), 1); QCOMPARE(browser->property("qrRequests").toInt(), 2);
+        authenticator->setProperty("checked", false);
+        QTRY_VERIFY(!qr->property("visible").toBool());
         auto state = findVisual(item, "browserAccessState"); QVERIFY(state);
         QVERIFY(state->property("text").toString().contains("Tailscale"));
         auto first = findVisual(item, "revokeBrowserPairing-one"); QVERIFY(first);

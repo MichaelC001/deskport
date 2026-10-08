@@ -14,6 +14,8 @@ class HostManager;
 class BrowserHost : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString accessCode READ accessCode NOTIFY changed)
+    Q_PROPERTY(qint64 accessCodeExpiresAt READ accessCodeExpiresAt NOTIFY changed)
+    Q_PROPERTY(qint64 codeLockedUntil READ codeLockedUntil NOTIFY changed)
     Q_PROPERTY(QStringList urls READ urls NOTIFY changed)
     Q_PROPERTY(QString qrSource READ qrSource NOTIFY changed)
     Q_PROPERTY(QString errorString READ errorString NOTIFY changed)
@@ -29,6 +31,12 @@ public:
     bool start();
     void stop();
     QString accessCode() const;
+    qint64 accessCodeExpiresAt() const;
+    qint64 codeLockedUntil() const;
+    // Exports the shared secret for an authenticator app; local UI/CLI only.
+    Q_INVOKABLE QString authenticatorUri() const;
+    Q_INVOKABLE QString authenticatorQr() const;
+    Q_INVOKABLE bool resetAuthenticator();
     QStringList urls() const;
     QString qrSource() const;
     QString errorString() const;
@@ -45,6 +53,7 @@ private:
     friend class BrowserHostTests;
     using Completion = std::function<void(QJsonObject)>;
     QJsonObject state() const;
+    static QString qrSvg(const QString& value);
     void request(const QJsonObject& body, QObject* context, Completion completion);
     void begin(const QJsonObject& body, Completion completion);
     void beginMedia(QJsonObject body, quint64 epoch, Completion completion);

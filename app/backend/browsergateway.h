@@ -18,6 +18,8 @@ class QTcpServer;
 class BrowserGateway : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString accessCode READ accessCode NOTIFY changed)
+    Q_PROPERTY(qint64 accessCodeExpiresAt READ accessCodeExpiresAt NOTIFY changed)
+    Q_PROPERTY(qint64 codeLockedUntil READ codeLockedUntil NOTIFY changed)
     Q_PROPERTY(QStringList urls READ urls NOTIFY changed)
     Q_PROPERTY(QString errorString READ errorString NOTIFY changed)
     Q_PROPERTY(int port READ port NOTIFY changed)
@@ -37,6 +39,9 @@ public:
         bool tailnetIdentity = true;
         QString tailscaleProgram;
         bool testLoopbackTailnet = false; // Isolated tests only: treat loopback peers as tailnet peers.
+        // Wall-clock seconds for the time-based access code; tests inject a clock.
+        std::function<qint64()> clock;
+        int codeFailureLimit = 10; // Wrong codes within 15 minutes before code sign-in pauses.
     };
     struct Hooks {
         std::function<QJsonObject()> state;
@@ -52,7 +57,14 @@ public:
     bool active() const { return !m_Listeners.isEmpty(); }
     bool tailnetIdentity() const { return m_Options.tailnetIdentity; }
     bool tailnetListening() const;
-    QString accessCode() const { return m_Code; } // Local UI/CLI only, never an HTTP response.
+    // The current 30-second code (RFC 6238, six digits). Local UI/CLI only,
+    // never an HTTP response; authenticatorUri() exports the shared secret.
+    QString accessCode() const;
+    qint64 accessCodeExpiresAt() const; // Milliseconds since the epoch.
+    QString authenticatorUri(const QString& account) const;
+    qint64 codeLockedUntil() const; // Milliseconds since the epoch; 0 when code sign-in is open.
+    static QString totp(const QByteArray& secret, qint64 step);
+    static constexpr qint64 RememberSeconds = 7LL * 24 * 60 * 60;
     QStringList urls() const { return m_Urls; }
     QString errorString() const { return m_Error; }
     int port() const { return m_Port; }
@@ -104,7 +116,10 @@ private:
     void refreshAddresses();
     bool tailnetEligible(Connection* connection) const;
     void tailnetOwner(const QHostAddress& peer, std::function<void(bool)> done);
-    bool saveCode(const QString& code);
+    bool saveSecret(const QByteArray& secret);
+    bool acceptCode(const QByteArray& code);
+    qint64 wallSeconds() const;
+    void scheduleCodeTick();
     bool permittedHost(const QByteArray& host) const;
     bool loginAllowed(const QString& address);
     QString authenticated(Connection* connection) const;
@@ -119,7 +134,12 @@ private:
     QList<QSslCertificate> m_Certificates;
     QSslKey m_PrivateKey;
     QTimer m_Cleanup;
-    QString m_Directory, m_Code, m_Error;
+    QString m_Directory, m_Error;
+    QByteArray m_Secret;
+    qint64 m_LastStep = -1; // A code is accepted once; replay of an older step is refused.
+    QList<qint64> m_CodeFailures; // Monotonic milliseconds of recent wrong codes.
+    qint64 m_LockedUntil = 0; // Monotonic milliseconds.
+    QTimer m_CodeTick;
     QStringList m_Urls, m_Hosts;
     int m_Port = 0;
     int m_AddressTicks = 0;

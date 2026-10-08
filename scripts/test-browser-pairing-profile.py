@@ -57,7 +57,7 @@ try:
         if body.get('action')=='restart':
             gateway.stdin.write(b'quit\n'); gateway.stdin.flush(); gateway.wait(timeout=20)
             gateway,next_ready=start(ready['port'])
-            if next_ready['port']!=ready['port'] or next_ready['code']!=ready['code']:
+            if next_ready['port']!=ready['port'] or next_ready['authenticator']!=ready['authenticator']:
                 raise RuntimeError('Restart changed gateway identity')
             return {'ok':True,'port':next_ready['port']}
         gateway.stdin.write(json.dumps(body).encode()+b'\n'); gateway.stdin.flush(); return read_line(gateway)

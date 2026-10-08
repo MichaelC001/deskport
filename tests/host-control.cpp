@@ -91,6 +91,22 @@ private slots:
         QVERIFY(web["ok"].toBool());
         QCOMPARE(web["data"].toObject()["accessCode"].toString(), QString("TEST42"));
         QVERIFY(!web["data"].toObject()["urls"].toArray().first().toString().contains("TEST42"));
+        QVERIFY(!web["data"].toObject().contains("authenticatorUri")); // The secret is never part of info.
+        // The authenticator secret is exported only by its own explicit request.
+        QLocalSocket missing; send(missing, {"web", "authenticator"}); QTRY_VERIFY(missing.canReadLine());
+        QCOMPARE(reply(missing)["code"].toString(), QString("unavailable"));
+        int resets = 0; bool resetWorks = false;
+        server.setBrowserAuthenticator([] { return QString("otpauth://totp/DeskPort:test?secret=AAAA"); },
+                                       [&] { ++resets; return resetWorks; });
+        QLocalSocket authenticator; send(authenticator, {"web", "authenticator"}); QTRY_VERIFY(authenticator.canReadLine());
+        const auto exported = reply(authenticator);
+        QVERIFY(exported["ok"].toBool());
+        QCOMPARE(exported["data"].toObject()["authenticatorUri"].toString(), QString("otpauth://totp/DeskPort:test?secret=AAAA"));
+        QLocalSocket failedReset; send(failedReset, {"web", "reset-code"}); QTRY_VERIFY(failedReset.canReadLine());
+        QCOMPARE(reply(failedReset)["code"].toString(), QString("reset-failed"));
+        resetWorks = true;
+        QLocalSocket reset; send(reset, {"web", "reset-code"}); QTRY_VERIFY(reset.canReadLine());
+        QVERIFY(reply(reset)["data"].toObject()["codeReset"].toBool()); QCOMPARE(resets, 2);
     }
     void invitationCliOutputAndRevocation() {
         QTemporaryDir dir;

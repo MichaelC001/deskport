@@ -2210,6 +2210,46 @@
 <context>
     <name>HostView</name>
     <message>
+        <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
+        <translation>Scanne den Code oder öffne die URL auf deinem anderen Gerät und gib dann den sechsstelligen Code ein, der hier oder in deiner Authenticator-App angezeigt wird. Er ändert sich alle 30 Sekunden.</translation>
+    </message>
+    <message>
+        <source>Changes in %1 s</source>
+        <translation>Ändert sich in %1 s</translation>
+    </message>
+    <message>
+        <source>Too many wrong codes. Code sign-in is paused until %1.</source>
+        <translation>Zu viele falsche Codes. Die Anmeldung per Code ist bis %1 pausiert.</translation>
+    </message>
+    <message>
+        <source>Hide authenticator QR</source>
+        <translation>Authenticator-QR ausblenden</translation>
+    </message>
+    <message>
+        <source>Add to authenticator app</source>
+        <translation>Zur Authenticator-App hinzufügen</translation>
+    </message>
+    <message>
+        <source>Reset code secret</source>
+        <translation>Code-Schlüssel zurücksetzen</translation>
+    </message>
+    <message>
+        <source>Could not save a new code secret. Please try again.</source>
+        <translation>Der neue Code-Schlüssel konnte nicht gespeichert werden. Bitte versuche es erneut.</translation>
+    </message>
+    <message>
+        <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
+        <translation>Scanne mit Ente Auth oder einer anderen Authenticator-App, um denselben Code auf deinem Telefon zu sehen. Wer diesen QR-Code hat, kann sich im Browser anmelden. Das Zurücksetzen des Code-Schlüssels trennt alle Authenticator-Apps.</translation>
+    </message>
+    <message>
+        <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>Ein nicht gemerkter Browser braucht nach dem Schließen einen neuen Code. Starte die Freigabe vor dem Verbinden. Das verbindende Gerät muss dem lokalen HTTPS-Zertifikat vertrauen.</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
+        <translation>Wähle beim Verbinden „Diesen Browser 7 Tage merken“, um den Code in diesem Browser zu überspringen.</translation>
+    </message>
+    <message>
         <source>Browser access is not running.</source>
         <translation>Der Browserzugriff ist nicht aktiv.</translation>
     </message>
@@ -2275,10 +2315,6 @@
         <translation>Browserzugriff</translation>
     </message>
     <message>
-        <source>Scan or open the URL on your other device, then enter this access code.</source>
-        <translation>Scannen oder öffnen Sie die URL auf Ihrem anderen Gerät und geben Sie dann diesen Zugriffscode ein.</translation>
-    </message>
-    <message>
         <source>Browser access code</source>
         <translation>Browser-Zugriffscode</translation>
     </message>
@@ -2287,16 +2323,8 @@
         <translation>Browser-URL</translation>
     </message>
     <message>
-        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
-        <translation>Der Code bleibt nach einem Neustart von DeskPort gültig. Starten Sie vor dem Verbinden die Freigabe. Auf dem verbindenden Gerät muss einem lokalen HTTPS-Zertifikat vertraut werden.</translation>
-    </message>
-    <message>
         <source>Paired browsers</source>
         <translation>Gekoppelte Browser</translation>
-    </message>
-    <message>
-        <source>Choose Remember this browser when connecting to keep its pairing.</source>
-        <translation>Wählen Sie beim Verbinden „Diesen Browser merken“, um die Kopplung beizubehalten.</translation>
     </message>
     <message>
         <source>Remove pairing</source>

@@ -3,7 +3,11 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import http.client
+import base64
 import hashlib
+import hmac
+import struct
+from urllib.parse import urlparse, parse_qs, unquote
 import json
 import os
 from pathlib import Path
@@ -48,6 +52,28 @@ if build.returncode:
 
 processes = []
 checks = []
+# Every gateway reads this clock; reading info["code"] advances it one 30-second
+# step and computes the code here, independently of the C++ implementation.
+CLOCK = work / "clock"
+CLOCK.write_text("1800000000")
+def clock():
+    return int(CLOCK.read_text())
+def advance(seconds=30):
+    CLOCK.write_text(str(clock() + seconds))
+def totp(secret, step):
+    digest = hmac.new(secret, struct.pack(">Q", step), hashlib.sha1).digest()
+    offset = digest[-1] & 15
+    return f"{(struct.unpack('>I', digest[offset:offset + 4])[0] & 0x7fffffff) % 1000000:06d}"
+def secret_of(uri):
+    query = parse_qs(urlparse(uri).query)
+    value = query["secret"][0]
+    return base64.b32decode(value + "=" * (-len(value) % 8))
+class Info(dict):
+    def __getitem__(self, key):
+        if key != "code":
+            return super().__getitem__(key)
+        advance()
+        return totp(secret_of(super().__getitem__("authenticator")), clock() // 30)
 def check(condition, label):
     if not condition:
         raise AssertionError(label)
@@ -66,10 +92,10 @@ def launch(directory, port=0, certificate=None, key=None, environment=None):
     command = [str(work / "gateway-test"), str(directory), str(port)]
     if certificate is not None:
         command += [str(certificate), str(key)]
-    process = subprocess.Popen(command, cwd=work, env=dict(os.environ, **(environment or {})),
+    process = subprocess.Popen(command, cwd=work, env=dict(os.environ, DESKPORT_TEST_CLOCK_FILE=str(CLOCK), **(environment or {})),
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     processes.append(process)
-    info = line(process)
+    info = Info(line(process))
     return process, info
 
 def command(process, value):
@@ -110,7 +136,7 @@ def request(info, directory, method, path, body=None, auth=None, headers=None, r
 
 def login(info, directory, code=None):
     status, result, headers = request(info, directory, "POST", "/api/login", {"code": code or info["code"]})
-    check(status == 200 and result.get("ok") and "csrfToken" in result, "valid permanent code authenticates")
+    check(status == 200 and result.get("ok") and "csrfToken" in result, "valid current code authenticates")
     cookie = headers["Set-Cookie"]
     check(all(value in cookie for value in ("Secure", "HttpOnly", "SameSite=Strict", "Path=/")), "cookie has secure session attributes")
     check("Max-Age" not in cookie and "Expires" not in cookie, "login cookie is not persistent")
@@ -126,7 +152,7 @@ def pairing_login(info, directory, name="Isolated Safari", existing=""):
         "remembered login returns public device identity")
     values = cookies(headers)
     check(len(values) == 2 and all(value in values["__Host-deskport-pairing"] for value in
-        ("Secure", "HttpOnly", "SameSite=Strict", "Path=/", "Max-Age=31536000")),
+        ("Secure", "HttpOnly", "SameSite=Strict", "Path=/", "Max-Age=604800")),
         "pairing and session use distinct Set-Cookie headers with persistent pairing attributes")
     pair = values["__Host-deskport-pairing"].split(";", 1)[0]
     session = values["__Host-deskport-session"].split(";", 1)[0]
@@ -136,15 +162,29 @@ def resume(info, directory, pair):
     status, result, headers = request(info, directory, "POST", "/api/resume", {}, headers={"Cookie": pair})
     check(status == 200 and result.get("paired") and result.get("csrfToken"), "pairing restores a fresh short session")
     values = cookies(headers)
-    check(len(values) == 2 and "Max-Age=31536000" in values["__Host-deskport-pairing"] and
-        "Max-Age" not in values["__Host-deskport-session"], "resume refreshes pairing lifetime without persisting short session")
+    age = int(re.search(r"Max-Age=(\d+)", values["__Host-deskport-pairing"]).group(1))
+    check(len(values) == 2 and 0 < age <= 604800 and
+        "Max-Age" not in values["__Host-deskport-session"], "resume keeps the seven-day limit without persisting short session")
     return (values["__Host-deskport-session"].split(";", 1)[0] + "; " + pair, result["csrfToken"]), result
 
 try:
     directory = work / "state"
     process, info = launch(directory)
     check("error" not in info, "gateway starts on isolated loopback")
-    check(bool(re.fullmatch(r"[0-9A-HJKMNP-TV-Z]{6}", info["code"])), "host creates six-character alphanumeric code")
+    uri = urlparse(info["authenticator"]); query = parse_qs(uri.query)
+    check(uri.scheme == "otpauth" and uri.netloc == "totp" and unquote(uri.path) == "/DeskPort:Isolated host" and
+        query["issuer"] == ["DeskPort"] and query["algorithm"] == ["SHA1"] and query["digits"] == ["6"] and
+        query["period"] == ["30"] and len(secret_of(info["authenticator"])) == 20,
+        "authenticator URI is standard six-digit 30-second SHA-1 TOTP with a 160-bit secret")
+    check(dict.get(info, "code") == totp(secret_of(info["authenticator"]), clock() // 30),
+        "host code matches an independent RFC 6238 computation")
+    vectors = subprocess.run([str(work / "gateway-test"), str(work / "vectors")], cwd=work, capture_output=True, text=True,
+        env=dict(os.environ, DESKPORT_TEST_TOTP_VECTOR="1"), timeout=30)
+    check(json.loads(vectors.stdout)["vectors"] == ["287082", "081804", "050471", "005924", "279037", "353130"],
+        "TOTP matches the RFC 6238 SHA-1 test vectors")
+    settings_text = (directory / "browser.ini").read_text()
+    check("secret=" in settings_text and "access/code" not in settings_text and "code=" not in settings_text,
+        "only the code secret is stored, never a fixed code")
     check(directory.stat().st_mode & 0o777 == 0o700, "settings directory is owner-only")
     for name in ("browser.ini", "https-key.pem", "https-cert.pem"):
         check((directory / name).stat().st_mode & 0o777 == 0o600, f"{name} is owner-only")
@@ -200,10 +240,12 @@ try:
     check(command(process, "snapshot")["stops"] == 3, "missing browser heartbeat releases media")
     check(request(info, directory, "GET", "/api/status", auth=auth)[0] == 401, "heartbeat expiry requires fresh authentication")
     original_code = info["code"]
+    original_secret = secret_of(info["authenticator"])
     original_cert = (directory / "https-cert.pem").read_bytes()
     finish(process)
     process, info = launch(directory)
-    check(info["code"] == original_code and (directory / "https-cert.pem").read_bytes() == original_cert, "code and HTTPS identity survive process restart")
+    check(secret_of(info["authenticator"]) == original_secret and (directory / "https-cert.pem").read_bytes() == original_cert,
+        "code secret and HTTPS identity survive process restart")
     classify = subprocess.run([str(work / "gateway-test"), str(work / "classify")], cwd=work, capture_output=True, text=True,
         env=dict(os.environ, DESKPORT_TEST_CLASSIFY="1"), timeout=30)
     check(json.loads(classify.stdout)["overlay"] == [True, True, True, False, False, False, False],
@@ -247,7 +289,7 @@ try:
     extended, extended_info = launch(tail_dir, environment={"DESKPORT_TEST_ALLOWED_HOSTS": "tailnet-host.test"})
     extended_cert = (tail_dir / "https-cert.pem").read_bytes()
     check(extended_cert != first_cert and {("DNS", "tailnet-host.test"), ("IP Address", "127.0.0.1"), ("DNS", "localhost")} <= names(tail_dir / "https-cert.pem")
-        and extended_info["code"] == first_info["code"], "generated certificate is extended to a newly served name and keeps the access code")
+        and secret_of(extended_info["authenticator"]) == secret_of(first_info["authenticator"]), "generated certificate is extended to a newly served name and keeps the code secret")
     check(request(extended_info, tail_dir, "GET", "/", raw=True, hostname="tailnet-host.test")[0] == 200,
         "extended certificate validates for the new name over real TLS")
     finish(extended)
@@ -260,10 +302,12 @@ try:
     auth = login(info, directory)
     request(info, directory, "POST", "/api/session/start", {}, auth=auth)
     new = command(process, "reset")
-    check(new["code"] != info["code"] and new["stops"] == 1, "explicit code reset releases media and replaces credential")
+    check(secret_of(new["authenticator"]) != secret_of(info["authenticator"]) and new["stops"] == 1,
+        "explicit code reset releases media and replaces the code secret")
+    info["authenticator"] = new["authenticator"]
     check(request(info, directory, "GET", "/api/status", auth=auth)[0] == 401, "reset invalidates old login sessions")
     wrong_results = [request(info, directory, "POST", "/api/login", {"code": original_code})[0] for _ in range(6)]
-    check(401 in wrong_results and 429 in wrong_results, "wrong permanent codes are rate limited")
+    check(401 in wrong_results and 429 in wrong_results, "codes from a reset secret are refused and rate limited")
     finish(process)
     busy = socket.socket()
     busy.bind(("127.0.0.1", 0)); busy.listen()
@@ -279,10 +323,10 @@ try:
     partial.wait(timeout=5)
     corrupt_dir = work / "corrupt"
     corrupt_dir.mkdir()
-    (corrupt_dir / "browser.ini").write_text("[access]\ncode=invalid\n")
+    (corrupt_dir / "browser.ini").write_text("[access]\nsecret=invalid\n")
     corrupt, result = launch(corrupt_dir)
-    check("error" in result and "code=invalid" in (corrupt_dir / "browser.ini").read_text(),
-        "invalid saved access code fails without silent replacement")
+    check("error" in result and "secret=invalid" in (corrupt_dir / "browser.ini").read_text(),
+        "invalid saved code secret fails without silent replacement")
     corrupt.wait(timeout=5)
     incomplete_dir = work / "incomplete"
     incomplete_dir.mkdir()
@@ -444,10 +488,8 @@ try:
     check(command(writer, "revoke " + write_id)["revoked"], "revocation succeeds once durable storage is restored")
     finish(writer)
     expired = json.loads(json.dumps(saved))
-    expired["devices"][0].update(createdAt=1, lastSeenAt=int(time.time() * 1000) - 31536000000 - 10000,
-        expiresAt=int(time.time() * 1000) - 10000)
-    # Use exactly one clock sample so strict timestamp validation is meaningful.
-    expired["devices"][0]["expiresAt"] = expired["devices"][0]["lastSeenAt"] + 31536000000
+    created = int(time.time() * 1000) - 604800000 - 10000
+    expired["devices"][0].update(createdAt=created, lastSeenAt=created, expiresAt=created + 604800000)
     expiry_dir = work / "expired-pairing"; expiry_dir.mkdir()
     (expiry_dir / "pairings.json").write_text(json.dumps(expired))
     expiry, expiry_info = launch(expiry_dir)
@@ -457,7 +499,8 @@ try:
         "expired persisted pairing cannot restore a session or mutate shared browser cookies")
     finish(expiry)
     malformed = {"truncated": '{"version":1', "oversize": " " * 32769,
-        "wrong-version": json.dumps(dict(saved, version=2)), "duplicate-id": json.dumps(dict(saved, devices=saved["devices"] * 2)),
+        "wrong-version": json.dumps(dict(saved, version=3)),
+        "long-lifetime": json.dumps(dict(saved, devices=[dict(saved_row, expiresAt=saved_row["createdAt"] + 31536000000)])), "duplicate-id": json.dumps(dict(saved, devices=saved["devices"] * 2)),
         "duplicate-hash": json.dumps(dict(saved, devices=[saved_row, dict(saved_row, id="f" * 32)])),
         "fractional-time": json.dumps(dict(saved, devices=[dict(saved_row, createdAt=1.5)])),
         "control-in-name": json.dumps(dict(saved, devices=[dict(saved_row, name="Browser\nInjected")])),
@@ -471,12 +514,50 @@ try:
         bad.wait(timeout=5)
     limit_dir = work / "pairing-limit"; limit_dir.mkdir()
     rows = [dict(saved_row, id=f"{i:032x}", hash=hashlib.sha256(str(i).encode()).hexdigest()) for i in range(32)]
-    (limit_dir / "pairings.json").write_text(json.dumps({"version": 1, "devices": rows}))
+    (limit_dir / "pairings.json").write_text(json.dumps({"version": 2, "devices": rows}))
     limit, limit_info = launch(limit_dir)
     check("error" not in limit_info and len(command(limit, "snapshot")["pairings"]) == 32, "maximum bounded pairing registry loads")
     status, result, headers = request(limit_info, limit_dir, "POST", "/api/login", {"code": limit_info["code"], "remember": True})
     check(status == 409 and result["code"] == "pairing-limit" and not headers["Set-Cookies"], "33rd device enrollment is refused without issuing cookies")
     finish(limit)
+    legacy_dir = work / "legacy-pairings"; legacy_dir.mkdir()
+    legacy_row = dict(saved_row, expiresAt=saved_row["lastSeenAt"] + 31536000000)
+    (legacy_dir / "pairings.json").write_text(json.dumps({"version": 1, "devices": [legacy_row]}))
+    (legacy_dir / "browser.ini").write_text("[access]\ncode=ABC234\n"); (legacy_dir / "browser.ini").chmod(0o600)
+    legacy, legacy_info = launch(legacy_dir)
+    check("error" not in legacy_info and not command(legacy, "snapshot")["pairings"] and
+        json.loads((legacy_dir / "pairings.json").read_text()) == {"version": 2, "devices": []},
+        "upgrading clears every browser remembered under the fixed code")
+    check("ABC234" not in (legacy_dir / "browser.ini").read_text() and
+        request(legacy_info, legacy_dir, "POST", "/api/login", {"code": "ABC234"})[0] == 401, "the retired fixed code no longer signs in")
+    status, result, headers = request(legacy_info, legacy_dir, "POST", "/api/resume", headers={"Cookie": pair_cookie})
+    check(status == 401 and result["code"] == "unpaired", "a browser remembered before the upgrade must enter a code")
+    finish(legacy)
+    # Code rules: each step works once, one step of drift either way, nothing older.
+    totp_dir = work / "totp"; totp_dir.mkdir()
+    gate, gate_info = launch(totp_dir, environment={"DESKPORT_TEST_CODE_FAILURES": "3"})
+    secret = secret_of(gate_info["authenticator"])
+    def try_code(value):
+        return request(gate_info, totp_dir, "POST", "/api/login", {"code": value})
+    advance(); step = clock() // 30
+    check(try_code(totp(secret, step))[0] == 200, "current step signs in")
+    status, result, _ = try_code(totp(secret, step))
+    check(status == 401 and result["code"] == "unauthorized", "the same code cannot be used twice")
+    advance(); step = clock() // 30
+    check(try_code(totp(secret, step + 1)[:3] + " " + totp(secret, step + 1)[3:])[0] == 200,
+        "a code one step ahead (authenticator clock drift) is accepted, with a space")
+    check(try_code(totp(secret, step))[0] == 401, "an older step than the last accepted one is refused")
+    time.sleep(12.5)  # Per-address rate limit refills one attempt per 12 s.
+    advance(120); step = clock() // 30
+    check(try_code(totp(secret, step - 2))[0] == 401, "a code two steps old has expired")
+    time.sleep(12.5)
+    check(try_code("000000" if totp(secret, step) != "000000" else "111111")[0] == 401, "a wrong code is refused")
+    snapshot = command(gate, "snapshot")
+    check(snapshot["locked"], "repeated wrong codes pause code sign-in")
+    time.sleep(12.5)
+    status, result, _ = try_code(totp(secret, step))
+    check(status == 429 and result["code"] == "code-locked", "while paused even the right code is refused")
+    finish(gate)
     print(f"PASS: {len(checks)} isolated HTTPS/authentication checks; build and generated test material: {work}")
 finally:
     for process in processes:

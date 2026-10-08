@@ -994,6 +994,8 @@ int main(int argc, char *argv[])
     BrowserHost browserHost(&hostManager);
     if (resident && !app.arguments().contains("--no-web-server")) browserHost.start();
     controlServer.setBrowserInfo([&browserHost] { return browserHost.localInfo(); });
+    controlServer.setBrowserAuthenticator([&browserHost] { return browserHost.listening() ? browserHost.authenticatorUri() : QString(); },
+                                    [&browserHost] { return browserHost.resetAuthenticator(); });
     controlServer.setBrowserPairings([&browserHost] { return QJsonArray::fromVariantList(browserHost.pairedBrowsers()); },
                                     [&browserHost](const QString& id) { return browserHost.revokeBrowser(id); });
     if (resident && !controlServer.listen())

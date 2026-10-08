@@ -83,7 +83,8 @@ async function ready(paired, name) {
 async function connectWithCode(remember, name) {
   await page.locator('#remember-browser').setChecked(remember);
   if (remember) await page.locator('#device-name').fill(name);
-  await page.locator('#access-code').fill(fixture.code);
+  // A code is accepted once; each sign-in uses the fixture's next 30-second code.
+  await page.locator('#access-code').fill((await control('next-code')).code);
   await page.locator('#connect').click();
   if(fixture.authOnly) {
     // This separate branded-browser fixture has no capture host. Its real
@@ -134,7 +135,7 @@ async function noOwner() {
 let result;
 try {
   await launch('remembered-profile'); await ready(false,'new profile');
-  check('remember option defaults on',await page.locator('#remember-browser').isChecked());
+  check('remember option defaults off',!(await page.locator('#remember-browser').isChecked()));
   await connectWithCode(true,'Remembered fixture'); await sample('paired-initial');
   const idleTab=await context.newPage();
   idleTab.on('pageerror',error=>pageErrors.push(error.message));
@@ -147,9 +148,9 @@ try {
     await page.evaluate(authOnly=>authOnly?document.body.dataset.paired==='true':window.pairingTestPeers.at(-1).connectionState==='connected',Boolean(fixture.authOnly)));
   const cookie=await profileCookie();
   check('persistent cookie is Secure HttpOnly Strict host cookie',cookie?.secure && cookie.httpOnly && cookie.sameSite==='Strict' && cookie.path==='/' && cookie.domain==='127.0.0.1');
-  check('pairing expires in one year',cookie.expires-Date.now()/1000>31535000 && cookie.expires-Date.now()/1000<31537000);
+  check('pairing expires in seven days',cookie.expires-Date.now()/1000>603800 && cookie.expires-Date.now()/1000<605800);
   check('short session cookie has no persistent expiry',(await context.cookies()).filter(c=>c.name!==cookie.name && c.name.startsWith('__Host-')).every(c=>c.expires===-1));
-  check('pairing Set-Cookie has no Domain and declares one year',cookieFlags.some(c=>c.name===cookie.name && c.flags.includes('Max-Age=31536000') && !c.flags.some(flag=>flag.toLowerCase().startsWith('domain='))));
+  check('pairing Set-Cookie has no Domain and declares seven days',cookieFlags.some(c=>c.name===cookie.name && c.flags.includes('Max-Age=604800') && !c.flags.some(flag=>flag.toLowerCase().startsWith('domain='))));
   await disconnect(true,'normal disconnect preserves pairing');
   if(!fixture.authOnly) {
     const resumed=await context.request.post(fixture.url+'api/resume',{data:{},headers:{Origin:new URL(fixture.url).origin}});

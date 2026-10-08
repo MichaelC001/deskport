@@ -53,8 +53,9 @@
   const pressedKeys = new Set();
   const pressedButtons = new Set();
   const errorMessages = {
-    unauthorized: '访问码不正确或本次连接已过期，请重新输入。',
-    unpaired: '此浏览器尚未配对，或配对已被电脑取消。请重新输入访问码。',
+    unauthorized: '动态码不正确或已过期，请输入当前显示的 6 位动态码。',
+    'code-locked': '动态码错误次数过多，代码登录已暂停 15 分钟。可稍后再试，或在电脑上查看。',
+    unpaired: '此浏览器未配对，或配对已满 7 天、已被电脑取消。请输入动态码。',
     'storage-unavailable': '电脑暂时无法保存配对变更，请稍后重试。',
     'rate-limited': '尝试次数过多，请稍后再试。',
     'sharing-disabled': '电脑尚未开启屏幕共享，请在电脑端开启后重试。',
@@ -65,8 +66,8 @@
     'invalid-request': '连接请求未被电脑接受，请刷新页面后重试。',
     timeout: '连接超时，请检查电脑是否在线以及网络是否畅通。',
     network: '无法连接电脑，请检查网络和电脑端的 HTTPS 证书。',
-    'tailnet-denied': '这台 Tailscale 设备不属于这台电脑的用户，请输入访问码。',
-    'tailnet-unavailable': '当前网络需要输入电脑端显示的访问码。'
+    'tailnet-denied': '这台 Tailscale 设备不属于这台电脑的用户，请输入动态码。',
+    'tailnet-unavailable': '当前网络需要输入电脑端显示的动态码。'
   };
 
   function notice(message, error = false, persistent = false) {
@@ -103,7 +104,7 @@
     document.body.dataset.paired = String(Boolean(pairing));
     ui['login-intro'].textContent = restoreFailed ? '暂时无法确认配对状态。网络恢复后，请重新检查。'
       : pairing ? '此浏览器已与电脑配对。点击连接即可使用。'
-        : tailnet ? '已通过 Tailscale 确认这是你的设备，无需访问码。点击连接即可使用。' : '输入这台电脑上显示的 6 位访问码。';
+        : tailnet ? '已通过 Tailscale 确认这是你的设备，无需动态码。点击连接即可使用。' : '输入电脑共享页面或验证器 App 上的 6 位动态码。';
     ui.disconnect.disabled = next === 'stopping';
     ui['video-placeholder'].hidden = next === 'streaming';
   }
@@ -130,7 +131,7 @@
         const result = await api('/api/resume', {}, { token: '' });
         if (currentGeneration === generation) acceptAuthentication(result);
       });
-      if (currentGeneration === generation && announce) notice(pairing ? '配对已恢复，点击连接即可使用。' : '请输入电脑端访问码。');
+      if (currentGeneration === generation && announce) notice(pairing ? '配对已恢复，点击连接即可使用。' : '请输入电脑端动态码。');
     } catch (error) {
       if (currentGeneration !== generation) return;
       token = '';
@@ -305,7 +306,7 @@
       return;
     }
     const code = ui['access-code'].value.trim();
-    if (!pairing && !tailnet && !/^[a-z0-9]{6}$/i.test(code)) { notice('请输入电脑端显示的 6 位字母数字访问码。', true); return; }
+    if (!pairing && !tailnet && !/^[0-9]{3} ?[0-9]{3}$/.test(code)) { notice('请输入电脑或验证器 App 上的 6 位数字动态码。', true); return; }
     const currentGeneration = ++generation;
     wantAudio = ui['request-audio'].checked;
     // Prime playback inside the user gesture; a visible fallback handles Safari rejecting it.
@@ -515,12 +516,12 @@
         clearLocalSession();
         ui['access-code'].value = '';
       });
-      if (currentGeneration === generation) notice('已取消此浏览器配对。下次连接需要重新输入访问码。');
+      if (currentGeneration === generation) notice('已取消此浏览器配对。下次连接需要重新输入动态码。');
     } catch (error) {
       if (currentGeneration !== generation) return;
       if (error.code === 'unpaired') {
         token = ''; pairing = null; restoreFailed = false;
-        notice('电脑已取消此浏览器配对，请重新输入访问码。', true);
+        notice('电脑已取消此浏览器配对，请重新输入动态码。', true);
       } else notice('未能确认取消配对。' + error.message, true, true);
     } finally { if (currentGeneration === generation) setPhase('idle'); }
   }

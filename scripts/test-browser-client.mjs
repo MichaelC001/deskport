@@ -114,6 +114,7 @@ await context.route('**/api/**', async route => {
   }
   if (endpoint === '/api/login') {
     if (mode === 'bad-code') return respond(401, { ok: false, code: 'unauthorized' });
+    if (mode === 'locked') return respond(429, { ok: false, code: 'code-locked' });
     if (body.remember) serverPairing = { id: 'fixture-pairing', name: body.deviceName || '测试浏览器' };
     return authenticated(Boolean(body.remember));
   }
@@ -156,7 +157,7 @@ await context.route('**/api/**', async route => {
 });
 
 async function waitVisible(selector) { await page.locator(selector).waitFor({ state: 'visible' }); }
-async function login() { await page.locator('#access-code').fill('ABC234'); await page.locator('#connect').click(); }
+async function login() { await page.locator('#access-code').fill('123456'); await page.locator('#connect').click(); }
 async function inputEvents() { return page.evaluate(() => window.fixtureHost.events); }
 async function waitEvent(type, predicate = {}) {
   await page.waitForFunction(({ type, predicate }) => window.fixtureHost.events.some(event => event.type === type && Object.entries(predicate).every(([key, value]) => event[key] === value)), { type, predicate });
@@ -181,7 +182,10 @@ try {
   await page.goto(origin);
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
   check('first visit checks pairing without starting media', requests.some(request => request.endpoint === '/api/resume') && !requests.some(request => request.endpoint === '/api/session/start'));
-  check('remember browser is checked by default', await page.locator('#remember-browser').isChecked());
+  check('remember browser is off by default (7 days when chosen)', !(await page.locator('#remember-browser').isChecked()) &&
+    (await page.locator('label.check').first().textContent()).includes('7 天'));
+  check('code field asks for six digits with a numeric keyboard', await page.locator('#access-code').evaluate(input =>
+    input.inputMode === 'numeric' && input.autocomplete === 'one-time-code' && input.type === 'text'));
   check('page logo and browser tab use the DeskPort icon', await page.evaluate(() => {
     const logo = document.querySelector('.brand-mark');
     return logo.complete && logo.naturalWidth > 0 && document.querySelector('link[rel="icon"]').getAttribute('href') === '/icon.svg';
@@ -190,9 +194,13 @@ try {
   await writeFile(path.join(output, 'chrome-h264-capabilities.json'), JSON.stringify({ browser: browser.version(), codecs }, null, 2));
   await page.screenshot({ path: path.join(output, 'login-desktop.png') });
   await login();
-  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('访问码不正确'));
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('动态码不正确'));
   check('incorrect access code shows an actionable error');
   check('failed login clears the code', await page.locator('#access-code').inputValue() === '');
+  mode = 'locked';
+  await login();
+  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('暂停 15 分钟'));
+  check('repeated wrong codes explain the 15-minute pause');
   mode = 'busy';
   await page.locator('#remember-browser').uncheck();
   await login();
@@ -219,7 +227,7 @@ try {
   check('H.264 capabilities sent for server negotiation', start.videoCapabilities.length > 0);
   check('start reports the drawable viewport for shared workspace policy',
     start.viewport?.width > 0 && start.viewport?.height > 0 && start.viewport?.ratio > 0 && start.zoom === 1 && start.displayPolicy === 0);
-  check('code does not enter URL', !page.url().includes('ABC234'));
+  check('code does not enter URL', !page.url().includes('123456'));
   check('credentials not persisted in web storage', await page.evaluate(() => localStorage.length === 0 && sessionStorage.length === 0));
   const otherTab = await context.newPage();
   await otherTab.goto(origin);
@@ -382,6 +390,7 @@ try {
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle', null, { timeout: 15000 });
   await page.waitForFunction(() => !document.getElementById('credential-fields').hidden);
   check('host-revoked pairing stops playback and returns to code entry', await page.locator('#notice').textContent().then(text => text.includes('配对')));
+  await page.locator('#remember-browser').check();
   mode = 'busy';
   await login();
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
@@ -392,6 +401,8 @@ try {
   await page.reload();
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
   check('forgotten browser cannot resume on refresh', await page.locator('#credential-fields').isVisible() && await page.locator('#access-code').inputValue() === '');
+  check('reloaded page does not remember by default', !(await page.locator('#remember-browser').isChecked()));
+  await page.locator('#remember-browser').check();
   mode = 'slow-start';
   await login();
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'connecting');

@@ -61,7 +61,8 @@ QString validate(const QStringList& args) {
         args == QStringList{"sharing", "start"} || args == QStringList{"sharing", "stop"} ||
         args == QStringList{"devices", "list"} || args == QStringList{"devices", "pending"} ||
         args == QStringList{"devices", "revoke-invite"} || args == QStringList{"web", "info"} ||
-        args == QStringList{"web", "list"}) return {};
+        args == QStringList{"web", "list"} || args == QStringList{"web", "authenticator"} ||
+        args == QStringList{"web", "reset-code"}) return {};
     if (args.size() == 3 && args[0] == "web" && args[1] == "remove" &&
         !args[2].isEmpty() && args[2].size() <= 128) return {};
     if (args.size() == 4 && args[0] == "devices" && args[1] == "invite" && args[2] == "--address") {
@@ -159,8 +160,12 @@ void printHuman(const QJsonObject& result) {
         const auto urls = data["urls"].toArray();
         if (!urls.isEmpty()) output << terminalQr(urls.first().toString());
         for (const auto& url : urls) output << printable(url.toString()) << '\n';
-        output << "Access code: " << printable(data["accessCode"].toString()) << '\n';
-        output << "Enter this code in the browser. It stays valid across restarts.\n";
+        const auto left = qMax<qint64>(0, (qint64(data["accessCodeExpiresAt"].toDouble()) - QDateTime::currentMSecsSinceEpoch() + 999) / 1000);
+        output << "Access code: " << printable(data["accessCode"].toString()) << " (changes in " << left << " s)\n";
+        if (data["codeLockedUntil"].toDouble() > 0)
+            output << "Code sign-in is paused after repeated wrong codes until "
+                   << QDateTime::fromMSecsSinceEpoch(qint64(data["codeLockedUntil"].toDouble())).toLocalTime().toString("HH:mm") << ".\n";
+        output << "The code changes every 30 seconds and works once. 'deskport web authenticator' adds it to an authenticator app.\n";
         if (!data["error"].toString().isEmpty()) output << printable(data["error"].toString()) << '\n';
         return;
     }
@@ -171,6 +176,18 @@ void printHuman(const QJsonObject& result) {
             const auto row = value.toObject();
             output << printable(row["id"].toString()) << '\t' << printable(row["name"].toString()) << '\n';
         }
+        return;
+    }
+    if (data.contains("authenticatorUri")) {
+        const auto uri = data["authenticatorUri"].toString();
+        output << terminalQr(uri) << printable(uri) << '\n';
+        output << "Scan with Ente Auth or another authenticator app. Anyone with this QR code or link can sign in\n"
+                  "from a browser, so do not share it. 'deskport web reset-code' disconnects every authenticator.\n";
+        return;
+    }
+    if (data.contains("codeReset")) {
+        output << "A new code secret is active. Browser sessions signed in with a code were ended; add DeskPort to\n"
+                  "your authenticator app again with 'deskport web authenticator'.\n";
         return;
     }
     if (data.contains("uri")) {
@@ -221,6 +238,8 @@ const char* helpText() {
            "  deskport web info [--json]\n"
            "  deskport web list [--json]\n"
            "  deskport web remove BROWSER_ID [--json]\n"
+           "  deskport web authenticator [--json]\n"
+           "  deskport web reset-code [--json]\n"
            "  deskport devices list|pending [--json]\n"
            "  deskport devices invite --address HOST[:PORT] [--json]\n"
            "  deskport devices revoke-invite [--json]\n"
@@ -366,6 +385,12 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
         request->finish(m_BrowserInfo ? success(m_BrowserInfo()) : failure("unavailable", "Browser access is unavailable in this instance."));
         return;
     }
+    if (args == QStringList{"web", "authenticator"}) {
+        const auto uri = m_BrowserAuthenticator ? m_BrowserAuthenticator() : QString();
+        request->finish(uri.isEmpty() ? failure("unavailable", "Browser access is unavailable in this instance.")
+                                      : success({{"authenticatorUri", uri}}));
+        return;
+    }
     if (args == QStringList{"web", "list"}) {
         request->finish(m_BrowserPairings ? success({{"browsers", m_BrowserPairings()}}) :
             failure("unavailable", "Browser pairing management is unavailable in this instance."));
@@ -394,6 +419,12 @@ void ControlServer::dispatch(QObject* context, const QStringList& args) {
         if (!found) { request->finish(failure("not-found", "No paired browser matches that exact ID. Run web list again.")); return; }
         request->finish(m_RevokeBrowser(args[2]) ? success({{"removed", args[2]}}) :
             failure("remove-failed", "Cannot save the browser pairing removal. Check the local browser settings directory and retry."));
+        return;
+    }
+    if (args == QStringList{"web", "reset-code"}) {
+        if (!m_ResetBrowserCode) { request->finish(failure("unavailable", "Browser access is unavailable in this instance.")); return; }
+        request->finish(m_ResetBrowserCode() ? success({{"codeReset", true}}) :
+            failure("reset-failed", "Cannot save a new code secret. Check the local browser settings directory and retry."));
         return;
     }
     if (args == QStringList{"devices", "revoke-invite"}) {

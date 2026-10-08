@@ -88,6 +88,8 @@ int DeskPortCli::runHostDaemon(int& argc, char** argv) {
     BrowserHost browserHost(&host);
     if (sessionMode == DeskPortSession::Mode::Desktop && !parser.isSet("no-web-server")) browserHost.start();
     control.setBrowserInfo([&browserHost] { return browserHost.localInfo(); });
+    control.setBrowserAuthenticator([&browserHost] { return browserHost.listening() ? browserHost.authenticatorUri() : QString(); },
+                                    [&browserHost] { return browserHost.resetAuthenticator(); });
     control.setBrowserPairings([&browserHost] { return QJsonArray::fromVariantList(browserHost.pairedBrowsers()); },
                               [&browserHost](const QString& id) { return browserHost.revokeBrowser(id); });
     if (sessionMode == DeskPortSession::Mode::Seamless) {

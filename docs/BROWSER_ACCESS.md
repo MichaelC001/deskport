@@ -1,27 +1,44 @@
 # Browser access
 
 The desktop host starts a local HTTPS browser entry by default. An iPad or
-another device can open its URL without installing DeskPort. The initial
-implementation uses one six-character, server-generated access code; the same
-code remains valid across restarts. No account, password registration, mobile
-app, authenticator, or browser key enrollment is required.
+another device can open its URL without installing DeskPort. Sign-in uses a
+six-digit code that changes every 30 seconds, shown on the computer and, if you
+add it, in an authenticator app such as Ente Auth. No account, password
+registration, mobile app or browser key enrollment is required.
 
 ## Connect
 
 1. Start DeskPort on the computer and enable sharing.
 2. Expand **Browser access** on the Sharing page. It shows whether the entry is
    running and on which networks. Scan the URL QR code or open one of the
-   displayed LAN or Tailscale URLs on the other device. The access code stays
-   hidden until you select **Show code**.
-3. Complete the browser's certificate trust step, then type the six-character
-   code displayed on the computer. Keep **Remember this browser** selected on
-   your own device, or clear it for a temporary connection, then select **Connect**.
+   displayed LAN or Tailscale URLs on the other device. The current code stays
+   hidden until you select **Show code**; a countdown shows when it changes.
+3. Complete the browser's certificate trust step, then type the six-digit code
+   shown on the computer or in your authenticator app. Select **Remember this
+   browser for 7 days** only on your own device, then select **Connect**.
 4. Use the touchpad, direct touch, mouse, physical keyboard, on-screen shortcuts,
    or text panel. The text panel accepts composed text, including Chinese.
 
 The HTTPS entry runs whenever DeskPort runs; no command needs to be issued on
 the computer before connecting. `deskport web info` only reports the URLs and
-code.
+the current code.
+
+## Time-based code
+
+The code is a standard TOTP (RFC 6238: HMAC-SHA1, six digits, 30-second steps).
+**Add to authenticator app** on the Sharing page, or `deskport web authenticator`
+over SSH, shows an `otpauth://` QR code for Ente Auth or any other authenticator,
+so the code is available on your phone even when the computer has no display.
+That QR code is the secret itself: anyone holding it can sign in. **Reset code
+secret** (`deskport web reset-code`) replaces it, disconnects every authenticator
+and ends browser sessions signed in with a code; remembered browsers stay paired.
+
+The computer accepts the current step and one step either side for clock drift.
+Each step is accepted once, so a second browser waits for the next code. Ten
+wrong codes within 15 minutes pause code sign-in for 15 minutes, on top of the
+per-address rate limit; the Sharing page and `deskport web info` show the pause.
+Tailscale sign-in of owned devices is not affected. Upgrading from the earlier
+fixed six-character code retires it and forgets every remembered browser once.
 
 ## Tailscale devices without the code
 
@@ -39,13 +56,13 @@ session but no remembered pairing; ownership is checked again on each visit.
 Set `web/tailnetIdentity=false` to require the code everywhere, or
 `web/tailscale=/path/to/tailscale` when the CLI is not in a standard location.
 
-The QR contains only the HTTPS URL. The code is entered separately and never
+The URL QR contains only the HTTPS URL. The code is entered separately and never
 appears in URLs or browser storage. A remembered browser restores its pairing
-after refreshing or reopening the page and can connect without entering the
-code again. Starting desktop media still requires selecting **Connect**. An
-unremembered browser requires the code for every new connection. The permanent
-code itself does not expire every 30 seconds; individual media packets and API
-requests never require repeated manual entry.
+after refreshing or reopening the page and can connect without entering a code
+for seven days. Starting desktop media still requires selecting **Connect**. A
+browser that is not remembered keeps its sign-in only in page memory, so closing
+the tab or browser requires a new code; media packets and API requests within a
+connection never ask again.
 
 The server creates a self-signed certificate on first run. Browser trust is
 separate from the access code: this version does not silently install a CA or
@@ -59,9 +76,10 @@ deskport web info
 deskport web info --json
 ```
 
-The local command returns URLs and the permanent code, and its human output
-includes a terminal QR. Treat that output as a credential. Ordinary host status
-and unauthenticated web responses do not include the code.
+The local command returns URLs and the current code with its remaining seconds,
+and its human output includes a terminal QR of the URL. Ordinary host status and
+unauthenticated web responses never include the code or its secret;
+`deskport web authenticator` is the only command that prints the secret.
 
 ## Remembered browsers
 
@@ -70,9 +88,10 @@ app, account or authenticator is required. Safari uses the same browser entry,
 but its acceptance checks remain open. Each browser gets an independent
 256-bit random credential in a persistent `Secure`, `HttpOnly`, `SameSite=Strict`
 cookie. Page JavaScript cannot read it. The server saves only its hash and local
-device metadata. A successful restore recovers a temporary session and
-renews the one-year pairing validity. Browser and server restarts preserve the
-pairing; inactive pairings expire after a year.
+device metadata. A successful restore recovers a temporary session. The pairing
+is valid for seven days from the code entry that created it; use does not extend
+it, and entering a code again restarts the seven days. Browser and server
+restarts preserve the pairing until then.
 
 **Disconnect** stops media and releases control while keeping the pairing.
 **Forget this browser** removes its saved authorization. The computer's
@@ -85,9 +104,8 @@ deskport web list --json
 deskport web remove BROWSER_ID
 ```
 
-Removal invalidates the old credential. Someone who still knows the permanent
-six-character code can pair again. Code rotation and disabling new enrollments
-are separate future controls.
+Removal invalidates the old credential. Pairing again needs a current code;
+resetting the code secret also stops authenticator apps from producing one.
 
 Keep the HTTPS host name or IP address stable. Browser profiles and private
 windows have separate storage; clearing cookies/site data or losing browser
@@ -151,7 +169,8 @@ a new address or name appears, DeskPort extends that self-signed certificate,
 keeping the names it already had, so the connecting browser must trust the new
 certificate once. The access code and remembered browsers are unchanged. A
 custom certificate is never modified; it must already cover any Tailscale address
-or MagicDNS name used. Keep `browser.ini` to retain the permanent access code.
+or MagicDNS name used. Keep `browser.ini` to retain the code secret, so
+authenticator apps keep working.
 
 The supervisor accepts `--no-web-server` to disable this entry for that run.
 Persistent settings use the existing DeskPort settings file:
@@ -178,11 +197,10 @@ run. With a custom certificate, explicitly configured `allowedHosts` appear
 before IP URLs and can be used for the QR entry. Browser credentials and the
 generated certificate are stored beneath the
 application's local data directory in `browser/`. The directory and private
-files are restricted to the current user. Saving the six-character code is
-intentional so it survives restarts. Browser pairings are stored separately in
-the same private directory. Multiple independent remembered browsers are
-supported; only one may control the desktop at a time. Multiple six-character
-codes and code rotation controls are future work.
+files are restricted to the current user. The code secret is saved so it
+survives restarts. Browser pairings are stored separately in the same private
+directory. Multiple independent remembered browsers are supported; only one may
+control the desktop at a time.
 
 ## macOS host checkpoint — 2026-10-08
 

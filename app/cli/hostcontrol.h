@@ -34,6 +34,9 @@ public:
                             std::function<bool(const QString&)> revoke) {
         m_BrowserPairings = std::move(list); m_RevokeBrowser = std::move(revoke);
     }
+    void setBrowserAuthenticator(std::function<QString()> uri, std::function<bool()> reset) {
+        m_BrowserAuthenticator = std::move(uri); m_ResetBrowserCode = std::move(reset);
+    }
     void setStatusExtension(std::function<QJsonObject()> status) { m_StatusExtension = std::move(status); }
 private:
     void acceptConnections();
@@ -50,6 +53,8 @@ private:
     std::function<QJsonObject()> m_BrowserInfo;
     std::function<QJsonArray()> m_BrowserPairings;
     std::function<bool(const QString&)> m_RevokeBrowser;
+    std::function<QString()> m_BrowserAuthenticator;
+    std::function<bool()> m_ResetBrowserCode;
     std::function<QJsonObject()> m_StatusExtension;
 };
 

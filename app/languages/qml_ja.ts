@@ -2213,6 +2213,46 @@
 <context>
     <name>HostView</name>
     <message>
+        <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
+        <translation>別のデバイスで QR コードを読み取るか URL を開き、ここまたは認証アプリに表示される 6 桁のコードを入力してください。コードは 30 秒ごとに変わります。</translation>
+    </message>
+    <message>
+        <source>Changes in %1 s</source>
+        <translation>%1 秒後に変更</translation>
+    </message>
+    <message>
+        <source>Too many wrong codes. Code sign-in is paused until %1.</source>
+        <translation>誤ったコードが多すぎます。コードでのサインインは %1 まで停止しています。</translation>
+    </message>
+    <message>
+        <source>Hide authenticator QR</source>
+        <translation>認証アプリ用 QR を隠す</translation>
+    </message>
+    <message>
+        <source>Add to authenticator app</source>
+        <translation>認証アプリに追加</translation>
+    </message>
+    <message>
+        <source>Reset code secret</source>
+        <translation>コードの秘密鍵をリセット</translation>
+    </message>
+    <message>
+        <source>Could not save a new code secret. Please try again.</source>
+        <translation>新しいコードの秘密鍵を保存できませんでした。もう一度お試しください。</translation>
+    </message>
+    <message>
+        <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
+        <translation>Ente Auth などの認証アプリで読み取ると、スマートフォンにも同じコードが表示されます。この QR コードを持つ人は誰でもブラウザーからサインインできます。秘密鍵をリセットすると、すべての認証アプリが無効になります。</translation>
+    </message>
+    <message>
+        <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>記憶しないブラウザーは、閉じた後に新しいコードが必要です。接続する前に共有を開始してください。接続するデバイスでローカル HTTPS 証明書を信頼する必要があります。</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
+        <translation>接続時に「このブラウザーを 7 日間記憶」を選ぶと、そのブラウザーではコードの入力を省略できます。</translation>
+    </message>
+    <message>
         <source>Browser access is not running.</source>
         <translation>ブラウザーアクセスは実行されていません。</translation>
     </message>
@@ -2278,10 +2318,6 @@
         <translation>ブラウザーアクセス</translation>
     </message>
     <message>
-        <source>Scan or open the URL on your other device, then enter this access code.</source>
-        <translation>別のデバイスでQRコードを読み取るかURLを開き、このアクセスコードを入力してください。</translation>
-    </message>
-    <message>
         <source>Browser access code</source>
         <translation>ブラウザーアクセスコード</translation>
     </message>
@@ -2290,16 +2326,8 @@
         <translation>ブラウザーURL</translation>
     </message>
     <message>
-        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
-        <translation>DeskPortを再起動してもコードは有効です。接続する前に共有を開始してください。接続するデバイスでローカルHTTPS証明書を信頼する必要があります。</translation>
-    </message>
-    <message>
         <source>Paired browsers</source>
         <translation>ペアリング済みブラウザー</translation>
-    </message>
-    <message>
-        <source>Choose Remember this browser when connecting to keep its pairing.</source>
-        <translation>接続時に「このブラウザーを記憶」を選ぶと、ペアリングが保持されます。</translation>
     </message>
     <message>
         <source>Remove pairing</source>

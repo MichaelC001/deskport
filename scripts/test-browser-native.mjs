@@ -13,7 +13,7 @@ const fixtureIndex = process.argv.indexOf('--fixture');
 assert.ok(fixtureIndex >= 0 && process.argv[fixtureIndex + 1], 'Pass --fixture with an isolated browser.json file.');
 const fixture = JSON.parse(await readFile(process.argv[fixtureIndex + 1], 'utf8'));
 assert.ok(new URL(fixture.url).protocol === 'https:', 'The fixture must serve production HTTPS.');
-assert.match(fixture.code, /^[A-Z0-9]{6}$/i, 'Fixture access code must contain six alphanumeric characters.');
+assert.match(fixture.code, /^[0-9]{6}$/, 'Fixture access code must contain six digits.');
 assert.ok(fixture.chromium && fixture.outputDir, 'Fixture must include chromium and outputDir.');
 await mkdir(fixture.outputDir, { recursive: true });
 const require = createRequire(import.meta.url);

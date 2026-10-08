@@ -6,6 +6,9 @@ UiPage {
     id: page
     readonly property var webHost: typeof browserHost === "undefined" ? null : browserHost
     property string browserPairingError: ""
+    property real clockNow: Date.now()
+    property string authenticatorQr: ""
+    Timer { interval: 1000; repeat: true; running: page.visible && page.webHost !== null; onTriggered: page.clockNow = Date.now() }
     Component.onCompleted: hostManager.refreshPermissions()
     Timer { interval: 3000; repeat: true; running: page.visible; onTriggered: hostManager.refreshPermissions() }
     objectName: qsTr("Sharing")
@@ -53,7 +56,7 @@ UiPage {
                     color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
                 Label {
-                    text: qsTr("Scan or open the URL on your other device, then enter this access code.")
+                    text: qsTr("Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.")
                     color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
                 Image {
@@ -80,6 +83,52 @@ UiPage {
                         checkable: true
                         text: checked ? qsTr("Hide code") : qsTr("Show code")
                     }
+                    Label {
+                        objectName: "browserAccessCodeCountdown"
+                        visible: page.webHost !== null && page.webHost.listening === true
+                        text: qsTr("Changes in %1 s").arg(page.webHost ? Math.max(0, Math.ceil((page.webHost.accessCodeExpiresAt - page.clockNow) / 1000)) : 0)
+                        color: ui.muted
+                    }
+                }
+                Label {
+                    objectName: "browserAccessCodeLocked"
+                    visible: page.webHost !== null && page.webHost.codeLockedUntil > page.clockNow
+                    text: qsTr("Too many wrong codes. Code sign-in is paused until %1.").arg(page.webHost ? new Date(page.webHost.codeLockedUntil).toLocaleTimeString(Qt.locale(), Locale.ShortFormat) : "")
+                    color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                RowLayout {
+                    spacing: 10
+                    UiButton {
+                        id: authenticatorToggle
+                        objectName: "browserAuthenticatorToggle"
+                        checkable: true
+                        enabled: page.webHost !== null && page.webHost.listening === true
+                        text: checked ? qsTr("Hide authenticator QR") : qsTr("Add to authenticator app")
+                        // Generated on request only; the QR holds the code secret.
+                        onCheckedChanged: page.authenticatorQr = checked && page.webHost ? page.webHost.authenticatorQr() : ""
+                    }
+                    UiButton {
+                        objectName: "browserAuthenticatorReset"
+                        visible: authenticatorToggle.checked
+                        text: qsTr("Reset code secret")
+                        onClicked: {
+                            page.browserPairingError = page.webHost.resetAuthenticator() ? "" : qsTr("Could not save a new code secret. Please try again.")
+                            page.authenticatorQr = page.webHost.authenticatorQr()
+                        }
+                    }
+                }
+                Label {
+                    visible: authenticatorToggle.checked
+                    text: qsTr("Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.")
+                    color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Image {
+                    objectName: "browserAuthenticatorQr"
+                    source: page.authenticatorQr
+                    visible: authenticatorToggle.checked && page.authenticatorQr.length > 0
+                    sourceSize: Qt.size(192, 192)
+                    Layout.preferredWidth: 192; Layout.preferredHeight: 192
+                    smooth: false
                 }
                 Repeater {
                     model: page.webHost ? page.webHost.urls : []
@@ -95,7 +144,7 @@ UiPage {
                     color: ui.warning; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
                 Label {
-                    text: qsTr("The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.")
+                    text: qsTr("A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.")
                     color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
                 Label {
@@ -104,7 +153,7 @@ UiPage {
                 }
                 Label {
                     visible: page.webHost !== null && page.webHost.pairedBrowsers.length === 0
-                    text: qsTr("Choose Remember this browser when connecting to keep its pairing.")
+                    text: qsTr("Choose Remember this browser for 7 days when connecting to skip the code on that browser.")
                     color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
                 Repeater {

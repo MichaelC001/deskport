@@ -1,5 +1,6 @@
 #include "browsergateway.h"
 #include <QCoreApplication>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QSocketNotifier>
@@ -26,6 +27,14 @@ int main(int argc, char** argv) {
         report({{"overlay", results}});
         return 0;
     }
+    if (qEnvironmentVariableIsSet("DESKPORT_TEST_TOTP_VECTOR")) {
+        // RFC 6238 appendix B, SHA-1 secret, truncated to six digits.
+        QJsonArray results;
+        for (const qint64 time : {59LL, 1111111109LL, 1111111111LL, 1234567890LL, 2000000000LL, 20000000000LL})
+            results.append(BrowserGateway::totp("12345678901234567890", time / 30));
+        report({{"vectors", results}});
+        return 0;
+    }
     bool sharing = true;
     QString owner;
     int starts = 0, stops = 0;
@@ -41,6 +50,14 @@ int main(int argc, char** argv) {
         options.allowedHosts = qEnvironmentVariable("DESKPORT_TEST_ALLOWED_HOSTS").split(',');
     options.port = argc > 2 ? quint16(QString::fromLocal8Bit(argv[2]).toInt()) : 0;
     options.mediaIdleSeconds = 2;
+    // A shared clock file lets the suite step the 30-second code deterministically.
+    const auto clockFile = qEnvironmentVariable("DESKPORT_TEST_CLOCK_FILE");
+    if (!clockFile.isEmpty()) options.clock = [clockFile] {
+        QFile file(clockFile);
+        return file.open(QIODevice::ReadOnly) ? file.readAll().trimmed().toLongLong() : 0LL;
+    };
+    if (qEnvironmentVariableIsSet("DESKPORT_TEST_CODE_FAILURES"))
+        options.codeFailureLimit = qEnvironmentVariableIntValue("DESKPORT_TEST_CODE_FAILURES");
     if (argc > 4) { options.certificatePath = QString::fromLocal8Bit(argv[3]); options.privateKeyPath = QString::fromLocal8Bit(argv[4]); }
     BrowserGateway::Hooks hooks;
     hooks.state = [&] { return QJsonObject{{"sharing", sharing}, {"hostName", "Isolated host"},
@@ -70,7 +87,8 @@ int main(int argc, char** argv) {
     BrowserGateway gateway(hooks, options);
     if (!gateway.start()) { report({{"error", gateway.errorString()}, {"active", gateway.active()},
         {"port", gateway.port()}, {"urlCount", gateway.urls().size()}}); return 2; }
-    report({{"port", gateway.port()}, {"code", gateway.accessCode()}, {"urls", QJsonArray::fromStringList(gateway.urls())}});
+    report({{"port", gateway.port()}, {"code", gateway.accessCode()}, {"authenticator", gateway.authenticatorUri("Isolated host")},
+        {"urls", QJsonArray::fromStringList(gateway.urls())}});
     QByteArray input;
     QSocketNotifier notifier(STDIN_FILENO, QSocketNotifier::Read);
     QObject::connect(&notifier, &QSocketNotifier::activated, &application, [&] {
@@ -92,7 +110,8 @@ int main(int argc, char** argv) {
                 completion({{"status", true}, {"type", "offer"}, {"sdp", "v=0\r\n"}});
             }
             report({{"starts", starts}, {"stops", stops}, {"active", !owner.isEmpty()},
-                {"code", gateway.accessCode()}, {"last", last}, {"pairings", gateway.pairedBrowsers()},
+                {"code", gateway.accessCode()}, {"authenticator", gateway.authenticatorUri("Isolated host")},
+                {"locked", gateway.codeLockedUntil() > 0}, {"last", last}, {"pairings", gateway.pairedBrowsers()},
                 {"revoked", revoked}, {"error", gateway.errorString()}});
         }
     });

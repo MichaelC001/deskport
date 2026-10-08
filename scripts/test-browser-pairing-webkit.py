@@ -78,7 +78,8 @@ try:
         except OSError:time.sleep(.1)
     capabilities=new_session(); ready(False)
     check('WebKit production page is secure',execute('return isSecureContext'))
-    login=fetch('/api/login',{'code':fixture['code'],'remember':True,'deviceName':'WebKit fixture'})
+    # Each code works once; take the fixture's next 30-second code.
+    login=fetch('/api/login',{'code':control('next-code')['code'],'remember':True,'deviceName':'WebKit fixture'})
     check('WebKit real HTTPS persistent login',login.get('status')==200 and login['data'].get('paired'))
     pair_id=login['data']['pairing']['id']
     cookies=command('GET','/cookie')

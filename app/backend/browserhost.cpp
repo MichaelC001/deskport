@@ -99,6 +99,11 @@ void BrowserHost::stop() {
     m_Listening = false; m_Poll.stop(); m_Gateway.stop(); end(); emit changed();
 }
 QString BrowserHost::accessCode() const { return m_Gateway.accessCode(); }
+qint64 BrowserHost::accessCodeExpiresAt() const { return m_Gateway.accessCodeExpiresAt(); }
+qint64 BrowserHost::codeLockedUntil() const { return m_Gateway.codeLockedUntil(); }
+QString BrowserHost::authenticatorUri() const { return m_Gateway.authenticatorUri(m_Host->deviceName()); }
+QString BrowserHost::authenticatorQr() const { return qrSvg(authenticatorUri()); }
+bool BrowserHost::resetAuthenticator() { return m_Gateway.resetAccessCode(); }
 QStringList BrowserHost::urls() const { return m_Gateway.urls(); }
 QString BrowserHost::errorString() const { return m_Gateway.errorString(); }
 bool BrowserHost::listening() const { return m_Listening; }
@@ -108,7 +113,11 @@ QVariantList BrowserHost::pairedBrowsers() const { return m_Gateway.pairedBrowse
 bool BrowserHost::revokeBrowser(const QString& id) { return m_Gateway.revokeBrowser(id); }
 QString BrowserHost::qrSource() const {
     if (!m_Listening || urls().isEmpty()) return {};
-    const auto text = urls().first().toUtf8();
+    return qrSvg(urls().first());
+}
+QString BrowserHost::qrSvg(const QString& value) {
+    if (value.isEmpty()) return {};
+    const auto text = value.toUtf8();
     const auto qr = qrcodegen::QrCode::encodeText(text.constData(), qrcodegen::QrCode::Ecc::MEDIUM);
     const int size = qr.getSize();
     QByteArray svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 " +
@@ -122,7 +131,8 @@ QString BrowserHost::qrSource() const {
 }
 QJsonObject BrowserHost::localInfo() const {
     return {{"enabled", m_Listening}, {"urls", QJsonArray::fromStringList(urls())},
-            {"accessCode", accessCode()}, {"port", int(m_Gateway.port())},
+            {"accessCode", accessCode()}, {"accessCodeExpiresAt", accessCodeExpiresAt()},
+            {"codeLockedUntil", codeLockedUntil()}, {"port", int(m_Gateway.port())},
             {"busy", busy()}, {"error", errorString()}};
 }
 QJsonObject BrowserHost::state() const {

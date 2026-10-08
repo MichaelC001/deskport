@@ -2203,6 +2203,46 @@
 <context>
     <name>HostView</name>
     <message>
+        <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
+        <translation>在另一台设备上扫码或打开网址，然后输入此处或验证器 App 上显示的 6 位动态码。动态码每 30 秒更换一次。</translation>
+    </message>
+    <message>
+        <source>Changes in %1 s</source>
+        <translation>%1 秒后更换</translation>
+    </message>
+    <message>
+        <source>Too many wrong codes. Code sign-in is paused until %1.</source>
+        <translation>动态码错误次数过多，代码登录已暂停至 %1。</translation>
+    </message>
+    <message>
+        <source>Hide authenticator QR</source>
+        <translation>隐藏验证器二维码</translation>
+    </message>
+    <message>
+        <source>Add to authenticator app</source>
+        <translation>添加到验证器 App</translation>
+    </message>
+    <message>
+        <source>Reset code secret</source>
+        <translation>重置动态码密钥</translation>
+    </message>
+    <message>
+        <source>Could not save a new code secret. Please try again.</source>
+        <translation>无法保存新的动态码密钥，请重试。</translation>
+    </message>
+    <message>
+        <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
+        <translation>用 Ente Auth 或其他验证器 App 扫码，即可在手机上看到同样的动态码。拿到此二维码的人都能从浏览器登录。重置动态码密钥会让所有验证器失效。</translation>
+    </message>
+    <message>
+        <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+        <translation>未记住的浏览器关闭后需要重新输入动态码。连接前请先开始共享。连接设备需要信任本机 HTTPS 证书。</translation>
+    </message>
+    <message>
+        <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
+        <translation>连接时勾选“记住此浏览器 7 天”，该浏览器 7 天内无需再输入动态码。</translation>
+    </message>
+    <message>
         <source>Browser access is not running.</source>
         <translation>浏览器访问未运行。</translation>
     </message>
@@ -2271,10 +2311,6 @@
         <translation>浏览器访问</translation>
     </message>
     <message>
-        <source>Scan or open the URL on your other device, then enter this access code.</source>
-        <translation>在另一台设备上扫描或打开此网址，然后输入此访问码。</translation>
-    </message>
-    <message>
         <source>Browser access code</source>
         <translation>浏览器访问码</translation>
     </message>
@@ -2283,16 +2319,8 @@
         <translation>浏览器网址</translation>
     </message>
     <message>
-        <source>The code stays valid after restarting DeskPort. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
-        <translation>重启 DeskPort 后，此访问码仍然有效。请先开启共享再连接。连接设备需要信任本地 HTTPS 证书。</translation>
-    </message>
-    <message>
         <source>Paired browsers</source>
         <translation>已配对的浏览器</translation>
-    </message>
-    <message>
-        <source>Choose Remember this browser when connecting to keep its pairing.</source>
-        <translation>连接时选择“记住此浏览器”，即可保留配对。</translation>
     </message>
     <message>
         <source>Remove pairing</source>

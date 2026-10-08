@@ -22,14 +22,14 @@
       <div class="login-card">
         <span class="eyebrow">你的电脑，随手可用</span>
         <h1 id="login-title">连接到 DeskPort</h1>
-        <p id="login-intro" class="intro">输入这台电脑上显示的 6 位访问码。</p>
+        <p id="login-intro" class="intro">输入电脑共享页面或验证器 App 上的 6 位动态码。</p>
         <form id="login-form" autocomplete="off">
           <div id="credential-fields">
-          <label for="access-code">访问码</label>
-          <input id="access-code" name="access-code" type="password" minlength="6" maxlength="6" pattern="[A-Za-z0-9]{6}" required autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" placeholder="6 位字母或数字" aria-describedby="code-note">
-          <p id="code-note" class="hint">访问码不会保存在浏览器。</p>
-          <label class="check"><input id="remember-browser" type="checkbox" checked>记住此浏览器</label>
-          <p class="hint remember-note">仅在自己的设备上勾选。配对后，下次打开即可连接。</p>
+          <label for="access-code">动态码</label>
+          <input id="access-code" name="access-code" type="text" minlength="6" maxlength="7" pattern="[0-9]{3} ?[0-9]{3}" required autocomplete="one-time-code" spellcheck="false" inputmode="numeric" placeholder="6 位数字" aria-describedby="code-note">
+          <p id="code-note" class="hint">动态码每 30 秒更换一次，每个只能用一次。</p>
+          <label class="check"><input id="remember-browser" type="checkbox">记住此浏览器 7 天</label>
+          <p class="hint remember-note">仅在自己的设备上勾选。不记住时，关闭浏览器后需要重新输入动态码。</p>
           <label id="device-name-label" for="device-name">设备名称（可选）</label>
           <input id="device-name" name="device-name" type="text" maxlength="64" autocomplete="off" spellcheck="false" placeholder="用于在电脑端识别此浏览器">
           </div>
@@ -50,7 +50,7 @@
           </details>
           <button id="connect" class="primary" type="submit">连接电脑<span aria-hidden="true">↗</span></button>
         </form>
-        <p class="privacy-note">无需注册账号。请只输入目标电脑上显示的访问码。</p>
+        <p class="privacy-note">无需注册账号。请只输入目标电脑或你自己的验证器 App 上的动态码。</p>
       </div>
     </section>
     <section id="session-panel" class="session-panel" aria-label="远程电脑" hidden>
