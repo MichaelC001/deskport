@@ -83,4 +83,39 @@ with tempfile.TemporaryDirectory(prefix='deskport-macos-relocation-', dir=scratc
     result = run(str(probe), capture_output=True)
     assert result.stdout == '17\n', result.stdout
 
-print('PASS: colliding dylib basenames retain distinct source ABIs and remain runnable')
+# Nix builds Apple's libiconv with converter data under absolute /nix/store
+# paths. Packages must use the system copy so other Macs can convert text.
+with tempfile.TemporaryDirectory(prefix='deskport-macos-system-iconv-', dir=scratch) as temporary:
+    root = pathlib.Path(temporary)
+    app = root / 'Probe.app'
+    (app / 'Contents/MacOS').mkdir(parents=True)
+    nix = root / 'nix-libiconv'
+    nix.mkdir()
+    fake = nix / 'libiconv.2.dylib'
+    (nix / 'iconv.c').write_text(
+        '#include <stddef.h>\n'
+        'const char *data = "/nix/store/0000000000000000000000000000000-libiconv-113/share/i18n/csmapper";\n'
+        'void *iconv_open(const char *a, const char *b) { (void)a; (void)b; (void)data; return (void *)-1; }\n'
+        'size_t iconv(void *c, char **i, size_t *il, char **o, size_t *ol) { (void)c; (void)i; (void)il; (void)o; (void)ol; return (size_t)-1; }\n'
+        'int iconv_close(void *c) { (void)c; return -1; }\n')
+    run('xcrun', 'clang', '-dynamiclib', str(nix / 'iconv.c'), '-Wl,-install_name,@rpath/libiconv.2.dylib', '-o', str(fake))
+    (root / 'convert.c').write_text(
+        '#include <iconv.h>\n#include <stdio.h>\n#include <string.h>\n'
+        'int main(void) { iconv_t c = iconv_open("UTF-8", "ISO-8859-1");\n'
+        '  if (c == (iconv_t)-1) return 2;\n'
+        '  char in[] = "\\xe9"; char out[8]; char *ip = in, *op = out; size_t il = 1, ol = sizeof out;\n'
+        '  if (iconv(c, &ip, &il, &op, &ol) == (size_t)-1) return 3;\n'
+        '  printf("%zu\\n", sizeof out - ol); iconv_close(c); return 0; }\n')
+    probe = app / 'Contents/MacOS/probe'
+    run('xcrun', 'clang', str(root / 'convert.c'), str(fake), '-Wl,-rpath,' + str(nix), '-o', str(probe))
+    assert subprocess.run([str(probe)]).returncode == 2, 'fixture must fail with the build-machine libiconv'
+    run(sys.executable, str(relocator), str(app))
+    links = subprocess.check_output(['otool', '-L', str(probe)], text=True)
+    assert '/usr/lib/libiconv.2.dylib' in links and '@loader_path' not in links.split('libiconv')[0][-40:], links
+    frameworks = app / 'Contents/Frameworks'
+    assert not [path for path in frameworks.iterdir() if path.name.startswith('libiconv')], list(frameworks.iterdir())
+    result = run(str(probe), capture_output=True)
+    assert result.stdout == '2\n', result.stdout
+
+print('PASS: colliding dylib basenames retain distinct source ABIs and remain runnable; '
+      'build-machine Apple libiconv is replaced by the system library')

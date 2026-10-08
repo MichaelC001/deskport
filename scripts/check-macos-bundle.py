@@ -41,6 +41,12 @@ for path in root.rglob('*'):
     signature = subprocess.run(['/usr/bin/codesign', '--verify', '--strict', str(path)], capture_output=True, text=True)
     if signature.returncode:
         errors.append(f'{path.relative_to(root)}: invalid code signature: {signature.stderr.strip()}')
+    # Links are not the only build-machine dependency: Apple's libiconv as built
+    # by Nix loads converter modules and tables from absolute store paths at run
+    # time, so text conversion (and GLib error reporting) fails on other Macs.
+    data = path.read_bytes()
+    if b'/nix/store/' in data and (b'/share/i18n/csmapper' in data or b'/lib/i18n/' in data):
+        errors.append(f'{path.relative_to(root)}: loads run-time converter data from the build machine')
     output = subprocess.check_output(['/usr/bin/otool', '-arch', 'arm64', '-L', str(path)], text=True)
     for line in output.splitlines()[1:]:
         dependency = line.strip().split(' (')[0]

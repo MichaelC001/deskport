@@ -119,7 +119,18 @@ static void waitForMode(NSInteger width, NSInteger height, unsigned token, unsig
     BOOL ready = current && CGDisplayIsActive(capture) &&
         CGDisplayModeGetPixelWidth(current) == width && CGDisplayModeGetPixelHeight(current) == height &&
         CGDisplayModeGetWidth(current) == width / requestedScale && CGDisplayModeGetHeight(current) == height / requestedScale;
-    if (attempt==0 || attempt==30) fprintf(stderr,"DeskPort mode attempt=%u requested=%ldx%ld@%ld actual=%zux%zu/%zux%zu main=%u\n",attempt,(long)width,(long)height,(long)requestedScale,current?CGDisplayModeGetWidth(current):0,current?CGDisplayModeGetHeight(current):0,current?CGDisplayModeGetPixelWidth(current):0,current?CGDisplayModeGetPixelHeight(current):0,CGMainDisplayID());
+    if (attempt%10==0) fprintf(stderr,"DeskPort mode attempt=%u requested=%ldx%ld@%ld actual=%zux%zu/%zux%zu active=%d main=%u\n",attempt,(long)width,(long)height,(long)requestedScale,current?CGDisplayModeGetWidth(current):0,current?CGDisplayModeGetHeight(current):0,current?CGDisplayModeGetPixelWidth(current):0,current?CGDisplayModeGetPixelHeight(current):0,CGDisplayIsActive(capture),CGMainDisplayID());
+    if (attempt==10 && !ready) {
+        // Name what the virtual display offers when the requested mode is missing.
+        CFArrayRef offered = CGDisplayCopyAllDisplayModes(capture,
+            (__bridge CFDictionaryRef)@{(__bridge NSString *)kCGDisplayShowDuplicateLowResolutionModes: @YES});
+        for (CFIndex i = 0; offered && i < CFArrayGetCount(offered) && i < 16; ++i) {
+            CGDisplayModeRef mode = (CGDisplayModeRef)CFArrayGetValueAtIndex(offered, i);
+            fprintf(stderr,"DeskPort mode offered=%zux%zu/%zux%zu\n",CGDisplayModeGetWidth(mode),CGDisplayModeGetHeight(mode),
+                CGDisplayModeGetPixelWidth(mode),CGDisplayModeGetPixelHeight(mode));
+        }
+        if (offered) CFRelease(offered);
+    }
     if (current) CFRelease(current);
     if (!ready && !source) {
         CFArrayRef modes = CGDisplayCopyAllDisplayModes(display.displayID,
@@ -344,12 +355,12 @@ int main(int argc, const char *argv[]) {
                         id value=request[@"displayPolicy"];
                         int policy=[value isKindOfClass:NSNumber.class] ? [value intValue] : DP_DISPLAY_PRIMARY_MIRROR;
                         BOOL session=[request[@"session"] boolValue];
-                        if (isolatedDisplay()) policy=DP_DISPLAY_EXTEND;
+                        if (isolatedPolicy()) policy=DP_DISPLAY_EXTEND;
                         if ((value && (![value isKindOfClass:NSNumber.class] || ![@[@0,@1,@2] containsObject:value])) ||
                             (session && sessionActive && policy!=sessionDisplayPolicy)) {
                             requestSequence=sequence; respond(@{@"error":@"Invalid or changed session display policy"}); return;
                         }
-                        if (session) sessionDisplayPolicy=isolatedDisplay() ? DP_DISPLAY_EXTEND : policy;
+                        if (session) sessionDisplayPolicy=isolatedPolicy() ? DP_DISPLAY_EXTEND : policy;
                         displayRebuilt=NO;
                         configure(width, height, scale ?: 1, sequence, session);
                     });

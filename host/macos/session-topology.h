@@ -19,6 +19,13 @@ static CGDirectDisplayID recoveryOwnedDisplay;
 static BOOL isolatedDisplay(void) {
     return [NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_ISOLATED"] isEqualToString:@"1"];
 }
+// Isolated acceptance hosts extend to the right and never touch other layouts.
+// DESKPORT_DISPLAY_REAL_TOPOLOGY=1 (isolated runs only) reproduces the installed
+// primary/mirror policy while keeping its journal in the temporary state directory.
+static BOOL isolatedPolicy(void) {
+    return isolatedDisplay() &&
+        ![NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_REAL_TOPOLOGY"] isEqualToString:@"1"];
+}
 static NSString *topologyPath(void) {
     if (isolatedDisplay()) {
         NSString *directory=NSProcessInfo.processInfo.environment[@"DESKPORT_DISPLAY_STATE_DIR"];
@@ -74,7 +81,7 @@ static NSArray *captureTopology(CGDirectDisplayID own) {
 static BOOL snapshotTopology(CGDirectDisplayID own) {
     // Parallel acceptance hosts must never journal or restore another helper's
     // physical/virtual layout. They only move their own extended display.
-    if (isolatedDisplay()) return YES;
+    if (isolatedPolicy()) return YES;
     if (savedTopology) return YES;
     NSArray *entries=captureTopology(own); if (!entries) return NO;
     NSString *path=topologyPath();
@@ -154,7 +161,7 @@ static BOOL restoredTopologyReady(void) {
     return YES;
 }
 static BOOL restoreTopology(CGDirectDisplayID own) {
-    if (isolatedDisplay()) return YES;
+    if (isolatedPolicy()) return YES;
     if (own) recoveryOwnedDisplay=own;
     if (!savedTopology) return YES;
     if (!onlineDisplays()) return NO;
@@ -220,7 +227,7 @@ static BOOL restoreTopology(CGDirectDisplayID own) {
 }
 static BOOL sessionTopologyReady(CGDirectDisplayID own) {
     if (!CGDisplayIsActive(own) || CGDisplayMirrorsDisplay(own)) return NO;
-    if (isolatedDisplay()) return !CGDisplayIsMain(own);
+    if (isolatedPolicy()) return !CGDisplayIsMain(own);
     if (sessionDisplayPolicy==DP_DISPLAY_EXTEND) {
         return restoredTopologyReady();
     }
@@ -235,7 +242,7 @@ static BOOL sessionTopologyReady(CGDirectDisplayID own) {
     return YES;
 }
 static BOOL applySessionTopology(CGDirectDisplayID own) {
-    if (isolatedDisplay()) {
+    if (isolatedPolicy()) {
         if (sessionTopologyReady(own)) return YES;
         CGFloat right=0;
         for (NSNumber *item in onlineDisplays()) {

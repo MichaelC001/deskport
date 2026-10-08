@@ -263,6 +263,24 @@ library dependencies without a corresponding change to the pinned host source.
 macOS dependency relocation preserves libraries with the same basename when
 their contents differ and rewrites each consumer to its exact source ABI. Run
 `python3 scripts/test-fix-macos-dependencies.py` after changing relocation.
+Links are not the only build-machine dependency. Apple's libiconv as built by
+Nix loads its converter modules and `csmapper` tables from absolute
+`/nix/store` paths at run time, so on any other Mac every conversion failed and
+GLib produced empty error messages; libnice then stopped answering ICE checks and
+browser video never started. Relocation rewrites that library's consumers to the
+system `/usr/lib/libiconv.2.dylib` (same Apple ABI, system data paths) and the
+bundle checker rejects any bundled library that still loads such data. Other
+embedded store strings (source paths, locale and CA directories, OpenSSL module
+directories) are fallbacks that DeskPort's pinned-certificate connections do not use.
+
+For troubleshooting, start DeskPort with `DESKPORT_HOST_LOG=/absolute/path` to
+append the host and display helpers' raw output to a private (0600) file, capped
+at 32 MiB; the host then logs at debug level. It is off by default because raw
+output contains addresses and paths that diagnostics deliberately drop. The
+isolated `--host-session-test` instance accepts `DESKPORT_DISPLAY_REAL_TOPOLOGY=1`
+to reproduce the installed primary/mirror display policy, journaling its layout
+in the temporary state directory instead of extending to the right.
+
 The bundle checker executes the packaged nested Sunshine with `--help` inside a
 write- and network-denied sandbox; this dynamic-loader smoke is required in
 addition to signing, notarization, stapling and Gatekeeper checks.

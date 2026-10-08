@@ -52,6 +52,23 @@
 #include "macdock.h"
 #include "macunattended.h"
 #endif
+namespace {
+// Explicit troubleshooting opt-in only. Diagnostics keep fixed event classes and
+// drop raw text; DESKPORT_HOST_LOG names a private file that receives the
+// helpers' raw output (addresses and paths included), capped at 32 MiB.
+void rawHostLog(const QByteArray& output) {
+    static const QString path = qEnvironmentVariable("DESKPORT_HOST_LOG");
+    static QFile* file = nullptr;
+    if (path.isEmpty() || output.isEmpty()) return;
+    if (!file) {
+        file = new QFile(path);
+        if (!file->open(QIODevice::WriteOnly | QIODevice::Append) ||
+            !file->setPermissions(QFile::ReadOwner | QFile::WriteOwner)) { file->close(); return; }
+    }
+    if (!file->isOpen() || file->size() > 32 * 1024 * 1024) return;
+    file->write(output); file->flush();
+}
+}
 
 HostManager::HostManager(QObject *parent, const QString &directory, bool interactive) : QObject(parent) {
 #if defined(Q_OS_WIN) || defined(Q_OS_LINUX)
@@ -104,6 +121,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
     // file handles are inherited, and toggles affect already-running children.
     const auto consumeHost = [this](const QByteArray& output) {
         Diagnostics::instance().ingest("host", output);
+        rawHostLog(output);
         // Operational status must work without diagnostic files. Fixed messages only.
         m_DiagnosticStatusBuffer = (m_DiagnosticStatusBuffer + output).right(4096);
         if (m_DiagnosticStatusBuffer.contains("No screen capture permission"))
@@ -113,7 +131,11 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
     };
     connect(&m_Server, &QProcess::readyReadStandardOutput, this, [this, consumeHost] { consumeHost(m_Server.readAllStandardOutput()); });
     connect(&m_Server, &QProcess::readyReadStandardError, this, [this, consumeHost] { consumeHost(m_Server.readAllStandardError()); });
-    connect(&m_Display, &QProcess::readyReadStandardError, this, [this] { Diagnostics::instance().ingest("display", m_Display.readAllStandardError()); });
+    connect(&m_Display, &QProcess::readyReadStandardError, this, [this] {
+        const auto output = m_Display.readAllStandardError();
+        Diagnostics::instance().ingest("display", output);
+        rawHostLog(output);
+    });
     m_Network.setProxy(QNetworkProxy::NoProxy);
     m_Directory = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/host" : directory;
     m_Status = available() ? tr("Sharing is off") : tr("The bundled DeskPort host is missing. Repair the installation to enable sharing.");
@@ -668,6 +690,7 @@ void HostManager::start(int width, int height) {
                 displayEnvironment.remove("DESKPORT_DISPLAY_ISOLATED");
                 displayEnvironment.remove("DESKPORT_DISPLAY_STATE_DIR");
                 displayEnvironment.remove("DESKPORT_DISPLAY_SERIAL");
+                displayEnvironment.remove("DESKPORT_DISPLAY_REAL_TOPOLOGY"); // isolated acceptance only
             }
 #ifdef Q_OS_WIN
             displayEnvironment.insert("DESKPORT_DISPLAY_STATE_DIR", m_Directory);
@@ -710,7 +733,9 @@ void HostManager::startServer(int displayId) {
     QString deviceName = this->deviceName().left(64);
     deviceName.replace('\n', ' '); deviceName.replace('\r', ' ');
     if (deviceName.trimmed().isEmpty()) deviceName = "DeskPort";
-    config.write(QString("sunshine_name = %2\nport = %1\naddress_family = ipv4\nupnp = disabled\nsystem_tray = disabled\nmin_log_level = 2\norigin_web_ui_allowed = pc\n").arg(m_BasePort).arg(deviceName).toUtf8());
+    // Debug detail only when the operator explicitly asked for a raw host log.
+    const int logLevel = qEnvironmentVariableIsEmpty("DESKPORT_HOST_LOG") ? 2 : 1;
+    config.write(QString("sunshine_name = %2\nport = %1\naddress_family = ipv4\nupnp = disabled\nsystem_tray = disabled\nmin_log_level = %3\norigin_web_ui_allowed = pc\n").arg(m_BasePort).arg(deviceName).arg(logLevel).toUtf8());
 #ifdef Q_OS_MACOS
     config.write(QString("output_name = %1\n").arg(displayId).toUtf8());
     auto hostEnvironment = QProcessEnvironment::systemEnvironment();

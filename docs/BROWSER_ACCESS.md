@@ -171,6 +171,16 @@ the same private directory. Multiple independent remembered browsers are
 supported; only one may control the desktop at a time. Multiple six-character
 codes and code rotation controls are future work.
 
+## macOS host checkpoint — 2026-10-08
+
+A Mac host previously admitted browser sessions but sent no video: the bundled
+Nix copy of Apple's libiconv could not load its converter data away from the
+packaging machine, and libnice stopped answering ICE checks after GLib produced
+an empty error. The package now uses the system libiconv. Verified on mm1 with an
+isolated instance using the installed primary/mirror display policy: a headless
+Chrome on pk4 signed in over Tailscale without the code and received continuous
+H.264 video (about 30 fps, 1280x528) and Opus audio.
+
 ## Implementation and validation
 
 `BrowserGateway` serves embedded assets and authenticated same-origin HTTPS

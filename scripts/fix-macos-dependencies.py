@@ -70,6 +70,18 @@ def flat_target(source):
     origins[target.resolve()] = source
     return target
 
+SYSTEM_ICONV = '/usr/lib/libiconv.2.dylib'
+
+def build_machine_iconv(path):
+    """Apple's libiconv built by Nix loads its converter modules and csmapper
+    tables from absolute /nix/store paths at run time. Those exist only on the
+    packaging machine, so GLib's error text (and every conversion) breaks on
+    other Macs. The system copy is the same Apple ABI with system-path data."""
+    if path.name != 'libiconv.2.dylib':
+        return False
+    data = path.read_bytes()
+    return b'/nix/store/' in data and b'/share/i18n/csmapper' in data
+
 def loader_rpaths(binary):
     commands = subprocess.check_output(
         ['otool', '-arch', 'arm64', '-l', str(binary)], text=True).splitlines()
@@ -141,6 +153,10 @@ while True:
             if dep.startswith(('/System/', '/usr/lib/')):
                 continue
             source = resolve(dep, binary)
+            if build_machine_iconv(source):
+                if dep != SYSTEM_ICONV:
+                    edits.extend(['-change', dep, SYSTEM_ICONV])
+                continue
             target = source
             if not source.is_relative_to(app):
                 parts = source.parts
@@ -181,4 +197,10 @@ while True:
         if edits:
             subprocess.run(['install_name_tool', *edits, str(binary)], check=True)
         processed.add(binary)
+# A copy already deployed before relocation is unused once consumers use the system library.
+for copy in list(frameworks.glob('libiconv.2*.dylib')):
+    data = copy.read_bytes() if copy.is_file() and not copy.is_symlink() else b''
+    if b'/nix/store/' in data and b'/share/i18n/csmapper' in data:
+        print(f'Removing build-machine libiconv in favour of {SYSTEM_ICONV}: {copy.name}')
+        copy.unlink()
 print(f'Relocated {len(processed)} Mach-O files into the application')
