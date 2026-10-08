@@ -6,13 +6,15 @@
   <meta name="color-scheme" content="dark">
   <meta name="referrer" content="no-referrer">
   <title>DeskPort · 浏览器连接</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="apple-touch-icon" href="/icon.svg">
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
   <main id="app">
     <header class="app-header">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">D</span><div><strong>DeskPort</strong><span id="host-name">浏览器连接</span></div></div>
+      <div class="brand"><img class="brand-mark" src="/icon.svg" alt="" aria-hidden="true"><div><strong>DeskPort</strong><span id="host-name">浏览器连接</span></div></div>
       <span id="connection-status" class="status" role="status" aria-live="polite">未连接</span>
       <button id="disconnect" class="quiet" hidden>断开连接</button>
     </header>

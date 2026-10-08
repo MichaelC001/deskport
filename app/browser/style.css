@@ -11,7 +11,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 #app { min-height: 100vh; min-height: 100dvh; padding: max(0px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); display: flex; flex-direction: column; }
 .app-header { min-height: 82px; width: 100%; max-width: 1800px; margin: 0 auto; display: flex; align-items: center; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 11px; margin-right: auto; }
-.brand-mark { display: grid; place-items: center; width: 36px; height: 36px; border: 2px solid var(--accent); border-radius: 10px; color: var(--accent); font-size: 24px; font-weight: 650; }
+.brand-mark { display: block; width: 40px; height: 40px; flex: none; }
 .brand strong { display: block; font-size: 18px; letter-spacing: -.4px; }
 .brand div > span { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
 .status { color: var(--muted); font-size: 13px; white-space: nowrap; }
@@ -73,6 +73,6 @@ textarea { resize: vertical; min-height: 64px; max-height: 150px; flex: 1; min-w
 .notice[data-error="true"] { border-color: #ae766d; background: #462e2e; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 #session-panel:fullscreen { background: #10151e; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
-@media (max-width: 600px) { .app-header { min-height: 70px; gap: 10px; } .brand-mark { width: 30px; height: 30px; font-size: 20px; } .brand strong { font-size: 16px; } #disconnect { padding: 8px 10px; font-size: 12px; } .toolbar { gap: 6px; } .toolbar button { padding: 9px 10px; min-width: 48px; font-size: 13px; } .toolbar-spacer { display: none; } .toolbar select { max-width: 116px; } .text-panel { flex-direction: column; } .text-actions { justify-content: flex-end; } .session-footer { flex-direction: column; gap: 1px; } }
+@media (max-width: 600px) { .app-header { min-height: 70px; gap: 10px; } .brand-mark { width: 32px; height: 32px; } .brand strong { font-size: 16px; } #disconnect { padding: 8px 10px; font-size: 12px; } .toolbar { gap: 6px; } .toolbar button { padding: 9px 10px; min-width: 48px; font-size: 13px; } .toolbar-spacer { display: none; } .toolbar select { max-width: 116px; } .text-panel { flex-direction: column; } .text-actions { justify-content: flex-end; } .session-footer { flex-direction: column; gap: 1px; } }
 @media (max-height: 550px) and (orientation: landscape) { body[data-session="true"] .app-header { min-height: 50px; } .session-footer { display: none; } .toolbar { padding-block: 6px; } .toolbar button, .toolbar select { min-height: 40px; padding-block: 7px; } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }

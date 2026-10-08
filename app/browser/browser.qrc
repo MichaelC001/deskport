@@ -3,5 +3,6 @@
         <file>index.html</file>
         <file>app.js</file>
         <file>style.css</file>
+        <file alias="icon.svg">../res/deskport.svg</file>
     </qresource>
 </RCC>

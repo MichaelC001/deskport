@@ -770,6 +770,7 @@ void BrowserGateway::dispatch(Connection* connection) {
         if (connection->path == "/" || connection->path == "/index.html") { resource = ":/browser/index.html"; contentType = "text/html; charset=utf-8"; }
         else if (connection->path == "/app.js") { resource = ":/browser/app.js"; contentType = "application/javascript; charset=utf-8"; }
         else if (connection->path == "/style.css") { resource = ":/browser/style.css"; contentType = "text/css; charset=utf-8"; }
+        else if (connection->path == "/icon.svg") { resource = ":/browser/icon.svg"; contentType = "image/svg+xml"; }
         else { error(connection, 404, "not-found", "Resource not found."); return; }
         QFile file(resource);
         if (!file.open(QIODevice::ReadOnly)) { error(connection, 503, "unavailable", "The browser client is not included in this build."); return; }

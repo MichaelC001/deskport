@@ -26,8 +26,9 @@ resources = work / "resources.qrc"
 (work / "index.html").write_text("<!doctype html><title>Isolated DeskPort</title>")
 (work / "app.js").write_text("'use strict';")
 (work / "style.css").write_text("body { color: black; }")
+(work / "icon.svg").write_bytes((ROOT / "app/res/deskport.svg").read_bytes())
 resources.write_text('<RCC><qresource prefix="/browser">' + ''.join(
-    f'<file alias="{name}">{work / name}</file>' for name in ("index.html", "app.js", "style.css")) + '</qresource></RCC>')
+    f'<file alias="{name}">{work / name}</file>' for name in ("index.html", "app.js", "style.css", "icon.svg")) + '</qresource></RCC>')
 project.write_text(f'''QT = core network
 CONFIG += console c++17 link_pkgconfig
 CONFIG -= app_bundle
@@ -149,6 +150,9 @@ try:
         check((directory / name).stat().st_mode & 0o777 == 0o600, f"{name} is owner-only")
     status, page, headers = request(info, directory, "GET", "/", raw=True)
     check(status == 200 and b"Isolated DeskPort" in page, "trusted TLS certificate has loopback SAN and serves embedded page")
+    status, icon, headers = request(info, directory, "GET", "/icon.svg", raw=True)
+    check(status == 200 and icon.startswith(b"<svg") and headers.get("Content-Type") == "image/svg+xml",
+        "DeskPort icon is served for the page logo and browser tab")
     check(info["code"].encode() not in page, "anonymous page does not expose access code")
     check("frame-ancestors 'none'" in headers["Content-Security-Policy"], "static page has restrictive CSP")
     check(request(info, directory, "GET", "/api/status")[0] == 401, "status requires authentication")

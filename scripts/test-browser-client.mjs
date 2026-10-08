@@ -43,10 +43,11 @@ const cert = path.join(output, 'fixture-cert.pem');
 const key = path.join(output, 'fixture-key.pem');
 execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
 const resources = new Map(await Promise.all(['index.html', 'app.js', 'style.css'].map(async name => [name, await readFile(path.join(repo, 'app/browser', name))])));
+resources.set('icon.svg', await readFile(path.join(repo, 'app/res/deskport.svg')));
 const server = https.createServer({ key: await readFile(key), cert: await readFile(cert) }, (request, response) => {
   const name = request.url === '/' ? 'index.html' : request.url.slice(1);
   if (!resources.has(name)) { response.writeHead(404); response.end(); return; }
-  response.setHeader('Content-Type', { 'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8', 'style.css': 'text/css' }[name]);
+  response.setHeader('Content-Type', { 'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8', 'style.css': 'text/css', 'icon.svg': 'image/svg+xml' }[name]);
   response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'");
   response.end(resources.get(name));
 });
@@ -177,6 +178,10 @@ try {
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
   check('first visit checks pairing without starting media', requests.some(request => request.endpoint === '/api/resume') && !requests.some(request => request.endpoint === '/api/session/start'));
   check('remember browser is checked by default', await page.locator('#remember-browser').isChecked());
+  check('page logo and browser tab use the DeskPort icon', await page.evaluate(() => {
+    const logo = document.querySelector('.brand-mark');
+    return logo.complete && logo.naturalWidth > 0 && document.querySelector('link[rel="icon"]').getAttribute('href') === '/icon.svg';
+  }));
   const codecs = await page.evaluate(() => RTCRtpReceiver.getCapabilities('video').codecs.filter(codec => codec.mimeType.toLowerCase() === 'video/h264'));
   await writeFile(path.join(output, 'chrome-h264-capabilities.json'), JSON.stringify({ browser: browser.version(), codecs }, null, 2));
   await page.screenshot({ path: path.join(output, 'login-desktop.png') });
