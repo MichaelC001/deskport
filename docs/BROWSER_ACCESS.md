@@ -97,18 +97,17 @@ after pairing, including when a certificate is replaced.
 
 ## Available controls and boundaries
 
-- H.264 Constrained Baseline Level 3.1 SDR desktop video, up to 1280 × 720 at
-  30 frames per second; stereo Opus audio. The browser must support that profile
-  and level with packetization mode 1. The capture encoder uses the profile and
-  level advertised in WebRTC; higher resolutions are deferred until their
-  receiving capability can be negotiated explicitly.
+- H.264 Constrained Baseline SDR desktop video at the remote desktop's own
+  resolution (up to about 3840 × 2160 at 30 frames per second, encoder level
+  chosen from the size); stereo Opus audio. The SDP advertises 42e01f with
+  packetization mode 1 like browsers' own WebRTC senders. The bitrate selected
+  on the page applies at 720p and scales with the encoded size, up to 30 Mbit/s.
 - Adaptive desktop size. The page reports its drawable area, device pixel ratio
   and the chosen content size; the host derives the remote desktop from the same
   shared-core workspace policy as native clients, including the macOS minimum.
   Resizing the window, rotating a tablet, entering fullscreen or changing the
   content size in the toolbar resizes the remote desktop while connected. Only
-  video capture restarts; audio, input and the WebRTC connection continue. The
-  transport still encodes the same aspect ratio within 1280 × 720.
+  video capture restarts; audio, input and the WebRTC connection continue.
 - Fullscreen shows only the remote desktop; the toolbar appears near the top
   edge or from the handle and hides again after a few seconds.
 - "Use as an extended display" (connection options) keeps the computer's own

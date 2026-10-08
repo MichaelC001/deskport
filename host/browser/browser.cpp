@@ -8,6 +8,7 @@
 #include "src/rtsp.h"
 #include "src/deskport/common/inputactivity.h"
 #include <algorithm>
+#include <cmath>
 #include <atomic>
 #include <chrono>
 #include <future>
@@ -86,18 +87,28 @@ public:
     std::atomic<uint64_t> frames{0}, audioPackets{0};
     int64_t stoppedAt = 0, startedAt = 0;
     std::shared_ptr<RtcSession> rtc;
-    // The workspace comes from the host's shared-core policy and may exceed the
-    // browser codec level. Encode the same aspect within Constrained Baseline 3.1.
+    // Encode the workspace at its own resolution so desktop text stays sharp,
+    // within the host H.264 encoder limit and Level 5.1 (about 4K at 30 fps).
+    // The SDP keeps advertising 42e01f like browsers' own WebRTC senders; the
+    // bitstream carries the level matching the encoded size.
     static std::pair<int, int> encodedSize(const Json& body) {
         const int width = integer(body, "width", 320, 7680), height = integer(body, "height", 200, 4320);
         if ((width | height) & 1) throw std::invalid_argument("Video dimensions must be even");
-        const double scale = std::min({1.0, 1280.0 / width, 720.0 / height});
+        const double scale = std::min({1.0, 4096.0 / width, 2304.0 / height,
+                                       std::sqrt(3840.0 * 2160.0 / (double(width) * height))});
         return {std::max(320, int(width * scale) / 4 * 4), std::max(200, int(height * scale) / 4 * 4)};
+    }
+    // The page asks for a bitrate at 720p; larger frames need more for the same
+    // text quality. Scale with the linear size, bounded for LAN and tailnet use.
+    static int scaledBitrate(int base, int width, int height) {
+        const double factor = std::clamp(std::sqrt(double(width) * height / (1280.0 * 720.0)), 1.0, 2.5);
+        return std::min(30000, int(base * factor));
     }
     void start(const Json& body) {
         const auto [width, height] = encodedSize(body);
         const int fps = std::min(30, integer(body, "fps", 1, 60));
-        const int bitrate = std::min(14000, integer(body, "bitrateKbps", 1000, 40000));
+        baseBitrate = std::min(14000, integer(body, "bitrateKbps", 1000, 40000));
+        const int bitrate = scaledBitrate(baseBitrate, width, height);
         streamWidth = width; streamHeight = height; streamFps = fps; streamBitrate = bitrate;
         inputEnabled = body.value("input", true);
         const bool audioEnabled = body.value("audio", true);
@@ -186,6 +197,7 @@ public:
         if (stopped) return false;
         queues->mail->event<bool>(mail::shutdown)->reset();
         currentVideo.width = width; currentVideo.height = height;
+        currentVideo.bitrate = streamBitrate = scaledBitrate(baseBitrate, width, height);
         streamWidth = width; streamHeight = height;
         startVideo();
         return true;
@@ -230,7 +242,7 @@ private:
     std::mutex inputMutex;
     bool inputEnabled = true, platformStarted = false;
     int64_t inputWindow = 0; unsigned inputCount = 0;
-    int streamWidth = 0, streamHeight = 0, streamFps = 0, streamBitrate = 0;
+    int streamWidth = 0, streamHeight = 0, streamFps = 0, streamBitrate = 0, baseBitrate = 0;
     video::config_t currentVideo{};
     std::atomic<uint64_t> videoGeneration{0};
     void startVideo() {

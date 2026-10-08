@@ -23,9 +23,11 @@ const fixtureProbe = JSON.parse(execFileSync(process.env.DESKPORT_TEST_FFPROBE |
 ], { encoding: 'utf8' })).streams[0];
 assert.equal(fixtureProbe?.codec_name, 'h264', 'The native fixture must contain actual H.264.');
 assert.equal(fixtureProbe?.profile, 'Constrained Baseline', 'Do not feed a High-profile bitstream under a Baseline SDP.');
-assert.equal(fixtureProbe?.level, 31, 'The validated fixture targets H.264 level 3.1.');
-assert.equal(fixtureProbe?.width, 1280, 'The validated fixture width is 1280.');
-assert.equal(fixtureProbe?.height, 720, 'The validated fixture height is 720.');
+// The host encodes the desktop at its own size; the level follows the macroblock count
+// while the SDP keeps 42e01f. Any fixture size is accepted when its level matches.
+const fixtureMacroblocks = Math.ceil(fixtureProbe?.width / 16) * Math.ceil(fixtureProbe?.height / 16);
+assert.equal(fixtureProbe?.level, fixtureMacroblocks <= 3600 ? 31 : fixtureMacroblocks <= 8192 ? 41 : 51,
+  'The fixture level must match the host level for its size.');
 // Raw Annex B has no container timestamps; verify its progressive SPS timing instead
 // of ffprobe's demuxer rate guess (some FFmpeg versions report twice the frame rate).
 const headers = spawnSync(process.env.DESKPORT_TEST_FFMPEG || 'ffmpeg', [
@@ -203,7 +205,7 @@ try {
   await login();
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
   await page.waitForFunction(() => window.fixtureChannel.readyState === 'open');
-  check('actual native WebRTC H.264 video renders', await page.evaluate(() => document.getElementById('desktop-video').videoWidth === 1280 && document.getElementById('desktop-video').videoHeight === 720));
+  check('actual native WebRTC H.264 video renders', await page.evaluate(size => document.getElementById('desktop-video').videoWidth === size.width && document.getElementById('desktop-video').videoHeight === size.height, { width: fixtureProbe.width, height: fixtureProbe.height }));
   const codecStats = await page.evaluate(async () => {
     const stats = await window.fixturePeers[0].getStats();
     const result = [];

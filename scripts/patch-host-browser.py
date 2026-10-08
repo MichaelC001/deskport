@@ -62,7 +62,10 @@ if not anchor:
     raise SystemExit('Browser overlay expected the H.264 AVCodec profile selection')
 edit('src/video.cpp', anchor.group(), anchor.group().replace('ctx->profile = ',
     'ctx->profile = config.deskport_browser_baseline ? AV_PROFILE_H264_CONSTRAINED_BASELINE : ') +
-    '\n          if (config.deskport_browser_baseline) ctx->level = 31;')
+    '\n          if (config.deskport_browser_baseline) {'
+    '\n            const int macroblocks = ((config.width + 15) / 16) * ((config.height + 15) / 16);'
+    '\n            ctx->level = macroblocks <= 3600 ? 31 : macroblocks <= 8192 ? 41 : 51;'
+    '\n          }')
 anchor = '      auto handle_option = [&options, &config](const encoder_t::option_t &option) {\n'
 edit('src/video.cpp', anchor, anchor + '''        if (config.deskport_browser_baseline && config.videoFormat == 0) {
           if (option.name == "profile") { av_dict_set(&options, "profile", "baseline", 0); return; }
@@ -76,7 +79,11 @@ if not anchor:
     raise SystemExit('Browser overlay expected the native NVENC H.264 profile')
 edit('src/nvenc/nvenc_base.cpp', anchor.group(), anchor.group().replace('enc_config.profileGUID = ',
     'enc_config.profileGUID = client_config.deskport_browser_baseline ? NV_ENC_H264_PROFILE_BASELINE_GUID : ') +
-    '\n          if (client_config.deskport_browser_baseline) enc_config.encodeCodecConfig.h264Config.level = NV_ENC_LEVEL_H264_31;')
+    '\n          if (client_config.deskport_browser_baseline) {'
+    '\n            const int macroblocks = ((client_config.width + 15) / 16) * ((client_config.height + 15) / 16);'
+    '\n            enc_config.encodeCodecConfig.h264Config.level = macroblocks <= 3600 ? NV_ENC_LEVEL_H264_31 :'
+    '\n              macroblocks <= 8192 ? NV_ENC_LEVEL_H264_41 : NV_ENC_LEVEL_H264_51;'
+    '\n          }')
 edit('src/nvenc/nvenc_base.cpp', 'config.h264_cavlc || !get_encoder_cap(',
      'client_config.deskport_browser_baseline || config.h264_cavlc || !get_encoder_cap(')
 
