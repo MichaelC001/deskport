@@ -26,7 +26,11 @@ static Json result(bool ok, const std::string& code = {}) {
     return value;
 }
 struct Queues {
+    // Video and input share one mail: capture publishes the touch port that maps
+    // absolute pointer positions. Audio owns its mail so video can be restarted
+    // at a new size without interrupting audio, input or the WebRTC transport.
     safe::mail_t mail = std::make_shared<safe::mail_raw_t>();
+    safe::mail_t audioMail = std::make_shared<safe::mail_raw_t>();
     safe::mail_raw_t::queue_t<video::packet_t> video =
         std::make_shared<safe::mail_raw_t::queue_t<video::packet_t>::element_type>(mail, 4);
     safe::mail_raw_t::queue_t<audio::packet_t> audio =
@@ -82,13 +86,18 @@ public:
     std::atomic<uint64_t> frames{0}, audioPackets{0};
     int64_t stoppedAt = 0, startedAt = 0;
     std::shared_ptr<RtcSession> rtc;
-    void start(const Json& body) {
-        int width = integer(body, "width", 320, 1920), height = integer(body, "height", 200, 1080);
-        const int fps = std::min(30, integer(body, "fps", 1, 60));
-        const int bitrate = std::min(14000, integer(body, "bitrateKbps", 1000, 40000));
+    // The workspace comes from the host's shared-core policy and may exceed the
+    // browser codec level. Encode the same aspect within Constrained Baseline 3.1.
+    static std::pair<int, int> encodedSize(const Json& body) {
+        const int width = integer(body, "width", 320, 7680), height = integer(body, "height", 200, 4320);
         if ((width | height) & 1) throw std::invalid_argument("Video dimensions must be even");
         const double scale = std::min({1.0, 1280.0 / width, 720.0 / height});
-        width = int(width * scale) / 4 * 4; height = int(height * scale) / 4 * 4;
+        return {std::max(320, int(width * scale) / 4 * 4), std::max(200, int(height * scale) / 4 * 4)};
+    }
+    void start(const Json& body) {
+        const auto [width, height] = encodedSize(body);
+        const int fps = std::min(30, integer(body, "fps", 1, 60));
+        const int bitrate = std::min(14000, integer(body, "bitrateKbps", 1000, 40000));
         streamWidth = width; streamHeight = height; streamFps = fps; streamBitrate = bitrate;
         inputEnabled = body.value("input", true);
         const bool audioEnabled = body.value("audio", true);
@@ -130,12 +139,10 @@ public:
         platf::streaming_will_start(); platformStarted = true;
         videoSender = std::jthread([this] { sendVideo(); });
         if (audioEnabled) audioSender = std::jthread([this] { sendAudio(); });
-        videoCapture = std::jthread([this, videoConfig] {
-            try { video::capture(queues->mail, videoConfig, queues.get()); } catch (...) {}
-            if (!stopped) failed = true;
-        });
+        currentVideo = videoConfig;
+        startVideo();
         if (audioEnabled) audioCapture = std::jthread([this, audioConfig] {
-            try { audio::capture(queues->mail, audioConfig, queues.get()); } catch (...) {}
+            try { audio::capture(queues->audioMail, audioConfig, queues.get()); } catch (...) {}
             // Video-only continuation remains possible if the audio backend is unavailable.
         });
     }
@@ -166,12 +173,30 @@ public:
         }
         return true;
     }
+    // Restart only video capture/encoding at the size of a resized workspace.
+    // Audio, input, the data channel and the WebRTC transport stay connected;
+    // the new encoder starts with an IDR frame at the new resolution.
+    bool resize(const Json& body) {
+        const auto [width, height] = encodedSize(body);
+        if (stopped || !queues || !rtc) return false;
+        if (width == streamWidth && height == streamHeight) return true;
+        ++videoGeneration; // The retiring capture thread must not mark the session failed.
+        queues->mail->event<bool>(mail::shutdown)->raise(true);
+        if (videoCapture.joinable()) videoCapture.join();
+        if (stopped) return false;
+        queues->mail->event<bool>(mail::shutdown)->reset();
+        currentVideo.width = width; currentVideo.height = height;
+        streamWidth = width; streamHeight = height;
+        startVideo();
+        return true;
+    }
     void stop() {
         if (stopped.exchange(true)) return;
         stoppedAt = now_ms();
         { std::lock_guard lock(inputMutex); if (inputContext) input::reset(inputContext); }
         if (queues) {
             queues->mail->event<bool>(mail::shutdown)->raise(true);
+            queues->audioMail->event<bool>(mail::shutdown)->raise(true);
             queues->video->stop(); queues->audio->stop();
         }
         if (rtc) rtc->close();
@@ -206,6 +231,15 @@ private:
     bool inputEnabled = true, platformStarted = false;
     int64_t inputWindow = 0; unsigned inputCount = 0;
     int streamWidth = 0, streamHeight = 0, streamFps = 0, streamBitrate = 0;
+    video::config_t currentVideo{};
+    std::atomic<uint64_t> videoGeneration{0};
+    void startVideo() {
+        const auto generation = ++videoGeneration;
+        videoCapture = std::jthread([this, config = currentVideo, generation] {
+            try { video::capture(queues->mail, config, queues.get()); } catch (...) {}
+            if (!stopped && generation == videoGeneration) failed = true;
+        });
+    }
     deskport::InputActivity activity;
     Clock::time_point epoch;
     void idr() { if (queues) queues->mail->event<bool>(mail::idr)->raise(true); }
@@ -322,6 +356,9 @@ Json request(const Json& body) {
             session->rtc->answer(body.at("sdp").get<std::string>()); session->lastActivity = now_ms();
         } else if (action == "input") {
             if (!session->input(body.at("event"))) return result(false, "input-disabled");
+        } else if (action == "resize") {
+            if (!session->resize(body)) return result(false, "invalid-state");
+            session->lastActivity = now_ms();
         } else if (action == "heartbeat") {
             if (!session->stopped) session->lastActivity = now_ms();
         } else if (action == "stop") {

@@ -130,7 +130,8 @@ await context.route('**/api/**', async route => {
     if (mode === 'slow-logout') await new Promise(resolve => setTimeout(resolve, 350));
     sessionToken = ''; return respond(200, { ok: true });
   }
-  if (endpoint === '/api/status') return respond(200, { ok: true, authenticated: true, sharing: true, busy: mode === 'busy', mediaAvailable: true, hostName: '测试电脑' });
+  if (endpoint === '/api/status') return respond(200, { ok: true, authenticated: true, sharing: true, busy: mode === 'busy', mediaAvailable: true, hostName: '测试电脑',
+    capabilities: { resize: true, adaptiveDisplay: true, extendDisplay: false, zoomChoices: [0.8, 1, 1.2, 1.5] } });
   if (endpoint === '/api/session/start') {
     if (mode === 'slow-start') await new Promise(resolve => setTimeout(resolve, 500));
     return respond(200, { ok: true, ...offer });
@@ -143,6 +144,7 @@ await context.route('**/api/**', async route => {
     serverPairing = null; sessionToken = '';
     return respond(401, { ok: false, code: 'unauthorized' });
   }
+  if (endpoint === '/api/session/resize') return respond(200, { ok: true, width: 1600, height: 900 });
   if (endpoint === '/api/session/input') await page.evaluate(event => window.fixtureHost?.events.push(event), body.event);
   if (endpoint === '/api/session/stop') {
     if (native) { native.kill('SIGTERM'); native = null; }
@@ -213,6 +215,8 @@ try {
   const start = requests.find(request => request.endpoint === '/api/session/start').body;
   check('stream hint stays inside validated dimensions', start.width <= 1280 && start.height <= 720 && start.fps === 30 && start.bitrateKbps <= 14000 && start.width % 4 === 0 && start.height % 4 === 0);
   check('H.264 capabilities sent for server negotiation', start.videoCapabilities.length > 0);
+  check('start reports the drawable viewport for shared workspace policy',
+    start.viewport?.width > 0 && start.viewport?.height > 0 && start.viewport?.ratio > 0 && start.zoom === 1 && start.displayPolicy === 0);
   check('code does not enter URL', !page.url().includes('ABC234'));
   check('credentials not persisted in web storage', await page.evaluate(() => localStorage.length === 0 && sessionStorage.length === 0));
   const otherTab = await context.newPage();
@@ -284,6 +288,14 @@ try {
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   check('phone toolbar remains inside viewport', await page.locator('.toolbar').evaluate(element => element.getBoundingClientRect().bottom <= innerHeight));
   check('narrow layout has no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  const resizeRequests = () => requests.filter(request => request.endpoint === '/api/session/resize');
+  for (let i = 0; i < 40 && !resizeRequests().some(request => request.body.viewport.width < 400); ++i) await new Promise(resolve => setTimeout(resolve, 100));
+  const phoneResize = resizeRequests().at(-1)?.body;
+  check('window size changes resize the remote desktop once settled', phoneResize?.viewport.width < 400 && phoneResize.viewport.height > phoneResize.viewport.width);
+  const resizesBeforeZoom = resizeRequests().length;
+  await page.selectOption('#session-zoom', '1.2');
+  for (let i = 0; i < 20 && resizeRequests().length === resizesBeforeZoom; ++i) await new Promise(resolve => setTimeout(resolve, 100));
+  check('in-session content size applies through live resize', resizeRequests().at(-1)?.body.zoom === 1.2);
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming');
   await new Promise(resolve => setTimeout(resolve, 5200));
   check('static sessions send authenticated heartbeat', requests.some(request => request.endpoint === '/api/session/heartbeat'));

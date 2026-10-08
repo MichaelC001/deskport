@@ -897,7 +897,7 @@ void BrowserGateway::dispatch(Connection* connection) {
     const QByteArray prefix("/api/session/");
     if (!connection->path.startsWith(prefix)) { error(connection, 404, "not-found", "API not found."); return; }
     const auto action = QString::fromLatin1(connection->path.mid(prefix.size()));
-    if (!QStringList{"start", "answer", "status", "heartbeat", "input", "stop"}.contains(action) ||
+    if (!QStringList{"start", "answer", "status", "heartbeat", "input", "resize", "stop"}.contains(action) ||
         (connection->method != "POST" && action != "status")) {
         error(connection, 404, "not-found", "Session API not found."); return;
     }
@@ -949,7 +949,8 @@ void BrowserGateway::forward(Connection* connection, const QString& key, const Q
         result.remove("id"); result.remove("lease");
         if (!success && result.value("code").toString().isEmpty()) result["code"] = "unavailable";
         const auto code = result.value("code").toString();
-        const int status = success ? 200 : (code == "busy" || code == "sharing-disabled" || code == "no-session") ? 409 : 503;
+        const int status = success ? 200 : (code == "busy" || code == "sharing-disabled" || code == "no-session") ? 409
+            : (code == "invalid-session" || code == "policy-unavailable") ? 400 : 503;
         self->respond(guarded, status, QJsonDocument(result).toJson(QJsonDocument::Compact));
     });
 }

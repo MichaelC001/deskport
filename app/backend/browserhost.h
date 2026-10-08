@@ -49,6 +49,11 @@ private:
     void begin(const QJsonObject& body, Completion completion);
     void beginMedia(QJsonObject body, quint64 epoch, Completion completion);
     void end(Completion completion = {});
+    void resize(const QJsonObject& body, Completion completion);
+    void dropResize() {
+        auto pending = std::move(m_Resize.done); m_Resize = {};
+        if (pending) pending(QJsonObject{{"version", 1}, {"status", false}, {"code", "cancelled"}});
+    }
     void poll();
     HostManager* m_Host;
     BrowserGateway m_Gateway;
@@ -58,6 +63,9 @@ private:
     bool m_Cancelled = false;
     bool m_DisplayOwned = false, m_Listening = false;
     int m_Sequence = 1000000;
+    int m_Policy = 0;
+    bool m_Resizing = false;
+    struct PendingResize { QJsonObject body; Completion done; } m_Resize;
     QTimer m_Poll;
     QVector<Completion> m_EndWaiters;
 };

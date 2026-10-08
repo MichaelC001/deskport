@@ -10,7 +10,8 @@
     'right-click', 'keyboard-toggle', 'shortcuts-toggle', 'shortcuts-panel', 'text-panel',
     'remote-text', 'paste-text', 'sound-toggle', 'fullscreen-toggle', 'input-hint',
     'stream-info', 'notice', 'login-intro', 'credential-fields', 'remember-browser', 'device-name',
-    'device-name-label', 'paired-ready', 'paired-name', 'forget-pairing', 'retry-pairing'
+    'device-name-label', 'paired-ready', 'paired-name', 'forget-pairing', 'retry-pairing',
+    'display-mode', 'desktop-zoom', 'session-zoom', 'show-controls'
   ].map(id => [id, $(id)]));
   const video = ui['desktop-video'];
   let token = '';
@@ -42,6 +43,12 @@
   let wheelX = 0;
   let wheelY = 0;
   let gesture = null;
+  // Host-reported features; older hosts report none and keep a fixed desktop.
+  let capabilities = {};
+  let sizeTimer = 0;
+  let sentSize = '';
+  let resizing = null;
+  let controlsTimer = 0;
   const pointers = new Map();
   const pressedKeys = new Set();
   const pressedButtons = new Set();
@@ -191,6 +198,61 @@
     } finally { clearTimeout(timer); }
   }
 
+  // The page reports its drawable area; the computer's shared workspace policy
+  // chooses the desktop size, backing scale and minimums from it.
+  function viewportSize() {
+    const rect = ui.viewport.getBoundingClientRect();
+    const width = Math.round(rect.width) || window.innerWidth;
+    const height = Math.round(rect.height) || Math.max(240, window.innerHeight - 170);
+    const ratio = Math.round(Math.max(0.5, Math.min(8, window.devicePixelRatio || 1)) * 100) / 100;
+    return { width: Math.max(160, width), height: Math.max(120, height), ratio };
+  }
+  function layoutOptions() {
+    return { viewport: viewportSize(), zoom: Number(ui['session-zoom'].value || ui['desktop-zoom'].value || 1) };
+  }
+  function layoutKey(options) {
+    return `${options.viewport.width}x${options.viewport.height}@${options.viewport.ratio}/${options.zoom}`;
+  }
+  function fillZoom(choices) {
+    const values = Array.isArray(choices) && choices.length ? choices : [1];
+    const current = Number(ui['desktop-zoom'].value || localStorageGet('deskport.zoom') || 1);
+    for (const select of [ui['desktop-zoom'], ui['session-zoom']]) {
+      select.replaceChildren(...values.map(value => {
+        const option = document.createElement('option');
+        option.value = String(value);
+        option.textContent = `${Math.round(value * 100)}%`;
+        return option;
+      }));
+      select.value = String(values.includes(current) ? current : 1);
+    }
+    ui['session-zoom'].parentElement.hidden = values.length < 2;
+  }
+  function localStorageGet(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
+  function localStorageSet(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* Optional. */ } }
+
+  function scheduleResize(delay = 500) {
+    clearTimeout(sizeTimer);
+    sizeTimer = setTimeout(() => { void resizeDesktop(); }, delay);
+  }
+  async function resizeDesktop() {
+    if (phase !== 'streaming' || !capabilities.resize || document.hidden) return;
+    const options = layoutOptions();
+    const key = layoutKey(options);
+    if (key === sentSize) return;
+    if (resizing) { scheduleResize(300); return; }
+    const currentGeneration = generation;
+    sentSize = key;
+    resizing = api('/api/session/resize', options, { timeout: 15000 });
+    try {
+      const result = await resizing;
+      if (currentGeneration === generation && result.superseded) scheduleResize(0);
+    } catch (error) {
+      if (currentGeneration !== generation) return;
+      sentSize = '';
+      notice(error.code === 'display-unavailable' ? '电脑暂时无法调整桌面尺寸，已保持当前画面。' : error.message, true);
+    } finally { resizing = null; }
+  }
+
   function streamOptions() {
     const quality = ui.quality.value;
     const maxWidth = 1280;
@@ -208,7 +270,8 @@
     return {
       width: Math.floor(width / 4) * 4, height: Math.floor(height / 4) * 4,
       fps: 30, bitrateKbps: quality === 'smooth' ? 4500 : quality === 'sharp' ? 12000 : 8000,
-      audio: wantAudio, input: true, videoCapabilities
+      audio: wantAudio, input: true, videoCapabilities,
+      ...(capabilities.resize ? { ...layoutOptions(), displayPolicy: Number(ui['display-mode'].value) } : {})
     };
   }
 
@@ -269,6 +332,12 @@
       if (status.sharing === false) throw new Error(errorMessages['sharing-disabled']);
       if (status.mediaAvailable === false) throw new Error(errorMessages.unsupported);
       if (status.busy) throw new Error(errorMessages.busy);
+      capabilities = status.capabilities || {};
+      fillZoom(capabilities.zoomChoices);
+      if (ui['display-mode'].value !== '0' && !capabilities.extendDisplay) {
+        ui['display-mode'].value = '0';
+        notice('这台电脑暂不支持扩展显示器，将调整电脑桌面以适合此窗口。');
+      }
       setPhase('connecting');
       const peer = new RTCPeerConnection({ iceServers: [], bundlePolicy: 'max-bundle' });
       pc = peer;
@@ -300,7 +369,9 @@
         } else if (peer.connectionState === 'connected') notice('');
       };
       const reservation = { token, succeeded: false, promise: null };
-      reservation.promise = api('/api/session/start', streamOptions(), { timeout: 30000 }).then(offer => {
+      const startOptions = streamOptions();
+      sentSize = startOptions.viewport ? layoutKey(startOptions) : '';
+      reservation.promise = api('/api/session/start', startOptions, { timeout: 30000 }).then(offer => {
         reservation.succeeded = true;
         return offer;
       });
@@ -357,7 +428,10 @@
     clearInterval(statsTimer);
     clearTimeout(connectionTimer);
     clearTimeout(lostTimer);
-    heartbeatTimer = statsTimer = connectionTimer = lostTimer = 0;
+    clearTimeout(sizeTimer);
+    clearTimeout(controlsTimer);
+    heartbeatTimer = statsTimer = connectionTimer = lostTimer = sizeTimer = controlsTimer = 0;
+    sentSize = '';
     resetGesture();
     inputQueue = [];
     pressedKeys.clear();
@@ -718,6 +792,8 @@
     if (!['connecting', 'streaming'].includes(phase) || !video.videoWidth) return;
     clearTimeout(connectionTimer);
     setPhase('streaming');
+    // The page may have changed size while media was negotiating.
+    scheduleResize(800);
     updateSound();
     ui.viewport.focus({ preventScroll: true });
   });
@@ -747,10 +823,43 @@
       else notice('此浏览器不支持网页全屏。横向使用 iPad 可获得更大的画面。');
     } catch (_) { notice('浏览器未允许全屏，请保持页面前台后重试。'); }
   });
+  // Fullscreen shows only the desktop; the toolbar returns on pointer movement
+  // near the top edge or from the handle, and hides again after a pause.
+  function showControls(sticky = false) {
+    clearTimeout(controlsTimer);
+    ui['session-panel'].dataset.controls = 'shown';
+    ui['show-controls'].hidden = true;
+    if (!sticky && document.fullscreenElement) controlsTimer = setTimeout(hideControls, 3000);
+  }
+  function hideControls() {
+    if (!document.fullscreenElement) return;
+    if (ui['session-panel'].querySelector('.toolbar:focus-within, .aux-panel:not([hidden])')) { showControls(); return; }
+    ui['session-panel'].dataset.controls = 'hidden';
+    ui['show-controls'].hidden = false;
+  }
   document.addEventListener('fullscreenchange', () => {
     releaseInput();
     ui['fullscreen-toggle'].textContent = document.fullscreenElement ? '退出全屏' : '全屏';
+    if (document.fullscreenElement) showControls(); else { clearTimeout(controlsTimer); delete ui['session-panel'].dataset.controls; ui['show-controls'].hidden = true; }
+    scheduleResize(300);
   });
+  ui['show-controls'].addEventListener('click', () => showControls());
+  ui['session-panel'].addEventListener('pointermove', event => {
+    if (document.fullscreenElement && event.pointerType === 'mouse' && event.clientY < 90) showControls();
+  });
+  for (const element of [ui['session-panel'].querySelector('.toolbar')]) {
+    element.addEventListener('pointerenter', () => showControls(true));
+    element.addEventListener('pointerleave', () => showControls());
+  }
+  if (window.ResizeObserver) new ResizeObserver(() => scheduleResize()).observe(ui.viewport);
+  else window.addEventListener('resize', () => scheduleResize());
+  for (const [source, other] of [['desktop-zoom', 'session-zoom'], ['session-zoom', 'desktop-zoom']]) {
+    ui[source].addEventListener('change', () => {
+      ui[other].value = ui[source].value;
+      localStorageSet('deskport.zoom', ui[source].value);
+      if (source === 'session-zoom') { releaseInput(); scheduleResize(0); }
+    });
+  }
   for (const [toggle, panel] of [['keyboard-toggle', 'text-panel'], ['shortcuts-toggle', 'shortcuts-panel']]) {
     ui[toggle].addEventListener('click', () => {
       releaseInput();
@@ -786,6 +895,9 @@
   });
   window.addEventListener('offline', () => { if (token) failSession('网络已断开。网络恢复后，请重新连接。'); });
   ui['device-name'].value = defaultDeviceName();
+  fillZoom([1]);
+  ui['display-mode'].value = localStorageGet('deskport.displayMode') === '2' ? '2' : '0';
+  ui['display-mode'].addEventListener('change', () => localStorageSet('deskport.displayMode', ui['display-mode'].value));
   setPhase('idle');
   if (!window.isSecureContext || location.protocol !== 'https:') notice('请使用电脑端提供的 HTTPS 地址，并确认浏览器信任其证书。', true, true);
   else void restorePairing();

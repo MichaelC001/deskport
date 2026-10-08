@@ -102,6 +102,20 @@ after pairing, including when a certificate is replaced.
   and level with packetization mode 1. The capture encoder uses the profile and
   level advertised in WebRTC; higher resolutions are deferred until their
   receiving capability can be negotiated explicitly.
+- Adaptive desktop size. The page reports its drawable area, device pixel ratio
+  and the chosen content size; the host derives the remote desktop from the same
+  shared-core workspace policy as native clients, including the macOS minimum.
+  Resizing the window, rotating a tablet, entering fullscreen or changing the
+  content size in the toolbar resizes the remote desktop while connected. Only
+  video capture restarts; audio, input and the WebRTC connection continue. The
+  transport still encodes the same aspect ratio within 1280 × 720.
+- Fullscreen shows only the remote desktop; the toolbar appears near the top
+  edge or from the handle and hides again after a few seconds.
+- "Use as an extended display" (connection options) keeps the computer's own
+  displays and adds the browser as a display to their right, where the host
+  supports display policies (macOS, Windows virtual display, Linux except GNOME
+  and Hyprland). A headless Mac has no physical display to extend, so the
+  browser display becomes its only display, as in the default mode.
 - Touchpad movement, tap/click, two-finger scrolling, long-press dragging, direct
   touch, mouse wheel, physical keys and on-screen shortcuts.
 - Explicit text entry/paste into the remote computer; this is not automatic
@@ -180,6 +194,11 @@ an empty error. The package now uses the system libiconv. Verified on mm1 with a
 isolated instance using the installed primary/mirror display policy: a headless
 Chrome on pk4 signed in over Tailscale without the code and received continuous
 H.264 video (about 30 fps, 1280x528) and Opus audio.
+
+Adaptive size checkpoint, same setup: from a 1368x728 viewport the desktop
+followed portrait (868x1028), ultra-wide (1568x528), 150% content size, four
+rapid window changes (coalesced to the last size) and fullscreen without
+reconnecting; decoded frames kept increasing across each video restart.
 
 ## Implementation and validation
 

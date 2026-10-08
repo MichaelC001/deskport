@@ -8,6 +8,7 @@
 #include <QPointer>
 #include <QSettings>
 #include <QStandardPaths>
+#include <QSysInfo>
 #include <algorithm>
 
 namespace {
@@ -15,6 +16,31 @@ QJsonObject failure(const QString& code) {
     return {{"version", 1}, {"status", false}, {"code", code}};
 }
 QJsonObject success() { return {{"version", 1}, {"status", true}}; }
+QString hostOperatingSystem() {
+#ifdef Q_OS_MACOS
+    return QStringLiteral("macos");
+#else
+    return QSysInfo::productType();
+#endif
+}
+// The browser reports its CSS viewport, devicePixelRatio and content zoom; the
+// desktop size, backing scale and host floors come from the shared core policy.
+DeskPortDisplay::Workspace browserWorkspace(const QJsonObject& body) {
+    const auto view = body.value("viewport").toObject();
+    if (view.isEmpty()) {
+        // Older pages send a transport size only.
+        const int width = body.value("width").toInt(), height = body.value("height").toInt();
+        if (width < 640 || width > 1280 || height < 360 || height > 720 || width % 4 || height % 4) return {};
+        return {QSize(width, height), 1};
+    }
+    const int width = view.value("width").toInt(), height = view.value("height").toInt();
+    const double ratio = view.value("ratio").toDouble(1.0);
+    if (width < 160 || height < 120 || width > 8192 || height > 8192 || !(ratio >= 0.5 && ratio <= 8.0)) return {};
+    const double zoom = body.value("zoom").toDouble(1.0);
+    const auto base = DeskPortDisplay::forClient(QSize(qRound(width * ratio), qRound(height * ratio)), ratio);
+    if (base.pixels.isEmpty()) return {};
+    return DeskPortDisplay::adjusted(base, zoom, hostOperatingSystem());
+}
 BrowserGateway::Options options(const QString& directory) {
     BrowserGateway::Options result;
     result.stateDirectory = directory.isEmpty()
@@ -49,7 +75,8 @@ BrowserHost::BrowserHost(HostManager* host, QObject* parent, const QString& dire
     connect(host, &HostManager::changed, this, [this] {
         if (!m_Host->running() && !m_Id.isEmpty()) {
             ++m_Epoch;
-            m_Id.clear(); m_Operation = m_Ending = m_Cancelled = m_Polling = m_DisplayOwned = false;
+            m_Id.clear(); m_Operation = m_Ending = m_Cancelled = m_Polling = m_DisplayOwned = m_Resizing = false;
+            dropResize();
             const auto waiters = std::move(m_EndWaiters);
             m_EndWaiters.clear();
             for (const auto& done : waiters) if (done) done(success());
@@ -99,8 +126,13 @@ QJsonObject BrowserHost::localInfo() const {
             {"busy", busy()}, {"error", errorString()}};
 }
 QJsonObject BrowserHost::state() const {
+    QJsonArray zoom;
+    for (const double value : dp_catalog_tuning_values) zoom.append(value);
     return {{"sharing", m_Host->canPair()}, {"hostName", m_Host->deviceName()},
-            {"mediaAvailable", m_Host->available()}, {"busy", busy()}};
+            {"mediaAvailable", m_Host->available()}, {"busy", busy()},
+            {"capabilities", QJsonObject{{"resize", true},
+                {"adaptiveDisplay", m_Host->adaptiveDisplayAvailable()},
+                {"extendDisplay", m_Host->displayPoliciesAvailable()}, {"zoomChoices", zoom}}}};
 }
 
 void BrowserHost::request(const QJsonObject& body, QObject* context, Completion completion) {
@@ -115,6 +147,7 @@ void BrowserHost::request(const QJsonObject& body, QObject* context, Completion 
         end(done); return;
     }
     if (id.isEmpty() || id != m_Id || m_Ending) { done(failure("not-owner")); return; }
+    if (action == "resize") { resize(body, done); return; }
     if (action != "answer" && action != "status" && action != "input" && action != "heartbeat") {
         done(failure("unsupported-action")); return;
     }
@@ -125,20 +158,24 @@ void BrowserHost::begin(const QJsonObject& input, Completion done) {
     if (busy()) { done(failure("busy")); return; }
     if (!m_Host->canPair() || m_Host->changing()) { done(failure("sharing-off")); return; }
     const QString id = input.value("id").toString();
-    const int width = input.value("width").toInt(), height = input.value("height").toInt();
-    // These are transport limits. Workspace arithmetic remains in shared core.
-    if (id.size() < 16 || id.size() > 64 || width < 640 || width > 1280 || height < 360 || height > 720 ||
-        width % 4 || height % 4 || width > DeskPortDisplay::MaxWidth || height > DeskPortDisplay::MaxHeight) {
+    const auto workspace = browserWorkspace(input);
+    const int policy = input.value("displayPolicy").toInt(0);
+    if (id.size() < 16 || id.size() > 64 || workspace.pixels.isEmpty() || (policy != 0 && policy != 2)) {
         done(failure("invalid-session")); return;
     }
+    if (policy && !m_Host->displayPoliciesAvailable()) { done(failure("policy-unavailable")); return; }
     m_Id = id; m_Operation = true; m_Cancelled = false; m_DisplayOwned = false;
+    m_Policy = policy; m_Resize = {}; m_Resizing = false;
     const auto epoch = ++m_Epoch;
     QJsonObject body = input;
+    // Media encodes this desktop size down to its own transport limit.
+    body["width"] = workspace.pixels.width(); body["height"] = workspace.pixels.height();
+    body.remove("viewport"); body.remove("zoom"); body.remove("displayPolicy");
     body["fps"] = std::clamp(body.value("fps").toInt(30), 1, 30);
     body["bitrateKbps"] = std::clamp(body.value("bitrateKbps").toInt(8000), 1000, 14000);
     emit changed();
     m_Host->browserControl({{"action", "reserve"}, {"id", id}}, this,
-        [this, body, epoch, done](QJsonObject reserved) {
+        [this, body, epoch, done, workspace](QJsonObject reserved) {
         if (epoch != m_Epoch) { done(failure("cancelled")); return; }
         m_Operation = false;
         if (!reserved.value("status").toBool()) {
@@ -171,11 +208,62 @@ void BrowserHost::begin(const QJsonObject& input, Completion done) {
                 end([done, error](QJsonObject) { done(failure(error.isEmpty() ? "cancelled" : "display-unavailable")); });
             } else beginMedia(body, epoch, done);
         });
-        if (!m_Host->resizeDisplay(body.value("width").toInt(), body.value("height").toInt(), 1, sequence)) {
+        if (!m_Host->resizeDisplay(body.value("width").toInt(), body.value("height").toInt(), workspace.scale, sequence, m_Policy)) {
             delete pending; m_Operation = false;
             end([done](QJsonObject) { done(failure("display-unavailable")); });
         }
     });
+}
+
+// Live viewport changes resize the host desktop first, then restart only the
+// browser's video encoder. A newer request replaces one still waiting.
+void BrowserHost::resize(const QJsonObject& body, Completion done) {
+    const auto workspace = browserWorkspace(body);
+    if (workspace.pixels.isEmpty()) { done(failure("invalid-session")); return; }
+    if (m_Operation) { done(failure("busy")); return; }
+    if (m_Resizing) {
+        if (m_Resize.done) m_Resize.done(QJsonObject{{"version", 1}, {"status", true}, {"superseded", true}});
+        m_Resize = {body, std::move(done)}; return;
+    }
+    m_Resizing = true;
+    const auto epoch = m_Epoch;
+    const QString id = m_Id;
+    const auto finish = [this, epoch](QJsonObject result, Completion completion) {
+        if (epoch != m_Epoch) { completion(failure("cancelled")); return; }
+        m_Resizing = false;
+        completion(result);
+        if (m_Resize.done && !m_Ending && !m_Id.isEmpty()) {
+            auto next = std::move(m_Resize); m_Resize = {};
+            resize(next.body, std::move(next.done));
+        }
+    };
+    const auto media = [this, id, workspace, epoch, finish, done]() {
+        if (epoch != m_Epoch || m_Ending) { finish(failure("cancelled"), done); return; }
+        m_Host->browserControl({{"action", "resize"}, {"id", id}, {"width", workspace.pixels.width()},
+                                {"height", workspace.pixels.height()}}, this,
+            [finish, done, workspace](QJsonObject result) {
+            // Report only the applied desktop size, not media internals.
+            if (result.value("status").toBool())
+                result = QJsonObject{{"version", 1}, {"status", true},
+                                     {"width", workspace.pixels.width()}, {"height", workspace.pixels.height()}};
+            finish(result, done);
+        });
+    };
+    if (!m_DisplayOwned || !m_Host->adaptiveDisplayAvailable()) { media(); return; }
+    const int sequence = ++m_Sequence;
+    auto pending = new QObject(this);
+    connect(m_Host, &HostManager::displayResized, pending,
+        [this, pending, sequence, media, finish, done](int value, int, int, const QString& error) {
+        if (value != sequence) return;
+        QObject::disconnect(m_Host, nullptr, pending, nullptr);
+        pending->deleteLater();
+        if (!error.isEmpty()) finish(failure("display-unavailable"), done);
+        else media();
+    });
+    if (!m_Host->resizeDisplay(workspace.pixels.width(), workspace.pixels.height(), workspace.scale, sequence, m_Policy)) {
+        delete pending;
+        finish(failure("display-unavailable"), done);
+    }
 }
 
 void BrowserHost::beginMedia(QJsonObject body, quint64 epoch, Completion done) {
@@ -196,7 +284,8 @@ void BrowserHost::end(Completion done) {
     if (m_Ending) return;
     if (m_Operation) { m_Cancelled = true; return; }
     const auto finish = [this](QJsonObject result) {
-        m_Id.clear(); m_Operation = m_Ending = m_Cancelled = m_Polling = m_DisplayOwned = false;
+        m_Id.clear(); m_Operation = m_Ending = m_Cancelled = m_Polling = m_DisplayOwned = m_Resizing = false;
+            dropResize();
         const auto waiters = std::move(m_EndWaiters); m_EndWaiters.clear();
         emit changed();
         for (const auto& waiter : waiters) if (waiter) waiter(result);

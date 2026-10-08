@@ -1,5 +1,6 @@
 #include "browserhost.h"
 #include "hostmanager.h"
+#include "workspaceresolution.h"
 #include <QApplication>
 #include <QPointer>
 #include <QTemporaryDir>
@@ -14,8 +15,8 @@ public:
     bool running() const override { return online; }
     bool canPair() const override { return online && sharing; }
     bool adaptiveDisplayAvailable() const override { return adaptive; }
-    bool resizeDisplay(int width, int height, int scale, int sequence, int) override {
-        events.append("resize"); lastSequence = sequence; lastSize = QSize(width, height); lastScale = scale;
+    bool resizeDisplay(int width, int height, int scale, int sequence, int policy) override {
+        events.append("resize"); lastSequence = sequence; lastSize = QSize(width, height); lastScale = scale; lastPolicy = policy;
         return acceptResize;
     }
     void settleSessionDisplay(QObject* context, std::function<void(bool)> completion) override {
@@ -51,7 +52,7 @@ public:
     QString owner;
     QStringList events;
     QVector<Operation> operations;
-    int lastSequence = 0, lastScale = 0;
+    int lastSequence = 0, lastScale = 0, lastPolicy = -1;
     QSize lastSize;
     QPointer<QObject> restoreContext;
     std::function<void(bool)> restoreDone;
@@ -114,6 +115,55 @@ private slots:
         host.resized(); host.resized();
         QCOMPARE(host.events.count("start"), 1);
         QVERIFY(host.complete("start")); QVERIFY(result.value("status").toBool());
+        send(browser, {{"action", "stop"}, {"id", id}}, result); finishEnd(host);
+    }
+    void viewportStartUsesSharedWorkspacePolicy() {
+        QTemporaryDir directory; FakeBrowserHost host(directory.path()); BrowserHost browser(&host, nullptr, directory.filePath("browser")); QJsonObject result;
+        auto body = startBody();
+        body["viewport"] = QJsonObject{{"width", 1440}, {"height", 820}, {"ratio", 2}};
+        body["zoom"] = 1.2; body["displayPolicy"] = 2;
+        send(browser, body, result); QVERIFY(host.complete("reserve"));
+        QString os = QSysInfo::productType();
+#ifdef Q_OS_MACOS
+        os = "macos";
+#endif
+        const auto expected = DeskPortDisplay::adjusted(DeskPortDisplay::forClient(QSize(2880, 1640), 2), 1.2, os);
+        QVERIFY(!expected.pixels.isEmpty());
+        QCOMPARE(host.lastSize, expected.pixels); QCOMPARE(host.lastScale, expected.scale); QCOMPARE(host.lastPolicy, 2);
+        host.resized();
+        const auto media = host.operations.last().body;
+        QCOMPARE(media.value("action").toString(), QString("start"));
+        QCOMPARE(QSize(media.value("width").toInt(), media.value("height").toInt()), expected.pixels);
+        QVERIFY(!media.contains("viewport")); QVERIFY(!media.contains("displayPolicy"));
+        QVERIFY(host.complete("start")); QVERIFY(result.value("status").toBool());
+        send(browser, {{"action", "stop"}, {"id", id}}, result); finishEnd(host);
+        body["displayPolicy"] = 1;
+        send(browser, body, result); QCOMPARE(result.value("code").toString(), QString("invalid-session"));
+    }
+    void liveResizeOrdersDisplayBeforeMediaAndCoalesces() {
+        QTemporaryDir directory; FakeBrowserHost host(directory.path()); BrowserHost browser(&host, nullptr, directory.filePath("browser")); QJsonObject result;
+        establish(browser, host, result);
+        const auto view = [this](int width, int height) {
+            return QJsonObject{{"action", "resize"}, {"id", id}, {"zoom", 1.0},
+                               {"viewport", QJsonObject{{"width", width}, {"height", height}, {"ratio", 1}}}};
+        };
+        QJsonObject first, second, third; int secondCount = 0;
+        send(browser, view(1600, 1000), first);
+        QCOMPARE(host.events.last(), QString("resize")); QCOMPARE(host.lastPolicy, 0);
+        send(browser, view(1200, 900), second, &secondCount);
+        send(browser, view(1920, 1080), third);
+        QCOMPARE(secondCount, 1); QVERIFY(second.value("superseded").toBool());
+        QCOMPARE(host.events.count("resize"), 2);
+        host.resized();
+        QCOMPARE(host.operations.last().body.value("action").toString(), QString("resize"));
+        QVERIFY(first.isEmpty());
+        QVERIFY(host.complete("resize")); QVERIFY(first.value("status").toBool());
+        QCOMPARE(host.events.count("resize"), 4); QVERIFY(third.isEmpty());
+        host.resized(); QVERIFY(host.complete("resize"));
+        QVERIFY(third.value("status").toBool());
+        QCOMPARE(QSize(third.value("width").toInt(), third.value("height").toInt()), host.lastSize);
+        send(browser, {{"action", "resize"}, {"id", "someone-else-session-0001"}}, result);
+        QCOMPARE(result.value("code").toString(), QString("not-owner"));
         send(browser, {{"action", "stop"}, {"id", id}}, result); finishEnd(host);
     }
     void invalidStartAndSharingOffDoNotReserve() {

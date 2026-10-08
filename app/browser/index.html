@@ -43,6 +43,8 @@
             <summary>连接选项</summary>
             <div class="option-grid">
               <label>画面质量<select id="quality"><option value="balanced">均衡 · 720p / 30 帧</option><option value="smooth">流畅 · 720p / 30 帧</option><option value="sharp">清晰 · 720p / 30 帧</option></select></label>
+              <label>桌面用法<select id="display-mode"><option value="0">调整电脑桌面以适合此窗口</option><option value="2">作为电脑的扩展显示器</option></select></label>
+              <label>内容大小<select id="desktop-zoom"></select></label>
               <label class="check"><input id="request-audio" type="checkbox" checked>播放电脑声音</label>
             </div>
           </details>
@@ -56,6 +58,7 @@
         <video id="desktop-video" playsinline autoplay muted disablepictureinpicture aria-label="远程桌面画面"></video>
         <div id="video-placeholder" class="video-placeholder"><span class="spinner" aria-hidden="true"></span><strong>正在连接电脑…</strong><span>第一帧画面就绪后即可操作</span></div>
         <button id="resume-audio" class="audio-prompt" hidden>点按开启声音</button>
+        <button id="show-controls" class="controls-handle" hidden aria-label="显示工具栏">⋯</button>
       </div>
       <nav class="toolbar" aria-label="远程操作">
         <label class="mode-label"><span class="sr-only">触摸模式</span><select id="touch-mode"><option value="trackpad">触控板</option><option value="direct">直接点按</option></select></label>
@@ -64,6 +67,7 @@
         <button id="keyboard-toggle" aria-expanded="false" aria-controls="text-panel">文字</button>
         <button id="shortcuts-toggle" aria-expanded="false" aria-controls="shortcuts-panel">快捷键</button>
         <span class="toolbar-spacer"></span>
+        <label class="mode-label"><span class="sr-only">内容大小</span><select id="session-zoom" title="内容大小"></select></label>
         <button id="sound-toggle" aria-pressed="false">声音关</button>
         <button id="fullscreen-toggle">全屏</button>
       </nav>

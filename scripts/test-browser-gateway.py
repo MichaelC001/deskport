@@ -176,6 +176,9 @@ try:
     check(request(info, directory, "POST", "/api/session/answer", {"type": "answer", "sdp": "v=0"}, auth=auth)[0] == 200, "answer reaches host adapter")
     check(request(info, directory, "GET", "/api/session/status", auth=auth)[0] == 200, "media status reports session state")
     check(request(info, directory, "POST", "/api/session/heartbeat", {}, auth=auth)[0] == 200, "explicit heartbeat reaches media adapter")
+    check(request(info, directory, "POST", "/api/session/resize", {"viewport": {"width": 1600, "height": 900, "ratio": 1}}, auth=auth)[0] == 200,
+          "live viewport resize reaches media adapter")
+    check(request(info, directory, "GET", "/api/session/resize", auth=auth)[0] == 404, "resize requires POST")
     check(request(info, directory, "POST", "/api/logout", {}, auth=auth)[0] == 200, "logout succeeds")
     check(command(process, "snapshot")["stops"] == 1, "logout releases media")
     check(request(info, directory, "GET", "/api/status", auth=auth)[0] == 401, "logged-out session cannot replay")

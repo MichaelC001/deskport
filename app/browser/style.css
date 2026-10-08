@@ -72,7 +72,15 @@ textarea { resize: vertical; min-height: 64px; max-height: 150px; flex: 1; min-w
 .notice { position: fixed; z-index: 10; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(560px, calc(100% - 32px)); padding: 16px 20px; border: 1px solid #56637a; background: #253346; color: #fff; border-radius: 12px; box-shadow: 0 8px 32px #0006; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 .notice[data-error="true"] { border-color: #ae766d; background: #462e2e; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-#session-panel:fullscreen { background: #10151e; padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+#session-panel:fullscreen { background: #000; padding: 0; max-width: none; position: relative; }
+#session-panel:fullscreen .viewport { border: 0; border-radius: 0; }
+#session-panel:fullscreen .toolbar, #session-panel:fullscreen .aux-panel { position: absolute; z-index: 5; left: 50%; transform: translateX(-50%); width: min(1100px, calc(100% - 24px)); background: #10151ee6; border: 1px solid #253141; border-radius: 12px; padding: 8px 10px; transition: opacity .2s; }
+#session-panel:fullscreen .toolbar { top: max(10px, env(safe-area-inset-top)); }
+#session-panel:fullscreen .aux-panel { top: calc(max(10px, env(safe-area-inset-top)) + 70px); }
+#session-panel:fullscreen .session-footer { display: none; }
+#session-panel:fullscreen[data-controls="hidden"] .toolbar, #session-panel:fullscreen[data-controls="hidden"] .aux-panel { opacity: 0; pointer-events: none; }
+.controls-handle { position: absolute; z-index: 4; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); min-width: 56px; min-height: 28px; padding: 0 14px; border-radius: 14px; background: #10151e99; opacity: .7; }
+#session-panel:not(:fullscreen) .controls-handle { display: none; }
 @media (max-width: 600px) { .app-header { min-height: 70px; gap: 10px; } .brand-mark { width: 32px; height: 32px; } .brand strong { font-size: 16px; } #disconnect { padding: 8px 10px; font-size: 12px; } .toolbar { gap: 6px; } .toolbar button { padding: 9px 10px; min-width: 48px; font-size: 13px; } .toolbar-spacer { display: none; } .toolbar select { max-width: 116px; } .text-panel { flex-direction: column; } .text-actions { justify-content: flex-end; } .session-footer { flex-direction: column; gap: 1px; } }
 @media (max-height: 550px) and (orientation: landscape) { body[data-session="true"] .app-header { min-height: 50px; } .session-footer { display: none; } .toolbar { padding-block: 6px; } .toolbar button, .toolbar select { min-height: 40px; padding-block: 7px; } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
