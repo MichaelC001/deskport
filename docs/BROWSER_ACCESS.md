@@ -10,7 +10,7 @@ app, authenticator, or browser key enrollment is required.
 
 1. Start DeskPort on the computer and enable sharing.
 2. Expand **Browser access** on the Sharing page. Scan the URL QR code or open
-   one of the displayed LAN URLs on the other device.
+   one of the displayed LAN or Tailscale URLs on the other device.
 3. Complete the browser's certificate trust step, then type the six-character
    code displayed on the computer. Keep **Remember this browser** selected on
    your own device, or clear it for a temporary connection, then select **Connect**.
@@ -93,8 +93,9 @@ after pairing, including when a certificate is replaced.
   Some browser or operating-system shortcuts cannot be intercepted; use the
   on-screen shortcut buttons in those cases.
 
-This version uses direct LAN WebRTC with no STUN/TURN relay, public rendezvous,
-UPnP change, or automatic firewall change. File transfer, gamepads, HDR, HEVC,
+This version uses direct WebRTC over the LAN or a Tailscale/Headscale tailnet,
+with no STUN/TURN relay, public rendezvous, UPnP change, or automatic firewall
+change. Over Tailscale, media follows the tailnet path (direct or DERP-relayed). File transfer, gamepads, HDR, HEVC,
 AV1, multiple displays, and native-client feature parity are outside this first
 browser client.
 
@@ -102,13 +103,20 @@ browser client.
 
 The default HTTPS port is TCP **48992**. Media uses WebRTC UDP **48100–48115**.
 Allow these only on the intended network if the host firewall blocks them.
-HTTPS binds the available private/link-local IPv4 interfaces and loopback when
-DeskPort starts; it does not bind every public interface. Restart the supervisor
-after network interface changes to refresh the listener addresses. The saved
-certificate is retained. If its IP SANs no longer match the new address, supply
-a matching trusted certificate, or stop the supervisor and explicitly regenerate
-the saved `https-cert.pem` / `https-key.pem` pair, then trust the new certificate
-on the connecting device. Keep `browser.ini` to retain the permanent access code.
+HTTPS binds the available private/link-local IPv4 interfaces, Tailscale or
+Headscale addresses, and loopback; it does not bind every public interface. A
+tailnet address is RFC 6598 space (`100.64.0.0/10`) on a tunnel interface such as
+`tailscale0` or `utun`; the same range on a physical or cellular link is carrier
+NAT and is not bound. Listeners follow interface changes within about ten
+seconds, for example when Tailscale starts after DeskPort at login, without
+interrupting connected browsers.
+
+The generated certificate is retained while it names every served address. When
+a new address or name appears, DeskPort extends that self-signed certificate,
+keeping the names it already had, so the connecting browser must trust the new
+certificate once. The access code and remembered browsers are unchanged. A
+custom certificate is never modified; it must already cover any Tailscale address
+or MagicDNS name used. Keep `browser.ini` to retain the permanent access code.
 
 The supervisor accepts `--no-web-server` to disable this entry for that run.
 Persistent settings use the existing DeskPort settings file:

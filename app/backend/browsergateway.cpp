@@ -95,6 +95,10 @@ bool localAddress(const QHostAddress& address) {
     return (value & 0xff000000u) == 0x0a000000u || (value & 0xfff00000u) == 0xac100000u ||
         (value & 0xffff0000u) == 0xc0a80000u || (value & 0xffff0000u) == 0xa9fe0000u;
 }
+bool sharedAddressSpace(const QHostAddress& address) {
+    // RFC 6598 100.64.0.0/10, used by Tailscale/Headscale tailnets and by carrier NAT.
+    return address.protocol() == QAbstractSocket::IPv4Protocol && (address.toIPv4Address() & 0xffc00000u) == 0x64400000u;
+}
 QList<QHostAddress> lanAddresses() {
     QList<QHostAddress> addresses{QHostAddress::LocalHost};
     auto interfaces = QNetworkInterface::allInterfaces();
@@ -108,13 +112,20 @@ QList<QHostAddress> lanAddresses() {
     });
     for (const auto& interface : interfaces) {
         if (!(interface.flags() & QNetworkInterface::IsUp) || !(interface.flags() & QNetworkInterface::IsRunning)) continue;
+        const bool pointToPoint = interface.flags().testFlag(QNetworkInterface::IsPointToPoint);
         for (const auto& entry : interface.addressEntries()) {
             const auto address = entry.ip();
-            if (address.protocol() == QAbstractSocket::IPv4Protocol && localAddress(address) && !addresses.contains(address))
+            const bool overlay = BrowserGateway::overlayAddress(address, interface.name(), pointToPoint, physical(interface));
+            if (address.protocol() == QAbstractSocket::IPv4Protocol && (localAddress(address) || overlay) &&
+                !addresses.contains(address))
                 addresses.append(address);
         }
     }
     return addresses;
+}
+QString listenerUrl(const QHostAddress& address, int port) {
+    QUrl url; url.setScheme("https"); url.setHost(address.toString()); url.setPort(port); url.setPath("/");
+    return url.toString();
 }
 QByteArray readBounded(const QString& path) {
     QFile file(path);
@@ -207,6 +218,11 @@ struct BrowserGateway::Connection : QObject {
     bool dispatched = false, replied = false;
 };
 
+bool BrowserGateway::overlayAddress(const QHostAddress& address, const QString& interfaceName,
+                                    bool pointToPoint, bool physical) {
+    if (physical || !sharedAddressSpace(address)) return false;
+    return pointToPoint || interfaceName.startsWith("tailscale") || interfaceName.startsWith("utun");
+}
 BrowserGateway::BrowserGateway(const Hooks& hooks, QObject* parent) : BrowserGateway(hooks, Options(), parent) {}
 BrowserGateway::BrowserGateway(const Hooks& hooks, const Options& options, QObject* parent)
     : QObject(parent), m_Hooks(hooks), m_Options(options) {
@@ -390,6 +406,9 @@ bool BrowserGateway::loadCredentials(const QList<QHostAddress>& addresses) {
     }
     if (m_Code.isEmpty()) m_Code = newCode();
     if (!saveCode(m_Code)) { m_Error = tr("Cannot save the browser access code."); return false; }
+    return loadCertificate();
+}
+bool BrowserGateway::loadCertificate() {
     const bool custom = !m_Options.certificatePath.isEmpty() || !m_Options.privateKeyPath.isEmpty();
     if (custom && (m_Options.certificatePath.isEmpty() || m_Options.privateKeyPath.isEmpty())) {
         m_Error = tr("A custom HTTPS certificate requires both certificate and private key paths."); return false;
@@ -402,6 +421,26 @@ bool BrowserGateway::loadCredentials(const QList<QHostAddress>& addresses) {
     if (!custom && !QFileInfo::exists(certPath) && !QFileInfo::exists(keyPath) &&
         !createCertificate(certPath, keyPath, m_Hosts)) {
         m_Error = tr("Cannot generate the browser HTTPS certificate."); return false;
+    }
+    if (!custom && QFileInfo::exists(certPath) && QFileInfo::exists(keyPath)) {
+        // A generated identity must name every address it serves, including a
+        // Tailscale address that appeared later. Keep earlier names so a
+        // returning DHCP or tailnet address does not force another trust step.
+        const auto existing = QSslCertificate::fromData(readBounded(certPath));
+        if (!existing.isEmpty() && matchingKey(readBounded(certPath), readBounded(keyPath))) {
+            QStringList covered;
+            const auto names = existing.first().subjectAlternativeNames();
+            for (auto it = names.cbegin(); it != names.cend(); ++it) covered.append(it.value().toLower());
+            QStringList missing;
+            for (const auto& host : m_Hosts) if (!covered.contains(host)) missing.append(host);
+            if (!missing.isEmpty()) {
+                QStringList hosts = m_Hosts;
+                for (const auto& name : covered) if (!hosts.contains(name) && hosts.size() < MaxCertificateNames) hosts.append(name);
+                if (!createCertificate(certPath, keyPath, hosts)) {
+                    m_Error = tr("Cannot extend the browser HTTPS certificate to a new address."); return false;
+                }
+            }
+        }
     }
     const auto certificate = readBounded(certPath), key = readBounded(keyPath);
     m_Certificates = QSslCertificate::fromData(certificate);
@@ -430,8 +469,8 @@ bool BrowserGateway::start() {
         if (!hostname.contains('.')) m_Hosts.append(hostname + ".local");
     }
     for (const auto& address : addresses) {
-        if (!localAddress(address) || address.isNull()) {
-            m_Error = tr("The browser listener requires an explicit LAN or loopback address."); emit changed(); return false;
+        if ((!localAddress(address) && !sharedAddressSpace(address)) || address.isNull()) {
+            m_Error = tr("The browser listener requires an explicit LAN, Tailscale or loopback address."); emit changed(); return false;
         }
         m_Hosts.append(address.toString().toLower());
     }
@@ -445,25 +484,7 @@ bool BrowserGateway::start() {
     if (!loadCredentials(addresses) || !loadPairings()) { emit changed(); return false; }
     m_Port = m_Options.port;
     for (const auto& address : addresses) {
-        auto listener = new Listener(this);
-        listener->setProxy(QNetworkProxy::NoProxy);
-        listener->incoming = [this](qintptr descriptor) { accept(descriptor); };
-        if (!listener->listen(address, quint16(m_Port))) {
-            m_Error = tr("Browser HTTPS could not listen on %1:%2: %3. Existing services were left unchanged.")
-                .arg(address.toString()).arg(m_Port).arg(listener->errorString());
-            delete listener; stop(); emit changed(); return false;
-        }
-        m_Port = listener->serverPort();
-        m_Listeners.append(listener);
-        QUrl url; url.setScheme("https"); url.setHost(address.toString()); url.setPort(m_Port); url.setPath("/");
-        // Preserve interface preference; loopback stays last in the UI.
-        if (address.isLoopback()) m_Urls.append(url.toString());
-        else {
-            auto beforeLoopback = std::find_if(m_Urls.begin(), m_Urls.end(), [](const QString& entry) {
-                return QHostAddress(QUrl(entry).host()).isLoopback();
-            });
-            m_Urls.insert(beforeLoopback, url.toString());
-        }
+        if (!addListener(address)) { stop(); emit changed(); return false; }
     }
     if (!m_Options.certificatePath.isEmpty() && !m_Options.privateKeyPath.isEmpty()) {
         QStringList preferred;
@@ -475,6 +496,60 @@ bool BrowserGateway::start() {
         m_Urls = preferred + m_Urls;
     }
     m_Cleanup.start(); emit changed(); return true;
+}
+bool BrowserGateway::addListener(const QHostAddress& address) {
+    auto listener = new Listener(this);
+    listener->setProxy(QNetworkProxy::NoProxy);
+    listener->incoming = [this](qintptr descriptor) { accept(descriptor); };
+    if (!listener->listen(address, quint16(m_Port))) {
+        m_Error = tr("Browser HTTPS could not listen on %1:%2: %3. Existing services were left unchanged.")
+            .arg(address.toString()).arg(m_Port).arg(listener->errorString());
+        delete listener; return false;
+    }
+    m_Port = listener->serverPort();
+    m_Listeners.append(listener);
+    const auto url = listenerUrl(address, m_Port);
+    // Preserve interface preference; loopback stays last in the UI.
+    if (address.isLoopback()) m_Urls.append(url);
+    else {
+        auto beforeLoopback = std::find_if(m_Urls.begin(), m_Urls.end(), [](const QString& entry) {
+            return QHostAddress(QUrl(entry).host()).isLoopback();
+        });
+        m_Urls.insert(beforeLoopback, url);
+    }
+    return true;
+}
+void BrowserGateway::refreshAddresses() {
+    // Automatic listeners follow interface changes, such as Tailscale starting
+    // after DeskPort at login. Existing connections and sessions are untouched.
+    if (!active() || !m_Options.listenAddresses.isEmpty()) return;
+    const auto current = lanAddresses();
+    bool updated = false;
+    for (int i = m_Listeners.size() - 1; i >= 0; --i) {
+        const auto address = m_Listeners[i]->serverAddress();
+        if (current.contains(address)) continue;
+        m_Listeners[i]->close(); delete m_Listeners[i]; m_Listeners.removeAt(i);
+        m_Urls.removeAll(listenerUrl(address, m_Port));
+        m_Hosts.removeAll(address.toString().toLower());
+        updated = true;
+    }
+    QList<QHostAddress> added;
+    for (const auto& address : current) {
+        const bool bound = std::any_of(m_Listeners.cbegin(), m_Listeners.cend(),
+            [&](const QTcpServer* listener) { return listener->serverAddress() == address; });
+        if (!bound) added.append(address);
+    }
+    if (!added.isEmpty()) {
+        const auto previousHosts = m_Hosts;
+        for (const auto& address : added) m_Hosts.append(address.toString().toLower());
+        m_Hosts.removeDuplicates();
+        if (!loadCertificate()) m_Hosts = previousHosts;
+        else for (const auto& address : added) {
+            if (addListener(address)) updated = true;
+            else m_Hosts.removeAll(address.toString().toLower());
+        }
+    }
+    if (updated) emit changed();
 }
 void BrowserGateway::stop() {
     m_Cleanup.stop();
@@ -508,7 +583,10 @@ void BrowserGateway::accept(qintptr descriptor) {
     int sameAddress = 0;
     for (auto connection : m_Connections)
         if (connection->socket->peerAddress() == socket->peerAddress()) ++sameAddress;
-    if (m_Connections.size() >= 32 || sameAddress >= 8 || !localAddress(socket->peerAddress())) {
+    // A tailnet peer is accepted only on a tailnet listener; the same RFC 6598
+    // range arriving on a LAN listener could be carrier NAT and stays refused.
+    const bool tailnetPeer = sharedAddressSpace(socket->peerAddress()) && sharedAddressSpace(socket->localAddress());
+    if (m_Connections.size() >= 32 || sameAddress >= 8 || (!localAddress(socket->peerAddress()) && !tailnetPeer)) {
         socket->abort(); delete socket; return;
     }
     auto connection = new Connection(this);
@@ -797,6 +875,7 @@ void BrowserGateway::release(const QString& key) {
 }
 void BrowserGateway::cleanup() {
     const qint64 current = now();
+    if (++m_AddressTicks >= AddressRefreshTicks) { m_AddressTicks = 0; refreshAddresses(); }
     const auto keys = m_Sessions.keys();
     for (const auto& key : keys) {
         const auto session = m_Sessions.value(key);

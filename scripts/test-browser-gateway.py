@@ -197,6 +197,29 @@ try:
     finish(process)
     process, info = launch(directory)
     check(info["code"] == original_code and (directory / "https-cert.pem").read_bytes() == original_cert, "code and HTTPS identity survive process restart")
+    classify = subprocess.run([str(work / "gateway-test"), str(work / "classify")], cwd=work, capture_output=True, text=True,
+        env=dict(os.environ, DESKPORT_TEST_CLASSIFY="1"), timeout=30)
+    check(json.loads(classify.stdout)["overlay"] == [True, True, True, False, False, False, False],
+        "only RFC 6598 addresses on tunnels count as Tailscale; carrier NAT on links does not")
+    def names(path):
+        return set(ssl._ssl._test_decode_cert(str(path))["subjectAltName"])
+    tail_dir = work / "tailnet"
+    first, first_info = launch(tail_dir)
+    first_cert = (tail_dir / "https-cert.pem").read_bytes()
+    finish(first)
+    extended, extended_info = launch(tail_dir, environment={"DESKPORT_TEST_ALLOWED_HOSTS": "tailnet-host.test"})
+    extended_cert = (tail_dir / "https-cert.pem").read_bytes()
+    check(extended_cert != first_cert and {("DNS", "tailnet-host.test"), ("IP Address", "127.0.0.1"), ("DNS", "localhost")} <= names(tail_dir / "https-cert.pem")
+        and extended_info["code"] == first_info["code"], "generated certificate is extended to a newly served name and keeps the access code")
+    check(request(extended_info, tail_dir, "GET", "/", raw=True, hostname="tailnet-host.test")[0] == 200,
+        "extended certificate validates for the new name over real TLS")
+    finish(extended)
+    again, _ = launch(tail_dir, environment={"DESKPORT_TEST_ALLOWED_HOSTS": "tailnet-host.test"})
+    finish(again)
+    check((tail_dir / "https-cert.pem").read_bytes() == extended_cert, "a covered certificate is not regenerated on restart")
+    without, _ = launch(tail_dir)
+    finish(without)
+    check((tail_dir / "https-cert.pem").read_bytes() == extended_cert, "a name that disappears stays covered, avoiding another trust step")
     auth = login(info, directory)
     request(info, directory, "POST", "/api/session/start", {}, auth=auth)
     new = command(process, "reset")

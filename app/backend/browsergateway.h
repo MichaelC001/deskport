@@ -51,6 +51,10 @@ public:
     QJsonArray pairedBrowsers() const;
     bool revokeBrowser(const QString& id);
     void hostStateChanged();
+    // A Tailscale/Headscale address: RFC 6598 space on a tunnel, never on a
+    // physical Wi-Fi/Ethernet link where the same range means carrier NAT.
+    static bool overlayAddress(const QHostAddress& address, const QString& interfaceName,
+                               bool pointToPoint, bool physical);
 signals:
     void changed();
 private:
@@ -86,6 +90,9 @@ private:
     void release(const QString& key);
     void cleanup();
     bool loadCredentials(const QList<QHostAddress>& addresses);
+    bool loadCertificate();
+    bool addListener(const QHostAddress& address);
+    void refreshAddresses();
     bool saveCode(const QString& code);
     bool permittedHost(const QByteArray& host) const;
     bool loginAllowed(const QString& address);
@@ -104,4 +111,7 @@ private:
     QString m_Directory, m_Code, m_Error;
     QStringList m_Urls, m_Hosts;
     int m_Port = 0;
+    int m_AddressTicks = 0;
+    static constexpr int AddressRefreshTicks = 10;
+    static constexpr int MaxCertificateNames = 32;
 };

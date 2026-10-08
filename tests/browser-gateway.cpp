@@ -13,6 +13,19 @@ static void report(const QJsonObject& object) {
 int main(int argc, char** argv) {
     QCoreApplication application(argc, argv);
     QCoreApplication::setApplicationName("DeskPort Browser Isolated Test");
+    if (qEnvironmentVariableIsSet("DESKPORT_TEST_CLASSIFY")) {
+        // name, point-to-point, physical, address
+        const QList<std::tuple<QString, bool, bool, QString>> cases{
+            {"tailscale0", true, false, "100.64.0.1"}, {"utun4", true, false, "100.101.2.3"},
+            {"wg0", true, false, "100.127.255.254"}, {"en0", false, true, "100.64.0.1"},
+            {"wwan0", false, false, "100.64.0.1"}, {"tailscale0", true, false, "100.128.0.1"},
+            {"tailscale0", true, false, "203.0.113.4"}};
+        QJsonArray results;
+        for (const auto& [name, pointToPoint, physical, address] : cases)
+            results.append(BrowserGateway::overlayAddress(QHostAddress(address), name, pointToPoint, physical));
+        report({{"overlay", results}});
+        return 0;
+    }
     bool sharing = true;
     QString owner;
     int starts = 0, stops = 0;
@@ -21,7 +34,8 @@ int main(int argc, char** argv) {
     QJsonObject last;
     BrowserGateway::Options options;
     options.stateDirectory = QString::fromLocal8Bit(argv[1]);
-    options.listenAddresses = {QHostAddress::LocalHost};
+    // Automatic interface selection is opt-in so the default suite never leaves loopback.
+    if (!qEnvironmentVariableIsSet("DESKPORT_TEST_AUTO_ADDRESSES")) options.listenAddresses = {QHostAddress::LocalHost};
     if (qEnvironmentVariableIsSet("DESKPORT_TEST_PARTIAL_BIND")) options.listenAddresses.append(QHostAddress::LocalHost);
     if (qEnvironmentVariableIsSet("DESKPORT_TEST_ALLOWED_HOSTS"))
         options.allowedHosts = qEnvironmentVariable("DESKPORT_TEST_ALLOWED_HOSTS").split(',');
