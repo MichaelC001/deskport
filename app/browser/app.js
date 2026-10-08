@@ -18,6 +18,9 @@
   let generation = 0;
   let pairing = null;
   let restoreFailed = false;
+  // Set when the computer confirms this browser runs on a Tailscale device owned
+  // by the same user; such a browser connects without the access code.
+  let tailnet = false;
   let authTail = Promise.resolve();
   let ending = null;
   let ownsMedia = false;
@@ -54,7 +57,9 @@
     'media-unavailable': '电脑当前无法采集或编码画面，请检查电脑端共享权限与编码器状态。',
     'invalid-request': '连接请求未被电脑接受，请刷新页面后重试。',
     timeout: '连接超时，请检查电脑是否在线以及网络是否畅通。',
-    network: '无法连接电脑，请检查网络和电脑端的 HTTPS 证书。'
+    network: '无法连接电脑，请检查网络和电脑端的 HTTPS 证书。',
+    'tailnet-denied': '这台 Tailscale 设备不属于这台电脑的用户，请输入访问码。',
+    'tailnet-unavailable': '当前网络需要输入电脑端显示的访问码。'
   };
 
   function notice(message, error = false, persistent = false) {
@@ -68,7 +73,7 @@
   function setPhase(next) {
     phase = next;
     ui['connection-status'].textContent = {
-      idle: pairing ? '已配对' : '未连接', restoring: '正在检查配对', forgetting: '正在取消配对',
+      idle: pairing ? '已配对' : tailnet ? '已通过 Tailscale 确认' : '未连接', restoring: '正在检查配对', forgetting: '正在取消配对',
       authenticating: '正在验证', connecting: '正在连接', streaming: '已连接', stopping: '正在断开'
     }[next];
     ui['connection-status'].dataset.state = next;
@@ -78,9 +83,9 @@
     ui.disconnect.hidden = !sessionVisible;
     document.body.dataset.session = String(sessionVisible);
     ui.connect.disabled = next !== 'idle' || restoreFailed;
-    ui['access-code'].disabled = next !== 'idle' || Boolean(pairing) || restoreFailed;
-    ui['access-code'].required = !pairing && !restoreFailed;
-    ui['credential-fields'].hidden = Boolean(pairing) || restoreFailed;
+    ui['access-code'].disabled = next !== 'idle' || Boolean(pairing) || tailnet || restoreFailed;
+    ui['access-code'].required = !pairing && !tailnet && !restoreFailed;
+    ui['credential-fields'].hidden = Boolean(pairing) || tailnet || restoreFailed;
     ui['paired-ready'].hidden = !pairing;
     ui['paired-name'].textContent = pairing?.name || '此浏览器';
     ui['forget-pairing'].disabled = next !== 'idle';
@@ -90,7 +95,8 @@
     ui['device-name'].disabled = next !== 'idle' || !ui['remember-browser'].checked;
     document.body.dataset.paired = String(Boolean(pairing));
     ui['login-intro'].textContent = restoreFailed ? '暂时无法确认配对状态。网络恢复后，请重新检查。'
-      : pairing ? '此浏览器已与电脑配对。点击连接即可使用。' : '输入这台电脑上显示的 6 位访问码。';
+      : pairing ? '此浏览器已与电脑配对。点击连接即可使用。'
+        : tailnet ? '已通过 Tailscale 确认这是你的设备，无需访问码。点击连接即可使用。' : '输入这台电脑上显示的 6 位访问码。';
     ui.disconnect.disabled = next === 'stopping';
     ui['video-placeholder'].hidden = next === 'streaming';
   }
@@ -125,12 +131,24 @@
         const wasPaired = Boolean(pairing);
         pairing = null;
         restoreFailed = false;
-        if (wasPaired || announce) notice(errorMessages.unpaired, true);
+        await probeTailnet(currentGeneration);
+        if ((wasPaired || announce) && !tailnet) notice(errorMessages.unpaired, true);
       } else {
         restoreFailed = true;
         notice(error.message, true, true);
       }
     } finally { if (currentGeneration === generation) setPhase('idle'); }
+  }
+
+  // Asks whether this connection comes from an owned Tailscale device. It never
+  // creates a session; any failure keeps the ordinary access-code form.
+  async function probeTailnet(currentGeneration) {
+    try {
+      const result = await api('/api/login/tailnet', { probe: true }, { token: '' });
+      if (currentGeneration === generation) tailnet = result.tailnet === true;
+    } catch {
+      if (currentGeneration === generation) tailnet = false;
+    }
   }
 
   function defaultDeviceName() {
@@ -224,7 +242,7 @@
       return;
     }
     const code = ui['access-code'].value.trim();
-    if (!pairing && !/^[a-z0-9]{6}$/i.test(code)) { notice('请输入电脑端显示的 6 位字母数字访问码。', true); return; }
+    if (!pairing && !tailnet && !/^[a-z0-9]{6}$/i.test(code)) { notice('请输入电脑端显示的 6 位字母数字访问码。', true); return; }
     const currentGeneration = ++generation;
     wantAudio = ui['request-audio'].checked;
     // Prime playback inside the user gesture; a visible fallback handles Safari rejecting it.
@@ -236,6 +254,7 @@
       await serializeAuth(async () => {
         if (currentGeneration !== generation) return;
         const login = pairing ? await api('/api/resume', {}, { token: '' })
+          : tailnet ? await api('/api/login/tailnet', {}, { token: '' })
           : await api('/api/login', {
             code, remember: ui['remember-browser'].checked,
             deviceName: ui['device-name'].value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 64) || defaultDeviceName()
@@ -311,6 +330,8 @@
       ui['access-code'].value = '';
       if (currentGeneration === generation) {
         if (error.code === 'unpaired') { token = ''; pairing = null; restoreFailed = false; }
+        // Ownership can change (device retagged or removed); fall back to the code.
+        if (error.code === 'tailnet-denied' || error.code === 'tailnet-unavailable') tailnet = false;
         await endSession(error.message, true);
       }
     }

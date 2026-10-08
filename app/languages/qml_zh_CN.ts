@@ -2203,6 +2203,30 @@
 <context>
     <name>HostView</name>
     <message>
+        <source>Browser access is not running.</source>
+        <translation>浏览器访问未运行。</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network and your Tailscale network.</source>
+        <translation>浏览器访问已开启，可在本地网络和你的 Tailscale 网络中使用。</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network.</source>
+        <translation>浏览器访问已开启，可在本地网络中使用。</translation>
+    </message>
+    <message>
+        <source>Devices signed in to the same Tailscale account connect without the code.</source>
+        <translation>登录同一 Tailscale 账户的设备无需访问码即可连接。</translation>
+    </message>
+    <message>
+        <source>Show code</source>
+        <translation>显示访问码</translation>
+    </message>
+    <message>
+        <source>Hide code</source>
+        <translation>隐藏访问码</translation>
+    </message>
+    <message>
         <source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source>
         <translation>断开连接后移除虚拟屏幕，并恢复原来的物理屏幕布局。重新连接时会创建新的虚拟屏幕。</translation>
     </message>

@@ -59,6 +59,14 @@ int main(int argc, char** argv) {
         } else if (owner != id) completion({{"status", false}, {"code", "no-session"}});
         else completion({{"status", true}, {"state", "connected"}});
     };
+    // DESKPORT_TEST_TAILNET=owner|other simulates the local Tailscale ownership
+    // answer for loopback peers; DESKPORT_TEST_REAL_TAILSCALE uses the real CLI.
+    const auto tailnet = qEnvironmentVariable("DESKPORT_TEST_TAILNET");
+    if (!tailnet.isEmpty()) {
+        options.testLoopbackTailnet = true;
+        hooks.tailnetOwner = [tailnet](const QHostAddress&, std::function<void(bool)> done) { done(tailnet == "owner"); };
+    }
+    if (qEnvironmentVariableIsSet("DESKPORT_TEST_NO_TAILNET")) options.tailnetIdentity = false;
     BrowserGateway gateway(hooks, options);
     if (!gateway.start()) { report({{"error", gateway.errorString()}, {"active", gateway.active()},
         {"port", gateway.port()}, {"urlCount", gateway.urls().size()}}); return 2; }

@@ -32,10 +32,17 @@ public:
         QString privateKeyPath;
         int sessionIdleSeconds = 900;
         int mediaIdleSeconds = 20;
+        // Devices owned by this computer's Tailscale user may sign in without
+        // the access code, but only over a tailnet listener.
+        bool tailnetIdentity = true;
+        QString tailscaleProgram;
+        bool testLoopbackTailnet = false; // Isolated tests only: treat loopback peers as tailnet peers.
     };
     struct Hooks {
         std::function<QJsonObject()> state;
         std::function<void(const QJsonObject&, QObject*, std::function<void(QJsonObject)>)> request;
+        // Optional override of the local Tailscale ownership check (tests).
+        std::function<void(const QHostAddress&, std::function<void(bool)>)> tailnetOwner;
     };
     explicit BrowserGateway(const Hooks& hooks, QObject* parent = nullptr);
     BrowserGateway(const Hooks& hooks, const Options& options, QObject* parent = nullptr);
@@ -43,6 +50,8 @@ public:
     bool start();
     void stop();
     bool active() const { return !m_Listeners.isEmpty(); }
+    bool tailnetIdentity() const { return m_Options.tailnetIdentity; }
+    bool tailnetListening() const;
     QString accessCode() const { return m_Code; } // Local UI/CLI only, never an HTTP response.
     QStringList urls() const { return m_Urls; }
     QString errorString() const { return m_Error; }
@@ -93,6 +102,8 @@ private:
     bool loadCertificate();
     bool addListener(const QHostAddress& address);
     void refreshAddresses();
+    bool tailnetEligible(Connection* connection) const;
+    void tailnetOwner(const QHostAddress& peer, std::function<void(bool)> done);
     bool saveCode(const QString& code);
     bool permittedHost(const QByteArray& host) const;
     bool loginAllowed(const QString& address);

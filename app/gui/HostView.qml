@@ -40,6 +40,19 @@ UiPage {
                 visible: browserDetails.checked && page.webHost !== null
                 Layout.fillWidth: true; spacing: 10
                 Label {
+                    objectName: "browserAccessState"
+                    text: !page.webHost || page.webHost.listening !== true ? qsTr("Browser access is not running.")
+                        : page.webHost.tailnetListening === true ? qsTr("Browser access is on for this network and your Tailscale network.")
+                        : qsTr("Browser access is on for this network.")
+                    color: page.webHost && page.webHost.listening === true ? ui.accent : ui.warning
+                    wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Label {
+                    visible: page.webHost !== null && page.webHost.tailnetListening === true && page.webHost.tailnetIdentity === true
+                    text: qsTr("Devices signed in to the same Tailscale account connect without the code.")
+                    color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                }
+                Label {
                     text: qsTr("Scan or open the URL on your other device, then enter this access code.")
                     color: ui.muted; wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
@@ -50,12 +63,23 @@ UiPage {
                     Layout.preferredWidth: 192; Layout.preferredHeight: 192
                     smooth: false
                 }
-                TextField {
-                    text: page.webHost ? page.webHost.accessCode : ""
-                    readOnly: true; selectByMouse: true
-                    font.pixelSize: 28; font.letterSpacing: 5
-                    Layout.preferredWidth: 240
-                    Accessible.name: qsTr("Browser access code")
+                RowLayout {
+                    spacing: 10
+                    TextField {
+                        objectName: "browserAccessCode"
+                        // Hidden until requested so the code is not exposed to onlookers.
+                        text: page.webHost ? (showCode.checked ? page.webHost.accessCode : "••••••") : ""
+                        readOnly: true; selectByMouse: showCode.checked
+                        font.pixelSize: 28; font.letterSpacing: 5
+                        Layout.preferredWidth: 240
+                        Accessible.name: qsTr("Browser access code")
+                    }
+                    UiButton {
+                        id: showCode
+                        objectName: "browserAccessShowCode"
+                        checkable: true
+                        text: checked ? qsTr("Hide code") : qsTr("Show code")
+                    }
                 }
                 Repeater {
                     model: page.webHost ? page.webHost.urls : []

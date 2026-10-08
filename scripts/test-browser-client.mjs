@@ -80,6 +80,7 @@ page.on('pageerror', error => errors.push(error.message));
 const requests = [];
 let mode = 'bad-code';
 let serverPairing = null;
+let tailnetOwner = false;
 let sessionToken = '';
 let sessionCounter = 0;
 let offer;
@@ -112,6 +113,11 @@ await context.route('**/api/**', async route => {
     if (mode === 'bad-code') return respond(401, { ok: false, code: 'unauthorized' });
     if (body.remember) serverPairing = { id: 'fixture-pairing', name: body.deviceName || '测试浏览器' };
     return authenticated(Boolean(body.remember));
+  }
+  if (endpoint === '/api/login/tailnet') {
+    if (!tailnetOwner) return respond(403, { ok: false, code: 'tailnet-unavailable' });
+    if (body.probe) return respond(200, { ok: true, tailnet: true });
+    return authenticated(false);
   }
   if (!sessionToken || request.headers()['x-deskport-session'] !== sessionToken) return respond(401, { ok: false, code: 'unauthorized' });
   if (endpoint === '/api/forget') {
@@ -391,6 +397,28 @@ try {
   mode = 'slow-logout';
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
   check('temporary owned session still logs out after stopping', requests.filter(request => request.endpoint === '/api/logout').length === temporaryLogoutsBefore + 1 && await page.locator('#credential-fields').isVisible());
+  // An owned Tailscale device: no code field, a probe only, then a code-free login.
+  mode = 'success'; serverPairing = null; tailnetOwner = true;
+  const tailnetFrom = requests.length;
+  await page.goto(origin);
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  const probes = requests.slice(tailnetFrom).filter(request => request.endpoint === '/api/login/tailnet');
+  check('owned Tailscale device hides the access code', !(await page.locator('#credential-fields').isVisible()) &&
+    (await page.locator('#login-intro').textContent()).includes('Tailscale'));
+  check('Tailscale probe creates no session', probes.length === 1 && probes[0].body.probe === true &&
+    !requests.slice(tailnetFrom).some(request => request.endpoint.startsWith('/api/session/')));
+  await page.screenshot({ path: path.join(output, 'login-tailnet.png') });
+  await prepareHost();
+  await page.locator('#connect').click();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
+  const tailnetRequests = requests.slice(tailnetFrom);
+  check('owned Tailscale device streams without the access code',
+    tailnetRequests.filter(request => request.endpoint === '/api/login/tailnet').at(-1).body.probe === undefined &&
+    !tailnetRequests.some(request => request.endpoint === '/api/login'));
+  await page.locator('#disconnect').click();
+  await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
+  check('after disconnect a Tailscale device can connect again without the code', !(await page.locator('#credential-fields').isVisible()));
+  tailnetOwner = false;
   check('browser reports no uncaught application errors', errors.length === 0);
   const report = { browser: browser.version(), checks, count: checks.length, fixtureProbe, media: 'Real production RtcSession/libdatachannel Constrained Baseline H.264/Opus and DataChannel with a verified test pattern; mocked authentication/server HTTP API. No native capture/input injection or physical iPad validation.', mediaStats, errors };
   await writeFile(path.join(output, 'frontend-test-results.json'), JSON.stringify(report, null, 2));

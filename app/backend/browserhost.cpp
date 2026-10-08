@@ -32,6 +32,8 @@ BrowserGateway::Options options(const QString& directory) {
     result.certificatePath = settings.value("web/certificate").toString();
     result.privateKeyPath = settings.value("web/privateKey").toString();
     result.allowedHosts = settings.value("web/allowedHosts").toStringList();
+    result.tailnetIdentity = settings.value("web/tailnetIdentity", true).toBool();
+    result.tailscaleProgram = settings.value("web/tailscale").toString();
     return result;
 }
 }
@@ -73,6 +75,8 @@ QString BrowserHost::accessCode() const { return m_Gateway.accessCode(); }
 QStringList BrowserHost::urls() const { return m_Gateway.urls(); }
 QString BrowserHost::errorString() const { return m_Gateway.errorString(); }
 bool BrowserHost::listening() const { return m_Listening; }
+bool BrowserHost::tailnetListening() const { return m_Gateway.tailnetListening(); }
+bool BrowserHost::tailnetIdentity() const { return m_Gateway.tailnetIdentity(); }
 QVariantList BrowserHost::pairedBrowsers() const { return m_Gateway.pairedBrowsers().toVariantList(); }
 bool BrowserHost::revokeBrowser(const QString& id) { return m_Gateway.revokeBrowser(id); }
 QString BrowserHost::qrSource() const {

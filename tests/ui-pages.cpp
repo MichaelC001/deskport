@@ -644,6 +644,9 @@ ApplicationWindow {
         fixture.setData(R"(import QtQuick 2.9
 QtObject {
  property string accessCode: "TEST42"
+ property bool listening: true
+ property bool tailnetListening: true
+ property bool tailnetIdentity: true
  property string qrSource: ""
  property string errorString: ""
  property var urls: []
@@ -675,6 +678,16 @@ QtObject {
         item->setParentItem(window.contentItem()); item->setSize(QSizeF(820, 1100));
         auto details = findVisual(item, "browserAccessDetails"); QVERIFY(details);
         details->setProperty("checked", true); window.show(); QTest::qWait(80);
+        // The access code stays hidden until the operator asks to see it.
+        auto code = findVisual(item, "browserAccessCode"); QVERIFY(code);
+        QVERIFY(!code->property("text").toString().contains("TEST42"));
+        auto showCode = findVisual(item, "browserAccessShowCode"); QVERIFY(showCode);
+        showCode->setProperty("checked", true);
+        QTRY_COMPARE(code->property("text").toString(), QString("TEST42"));
+        showCode->setProperty("checked", false);
+        QTRY_VERIFY(!code->property("text").toString().contains("TEST42"));
+        auto state = findVisual(item, "browserAccessState"); QVERIFY(state);
+        QVERIFY(state->property("text").toString().contains("Tailscale"));
         auto first = findVisual(item, "revokeBrowserPairing-one"); QVERIFY(first);
         QVERIFY(findVisual(item, "revokeBrowserPairing-two"));
         const auto screenshot = qEnvironmentVariable("DESKPORT_PAIRING_UI_SHOT");

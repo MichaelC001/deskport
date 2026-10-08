@@ -203,6 +203,36 @@ try:
         "only RFC 6598 addresses on tunnels count as Tailscale; carrier NAT on links does not")
     def names(path):
         return set(ssl._ssl._test_decode_cert(str(path))["subjectAltName"])
+    status, result, headers = request(info, directory, "POST", "/api/login/tailnet", {"probe": True})
+    check(status == 403 and result["code"] == "tailnet-unavailable" and not headers["Set-Cookies"],
+        "a LAN or loopback browser cannot use Tailscale sign-in")
+    owner_dir = work / "tailnet-owner"
+    owner, owner_info = launch(owner_dir, environment={"DESKPORT_TEST_TAILNET": "owner"})
+    status, result, headers = request(owner_info, owner_dir, "POST", "/api/login/tailnet", {"probe": True})
+    check(status == 200 and result.get("tailnet") is True and not headers["Set-Cookies"],
+        "Tailscale probe reports ownership without creating a session")
+    check(request(owner_info, owner_dir, "POST", "/api/login/tailnet", {"probe": "yes"})[0] == 400, "non-boolean probe is rejected")
+    status, result, headers = request(owner_info, owner_dir, "POST", "/api/login/tailnet", {})
+    owner_cookie = headers["Set-Cookie"].split(";", 1)[0]
+    check(status == 200 and result.get("csrfToken") and not result.get("paired") and "Max-Age" not in headers["Set-Cookie"],
+        "an owned Tailscale device signs in without the access code, without a persistent pairing")
+    check(request(owner_info, owner_dir, "GET", "/api/status", auth=(owner_cookie, result["csrfToken"]))[0] == 200,
+        "a Tailscale sign-in session is authenticated")
+    check(not command(owner, "snapshot")["pairings"], "Tailscale sign-in stores no browser pairing")
+    finish(owner)
+    other_dir = work / "tailnet-other"
+    other, other_info = launch(other_dir, environment={"DESKPORT_TEST_TAILNET": "other"})
+    status, result, headers = request(other_info, other_dir, "POST", "/api/login/tailnet", {})
+    check(status == 401 and result["code"] == "tailnet-denied" and not headers["Set-Cookies"],
+        "a Tailscale device of another user is refused and must use the access code")
+    check(request(other_info, other_dir, "POST", "/api/login", {"code": other_info["code"]})[0] == 200,
+        "the access code still works for a refused Tailscale device")
+    finish(other)
+    disabled_dir = work / "tailnet-disabled"
+    disabled, disabled_info = launch(disabled_dir, environment={"DESKPORT_TEST_TAILNET": "owner", "DESKPORT_TEST_NO_TAILNET": "1"})
+    check(request(disabled_info, disabled_dir, "POST", "/api/login/tailnet", {})[0] == 403,
+        "Tailscale sign-in can be disabled in settings")
+    finish(disabled)
     tail_dir = work / "tailnet"
     first, first_info = launch(tail_dir)
     first_cert = (tail_dir / "https-cert.pem").read_bytes()

@@ -2209,6 +2209,30 @@
 </context>
 <context>
     <name>HostView</name>
+    <message>
+        <source>Browser access is not running.</source>
+        <translation>브라우저 접근이 실행되고 있지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network and your Tailscale network.</source>
+        <translation>브라우저 접근이 이 네트워크와 내 Tailscale 네트워크에서 켜져 있습니다.</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network.</source>
+        <translation>브라우저 접근이 이 네트워크에서 켜져 있습니다.</translation>
+    </message>
+    <message>
+        <source>Devices signed in to the same Tailscale account connect without the code.</source>
+        <translation>같은 Tailscale 계정에 로그인한 기기는 코드 없이 연결할 수 있습니다.</translation>
+    </message>
+    <message>
+        <source>Show code</source>
+        <translation>코드 표시</translation>
+    </message>
+    <message>
+        <source>Hide code</source>
+        <translation>코드 숨기기</translation>
+    </message>
     <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>연결을 끊으면 가상 디스플레이를 제거하고 실제 화면 배치를 복원합니다. 다시 연결하면 새 가상 디스플레이를 만듭니다.</translation></message>
     <message>
         <source>Sharing</source>

@@ -10,6 +10,8 @@
 #include <QNetworkInterface>
 #include <QNetworkProxy>
 #include <QPointer>
+#include <QProcess>
+#include <QTimer>
 #include <QRandomGenerator>
 #include <QRegularExpression>
 #include <QSaveFile>
@@ -123,6 +125,36 @@ QList<QHostAddress> lanAddresses() {
     }
     return addresses;
 }
+QString tailscaleProgram(const QString& configured) {
+    if (!configured.isEmpty()) return QFileInfo(configured).isExecutable() ? configured : QString();
+    const auto found = QStandardPaths::findExecutable("tailscale");
+    if (!found.isEmpty()) return found;
+    // GUI and launchd sessions often lack the shell PATH.
+    for (const char* path : {"/run/current-system/sw/bin/tailscale", "/usr/local/bin/tailscale", "/opt/homebrew/bin/tailscale",
+                             "/usr/bin/tailscale", "/Applications/Tailscale.app/Contents/MacOS/Tailscale"})
+        if (QFileInfo(QString::fromLatin1(path)).isExecutable()) return QString::fromLatin1(path);
+    return {};
+}
+// Runs one bounded local Tailscale query; any failure yields an empty object.
+void tailscaleJson(QObject* context, const QString& program, const QStringList& arguments,
+                   std::function<void(QJsonObject)> done) {
+    auto process = new QProcess(context);
+    auto finished = std::make_shared<bool>(false);
+    auto complete = [process, done, finished](const QJsonObject& result) {
+        if (*finished) return;
+        *finished = true; process->deleteLater(); done(result);
+    };
+    QObject::connect(process, &QProcess::finished, context, [process, complete](int code, QProcess::ExitStatus status) {
+        const auto output = process->readAllStandardOutput();
+        complete(status == QProcess::NormalExit && code == 0 && output.size() < 4 * 1024 * 1024
+            ? QJsonDocument::fromJson(output).object() : QJsonObject());
+    });
+    QObject::connect(process, &QProcess::errorOccurred, context, [complete](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart) complete({});
+    });
+    QTimer::singleShot(4000, process, [process, complete] { process->kill(); complete({}); });
+    process->start(program, arguments);
+}
 QString listenerUrl(const QHostAddress& address, int port) {
     QUrl url; url.setScheme("https"); url.setHost(address.toString()); url.setPort(port); url.setPath("/");
     return url.toString();
@@ -218,6 +250,36 @@ struct BrowserGateway::Connection : QObject {
     bool dispatched = false, replied = false;
 };
 
+bool BrowserGateway::tailnetListening() const {
+    return std::any_of(m_Listeners.cbegin(), m_Listeners.cend(),
+        [](const QTcpServer* listener) { return sharedAddressSpace(listener->serverAddress()); });
+}
+bool BrowserGateway::tailnetEligible(Connection* connection) const {
+    if (!m_Options.tailnetIdentity) return false;
+    const auto peer = connection->socket->peerAddress();
+    return (sharedAddressSpace(peer) && sharedAddressSpace(connection->socket->localAddress())) ||
+        (m_Options.testLoopbackTailnet && peer.isLoopback());
+}
+void BrowserGateway::tailnetOwner(const QHostAddress& peer, std::function<void(bool)> done) {
+    if (m_Hooks.tailnetOwner) { m_Hooks.tailnetOwner(peer, std::move(done)); return; }
+    const auto program = tailscaleProgram(m_Options.tailscaleProgram);
+    if (program.isEmpty()) { done(false); return; }
+    // tailscaled authenticated the WireGuard peer, so its address identifies a
+    // node. Allow only an untagged node owned by the same user as this untagged host.
+    const QString address = peer.toString();
+    tailscaleJson(this, program, {"status", "--json", "--peers=false"}, [this, program, address, done](QJsonObject status) {
+        const auto self = status.value("Self").toObject();
+        const auto user = self.value("UserID").toVariant().toLongLong();
+        if (user <= 0 || !self.value("Tags").toArray().isEmpty()) { done(false); return; }
+        tailscaleJson(this, program, {"whois", "--json", address}, [user, address, done](QJsonObject whois) {
+            const auto node = whois.value("Node").toObject();
+            bool listed = false;
+            for (const auto& value : node.value("Addresses").toArray())
+                if (value.toString().section('/', 0, 0) == address) listed = true;
+            done(listed && node.value("Tags").toArray().isEmpty() && node.value("User").toVariant().toLongLong() == user);
+        });
+    });
+}
 bool BrowserGateway::overlayAddress(const QHostAddress& address, const QString& interfaceName,
                                     bool pointToPoint, bool physical) {
     if (physical || !sharedAddressSpace(address)) return false;
@@ -725,6 +787,31 @@ void BrowserGateway::dispatch(Connection* connection) {
         }
         body = json.object();
     } else if (!connection->body.isEmpty()) { error(connection, 400, "invalid-request", "Unexpected request body."); return; }
+    if (connection->path == "/api/login/tailnet" && connection->method == "POST") {
+        if (!loginAllowed(connection->socket->peerAddress().toString())) {
+            error(connection, 429, "rate-limited", "Too many attempts. Wait before trying again."); return;
+        }
+        if (body.contains("probe") && !body.value("probe").isBool()) {
+            error(connection, 400, "invalid-request", "Expected a probe flag."); return;
+        }
+        if (!tailnetEligible(connection)) {
+            error(connection, 403, "tailnet-unavailable", "Enter the computer's access code on this network."); return;
+        }
+        const bool probe = body.value("probe").toBool();
+        const QPointer<Connection> guarded(connection);
+        const QPointer<BrowserGateway> self(this);
+        tailnetOwner(connection->socket->peerAddress(), [self, guarded, probe](bool owner) {
+            if (!self || !guarded || guarded->replied) return;
+            if (!owner) {
+                self->error(guarded, 401, "tailnet-denied", "This Tailscale device does not belong to this computer's user."); return;
+            }
+            // A probe only lets the page hide the code field; it never creates a session.
+            if (probe) { self->respond(guarded, 200, "{\"ok\":true,\"tailnet\":true}"); return; }
+            if (!self->sessionAvailable(guarded)) return;
+            self->createSession(guarded, {});
+        });
+        return;
+    }
     if (connection->path == "/api/login" && connection->method == "POST") {
         if (!loginAllowed(connection->socket->peerAddress().toString())) {
             error(connection, 429, "rate-limited", "Too many attempts. Wait before trying again."); return;

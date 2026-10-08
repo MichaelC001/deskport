@@ -2209,6 +2209,30 @@
 </context>
 <context>
     <name>HostView</name>
+    <message>
+        <source>Browser access is not running.</source>
+        <translation>Der Browserzugriff ist nicht aktiv.</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network and your Tailscale network.</source>
+        <translation>Der Browserzugriff ist für dieses Netzwerk und Ihr Tailscale-Netzwerk aktiv.</translation>
+    </message>
+    <message>
+        <source>Browser access is on for this network.</source>
+        <translation>Der Browserzugriff ist für dieses Netzwerk aktiv.</translation>
+    </message>
+    <message>
+        <source>Devices signed in to the same Tailscale account connect without the code.</source>
+        <translation>Geräte, die im selben Tailscale-Konto angemeldet sind, verbinden sich ohne Code.</translation>
+    </message>
+    <message>
+        <source>Show code</source>
+        <translation>Code anzeigen</translation>
+    </message>
+    <message>
+        <source>Hide code</source>
+        <translation>Code ausblenden</translation>
+    </message>
     <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>Beim Trennen wird der virtuelle Bildschirm entfernt und die Anordnung der physischen Bildschirme wiederhergestellt. Beim erneuten Verbinden wird ein neuer virtueller Bildschirm erstellt.</translation></message>
     <message>
         <source>Sharing</source>

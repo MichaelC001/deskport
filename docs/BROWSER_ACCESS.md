@@ -9,13 +9,35 @@ app, authenticator, or browser key enrollment is required.
 ## Connect
 
 1. Start DeskPort on the computer and enable sharing.
-2. Expand **Browser access** on the Sharing page. Scan the URL QR code or open
-   one of the displayed LAN or Tailscale URLs on the other device.
+2. Expand **Browser access** on the Sharing page. It shows whether the entry is
+   running and on which networks. Scan the URL QR code or open one of the
+   displayed LAN or Tailscale URLs on the other device. The access code stays
+   hidden until you select **Show code**.
 3. Complete the browser's certificate trust step, then type the six-character
    code displayed on the computer. Keep **Remember this browser** selected on
    your own device, or clear it for a temporary connection, then select **Connect**.
 4. Use the touchpad, direct touch, mouse, physical keyboard, on-screen shortcuts,
    or text panel. The text panel accepts composed text, including Chinese.
+
+The HTTPS entry runs whenever DeskPort runs; no command needs to be issued on
+the computer before connecting. `deskport web info` only reports the URLs and
+code.
+
+## Tailscale devices without the code
+
+A browser that reaches the computer through its Tailscale address can sign in
+without the access code when the computer's own Tailscale agent confirms that
+the device belongs to the same Tailscale (or Headscale) user as this computer.
+The page asks once when it opens; an owned device sees **Connect** directly.
+DeskPort runs `tailscale status` and `tailscale whois` locally for each such
+request. tailscaled has already authenticated the device's WireGuard key, so its
+tailnet address identifies the device. Tagged devices, other users' devices,
+computers that are themselves tagged, LAN connections and any failure of the
+local query fall back to the access code. A Tailscale sign-in creates an ordinary
+session but no remembered pairing; ownership is checked again on each visit.
+
+Set `web/tailnetIdentity=false` to require the code everywhere, or
+`web/tailscale=/path/to/tailscale` when the CLI is not in a standard location.
 
 The QR contains only the HTTPS URL. The code is entered separately and never
 appears in URLs or browser storage. A remembered browser restores its pairing
@@ -132,6 +154,10 @@ port=48992
 # privateKey=/absolute/path/private-key.pem
 # Optional DNS name covered by that certificate and resolving to this LAN host.
 # allowedHosts=desktop.example.com
+# Owned Tailscale devices may connect without the code (default true).
+# tailnetIdentity=true
+# Optional tailscale CLI path when it is not on PATH or a standard location.
+# tailscale=/run/current-system/sw/bin/tailscale
 ```
 
 `DESKPORT_WEB_PORT` and `DESKPORT_WEB_BIND` override port and bind address for a

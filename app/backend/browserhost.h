@@ -18,6 +18,8 @@ class BrowserHost : public QObject {
     Q_PROPERTY(QString qrSource READ qrSource NOTIFY changed)
     Q_PROPERTY(QString errorString READ errorString NOTIFY changed)
     Q_PROPERTY(bool listening READ listening NOTIFY changed)
+    Q_PROPERTY(bool tailnetListening READ tailnetListening NOTIFY changed)
+    Q_PROPERTY(bool tailnetIdentity READ tailnetIdentity NOTIFY changed)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
     Q_PROPERTY(QVariantList pairedBrowsers READ pairedBrowsers NOTIFY changed)
 public:
@@ -31,6 +33,8 @@ public:
     QString qrSource() const;
     QString errorString() const;
     bool listening() const;
+    bool tailnetListening() const;
+    bool tailnetIdentity() const;
     bool busy() const { return !m_Id.isEmpty() || m_Operation; }
     QJsonObject localInfo() const;
     QVariantList pairedBrowsers() const;
