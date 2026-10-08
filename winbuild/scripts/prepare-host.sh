@@ -51,5 +51,8 @@ cp "$SRC_ROOT/host/common/"{smartstream,inputactivity,framecadence,encoderpolicy
 python3 "$SRC_ROOT/scripts/patch-host-encoder-policy.py" "$HOST_SOURCE"
 python3 "$SRC_ROOT/scripts/patch-host-input-activity.py" "$HOST_SOURCE"
 python3 "$SRC_ROOT/scripts/patch-host-sync-cadence.py" "$HOST_SOURCE"
+# Browser access: WebRTC transport over the existing capture and encoders.
+python3 "$SRC_ROOT/scripts/patch-host-browser.py" "$HOST_SOURCE" "$SRC_ROOT/host/browser" --revert
+python3 "$SRC_ROOT/scripts/patch-host-browser.py" "$HOST_SOURCE" "$SRC_ROOT/host/browser"
 
 printf '%s\n' "$HOST_SOURCE"

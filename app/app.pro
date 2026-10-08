@@ -675,6 +675,8 @@ macx {
 }
 
 VERSION = "$$cat(version.txt)"
+# Windows resources need a numeric version; a pre-release keeps its full name in VERSION_STR.
+win32: VERSION = $$section(VERSION, -, 0, 0)
 # Carry the version in a generated header rather than a DEFINE. A DEFINE only
 # lives in the Makefile, so an incremental build after a version bump leaves
 # every already-compiled object on the old string (0.1.5 shipped a binary that

@@ -42,8 +42,13 @@ SeamlessHostManager::SeamlessHostManager(QObject* parent) : QObject(parent) {
     m_Process.setProcessChannelMode(QProcess::SeparateChannels);
 #ifdef Q_OS_LINUX
     m_Process.setChildProcessModifier([this] {
-        if (::prctl(PR_SET_PDEATHSIG, SIGTERM) != 0)
+        if (::prctl(PR_SET_PDEATHSIG, SIGTERM) != 0) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
             m_Process.failChildProcessModifier("prctl(PR_SET_PDEATHSIG)", errno);
+#else
+            ::_exit(127); // Qt 6.4: no failure channel; the child does not start.
+#endif
+        }
         if (::getppid() == 1)
             ::raise(SIGTERM);
     });

@@ -102,6 +102,13 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 rejected = request_api({'action': 'acquire', 'uuid': 'unpaired',
                     'lease': 'package-check', 'snapshot': snapshot['snapshot']})
                 assert rejected['status'] is False and rejected['code'] == 'unauthorized', rejected
+                # The browser transport is linked in: its management route answers.
+                browser = urllib.request.Request('https://127.0.0.1:52990/api/deskport/browser',
+                    data=json.dumps({'action': 'status', 'id': 'package-check-browser'}).encode(),
+                    headers={'Authorization': authorization, 'Content-Type': 'application/json'})
+                with urllib.request.urlopen(browser, context=context, timeout=2) as response:
+                    answer = json.load(response)
+                assert answer.get('status') is False and answer.get('code') == 'not-found', answer
                 released = request_api({'action': 'release', 'lease': 'package-check'})
                 assert released['status'] is True and released['sessions'] == 0, released
                 for headers in [{'Authorization': ''}, {'Origin': 'https://example.invalid'}]:

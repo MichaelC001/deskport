@@ -5,6 +5,7 @@ FULL="$WB/full"
 HOST_SOURCE="${DESKPORT_HOST_SOURCE_DIR:-$FULL/sunshine-prepared}"
 HOST_BUILD="${DESKPORT_HOST_BUILD_DIR:-$FULL/host-build-prepared}"
 "$WB/scripts/prepare-host.sh" >/dev/null
+"$WB/scripts/build-host-datachannel.sh"
 export PREFIX="$FULL/prefix"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 export BUILD_VERSION=2026.906.222525 BRANCH=deskport

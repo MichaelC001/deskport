@@ -80,11 +80,14 @@ and license notices.
 
 ## Browser media transport (development)
 
-The browser-enabled Nix Linux and macOS host builds dynamically link
+The browser-enabled host builds link
 [libdatachannel 0.24.1](https://github.com/paullouisageneau/libdatachannel/tree/v0.24.1)
-under MPL-2.0, from the existing pinned nixpkgs revision. Its WebRTC dependency
-closure is resolved by that pin, including ICE, SRTP and SCTP libraries; release
-packaging must retain their corresponding notices and source/version records.
+under MPL-2.0. Nix and macOS use the pinned nixpkgs build. Native Linux packages
+(dynamic) and Windows (static) build it from tag v0.24.1 (a02b7519) with its
+bundled libjuice (MPL-2.0), usrsctp and libsrtp (BSD-3-Clause), plog and
+nlohmann/json (MIT); submodule revisions are verified before building. Their
+license texts ship in the packages, and the exact source is attached to each
+release as `libdatachannel-0.24.1-source.tar.gz`.
 DeskPort's transport adapter and host overlay are in `host/browser/` and
 `scripts/patch-host-browser.py`. No upstream library source is modified by this
 integration. The adapter reuses the host's existing capture, encoders and input

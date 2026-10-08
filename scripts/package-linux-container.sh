@@ -70,7 +70,7 @@ mkdir -p "$appdir/usr/libexec"
 python3 "$repo/scripts/extract-appimage.py" "$work/cache/sunshine.AppImage" "$appdir/usr/libexec/sunshine"
 # Keep upstream assets, but replace the executable with our patched host.
 install -m755 "$work/host-build/sunshine" "$appdir/usr/libexec/sunshine/usr/bin/sunshine"
-"$work/cache/linuxdeploy.dir/AppRun" --appdir "$appdir/usr/libexec/sunshine" \
+LD_LIBRARY_PATH="$work/cache/libdatachannel-0.24.1/lib" "$work/cache/linuxdeploy.dir/AppRun" --appdir "$appdir/usr/libexec/sunshine" \
     --executable "$appdir/usr/libexec/sunshine/usr/bin/sunshine"
 cat > "$appdir/usr/libexec/deskport-host" <<'SH'
 #!/bin/sh
@@ -94,6 +94,7 @@ SH
 chmod +x "$appdir/usr/libexec/deskport-host"
 mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
+cp -r "$work/cache/libdatachannel-notices" "$appdir/usr/share/doc/deskport/libdatachannel"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
 # Keep the native-package runtime unchanged; only AppImage bundles glibc.
 appimage_dir="$work/DeskPort-AppImage.AppDir"
@@ -117,5 +118,5 @@ cd "$work/output"
 if [ "$format" = appimage ]; then
     sha256sum "DeskPort-$version-x86_64.AppImage" > SHA256SUMS-linux.txt
 else
-    sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst > SHA256SUMS-linux.txt
+    sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst libdatachannel-*-source.tar.gz > SHA256SUMS-linux.txt
 fi

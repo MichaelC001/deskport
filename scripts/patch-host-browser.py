@@ -150,7 +150,12 @@ find_package(LibDataChannel 0.24 CONFIG REQUIRED)
 target_sources(sunshine PRIVATE
     "${CMAKE_SOURCE_DIR}/src/deskport/browser/browser.cpp"
     "${CMAKE_SOURCE_DIR}/src/deskport/browser/rtc-session.cpp")
-target_link_libraries(sunshine LibDataChannel::LibDataChannel)
+# Shared on Nix, macOS and native Linux; static in the Windows cross build.
+if(TARGET LibDataChannel::LibDataChannel)
+    target_link_libraries(sunshine LibDataChannel::LibDataChannel)
+else()
+    target_link_libraries(sunshine LibDataChannel::LibDataChannelStatic)
+endif()
 ''' + ('target_compile_definitions(sunshine PRIVATE ' + ' '.join(definitions) + ')\n' if definitions else '')
 
 patch = ''.join(''.join(difflib.unified_diff(original[path].splitlines(True), updated.splitlines(True),

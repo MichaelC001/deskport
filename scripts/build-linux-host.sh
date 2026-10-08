@@ -5,6 +5,7 @@ repo=${DESKPORT_SOURCE:-/src}
 work=${DESKPORT_WORK:-/work}
 source="$work/cache/sunshine-vendored-source"
 python3 "$repo/scripts/prepare-host-source.py" "$source"
+python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser" --revert
 python3 "$repo/scripts/patch-host-diagnostics.py" "$source"
 python3 "$repo/scripts/patch-host-network.py" "$source"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
@@ -23,6 +24,9 @@ for patch in display-ownership egl-query-lifetime; do
 done
 python3 "$repo/scripts/patch-host-vulkan-lifetime.py" "$source" "$repo/host/linux/vulkan-driver-lifetime.h"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source"
+# Browser access: WebRTC transport over the existing capture and encoders.
+python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser"
+datachannel=$(bash "$repo/scripts/build-linux-libdatachannel.sh" | tail -n 1)
 # Ubuntu 24.04's libstdc++ lacks ranges::to; only debug formatting changes.
 compatibility_patch="$repo/host/linux/patches/sunshine-gcc13-log.patch"
 if git -C "$source" apply --check "$compatibility_patch" 2>/dev/null; then
@@ -34,6 +38,7 @@ bash "$repo/scripts/build-linux-ffmpeg.sh"
 export BUILD_VERSION=2026.906.222525 BRANCH=deskport
 cmake -S "$source" -B "$work/host-build" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_PREFIX_PATH="$datachannel" -DCMAKE_BUILD_RPATH="$datachannel/lib" \
     -DFFMPEG_PREPARED_BINARIES="$work/cache/ffmpeg-pinned" \
     -DCMAKE_CXX_FLAGS="-I$work/cache/vulkan-headers/include" \
     -DSUNSHINE_ASSETS_DIR=share/sunshine \

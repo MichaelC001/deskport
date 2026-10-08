@@ -802,10 +802,17 @@ bool SidecarHost::launchChild(const QStringList& argv, QString* error)
     m_Child.setStandardErrorFile(QStringLiteral("/dev/stderr"), QIODevice::Append);
 #ifdef Q_OS_LINUX
     m_Child.setChildProcessModifier([this] {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+        const auto fail = [this](const char* call) { m_Child.failChildProcessModifier(call, errno); };
+#else
+        // Qt 6.4 (Ubuntu 24.04 packages) has no failure channel; the child exits
+        // before exec and QProcess reports that it did not start.
+        const auto fail = [](const char*) { ::_exit(127); };
+#endif
         if (::setpgid(0, 0) != 0)
-            m_Child.failChildProcessModifier("setpgid", errno);
+            fail("setpgid");
         if (::prctl(PR_SET_PDEATHSIG, SIGTERM) != 0)
-            m_Child.failChildProcessModifier("prctl(PR_SET_PDEATHSIG)", errno);
+            fail("prctl(PR_SET_PDEATHSIG)");
         if (::getppid() == 1)
             ::raise(SIGTERM);
     });

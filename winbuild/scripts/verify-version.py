@@ -7,8 +7,10 @@ import struct
 
 
 def verify(executable, expected):
-    if not re.fullmatch(r"\d+\.\d+\.\d+", expected):
+    # Pre-releases (0.7.0-rc.1) carry the numeric release in their PE resources.
+    if not re.fullmatch(r"\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?", expected):
         raise ValueError(f"Invalid release version: {expected}")
+    expected = expected.split("-", 1)[0]
     data = Path(executable).read_bytes()
     pe = struct.unpack_from("<I", data, 60)[0]
     if data[:2] != b"MZ" or data[pe:pe + 4] != b"PE\0\0":

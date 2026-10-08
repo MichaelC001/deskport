@@ -12,7 +12,7 @@ external_runtime = re.compile(r'qt[56]|avcodec|avutil|avformat|avfilter|swscale|
 art = Path(sys.argv[1]).resolve()
 suffix = '-'+sys.argv[2] if len(sys.argv) > 2 else ''
 version = (Path(__file__).resolve().parents[2] / 'app/version.txt').read_text().strip()
-assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version), version
+assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?', version), version
 exe = art / (f'DeskPort-{version}-windows-x64-setup'+suffix+'.exe')
 zip_path = art / (f'DeskPort-{version}-windows-x64-portable'+suffix+'.zip')
 audit = art/('audit'+suffix)

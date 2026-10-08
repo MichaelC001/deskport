@@ -1,4 +1,7 @@
-QT += core gui waylandcompositor waylandcompositorxdgshell
+QT += core gui waylandcompositor
+# Qt 6.5+ splits XdgShell into its own module; Qt 6.4 (Ubuntu 24.04) keeps it
+# in waylandcompositor with the same QtWaylandCompositor headers.
+qtHaveModule(waylandcompositorxdgshell): QT += waylandcompositorxdgshell
 
 CONFIG += console c++17
 CONFIG -= app_bundle

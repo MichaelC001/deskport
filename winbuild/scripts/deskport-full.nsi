@@ -153,6 +153,10 @@ Section "DeskPort" SecMain
   Pop $0
   nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Full Binding" program="$INSTDIR\DeskPort.exe"'
   Pop $0
+  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Browser HTTPS" program="$INSTDIR\DeskPort.exe"'
+  Pop $0
+  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Browser Media" program="$INSTDIR\host\deskport-host.exe"'
+  Pop $0
   nsExec::ExecToLog 'netsh advfirewall firewall add rule name="DeskPort Full Host TCP" dir=in action=allow program="$INSTDIR\host\deskport-host.exe" protocol=TCP localport=48984,48989,49010,49084,49089,49110,49184,49189,49210,49284,49289,49310,49384,49389,49410,49484,49489,49510,49584,49589,49610,49684,49689,49710,49784,49789,49810,49884,49889,49910,49984,49989,50010,50084,50089,50110,50184,50189,50210,50284,50289,50310,50384,50389,50410,50484,50489,50510,50584,50589,50610,50684,50689,50710,50784,50789,50810,50884,50889,50910 profile=any remoteip=LocalSubnet'
   Pop $0
   ${If} $0 != 0
@@ -168,6 +172,22 @@ Section "DeskPort" SecMain
     Abort
   ${EndIf}
   nsExec::ExecToLog 'netsh advfirewall firewall add rule name="DeskPort Full Binding" dir=in action=allow program="$INSTDIR\DeskPort.exe" protocol=TCP profile=any remoteip=LocalSubnet'
+  Pop $0
+  ${If} $0 != 0
+    MessageBox MB_ICONSTOP "Windows could not create the DeskPort firewall rule. Installation is incomplete (error $0)." /SD IDOK
+    SetErrorLevel 1
+    Abort
+  ${EndIf}
+  ; Browser access: HTTPS page on 48992 and WebRTC media on UDP 48100-48115,
+  ; reachable from the LAN and from Tailscale/Headscale tailnet addresses.
+  nsExec::ExecToLog 'netsh advfirewall firewall add rule name="DeskPort Browser HTTPS" dir=in action=allow program="$INSTDIR\DeskPort.exe" protocol=TCP localport=48992 profile=any remoteip=LocalSubnet,100.64.0.0/10,fd7a:115c:a1e0::/48'
+  Pop $0
+  ${If} $0 != 0
+    MessageBox MB_ICONSTOP "Windows could not create the DeskPort firewall rule. Installation is incomplete (error $0)." /SD IDOK
+    SetErrorLevel 1
+    Abort
+  ${EndIf}
+  nsExec::ExecToLog 'netsh advfirewall firewall add rule name="DeskPort Browser Media" dir=in action=allow program="$INSTDIR\host\deskport-host.exe" protocol=UDP localport=48100-48115 profile=any remoteip=LocalSubnet,100.64.0.0/10,fd7a:115c:a1e0::/48'
   Pop $0
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "Windows could not create the DeskPort firewall rule. Installation is incomplete (error $0)." /SD IDOK
@@ -220,6 +240,10 @@ Section "Uninstall"
   nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Full Host UDP" program="$INSTDIR\host\deskport-host.exe"'
   Pop $0
   nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Full Binding" program="$INSTDIR\DeskPort.exe"'
+  Pop $0
+  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Browser HTTPS" program="$INSTDIR\DeskPort.exe"'
+  Pop $0
+  nsExec::ExecToLog 'netsh advfirewall firewall delete rule name="DeskPort Browser Media" program="$INSTDIR\host\deskport-host.exe"'
   Pop $0
   ExecWait '$\"$INSTDIR\deskport-driver-setup.exe$\" restore-config' $0
   ${If} $0 != 0

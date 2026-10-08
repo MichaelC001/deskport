@@ -226,9 +226,14 @@ host's browser transport. Browser input uses an ordered WebRTC DataChannel, with
 an authenticated HTTP fallback. The existing capture and encoder produce H.264
 and Opus directly for libdatachannel; there is no second decode/encode step.
 
-The pinned Nix Linux package and macOS host build include libdatachannel 0.24.1
-and the browser overlay. Windows and other packaging recipes need their own
-dependency/build integration before distributing this feature there.
+Every desktop host package includes libdatachannel 0.24.1 and the browser
+overlay: Nix and macOS link it dynamically from the pinned dependencies; the
+native Linux packages build it from pinned source in the packaging container
+(`scripts/build-linux-libdatachannel.sh`); the Windows cross build links it
+statically (`winbuild/scripts/build-host-datachannel.sh`). All use libjuice for
+ICE. The Windows installer opens TCP 48992 for `DeskPort.exe` and UDP
+48100–48115 for the host, from the local subnet and Tailscale address ranges.
+Flatpak is viewer only and has no browser entry.
 
 Run the isolated checks inside the locked development shell:
 

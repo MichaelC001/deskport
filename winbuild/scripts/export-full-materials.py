@@ -61,7 +61,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
     if shell_nix.exists():
         tar.add(shell_nix, arcname='shell.nix')
     full = wb/'full'
-    host_names = ('media-source','curl','miniupnpc','minhook','onevpl','cppwinrt','host-vendored-deps',
+    host_names = ('media-source','curl','miniupnpc','minhook','onevpl','cppwinrt','host-vendored-deps','libdatachannel',
                   'mingw-host-toolchain.cmake','fetch-host-deps.py','download-hashes.json',
                   'host-deps-inputs.json','build-deps-releases.json','VDD-LICENSE',
                   'Signed-Driver-v24.12.24-x64.zip','Sunshine-Windows-AMD64-lite.zip')

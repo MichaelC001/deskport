@@ -10,6 +10,7 @@ source = Path(os.environ.get('DESKPORT_HOST_SOURCE_DIR', wb/'full/sunshine-prepa
 build = Path(os.environ.get('DESKPORT_HOST_BUILD_DIR', wb/'full/host-build-prepared'))
 roots = [source/'third-party']
 roots += sorted((build/'_deps').glob('*-src'))
+roots += [p for p in [wb/'full/libdatachannel'] if p.exists()]
 for root in roots:
     label = 'sunshine-third-party' if root.name == 'third-party' else root.name
     for base, dirs, files in os.walk(root):

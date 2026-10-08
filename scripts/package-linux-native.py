@@ -24,7 +24,9 @@ host_permission.write_text(permission.read_text().replace(
     '/opt/deskport/usr/libexec/sunshine/usr/bin/sunshine'))
 config = {
     'name': 'deskport', 'arch': 'amd64', 'platform': 'linux',
-    'version': version, 'release': '1', 'section': 'net', 'priority': 'optional',
+    # 0.7.0-rc.1 -> version 0.7.0 + prerelease rc.1: DEB/RPM order it before 0.7.0.
+    'version': version.split('-', 1)[0], 'release': '1', 'section': 'net', 'priority': 'optional',
+    **({'prerelease': version.split('-', 1)[1]} if '-' in version else {}),
     'maintainer': 'DeskPort <keithxc@users.noreply.github.com>',
     'description': 'Remote desktop viewer and optional Sunshine host\n'
                    'Includes a private Qt/media runtime under /opt/deskport. '
