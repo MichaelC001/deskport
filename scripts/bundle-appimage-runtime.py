@@ -124,6 +124,15 @@ def bundle(root, sharun, executables, excluded=None):
         if elf(target):
             manifest[str(target.relative_to(runtime))] = metadata
             queue.append(target)
+    # GLVND discovers EGL implementations through JSON, not DT_NEEDED. The
+    # bundled Mesa fallback otherwise remains invisible on non-Ubuntu hosts.
+    egl_source = Path('/usr/share/glvnd/egl_vendor.d/50_mesa.json')
+    if json.loads(egl_source.read_text())['ICD']['library_path'] != 'libEGL_mesa.so.0':
+        raise RuntimeError(f'Unexpected Mesa EGL vendor registration: {egl_source}')
+    egl_target = prefix / 'share/glvnd/egl_vendor.d/50_mesa.json'
+    egl_target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(egl_source, egl_target)
+    provenance(egl_source)
     # Include software rendering for the old-system X11 startup check. Hardware
     # drivers remain supplied by the host kernel/vendor; do not bundle NVIDIA.
     dri = system / 'dri/swrast_dri.so'
@@ -194,6 +203,7 @@ export QML2_IMPORT_PATH="$root/usr/qml"
 export SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"
 export PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"
 export PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"
+export __EGL_VENDOR_LIBRARY_DIRS="${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIBRARY_DIRS:}/run/opengl-driver/share/glvnd/egl_vendor.d:/usr/share/glvnd/egl_vendor.d:$root/usr/share/glvnd/egl_vendor.d"
 # Keep host hardware drivers ahead of our software fallback. Do not let sharun
 # replace LIBGL_DRIVERS_PATH with a directory containing only swrast.
 export LIBGL_DRIVERS_PATH="${LIBGL_DRIVERS_PATH:+$LIBGL_DRIVERS_PATH:}/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"
@@ -204,6 +214,7 @@ exec "$root/usr/bin/deskport" "$@"
     content = launcher.read_text().replace('unset APPIMAGE APPDIR LD_LIBRARY_PATH',
                                           'unset SHARUN_DIR APPIMAGE APPDIR LD_LIBRARY_PATH')
     content = content.replace('export LD_LIBRARY_PATH="$root/usr/lib"\n', '')
+    content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport __EGL_VENDOR_LIBRARY_DIRS="${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIBRARY_DIRS:}/run/opengl-driver/share/glvnd/egl_vendor.d:/usr/share/glvnd/egl_vendor.d:$root/usr/share/glvnd/egl_vendor.d"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"\nexport PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"\nexport PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport LIBGL_DRIVERS_PATH="/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"')
     launcher.write_text(content)

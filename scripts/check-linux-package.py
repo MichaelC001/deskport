@@ -45,6 +45,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
             for relative in ('shared/lib/spa-0.2/support/libspa-support.so',
                              'shared/lib/spa-0.2/audioconvert/libspa-audioconvert.so',
                              'shared/lib/spa-0.2/videoconvert/libspa-videoconvert.so',
+                             'share/glvnd/egl_vendor.d/50_mesa.json',
                              'share/pipewire/client.conf', 'share/pipewire/client-rt.conf'):
                 assert (prefix / relative).is_file(), f'Missing portable PipeWire input: {prefix / relative}'
             for module in ('rt', 'protocol-native', 'client-node', 'client-device',
@@ -52,6 +53,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 assert (prefix / f'shared/lib/pipewire-0.3/libpipewire-module-{module}.so').is_file(), module
         for launcher in (root / 'AppRun', host):
             text = launcher.read_text()
+            assert 'export __EGL_VENDOR_LIBRARY_DIRS=' in text and '$root/usr/share/glvnd/egl_vendor.d' in text, launcher
             for key, relative in [('SPA_PLUGIN_DIR', 'shared/lib/spa-0.2'),
                                   ('PIPEWIRE_MODULE_DIR', 'shared/lib/pipewire-0.3'),
                                   ('PIPEWIRE_CONFIG_DIR', 'share/pipewire')]:

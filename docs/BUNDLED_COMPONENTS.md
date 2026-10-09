@@ -140,6 +140,8 @@ These are loaded dynamically and cannot be found through ELF dependencies alone.
 AppImage launchers select their own runtime paths instead of distro-specific
 defaults. They still connect to the host's existing PipeWire server; no daemon,
 session manager or system configuration is installed or started by the bundle.
+Mesa's EGL vendor registration is also included so GLVND can discover the
+bundled software fallback; host vendor registration paths remain available.
 
 Kernel interfaces, display/audio servers and hardware/vendor drivers remain host
 facilities. Bundling glibc does not establish support for every kernel, GPU or

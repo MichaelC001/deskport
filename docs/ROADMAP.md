@@ -23,6 +23,8 @@ Final artifact capture exposed a separate portable-runtime omission: the bundled
 PipeWire library could not load its `support.system` SPA factory on a host without
 Ubuntu's plugin paths. Bundle matching SPA plugins, client modules and client
 configuration, with private launcher paths and corresponding source notices.
+Also bundle Mesa's GLVND EGL vendor JSON so the software capture fallback is
+discoverable when Ubuntu's system vendor paths are absent.
 Require real packaged Sunshine capture/encoder probes in the final display matrix,
 not just native capture and package startup. Do not publish until these pass.
 
