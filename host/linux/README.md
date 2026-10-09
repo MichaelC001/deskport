@@ -1,5 +1,9 @@
 # Linux virtual display helper
 
+Output enumeration uses the KWin 6.7 device registry when available and retains
+the individual device globals used by KWin 6.6. Both removal paths end the owned
+lease without falling back to a physical capture target.
+
 On KDE, DeskPort owns one virtual output through a dedicated Wayland connection. KDE
 Plasma 6.6 or newer is required for virtual custom modes. The UUID-named virtual
 output becomes primary, and physical outputs enabled before connection mirror its viewport. Physical
@@ -16,6 +20,15 @@ local edits. Video-only reconnects retain the output within a display-control se
 Custom modes use KDE output management. It acknowledges only the observed current
 pixel mode and scale. A protocol timeout closes the helper, preventing a late
 configuration result from being mistaken for a newer request.
+
+KWin 6.7 derives CVT custom timings, so their advertised refresh can differ from
+the requested 60 Hz. The helper selects the closest advertised refresh while
+requiring exact pixels and scale. With output-management v21, CVT also rounds
+custom widths to multiples of eight. If no exact mode is available, the helper
+sequentially replaces only its own virtual output using an exact initial mode,
+retaining the admitted output name, policy and original recovery snapshot.
+Sunshine reopens the same owned name after the PipeWire stream disconnects.
+A rounded mode is never acknowledged as the requested size.
 
 The three protocol XMLs and generated client bindings are from the pinned
 Sunshine plasma-wayland-protocols submodule. The XMLs carry their upstream

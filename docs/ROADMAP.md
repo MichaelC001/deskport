@@ -1,3 +1,24 @@
+## KWin 6.7 output discovery — 2026-10-09
+
+Reason: [issue #5](https://github.com/keithxc/deskport/issues/5) reports an
+AppImage virtual output being removed before session admission on KWin 6.7.5.
+KWin 6.7 announces devices through `kde_output_device_registry_v2` rather than
+individual globals. Bind that registry, observe device removal, and retain the
+KWin 6.6 global path. The output probe follows the same protocol transition.
+Custom modes select the nearest advertised refresh because KWin 6.7 derives
+CVT timings (for example 59.934 Hz for a 1920x1080 request at nominal 60 Hz).
+Pixel dimensions and scale must still match exactly after application.
+KWin 6.7.5 output-management v21 also rounds custom widths to multiples of eight.
+The helper first reuses exact advertised modes. If custom mode generation cannot
+provide the requested pixels, it sequentially replaces its owned output with an
+exact initial mode, retaining the name, policy and original recovery snapshot.
+The original 1668x2388@2 portrait regression remains required on both versions.
+
+The isolated regression adds eight repeated 2560x1440 admissions and records
+owned child PIDs. The AppImage-only `0.7.0-rc.3` candidate must pass KWin 6.6.6
+and 6.7.5 lifecycle, policy, permission and packaged-runtime checks before
+publication. Bazzite hardware capture, input and VA-API remain reporter checks.
+
 ## Persistent browser pairing — 2026-10-05
 
 Reason: the user requested native-client-like reconnects in ordinary Chrome and

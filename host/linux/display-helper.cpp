@@ -40,6 +40,7 @@ static void reply(const QJsonObject& object) {
 class Display {
     struct Mode { QSize size; int refresh = 0; bool removed = false; };
     struct Output {
+        Display* owner = nullptr;
         kde_output_device_v2* proxy = nullptr;
         QString name, uuid, replication;
         uint32_t priority = 0;
@@ -55,7 +56,12 @@ class Display {
     zkde_screencast_unstable_v1* screencast = nullptr;
     zkde_screencast_stream_unstable_v1* stream = nullptr;
     kde_output_management_v2* management = nullptr;
-    std::map<uint32_t, std::unique_ptr<Output>> outputs;
+    kde_output_device_registry_v2* outputRegistry = nullptr;
+    std::map<uint64_t, std::unique_ptr<Output>> outputs;
+    std::map<uint32_t, Output*> legacyOutputGlobals;
+    std::map<uint32_t, uint32_t> pendingLegacyOutputGlobals;
+    bool collectingInitialGlobals = false;
+    uint64_t nextOutputId = 0;
     Output* owned = nullptr;
     bool ready = false, broken = false;
     int applied = 0;
@@ -112,9 +118,16 @@ public:
     void resetConnection() {
         for (auto& pair : outputs) {
             for (auto& mode : pair.second->modes) wl_proxy_destroy(reinterpret_cast<wl_proxy*>(mode.first));
-            wl_proxy_destroy(reinterpret_cast<wl_proxy*>(pair.second->proxy));
+            if (!pair.second->proxy) continue;
+            if (wl_proxy_get_version(reinterpret_cast<wl_proxy*>(pair.second->proxy)) >= KDE_OUTPUT_DEVICE_V2_RELEASE_SINCE_VERSION)
+                kde_output_device_v2_release(pair.second->proxy);
+            else wl_proxy_destroy(reinterpret_cast<wl_proxy*>(pair.second->proxy));
         }
         outputs.clear();
+        owned = nullptr;
+        legacyOutputGlobals.clear();
+        pendingLegacyOutputGlobals.clear();
+        if (outputRegistry) { kde_output_device_registry_v2_destroy(outputRegistry); outputRegistry = nullptr; }
         if (screencast) { zkde_screencast_unstable_v1_destroy(screencast); screencast = nullptr; }
         if (management) { kde_output_management_v2_destroy(management); management = nullptr; }
         if (registry) { wl_registry_destroy(registry); registry = nullptr; }
@@ -145,6 +158,7 @@ public:
         display = wl_display_connect(nullptr);
         if (!display) { error = "Cannot connect to the Wayland session"; return false; }
         registry = wl_display_get_registry(display);
+        collectingInitialGlobals = true;
         static const wl_registry_listener listener = {
             [](void* p, wl_registry* registry, uint32_t id, const char* interface, uint32_t version) {
                 auto self = static_cast<Display*>(p);
@@ -152,26 +166,43 @@ public:
                     self->screencast = static_cast<zkde_screencast_unstable_v1*>(wl_registry_bind(registry, id, &zkde_screencast_unstable_v1_interface, std::min(version, 4u)));
                 } else if (!strcmp(interface, "kde_output_management_v2") && version >= 18) {
                     self->management = static_cast<kde_output_management_v2*>(wl_registry_bind(registry, id, &kde_output_management_v2_interface, 18));
+                } else if (!strcmp(interface, "kde_output_device_registry_v2") && version >= 21 && !self->outputRegistry && self->outputs.empty()) {
+                    self->outputRegistry = static_cast<kde_output_device_registry_v2*>(wl_registry_bind(
+                        registry, id, &kde_output_device_registry_v2_interface, std::min(version, 23u)));
+                    static const kde_output_device_registry_v2_listener outputRegistryListener = {
+                        [](void*, kde_output_device_registry_v2*) {},
+                        [](void* p, kde_output_device_registry_v2*, kde_output_device_v2* output) {
+                            static_cast<Display*>(p)->addOutput(output);
+                        }
+                    };
+                    kde_output_device_registry_v2_add_listener(self->outputRegistry, &outputRegistryListener, self);
+                    self->pendingLegacyOutputGlobals.clear();
                 } else if (!strcmp(interface, "kde_output_device_v2") && version >= 18) {
-                    auto out = std::make_unique<Output>();
-                    out->proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(registry, id, &kde_output_device_v2_interface, 18));
-                    wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(out->proxy), outputEvent, nullptr, out.get());
-                    self->outputs.emplace(id, std::move(out));
+                    if (self->outputRegistry) return;
+                    if (self->collectingInitialGlobals) self->pendingLegacyOutputGlobals[id] = version;
+                    else self->addLegacyOutput(registry, id, version);
                 }
             },
             [](void* p, wl_registry*, uint32_t id) {
                 auto self = static_cast<Display*>(p);
-                auto found = self->outputs.find(id);
-                if (found != self->outputs.end()) {
-                    found->second->removed = true;
-                    if (found->second.get() == self->owned) {
-                        self->broken = true; self->error = "The DeskPort virtual output was removed";
-                    }
-                }
+                self->pendingLegacyOutputGlobals.erase(id);
+                auto legacy = self->legacyOutputGlobals.find(id);
+                if (legacy == self->legacyOutputGlobals.end()) return;
+                self->markRemoved(legacy->second);
+                self->legacyOutputGlobals.erase(legacy);
             }
         };
         wl_registry_add_listener(registry, &listener, this);
-        if (!sync() || !sync()) return false;
+        if (!sync()) return false;
+        collectingInitialGlobals = false;
+        // Prefer the registry even if the compositor also advertises legacy
+        // globals, regardless of announcement order. KWin 6.6 uses the fallback.
+        if (!outputRegistry) {
+            for (const auto& pending : pendingLegacyOutputGlobals)
+                addLegacyOutput(registry, pending.first, pending.second);
+        }
+        pendingLegacyOutputGlobals.clear();
+        if (!sync()) return false;
         if (!screencast || !management) {
             error = !management ? "deskport-display requires KWin 6.6+ output-management protocols" :
                 "KWin screencast permission is unavailable for deskport-display";
@@ -321,8 +352,8 @@ public:
         stream = zkde_screencast_unstable_v1_stream_virtual_output(screencast, name.toUtf8().constData(), width, height, wl_fixed_from_int(1), ZKDE_SCREENCAST_UNSTABLE_V1_POINTER_EMBEDDED);
         static const zkde_screencast_stream_unstable_v1_listener streamListener = {
             [](void* p, zkde_screencast_stream_unstable_v1* stream) { auto s = static_cast<Display*>(p); if (s->stream != stream) return; s->broken = true; s->error = "KWin closed the virtual output"; },
-            [](void* p, zkde_screencast_stream_unstable_v1*, uint32_t) { static_cast<Display*>(p)->ready = true; },
-            [](void* p, zkde_screencast_stream_unstable_v1*, const char* error) { auto s = static_cast<Display*>(p); s->broken = true; s->error = QString::fromUtf8(error); },
+            [](void* p, zkde_screencast_stream_unstable_v1* stream, uint32_t) { auto s = static_cast<Display*>(p); if (s->stream == stream) s->ready = true; },
+            [](void* p, zkde_screencast_stream_unstable_v1* stream, const char* error) { auto s = static_cast<Display*>(p); if (s->stream != stream) return; s->broken = true; s->error = QString::fromUtf8(error); },
             nullptr // Bound at version 4: serial is a version 6 event.
         };
         zkde_screencast_stream_unstable_v1_add_listener(stream, &streamListener, this);
@@ -334,14 +365,14 @@ public:
         // Creation parameters are a request, not an acknowledgment of the mode.
         if (!matches(width, height, 1)) {
             fprintf(stderr, "KWin initial mode differs; reconciling to %dx%d at scale 1\n", width, height);
-            if (!resize(width, height, 1)) return false;
+            if (!resize(width, height, 1, false)) return false;
         }
         if (!restore(baseline)) {
             deferLocalLayout();
             // The physical layout and the owned capture mode are independent.
             if (broken) return false;
         }
-        return matches(width,height,1) || resize(width,height,1);
+        return matches(width,height,1) || resize(width,height,1,false);
     }
     bool mirror(int policy) {
         if (policy == 2) return true;
@@ -403,31 +434,57 @@ public:
         if (applied != 1) { if (error.isEmpty()) error = "KWin rejected the virtual output mode"; return false; }
         return sync();
     }
-    bool resize(int width, int height, int scale) {
+    kde_output_device_mode_v2* exactMode(int width, int height) const {
+        kde_output_device_mode_v2* selected = nullptr;
+        int nearestRefresh = 0;
+        // CVT refresh need not be exactly 60 Hz. Pixel dimensions still must
+        // match; the stream's exact initial mode can also satisfy a later resize.
+        for (const auto& mode : owned->modes) {
+            if (mode.second.removed || mode.second.size != QSize(width, height) || mode.second.refresh <= 0) continue;
+            if (!selected || std::abs(mode.second.refresh - 60000) < std::abs(nearestRefresh - 60000)) {
+                selected = mode.first;
+                nearestRefresh = mode.second.refresh;
+            }
+        }
+        return selected;
+    }
+    bool resize(int width, int height, int scale, bool allowReplacement = true) {
         error.clear();
         if (broken || !owned || owned->removed) { error = "Virtual output is unavailable"; return false; }
         if (matches(width, height, scale)) return true;
-        // The custom-mode list and selected mode are separate atomic transactions.
-        // Keep the old mode until the new one has been advertised and selected.
-        auto modes = kde_output_management_v2_create_mode_list(management);
-        auto add = [&](QSize size) {
-            kde_mode_list_v2_set_resolution(modes, uint32_t(size.width()), uint32_t(size.height()));
-            kde_mode_list_v2_set_refresh_rate(modes, 60000);
-            kde_mode_list_v2_set_reduced_blanking(modes, 1);
-            kde_mode_list_v2_add_mode(modes);
-        };
-        const auto old = owned->modes.find(owned->current);
-        if (old != owned->modes.end() && old->second.size != QSize(width, height)) add(old->second.size);
-        add(QSize(width, height));
+        auto selected = exactMode(width, height);
+        if (!selected) {
+            // The custom-mode list and selected mode are separate atomic transactions.
+            // Keep the old mode until the new one has been advertised and selected.
+            auto modes = kde_output_management_v2_create_mode_list(management);
+            auto add = [&](QSize size) {
+                kde_mode_list_v2_set_resolution(modes, uint32_t(size.width()), uint32_t(size.height()));
+                kde_mode_list_v2_set_refresh_rate(modes, 60000);
+                kde_mode_list_v2_set_reduced_blanking(modes, 1);
+                kde_mode_list_v2_add_mode(modes);
+            };
+            const auto old = owned->modes.find(owned->current);
+            if (old != owned->modes.end() && old->second.size != QSize(width, height)) add(old->second.size);
+            add(QSize(width, height));
+            auto config = kde_output_management_v2_create_configuration(management);
+            kde_output_configuration_v2_set_custom_modes(config, owned->proxy, modes);
+            const bool added = apply(config);
+            kde_mode_list_v2_destroy(modes);
+            if (!added || !sync()) return false;
+            selected = exactMode(width, height);
+            if (!selected && outputRegistry && allowReplacement) {
+                // KWin 6.7 generates CVT custom modes (width rounded to eight), but
+                // stream_virtual_output creates an exact, non-CVT initial mode.
+                // Replace only our output, sequentially, retaining its admitted name,
+                // session policy and original recovery snapshot. Sunshine reopens
+                // that name on PipeWire disconnect; physical fallback stays forbidden.
+                fprintf(stderr, "KWin custom mode is not exact; replacing owned output at %dx%d\n", width, height);
+                if (!removeOutput() || !createOutput(width, height)) return false;
+                return resize(width, height, scale, false);
+            }
+            if (!selected) { error = "KWin did not advertise the requested virtual mode"; return false; }
+        }
         auto config = kde_output_management_v2_create_configuration(management);
-        kde_output_configuration_v2_set_custom_modes(config, owned->proxy, modes);
-        const bool added = apply(config);
-        kde_mode_list_v2_destroy(modes);
-        if (!added || !sync()) return false;
-        kde_output_device_mode_v2* selected = nullptr;
-        for (const auto& mode : owned->modes) if (!mode.second.removed && mode.second.size == QSize(width, height) && mode.second.refresh == 60000) selected = mode.first;
-        if (!selected) { error = "KWin did not advertise the requested virtual mode"; return false; }
-        config = kde_output_management_v2_create_configuration(management);
         kde_output_configuration_v2_enable(config, owned->proxy, 1);
         kde_output_configuration_v2_set_replication_source(config, owned->proxy, "");
         kde_output_configuration_v2_transform(config, owned->proxy, 0);
@@ -452,6 +509,31 @@ public:
     bool dispatch() { return !broken && wl_display_dispatch(display) >= 0 && !broken; }
     bool healthy() const { return !broken; }
 private:
+    void addOutput(kde_output_device_v2* proxy, uint32_t legacyGlobal = 0) {
+        if (!proxy) return;
+        auto out = std::make_unique<Output>();
+        out->owner = this;
+        out->proxy = proxy;
+        wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(proxy), outputEvent, nullptr, out.get());
+        if (legacyGlobal) legacyOutputGlobals[legacyGlobal] = out.get();
+        // Registry-created proxies may reuse addresses after release. Keep a
+        // stable record for removal waits without keying ownership by address.
+        outputs.emplace(++nextOutputId, std::move(out));
+    }
+    void addLegacyOutput(wl_registry* source, uint32_t id, uint32_t version) {
+        if (outputRegistry || legacyOutputGlobals.count(id)) return;
+        auto proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(
+            source, id, &kde_output_device_v2_interface, std::min(version, 18u)));
+        addOutput(proxy, id);
+    }
+    void markRemoved(Output* out) {
+        if (!out || out->removed) return;
+        out->removed = true;
+        if (out == owned) {
+            broken = true;
+            error = "The DeskPort virtual output was removed";
+        }
+    }
     static int modeEvent(const void*, void* target, uint32_t, const wl_message* message, wl_argument* args) {
         auto out = static_cast<Output*>(wl_proxy_get_user_data(static_cast<wl_proxy*>(target)));
         auto& mode = out->modes[static_cast<kde_output_device_mode_v2*>(target)];
@@ -474,6 +556,12 @@ private:
             auto mode = reinterpret_cast<kde_output_device_mode_v2*>(args[0].o);
             out->modes.emplace(mode, Mode{});
             wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(mode), modeEvent, nullptr, out);
+        } else if (!strcmp(message->name, "removed")) {
+            out->owner->markRemoved(out);
+            if (out->proxy) {
+                kde_output_device_v2_release(out->proxy);
+                out->proxy = nullptr;
+            }
         }
         return 0;
     }

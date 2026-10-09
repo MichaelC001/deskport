@@ -19,6 +19,11 @@ DeskPort client with display control.
   Disconnection removes the virtual output before restoring that snapshot; an
   independent recovery process also restores it after helper process death.
   Recovery is disarmed while idle so later local layout edits are not overwritten.
+  KWin 6.7 uses the device registry instead of individual output globals. Its CVT
+  custom modes may round refresh rates and widths; when no exact pixel mode is
+  available, DeskPort sequentially replaces only its virtual output with an exact
+  initial mode, preserving the admitted name and recovery snapshot. Capture may
+  briefly reconnect to that same owned name; physical fallback remains forbidden.
 - **GNOME / Mutter:** Mutter ScreenCast `RecordVirtual`, with PipeWire format
   negotiation and temporary DisplayConfig scaling. The owned output is verified
   against the current monitor state. Sunshine attaches to that output's PipeWire

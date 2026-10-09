@@ -5,16 +5,19 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <vector>
 #include <wayland-client.h>
 #include "../host/linux/kde-output-device-v2.h"
 #include "../host/linux/kde-output-management-v2.h"
 static kde_output_management_v2* management = nullptr;
 struct Output { wl_output* proxy; QJsonObject state; bool removed = false; };
 struct Device {
-    kde_output_device_v2* proxy;
+    kde_output_device_v2* proxy = nullptr;
+    bool removed = false;
     kde_output_device_mode_v2* current = nullptr;
     std::map<kde_output_device_mode_v2*, QJsonObject> modes;
     QJsonObject state;
@@ -39,31 +42,68 @@ static int deviceEvent(const void*, void* target, uint32_t, const wl_message* me
         auto mode = reinterpret_cast<kde_output_device_mode_v2*>(args[0].o);
         device->modes.emplace(mode, QJsonObject{});
         wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(mode), modeEvent, nullptr, device);
+    } else if (event == "removed") {
+        device->removed = true;
+        kde_output_device_v2_release(device->proxy);
+        device->proxy = nullptr;
     }
     return 0;
 }
+struct Devices {
+    kde_output_device_registry_v2* registry = nullptr;
+    std::map<uint32_t, Device> records;
+    std::map<uint32_t, uint32_t> legacyGlobals;
+    uint32_t nextId = 0;
+    void add(kde_output_device_v2* proxy) {
+        auto& device = records[++nextId];
+        device.proxy = proxy;
+        wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(proxy), deviceEvent, nullptr, &device);
+    }
+};
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     auto display = wl_display_connect(nullptr);
     if (!display) return 1;
     if (app.arguments().contains("--devices") || (app.arguments().contains("--disable-last") || app.arguments().contains("--enable-last"))) {
-        std::map<uint32_t, Device> devices;
+        Devices devices;
         auto registry = wl_display_get_registry(display);
         static const wl_registry_listener listener = {
             [](void* p, wl_registry* registry, uint32_t id, const char* interface, uint32_t version) {
+                auto self = static_cast<Devices*>(p);
                 if (!strcmp(interface, "kde_output_management_v2")) {
                     management = static_cast<kde_output_management_v2*>(wl_registry_bind(registry, id, &kde_output_management_v2_interface, std::min(version, 18u))); return;
                 }
+                if (!strcmp(interface, "kde_output_device_registry_v2") && version >= 21 && !self->registry) {
+                    self->registry = static_cast<kde_output_device_registry_v2*>(wl_registry_bind(
+                        registry, id, &kde_output_device_registry_v2_interface, std::min(version, 23u)));
+                    static const kde_output_device_registry_v2_listener outputListener = {
+                        [](void*, kde_output_device_registry_v2*) {},
+                        [](void* p, kde_output_device_registry_v2*, kde_output_device_v2* output) {
+                            static_cast<Devices*>(p)->add(output);
+                        }
+                    };
+                    kde_output_device_registry_v2_add_listener(self->registry, &outputListener, self);
+                    self->legacyGlobals.clear();
+                    return;
+                }
                 if (strcmp(interface, "kde_output_device_v2") || version < 18) return;
-                auto& device = (*static_cast<std::map<uint32_t, Device>*>(p))[id];
-                device.proxy = static_cast<kde_output_device_v2*>(wl_registry_bind(registry, id, &kde_output_device_v2_interface, 18));
-                wl_proxy_add_dispatcher(reinterpret_cast<wl_proxy*>(device.proxy), deviceEvent, nullptr, &device);
+                if (!self->registry) self->legacyGlobals[id] = version;
             }, [](void*, wl_registry*, uint32_t) {}
         };
         wl_registry_add_listener(registry, &listener, &devices);
-        for (int n = 0; n < 3; ++n) if (wl_display_roundtrip(display) < 0) return 1;
+        if (wl_display_roundtrip(display) < 0) return 1;
+        if (!devices.registry) for (const auto& global : devices.legacyGlobals) {
+            devices.add(static_cast<kde_output_device_v2*>(wl_registry_bind(registry,
+                global.first, &kde_output_device_v2_interface, 18)));
+        }
+        for (int n = 0; n < 2; ++n) if (wl_display_roundtrip(display) < 0) return 1;
         if ((app.arguments().contains("--disable-last") || app.arguments().contains("--enable-last"))) {
-            if (!management || devices.size() < 2) return 2;
+            std::vector<Device*> active;
+            for (auto& record : devices.records) if (!record.second.removed) active.push_back(&record.second);
+            std::sort(active.begin(), active.end(), [](const Device* a, const Device* b) {
+                return a->state["name"].toString() < b->state["name"].toString();
+            });
+            if (!management || active.size() < 2) return 2;
             int applied = 0;
             auto config = kde_output_management_v2_create_configuration(management);
             static const kde_output_configuration_v2_listener listener = {
@@ -72,9 +112,9 @@ int main(int argc, char** argv) {
                 [](void*, kde_output_configuration_v2*, const char* reason) { fprintf(stderr, "Fixture configuration failed: %s\n", reason); }
             };
             kde_output_configuration_v2_add_listener(config, &listener, &applied);
-            kde_output_configuration_v2_enable(config, devices.rbegin()->second.proxy, app.arguments().contains("--enable-last") ? 1 : 0);
+            kde_output_configuration_v2_enable(config, active.back()->proxy, app.arguments().contains("--enable-last") ? 1 : 0);
             // Exercise restoration of a rotated fractional-scale panel as well.
-            auto first = devices.begin()->second.proxy;
+            auto first = active.front()->proxy;
             kde_output_configuration_v2_transform(config, first, 3);
             kde_output_configuration_v2_scale(config, first, wl_fixed_from_double(1.75));
             kde_output_configuration_v2_position(config, first, 100, 100);
@@ -90,8 +130,9 @@ int main(int argc, char** argv) {
             return applied == 1 ? 0 : 1;
         }
         QJsonArray result;
-        for (auto& entry : devices) {
+        for (auto& entry : devices.records) {
             auto& device = entry.second;
+            if (device.removed) continue;
             const auto mode = device.modes[device.current];
             for (auto it = mode.begin(); it != mode.end(); ++it) device.state[it.key()] = it.value();
             result.append(device.state);

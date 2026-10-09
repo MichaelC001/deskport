@@ -32,14 +32,22 @@ if '--inside' not in sys.argv:
             anchor = 'name.toUtf8().constData(), width, height, wl_fixed_from_int(1),'
             assert text.count(anchor) == 1
             if '--initial-mode-mismatch' in sys.argv:
-                text = text.replace(anchor, 'name.toUtf8().constData(), 1024, 768, wl_fixed_from_int(2),')
+                # Inject the startup discrepancy once per helper, not into every
+                # subsequent exact-size replacement (a different failure case).
+                field = 'bool ready = false, broken = false;'
+                assert text.count(field) == 1
+                text = text.replace(field, field + '\n    bool testInitialModeMismatchPending = true;')
+                text = text.replace(anchor, 'name.toUtf8().constData(), testInitialModeMismatchPending ? 1024 : width, testInitialModeMismatchPending ? 768 : height, wl_fixed_from_int(testInitialModeMismatchPending ? 2 : 1),')
+                end = 'ZKDE_SCREENCAST_UNSTABLE_V1_POINTER_EMBEDDED);'
+                assert text.count(end) == 1
+                text = text.replace(end, end + '\n        testInitialModeMismatchPending = false;')
             if '--restore-failure' in sys.argv:
                 for signature in ('bool restore(const QJsonArray& state) {', 'bool mirror(int policy) {'):
                     assert text.count(signature) == 1
                     text = text.replace(signature, signature + '\n        if (QFile::exists(qEnvironmentVariable("XDG_RUNTIME_DIR") + "/reject-local-layout")) { error="Injected local layout failure"; return false; }')
             cpp.write_text(text)
             subprocess.run(['qmake', str(fixture / 'linux.pro')], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
-            subprocess.run(['make', '-j4'], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
+            subprocess.run(['make', '-j2'], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
             helper = str(fixture / 'deskport-display')
         env = dict(os.environ, XDG_RUNTIME_DIR=tmp, XDG_CONFIG_HOME=tmp + '/config',
                    XDG_DATA_HOME=tmp + '/data', XDG_CACHE_HOME=tmp + '/cache', XDG_DATA_DIRS=tmp + '/data:' + os.environ.get('XDG_DATA_DIRS', '/usr/share'),
@@ -87,14 +95,18 @@ if '--inside' not in sys.argv:
 
 children = []
 logs = []
+def track(child):
+    children.append(child)
+    print(f'RESOURCE pid={child.pid} command={child.args!r}', flush=True)
+
 try:
     if not gnome: subprocess.run(['kbuildsycoca6', '--noincremental'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--output-count', '3', '--width', '1280', '--height', '720',
+    compositor = [os.environ.get('DESKPORT_GNOME_SHELL', 'gnome-shell'), '--headless', '--wayland', '--no-x11', '--virtual-monitor', '1280x720', '--wayland-display', 'deskport-test'] if gnome else [os.environ.get('DESKPORT_TEST_KWIN') or shutil.which('kwin_wayland', path=os.pathsep.join(p for p in os.environ['PATH'].split(os.pathsep) if '/wrappers/' not in p)), '--virtual', '--output-count', '3', '--width', '1280', '--height', '720',
                                     '--socket', 'deskport-test', '--no-lockscreen', '--no-global-shortcuts', '--no-kactivities']
     for command in [['pipewire'], ['wireplumber'], compositor]:
         log = tempfile.TemporaryFile(mode='w+')
         logs.append(log)
-        children.append(subprocess.Popen(command, stdout=log, stderr=log))
+        track(subprocess.Popen(command, stdout=log, stderr=log))
         if command[0] == 'pipewire':
             deadline = time.monotonic() + 10
             while not (Path(os.environ['XDG_RUNTIME_DIR']) / 'pipewire-0').exists() and time.monotonic() < deadline: time.sleep(.05)
@@ -150,7 +162,7 @@ try:
     # Production startup mode: no encoder-probe display before admission.
     idle = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                             text=True, env=dict(helper_env, DESKPORT_DISPLAY_ON_DEMAND='1'))
-    children.append(idle)
+    track(idle)
     assert select.select([idle.stdout], [], [], 10)[0]
     ready = json.loads(idle.stdout.readline())
     assert ready.get('ready') and not ready.get('active'), ready
@@ -161,9 +173,20 @@ try:
         ack=json.loads(idle.stdout.readline()); assert 'error' not in ack, ack
         if active: assert ack.get('outputName') and len(outputs()) > len(baseline), ack
         else: assert restored(), 'Explicit release did not restore idle display state'
+    # Registry output proxies can reuse addresses after their removed/release
+    # events. Repeated admission must not retain a stale ownership record.
+    for seq in range(3, 19):
+        active = seq % 2 == 1
+        idle.stdin.write(json.dumps(dict(displayPolicy=2, seq=seq, width=2560, height=1440, scale=1, session=active))+'\n'); idle.stdin.flush()
+        assert select.select([idle.stdout], [], [], 10)[0]
+        ack = json.loads(idle.stdout.readline()); assert 'error' not in ack, ack
+        if active:
+            actual = (outputs() if gnome else devices())[ack['outputName']]
+            assert (actual['width'], actual['height'], actual['scale']) == (2560, 1440, 1), actual
+        else: assert restored(), 'Repeated release did not restore the baseline'
     idle.stdin.close(); assert idle.wait(timeout=5)==0
     assert restored()
-    print('PASS on-demand startup, admitted creation and explicit removal', flush=True)
+    print('PASS on-demand startup, admitted creation, explicit removal and 8 repeated 2560x1440 admissions', flush=True)
     if auto_permission:
         applications = Path(os.environ['XDG_DATA_HOME']) / 'applications'
         def link_or_copy(source, target):
@@ -189,7 +212,7 @@ try:
         def check_start(executable, extra_env=None):
             proc = subprocess.Popen([str(executable), '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     text=True, env=dict(helper_env, DESKPORT_DISPLAY_ON_DEMAND='1', **(extra_env or {})))
-            children.append(proc)
+            track(proc)
             assert select.select([proc.stdout], [], [], 12)[0], 'Permission setup timed out'
             result = json.loads(proc.stdout.readline())
             assert result.get('ready'), result
@@ -236,7 +259,7 @@ try:
         print('PASS first-use permission, repeated sharing, remount, spaces, canonical symlink paths and stale-entry cleanup', flush=True)
         print('PASS actionable setup-write failure and automatic cache-discovery fallback', flush=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
-    children.append(p)
+    track(p)
     def receive(allow_error=False):
         assert select.select([p.stdout], [], [], 10)[0], 'helper acknowledgment timed out'
         line = p.stdout.readline()
@@ -260,7 +283,7 @@ try:
         hostenv['DESKPORT_VIRTUAL_DISPLAY'] = str(descriptor)
         log = tempfile.TemporaryFile(mode='w+')
         process = subprocess.Popen([host, str(config)], cwd=work, env=hostenv, stdout=log, stderr=log)
-        children.append(process)
+        track(process)
         deadline = time.monotonic() + 20
         text = ''
         while time.monotonic() < deadline:
@@ -295,6 +318,19 @@ try:
         if gnome: assert observed == baseline, 'Other output modes, positions or scales changed'
         else: verify_mirror(owned)
         if seq == 3: capture(width, height, scale)
+    # Exercise several distinct non-CVT widths, not just the initial portrait
+    # mode. KWin 6.7 must replace only the owned output and retain exact pixels,
+    # its admitted name, physical policy and the original recovery baseline.
+    if not gnome:
+        for seq, width in enumerate((1684, 1668, 1764, 1920), 20):
+            p.stdin.write(json.dumps(dict(displayPolicy=policy, seq=seq, width=width, height=1888, scale=2)) + '\n'); p.stdin.flush()
+            result = receive()
+            assert result['outputName'] == owned and result['width'] == width, result
+            actual = devices()[owned]
+            assert (actual['width'], actual['height'], actual['scale']) == (width, 1888, 2), actual
+            verify_mirror(owned)
+        capture(1920, 1888, 2)
+        print('PASS: four additional exact-width resizes retain owned identity and physical policy', flush=True)
     if '--restore-failure' in sys.argv:
         assert not gnome
         fault = Path(os.environ['XDG_RUNTIME_DIR']) / 'reject-local-layout'
@@ -342,7 +378,7 @@ try:
     assert restored(), 'Layout was not restored after helper EOF'
     capture(1280, 720, 1, missing=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
-    children.append(p)
+    track(p)
     initial = receive()
     if not gnome:
         owned = initial['outputName']
@@ -355,7 +391,7 @@ try:
     assert restored(), 'Layout was not restored after helper crash'
     if not gnome and '--disabled-output' in sys.argv:
         p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
-        children.append(p); receive()
+        track(p); receive()
         p.stdin.write(json.dumps(dict(displayPolicy=policy, seq=1, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush(); receive()
         assert restored()
         subprocess.run([os.environ['DESKPORT_OUTPUT_PROBE'], '--enable-last'], check=True, timeout=5)
@@ -378,3 +414,4 @@ finally:
             child.terminate()
             try: child.wait(timeout=5)
             except subprocess.TimeoutExpired: child.kill(); child.wait()
+        print(f'RESOURCE stopped pid={child.pid} status={child.returncode}', flush=True)
