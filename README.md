@@ -108,9 +108,9 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
-**0.7.0 release candidate:** [0.7.0-rc.1 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.7.0-rc.1)
+**0.7.0 release candidate:** [0.7.0-rc.2 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.7.0-rc.2)
 adds browser access (no install, 30-second code, adaptive desktop) on every
-desktop platform. See the [release notes](docs/RELEASE_0.7.0-rc.1.md).
+desktop platform. See the [release notes](docs/RELEASE_0.7.0-rc.2.md).
 
 **AppImage compatibility preview:** [0.6.4 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.6.4)
 bundles its own glibc runtime for older Linux distributions. It is AppImage-only;
