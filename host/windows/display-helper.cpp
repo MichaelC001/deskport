@@ -261,8 +261,14 @@ bool applyMode(DEVMODEW target) {
     const auto& before=sessionTopology;
     if(before.paths.empty()&&!headlessVirtual)return false;
     const auto changeResult=ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr);
-    if(changeResult!=DISP_CHANGE_SUCCESSFUL)
-        std::cerr<<"GDI display change rejected ("<<changeResult<<"); trying the owned CCD path"<<std::endl;
+    if(changeResult!=DISP_CHANGE_SUCCESSFUL) {
+        // When Windows' saved layout for this display combination leaves the
+        // owned output detached, a dynamic change cannot attach it. Attaching
+        // needs the registry mode followed by a single global apply.
+        const auto staged=ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,CDS_UPDATEREGISTRY|CDS_NORESET,nullptr);
+        const auto attached=staged==DISP_CHANGE_SUCCESSFUL?ChangeDisplaySettingsExW(nullptr,nullptr,nullptr,0,nullptr):staged;
+        std::cerr<<"GDI display change rejected ("<<changeResult<<"); attaching the owned output: "<<attached<<std::endl;
+    }
     // An enabled indirect display can reject its initial GDI positioning even
     // though CCD exposes a valid active path. Re-query after either result and
     // let the topology-preserving CCD update below place the owned output.
@@ -343,9 +349,15 @@ bool applyMode(DEVMODEW target) {
     ActiveTopology verified;
     if(!verified.read())return false;
     DEVMODEW actual{};
-    return preservesPhysicalSources(before,verified) && current(actual) &&
+    const bool physical=preservesPhysicalSources(before,verified),readable=current(actual);
+    if(physical && readable &&
         actual.dmPelsWidth==target.dmPelsWidth && actual.dmPelsHeight==target.dmPelsHeight &&
-        actual.dmPosition.x==target.dmPosition.x && actual.dmPosition.y==target.dmPosition.y;
+        actual.dmPosition.x==target.dmPosition.x && actual.dmPosition.y==target.dmPosition.y)return true;
+    std::cerr<<"Owned output verification failed: physical="<<physical<<" readable="<<readable
+             <<" requested="<<target.dmPelsWidth<<"x"<<target.dmPelsHeight<<"@"<<target.dmPosition.x<<","<<target.dmPosition.y
+             <<" actual="<<actual.dmPelsWidth<<"x"<<actual.dmPelsHeight<<"@"<<actual.dmPosition.x<<","<<actual.dmPosition.y<<std::endl;
+    dumpTopology("verified",verified);
+    return false;
 }
 // Build every policy from the immutable sharing baseline, never from the
 // previous session's clone/exclusive topology. The elevated guardian retains
@@ -563,6 +575,24 @@ int main(int argc, char** argv) {
             send({{"error", "Cannot read the selected Windows display mode"}}); return 1;
         }
     }
+    // A detached owned output can have no saved mode (Windows reports 0x0),
+    // which every display change rejects. Start from a mode the driver lists;
+    // the session sets its own size afterwards.
+    if (privateVirtual && (!original.dmPelsWidth || !original.dmPelsHeight)) {
+        DEVMODEW listed{}; listed.dmSize = sizeof(listed);
+        bool found = false;
+        for (DWORD index = 0; index < 4096; ++index) {
+            DEVMODEW mode{}; mode.dmSize = sizeof(mode);
+            if (!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), index, &mode, 0)) break;
+            if (!found || (mode.dmPelsWidth == 1920 && mode.dmPelsHeight == 1080 && mode.dmBitsPerPel >= listed.dmBitsPerPel)) {
+                listed = mode; found = true;
+            }
+        }
+        if (!found) { send({{"error", "The virtual display lists no display modes"}}); return 1; }
+        std::cerr << "Display lease: owned output had no saved mode; starting at "
+                  << listed.dmPelsWidth << "x" << listed.dmPelsHeight << std::endl;
+        original = listed;
+    }
     if (privateVirtual) {
         std::cerr << "Display lease: positioning owned output" << std::endl;
 
@@ -605,9 +635,17 @@ int main(int argc, char** argv) {
             // split a duplicate group, change resolutions) that the topology
             // rebuild undoes. Position against the restored layout only.
             bool fromSnapshot=false;
-            for(const auto& mode:sessionTopology.modes) {
+            for(size_t i=0;i<sessionTopology.modes.size();++i) {
+                const auto& mode=sessionTopology.modes[i];
                 if(mode.infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)continue;
-                const LONG edge=mode.sourceMode.position.x+LONG(mode.sourceMode.width);
+                // CCD reports the unrotated source size; a panel rotated by 90
+                // or 270 degrees spans its height across the desktop.
+                bool turned=false;
+                for(const auto& path:sessionTopology.paths) {
+                    const auto index=(path.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE)?path.sourceInfo.sourceModeInfoIdx:path.sourceInfo.modeInfoIdx;
+                    if(index==i)turned=path.targetInfo.rotation==DISPLAYCONFIG_ROTATION_ROTATE90||path.targetInfo.rotation==DISPLAYCONFIG_ROTATION_ROTATE270;
+                }
+                const LONG edge=mode.sourceMode.position.x+LONG(turned?mode.sourceMode.height:mode.sourceMode.width);
                 right=fromSnapshot?qMax(right,edge):edge; fromSnapshot=true;
             }
             // Windows may reactivate a remembered placement above the primary.
@@ -618,6 +656,10 @@ int main(int argc, char** argv) {
             original.dmPosition.y = fromSnapshot ? 0 : primary.dmPosition.y;
         }
         original.dmFields |= DM_POSITION | DM_PELSWIDTH | DM_PELSHEIGHT;
+        std::cerr << "Display lease: owned output " << original.dmPelsWidth << "x" << original.dmPelsHeight
+                  << " bpp=" << original.dmBitsPerPel << " hz=" << original.dmDisplayFrequency
+                  << " at " << original.dmPosition.x << "," << original.dmPosition.y
+                  << " fields=0x" << std::hex << original.dmFields << std::dec << std::endl;
         if (!writeState(true) || !applyMode(original)) {
             send({{"error", "Cannot activate the DeskPort virtual display"}}); return 1;
         }

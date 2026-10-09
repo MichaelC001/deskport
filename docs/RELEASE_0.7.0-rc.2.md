@@ -10,8 +10,12 @@ the stable release until device acceptance of this candidate is complete.
   duplicate group and change the external resolution, after which Windows
   rejected the layout (error 87) and sharing never started. DeskPort now
   rebuilds the complete pre-sharing layout around the virtual display, and
-  stopping restores it exactly. Checked in duplicate, extend, external-only
-  and panel-only modes.
+  stopping restores it exactly, including a panel rotated to landscape.
+  Checked in duplicate, extend, external-only and panel-only modes.
+- **Windows: sharing starts when Windows keeps the virtual display detached.**
+  After a failed attempt Windows can remember a layout without the virtual
+  display, or forget its mode, and every later share failed. DeskPort now
+  attaches it explicitly and starts it at a mode the driver offers.
 - **Windows: recovery after the display guardian itself was terminated.** The
   next share recovers the saved display snapshot instead of failing until it
   was recovered by hand.
