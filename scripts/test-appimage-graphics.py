@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -76,6 +77,18 @@ class GraphicsRuntime(unittest.TestCase):
         result = self.run_selection(MOCK_GLIBC='2.35')
         self.assertEqual(result.stdout, '\n\n')
         self.assertFalse((self.root / 'cache with spaces').exists())
+
+    def test_cache_reuse_does_not_require_diffutils(self):
+        tools = self.root / 'minimal-tools'
+        tools.mkdir()
+        for name in ('sh', 'env', 'mkdir', 'mktemp', 'awk', 'sort', 'readlink',
+                     'ln', 'rm', 'cksum', 'cat', 'mv'):
+            (tools / name).symlink_to(shutil.which(name))
+        self.assertFalse((tools / 'cmp').exists())
+        first = self.run_selection(PATH=str(tools))
+        second = self.run_selection(PATH=str(tools))
+        self.assertEqual(first.stdout, second.stdout)
+        self.assertIn(str(self.loader), second.stdout)
 
     def test_explicit_private_runtime_does_not_probe_the_host(self):
         result = self.run_selection(DESKPORT_APPIMAGE_RUNTIME='private')

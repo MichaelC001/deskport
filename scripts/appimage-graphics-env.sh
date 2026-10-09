@@ -75,15 +75,16 @@ deskport_graphics_env() {
     # Verify the manifest too, so a checksum collision cannot select a cohort.
     dp_key=$(cksum < "$dp_temp/inputs" | awk '{print $1 "-" $2}')
     dp_cache=$dp_base/$dp_key
+    dp_inputs=$(cat "$dp_temp/inputs")
     if [ -d "$dp_cache" ]; then
-        if ! cmp -s "$dp_cache/inputs" "$dp_temp/inputs"; then
+        if [ ! -f "$dp_cache/inputs" ] || [ "$(cat "$dp_cache/inputs")" != "$dp_inputs" ]; then
             rm -r -- "$dp_temp"
             return 0
         fi
         rm -r -- "$dp_temp"
     elif ! mv -T "$dp_temp" "$dp_cache" 2>/dev/null; then
         # Another process may have atomically installed the same cohort.
-        if ! cmp -s "$dp_cache/inputs" "$dp_temp/inputs"; then
+        if [ ! -f "$dp_cache/inputs" ] || [ "$(cat "$dp_cache/inputs")" != "$dp_inputs" ]; then
             rm -r -- "$dp_temp"
             return 0
         fi
