@@ -191,7 +191,7 @@ void AdaptiveDisplay::run() {
             { QMutexLocker lock(&m_Mutex);
               if (admitted && m_Lifecycle) m_ResumeToken = state["resumeToken"].toString();
               if (!admitted && !state.isEmpty()) m_Retryable = false;
-              if (!admitted && m_TopologyError != "cancelled") m_TopologyError = state["code"].toString(state["busy"].toBool() ? "busy" : "unavailable");
+              if (!admitted && m_TopologyError != "cancelled") m_TopologyError = state.value("code").toString(state.value("busy").toBool() ? "busy" : "unavailable");
             }
             connected = connected && admitted;
         }
