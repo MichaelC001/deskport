@@ -26,7 +26,17 @@ configuration, with private launcher paths and corresponding source notices.
 Also bundle Mesa's GLVND EGL vendor JSON so the software capture fallback is
 discoverable when Ubuntu's system vendor paths are absent.
 Require real packaged Sunshine capture/encoder probes in the final display matrix,
-not just native capture and package startup. Do not publish until these pass.
+not just native capture and package startup.
+
+Acceptance checkpoint: the final extracted AppImage passed all eight KWin
+6.6.6/6.7.5 runs (policies 0/1/2 and automatic permission/remount handling),
+including real software capture/H.264 encoder probes at four sizes, exact-pixel
+resizing, physical-fallback rejection and recovery. Process mappings verified
+that SPA and PipeWire client modules came from the private bundle. Ubuntu 22.04
+and Fedora 44 package startup/session-API checks passed. The native Nix build and
+its packaged KWin 6.7.5 policy-0 capture/lifecycle check also passed. This is an
+AppImage-only prerelease on a fix branch; stable/main and deployed services remain
+unchanged. Keep issue #5 open for the affected user's actual Bazzite retest.
 
 ## Persistent browser pairing — 2026-10-05
 
