@@ -29,6 +29,8 @@ namespace {
 void send(const QJsonObject& value) {
     const auto bytes = QJsonDocument(value).toJson(QJsonDocument::Compact);
     std::cout << bytes.constData() << std::endl;
+    // Errors also go to the host log; the client only shows a summary.
+    if (value.contains("error")) std::cerr << "Display helper error: " << bytes.constData() << std::endl;
 }
 QString ownedAdapterHardware(const QString& instance) {
     if (instance.isEmpty()) return {};
