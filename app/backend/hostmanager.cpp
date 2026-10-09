@@ -224,6 +224,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 continue;
             }
             if (object.contains("error")) {
+                Diagnostics::instance().record("display", "DeskPort failure stage=virtual-display code=display-failed");
                 qWarning() << "Virtual display startup failed:" << object["error"].toString();
 #ifdef Q_OS_MACOS
                 // A private virtual display can stay unavailable indefinitely: a
@@ -776,6 +777,8 @@ void HostManager::startServer(int displayId) {
 #endif
 #ifdef Q_OS_LINUX
     config.write(QString("output_name = %1\n").arg(m_LinuxOutputName).toUtf8());
+    Diagnostics::instance().record("host", "DeskPort runtime kind=capture backend=" +
+        QString(m_LinuxHyprland ? "wlr" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "kwin" : "portal"));
     config.write(m_LinuxHyprland ? "capture = wlr\n" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }

@@ -1271,6 +1271,7 @@ private slots:
             {
                 AdaptiveDisplay competing("127.0.0.1", server.port(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
                 QVERIFY(!resize(competing, QSize(2560, 1440)));
+                QCOMPARE(competing.topologyError(), QString("cancelled"));
             }
             QTRY_VERIFY(!server.busy());
             QVERIFY(resize(channel, QSize(1600, 1000)));
@@ -1294,6 +1295,38 @@ private slots:
         for (const auto& reply : resized) if (reply[0].toInt() > 0) ++clientReplies;
         QCOMPARE(clientReplies, 6);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void preparationFailureCodes_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* value : {"unauthorized", "busy", "stale", "unavailable", "display-failed", "legacy", "cancelled"})
+            QTest::newRow(value) << QString(value);
+    }
+    void preparationFailureCodes() {
+        QFETCH(QString, scenario);
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
+        auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280,720), 1); });
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
+        QJsonObject meta{{"adaptiveDisplay",1},{"sessionTakeover",1},{"sessionTopology",1}};
+        if (scenario == "legacy") meta.remove("sessionTopology");
+        server.send({{"type","hello"},{"meta",meta}});
+        if (scenario != "legacy") {
+            QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+            server.messages.takeFirst();
+            if (scenario == "cancelled") channel.cancel();
+            else if (scenario == "display-failed") {
+                server.send({{"type","session-state"},{"admitted",true}});
+                QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+                auto request = server.messages.takeFirst();
+                server.send({{"type","display-result"},{"seq",request["seq"]},{"error","private.example.net /private/path"}});
+            } else server.send({{"type","session-result"},{"admitted",false},{"code",scenario},{"error","private.example.net"}});
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready, 5000);
+        QVERIFY(!result.get());
+        QCOMPARE(channel.topologyError(), scenario == "legacy" ? QString("topology-unsupported") : scenario);
+        QVERIFY(channel.admissionRequired());
     }
     void videoPauseNegotiation_data() {
         QTest::addColumn<QString>("scenario");

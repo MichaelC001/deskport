@@ -1,3 +1,14 @@
+## Preparation failures and private integration — 2026-10-09
+
+Client preparation now distinguishes cancellation, denial, busy/expired admission,
+host unavailability, virtual-display failure and capture/encoder launch failure.
+Existing protocol results retain their admission rules; an unavailable host is
+never interpreted as denial or permission to capture a physical display.
+Diagnostics retain only fixed failure stages/codes and allowlisted runtime
+backend choices, revalidated at ZIP export. Raw error strings remain excluded.
+KWin 6.7 and portable libva/Mesa fixes are being integrated for private testing;
+issue #5 remains open pending the reporter's physical Bazzite acceptance.
+
 ## KWin 6.7 output discovery — 2026-10-09
 
 Reason: [issue #5](https://github.com/keithxc/deskport/issues/5) reports an

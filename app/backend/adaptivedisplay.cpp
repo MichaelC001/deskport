@@ -34,7 +34,7 @@ QString AdaptiveDisplay::topologyError() { QMutexLocker lock(&m_Mutex); return m
 bool AdaptiveDisplay::retryable() { QMutexLocker lock(&m_Mutex); return m_Retryable && !m_TakenOver; }
 QString AdaptiveDisplay::warning() { QMutexLocker lock(&m_Mutex); return m_Warning; }
 QString AdaptiveDisplay::resumeToken() { QMutexLocker lock(&m_Mutex); return m_ResumeToken; }
-void AdaptiveDisplay::cancel() { QMutexLocker lock(&m_Mutex); m_Failed = true; m_Retryable = false; requestInterruption(); m_Wake.wakeAll(); }
+void AdaptiveDisplay::cancel() { QMutexLocker lock(&m_Mutex); m_TopologyError = "cancelled"; m_Failed = true; m_Retryable = false; requestInterruption(); m_Wake.wakeAll(); }
 void AdaptiveDisplay::release() { QMutexLocker lock(&m_Mutex); m_Release = true; requestInterruption(); }
 QSize AdaptiveDisplay::selectedSize(QSize requested) {
     QMutexLocker lock(&m_Mutex);
@@ -86,7 +86,7 @@ bool AdaptiveDisplay::resize(const QSize& pixels, int scale, const std::function
         m_Wake.wait(&m_Mutex, progress ? 20 : 100);
         if (progress) { lock.unlock(); progress(); lock.relock(); }
     }
-    if (!m_Complete || !m_Result) { m_Failed = true; requestInterruption(); return false; }
+    if (!m_Complete || !m_Result) { if (m_TopologyError.isEmpty()) m_TopologyError = "timeout"; m_Failed = true; requestInterruption(); return false; }
     return true;
 }
 void AdaptiveDisplay::run() {
@@ -136,6 +136,7 @@ void AdaptiveDisplay::run() {
         return {};
     };
     bool connected = SmallTcp::connectBlocking(socket, m_Address, m_Port, 4000) && socket.peerCertificate() == m_Peer;
+    if (!connected) { QMutexLocker lock(&m_Mutex); if (m_TopologyError.isEmpty()) m_TopologyError = "unavailable"; }
     if (connected) SmallTcp::accepted(socket, m_Address, m_Port);
     bool policySupported = false, videoPauseSupported = false;
     bool videoStateUnknown = !m_ResumeToken.isEmpty();
@@ -175,22 +176,29 @@ void AdaptiveDisplay::run() {
                 while (!m_ConfirmationReady && !isInterruptionRequested() && confirmation.elapsed() < DP_SESSION_CONFIRMATION_TTL_MS)
                     m_Wake.wait(&m_Mutex, 100);
                 const bool confirmed = m_ConfirmationReady && m_Confirmed && confirmation.elapsed() < DP_SESSION_CONFIRMATION_TTL_MS;
+                const bool declined = m_ConfirmationReady;
                 lock.unlock();
                 if (confirmed) {
                     send({{"type", DP_MESSAGE_SESSION_TAKEOVER}, {"challenge", state["challenge"]}});
                     const auto result = receive(25000);
                     state = result;
                     admitted = result["type"].toString() == DP_MESSAGE_SESSION_RESULT && result["admitted"].toBool();
+                } else {
+                    // A declined takeover is cancellation, not authorization failure.
+                    state["code"] = declined ? "cancelled" : "timeout";
                 }
             }
             { QMutexLocker lock(&m_Mutex);
               if (admitted && m_Lifecycle) m_ResumeToken = state["resumeToken"].toString();
               if (!admitted && !state.isEmpty()) m_Retryable = false;
-              if (!admitted) m_TopologyError = state["code"].toString();
+              if (!admitted && m_TopologyError != "cancelled") m_TopologyError = state["code"].toString(state["busy"].toBool() ? "busy" : "unavailable");
             }
             connected = connected && admitted;
         }
-        connected = connected && DPDisplayPolicyValid(m_Policy) && (policySupported || m_Policy == DP_DISPLAY_PRIMARY_MIRROR);
+        if (connected && (!DPDisplayPolicyValid(m_Policy) || (!policySupported && m_Policy != DP_DISPLAY_PRIMARY_MIRROR))) {
+            QMutexLocker lock(&m_Mutex); m_TopologyError = "policy-unsupported";
+            connected = false;
+        }
         if (!connected) qWarning() << "The host does not support the selected virtual screen policy";
     }
     int sequence = 0, videoSequence = 0;
@@ -208,7 +216,11 @@ void AdaptiveDisplay::run() {
             const auto reply = receive();
             connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&
                 reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");
-            if (!connected && !reply.isEmpty()) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
+            if (!connected) {
+                QMutexLocker lock(&m_Mutex);
+                m_TopologyError = reply.isEmpty() ? "unavailable" : "display-failed";
+                if (!reply.isEmpty()) m_Retryable = false;
+            }
             if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
             { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; if (connected) m_NegotiatedSize = size; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();

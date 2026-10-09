@@ -1,3 +1,4 @@
+#include "sessionfailure.h"
 #include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
@@ -1057,7 +1058,7 @@ void PeerManager::fail(Link* link, const QString& message) {
 }
 void PeerManager::sessionError(Link* link, const QString& code) {
     send(link, {{"type", DP_MESSAGE_SESSION_RESULT}, {"admitted", false}, {"code", code},
-                {"error", tr("Session access was not granted (%1). Reconnect and try again.").arg(code)}});
+                {"error", DeskPortSessionFailure::message(code)}});
 }
 void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
     const auto peer = m_Peers.value(link->fingerprint).toObject();
@@ -1086,9 +1087,10 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
 void PeerManager::sessionRequestVerified(Link* link, const QJsonObject& message) {
     const auto peer = m_Peers.value(link->fingerprint).toObject();
     if (!link->incoming || link->requested || link->clipboardControl ||
-        !peer["ready"].toBool() || !peer["granted"].toBool() || m_Revoking == link->fingerprint || !m_Host->running()) {
+        !peer["ready"].toBool() || !peer["granted"].toBool() || m_Revoking == link->fingerprint) {
         sessionError(link, "unauthorized"); return;
     }
+    if (!m_Host->running()) { sessionError(link, "unavailable"); return; }
     const bool takeover = message["type"].toString() == DP_MESSAGE_SESSION_TAKEOVER;
     if ((!takeover && message["sessionTakeover"].toInt() != DP_SESSION_TAKEOVER_VERSION) ||
         (takeover && !link->sessionOptIn)) { sessionError(link, "unauthorized"); return; }

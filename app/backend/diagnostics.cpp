@@ -17,8 +17,11 @@
 namespace {
 const QStringList sources {"client", "host", "display"};
 const QStringList stages {"decoder-setup", "continuation", "mode-request", "mode-ready", "mode-failed", "observed", "stop-begin", "viewer-geometry-ready", "probe-begin", "probe-end", "stop-end", "resume-request", "resume-response", "initialize-begin", "input-init-begin", "input-init-end", "first-render-submit"};
+const QStringList failureStages {"session-prepare", "virtual-display", "stream-launch", "capture", "encoder"};
+const QStringList failureCodes {"cancelled", "unauthorized", "busy", "stale", "cycle", "topology-unsupported", "topology-unavailable", "topology-invalid", "unavailable", "timeout", "display-failed", "policy-unsupported", "capture-encoder-failed", "capture-permission", "encoder-unavailable"};
+const QStringList runtimeBackends {"kwin", "portal", "wlr", "screen-capture-kit", "vaapi", "videotoolbox", "software", "nvenc", "amdvce", "quicksync"};
 const QStringList navigationStages {"devices-request", "devices-ready", "devices-frame", "event-loop-delay"};
-const QStringList events {"navigation","started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled"};
+const QStringList events {"failure","runtime","navigation","started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled"};
 QStringList names() {
     QStringList result;
     for (const auto& source : sources) for (int i = 0; i < 3; ++i)
@@ -113,6 +116,23 @@ QJsonObject Diagnostics::project(const QString& message) {
     // Do not fingerprint or persist private payloads, even when mixed with an error.
     for (const auto& word : {"clipboard", "keycode", "keystroke", "keydown", "keyup", "key text", "text input", "password", "token", "secret", "private key", "rikey"})
         if (lower.contains(QLatin1String(word))) return {};
+    static const QRegularExpression failure("DeskPort failure stage=([a-z-]+) code=([a-z-]+)\\s*$");
+    auto structured = failure.match(message);
+    if (structured.hasMatch() && failureStages.contains(structured.captured(1)) && failureCodes.contains(structured.captured(2)))
+        return {{"event", "failure"}, {"stage", structured.captured(1)}, {"code", structured.captured(2)}};
+    static const QRegularExpression runtime("DeskPort runtime kind=(capture|encoder) backend=([a-z-]+)\\s*$");
+    structured = runtime.match(message);
+    if (structured.hasMatch() && runtimeBackends.contains(structured.captured(2)))
+        return {{"event", "runtime"}, {"kind", structured.captured(1)}, {"backend", structured.captured(2)}};
+    static const QRegularExpression encoder("Found (?:H\\.264|HEVC|AV1) encoder: [a-z0-9_]{1,32} \\[([a-z-]+)\\]\\s*$");
+    structured = encoder.match(message);
+    if (structured.hasMatch() && runtimeBackends.contains(structured.captured(1)))
+        return {{"event", "runtime"}, {"kind", "encoder"}, {"backend", structured.captured(1)}};
+    // Fixed upstream signatures become local codes; no suffix is ever retained.
+    if (message.contains("No screen capture permission"))
+        return {{"event", "failure"}, {"stage", "capture"}, {"code", "capture-permission"}};
+    if (message.contains("Video failed to find working encoder"))
+        return {{"event", "failure"}, {"stage", "encoder"}, {"code", "encoder-unavailable"}};
     static const QRegularExpression resize("DeskPort resize stage=([a-z-]+) tick_ms=([0-9]{1,10}) width=([0-9]{1,5}) height=([0-9]{1,5})\\s*$");
     auto match=resize.match(message);
     if (match.hasMatch() && stages.contains(match.captured(1))) {
@@ -148,6 +168,14 @@ QJsonObject Diagnostics::validate(const QJsonObject& o) {
     if (!result.contains("elapsed_ms")) return {};
     if (stages.contains(o.value("stage").toString()) ||
         (o.value("event") == "navigation" && navigationStages.contains(o.value("stage").toString()))) result["stage"]=o.value("stage");
+    if (o.value("event") == "failure") {
+        if (!failureStages.contains(o.value("stage").toString()) || !failureCodes.contains(o.value("code").toString())) return {};
+        result["stage"] = o.value("stage"); result["code"] = o.value("code");
+    }
+    if (o.value("event") == "runtime") {
+        if (!QStringList{"capture", "encoder"}.contains(o.value("kind").toString()) || !runtimeBackends.contains(o.value("backend").toString())) return {};
+        result["kind"] = o.value("kind"); result["backend"] = o.value("backend");
+    }
     return result;
 }
 void Diagnostics::ingest(const QString& source, const QByteArray& bytes) {

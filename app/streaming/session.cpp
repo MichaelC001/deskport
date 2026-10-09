@@ -1,3 +1,4 @@
+#include "../backend/sessionfailure.h"
 #include "backend/diagnostics.h"
 #include "connectionwait.h"
 #include "resizetrace.h"
@@ -1114,11 +1115,8 @@ bool Session::initialize()
     if (!m_AdaptiveGeometry.isValid()) m_AdaptiveGeometry = QRect(x, y, width, height);
     initializeAdaptiveDisplay(m_TransitionWindow ? m_TransitionWindow->window() : testWindow);
     if (m_SessionAdmissionFailed) {
-        emit displayLaunchError(m_SessionTopologyError == "cycle"
-            ? tr("This connection would create a loop. Disconnect one of the existing links first.")
-            : m_SessionTopologyError.startsWith("topology-")
-            ? tr("The connection path could not be verified. Update DeskPort on every desktop in the chain and try again.")
-            : tr("Connection cancelled or session access was not granted. Reconnect to try again."));
+        Diagnostics::instance().record("client", "DeskPort failure stage=session-prepare code=" + m_SessionTopologyError);
+        emit displayLaunchError(DeskPortSessionFailure::message(m_SessionTopologyError));
         SDL_DestroyWindow(testWindow); SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
@@ -2123,7 +2121,10 @@ bool Session::startConnectionAsync()
         deskportResizeStage("resume-response");
     } catch (const GfeHttpResponseException& e) {
         if (m_RecoveryCancelled) return false;
-        emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
+        if (e.getStatusCode() == 503 && e.toQString().startsWith("Failed to initialize video capture/encoding.")) {
+            Diagnostics::instance().record("client", "DeskPort failure stage=stream-launch code=capture-encoder-failed");
+            emit displayLaunchError(DeskPortSessionFailure::message("capture-encoder-failed"));
+        } else emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
         return false;
     } catch (const QtNetworkReplyException& e) {
         if (m_RecoveryCancelled) return false;

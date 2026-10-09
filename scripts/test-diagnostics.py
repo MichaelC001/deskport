@@ -32,5 +32,5 @@ TARGET = diagnostics-test
             if name.endswith('.jsonl'):
                 records = [json.loads(line) for line in archive.read(name).splitlines()]
                 assert records
-                assert all(set(r) <= {'source', 'run', 'event', 'elapsed_ms', 'stage', 'tick_ms', 'width', 'height', 'phase', 'state', 'error', 'duration_ms'} for r in records)
+                assert all(set(r) <= {'source', 'run', 'event', 'elapsed_ms', 'stage', 'tick_ms', 'width', 'height', 'phase', 'state', 'error', 'duration_ms', 'code', 'kind', 'backend'} for r in records)
     print('Independent ZIP CRC, allowlist, metadata and record validation passed')

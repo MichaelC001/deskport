@@ -6,6 +6,7 @@
 #include <QDesktopServices>
 #include <QUrlQuery>
 #include "diagnostics.h"
+#include "sessionfailure.h"
 
 class DiagnosticsTest : public QObject {
     Q_OBJECT
@@ -18,6 +19,34 @@ private slots:
         QCoreApplication::setApplicationVersion(qEnvironmentVariable("TEST_DESKPORT_VERSION", "development"));
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,qEnvironmentVariable("TEST_DIAGNOSTICS_ROOT"));
+    }
+    void preparationErrorsAndStructuredPrivacy() {
+        for (const auto code : {"cancelled", "unauthorized", "busy", "stale", "cycle", "unavailable", "timeout", "display-failed", "capture-encoder-failed"}) {
+            const QString value(code);
+            QVERIFY(!DeskPortSessionFailure::message(value).isEmpty());
+            if (value != "unauthorized") QVERIFY(!DeskPortSessionFailure::message(value).contains("denied"));
+            auto event = Diagnostics::project("DeskPort failure stage=session-prepare code=" + value);
+            QCOMPARE(event["code"].toString(), value);
+            event["source"] = "client"; event["run"] = QString(32, 'a'); event["elapsed_ms"] = 1;
+            event["message"] = "PRIVATE_SECRET";
+            const auto safe = Diagnostics::validate(event);
+            QCOMPARE(safe["code"].toString(), value); QVERIFY(!safe.contains("message"));
+            event["code"] = "private.example.net"; QVERIFY(Diagnostics::validate(event).isEmpty());
+        }
+        QVERIFY(!DeskPortSessionFailure::message("unknown-private-host").contains("unknown-private-host"));
+        QCOMPARE(Diagnostics::project("[Info]: Found H.264 encoder: h264_vaapi [vaapi]")["backend"].toString(), QString("vaapi"));
+        QVERIFY(!Diagnostics::project("Found H.264 encoder: secret [private-host]").contains("backend"));
+        auto runtime = Diagnostics::project("DeskPort runtime kind=capture backend=kwin");
+        runtime["source"] = "host"; runtime["run"] = QString(32, 'a'); runtime["elapsed_ms"] = 1;
+        QCOMPARE(Diagnostics::validate(runtime)["backend"].toString(), QString("kwin"));
+        runtime["backend"] = "/private/config"; QVERIFY(Diagnostics::validate(runtime).isEmpty());
+        QVERIFY(!Diagnostics::project("DeskPort failure stage=session-prepare code=private-host").contains("code"));
+        QCOMPARE(Diagnostics::project("Video failed to find working encoder: /private/path")["code"].toString(), QString("encoder-unavailable"));
+        QTemporaryDir dir; Diagnostics logs(nullptr, dir.path()); logs.setEnabled(true);
+        logs.record("client", "DeskPort failure stage=session-prepare code=display-failed");
+        logs.record("host", "DeskPort runtime kind=capture backend=kwin");
+        QFile archive(logs.createBundle()); QVERIFY(archive.open(QIODevice::ReadOnly));
+        const auto bytes = archive.readAll(); QVERIFY(bytes.contains("display-failed")); QVERIFY(bytes.contains("kwin"));
     }
     void defaultAndSavedPreference() {
         QStandardPaths::setTestModeEnabled(true);
