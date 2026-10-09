@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <cstring>
@@ -274,6 +275,25 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     std::ofstream leaseLog;
     if(!directory.empty())leaseLog.open(std::filesystem::path(snapshot+L".log"),std::ios::binary);
     auto previousOutput=leaseLog ? std::cout.rdbuf(leaseLog.rdbuf()) : nullptr;
+    // A previous guardian that was itself terminated (not just its client)
+    // leaves the owned device enabled with its snapshot. Holding the lease
+    // mutex proves no lease is active, so recover from that snapshot first,
+    // but only one written since this boot: older ones describe stale layouts.
+    if(!directory.empty()&&deviceState()!=CM_PROB_DISABLED) {
+        const auto bootTime=std::filesystem::file_time_type::clock::now()-std::chrono::milliseconds(GetTickCount64());
+        std::filesystem::path newest;std::filesystem::file_time_type newestTime{};
+        std::error_code ec;
+        for(const auto& entry:std::filesystem::directory_iterator(directory,ec)) {
+            if(entry.path().extension()!=L".bin"||entry.path()==std::filesystem::path(snapshot))continue;
+            const auto when=entry.last_write_time(ec);
+            if(!ec&&when>bootTime&&(newest.empty()||when>newestTime)){newest=entry.path();newestTime=when;}
+        }
+        if(!newest.empty()) {
+            const int recovered=runWorker(L"recover \""+newest.wstring()+L"\"");
+            std::cout<<"orphaned_snapshot_recovery="<<recovered<<std::endl;
+            if(!recovered)DeleteFileW(newest.c_str());
+        }
+    }
     if(directory.empty()||deviceState()!=CM_PROB_DISABLED||!capture(original)||!save(snapshot,original))result=ERROR_INVALID_STATE;
     else {
         captured=true;

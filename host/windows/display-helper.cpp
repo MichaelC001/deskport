@@ -197,6 +197,29 @@ bool preservesPhysicalSources(const ActiveTopology& before, const ActiveTopology
     }
     return true;
 }
+// Remove one adapter's paths and modes from a topology, remapping indices.
+void dropAdapter(ActiveTopology& t, LUID adapter) {
+    const auto same=[&](LUID a){return a.LowPart==adapter.LowPart&&a.HighPart==adapter.HighPart;};
+    std::vector<UINT32> remap(t.modes.size(),UINT32(-1));
+    std::vector<DISPLAYCONFIG_MODE_INFO> modes;
+    for(size_t i=0;i<t.modes.size();++i)
+        if(!same(t.modes[i].adapterId)){remap[i]=UINT32(modes.size());modes.push_back(t.modes[i]);}
+    const auto map=[&](UINT32 index, UINT32 invalid)->UINT32{return index<remap.size()&&remap[index]!=UINT32(-1)?remap[index]:invalid;};
+    std::vector<DISPLAYCONFIG_PATH_INFO> paths;
+    for(auto path:t.paths) {
+        if(same(path.sourceInfo.adapterId)||same(path.targetInfo.adapterId))continue;
+        if(path.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE) {
+            path.sourceInfo.sourceModeInfoIdx=map(path.sourceInfo.sourceModeInfoIdx,DISPLAYCONFIG_PATH_SOURCE_MODE_IDX_INVALID);
+            path.targetInfo.targetModeInfoIdx=map(path.targetInfo.targetModeInfoIdx,DISPLAYCONFIG_PATH_TARGET_MODE_IDX_INVALID);
+            path.targetInfo.desktopModeInfoIdx=map(path.targetInfo.desktopModeInfoIdx,DISPLAYCONFIG_PATH_DESKTOP_IMAGE_IDX_INVALID);
+        } else {
+            path.sourceInfo.modeInfoIdx=map(path.sourceInfo.modeInfoIdx,DISPLAYCONFIG_PATH_MODE_IDX_INVALID);
+            path.targetInfo.modeInfoIdx=map(path.targetInfo.modeInfoIdx,DISPLAYCONFIG_PATH_MODE_IDX_INVALID);
+        }
+        paths.push_back(path);
+    }
+    t.paths=std::move(paths);t.modes=std::move(modes);
+}
 // The complete pre-sharing physical topology plus the owned output's path and
 // modes from the live topology, placed at the requested position.
 bool rebuildWithOwned(const ActiveTopology& before, const ActiveTopology& live, const DEVMODEW& target, ActiveTopology& out) {
@@ -478,6 +501,29 @@ int main(int argc, char** argv) {
     // Bind only the device instance created by DeskPort, never an independently
     // installed VDD adapter with the same vendor or friendly name.
     if(!ownedInstance.isEmpty()&&!sessionTopology.read()){send({{"error", "Cannot capture the pre-sharing display topology"}});return 1;}
+    // A previous session whose guardian was itself terminated can leave the
+    // owned output active here; the new guardian recovers it before enabling.
+    // The pre-sharing layout must contain physical outputs only. The adapter
+    // LUID changes on every enable, so identify it now by hardware ID.
+    if(!ownedInstance.isEmpty()) {
+        const auto ownedHardware=ownedAdapterHardware(ownedInstance);
+        for(const auto& path:std::vector<DISPLAYCONFIG_PATH_INFO>(sessionTopology.paths)) {
+            DISPLAYCONFIG_SOURCE_DEVICE_NAME name{};
+            name.header.type=DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+            name.header.size=sizeof(name);name.header.adapterId=path.sourceInfo.adapterId;name.header.id=path.sourceInfo.id;
+            if(ownedHardware.isEmpty()||DisplayConfigGetDeviceInfo(&name.header))continue;
+            DISPLAY_DEVICEW device{};device.cb=sizeof(device);
+            for(DWORD i=0;EnumDisplayDevicesW(nullptr,i,&device,0);++i) {
+                if(!_wcsicmp(device.DeviceName,name.viewGdiDeviceName)&&
+                   QString::fromWCharArray(device.DeviceID).compare(ownedHardware,Qt::CaseInsensitive)==0) {
+                    dropAdapter(sessionTopology,path.sourceInfo.adapterId);
+                    std::cerr<<"Display lease: removed a stale owned output from the pre-sharing layout"<<std::endl;
+                    break;
+                }
+                device={};device.cb=sizeof(device);
+            }
+        }
+    }
     if (!ownedInstance.isEmpty() && !recovery.start()) { send({{"error", recovery.error}}); return 1; }
     const auto owned = ownedAdapterHardware(ownedInstance);
     if (!ownedInstance.isEmpty() && owned.isEmpty()) {
@@ -517,6 +563,7 @@ int main(int argc, char** argv) {
     }
     if (privateVirtual) {
         std::cerr << "Display lease: positioning owned output" << std::endl;
+
         // Enabling an indirect display can make Windows retire the closed
         // laptop panel. A sole remaining source must be placed at (0, 0), not
         // to the right of the no-longer-active panel. The independent guardian
