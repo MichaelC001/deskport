@@ -90,6 +90,19 @@ class GraphicsRuntime(unittest.TestCase):
         self.assertEqual(first.stdout, second.stdout)
         self.assertIn(str(self.loader), second.stdout)
 
+    def test_multilib_drivers_do_not_mix_a_32bit_libc_into_the_cohort(self):
+        dri32 = self.root / 'dri32'
+        dri32.mkdir()
+        (dri32 / 'radeonsi_drv_video.so').touch()
+        mock = (self.tools / 'ldd').read_text()
+        mock = mock.replace('#!/bin/sh\n', '#!/bin/sh\n'
+            + 'case "$1" in *dri32*) printf "libc.so.6 => /lib/libc.so.6 (0x1)\\n/lib/ld-linux.so.2 (0x2)\\n"; exit 0 ;; esac\n')
+        self.executable('ldd', mock)
+        result = self.run_selection(LIBVA_DRIVERS_PATH=str(self.dri) + ':' + str(dri32))
+        loader, directory = result.stdout.splitlines()
+        self.assertEqual(loader, str(self.loader))
+        self.assertNotIn('/lib/libc.so.6', (Path(directory) / 'inputs').read_text())
+
     def test_explicit_private_runtime_does_not_probe_the_host(self):
         result = self.run_selection(DESKPORT_APPIMAGE_RUNTIME='private')
         self.assertEqual(result.stdout, '\n\n')

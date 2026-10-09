@@ -31,6 +31,9 @@ deskport_graphics_env() {
             [ -f "$dp_library" ] || continue
             dp_listing=$(env -u LD_LIBRARY_PATH -u LD_PRELOAD "$dp_ldd" "$dp_library" 2>/dev/null) || continue
             case "$dp_listing" in *'not found'*) continue ;; esac
+            # Gaming distributions commonly install both Mesa architectures.
+            # A 32-bit driver must not inject its libc into this x86_64 cohort.
+            case "$dp_listing" in *'/ld-linux-x86-64.so.2 '*) ;; *) continue ;; esac
             printf '%s\n' "$dp_library" >> "$dp_temp/inputs"
             printf '%s\n' "$dp_listing" | awk '
                 $2 == "=>" && $3 ~ /^\// { print $3 }
