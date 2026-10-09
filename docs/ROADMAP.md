@@ -19,6 +19,13 @@ owned child PIDs. The AppImage-only `0.7.0-rc.3` candidate must pass KWin 6.6.6
 and 6.7.5 lifecycle, policy, permission and packaged-runtime checks before
 publication. Bazzite hardware capture, input and VA-API remain reporter checks.
 
+Final artifact capture exposed a separate portable-runtime omission: the bundled
+PipeWire library could not load its `support.system` SPA factory on a host without
+Ubuntu's plugin paths. Bundle matching SPA plugins, client modules and client
+configuration, with private launcher paths and corresponding source notices.
+Require real packaged Sunshine capture/encoder probes in the final display matrix,
+not just native capture and package startup. Do not publish until these pass.
+
 ## Persistent browser pairing — 2026-10-05
 
 Reason: the user requested native-client-like reconnects in ordinary Chrome and

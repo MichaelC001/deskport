@@ -134,6 +134,13 @@ for the added runtime libraries; it is also included inside the AppImage.
 The libraries remain dynamically linked and replaceable. Native packages retain
 their original runtime layout and system glibc requirements.
 
+The AppImage client runtimes also contain matching PipeWire SPA support,
+audio/video conversion plugins, client modules and client configuration files.
+These are loaded dynamically and cannot be found through ELF dependencies alone.
+AppImage launchers select their own runtime paths instead of distro-specific
+defaults. They still connect to the host's existing PipeWire server; no daemon,
+session manager or system configuration is installed or started by the bundle.
+
 Kernel interfaces, display/audio servers and hardware/vendor drivers remain host
 facilities. Bundling glibc does not establish support for every kernel, GPU or
 compositor. No personal configuration, credentials or device state is bundled.

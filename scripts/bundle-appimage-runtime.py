@@ -13,6 +13,32 @@ import shutil
 import subprocess
 
 
+PIPEWIRE_MODULES = ('rt', 'protocol-native', 'client-node', 'client-device',
+                    'adapter', 'metadata', 'session-manager')
+SPA_PLUGINS = ('support/libspa-support.so',
+               'audioconvert/libspa-audioconvert.so',
+               'videoconvert/libspa-videoconvert.so')
+
+
+def copy_pipewire_runtime(prefix, system, share):
+    """Copy dynamically loaded client inputs; ldd cannot discover these."""
+    inputs = [(system / 'spa-0.2' / name,
+               prefix / 'shared/lib/spa-0.2' / name) for name in SPA_PLUGINS]
+    inputs += [(system / 'pipewire-0.3' / f'libpipewire-module-{name}.so',
+                prefix / 'shared/lib/pipewire-0.3' / f'libpipewire-module-{name}.so')
+               for name in PIPEWIRE_MODULES]
+    inputs += [(share / name, prefix / 'share/pipewire' / name)
+               for name in ('client.conf', 'client-rt.conf')]
+    # Fail before copying an incomplete client runtime into the candidate.
+    for source, _ in inputs:
+        if not source.is_file():
+            raise RuntimeError(f'Missing PipeWire client runtime input: {source}')
+    for source, target in inputs:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target, follow_symlinks=True)
+    return inputs
+
+
 def elf(path):
     try:
         with path.open('rb') as stream:
@@ -89,6 +115,15 @@ def bundle(root, sharun, executables, excluded=None):
         if not source.exists():
             raise RuntimeError(f'Missing runtime input: {source}')
         copy_library(source)
+    # PipeWire loads SPA factories and client modules through dlopen using
+    # compiled-in distro paths. Bundle matching inputs in both private trees,
+    # never the server daemon or a session manager. Include their dependencies
+    # and source/copyright records in the same closure as ordinary libraries.
+    for source, target in copy_pipewire_runtime(prefix, system, Path('/usr/share/pipewire')):
+        metadata = {'path': str(source.resolve()), **provenance(source)}
+        if elf(target):
+            manifest[str(target.relative_to(runtime))] = metadata
+            queue.append(target)
     # Include software rendering for the old-system X11 startup check. Hardware
     # drivers remain supplied by the host kernel/vendor; do not bundle NVIDIA.
     dri = system / 'dri/swrast_dri.so'
@@ -156,6 +191,9 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 unset SHARUN_DIR LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
 export APPDIR="$root"
 export QML2_IMPORT_PATH="$root/usr/qml"
+export SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"
+export PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"
+export PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"
 # Keep host hardware drivers ahead of our software fallback. Do not let sharun
 # replace LIBGL_DRIVERS_PATH with a directory containing only swrast.
 export LIBGL_DRIVERS_PATH="${LIBGL_DRIVERS_PATH:+$LIBGL_DRIVERS_PATH:}/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"
@@ -166,6 +204,7 @@ exec "$root/usr/bin/deskport" "$@"
     content = launcher.read_text().replace('unset APPIMAGE APPDIR LD_LIBRARY_PATH',
                                           'unset SHARUN_DIR APPIMAGE APPDIR LD_LIBRARY_PATH')
     content = content.replace('export LD_LIBRARY_PATH="$root/usr/lib"\n', '')
+    content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"\nexport PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"\nexport PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport LIBGL_DRIVERS_PATH="/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"')
     launcher.write_text(content)
     print('Bundled independent viewer and host runtimes with sharun 0.8.1')

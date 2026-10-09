@@ -292,6 +292,18 @@ try:
             if missing and ('refusing physical display fallback' in text or 'Could not find display with name' in text): break
             if process.poll() is not None: break
             time.sleep(.1)
+        private_host = Path(host).resolve().parent / 'sunshine/usr/shared/lib'
+        if not missing and 'Found H.264 encoder:' in text and (private_host / 'libc.so.6').exists():
+            maps = Path(f'/proc/{process.pid}/maps').read_text()
+            for relative in ('spa-0.2/support/libspa-support.so',
+                             'pipewire-0.3/libpipewire-module-protocol-native.so',
+                             'pipewire-0.3/libpipewire-module-client-node.so'):
+                assert str(private_host / relative) in maps, f'Missing private PipeWire input: {relative}\n{maps}'
+            external_pipewire = [line for line in maps.splitlines()
+                if any(name in line for name in ('libpipewire', 'libspa-'))
+                and not line.split()[-1].startswith(str(private_host.parent.parent) + '/')]
+            assert not external_pipewire, external_pipewire
+            print('PASS: packaged capture uses private PipeWire client modules and SPA support')
         process.terminate()
         try: process.wait(timeout=5)
         except subprocess.TimeoutExpired: process.kill(); process.wait()

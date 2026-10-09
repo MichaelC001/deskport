@@ -38,6 +38,24 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
         assert result.returncode == 0, output
         assert (version if flag == '--version' else 'Usage:') in output, output
     host = root / 'usr/libexec/deskport-host'
+    # Version/API startup alone does not load the client's PipeWire plugin tree.
+    # Keep this structural gate alongside the real KWin capture regression.
+    if (root / 'usr/shared/lib/libc.so.6').exists():
+        for prefix in (root / 'usr', root / 'usr/libexec/sunshine/usr'):
+            for relative in ('shared/lib/spa-0.2/support/libspa-support.so',
+                             'shared/lib/spa-0.2/audioconvert/libspa-audioconvert.so',
+                             'shared/lib/spa-0.2/videoconvert/libspa-videoconvert.so',
+                             'share/pipewire/client.conf', 'share/pipewire/client-rt.conf'):
+                assert (prefix / relative).is_file(), f'Missing portable PipeWire input: {prefix / relative}'
+            for module in ('rt', 'protocol-native', 'client-node', 'client-device',
+                           'adapter', 'metadata', 'session-manager'):
+                assert (prefix / f'shared/lib/pipewire-0.3/libpipewire-module-{module}.so').is_file(), module
+        for launcher in (root / 'AppRun', host):
+            text = launcher.read_text()
+            for key, relative in [('SPA_PLUGIN_DIR', 'shared/lib/spa-0.2'),
+                                  ('PIPEWIRE_MODULE_DIR', 'shared/lib/pipewire-0.3'),
+                                  ('PIPEWIRE_CONFIG_DIR', 'share/pipewire')]:
+                assert f'export {key}="$root/usr/{relative}"' in text, launcher
     if host.exists():
         result = subprocess.run([str(host), '--version'], env=env, cwd=state,
                                 capture_output=True, text=True, timeout=30, check=True)

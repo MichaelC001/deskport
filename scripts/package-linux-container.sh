@@ -16,7 +16,7 @@ apt-get install -y --no-install-recommends \
     libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \
     libswscale-dev libva-dev libvdpau-dev libdrm-dev libegl1-mesa-dev libgl1-mesa-dev \
     libwayland-dev libx11-dev libxkbcommon-dev libxcb-cursor0 libfuse2t64 \
-    libpipewire-0.3-0t64 libpipewire-0.3-dev desktop-file-utils \
+    libpipewire-0.3-0t64 libpipewire-0.3-dev libpipewire-0.3-modules pipewire-bin desktop-file-utils \
     cmake ninja-build pkg-config libcap-dev libcurl4-openssl-dev libevdev-dev \
     libgbm-dev libminiupnpc-dev libnuma-dev libpulse-dev libsystemd-dev libudev-dev \
     libxcb-shm0-dev libxcb-xfixes0-dev libxfixes-dev libxrandr-dev libxtst-dev \
