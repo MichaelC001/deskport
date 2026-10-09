@@ -153,6 +153,30 @@ struct ActiveTopology {
         return false;
     }
 };
+// Diagnostics for rejected configurations: one line per path and mode.
+void dumpTopology(const char* tag, const ActiveTopology& t) {
+    std::cerr<<"Display topology "<<tag<<": "<<t.paths.size()<<" paths, "<<t.modes.size()<<" modes"<<std::endl;
+    for(size_t i=0;i<t.paths.size();++i) {
+        const auto& p=t.paths[i];
+        const bool virt=p.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE;
+        std::cerr<<"  path "<<i<<" flags=0x"<<std::hex<<p.flags<<std::dec<<" src="<<p.sourceInfo.adapterId.LowPart<<":"<<p.sourceInfo.id
+                 <<" tgt="<<p.targetInfo.adapterId.LowPart<<":"<<p.targetInfo.id<<" rot="<<p.targetInfo.rotation<<" scale="<<p.targetInfo.scaling
+                 <<" avail="<<p.targetInfo.targetAvailable;
+        if(virt) std::cerr<<" srcMode="<<p.sourceInfo.sourceModeInfoIdx<<" clone="<<p.sourceInfo.cloneGroupId
+                          <<" tgtMode="<<p.targetInfo.targetModeInfoIdx<<" desktop="<<p.targetInfo.desktopModeInfoIdx;
+        else std::cerr<<" srcMode="<<p.sourceInfo.modeInfoIdx<<" tgtMode="<<p.targetInfo.modeInfoIdx;
+        std::cerr<<std::endl;
+    }
+    for(size_t i=0;i<t.modes.size();++i) {
+        const auto& m=t.modes[i];
+        std::cerr<<"  mode "<<i<<" type="<<m.infoType<<" id="<<m.id<<" adapter="<<m.adapterId.LowPart;
+        if(m.infoType==DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
+            std::cerr<<" source "<<m.sourceMode.width<<"x"<<m.sourceMode.height<<" at "<<m.sourceMode.position.x<<","<<m.sourceMode.position.y;
+        else if(m.infoType==DISPLAYCONFIG_MODE_INFO_TYPE_TARGET)
+            std::cerr<<" target active "<<m.targetMode.targetVideoSignalInfo.activeSize.cx<<"x"<<m.targetMode.targetVideoSignalInfo.activeSize.cy;
+        std::cerr<<std::endl;
+    }
+}
 ActiveTopology sessionTopology;
 ActiveTopology idleTopology;
 bool policyChanged = false;
@@ -172,6 +196,39 @@ bool preservesPhysicalSources(const ActiveTopology& before, const ActiveTopology
         if(a.rotation!=b.rotation||a.scaling!=b.scaling||a.refreshRate.Numerator!=b.refreshRate.Numerator||a.refreshRate.Denominator!=b.refreshRate.Denominator||a.scanLineOrdering!=b.scanLineOrdering)return false;
     }
     return true;
+}
+// The complete pre-sharing physical topology plus the owned output's path and
+// modes from the live topology, placed at the requested position.
+bool rebuildWithOwned(const ActiveTopology& before, const ActiveTopology& live, const DEVMODEW& target, ActiveTopology& out) {
+    out=before;
+    for(const auto& path:live.paths) {
+        DISPLAYCONFIG_SOURCE_DEVICE_NAME name{};
+        name.header.type=DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+        name.header.size=sizeof(name);name.header.adapterId=path.sourceInfo.adapterId;name.header.id=path.sourceInfo.id;
+        if(DisplayConfigGetDeviceInfo(&name.header))return false;
+        if(output.compare(QString::fromWCharArray(name.viewGdiDeviceName),Qt::CaseInsensitive))continue;
+        auto owned=path;
+        const bool virt=owned.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE;
+        const auto copy=[&](UINT32 index, UINT32 invalid)->UINT32 {
+            if(index==invalid||index>=live.modes.size())return invalid;
+            out.modes.push_back(live.modes[index]);return UINT32(out.modes.size()-1);
+        };
+        UINT32 source;
+        if(virt) {
+            owned.sourceInfo.sourceModeInfoIdx=source=copy(path.sourceInfo.sourceModeInfoIdx,DISPLAYCONFIG_PATH_SOURCE_MODE_IDX_INVALID);
+            owned.targetInfo.targetModeInfoIdx=copy(path.targetInfo.targetModeInfoIdx,DISPLAYCONFIG_PATH_TARGET_MODE_IDX_INVALID);
+            owned.targetInfo.desktopModeInfoIdx=DISPLAYCONFIG_PATH_DESKTOP_IMAGE_IDX_INVALID;
+        } else {
+            owned.sourceInfo.modeInfoIdx=source=copy(path.sourceInfo.modeInfoIdx,DISPLAYCONFIG_PATH_MODE_IDX_INVALID);
+            owned.targetInfo.modeInfoIdx=copy(path.targetInfo.modeInfoIdx,DISPLAYCONFIG_PATH_MODE_IDX_INVALID);
+        }
+        if(source>=out.modes.size()||out.modes[source].infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)return false;
+        auto& mode=out.modes[source].sourceMode;
+        mode.position=target.dmPosition;mode.width=target.dmPelsWidth;mode.height=target.dmPelsHeight;
+        out.paths.push_back(owned);
+        return true;
+    }
+    return false;
 }
 bool applyMode(DEVMODEW target) {
     if(!privateVirtual)return ChangeDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),&target,nullptr,0,nullptr)==DISP_CHANGE_SUCCESSFUL;
@@ -196,15 +253,18 @@ bool applyMode(DEVMODEW target) {
     }
     auto sameAdapter=[](LUID a,LUID b){return a.LowPart==b.LowPart&&a.HighPart==b.HighPart;};
     bool found=false;
+    // Any mismatch with the pre-sharing topology (a retired panel, a split
+    // duplicate group) is resolved by the full rebuild below, not by failing.
+    const char* mismatch=nullptr;
     for(auto& path:after.paths) {
         DISPLAYCONFIG_SOURCE_DEVICE_NAME name{};
         name.header.type=DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
         name.header.size=sizeof(name);name.header.adapterId=path.sourceInfo.adapterId;name.header.id=path.sourceInfo.id;
-        if(DisplayConfigGetDeviceInfo(&name.header))return false;
+        if(DisplayConfigGetDeviceInfo(&name.header)){mismatch="source name";break;}
         const bool owned=output.compare(QString::fromWCharArray(name.viewGdiDeviceName),Qt::CaseInsensitive)==0;
         if(owned) {
             const auto index=(path.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE)?path.sourceInfo.sourceModeInfoIdx:path.sourceInfo.modeInfoIdx;
-            if(index>=after.modes.size()||after.modes[index].infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)return false;
+            if(index>=after.modes.size()||after.modes[index].infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE){mismatch="owned source mode";break;}
             auto& source=after.modes[index].sourceMode;
             source.position=target.dmPosition;source.width=target.dmPelsWidth;source.height=target.dmPelsHeight;
             // The queried desktop-image rectangle describes the old source
@@ -215,7 +275,7 @@ bool applyMode(DEVMODEW target) {
             found=true;
         } else {
             const auto oldPath=std::find_if(before.paths.begin(),before.paths.end(),[&](const DISPLAYCONFIG_PATH_INFO& p){return sameAdapter(p.sourceInfo.adapterId,path.sourceInfo.adapterId)&&p.sourceInfo.id==path.sourceInfo.id&&sameAdapter(p.targetInfo.adapterId,path.targetInfo.adapterId)&&p.targetInfo.id==path.targetInfo.id;});
-            if(oldPath==before.paths.end())return false;
+            if(oldPath==before.paths.end()){mismatch="physical path changed";break;}
             path.targetInfo.rotation=oldPath->targetInfo.rotation;
             path.targetInfo.scaling=oldPath->targetInfo.scaling;
             path.targetInfo.refreshRate=oldPath->targetInfo.refreshRate;
@@ -229,12 +289,32 @@ bool applyMode(DEVMODEW target) {
             }
         }
     }
-    if(!found)return false;
+    if(!found&&!mismatch)mismatch="owned output missing";
+    // Every physical source of the pre-sharing topology must still be present.
+    if(!mismatch&&after.paths.size()<before.paths.size()+1)mismatch="physical path retired";
     const auto flags=SDC_USE_SUPPLIED_DISPLAY_CONFIG|SDC_VIRTUAL_MODE_AWARE|SDC_ALLOW_CHANGES;
-    auto rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_VALIDATE|flags);
-    if(!rc)rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_APPLY|flags);
-    if(rc)std::cerr<<"Preserving display topology failed: "<<rc<<std::endl;
-    if(rc)return false;
+    LONG rc=ERROR_INVALID_PARAMETER;
+    if(mismatch)std::cerr<<"Live topology differs from the pre-sharing layout ("<<mismatch<<")"<<std::endl;
+    else {
+        rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_VALIDATE|flags);
+        if(!rc)rc=SetDisplayConfig(UINT32(after.paths.size()),after.paths.data(),UINT32(after.modes.size()),after.modes.data(),SDC_APPLY|flags);
+    }
+    if(rc) {
+        if(!mismatch){std::cerr<<"Preserving display topology failed: "<<rc<<std::endl;dumpTopology("submitted",after);}
+        dumpTopology("before",before);
+        // Windows can retire a physical path when the indirect display
+        // arrives, e.g. a built-in panel beside an external monitor, and pick
+        // its own defaults for the rest. Patching only the surviving paths then
+        // leaves no source at the origin (87). Rebuild from the complete
+        // pre-sharing topology and append the owned path at its target place.
+        ActiveTopology desired;
+        if(!rebuildWithOwned(before,after,target,desired))return false;
+        dumpTopology("rebuilt",desired);
+        rc=SetDisplayConfig(UINT32(desired.paths.size()),desired.paths.data(),UINT32(desired.modes.size()),desired.modes.data(),SDC_VALIDATE|flags);
+        if(!rc)rc=SetDisplayConfig(UINT32(desired.paths.size()),desired.paths.data(),UINT32(desired.modes.size()),desired.modes.data(),SDC_APPLY|flags);
+        std::cerr<<"Pre-sharing topology with owned output: "<<rc<<std::endl;
+        if(rc)return false;
+    }
     ActiveTopology verified;
     if(!verified.read())return false;
     DEVMODEW actual{};
@@ -471,15 +551,22 @@ int main(int argc, char** argv) {
                 }
                 other={}; other.cb=sizeof(other);
             }
+            // The pre-sharing snapshot is authoritative: enabling the indirect
+            // display can make Windows apply temporary defaults (retire a panel,
+            // split a duplicate group, change resolutions) that the topology
+            // rebuild undoes. Position against the restored layout only.
+            bool fromSnapshot=false;
             for(const auto& mode:sessionTopology.modes) {
-                if(mode.infoType==DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)
-                    right=qMax(right,mode.sourceMode.position.x+LONG(mode.sourceMode.width));
+                if(mode.infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)continue;
+                const LONG edge=mode.sourceMode.position.x+LONG(mode.sourceMode.width);
+                right=fromSnapshot?qMax(right,edge):edge; fromSnapshot=true;
             }
             // Windows may reactivate a remembered placement above the primary.
             // Always place this session's owned output to the right of all existing
             // outputs; the external lease restores the actual pre-session topology.
             original.dmPosition.x = right;
-            original.dmPosition.y = primary.dmPosition.y;
+            // The pre-sharing primary is at the origin of the restored layout.
+            original.dmPosition.y = fromSnapshot ? 0 : primary.dmPosition.y;
         }
         original.dmFields |= DM_POSITION | DM_PELSWIDTH | DM_PELSHEIGHT;
         if (!writeState(true) || !applyMode(original)) {
