@@ -167,6 +167,8 @@ drivers, incomplete/conflicting closures or failed preflight retain the private
 runtime. Host drivers, packages, services and security settings are never changed.
 Cache entries are under `$XDG_CACHE_HOME/DeskPort/graphics-runtime` (or
 `~/.cache/DeskPort/graphics-runtime`) and do not alter the AppImage mount.
+`DESKPORT_APPIMAGE_RUNTIME=private` explicitly selects the self-contained
+fallback for diagnostics; it does not claim hardware-driver compatibility.
 
 See `scripts/test-appimage-graphics.py` for offline selection/fallback checks and
 `tests/va-runtime-probe.c` / `tests/vaapi-codec-probe.c` for explicit synthetic

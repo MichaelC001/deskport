@@ -50,7 +50,7 @@ class GraphicsRuntime(unittest.TestCase):
 
     def run_selection(self, **overrides):
         env = dict(os.environ, HOME=str(self.root), XDG_CACHE_HOME=str(self.root / 'cache with spaces'),
-                   LIBVA_DRIVERS_PATH=str(self.dri))
+                   LIBVA_DRIVERS_PATH=str(self.dri), DESKPORT_APPIMAGE_RUNTIME='auto')
         env.update(overrides)
         env.pop('SHARUN_LDNAME', None)
         env.pop('SHARUN_EXTRA_LIBRARY_PATH', None)
@@ -74,6 +74,11 @@ class GraphicsRuntime(unittest.TestCase):
 
     def test_old_host_keeps_private_runtime(self):
         result = self.run_selection(MOCK_GLIBC='2.35')
+        self.assertEqual(result.stdout, '\n\n')
+        self.assertFalse((self.root / 'cache with spaces').exists())
+
+    def test_explicit_private_runtime_does_not_probe_the_host(self):
+        result = self.run_selection(DESKPORT_APPIMAGE_RUNTIME='private')
         self.assertEqual(result.stdout, '\n\n')
         self.assertFalse((self.root / 'cache with spaces').exists())
 

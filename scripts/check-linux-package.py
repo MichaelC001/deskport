@@ -26,7 +26,9 @@ if str(root) == '/opt/deskport':
 with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
     state = pathlib.Path(temporary)
     env = {'PATH': '/usr/bin:/bin', 'HOME': temporary, 'QT_QPA_PLATFORM': 'offscreen',
-           'QT_QUICK_BACKEND': 'software', 'SDL_VIDEODRIVER': 'dummy'}
+           'QT_QUICK_BACKEND': 'software', 'SDL_VIDEODRIVER': 'dummy',
+           # Verify the self-contained fallback even on a modern build host.
+           'DESKPORT_APPIMAGE_RUNTIME': 'auto' if os.environ.get('DESKPORT_TEST_HOST_GRAPHICS') == '1' else 'private'}
     for key in ['XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_CACHE_HOME', 'XDG_STATE_HOME', 'XDG_RUNTIME_DIR']:
         path = state / key.lower()
         path.mkdir(mode=0o700)
@@ -114,7 +116,10 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 private_libc = root / 'usr/libexec/sunshine/usr/shared/lib/libc.so.6'
                 if private_libc.exists():
                     maps = pathlib.Path(f'/proc/{server.pid}/maps').read_text()
-                    assert str(private_libc) in maps, 'Host did not use its private glibc'
+                    if env['DESKPORT_APPIMAGE_RUNTIME'] == 'private':
+                        assert str(private_libc) in maps, 'Host did not use its private glibc'
+                    else:
+                        assert str(private_libc) not in maps, 'Host did not select the modern driver cohort'
                     expected = root / 'usr/libexec/sunshine/usr/bin/sunshine'
                     assert pathlib.Path(f'/proc/{server.pid}/exe').resolve() == expected
                 assert snapshot['status'] is True and snapshot['version'] == 1, snapshot

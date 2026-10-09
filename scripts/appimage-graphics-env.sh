@@ -3,6 +3,7 @@
 # dependencies together, without replacing Qt, SDL, FFmpeg or PipeWire.
 # Old hosts retain the portable glibc/software fallback. No host files change.
 deskport_graphics_env() {
+    [ "${DESKPORT_APPIMAGE_RUNTIME:-auto}" != private ] || return 0
     dp_prefix=$1
     dp_tools=/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin
     dp_ldd=$(PATH=$dp_tools command -v ldd) || return 0
