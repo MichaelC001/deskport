@@ -2660,3 +2660,19 @@ its removal on disconnect, and quiet recovery versus explicit raising), UI
 (26), transition window (30 transitions), session navigation, core workspace
 and Qt adapter vectors, and an incremental full app compile. Live tray, KDE,
 limit-hint rendering and real network-loss recovery remain acceptance checks.
+
+### AppImage VA-API and driver-cohort follow-up — 2026-10-09
+
+Reason: issue #5 also reported that an older AppImage VA-API interface could not
+load Fedora's Mesa `__vaDriverInit_1_23`. Reproduction on a current AMD host found
+a second blocker: private glibc could not satisfy the driver's newer TLS ABI.
+
+AppImage viewer and host now use checksum-pinned libva 2.23.0. Modern-host GPU
+drivers are selected with their dependency closure and matching libc/interpreter,
+without replacing the private Qt/media/PipeWire stack. Old-system fallback and
+canonical public executable identity remain required. Native packages, deployed
+services, the shared core and stable main are unchanged by this candidate.
+
+Validation: offline selection/fallback tests and synthetic AMD hardware encode /
+decode probes passed during development. Final AppImage, isolated KWin lifecycle,
+old-system runtime and affected-user Bazzite acceptance are separate release gates.

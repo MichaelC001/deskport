@@ -15,7 +15,7 @@ apt-get install -y --no-install-recommends \
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript \
     libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \
     libswscale-dev libva-dev libvdpau-dev libdrm-dev libegl1-mesa-dev libgl1-mesa-dev \
-    libwayland-dev libx11-dev libxkbcommon-dev libxcb-cursor0 libfuse2t64 \
+    libwayland-dev libx11-dev libx11-xcb-dev libxcb-dri3-dev libxkbcommon-dev libxcb-cursor0 libfuse2t64 \
     libpipewire-0.3-0t64 libpipewire-0.3-dev libpipewire-0.3-modules pipewire-bin desktop-file-utils \
     cmake ninja-build pkg-config libcap-dev libcurl4-openssl-dev libevdev-dev \
     libgbm-dev libminiupnpc-dev libnuma-dev libpulse-dev libsystemd-dev libudev-dev \
@@ -106,7 +106,9 @@ python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
 appimage_dir="$work/DeskPort-AppImage.AppDir"
 rm -rf "$appimage_dir"
 cp -a "$appdir" "$appimage_dir"
-python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun"
+bash "$repo/scripts/build-appimage-libva.sh"
+python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun" \
+    --libva-prefix "$work/cache/libva-2.23.0-runtime"
 cp "$repo/packaging/SHARUN-LICENSE" "$appimage_dir/usr/share/doc/deskport/"
 # Exact source URLs and Ubuntu copyright notices accompany the runtime binaries.
 sed 's/^Types: deb$/Types: deb-src/' /etc/apt/sources.list.d/ubuntu.sources > /etc/apt/sources.list.d/deskport-source.sources

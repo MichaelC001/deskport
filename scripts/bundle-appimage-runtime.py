@@ -47,8 +47,21 @@ def elf(path):
         return False
 
 
-def bundle(root, sharun, executables, excluded=None):
+def bundle(root, sharun, executables, excluded=None, libva=None):
     prefix = root / 'usr'
+    va_metadata = None
+    if libva is not None:
+        va_metadata = json.loads((libva / 'source.json').read_text())
+        required = ('libva.so.2', 'libva-drm.so.2', 'libva-x11.so.2', 'libva-wayland.so.2')
+        for name in required:
+            if not (libva / 'usr/lib' / name).is_file():
+                raise RuntimeError(f'Missing pinned VA-API runtime: {name}')
+        # Replace both the viewer's older distro libva and the upstream host's
+        # copy. Never leave a second, silently selected VA-API version behind.
+        for old in (prefix / 'lib').glob('libva*.so*'):
+            old.unlink()
+        for name in required:
+            shutil.copy2(libva / 'usr/lib' / name, prefix / 'lib' / name)
     runtime = prefix / 'shared/lib'
     runtime.mkdir(parents=True)
     binaries = prefix / 'shared/bin'
@@ -70,6 +83,11 @@ def bundle(root, sharun, executables, excluded=None):
     notices = root / 'usr/share/doc/deskport/runtime-licenses'
     notices.mkdir(parents=True, exist_ok=True)
     packages = {}
+    if va_metadata is not None:
+        packages['libva-upstream'] = va_metadata
+        shutil.copy2(libva / 'COPYING', notices / 'libva-upstream.copyright')
+        for name in required:
+            manifest[name] = {'path': str(libva / 'usr/lib' / name), **va_metadata}
 
     def provenance(source):
         candidates = dict.fromkeys(str(path) for path in (source, source.resolve()))
@@ -186,18 +204,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('appdir', type=Path)
     parser.add_argument('sharun', type=Path)
+    parser.add_argument('--libva-prefix', type=Path, required=True,
+                        help='Pinned libva build including source.json and COPYING')
     args = parser.parse_args()
     root = args.appdir.resolve()
     host = root / 'usr/libexec/sunshine'
-    bundle(host, args.sharun, ['bin/sunshine'])
-    bundle(root, args.sharun, ['bin/deskport'], excluded=host)
+    bundle(host, args.sharun, ['bin/sunshine'], libva=args.libva_prefix)
+    bundle(root, args.sharun, ['bin/deskport'], excluded=host, libva=args.libva_prefix)
+    graphics_env = Path(__file__).with_name('appimage-graphics-env.sh')
+    for tree in (root, host):
+        (tree / 'usr/libexec').mkdir(exist_ok=True)
+        shutil.copy2(graphics_env, tree / 'usr/libexec/deskport-graphics-env.sh')
     # Avoid exporting bundled glibc through LD_LIBRARY_PATH into host tools or
     # desktop applications launched later. sharun supplies --library-path.
     (root / 'AppRun').unlink()
     (root / 'AppRun').write_text('''#!/bin/sh
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-unset SHARUN_DIR LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
+unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
 export APPDIR="$root"
 export QML2_IMPORT_PATH="$root/usr/qml"
 export SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"
@@ -207,16 +231,24 @@ export __EGL_VENDOR_LIBRARY_DIRS="${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIB
 # Keep host hardware drivers ahead of our software fallback. Do not let sharun
 # replace LIBGL_DRIVERS_PATH with a directory containing only swrast.
 export LIBGL_DRIVERS_PATH="${LIBGL_DRIVERS_PATH:+$LIBGL_DRIVERS_PATH:}/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"
+export LIBVA_DRIVERS_PATH="${LIBVA_DRIVERS_PATH:-/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri}"
+. "$root/usr/libexec/deskport-graphics-env.sh"
+deskport_graphics_env "$root/usr" deskport
 exec "$root/usr/bin/deskport" "$@"
 ''')
     (root / 'AppRun').chmod(0o755)
     launcher = root / 'usr/libexec/deskport-host'
     content = launcher.read_text().replace('unset APPIMAGE APPDIR LD_LIBRARY_PATH',
-                                          'unset SHARUN_DIR APPIMAGE APPDIR LD_LIBRARY_PATH')
+                                          'unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH APPIMAGE APPDIR LD_LIBRARY_PATH')
     content = content.replace('export LD_LIBRARY_PATH="$root/usr/lib"\n', '')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport __EGL_VENDOR_LIBRARY_DIRS="${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIBRARY_DIRS:}/run/opengl-driver/share/glvnd/egl_vendor.d:/usr/share/glvnd/egl_vendor.d:$root/usr/share/glvnd/egl_vendor.d"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"\nexport PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"\nexport PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport LIBGL_DRIVERS_PATH="/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri:$root/usr/shared/lib/mesa-software"')
+    content = content.replace('exec "$root/usr/bin/sunshine"',
+        'export LIBVA_DRIVERS_PATH="${LIBVA_DRIVERS_PATH:-/run/opengl-driver/lib/dri:/usr/lib/x86_64-linux-gnu/dri:/usr/lib64/dri:/usr/lib/dri}"\n'
+        '. "$root/usr/libexec/deskport-graphics-env.sh"\n'
+        'deskport_graphics_env "$root/usr" sunshine\n'
+        'exec "$root/usr/bin/sunshine"')
     launcher.write_text(content)
     print('Bundled independent viewer and host runtimes with sharun 0.8.1')
 

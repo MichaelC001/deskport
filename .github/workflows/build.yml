@@ -21,6 +21,11 @@ jobs:
         run: nix develop -c python3 scripts/test-core.py
       - name: Build
         run: nix build -L
+      - name: Portable runtime regression checks
+        run: |
+          python3 scripts/test-appimage-graphics.py
+          python3 scripts/test-appimage-pipewire.py
+          python3 scripts/test-appimage-source-index.py
       - name: CLI and desktop-entry smoke check
         run: python3 scripts/deskport-smoke.py ./result
 

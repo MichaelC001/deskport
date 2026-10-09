@@ -277,7 +277,9 @@ try:
         descriptor = work / 'virtual-display.json'
         descriptor.write_text(json.dumps(dict(node=initial.get('pipewireNode'), serial=initial.get('pipewireSerial'), output=initial['outputName'], width=width, height=height, scale=scale)))
         config = work / 'sunshine.conf'
-        config.write_text(f'capture = {"portal" if gnome else "kwin"}\noutput_name = {initial["outputName"] if gnome else "DeskPort-stale-startup-name"}\nencoder = software\nkeyboard = disabled\nmouse = disabled\ncontroller = disabled\nstream_audio = disabled\nupnp = disabled\nsystem_tray = disabled\nbind_address = 127.0.0.1\nport = {57989 if gnome else 56989}\nmin_log_level = 1\nfile_state = {work}/state.json\ncredentials_file = {work}/control.json\npkey = {work}/key.pem\ncert = {work}/cert.pem\nfile_apps = {work}/apps.json\nlog_path = {work}/sunshine.log\n')
+        encoder = os.environ.get('DESKPORT_TEST_ENCODER', 'software')
+        assert encoder in ('software', 'vaapi'), encoder
+        config.write_text(f'capture = {"portal" if gnome else "kwin"}\noutput_name = {initial["outputName"] if gnome else "DeskPort-stale-startup-name"}\nencoder = {encoder}\nkeyboard = disabled\nmouse = disabled\ncontroller = disabled\nstream_audio = disabled\nupnp = disabled\nsystem_tray = disabled\nbind_address = 127.0.0.1\nport = {57989 if gnome else 56989}\nmin_log_level = 1\nfile_state = {work}/state.json\ncredentials_file = {work}/control.json\npkey = {work}/key.pem\ncert = {work}/cert.pem\nfile_apps = {work}/apps.json\nlog_path = {work}/sunshine.log\n')
         (work / 'apps.json').write_text('{"apps": []}')
         hostenv = dict(os.environ, DBUS_SYSTEM_BUS_ADDRESS='unix:path=' + str(work / 'no-system-bus'))
         hostenv['DESKPORT_VIRTUAL_DISPLAY'] = str(descriptor)
@@ -289,6 +291,7 @@ try:
         private_host = Path(host).resolve().parent / 'sunshine/usr/shared/lib'
         private_runtime = (private_host / 'libc.so.6').exists()
         pipewire_maps = set()
+        vaapi_maps = set()
         while time.monotonic() < deadline:
             # Encoder probing destroys its temporary capture context before
             # logging success. Observe module mappings while it is still alive,
@@ -298,6 +301,8 @@ try:
                     maps = Path(f'/proc/{process.pid}/maps').read_text()
                     pipewire_maps.update(line.split()[-1] for line in maps.splitlines()
                         if any(name in line for name in ('libpipewire', 'libspa-')))
+                    vaapi_maps.update(line.split()[-1] for line in maps.splitlines()
+                        if any(name in line for name in ('libva.', 'libva-', 'libgallium', '_drv_video.so')))
                 except FileNotFoundError:
                     pass
             log.seek(0); text = log.read()
@@ -323,6 +328,12 @@ try:
             print('PASS: removed virtual output refuses physical capture fallback')
             return
         assert 'Found H.264 encoder:' in text, text[-9000:]
+        if encoder == 'vaapi':
+            assert 'h264_vaapi' in text, text[-9000:]
+            if private_runtime:
+                assert str(private_host.parent.parent / 'lib/libva.so.2') in vaapi_maps, sorted(vaapi_maps)
+                assert any('libgallium' in name or '_drv_video.so' in name for name in vaapi_maps), sorted(vaapi_maps)
+            print('PASS: actual packaged Sunshine H.264 VAAPI encoder and GPU driver mappings')
         assert (f'DeskPort owned virtual capture: {initial["outputName"]} {width}x{height}' if gnome else f'name {initial["outputName"]}') in text, text[-9000:]
         print(f'PASS: {"GNOME" if gnome else "KWin"} real Sunshine capture/encoder probe at {width}x{height}@{scale}')
     capture(1280, 720, 1)

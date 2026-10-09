@@ -42,6 +42,11 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
     # Keep this structural gate alongside the real KWin capture regression.
     if (root / 'usr/shared/lib/libc.so.6').exists():
         for prefix in (root / 'usr', root / 'usr/libexec/sunshine/usr'):
+            metadata = json.loads((prefix / 'shared/lib/manifest.json').read_text())
+            for name in ('libva.so.2', 'libva-drm.so.2', 'libva-x11.so.2', 'libva-wayland.so.2'):
+                assert (prefix / 'lib' / name).is_file(), name
+                assert metadata[name]['source_version'] == '2.23.0', metadata[name]
+            assert (prefix / 'libexec/deskport-graphics-env.sh').is_file()
             for relative in ('shared/lib/spa-0.2/support/libspa-support.so',
                              'shared/lib/spa-0.2/audioconvert/libspa-audioconvert.so',
                              'shared/lib/spa-0.2/videoconvert/libspa-videoconvert.so',
@@ -53,6 +58,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 assert (prefix / f'shared/lib/pipewire-0.3/libpipewire-module-{module}.so').is_file(), module
         for launcher in (root / 'AppRun', host):
             text = launcher.read_text()
+            assert 'deskport_graphics_env' in text and 'export LIBVA_DRIVERS_PATH=' in text, launcher
             assert 'export __EGL_VENDOR_LIBRARY_DIRS=' in text and '$root/usr/share/glvnd/egl_vendor.d' in text, launcher
             for key, relative in [('SPA_PLUGIN_DIR', 'shared/lib/spa-0.2'),
                                   ('PIPEWIRE_MODULE_DIR', 'shared/lib/pipewire-0.3'),

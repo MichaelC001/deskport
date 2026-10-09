@@ -146,3 +146,28 @@ bundled software fallback; host vendor registration paths remain available.
 Kernel interfaces, display/audio servers and hardware/vendor drivers remain host
 facilities. Bundling glibc does not establish support for every kernel, GPU or
 compositor. No personal configuration, credentials or device state is bundled.
+
+### AppImage VA-API and modern Mesa compatibility (0.7.0-rc.4)
+
+Both private processes use unmodified libva 2.23.0 (VA-API 1.23), built against
+the portable Ubuntu runtime. This replaces the older viewer interface and avoids
+silently retaining a different upstream host copy. The exact upstream source
+archive and SHA-256 are pinned in `scripts/linux-tools.json`; the MIT copyright
+notice and corresponding-source entry accompany each private tree. This is an
+AppImage-only replacement; native packages continue to use distribution libva.
+
+Modern Mesa can require a newer libc ABI as well as a newer VA-API initializer.
+On hosts with glibc 2.39 or newer, the launchers inspect installed VA/EGL/GLX
+graphics libraries using the system `ldd`. A selective, user-owned symlink cache
+keeps the driver dependency closure, libc companions and matching interpreter
+together. A loader preflight must succeed before this cohort is selected through
+sharun; the public executable identity is retained. Qt, SDL, FFmpeg and PipeWire
+are not replaced wholesale by a system library search path. Older hosts, absent
+drivers, incomplete/conflicting closures or failed preflight retain the private
+runtime. Host drivers, packages, services and security settings are never changed.
+Cache entries are under `$XDG_CACHE_HOME/DeskPort/graphics-runtime` (or
+`~/.cache/DeskPort/graphics-runtime`) and do not alter the AppImage mount.
+
+See `scripts/test-appimage-graphics.py` for offline selection/fallback checks and
+`tests/va-runtime-probe.c` / `tests/vaapi-codec-probe.c` for explicit synthetic
+GPU validation. This selection is not a claim of universal GPU/vendor support.

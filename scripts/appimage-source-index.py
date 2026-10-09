@@ -46,6 +46,13 @@ for manifest in root.rglob('runtime-licenses/packages.json'):
         packages[(item['source'], item['source_version'])] = item
 result = []
 for (name, version), package in sorted(packages.items()):
+    if 'archives' in package:
+        archives = package['archives']
+        if not archives or any(not re.fullmatch(r'SHA256:[0-9a-f]{64}', item['checksum'])
+                               or not item['url'].startswith('https://') for item in archives):
+            raise RuntimeError(f'Invalid pinned upstream source: {name} {version}')
+        result.append(dict(source=name, version=version, archives=archives))
+        continue
     try:
         output = subprocess.check_output(['apt-get', '--print-uris', '--only-source',
             'source', '--download-only', f'{name}={version}'], text=True)
