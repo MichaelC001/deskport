@@ -35,9 +35,15 @@ python3 - "$repo/scripts/linux-tools.json" "$work/cache" <<'PY'
 import hashlib,json,pathlib,subprocess,sys
 for name,item in json.load(open(sys.argv[1])).items():
     path=pathlib.Path(sys.argv[2])/name
-    if not path.exists():
-        subprocess.run(['curl','-fL','--retry','3','-o',str(path),item['url']],check=True)
-    if hashlib.sha256(path.read_bytes()).hexdigest()!=item['sha256']:
+    def verified():
+        return path.exists() and hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256']
+    # Upstream "continuous" tags move; the mirror keeps the verified build.
+    for url in [item['url']]+([item['mirror']] if 'mirror' in item else []):
+        if verified():
+            break
+        path.unlink(missing_ok=True)
+        subprocess.run(['curl','-fL','--retry','3','-o',str(path),url],check=False)
+    if not verified():
         raise SystemExit(f'Checksum mismatch: {name}; review upstream tool changes before updating lock')
     path.chmod(0o755)
 PY

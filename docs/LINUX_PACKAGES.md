@@ -264,7 +264,12 @@ This skips native installer creation and writes checksums only for the candidate
 AppImage. It still builds the viewer and bundled host and runs the package checks.
 
 The rootless Podman build uses a pinned Ubuntu 24.04 image and checksum-pinned
-packaging tools/Sunshine assets. The portable host is compiled from the exact
+packaging tools/Sunshine assets. Upstream publishes linuxdeploy, its Qt plugin,
+appimagetool and the AppImage runtime under moving `continuous` tags; when those
+files change, the build falls back to the verified copies attached to the
+[`build-tools-2026.09`](https://github.com/keithxc/deskport/releases/tag/build-tools-2026.09)
+release, and every tool is still checked against its locked SHA-256.
+The portable host is compiled from the exact
 Sunshine revision in `scripts/build-linux-host.sh`, with the same session-settings,
 authenticated takeover, Linux display and reconnect-lifetime patches used by
 the Nix package. The FFmpeg Vulkan backports rebuild four translation units
