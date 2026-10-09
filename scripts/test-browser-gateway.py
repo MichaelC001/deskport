@@ -27,7 +27,7 @@ args.output.mkdir(parents=True, exist_ok=True)
 work = Path(tempfile.mkdtemp(prefix="test-", dir=args.output))
 project = work / "test.pro"
 resources = work / "resources.qrc"
-(work / "index.html").write_text("<!doctype html><title>Isolated DeskPort</title>")
+(work / "index.html").write_text("<!doctype html><title>Isolated DeskPort</title><span>v@DESKPORT_VERSION@</span>")
 (work / "app.js").write_text("'use strict';")
 (work / "style.css").write_text("body { color: black; }")
 (work / "icon.svg").write_bytes((ROOT / "app/res/deskport.svg").read_bytes())
@@ -189,6 +189,7 @@ try:
     for name in ("browser.ini", "https-key.pem", "https-cert.pem"):
         check((directory / name).stat().st_mode & 0o777 == 0o600, f"{name} is owner-only")
     status, page, headers = request(info, directory, "GET", "/", raw=True)
+    check(b"v0.7.0-test" in page and b"@DESKPORT_VERSION@" not in page, "embedded page displays the serving application version")
     check(status == 200 and b"Isolated DeskPort" in page, "trusted TLS certificate has loopback SAN and serves embedded page")
     status, icon, headers = request(info, directory, "GET", "/icon.svg", raw=True)
     check(status == 200 and icon.startswith(b"<svg") and headers.get("Content-Type") == "image/svg+xml",
