@@ -14,6 +14,7 @@ static void report(const QJsonObject& object) {
 int main(int argc, char** argv) {
     QCoreApplication application(argc, argv);
     QCoreApplication::setApplicationName("DeskPort Browser Isolated Test");
+    QCoreApplication::setApplicationVersion("0.7.0-test");
     if (qEnvironmentVariableIsSet("DESKPORT_TEST_CLASSIFY")) {
         // name, point-to-point, physical, address
         const QList<std::tuple<QString, bool, bool, QString>> cases{

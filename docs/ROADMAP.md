@@ -38,6 +38,20 @@ its packaged KWin 6.7.5 policy-0 capture/lifecycle check also passed. This is an
 AppImage-only prerelease on a fix branch; stable/main and deployed services remain
 unchanged. Keep issue #5 open for the affected user's actual Bazzite retest.
 
+## Compact browser top bar — 2026-10-09
+
+- Align the Web header with the native top bar: shared icon, inline product name
+  and build version, 56px desktop / 52px phone height, compact connection state
+  and disconnect action. Long host names truncate while actions remain reachable.
+- Keep browser pairing, media controls and fullscreen behavior unchanged. The
+  version follows the serving binary; narrow screens hide it like native UI.
+- Verified: 66 isolated Chrome/WebRTC checks, including 320px long-name
+  layout, and 163 isolated HTTPS/authentication checks including serving-version
+  substitution. Physical-device acceptance remains separate.
+- Full Nix build remains unverified: the local macOS flake has no default package;
+  the aarch64 Linux builder killed `cc1plus` while compiling the unchanged Sunshine
+  dependency, including a retry requesting one core.
+
 ## Persistent browser pairing — 2026-10-05
 
 Reason: the user requested native-client-like reconnects in ordinary Chrome and

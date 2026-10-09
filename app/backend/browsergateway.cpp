@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include "browsergateway.h"
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -866,7 +867,9 @@ void BrowserGateway::dispatch(Connection* connection) {
         else { error(connection, 404, "not-found", "Resource not found."); return; }
         QFile file(resource);
         if (!file.open(QIODevice::ReadOnly)) { error(connection, 503, "unavailable", "The browser client is not included in this build."); return; }
-        respond(connection, 200, file.readAll(), contentType); return;
+        auto content = file.readAll();
+        if (resource == ":/browser/index.html") content.replace("@DESKPORT_VERSION@", QCoreApplication::applicationVersion().toHtmlEscaped().toUtf8());
+        respond(connection, 200, content, contentType); return;
     }
     QJsonObject body;
     if (connection->method == "POST") {

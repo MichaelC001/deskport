@@ -45,6 +45,7 @@ const cert = path.join(output, 'fixture-cert.pem');
 const key = path.join(output, 'fixture-key.pem');
 execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
 const resources = new Map(await Promise.all(['index.html', 'app.js', 'style.css'].map(async name => [name, await readFile(path.join(repo, 'app/browser', name))])));
+resources.set('index.html', Buffer.from(resources.get('index.html').toString().replace('@DESKPORT_VERSION@', '0.7.0-test')));
 resources.set('icon.svg', await readFile(path.join(repo, 'app/res/deskport.svg')));
 const server = https.createServer({ key: await readFile(key), cert: await readFile(cert) }, (request, response) => {
   const name = request.url === '/' ? 'index.html' : request.url.slice(1);
@@ -294,6 +295,16 @@ try {
   check('tablet toolbar remains inside viewport', await page.locator('.toolbar').evaluate(element => element.getBoundingClientRect().bottom <= innerHeight));
   await page.screenshot({ path: path.join(output, 'session-ipad-layout.png') });
   check('tablet layout has no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  check('desktop header matches native height and inline build version', await page.locator('.app-header').evaluate(element =>
+    element.getBoundingClientRect().height === 56 && element.querySelector('.app-version').textContent === 'v0.7.0-test'));
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.locator('#host-name').evaluate(element => { element.textContent = 'An isolated test computer with a very long name'; });
+  check('smallest phone keeps long host name and disconnect inside header', await page.locator('.app-header').evaluate(element => {
+    const host = element.querySelector('#host-name'), button = element.querySelector('#disconnect');
+    return element.getBoundingClientRect().height === 52 && host.scrollWidth > host.clientWidth &&
+      button.getBoundingClientRect().right <= innerWidth && document.documentElement.scrollWidth <= innerWidth;
+  }));
+  await page.screenshot({ path: path.join(output, 'session-phone-320.png') });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   check('phone toolbar remains inside viewport', await page.locator('.toolbar').evaluate(element => element.getBoundingClientRect().bottom <= innerHeight));
