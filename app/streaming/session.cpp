@@ -1667,6 +1667,24 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         m_SupportedVideoFormats.append(VIDEO_FORMAT_H264);
     }
 
+    // Hardware H.264 encoders (VideoToolbox, NVENC, AMF, QSV) reject frames with
+    // any dimension over 4096, which leaves the stream black. Prefer any other
+    // codec the host and client share, even with software decoding; otherwise
+    // stream a scaled-down picture.
+    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
+        if (m_SupportedVideoFormats & ~VIDEO_FORMAT_MASK_H264) {
+            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H264);
+        }
+        else {
+            const double factor = 4096.0 / qMax(m_StreamConfig.width, m_StreamConfig.height);
+            m_StreamConfig.width = int(m_StreamConfig.width * factor) & ~3;
+            m_StreamConfig.height = int(m_StreamConfig.height * factor) & ~3;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "H.264 cannot encode above 4096 pixels; streaming at %dx%d",
+                        m_StreamConfig.width, m_StreamConfig.height);
+        }
+    }
+
     // NVENC will fail to initialize when any dimension exceeds 4096 using:
     // - H.264 on all versions of NVENC
     // - HEVC prior to Pascal
