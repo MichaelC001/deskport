@@ -1206,6 +1206,28 @@ bool Session::initialize()
                 "Audio channel mask: %X",
                 CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
+    // Sunshine reports H.264 alone while it re-probes encoders, which a launch
+    // after a display change triggers. Wait out that window rather than drop
+    // HEVC and AV1 for the whole session.
+    for (int attempt = 0; attempt < 5 && !m_Computer->isNvidiaServerSoftware; ++attempt) {
+        {
+            QReadLocker lock(&m_Computer->lock);
+            if (m_Computer->maxLumaPixelsHEVC != 0 ||
+                (m_Computer->serverCodecModeSupport & (SCM_MASK_HEVC | SCM_MASK_AV1))) break;
+        }
+        if (attempt > 0) SDL_Delay(200);
+        try {
+            const QString serverInfo = NvHTTP(m_Computer).getServerInfo(NvHTTP::NVLL_ERROR, true);
+            const QString codecs = NvHTTP::getXmlString(serverInfo, "ServerCodecModeSupport");
+            const QString hevc = NvHTTP::getXmlString(serverInfo, "MaxLumaPixelsHEVC");
+            QWriteLocker lock(&m_Computer->lock);
+            if (!codecs.isEmpty()) m_Computer->serverCodecModeSupport = codecs.toInt();
+            if (!hevc.isEmpty()) m_Computer->maxLumaPixelsHEVC = hevc.toInt();
+        } catch (...) {
+            break;
+        }
+    }
+
     // Start with all codecs and profiles in priority order
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_HIGH10_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_MAIN10);
@@ -1669,20 +1691,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
     // Hardware H.264 encoders (VideoToolbox, NVENC, AMF, QSV) reject frames with
     // any dimension over 4096, which leaves the stream black. Prefer any other
-    // codec the host and client share, even with software decoding; otherwise
-    // stream a scaled-down picture.
-    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
-        if (m_SupportedVideoFormats & ~VIDEO_FORMAT_MASK_H264) {
-            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H264);
-        }
-        else {
-            const double factor = 4096.0 / qMax(m_StreamConfig.width, m_StreamConfig.height);
-            m_StreamConfig.width = int(m_StreamConfig.width * factor) & ~3;
-            m_StreamConfig.height = int(m_StreamConfig.height * factor) & ~3;
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "H.264 cannot encode above 4096 pixels; streaming at %dx%d",
-                        m_StreamConfig.width, m_StreamConfig.height);
-        }
+    // codec the host and client share, even with software decoding.
+    if ((m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) &&
+        (m_SupportedVideoFormats & ~VIDEO_FORMAT_MASK_H264)) {
+        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H264);
     }
 
     // NVENC will fail to initialize when any dimension exceeds 4096 using:
