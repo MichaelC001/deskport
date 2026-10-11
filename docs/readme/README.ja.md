@@ -8,7 +8,13 @@
   <a href="../../README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·
   <a href="README.zh-TW.md">繁體中文</a> ·
-  <b>日本語</b>
+  <b>日本語</b> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.pt-BR.md">Português (Brasil)</a> ·
+  <a href="README.ru.md">Русский</a>
 </p>
 
 <p align="center">
@@ -127,8 +133,11 @@ make -j4
 
 レビューしやすさを保つため、上流プロジェクトのファイル名は変更していません。
 
-## 上流との違い
+## Moonlight との違い
 
+- デバイス承認、引き継ぎ、デバイスごとの設定を備えた Sunshine ホストを同梱。
+- ビューアを隠してもセッションは接続されたまま。トレイ/メニューバーから呼び戻せます。
+- デスクトップホストが HTTPS のブラウザアクセスを提供。
 - 独立した `deskport` 実行ファイル、`DeskPort` Qt 設定名前空間、
   `io.github.keithxc.DeskPort` という Linux アプリケーション ID。
 - 既定でウィンドウ表示のストリーミングと絶対座標ポインタ操作。
@@ -146,9 +155,10 @@ make -j4
 ## プラットフォームの範囲
 
 各プラットフォームの公開状況は上の[プラットフォーム状況の表](#プラットフォーム状況)を参照してください。
-最初の実利用ターゲットは Linux x86-64 上の KDE Wayland / AMD です。
+デスクトップ版は macOS Apple Silicon、Linux x86_64、Windows x64 でビューアとホストの両方に対応し、
+モバイルアプリはクライアント専用です。
 
-最初の開発ラインは Sunshine を介した Linux → macOS です。クライアント側の対応とホスト側の対応は別物で、
+クライアント側の対応とホスト側の対応は別物で、
 Mac ホストに DeskPort の Mac クライアントは必須ではありません。ハードウェアデコード、実入力、画質、
 呼び出しの遅延は実セッションでの検証が必要で、ビルドが通ったことは証明になりません。
 
@@ -192,7 +202,7 @@ OS が予約するショートカットはデスクトップのコンポジタ�
 DeskPort は [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt)（当初 v6.1.0 を基点）の
 独立した派生プロジェクトであり、Moonlight や Sunshine の公式リリースではありません。
 ストリーミング基盤は Moonlight が提供し、[Sunshine](https://github.com/LizardByte/Sunshine) は
-macOS とポータブル Linux のホストパッケージに同梱され、Linux の Nix パッケージから提供されます。
+macOS、Windows、Linux のホストパッケージ（クライアント専用の Flatpak を除く）に同梱され、Linux の Nix パッケージから提供されます。
 別途インストールされた Sunshine サービスとは独立しています。
 
 GPL-3.0-or-later。[LICENSE](../../LICENSE)、保持されたソース表記、および

@@ -8,7 +8,13 @@
   <a href="../../README.md">English</a> ·
   <b>简体中文</b> ·
   <a href="README.zh-TW.md">繁體中文</a> ·
-  <a href="README.ja.md">日本語</a>
+  <a href="README.ja.md">日本語</a> ·
+  <a href="README.ko.md">한국어</a> ·
+  <a href="README.de.md">Deutsch</a> ·
+  <a href="README.es.md">Español</a> ·
+  <a href="README.fr.md">Français</a> ·
+  <a href="README.pt-BR.md">Português (Brasil)</a> ·
+  <a href="README.ru.md">Русский</a>
 </p>
 
 <p align="center">
@@ -35,7 +41,7 @@
 
 ## 主要功能
 
-- 桌面端整合查看、共享、设备授权和独立配置，原生安装包内置 Sunshine。
+- 桌面端整合查看、共享、设备授权和独立配置，macOS、Windows 与 Linux 主机安装包内置 Sunshine（仅客户端的 Flatpak 除外）。
 - 兼容 macOS/KDE 主机的自适应工作区、HiDPI、每设备桌面微调；调整尺寸时会短暂重连视频。
 - 虚拟主屏镜像、虚拟主屏并关闭其他屏幕、扩展工作区三种策略，断开后恢复屏幕布局。
 - 跨设备接管前确认，被接管端显示明确原因。
@@ -145,8 +151,11 @@ make -j4
 
 上游项目的文件名保持不变，以便这个分支仍然易于审阅。
 
-## 与上游有何不同
+## 与 Moonlight 有何不同
 
+- 内置 Sunshine 主机端，支持设备授权、接管与每设备设置。
+- 查看端隐藏时会话保持连接；可从托盘/菜单栏唤回。
+- 桌面主机提供 HTTPS 浏览器访问。
 - 独立的 `deskport` 可执行文件、`DeskPort` Qt 设置命名空间，以及
   `io.github.keithxc.DeskPort` Linux 应用 ID。
 - 默认窗口化串流与绝对指针控制。
@@ -160,10 +169,10 @@ make -j4
 
 ## 平台范围
 
-各平台的发布状态见上方的[平台进度表](#平台进度)。Linux x86-64 上的 KDE Wayland / AMD
-是第一个实际使用目标。
+各平台的发布状态见上方的[平台进度表](#平台进度)。桌面版覆盖 macOS Apple Silicon、Linux x86_64
+与 Windows x64，均可作为查看端和主机端；移动应用仅为客户端。
 
-最早的开发路线是通过 Sunshine 实现 Linux → macOS。客户端平台支持与主机端支持是相互独立的：
+客户端平台支持与主机端支持是相互独立的：
 Mac 主机并不要求使用 DeskPort 的 Mac 客户端。硬件解码、实时输入、画质与召回延迟都需要真实
 会话测试，构建成功并不能说明这些。
 
@@ -201,7 +210,7 @@ python3 scripts/deskport-smoke.py ./result
 
 DeskPort 是 [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt) 的独立衍生项目，
 最初基于 v6.1.0，并非官方的 Moonlight 或 Sunshine 发行版。Moonlight 提供串流基础；
-[Sunshine](https://github.com/LizardByte/Sunshine) 被打包进 macOS 与便携式 Linux 主机包，
+[Sunshine](https://github.com/LizardByte/Sunshine) 被打包进 macOS、Windows 与 Linux 主机包（仅客户端的 Flatpak 除外），
 并由 Linux Nix 包提供。单独安装的 Sunshine 服务保持独立。
 
 GPL-3.0-or-later；见 [LICENSE](../../LICENSE)、保留的源码声明，以及
