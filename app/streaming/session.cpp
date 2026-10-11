@@ -115,6 +115,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
 
 Session* Session::s_ActiveSession;
 QSemaphore Session::s_ActiveSessionSemaphore(1);
+QMutex Session::s_ActiveSessionLock;
+quint64 Session::s_ConnectionGeneration;
 
 void Session::clStageStarting(int stage)
 {
@@ -143,57 +145,73 @@ void Session::clConnectionTerminated(int errorCode)
     Diagnostics::instance().connection(0, errorCode, "terminated");
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
 
+    // This runs on a detached thread that LiStopConnection() never joins, so
+    // the session may be cleaned up and replaced while we wait below.
+    Session* session;
+    std::shared_ptr<AdaptiveDisplay> adaptive;
+    quint64 generation;
+    {
+        QMutexLocker lock(&s_ActiveSessionLock);
+        session = s_ActiveSession;
+        if (session == nullptr) return;
+        adaptive = session->m_AdaptiveDisplay;
+        generation = s_ConnectionGeneration;
+    }
+
     // The host joins the old video/input workers before reporting takeover on
     // the authenticated control channel. Resolve that reason before generic UI.
-    const bool takenOver = s_ActiveSession->m_AdaptiveDisplay &&
-        s_ActiveSession->m_AdaptiveDisplay->wasTakenOver(3000);
-    if (s_ActiveSession->m_TerminationReported.exchange(true)) return;
+    const bool takenOver = adaptive && adaptive->wasTakenOver(3000);
+
+    // Holding the lock keeps the session alive until this report is complete.
+    QMutexLocker lock(&s_ActiveSessionLock);
+    if (s_ActiveSession != session || s_ConnectionGeneration != generation) return;
+    if (session->m_TerminationReported.exchange(true)) return;
     if (!takenOver && errorCode != ML_ERROR_GRACEFUL_TERMINATION &&
         errorCode != ML_ERROR_PROTECTED_CONTENT && errorCode != ML_ERROR_FRAME_CONVERSION &&
         errorCode != ML_ERROR_UNEXPECTED_EARLY_TERMINATION)
-        s_ActiveSession->scheduleNetworkRecovery();
-    if (!takenOver && !s_ActiveSession->m_NetworkRetry) s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
+        session->scheduleNetworkRecovery();
+    if (!takenOver && !session->m_NetworkRetry) session->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
     if (takenOver) {
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("This connection was taken over by another device."));
+        session->m_UnexpectedTermination = true;
+        emit session->displayLaunchError(tr("This connection was taken over by another device."));
     } else switch (errorCode) {
     case ML_ERROR_GRACEFUL_TERMINATION:
         break;
 
     case ML_ERROR_NO_VIDEO_TRAFFIC:
-        s_ActiveSession->m_UnexpectedTermination = true;
+        session->m_UnexpectedTermination = true;
 
         char ports[128];
         SDL_assert(portFlags != 0);
         LiStringifyPortFlags(portFlags, ", ", ports, sizeof(ports));
-        emit s_ActiveSession->displayLaunchError(tr("No video received from host.") + "\n\n"+
+        emit session->displayLaunchError(tr("No video received from host.") + "\n\n"+
                                                  tr("Check your firewall and port forwarding rules for port(s): %1").arg(ports));
         break;
 
     case ML_ERROR_NO_VIDEO_FRAME:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
+        session->m_UnexpectedTermination = true;
+        emit session->displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
         break;
 
     case ML_ERROR_PROTECTED_CONTENT:
     case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
+        session->m_UnexpectedTermination = true;
+        emit session->displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
                                                  tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC."));
         break;
 
     case ML_ERROR_FRAME_CONVERSION:
-        s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("The host PC reported a fatal video encoding error.") + "\n\n" +
+        session->m_UnexpectedTermination = true;
+        emit session->displayLaunchError(tr("The host PC reported a fatal video encoding error.") + "\n\n" +
                                                  tr("Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution."));
         break;
 
     default:
-        s_ActiveSession->m_UnexpectedTermination = true;
+        session->m_UnexpectedTermination = true;
 
         // We'll assume large errors are hex values
         bool hexError = qAbs(errorCode) > 1000;
-        emit s_ActiveSession->displayLaunchError(tr("Connection terminated") + "\n\n" +
+        emit session->displayLaunchError(tr("Connection terminated") + "\n\n" +
                                                  tr("Error code: %1").arg(errorCode, hexError ? 8 : 0, hexError ? 16 : 10, QChar('0')));
         break;
     }
@@ -1701,7 +1719,11 @@ private:
     virtual ~DeferredSessionCleanupTask() override
     {
         // Allow another session to start now that we're cleaned up
-        Session::s_ActiveSession = nullptr;
+        {
+            QMutexLocker lock(&Session::s_ActiveSessionLock);
+            Session::s_ActiveSession = nullptr;
+            ++Session::s_ConnectionGeneration;
+        }
         Session::s_ActiveSessionSemaphore.release();
 
         // Notify that the session is ready to be cleaned up
@@ -1732,7 +1754,10 @@ private:
         // Finish cleanup of the connection state
         LiStopConnection();
         if (m_Session->adaptiveRestartPending()) deskportResizeStage("stop-end");
-        if (!m_Session->adaptiveRestartPending()) m_Session->m_AdaptiveDisplay.reset();
+        if (!m_Session->adaptiveRestartPending()) {
+            QMutexLocker lock(&Session::s_ActiveSessionLock);
+            m_Session->m_AdaptiveDisplay.reset();
+        }
 
         // Perform a best-effort app quit
         if (shouldQuit) {
@@ -2345,7 +2370,10 @@ void Session::execInternal()
     s_ActiveSessionSemaphore.acquire();
 
     // We're now active
-    s_ActiveSession = this;
+    {
+        QMutexLocker lock(&s_ActiveSessionLock);
+        s_ActiveSession = this;
+    }
 
     // Initialize the gamepad code with our preferences
     // NB: m_InputHandler must be initialize before starting the connection.

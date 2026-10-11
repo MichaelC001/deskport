@@ -6,6 +6,7 @@
 #include "resizesettler.h"
 
 #include <QSemaphore>
+#include <QMutex>
 #include <QWindow>
 #include "backend/adaptivedisplay.h"
 #include "transitionwindow.h"
@@ -388,4 +389,7 @@ private:
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
     static QSemaphore s_ActiveSessionSemaphore;
+    // Guards s_ActiveSession against the detached termination callback thread.
+    static QMutex s_ActiveSessionLock;
+    static quint64 s_ConnectionGeneration;
 };
