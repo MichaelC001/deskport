@@ -1285,13 +1285,10 @@ bool Session::initialize()
             }
         }
 
-        if (hevcDA != DecoderAvailability::Hardware) {
-            // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
-            // We need HEVC in that case because we cannot support 10-bit content with H.264,
-            // which would ordinarily be prioritized for software decoding performance.
-            if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
-                m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_H265);
-            }
+        // Prefer HEVC whenever this client can decode it, even in software: it
+        // keeps quality at lower bitrates and has no 4096-pixel encoder limit.
+        if (hevcDA == DecoderAvailability::None) {
+            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_H265);
         }
 
 #if 0

@@ -231,8 +231,9 @@ void StreamingPreferences::reload()
                                                          static_cast<int>(CaptureSysKeysMode::CSK_ALWAYS)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
-    videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
-                                                  static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
+    // The codec is always chosen automatically. Ignore a codec forced by an
+    // older version, which no setting could change back.
+    videoCodecConfig = VCC_AUTO;
     videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
                                                   static_cast<int>(VideoDecoderSelection::VDS_AUTO)).toInt());
     windowMode = static_cast<WindowMode>(settings.value(SER_WINDOWMODE,
@@ -271,8 +272,7 @@ void StreamingPreferences::reload()
     }
 
     // Fixup VCC value to the new settings format with codec and HDR separate
-    if (videoCodecConfig == VCC_FORCE_HEVC_HDR_DEPRECATED) {
-        videoCodecConfig = VCC_AUTO;
+    if (settings.value(SER_VIDEOCFG).toInt() == VCC_FORCE_HEVC_HDR_DEPRECATED) {
         enableHdr = true;
     }
 }

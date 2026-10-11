@@ -1317,63 +1317,6 @@ Flickable {
                     }
                 }
 
-                Label {
-                    width: parent.width
-                    id: resVCCTitle
-                    text: qsTr("Video codec")
-                    font.pointSize: 12
-                    wrapMode: Text.Wrap
-                }
-
-                AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        var saved_vcc = preferences.videoCodecConfig
-
-                        // Default to Automatic (relevant if HDR is enabled,
-                        // where we will match none of the codecs in the list)
-                        currentIndex = 0
-
-                        for(var i = 0; i < codecListModel.count; i++) {
-                            var el_vcc = codecListModel.get(i).val;
-                            if (saved_vcc === el_vcc) {
-                                currentIndex = i
-                                break
-                            }
-                        }
-
-                        activated(currentIndex)
-                    }
-
-                    id: codecComboBox
-                    textRole: "text"
-                    model: ListModel {
-                        id: codecListModel
-                        ListElement {
-                            text: qsTr("Automatic (Recommended)")
-                            val: StreamingPreferences.VCC_AUTO
-                        }
-                        ListElement {
-                            text: qsTr("H.264")
-                            val: StreamingPreferences.VCC_FORCE_H264
-                        }
-                        ListElement {
-                            text: qsTr("HEVC (H.265)")
-                            val: StreamingPreferences.VCC_FORCE_HEVC
-                        }
-                        ListElement {
-                            text: qsTr("AV1 (Experimental)")
-                            val: StreamingPreferences.VCC_FORCE_AV1
-                        }
-                    }
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        if (enabled) {
-                            preferences.videoCodecConfig = codecListModel.get(currentIndex).val
-                        }
-                    }
-                }
-
                 CheckBox {
                     id: enableHdr
                     width: parent.width
@@ -1385,8 +1328,6 @@ Flickable {
                     onCheckedChanged: {
                         preferences.enableHdr = checked
                     }
-
-                    // Updating preferences.videoCodecConfig is handled above
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
