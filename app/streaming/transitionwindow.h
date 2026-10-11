@@ -25,10 +25,17 @@ inline void recallDesktopWindow(SDL_Window* window) {
     // Without the shell's token, Wayland compositors only flash the window.
     if (!WindowActivation::activate(window)) SDL_RaiseWindow(window);
 }
+// Clicking a panel icon can take keyboard focus from the viewer just before
+// the click is reported, so the moment the viewer last lost focus is kept.
+inline Uint32& desktopWindowFocusLostAt() { static Uint32 ticks = 0; return ticks; }
+inline void noteDesktopWindowFocusLost() { desktopWindowFocusLostAt() = SDL_GetTicks(); }
 // A tray click hides the viewer only when it is the window in front; a
 // visible window behind other windows is brought forward instead.
 inline bool desktopWindowInFront(SDL_Window* window) {
-    return desktopWindowVisible(window) && (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS);
+    if (!desktopWindowVisible(window)) return false;
+    if (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) return true;
+    const Uint32 lost = desktopWindowFocusLostAt();
+    return lost && SDL_GetTicks() - lost < 600;
 }
 
 // Owns the existing native window between streaming sessions. All calls are made
