@@ -2751,8 +2751,9 @@ void Session::execInternal()
             case DeskPortToggleWindow:
                 // The control center and the remote window are never shown at
                 // the same time, so a hidden remote window means the tray click
-                // is coming back from the control center.
-                if (desktopWindowVisible(m_Window)) {
+                // is coming back from the control center. A window behind
+                // others is brought forward rather than hidden.
+                if (desktopWindowInFront(m_Window)) {
                     m_InputHandler->setCaptureActive(false);
                     SDL_HideWindow(m_Window);
                 } else {

@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL.h>
 #include <QString>
+#include "windowactivation.h"
 #include "waylandloading.h"
 
 constexpr int DeskPortRecallWindow = 105;
@@ -21,7 +22,13 @@ inline void recallDesktopWindow(SDL_Window* window) {
     if (!window) return;
     if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) SDL_RestoreWindow(window);
     SDL_ShowWindow(window);
-    SDL_RaiseWindow(window);
+    // Without the shell's token, Wayland compositors only flash the window.
+    if (!WindowActivation::activate(window)) SDL_RaiseWindow(window);
+}
+// A tray click hides the viewer only when it is the window in front; a
+// visible window behind other windows is brought forward instead.
+inline bool desktopWindowInFront(SDL_Window* window) {
+    return desktopWindowVisible(window) && (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS);
 }
 
 // Owns the existing native window between streaming sessions. All calls are made

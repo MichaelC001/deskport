@@ -16,6 +16,7 @@ linux {
     CONFIG += link_pkgconfig
     PKGCONFIG += wayland-client
     SOURCES += clipboard/waylandnative.cpp clipboard/ext-data-control.c
+    SOURCES += streaming/xdg-activation-v1.c
 }
 SOURCES += clipboard/agent.cpp clipboard/native.cpp
 HEADERS += clipboard/agent.h clipboard/native.h
@@ -707,3 +708,5 @@ HEADERS += streaming/transitionwindow.h
 
 SOURCES += streaming/waylandloading.cpp
 HEADERS += streaming/waylandloading.h
+SOURCES += streaming/windowactivation.cpp
+HEADERS += streaming/windowactivation.h

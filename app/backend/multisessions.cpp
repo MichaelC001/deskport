@@ -233,7 +233,11 @@ void MultiSessions::present(bool raise) {
     auto entry = m_Entries.value(m_Wanted);
     if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") {
         entry->exposed = true;
-        send(entry, {{"command","show"},{"raise",raise}});
+        QJsonObject show {{"command","show"},{"raise",raise}};
+        // Presenting can wait for another viewer to hide; the token waits too.
+        if (raise && !m_ActivationToken.isEmpty()) show["activationToken"] = QString::fromUtf8(m_ActivationToken);
+        m_ActivationToken.clear();
+        send(entry, show);
     }
 }
 void MultiSessions::showDevices() {

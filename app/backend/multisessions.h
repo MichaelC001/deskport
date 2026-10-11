@@ -46,6 +46,8 @@ public:
     // Shows the last viewed desktop, else the first connected one. False when
     // no desktop can be shown.
     Q_INVOKABLE bool recall();
+    // The desktop shell's activation token for the next raised viewer.
+    void setActivationToken(const QByteArray& token) { m_ActivationToken = token; }
     void shutdown();
     void suspend();
 signals:
@@ -86,6 +88,7 @@ private:
     QStringList m_Order;
     QString m_Selected, m_Wanted, m_Visible, m_Identity;
     QSet<QString> m_Hiding;
+    QByteArray m_ActivationToken;
     quint64 m_Epoch = 0;
     bool m_Shutdown = false;
 };

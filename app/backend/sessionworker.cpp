@@ -88,6 +88,7 @@ void SessionWorker::command(const QJsonObject& message) {
         // Only a user's request raises the window; recovery restores state quietly.
         const bool raise=message.value("raise").toBool(true);
         m_Visible=true;
+        if(raise) WindowActivation::setPending(message.value("activationToken").toString().toUtf8());
         if(m_Session) { m_Session->setViewerRequested(true); if(m_Session->viewerReady()) postEvent(raise ? DeskPortRecallWindow : DeskPortRestoreViewer); }
     } else if(action=="hide") {
         m_Visible=false; m_HideEpoch=quint64(message.value("epoch").toDouble());
