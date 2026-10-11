@@ -57,7 +57,8 @@ public:
     // Asks a two-choice question inside this window, styled like the app, in
     // place of a native message box. takeAnswer() returns -1 until the user
     // chooses: 0 for cancel (also Escape or Return), 1 for accept.
-    void ask(const QString& title, const QString& text, const QString& cancel, const QString& accept);
+    // scale is the desktop's UI scale, which SDL may not report on Wayland.
+    void ask(const QString& title, const QString& text, const QString& cancel, const QString& accept, double scale);
     int takeAnswer();
     // Withdraws an unanswered question and shows the connecting state again.
     void dismiss() { m_Asking = false; m_Answer = -1; m_PresentedFrames = 0; }
@@ -77,6 +78,7 @@ private:
     bool m_Asking = false;
     int m_Answer = -1;
     QString m_QuestionTitle, m_QuestionText, m_CancelText, m_AcceptText;
+    double m_QuestionScale = 1.0;
     // Button bounds in window pixels, from the last painted question.
     QRectF m_CancelButton, m_AcceptButton;
 };

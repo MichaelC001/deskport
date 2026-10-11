@@ -653,14 +653,11 @@ QSize windowPixels(SDL_Window* window) {
     return QSize(width, height);
 }
 }
-DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool initialFullscreen) const {
-    QSize pixels = windowPixels(window);
-    const int index = SDL_GetWindowDisplayIndex(window);
-    int logicalWidth, logicalHeight; SDL_GetWindowSize(window, &logicalWidth, &logicalHeight);
-    qreal scale = logicalWidth > 0 ? qreal(pixels.width()) / logicalWidth : 1.0;
+qreal Session::systemScaleForWindow(SDL_Window* window) const {
     // XWayland commonly exposes physical pixels for both SDL sizes, hiding the
     // compositor's fractional scaling. Match Qt's logical output geometry to the
     // SDL pixel mode; QScreen DPR can itself be rounded to 2 on a 1.5x compositor.
+    const int index = SDL_GetWindowDisplayIndex(window);
     const char* name = SDL_GetDisplayName(index);
     SDL_Rect bounds {}; SDL_GetDisplayBounds(index, &bounds);
     qreal systemScale = m_ClientDefaultScale;
@@ -675,6 +672,14 @@ DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool 
             if (name && screen.name == QString::fromUtf8(name)) break;
         }
     }
+    return systemScale;
+}
+DeskPortDisplay::Workspace Session::workspaceForWindow(SDL_Window* window, bool initialFullscreen) const {
+    QSize pixels = windowPixels(window);
+    const int index = SDL_GetWindowDisplayIndex(window);
+    int logicalWidth, logicalHeight; SDL_GetWindowSize(window, &logicalWidth, &logicalHeight);
+    qreal scale = logicalWidth > 0 ? qreal(pixels.width()) / logicalWidth : 1.0;
+    const qreal systemScale = systemScaleForWindow(window);
     scale = qMax(scale, systemScale);
     if (initialFullscreen) {
         SDL_DisplayMode mode; SDL_Rect safeArea;
@@ -909,9 +914,12 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             if (m_TransitionWindow && m_TransitionWindow->rendering()) {
                 // Ask inside the connecting window, in the app's own style. The
                 // host keeps the takeover offer for 30 seconds.
+                const auto viewer = m_TransitionWindow->window();
+                int points, pointsHeight; SDL_GetWindowSize(viewer, &points, &pointsHeight);
+                const qreal pixelRatio = points > 0 ? qreal(windowPixels(viewer).width()) / points : 1.0;
                 m_TransitionWindow->ask(tr("Host already in use"),
                     tr("Another device is connected to this host. Disconnect it and connect here?"),
-                    tr("Cancel"), tr("Disconnect and connect"));
+                    tr("Cancel"), tr("Disconnect and connect"), qMax(pixelRatio, systemScaleForWindow(viewer)));
                 recallDesktopWindow(m_TransitionWindow->window());
                 const Uint32 deadline = SDL_GetTicks() + 30000;
                 int answer = -1;

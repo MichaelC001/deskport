@@ -242,6 +242,8 @@ private:
     qreal m_ClientDefaultScale = 1.0;
     bool m_ClientWayland = false;
     DeskPortDisplay::Workspace workspaceForWindow(SDL_Window* window, bool initialFullscreen = false) const;
+    // The desktop's scale for the output showing the window, from Qt's screens.
+    qreal systemScaleForWindow(SDL_Window* window) const;
     void initializeAdaptiveDisplay(SDL_Window* window);
     bool checkAdaptiveResize();
     void restoreAdaptiveWindow();

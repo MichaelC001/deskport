@@ -102,8 +102,7 @@ void TransitionWindow::pump() {
     m_Frame.fill(QColor(24, 27, 33));
     QPainter painter(&m_Frame); painter.setRenderHint(QPainter::Antialiasing);
     if (m_Asking) {
-        int points, pointsHeight; SDL_GetWindowSize(m_Window, &points, &pointsHeight);
-        drawQuestion(painter, w, h, points > 0 ? std::max(1.0, double(w) / points) : 1.0);
+        drawQuestion(painter, w, h, m_QuestionScale);
     } else {
         const int phase = (SDL_GetTicks() / 80) % 12;
         for (int i = 0; i < 12; ++i) {
@@ -125,8 +124,9 @@ void TransitionWindow::pump() {
     SDL_RenderPresent(m_Renderer); SDL_DestroyTexture(texture); ++m_PresentedFrames;
 }
 
-void TransitionWindow::ask(const QString& title, const QString& text, const QString& cancel, const QString& accept) {
+void TransitionWindow::ask(const QString& title, const QString& text, const QString& cancel, const QString& accept, double scale) {
     m_QuestionTitle = title; m_QuestionText = text; m_CancelText = cancel; m_AcceptText = accept;
+    m_QuestionScale = std::clamp(scale, 1.0, 4.0);
     m_Asking = true; m_Answer = -1; m_PresentedFrames = 0;
     m_CancelButton = m_AcceptButton = QRectF();
 }
