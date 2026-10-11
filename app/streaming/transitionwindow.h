@@ -8,7 +8,7 @@ constexpr int DeskPortRecallWindow = 105;
 constexpr int DeskPortEndSession = 106;
 constexpr int DeskPortHideWindow = 107;
 constexpr int DeskPortShowDevices = 108;
-constexpr int DeskPortToggleWindow = 109;
+constexpr int DeskPortRaiseViewer = 109;
 constexpr int DeskPortReconnect = 110;
 constexpr int DeskPortFullscreen = 111;
 constexpr int DeskPortTransportEnded = 112;
@@ -24,11 +24,6 @@ inline void recallDesktopWindow(SDL_Window* window) {
     SDL_ShowWindow(window);
     // Without the shell's token, Wayland compositors only flash the window.
     if (!WindowActivation::activate(window)) SDL_RaiseWindow(window);
-}
-// A tray click hides the viewer only when it is the window in front; a
-// visible window behind other windows is brought forward instead.
-inline bool desktopWindowInFront(SDL_Window* window) {
-    return desktopWindowVisible(window) && (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS);
 }
 
 // Owns the existing native window between streaming sessions. All calls are made

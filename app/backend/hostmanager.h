@@ -115,7 +115,7 @@ public:
 
 signals:
     void openRequested();
-    void toggleWindowRequested();
+    void windowRequested();
     void showDevicesRequested();
     void viewerRecallRequested();
     void hideRequested();

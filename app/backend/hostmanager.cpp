@@ -362,16 +362,15 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
     connect(m_Menu->addAction(tr("Quit")), &QAction::triggered, this, &HostManager::requestExit, Qt::QueuedConnection);
     // The device-list order can change while the menu is closed.
     connect(m_Menu, &QMenu::aboutToShow, this, &HostManager::trayMenuAboutToShow);
-    // The left button shows and hides the window; the menu belongs to the right
+    // The left button brings the window forward; the menu belongs to the right
     // one. A menu attached to a macOS status item is opened by either button and
     // suppresses the button action entirely, so it is popped up natively there.
 #ifndef Q_OS_MACOS
     m_Tray.setContextMenu(m_Menu);
 #endif
     connect(&m_Tray, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
-        // A double click arrives after its own Trigger. Toggling twice would
-        // undo itself, so only the single click acts.
-        if (reason == QSystemTrayIcon::Trigger) emit toggleWindowRequested();
+        // A double click arrives after its own Trigger; the single click acts.
+        if (reason == QSystemTrayIcon::Trigger) emit windowRequested();
 #ifdef Q_OS_MACOS
         else if (reason == QSystemTrayIcon::Context) showTrayMenu();
 #endif

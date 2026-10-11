@@ -1101,15 +1101,10 @@ int main(int argc, char *argv[])
             if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) window->hide();
         }
     });
-    // The tray's left button is the one-action route to the window: it shows the
-    // remote desktop when one is connected, otherwise it toggles the device list.
-    // A click hides the window only when it is the one in front. A visible
-    // window behind other applications is brought forward instead, so a single
-    // click always shows it.
-    const auto windowInFront = [](QWindow* window) {
-        return window && window->isVisible() && window->windowState() != Qt::WindowMinimized && window->isActive();
-    };
-    auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront] {
+    // The tray's left button is the one-action route to the window: it brings
+    // the remote desktop forward when one is connected, otherwise the device
+    // list. Closing a window hides it; connected sessions stay connected.
+    auto raiseWindow = [&showDevices, &recallViewer, &managedSessions] {
         // Qt raises its own window with the shell's activation token from the
         // environment. An SDL viewer window in this process or in a session
         // worker needs the token handed over explicitly.
@@ -1120,21 +1115,17 @@ int main(int argc, char *argv[])
             managedSessions.setActivationToken(token);
             if (!managedSessions.recall()) {
                 managedSessions.setActivationToken({});
-                auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-                if (!windowInFront(window)) showDevices();
-                else window->hide();
+                showDevices();
             }
         } else if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
             WindowActivation::setPending(token);
             recallViewer();
         } else if (Session::get()) {
             WindowActivation::setPending(token);
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortToggleWindow;
+            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortRaiseViewer;
             SDL_PushEvent(&event);
         } else {
-            auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-            if (windowInFront(window)) window->hide();
-            else showDevices();
+            showDevices();
         }
         // A token is valid for one activation only; never keep it for a later one.
         qunsetenv("XDG_ACTIVATION_TOKEN");
@@ -1165,7 +1156,7 @@ int main(int argc, char *argv[])
         });
     });
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
-    QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
+    QObject::connect(&hostManager, &HostManager::windowRequested, &app, raiseWindow);
 #ifdef Q_OS_DARWIN
     MacTitleBar macTitleBar;
 #endif

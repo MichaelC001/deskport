@@ -2701,3 +2701,21 @@ services, the shared core and stable main are unchanged by this candidate.
 Validation: offline selection/fallback tests and synthetic AMD hardware encode /
 decode probes passed during development. Final AppImage, isolated KWin lifecycle,
 old-system runtime and affected-user Bazzite acceptance are separate release gates.
+
+### Tray left click always raises the window — 2026-10-11
+
+Reason: on KDE Wayland a tray click often only flashed the taskbar entry, and on
+macOS a window behind other applications took two clicks to show. Plasma hands
+its xdg-activation token to the clicked application, but the remote window lives
+on the SDL thread or in a session worker that never received it. A toggle also
+read a covered window as shown and hid it on the first click.
+
+The left button now only brings the window forward: the remote desktop during a
+session, otherwise the device list. Closing a window hides it, and connected
+sessions stay connected. The main process hands the shell's activation token to
+the SDL viewer (with the session worker's `show` request where applicable), which
+activates its surface through `xdg-activation-v1`. `DeskPortToggleWindow` became
+`DeskPortRaiseViewer`. This supersedes the 2026-09-12 toggle.
+
+Validation: Linux build on pk4 and a live KDE check of raising from the tray.
+macOS behavior follows from the shared logic and needs a packaged check.
