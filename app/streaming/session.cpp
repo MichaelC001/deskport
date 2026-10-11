@@ -2804,7 +2804,6 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_HIDDEN:
             case SDL_WINDOWEVENT_MINIMIZED:
             case SDL_WINDOWEVENT_FOCUS_LOST:
-                if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) noteDesktopWindowFocusLost();
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = true;
                 }
