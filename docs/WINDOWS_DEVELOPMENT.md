@@ -1,7 +1,7 @@
 # Windows development checkpoint
 
 The main branch contains the Windows x64 host and client integration.
-The 0.6.3 release is being packaged from the current shared desktop baseline.
+The 0.7.1 release uses the current shared desktop baseline.
 Dated checkpoints below describe their original samples, not blanket approval
 or current blockers for later binaries.
 
@@ -37,7 +37,7 @@ runtime version. The package label was taken from source while the cached qmake
 subproject still used the old generated version header. `build-app.sh` now runs
 recursive qmake generation, and both packaging paths and the extracted installer
 audit reject mismatched PE file/product versions. Run `tests/windows-cli.ps1`
-with the final executable and `-Version 0.6.3` to check redirected runtime output
+with the final executable and `-Version 0.7.1` to check redirected runtime output
 as well as PE metadata.
 
 On the affected Windows machine, display startup failed after the recovery guard
@@ -109,6 +109,11 @@ credentials out of Git. Cross-build and packaging recipes are preserved under
 `winbuild/scripts`; generated dependencies and binaries remain local.
 
 ## Host build order and offline delivery
+
+Set `DESKPORT_WINDOWS_SOURCE_ROOT` to the source checkout and
+`DESKPORT_WINDOWS_BUILD_ROOT` to an independent directory under the shared
+build root before invoking the recipes. All dependency, work, notice and
+material-export paths follow the selected build root.
 
 Prepare the cached inputs first. Client recipes use `winbuild/source-inputs`
 (or matching `S_*` overrides). Host curl/miniupnpc/minhook/onevpl archives,

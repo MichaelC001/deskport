@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Preserve source notices, including Qt attribution-referenced files."""
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
-wb = Path(__file__).resolve().parents[1]
+wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(Path(__file__).resolve().parents[1])))
 out = Path(sys.argv[1])
 for component in ('qtbase', 'qtdeclarative', 'qtshadertools', 'qtsvg', 'libplacebo', 'glslang', 'freetype', 'opus', 'SDL2', 'SDL2_ttf', 'openssl'):
     root = wb / 'work' / component

@@ -1,47 +1,42 @@
 # Linux release packages
 
-DeskPort 0.6.3 provides x86_64 Linux downloads for users who do not build from
+DeskPort 0.7.1 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package.
 
-## 0.6.4 AppImage prerelease
+## AppImage runtime
 
-The [0.6.4 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.6.4)
-is an x86_64 AppImage compatibility candidate. It bundles a private glibc loader
-and runtime for both the viewer and Sunshine host, using pinned sharun 0.8.1.
-The goal is to run on Ubuntu 22.04 without replacing system libraries. This does
-not lower the minimum requirements of the 0.6.3 native packages below.
-
-Run it as your normal desktop user. It requires a working graphical session and
-appropriate host input/capture permissions as documented below. Hardware encoding,
-decoding and virtual-display support still depend on the host kernel, drivers
-and compositor. See [verification and limitations](APPIMAGE_064.md).
+The 0.7.1 AppImage bundles a private glibc loader and runtime for the viewer and
+Sunshine host, using pinned sharun 0.8.1. It also includes matching PipeWire SPA
+plugins and VA-API runtime support. Native packages and portable archives retain
+their glibc 2.39 minimum. Hardware encoding, decoding and virtual displays still
+depend on the host kernel, GPU drivers and compositor.
 
 ## Choose a download
 
 | Format | Target | Install |
 | --- | --- | --- |
 | portable `.tar.gz` | x86_64, glibc 2.39+ | Extract and run `DeskPort.AppDir/AppRun` |
-| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install ./deskport_0.6.3-1_amd64.deb` |
-| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.6.3-1.x86_64.rpm` |
-| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.6.3-1-x86_64.pkg.tar.zst` |
-| `.AppImage` | Modern glibc-based desktops, glibc 2.39+ | Make executable, then open |
+| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install ./deskport_0.7.1-1_amd64.deb` |
+| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.7.1-1.x86_64.rpm` |
+| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst` |
+| `.AppImage` | x86_64 glibc desktops, private runtime included | Make executable, then open |
 | `.flatpak` | Distributions with Flatpak and Freedesktop Platform 25.08 | See below |
-| Nix | NixOS / Linux with Nix | `nix run github:keithxc/deskport/v0.6.3` |
+| Nix | NixOS / Linux with Nix | `nix run github:keithxc/deskport/v0.7.1` |
 
 Native packages install a private runtime in `/opt/deskport`, an application-menu
 entry and `/usr/bin/deskport`. Package managers install required system graphics,
 font, audio and PipeWire libraries. These are upstream portable binary packages,
 not entries in the distributions' official repositories or the AUR. RPM support
 does not imply compatibility with RHEL, CentOS or openSUSE. ARM Linux builds are
-not included in this release. Ubuntu 22.04 and Debian 12 need the Flatpak or a
-separately supported source/Nix build rather than these glibc 2.39 binaries.
+not included in this release. Ubuntu 22.04 and Debian 12 need the AppImage, Flatpak or a separately
+supported source/Nix build rather than the native glibc 2.39 binaries.
 
 For AppImage:
 
 ```sh
-chmod +x DeskPort-0.6.3-x86_64.AppImage
-./DeskPort-0.6.3-x86_64.AppImage
+chmod +x DeskPort-0.7.1-x86_64.AppImage
+./DeskPort-0.7.1-x86_64.AppImage
 ```
 
 Keep the AppImage in a permanent location before enabling login startup. Moving
@@ -52,7 +47,7 @@ AppImage with an FHS environment. Desktop graphics drivers remain system-provide
 For Flatpak:
 
 ```sh
-flatpak install --user ./DeskPort-0.6.3-client-x86_64.flatpak
+flatpak install --user ./DeskPort-0.7.1-client-x86_64.flatpak
 flatpak run io.github.keithxc.DeskPort
 ```
 
@@ -80,7 +75,7 @@ Do not use `yay -S deskport-bin` until this page confirms publication.
 For the existing release package:
 
 ```sh
-sudo pacman -U ./deskport-0.6.3-1-x86_64.pkg.tar.zst
+sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst
 ```
 
 To build the candidate locally, from a checkout containing the recipe:
@@ -105,7 +100,7 @@ repositories. Future AUR publication will not enable `pacman -S deskport`.
 **Available now:** the upstream flake, pinned to a released tag:
 
 ```sh
-nix run github:keithxc/deskport/v0.6.3
+nix run github:keithxc/deskport/v0.7.1
 ```
 
 For a flake-based NixOS configuration, add the input and install its package in a
@@ -113,7 +108,7 @@ module that receives `inputs` through your existing `specialArgs` configuration:
 
 ```nix
 # flake.nix inputs
-inputs.deskport.url = "github:keithxc/deskport/v0.6.3";
+inputs.deskport.url = "github:keithxc/deskport/v0.7.1";
 
 # NixOS module
 { inputs, pkgs, ... }: {
@@ -129,7 +124,7 @@ qualified for the released flake. Change the tag and update your lock file when
 upgrading. Build and review your configuration before activating it yourself.
 
 **Nixpkgs status (2026-09-27):** a standalone source-package candidate is prepared
-under [`packaging/nixpkgs`](../packaging/nixpkgs). [PR #567358](https://github.com/NixOS/nixpkgs/pull/567358) is ready for upstream review following maintainer review. It is not merged;
+under [`packaging/nixpkgs`](../packaging/nixpkgs). [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) is ready for upstream review following maintainer review. It is not merged;
 `pkgs.deskport` and `nix run nixpkgs#deskport` are not installation instructions
 for the current release. Upstream review and channel propagation are separate
 steps. Initial candidate scope is Linux x86_64, viewer plus private session host.
@@ -166,7 +161,7 @@ For Linux hosting, KDE and GNOME require their supported virtual-display APIs;
 see [adaptive display requirements](LINUX_ADAPTIVE_DISPLAY.md). Native installers
 include KWin permission entries for the display helper and bundled host.
 The source fix for [issue #2](https://github.com/keithxc/deskport/issues/2)
-is included in 0.6.3 and adds automatic display-helper permission setup for
+is included in 0.7.1 and adds automatic display-helper permission setup for
 portable builds. Older 0.6.0 AppImages require the workaround below. Remote keyboard/mouse input requires
 permission to access `/dev/uinput`. The application shows when input setup is
 needed. This release does not silently install privileged device rules, grant

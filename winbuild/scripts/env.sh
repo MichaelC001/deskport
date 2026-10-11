@@ -2,6 +2,8 @@
 set -euo pipefail
 WB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_ROOT="$(cd "$WB/.." && pwd)"
+WB="${DESKPORT_WINDOWS_BUILD_ROOT:-$WB}"
+SRC_ROOT="${DESKPORT_WINDOWS_SOURCE_ROOT:-$SRC_ROOT}"
 export WB SRC_ROOT
 export TRIPLE=x86_64-w64-mingw32
 export PREFIX="$WB/prefix"

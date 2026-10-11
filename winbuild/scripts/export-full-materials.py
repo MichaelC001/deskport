@@ -8,8 +8,8 @@ import re
 import subprocess
 import tarfile
 import sys
-root = Path(__file__).resolve().parents[2]
-wb = root / 'winbuild'
+root = Path(os.environ.get('DESKPORT_WINDOWS_SOURCE_ROOT', str(Path(__file__).resolve().parents[2])))
+wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(root / 'winbuild')))
 out = Path(sys.argv[1]).resolve()
 suffix = os.environ.get("MATERIAL_SUFFIX", "")
 inputs = {}
@@ -56,7 +56,8 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         if not name or name=='shared/deskport-core' or not p.exists(): continue
         tar.add(p,arcname='deskport/'+name,recursive=p.is_dir(),filter=filter_source)
     for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices','winbuild/THIRD-PARTY-NOTICES.txt','winbuild/THIRD-PARTY-NOTICES-full.txt','host/windows','app/clipboard/windowsnative.h'):
-        tar.add(root/name,arcname='deskport/'+name,filter=filter_source)
+        p = wb / name.removeprefix('winbuild/') if name.startswith('winbuild/') else root / name
+        tar.add(p,arcname='deskport/'+name,filter=filter_source)
     shell_nix = out.parent / 'shell.nix'
     if shell_nix.exists():
         tar.add(shell_nix, arcname='shell.nix')

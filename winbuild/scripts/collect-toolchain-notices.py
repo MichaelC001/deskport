@@ -5,7 +5,7 @@ import os
 import tarfile
 import shutil
 
-wb = Path(__file__).resolve().parents[1]
+wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(Path(__file__).resolve().parents[1])))
 out = wb / 'toolchain-notices'
 source_inputs = wb / 'source-inputs'
 

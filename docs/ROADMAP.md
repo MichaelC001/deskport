@@ -1,3 +1,16 @@
+## Desktop 0.7.1 formal release — 2026-10-11
+
+Prepare the stable PC matrix from committed main: macOS arm64 notarized DMG/ZIP,
+Windows x64 offline Setup/portable ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable,
+Nix and client-only Flatpak. Include exact dependency sources, licenses,
+relinking materials, checksums and package verification. Mobile distribution
+remains separate. User activation and current physical streaming/input acceptance
+remain separate from compilation, isolated regressions and package checks.
+
+Windows build and source-material export now accept an independent build root so
+formal builds preserve source checkouts and reused dependencies. No wire or media
+policy changes are part of release preparation.
+
 ## Preparation failures and private integration — 2026-10-09
 
 Client preparation now distinguishes cancellation, denial, busy/expired admission,
