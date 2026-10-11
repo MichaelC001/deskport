@@ -152,6 +152,23 @@ static bool s_SuppressVerboseOutput;
 void logToLoggerStream(QString& message)
 {
     Diagnostics::instance().record("client", message);
+
+    // Explicit troubleshooting opt-in only, like DESKPORT_HOST_LOG: a private
+    // file receives raw client text (addresses and paths included), capped at
+    // 32 MiB. Session workers inherit it, so each line names its process.
+    static const QString path = qEnvironmentVariable("DESKPORT_CLIENT_LOG");
+    if (path.isEmpty()) return;
+    static QMutex lock;
+    QMutexLocker locker(&lock);
+    static QFile* file = nullptr;
+    if (!file) {
+        file = new QFile(path);
+        if (!file->open(QIODevice::WriteOnly | QIODevice::Append) ||
+            !file->setPermissions(QFile::ReadOwner | QFile::WriteOwner)) { file->close(); return; }
+    }
+    if (!file->isOpen() || file->size() > 32 * 1024 * 1024) return;
+    file->write(QByteArray::number(QCoreApplication::applicationPid()) + " " + message.toUtf8());
+    file->flush();
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
