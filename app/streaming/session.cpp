@@ -1206,28 +1206,6 @@ bool Session::initialize()
                 "Audio channel mask: %X",
                 CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
-    // Sunshine reports H.264 alone while it re-probes encoders, which a launch
-    // after a display change triggers. Wait out that window rather than drop
-    // HEVC and AV1 for the whole session.
-    for (int attempt = 0; attempt < 5 && !m_Computer->isNvidiaServerSoftware; ++attempt) {
-        {
-            QReadLocker lock(&m_Computer->lock);
-            if (m_Computer->maxLumaPixelsHEVC != 0 ||
-                (m_Computer->serverCodecModeSupport & (SCM_MASK_HEVC | SCM_MASK_AV1))) break;
-        }
-        if (attempt > 0) SDL_Delay(200);
-        try {
-            const QString serverInfo = NvHTTP(m_Computer).getServerInfo(NvHTTP::NVLL_ERROR, true);
-            const QString codecs = NvHTTP::getXmlString(serverInfo, "ServerCodecModeSupport");
-            const QString hevc = NvHTTP::getXmlString(serverInfo, "MaxLumaPixelsHEVC");
-            QWriteLocker lock(&m_Computer->lock);
-            if (!codecs.isEmpty()) m_Computer->serverCodecModeSupport = codecs.toInt();
-            if (!hevc.isEmpty()) m_Computer->maxLumaPixelsHEVC = hevc.toInt();
-        } catch (...) {
-            break;
-        }
-    }
-
     // Start with all codecs and profiles in priority order
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_HIGH10_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_MAIN10);
@@ -1496,7 +1474,11 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     }
 
     if (m_SupportedVideoFormats & VIDEO_FORMAT_MASK_H265) {
-        if (m_Computer->maxLumaPixelsHEVC == 0) {
+        // Sunshine reports HEVC support only after an encoder probe, which it
+        // defers until a launch or repeats after a display change. Keep HEVC
+        // for it: the RTSP DESCRIBE after launch is authoritative, and
+        // moonlight-common-c falls back to H.264 when the host lacks HEVC.
+        if (m_Computer->maxLumaPixelsHEVC == 0 && m_Computer->isNvidiaServerSoftware) {
             if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC) {
                 emitLaunchWarning(tr("Your host PC doesn't support encoding HEVC."));
             }
