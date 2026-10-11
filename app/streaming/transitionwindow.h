@@ -47,6 +47,7 @@ private:
     QImage m_Frame;
     bool m_Cancelled = false;
     bool m_PresentationShown = false;
+    bool m_Pumping = false;
     unsigned m_PresentedFrames = 0;
     Uint32 m_LastPaint = 0;
 };

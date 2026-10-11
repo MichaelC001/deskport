@@ -5,6 +5,7 @@
 #include <QElapsedTimer>
 #include <QHostInfo>
 #include "session.h"
+#include <QPointer>
 #include "backend/hostalias.h"
 #define DP_TRAFFIC_IMPLEMENTATION
 #include "../../moonlight-common-c/traffic.h"
@@ -822,8 +823,14 @@ void Session::pumpTransitionWindowBetweenSessions() {
     m_TransitionTimer->start(20);
 }
 void Session::pumpTransitionWindow() {
-    m_TransitionWindow->pump();
-    if (m_TransitionWindow->takePresentationShown() && m_ViewerRequested) emit presentationShown();
+    // On macOS, SDL_PumpEvents() runs the Cocoa run loop, which also dispatches
+    // Qt timers and queued calls. A continuation can start its exec() there and
+    // take or release this window, so keep it and this session alive meanwhile.
+    const auto window = m_TransitionWindow;
+    if (!window) return;
+    const QPointer<Session> self(this);
+    window->pump();
+    if (window->takePresentationShown() && self && m_ViewerRequested) emit presentationShown();
 }
 
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {

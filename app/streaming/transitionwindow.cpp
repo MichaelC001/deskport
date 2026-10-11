@@ -38,8 +38,13 @@ SDL_Window* TransitionWindow::takeWindow() {
     return window;
 }
 void TransitionWindow::pump() {
-    if (!m_Window) return;
+    if (!m_Window || m_Pumping) return;
+    m_Pumping = true;
+    // Cocoa event pumping can dispatch Qt work that pumps this window again or
+    // hands its native window to the next stream; stop if that happened.
     SDL_PumpEvents();
+    m_Pumping = false;
+    if (!m_Window) return;
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_USEREVENT) > 0)
         if (event.user.code == DeskPortRecallWindow) { recallDesktopWindow(m_Window); m_PresentationShown=true; }
