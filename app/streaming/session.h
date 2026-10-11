@@ -219,6 +219,9 @@ private:
     std::unique_ptr<ClipboardSync> m_Clipboard;
     void initializeClipboard();
     void pumpTransitionWindow();
+    // Reports the viewer window's keyboard focus once per change.
+    void reportViewerFocus(bool focused);
+    int m_ReportedViewerFocus = -1;
     std::shared_ptr<AdaptiveDisplay> m_AdaptiveDisplay;
     bool m_SessionAdmissionFailed = false;
     QString m_SessionTopologyError;

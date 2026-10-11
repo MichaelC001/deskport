@@ -2740,3 +2740,12 @@ paused and resumed the stream each time.
 The session now pauses the host's video only after the viewer has stayed hidden
 for five seconds; showing it again within that time keeps the stream running.
 Input is still released as soon as the viewer hides.
+
+### Tray toggle while connecting — 2026-10-11
+
+Reason: a session worker reported its viewer's focus only once streaming had
+started, so while the connecting window was up the tray could only raise it,
+never hide it.
+
+The session now also reports focus while it pumps the connecting window, once
+per change, so the tray hides and shows that window like the streaming viewer.

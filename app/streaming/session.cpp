@@ -822,6 +822,11 @@ void Session::pumpTransitionWindowBetweenSessions() {
     }
     m_TransitionTimer->start(20);
 }
+void Session::reportViewerFocus(bool focused) {
+    if (m_ReportedViewerFocus == int(focused)) return;
+    m_ReportedViewerFocus = focused;
+    emit viewerFocusChanged(focused);
+}
 void Session::pumpTransitionWindow() {
     // On macOS, SDL_PumpEvents() runs the Cocoa run loop, which also dispatches
     // Qt timers and queued calls. A continuation can start its exec() there and
@@ -830,7 +835,10 @@ void Session::pumpTransitionWindow() {
     if (!window) return;
     const QPointer<Session> self(this);
     window->pump();
-    if (window->takePresentationShown() && self && m_ViewerRequested) emit presentationShown();
+    if (!self) return;
+    if (window->takePresentationShown() && m_ViewerRequested) emit presentationShown();
+    // The connecting window is the viewer too: the tray hides it when in front.
+    if (window->window()) reportViewerFocus(SDL_GetWindowFlags(window->window()) & SDL_WINDOW_INPUT_FOCUS);
 }
 
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {
@@ -2813,7 +2821,7 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_FOCUS_LOST:
                 if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                     noteDesktopWindowFocusLost();
-                    emit viewerFocusChanged(false);
+                    reportViewerFocus(false);
                 }
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = true;
@@ -2821,7 +2829,7 @@ void Session::execInternal()
                 m_InputHandler->notifyFocusLost();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
-                emit viewerFocusChanged(true);
+                reportViewerFocus(true);
                 if (!m_ViewerRequested) break;
                 m_InputHandler->notifyFocusGained();
                 if (m_Preferences->muteOnFocusLoss) {
