@@ -166,6 +166,10 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
         if (m_Visible == entry->id) m_Visible.clear();
         present(awaited);
     } else if (type == "devices") { showDevices(); emit devicesRequested(); }
+    else if (type == "focus") {
+        entry->focused = message.value("focused").toBool();
+        if (!entry->focused) entry->focusLost.start();
+    }
     else if (type == "next") {
         // Only the viewer that currently owns presentation may switch it.
         if (m_Wanted == entry->id || m_Visible == entry->id) selectNext();
@@ -204,6 +208,10 @@ void MultiSessions::selectNext() {
         const auto entry = m_Entries.value(order.at((qMax(current, 0) + step) % order.size()));
         if (entry && entry->state == "connected" && entry->id != m_Wanted) { select(entry->id); return; }
     }
+}
+bool MultiSessions::viewerInFront() const {
+    const auto entry = m_Entries.value(m_Visible);
+    return entry && (entry->focused || (entry->focusLost.isValid() && entry->focusLost.elapsed() < 600));
 }
 bool MultiSessions::recall() {
     if (m_Shutdown) return false;

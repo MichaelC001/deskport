@@ -2804,13 +2804,17 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_HIDDEN:
             case SDL_WINDOWEVENT_MINIMIZED:
             case SDL_WINDOWEVENT_FOCUS_LOST:
-                if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) noteDesktopWindowFocusLost();
+                if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                    noteDesktopWindowFocusLost();
+                    emit viewerFocusChanged(false);
+                }
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = true;
                 }
                 m_InputHandler->notifyFocusLost();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
+                emit viewerFocusChanged(true);
                 if (!m_ViewerRequested) break;
                 m_InputHandler->notifyFocusGained();
                 if (m_Preferences->muteOnFocusLoss) {

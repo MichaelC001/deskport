@@ -58,6 +58,7 @@ void SessionWorker::attach(Session* session) {
     });
     connect(session,&Session::presentationShown,this,[this] { if(m_Visible)send({{"type","shown"}}); });
     connect(session,&Session::presentationHidden,this,[this] { send({{"type","hidden"},{"epoch",double(m_HideEpoch)}}); });
+    connect(session,&Session::viewerFocusChanged,this,[this](bool focused) { send({{"type","focus"},{"focused",focused}}); });
     connect(session,&Session::stageFailed,this,[this](QString stage,int code,QString) {
         send({{"type","error"},{"message",tr("Connection failed at %1 (%2).").arg(stage).arg(code)}});
     });

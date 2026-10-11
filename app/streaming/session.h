@@ -200,6 +200,8 @@ signals:
     void readyForDeletion();
     void transportCleanupFinished();
     void presentationHidden();
+    // Keyboard focus of the viewer window, reported from the SDL thread.
+    void viewerFocusChanged(bool focused);
     void presentationShown();
 
 private:

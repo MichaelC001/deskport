@@ -2714,7 +2714,9 @@ session worker's `show` request where applicable), which activates its surface
 through `xdg-activation-v1`. The left button still toggles, but hides the window
 only when it is in front; a covered window is brought forward. Plasma takes focus
 from the window just before the click arrives, so a window that lost focus within
-the last 600 ms still counts as in front. Hiding keeps sessions connected.
+the last 600 ms still counts as in front. A session worker reports its viewer's
+focus to the main process, which hides that viewer the same way. Hiding keeps
+sessions connected.
 
 Validation: Linux build on pk4 and a live KDE check of raising and hiding from
 the tray. macOS behavior follows from the shared logic and needs a packaged check.

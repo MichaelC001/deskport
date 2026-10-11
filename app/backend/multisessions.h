@@ -5,6 +5,7 @@
 #include <QLocalServer>
 #include <QLocalSocket>
 #include <QPointer>
+#include <QElapsedTimer>
 #include <QMap>
 #include <QSet>
 #include <functional>
@@ -46,6 +47,9 @@ public:
     // Shows the last viewed desktop, else the first connected one. False when
     // no desktop can be shown.
     Q_INVOKABLE bool recall();
+    // The shown viewer is the window in front. Plasma takes focus from it just
+    // before a tray click arrives, so focus lost a moment ago still counts.
+    bool viewerInFront() const;
     // The desktop shell's activation token for the next raised viewer.
     void setActivationToken(const QByteArray& token) { m_ActivationToken = token; }
     void shutdown();
@@ -69,6 +73,9 @@ private:
         // False only after the worker acknowledged hiding at the current epoch.
         // Workers start hidden; a hidden worker never owns input.
         bool exposed = false;
+        // Keyboard focus of the worker's viewer window, for the tray toggle.
+        bool focused = false;
+        QElapsedTimer focusLost;
         quint64 hideEpoch = 0, hideRequest = 0;
     };
     // Session IDs in the device list's order (groups flattened in place).

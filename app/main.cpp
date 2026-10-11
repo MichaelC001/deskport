@@ -1121,7 +1121,10 @@ int main(int argc, char *argv[])
         // environment. An SDL viewer window in this process or in a session
         // worker needs the token handed over explicitly.
         const QByteArray token = qgetenv("XDG_ACTIVATION_TOKEN");
-        if (managedSessions.busy()) {
+        if (managedSessions.busy() && managedSessions.viewerInFront()) {
+            // Hiding the viewer releases its input; the sessions stay connected.
+            managedSessions.showDevices();
+        } else if (managedSessions.busy()) {
             // Go straight to the last viewed desktop, never through the device
             // list; the list stays available from the tray menu.
             managedSessions.setActivationToken(token);
