@@ -29,7 +29,7 @@
 
 - **One desktop app for viewing and sharing.** Bundled Sunshine, device approval,
   independent credentials and settings; no separate Sunshine installation for the
-  macOS and native Linux packages.
+  macOS, Windows and Linux host packages (not the viewer-only Flatpak).
 - **A workspace that follows your client.** Adaptive sizing on compatible macOS
   and KDE hosts, HiDPI, portrait/landscape mobile layouts and per-device size tuning.
   Size changes briefly reconnect video; they are not seamless encoder changes.
@@ -195,8 +195,11 @@ make -j4
 
 The upstream project filenames remain unchanged to keep the fork reviewable.
 
-## What is different today?
+## What is different from Moonlight?
 
+- Bundled Sunshine host with device approval, takeover and per-device settings.
+- Sessions stay connected while the viewer is hidden; recall it from the tray/menu bar.
+- HTTPS browser access served by desktop hosts.
 - Separate `deskport` executable, `DeskPort` Qt settings namespace and
   `io.github.keithxc.DeskPort` Linux application ID.
 - Windowed streaming and absolute-pointer control by default.
@@ -214,11 +217,11 @@ list or cards. Appearance follows the system, with light and dark overrides.
 ## Platform scope
 
 See the [platform table](#supported-platforms) above for release state per
-platform. KDE Wayland / AMD on Linux x86-64 is the first live-use target.
+platform. Desktop releases cover macOS Apple Silicon, Linux x86_64 and Windows x64
+as both viewer and host; mobile apps are clients only.
 
-The first development workflow is Linux → macOS through Sunshine. Client platform
-support and host support are separate: a Mac host does not require a DeskPort Mac
-client. Hardware decode, live input, image quality and recall latency need real
+Client platform support and host support are separate: a Mac host does not require
+a DeskPort Mac client. Hardware decode, live input, image quality and recall latency need real
 session testing; a successful build does not establish them.
 
 ## Next milestone
@@ -264,7 +267,7 @@ on a computer for unattended access.
 DeskPort is an independent derivative of [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt),
 initially based on v6.1.0. It is not an official Moonlight or Sunshine release.
 Moonlight provides the streaming foundation; [Sunshine](https://github.com/LizardByte/Sunshine)
-is bundled in the macOS and portable Linux host packages and supplied by the Linux Nix package.
+is bundled in the macOS, Windows and Linux host packages (not the viewer-only Flatpak) and supplied by the Linux Nix package.
 Separately installed Sunshine services are kept independent.
 
 GPL-3.0-or-later; see [LICENSE](LICENSE), retained source notices and the
