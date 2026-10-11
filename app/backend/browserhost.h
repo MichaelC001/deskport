@@ -25,6 +25,7 @@ class BrowserHost : public QObject {
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
     Q_PROPERTY(QVariantList pairedBrowsers READ pairedBrowsers NOTIFY changed)
 public:
+    using Completion = std::function<void(QJsonObject)>;
     explicit BrowserHost(HostManager* host, QObject* parent = nullptr,
                          const QString& directory = QString());
     ~BrowserHost();
@@ -44,6 +45,9 @@ public:
     bool tailnetListening() const;
     bool tailnetIdentity() const;
     bool busy() const { return !m_Id.isEmpty() || m_Operation; }
+    // Ends the browser session, display restoration included, so a native
+    // client can take over; the page is told it was taken over.
+    void endForTakeover(Completion done);
     QJsonObject localInfo() const;
     QVariantList pairedBrowsers() const;
     Q_INVOKABLE bool revokeBrowser(const QString& id);
@@ -51,7 +55,6 @@ signals:
     void changed();
 private:
     friend class BrowserHostTests;
-    using Completion = std::function<void(QJsonObject)>;
     QJsonObject state() const;
     static QString qrSvg(const QString& value);
     void request(const QJsonObject& body, QObject* context, Completion completion);
@@ -67,6 +70,8 @@ private:
     HostManager* m_Host;
     BrowserGateway m_Gateway;
     QString m_Id;
+    // The session a native client took over, until the page learns of it.
+    QString m_TakenOver;
     quint64 m_Epoch = 0;
     bool m_Operation = false, m_Ending = false, m_Polling = false;
     bool m_Cancelled = false;

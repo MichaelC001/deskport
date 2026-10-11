@@ -15,6 +15,7 @@
 #include <QTimer>
 
 class HostCaretMonitor;
+class BrowserHost;
 
 class HostManager : public QObject {
     Q_OBJECT
@@ -84,6 +85,9 @@ public:
                                 std::function<void(QJsonObject)> completion);
     virtual bool running() const;
     virtual bool canPair() const;
+    // The browser session supervisor, so a native takeover can end its session.
+    BrowserHost* browserHost() const { return m_BrowserHost; }
+    void setBrowserHost(BrowserHost* host) { m_BrowserHost = host; }
     int basePort() const { return m_BasePort; }
     bool loginStart() const;
     bool loginStartManaged() const;
@@ -160,6 +164,7 @@ private:
     HostPortReservation m_Ports;
     std::unique_ptr<QLockFile> m_HostLock;
     int m_BasePort = DeskPortNetwork::DefaultBasePort;
+    BrowserHost* m_BrowserHost = nullptr;
     QByteArray m_Buffer;
     QString m_LinuxOutputName;
     bool m_LinuxGnome = false;

@@ -102,6 +102,17 @@ private slots:
         host.restored(); QCOMPARE(host.events.last(), QString("release")); QVERIFY(ended.isEmpty()); QCOMPARE(host.owner, id);
         QVERIFY(host.complete("release")); QVERIFY(ended.value("status").toBool()); QVERIFY(!browser.busy()); QVERIFY(host.owner.isEmpty());
     }
+    void nativeTakeoverEndsTheSessionAndTellsThePage() {
+        QTemporaryDir directory; FakeBrowserHost host(directory.path()); BrowserHost browser(&host, nullptr, directory.filePath("browser"));
+        QCOMPARE(host.browserHost(), &browser);
+        QJsonObject result, ended, status;
+        establish(browser, host, result);
+        browser.endForTakeover([&ended](QJsonObject value) { ended = value; });
+        finishEnd(host);
+        QVERIFY(ended.value("status").toBool()); QVERIFY(!browser.busy());
+        send(browser, {{"action", "heartbeat"}, {"id", id}}, status);
+        QCOMPARE(status.value("code").toString(), QString("taken-over"));
+    }
     void nativeOwnerIsNeverEvictedOrResized() {
         QTemporaryDir directory; FakeBrowserHost host(directory.path()); host.nativeOwner = true;
         BrowserHost browser(&host, nullptr, directory.filePath("browser")); QJsonObject result;

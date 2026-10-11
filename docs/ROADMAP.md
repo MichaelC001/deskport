@@ -2749,3 +2749,14 @@ never hide it.
 
 The session now also reports focus while it pumps the connecting window, once
 per change, so the tray hides and shows that window like the streaming viewer.
+
+### Native clients take over browser sessions — 2026-10-11
+
+Reason: a browser session must not evict a native client, but a native client
+confirming a takeover was refused while a browser session held the host, since
+the host admits no native stream during a browser reservation.
+
+On a confirmed takeover the binding service now asks the browser supervisor to
+end its session, display restoration included, and then takes over with a fresh
+admission snapshot. The page's next request reports `taken-over` and the page
+ends at once with that explanation.

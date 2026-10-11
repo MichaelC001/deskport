@@ -86,8 +86,17 @@ BrowserHost::BrowserHost(HostManager* host, QObject* parent, const QString& dire
     });
     m_Poll.setInterval(1500);
     connect(&m_Poll, &QTimer::timeout, this, &BrowserHost::poll);
+    host->setBrowserHost(this);
 }
-BrowserHost::~BrowserHost() { m_Poll.stop(); m_Gateway.stop(); }
+BrowserHost::~BrowserHost() {
+    if (m_Host->browserHost() == this) m_Host->setBrowserHost(nullptr);
+    m_Poll.stop(); m_Gateway.stop();
+}
+void BrowserHost::endForTakeover(Completion done) {
+    // The page learns why its session ended on its next request.
+    if (!m_Id.isEmpty()) m_TakenOver = m_Id;
+    end(std::move(done));
+}
 bool BrowserHost::start() {
     if (!m_Host->available() || !QSettings().value("web/enabled", true).toBool()) return false;
     m_Listening = m_Gateway.start();
@@ -151,6 +160,7 @@ void BrowserHost::request(const QJsonObject& body, QObject* context, Completion 
     const QString action = body.value("action").toString();
     const QString id = body.value("id").toString();
     if (action == "start") { begin(body, done); return; }
+    if (!id.isEmpty() && id == m_TakenOver && id != m_Id) { done(failure("taken-over")); return; }
     if (action == "stop") {
         if (m_Id.isEmpty()) { done(success()); return; }
         if (id != m_Id) { done(failure("not-owner")); return; }
@@ -174,7 +184,7 @@ void BrowserHost::begin(const QJsonObject& input, Completion done) {
         done(failure("invalid-session")); return;
     }
     if (policy && !m_Host->displayPoliciesAvailable()) { done(failure("policy-unavailable")); return; }
-    m_Id = id; m_Operation = true; m_Cancelled = false; m_DisplayOwned = false;
+    m_Id = id; m_TakenOver.clear(); m_Operation = true; m_Cancelled = false; m_DisplayOwned = false;
     m_Policy = policy; m_Resize = {}; m_Resizing = false;
     const auto epoch = ++m_Epoch;
     QJsonObject body = input;

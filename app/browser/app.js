@@ -60,6 +60,7 @@
     'rate-limited': '尝试次数过多，请稍后再试。',
     'sharing-disabled': '电脑尚未开启屏幕共享，请在电脑端开启后重试。',
     busy: '电脑正被其他连接使用，请结束原连接后再试。',
+    'taken-over': '电脑已被 DeskPort 客户端接管，网页连接已结束。',
     unsupported: '这台电脑暂时无法提供浏览器串流，请检查电脑端状态。',
     'unsupported-codec': '当前浏览器不支持所需的视频格式（H.264 Baseline 3.1），请更新或更换浏览器。',
     'media-unavailable': '电脑当前无法采集或编码画面，请检查电脑端共享权限与编码器状态。',
@@ -417,7 +418,8 @@
       await api('/api/session/heartbeat', {}, { timeout: 7000 });
       if (currentGeneration === generation) heartbeatFailures = 0;
     } catch (error) {
-      if (currentGeneration === generation && (error.code === 'unauthorized' || error.code === 'unpaired' || ++heartbeatFailures >= 2)) {
+      if (currentGeneration === generation && (error.code === 'unauthorized' || error.code === 'unpaired' ||
+          error.code === 'taken-over' || ++heartbeatFailures >= 2)) {
         await endSession(error.message, true);
         if (pairing && (error.code === 'unauthorized' || error.code === 'unpaired')) await restorePairing(true);
       }
