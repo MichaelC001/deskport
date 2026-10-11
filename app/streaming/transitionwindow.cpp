@@ -1,7 +1,9 @@
 #include "transitionwindow.h"
 #include <QImage>
 #include <QPainter>
+#include <QFontMetricsF>
 #include <QFontMetrics>
+#include <algorithm>
 #include <cmath>
 
 TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text) : m_Window(window) {
@@ -61,8 +63,26 @@ void TransitionWindow::pump() {
         }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_QUIT, SDL_QUIT) > 0) SDL_HideWindow(m_Window);
     // Never replay keystrokes or clicks made while the stream was unavailable.
-    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_MOUSEWHEEL) > 0)
-        if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) m_Cancelled = true;
+    // Only an open question consumes them, for its own buttons.
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_MOUSEWHEEL) > 0) {
+        if (event.type == SDL_KEYDOWN && m_Asking && m_Answer < 0 &&
+            (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_RETURN)) m_Answer = 0;
+        else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) m_Cancelled = true;
+        else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT && m_Asking && m_Answer < 0 &&
+                 event.button.windowID == SDL_GetWindowID(m_Window)) {
+            int pixels, points, height;
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+            SDL_GetWindowSizeInPixels(m_Window, &pixels, &height);
+#else
+            SDL_GetWindowSize(m_Window, &pixels, &height);
+#endif
+            SDL_GetWindowSize(m_Window, &points, &height);
+            const double scale = points > 0 ? double(pixels) / points : 1.0;
+            const QPointF at(event.button.x * scale, event.button.y * scale);
+            if (m_AcceptButton.contains(at)) m_Answer = 1;
+            else if (m_CancelButton.contains(at)) m_Answer = 0;
+        }
+    }
     if (m_Cancelled) { SDL_HideWindow(m_Window); return; }
     SDL_FlushEvents(SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONUP);
     SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
@@ -81,15 +101,20 @@ void TransitionWindow::pump() {
     if (m_Frame.size() != QSize(w, h)) m_Frame = QImage(w, h, QImage::Format_ARGB32);
     m_Frame.fill(QColor(24, 27, 33));
     QPainter painter(&m_Frame); painter.setRenderHint(QPainter::Antialiasing);
-    const int phase = (SDL_GetTicks() / 80) % 12;
-    for (int i = 0; i < 12; ++i) {
-        const double angle = i * 6.283185307 / 12;
-        const int light = 55 + ((i - phase + 12) % 12) * 16;
-        painter.setPen(Qt::NoPen); painter.setBrush(QColor(int(light * 0.65), int(light * 0.85), light));
-        painter.drawEllipse(QPointF(w / 2 + std::cos(angle) * 22, h / 2 - 28 + std::sin(angle) * 22), 3, 3);
+    if (m_Asking) {
+        int points, pointsHeight; SDL_GetWindowSize(m_Window, &points, &pointsHeight);
+        drawQuestion(painter, w, h, points > 0 ? std::max(1.0, double(w) / points) : 1.0);
+    } else {
+        const int phase = (SDL_GetTicks() / 80) % 12;
+        for (int i = 0; i < 12; ++i) {
+            const double angle = i * 6.283185307 / 12;
+            const int light = 55 + ((i - phase + 12) % 12) * 16;
+            painter.setPen(Qt::NoPen); painter.setBrush(QColor(int(light * 0.65), int(light * 0.85), light));
+            painter.drawEllipse(QPointF(w / 2 + std::cos(angle) * 22, h / 2 - 28 + std::sin(angle) * 22), 3, 3);
+        }
+        QFont font; font.setPixelSize(20); painter.setFont(font); painter.setPen(QColor(230, 233, 238));
+        painter.drawText(QRect(0, h / 2 + 16, w, 48), Qt::AlignHCenter | Qt::AlignTop, m_Label);
     }
-    QFont font; font.setPixelSize(20); painter.setFont(font); painter.setPen(QColor(230, 233, 238));
-    painter.drawText(QRect(0, h / 2 + 16, w, 48), Qt::AlignHCenter | Qt::AlignTop, m_Label);
     painter.end();
     if (m_Wayland) { if (m_Wayland->present(m_Frame)) ++m_PresentedFrames; return; }
     auto surface = SDL_CreateRGBSurfaceWithFormatFrom(m_Frame.bits(), w, h, 32, m_Frame.bytesPerLine(), SDL_PIXELFORMAT_ARGB8888);
@@ -98,4 +123,50 @@ void TransitionWindow::pump() {
     if (!texture) return;
     SDL_RenderCopy(m_Renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(m_Renderer); SDL_DestroyTexture(texture); ++m_PresentedFrames;
+}
+
+void TransitionWindow::ask(const QString& title, const QString& text, const QString& cancel, const QString& accept) {
+    m_QuestionTitle = title; m_QuestionText = text; m_CancelText = cancel; m_AcceptText = accept;
+    m_Asking = true; m_Answer = -1; m_PresentedFrames = 0;
+    m_CancelButton = m_AcceptButton = QRectF();
+}
+int TransitionWindow::takeAnswer() {
+    if (m_Answer < 0) return -1;
+    const int answer = m_Answer;
+    dismiss();
+    return answer;
+}
+// The app's dark palette: card, raised button, line, text, muted text, accent.
+void TransitionWindow::drawQuestion(QPainter& painter, int width, int height, double scale) {
+    QFont titleFont; titleFont.setPixelSize(int(19 * scale)); titleFont.setBold(true);
+    QFont bodyFont; bodyFont.setPixelSize(int(15 * scale));
+    QFont buttonFont; buttonFont.setPixelSize(int(15 * scale)); buttonFont.setBold(true);
+    const double pad = 24 * scale, gap = 10 * scale, buttonHeight = 40 * scale;
+    const double cardWidth = std::min(width - 32 * scale, 460 * scale);
+    const double inner = cardWidth - 2 * pad;
+    const QRectF titleBounds = QFontMetricsF(titleFont).boundingRect(QRectF(0, 0, inner, 1e6), Qt::TextWordWrap, m_QuestionTitle);
+    const QRectF textBounds = QFontMetricsF(bodyFont).boundingRect(QRectF(0, 0, inner, 1e6), Qt::TextWordWrap, m_QuestionText);
+    const double cardHeight = pad + titleBounds.height() + gap + textBounds.height() + 2.2 * gap + buttonHeight + pad;
+    const QRectF card((width - cardWidth) / 2, (height - cardHeight) / 2, cardWidth, cardHeight);
+    painter.setPen(QPen(QColor(0x2f, 0x3b, 0x4d), scale)); painter.setBrush(QColor(0x1c, 0x25, 0x33));
+    painter.drawRoundedRect(card, 14 * scale, 14 * scale);
+    double y = card.top() + pad;
+    painter.setFont(titleFont); painter.setPen(QColor(0xf1, 0xf4, 0xf3));
+    painter.drawText(QRectF(card.left() + pad, y, inner, titleBounds.height()), Qt::TextWordWrap, m_QuestionTitle);
+    y += titleBounds.height() + gap;
+    painter.setFont(bodyFont); painter.setPen(QColor(0xa4, 0xb1, 0xb5));
+    painter.drawText(QRectF(card.left() + pad, y, inner, textBounds.height()), Qt::TextWordWrap, m_QuestionText);
+    const QFontMetricsF buttonMetrics(buttonFont);
+    const double acceptWidth = std::max(110 * scale, buttonMetrics.horizontalAdvance(m_AcceptText) + 32 * scale);
+    const double cancelWidth = std::max(90 * scale, buttonMetrics.horizontalAdvance(m_CancelText) + 32 * scale);
+    const double buttonTop = card.bottom() - pad - buttonHeight;
+    m_AcceptButton = QRectF(card.right() - pad - acceptWidth, buttonTop, acceptWidth, buttonHeight);
+    m_CancelButton = QRectF(m_AcceptButton.left() - gap - cancelWidth, buttonTop, cancelWidth, buttonHeight);
+    painter.setFont(buttonFont);
+    painter.setPen(Qt::NoPen); painter.setBrush(QColor(0x25, 0x30, 0x42));
+    painter.drawRoundedRect(m_CancelButton, 9 * scale, 9 * scale);
+    painter.setPen(QColor(0xf1, 0xf4, 0xf3)); painter.drawText(m_CancelButton, Qt::AlignCenter, m_CancelText);
+    painter.setPen(Qt::NoPen); painter.setBrush(QColor(0x32, 0x69, 0xd7));
+    painter.drawRoundedRect(m_AcceptButton, 9 * scale, 9 * scale);
+    painter.setPen(QColor(0xff, 0xff, 0xff)); painter.drawText(m_AcceptButton, Qt::AlignCenter, m_AcceptText);
 }

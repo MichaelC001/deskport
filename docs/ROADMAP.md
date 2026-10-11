@@ -2760,3 +2760,14 @@ On a confirmed takeover the binding service now asks the browser supervisor to
 end its session, display restoration included, and then takes over with a fresh
 admission snapshot. The page's next request reports `taken-over` and the page
 ends at once with that explanation.
+
+### Takeover question inside the connecting window — 2026-10-11
+
+Reason: the "Host already in use" takeover question was a native message box,
+which on Windows looked unlike the rest of DeskPort.
+
+While a connecting window is up, the question is now drawn in it with the app's
+dark palette and two buttons; Escape and Return choose Cancel, as before. The
+native box remains only as a fallback without a connecting window. On Windows,
+the main process also lets a session worker take the foreground when the tray
+shows its viewer, which otherwise opened behind other windows.

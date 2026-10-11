@@ -906,6 +906,24 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
         }, [this, window] {
             if (m_RecoveryDeadline || m_RecoveryCancelled) return false;
+            if (m_TransitionWindow && m_TransitionWindow->rendering()) {
+                // Ask inside the connecting window, in the app's own style. The
+                // host keeps the takeover offer for 30 seconds.
+                m_TransitionWindow->ask(tr("Host already in use"),
+                    tr("Another device is connected to this host. Disconnect it and connect here?"),
+                    tr("Cancel"), tr("Disconnect and connect"));
+                recallDesktopWindow(m_TransitionWindow->window());
+                const Uint32 deadline = SDL_GetTicks() + 30000;
+                int answer = -1;
+                while ((answer = m_TransitionWindow->takeAnswer()) < 0 && !m_TransitionWindow->cancelled() &&
+                       !m_RecoveryCancelled && !SDL_TICKS_PASSED(SDL_GetTicks(), deadline)) {
+                    pumpTransitionWindow();
+                    if (!m_ThreadedExec) QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+                    SDL_Delay(10);
+                }
+                if (answer < 0) m_TransitionWindow->dismiss();
+                return answer == 1;
+            }
             const auto title = tr("Host already in use").toUtf8();
             const auto text = tr("Another device is connected to this host. Disconnect it and connect here?").toUtf8();
             const auto cancel = tr("Cancel").toUtf8();

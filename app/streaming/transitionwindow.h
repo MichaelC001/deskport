@@ -1,6 +1,8 @@
 #pragma once
 #include <SDL.h>
 #include <QString>
+#include <QRectF>
+class QPainter;
 #include "windowactivation.h"
 #include "waylandloading.h"
 
@@ -52,8 +54,16 @@ public:
     bool rendering() const { return bool(m_Renderer) || (m_Wayland && m_Wayland->valid()); }
     const QImage& frame() const { return m_Frame; }
     unsigned presentedFrames() const { return m_PresentedFrames; }
+    // Asks a two-choice question inside this window, styled like the app, in
+    // place of a native message box. takeAnswer() returns -1 until the user
+    // chooses: 0 for cancel (also Escape or Return), 1 for accept.
+    void ask(const QString& title, const QString& text, const QString& cancel, const QString& accept);
+    int takeAnswer();
+    // Withdraws an unanswered question and shows the connecting state again.
+    void dismiss() { m_Asking = false; m_Answer = -1; m_PresentedFrames = 0; }
 private:
     void clearRenderer();
+    void drawQuestion(QPainter& painter, int width, int height, double scale);
     SDL_Window* m_Window;
     SDL_Renderer* m_Renderer = nullptr;
     std::unique_ptr<WaylandLoading> m_Wayland;
@@ -64,4 +74,9 @@ private:
     bool m_Pumping = false;
     unsigned m_PresentedFrames = 0;
     Uint32 m_LastPaint = 0;
+    bool m_Asking = false;
+    int m_Answer = -1;
+    QString m_QuestionTitle, m_QuestionText, m_CancelText, m_AcceptText;
+    // Button bounds in window pixels, from the last painted question.
+    QRectF m_CancelButton, m_AcceptButton;
 };
