@@ -48,3 +48,17 @@ released separately and their private source is excluded.
 Upgrading from the earlier fixed browser access code retires that code and
 forgets browsers enrolled under it. Review local host permissions and activate
 managed updates yourself.
+
+## Published artifacts
+
+The [stable release](https://github.com/keithxc/deskport/releases/tag/v0.7.1)
+is marked Latest. Tag `v0.7.1` resolves to desktop source
+`57b5ffed8664efceed3c8fce38ec456137903b5e`, with shared core
+`108ca7d24c023b443687971690b1066427012608`.
+
+All 19 public assets were downloaded without login and matched their local bytes,
+GitHub sizes/digests and [SHA256SUMS.txt](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt).
+[VERIFICATION.txt](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt)
+records notarization, native Windows checks, distribution installation tests,
+Nix and Flatpak validation, and the scope of isolated regressions. Current
+physical streaming/input acceptance and managed activation remain separate.

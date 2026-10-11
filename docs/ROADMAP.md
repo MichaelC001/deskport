@@ -1,11 +1,15 @@
 ## Desktop 0.7.1 formal release — 2026-10-11
 
-Prepare the stable PC matrix from committed main: macOS arm64 notarized DMG/ZIP,
+Released the stable PC matrix as [0.7.1](https://github.com/keithxc/deskport/releases/tag/v0.7.1)
+from desktop source `57b5ffed8664efceed3c8fce38ec456137903b5e` and shared core
+`108ca7d24c023b443687971690b1066427012608`: macOS arm64 notarized DMG/ZIP,
 Windows x64 offline Setup/portable ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable,
-Nix and client-only Flatpak. Include exact dependency sources, licenses,
-relinking materials, checksums and package verification. Mobile distribution
-remains separate. User activation and current physical streaming/input acceptance
-remain separate from compilation, isolated regressions and package checks.
+Nix and client-only Flatpak. All 19 public assets were downloaded without login
+and matched local bytes, GitHub digests and the published checksum manifest.
+Exact dependency sources, licenses, relinking materials and the verification
+report accompany the binaries. Mobile distribution remains separate. User
+activation and current physical streaming/input acceptance remain separate from
+compilation, isolated regressions and package checks.
 
 Windows build and source-material export now accept an independent build root so
 formal builds preserve source checkouts and reused dependencies. No wire or media
