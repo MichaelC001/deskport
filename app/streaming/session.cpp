@@ -2748,12 +2748,18 @@ void Session::execInternal()
                 if (!m_Clipboard) initializeClipboard();
                 emit presentationShown();
                 break;
-            case DeskPortRaiseViewer:
+            case DeskPortToggleWindow:
                 // The control center and the remote window are never shown at
-                // the same time; the tray click returns to the remote window.
-                // Closing the window hides it while the session stays connected.
-                if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "prepareViewerRecall", Qt::QueuedConnection);
-                recallDesktopWindow(m_Window);
+                // the same time, so a hidden remote window means the tray click
+                // is coming back from the control center. A window behind
+                // others is brought forward rather than hidden.
+                if (desktopWindowInFront(m_Window)) {
+                    m_InputHandler->setCaptureActive(false);
+                    SDL_HideWindow(m_Window);
+                } else {
+                    if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "prepareViewerRecall", Qt::QueuedConnection);
+                    recallDesktopWindow(m_Window);
+                }
                 break;
             case SDL_CODE_FRAME_READY:
                 if (m_VideoDecoder != nullptr) {
