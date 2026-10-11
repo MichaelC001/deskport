@@ -855,8 +855,23 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // When a hidden window is shown again, the compositor can resize its
+    // buffer for the output scale before SDL reports the new drawable size.
+    // Drawing with the stale size filled only the lower-left corner for a
+    // frame, so use the size of the buffer actually being drawn.
     int drawableWidth, drawableHeight;
-    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+    EGLint surfaceWidth = 0, surfaceHeight = 0;
+    const EGLSurface surface = eglGetCurrentSurface(EGL_DRAW);
+    if (surface != EGL_NO_SURFACE &&
+        eglQuerySurface(m_EGLDisplay, surface, EGL_WIDTH, &surfaceWidth) &&
+        eglQuerySurface(m_EGLDisplay, surface, EGL_HEIGHT, &surfaceHeight) &&
+        surfaceWidth > 0 && surfaceHeight > 0) {
+        drawableWidth = surfaceWidth;
+        drawableHeight = surfaceHeight;
+    }
+    else {
+        SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+    }
 
     // Set the viewport to the size of the aspect-ratio-scaled video
     SDL_Rect src, dst;
