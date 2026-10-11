@@ -8,6 +8,9 @@
 #include <QProcessEnvironment>
 #include <QTimer>
 #include <QUuid>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
 
 namespace {
 QByteArray frame(const QJsonObject& value) { return QJsonDocument(value).toJson(QJsonDocument::Compact) + '\n'; }
@@ -242,6 +245,11 @@ void MultiSessions::present(bool raise) {
     if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") {
         entry->exposed = true;
         QJsonObject show {{"command","show"},{"raise",raise}};
+#ifdef Q_OS_WIN
+        // Windows lets only the process that received the tray click take the
+        // foreground; without this the worker's viewer opens behind others.
+        if (raise && entry->process) AllowSetForegroundWindow(DWORD(entry->process->processId()));
+#endif
         // Presenting can wait for another viewer to hide; the token waits too.
         if (raise && !m_ActivationToken.isEmpty()) show["activationToken"] = QString::fromUtf8(m_ActivationToken);
         m_ActivationToken.clear();
