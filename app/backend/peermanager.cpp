@@ -2,7 +2,6 @@
 #include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
-#include "browserhost.h"
 #include "sessiongraph.h"
 #include <QSysInfo>
 #include <QPointer>
@@ -1129,14 +1128,13 @@ void PeerManager::sessionRequestVerified(Link* link, const QJsonObject& message)
             QDateTime::currentMSecsSinceEpoch() <= link->sessionDeadline && link->sessionEpoch == m_SessionEpoch;
         link->sessionChallenge.clear(); // Every attempted confirmation consumes it.
         if (!valid) { sessionError(link, "stale"); return; }
-        auto browser = m_Host->browserHost();
-        if (!browser || !browser->busy()) { acquireSession(link, link->sessionSnapshot, true); return; }
+        if (!m_Host->browserSessionBusy()) { acquireSession(link, link->sessionSnapshot, true); return; }
         // A native client takes over a browser session. The browser supervisor
         // ends it and restores the display first; the host refuses to admit a
         // native stream while a browser reservation exists.
         m_SessionOperation = true;
         const QPointer<Link> alive(link);
-        browser->endForTakeover([this, alive](QJsonObject) {
+        m_Host->endBrowserSession([this, alive] {
             m_Host->sessionControl({}, this, [this, alive](QJsonObject result) {
                 m_SessionOperation = false;
                 if (!alive || alive->ended) return;

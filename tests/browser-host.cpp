@@ -104,9 +104,10 @@ private slots:
     }
     void nativeTakeoverEndsTheSessionAndTellsThePage() {
         QTemporaryDir directory; FakeBrowserHost host(directory.path()); BrowserHost browser(&host, nullptr, directory.filePath("browser"));
-        QCOMPARE(host.browserHost(), &browser);
         QJsonObject result, ended, status;
+        QVERIFY(!host.browserSessionBusy());
         establish(browser, host, result);
+        QVERIFY(host.browserSessionBusy());
         browser.endForTakeover([&ended](QJsonObject value) { ended = value; });
         finishEnd(host);
         QVERIFY(ended.value("status").toBool()); QVERIFY(!browser.busy());

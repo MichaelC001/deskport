@@ -86,10 +86,12 @@ BrowserHost::BrowserHost(HostManager* host, QObject* parent, const QString& dire
     });
     m_Poll.setInterval(1500);
     connect(&m_Poll, &QTimer::timeout, this, &BrowserHost::poll);
-    host->setBrowserHost(this);
+    host->setBrowserTakeover([this] { return busy(); }, [this](std::function<void()> done) {
+        endForTakeover([done](QJsonObject) { done(); });
+    });
 }
 BrowserHost::~BrowserHost() {
-    if (m_Host->browserHost() == this) m_Host->setBrowserHost(nullptr);
+    m_Host->setBrowserTakeover({}, {});
     m_Poll.stop(); m_Gateway.stop();
 }
 void BrowserHost::endForTakeover(Completion done) {

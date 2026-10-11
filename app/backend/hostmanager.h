@@ -15,7 +15,6 @@
 #include <QTimer>
 
 class HostCaretMonitor;
-class BrowserHost;
 
 class HostManager : public QObject {
     Q_OBJECT
@@ -85,9 +84,13 @@ public:
                                 std::function<void(QJsonObject)> completion);
     virtual bool running() const;
     virtual bool canPair() const;
-    // The browser session supervisor, so a native takeover can end its session.
-    BrowserHost* browserHost() const { return m_BrowserHost; }
-    void setBrowserHost(BrowserHost* host) { m_BrowserHost = host; }
+    // Registered by the browser session supervisor so a native takeover can
+    // end its session without the binding code depending on the browser host.
+    void setBrowserTakeover(std::function<bool()> busy, std::function<void(std::function<void()>)> end) {
+        m_BrowserBusy = std::move(busy); m_EndBrowser = std::move(end);
+    }
+    bool browserSessionBusy() const { return m_BrowserBusy && m_BrowserBusy(); }
+    void endBrowserSession(std::function<void()> done) { if (m_EndBrowser) m_EndBrowser(std::move(done)); else done(); }
     int basePort() const { return m_BasePort; }
     bool loginStart() const;
     bool loginStartManaged() const;
@@ -164,7 +167,8 @@ private:
     HostPortReservation m_Ports;
     std::unique_ptr<QLockFile> m_HostLock;
     int m_BasePort = DeskPortNetwork::DefaultBasePort;
-    BrowserHost* m_BrowserHost = nullptr;
+    std::function<bool()> m_BrowserBusy;
+    std::function<void(std::function<void()>)> m_EndBrowser;
     QByteArray m_Buffer;
     QString m_LinuxOutputName;
     bool m_LinuxGnome = false;
