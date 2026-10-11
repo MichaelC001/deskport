@@ -55,7 +55,10 @@ void TransitionWindow::pump() {
             if (desktopWindowInFront(m_Window)) SDL_HideWindow(m_Window); else recallDesktopWindow(m_Window);
         }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT) > 0)
-        if (event.window.windowID == SDL_GetWindowID(m_Window) && event.window.event == SDL_WINDOWEVENT_CLOSE) SDL_HideWindow(m_Window);
+        if (event.window.windowID == SDL_GetWindowID(m_Window)) {
+            if (event.window.event == SDL_WINDOWEVENT_CLOSE) SDL_HideWindow(m_Window);
+            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) noteDesktopWindowFocusLost();
+        }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_QUIT, SDL_QUIT) > 0) SDL_HideWindow(m_Window);
     // Never replay keystrokes or clicks made while the stream was unavailable.
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_MOUSEWHEEL) > 0)

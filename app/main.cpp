@@ -1106,8 +1106,15 @@ int main(int argc, char *argv[])
     // A click hides the window only when it is the one in front. A visible
     // window behind other applications is brought forward instead, so a single
     // click always shows it.
-    const auto windowInFront = [](QWindow* window) {
-        return window && window->isVisible() && window->windowState() != Qt::WindowMinimized && window->isActive();
+    // Clicking a panel icon can take focus from the window just before the
+    // click is reported, so a window that was active a moment ago still counts.
+    QElapsedTimer frontLeft;
+    QObject::connect(&app, &QGuiApplication::focusWindowChanged, &app, [&frontLeft](QWindow* focus) {
+        if (!focus) frontLeft.start();
+    });
+    const auto windowInFront = [&frontLeft](QWindow* window) {
+        if (!window || !window->isVisible() || window->windowState() == Qt::WindowMinimized) return false;
+        return window->isActive() || (frontLeft.isValid() && frontLeft.elapsed() < 600);
     };
     auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront] {
         // Qt raises its own window with the shell's activation token from the
