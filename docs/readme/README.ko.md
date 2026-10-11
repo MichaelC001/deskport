@@ -77,9 +77,8 @@
 | Windows x64 | 뷰어 + 호스트 + 가상 디스플레이 | **0.7.1 stable**, 설치 프로그램 및 포터블 ZIP, 아래 검증 범위 참고 | [설치 프로그램](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | 검증되지 않음 | 검증된 릴리스 패키지 없음 | — |
 
-> **Windows 백신 안내:** 검사 결과는 실제로 검사한 그 패키지에만 해당합니다.
-> Microsoft는 이전에 신고된 0.5.6 r4 헬퍼를 **Not malware**로 분류했지만,
-> 이 판정이 이후 빌드를 보증하지는 않습니다. Defender를 켜 둔 채로
+> **Windows 백신 안내:** 백신 프로그램이 DeskPort의 Windows 헬퍼 구성 요소를 오탐지할 수 있습니다.
+> 자체 테스트에서는 이런 문제가 발생하지 않았습니다. Defender를 켜 둔 채로 사용하시고, 경고가 표시되면
 > 릴리스 검증 보고서와 [샘플 이력](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)을 확인하세요.
 
 네이티브 Linux 패키지에는 glibc 2.39+가 필요합니다: Ubuntu 24.04+/Debian 13+, Fedora 44,

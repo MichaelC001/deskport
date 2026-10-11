@@ -77,9 +77,8 @@ pour afficher l'image en taille réelle ; ces aperçus n'impliquent aucune dispo
 | Windows x64 | Visualiseur + hôte + écran virtuel | **0.7.1 stable** ; installateur et ZIP portable ; voir la portée de vérification ci-dessous | [Installateur](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
 | Linux ARM64 / Mac Intel | Non qualifié | Aucun paquet de version vérifié | — |
 
-> **Avertissement antivirus Windows :** Les résultats d'analyse s'appliquent au paquet exact testé.
-> Microsoft a classé le helper 0.5.6 r4 signalé précédemment comme **Not malware** ;
-> cette décision ne certifie pas les builds plus récents. Gardez Defender activé et
+> **Avertissement antivirus Windows :** Un antivirus peut signaler à tort les composants auxiliaires Windows de DeskPort (faux positif).
+> Nous ne l'avons pas constaté lors de nos propres tests. Gardez Defender activé ; si un avertissement apparaît,
 > consultez le rapport de vérification de la version et l'[historique des échantillons](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice).
 
 Les paquets Linux natifs nécessitent glibc 2.39+ : Ubuntu 24.04+/Debian 13+, Fedora 44,

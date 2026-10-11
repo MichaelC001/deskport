@@ -24,100 +24,128 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.6.0"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.6.0-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.1"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.7.1-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
-## 界面预览
-
-以下为当前界面的演示设备截图，点击可查看大图；不代表商店审核或正式发布已完成。
-
-| 设备 | 设置 | 使用手册 |
-| --- | --- | --- |
-| [![Devices](../media/devices.png)](../media/devices.png) | [![Settings](../media/device-settings.png)](../media/device-settings.png) | [![Manual](../media/manual.png)](../media/manual.png) |
-
 ## 主要功能
 
-- 桌面端整合查看、共享、设备授权和独立配置，macOS、Windows 与 Linux 主机安装包内置 Sunshine（仅客户端的 Flatpak 除外）。
-- 兼容 macOS/KDE 主机的自适应工作区、HiDPI、每设备桌面微调；调整尺寸时会短暂重连视频。
-- 虚拟主屏镜像、虚拟主屏并关闭其他屏幕、扩展工作区三种策略，断开后恢复屏幕布局。
-- 跨设备接管前确认，被接管端显示明确原因。
-- 桌面会话后台保留与快速呼出；隐藏时释放远程输入。
-- 每台电脑保存画面、声音、输入和地址设置；桌面之间文字即时共享，图片/文件按需获取。
-- 原生移动触控、触控板与办公键盘；可选登录启动和 macOS 进程恢复。
+- **一个桌面应用，既能查看也能共享。** 内置 Sunshine、设备授权、独立凭据与设置；
+  macOS、Windows 与 Linux 主机安装包无需另装 Sunshine（仅客户端的 Flatpak 除外）。
+- **工作区跟随你的客户端。** 在兼容的 macOS 与 KDE 主机上自适应尺寸，支持 HiDPI、
+  移动端横竖屏布局与每设备尺寸设置。调整尺寸时视频会短暂重连，并非无缝的编码器切换。
+- **选择主机的显示策略。** 虚拟主屏并镜像其他屏幕、虚拟主屏并关闭其他屏幕，或在符合条件的
+  主机上使用扩展工作区。会话结束时 DeskPort 会恢复保存的屏幕布局。
+- **在已授权设备之间切换。** 接管正在进行的会话前需要确认；被替换的客户端会收到经过认证的接管说明。
+- **桌面工作随手可及。** 隐藏和唤回已连接的查看端，隐藏时释放远程输入，
+  并可在不影响本地共享的情况下单独断开查看。
+- **每台电脑独立保存设置。** 画面、声音、输入、桌面微调与地址编辑都跟随设备保存；
+  支持卡片、置顶、主题和多语言界面。
+- **按需共享桌面剪贴板。** 文本即时更新；在已绑定且启用该选项的桌面设备之间，
+  受支持的图片与文件按需获取。见[剪贴板范围与限制](../CLIPBOARD.md)。
+- **原生移动端控制。** iPhone/iPad 与开发中的 Android 客户端提供触控/触控板输入、
+  键盘控制，并可直接进入远程桌面。
+- **可选的登录启动与 macOS 恢复。** 需要处于活动的图形登录会话并获得系统授权；
+  它们不会解锁 FileVault，也不会替你登录。
 
-## 同类产品对比
+## 界面预览
 
-核对日期：2026-09-20。下表对比平台和使用方式，不代表性能测试。
+当前界面截图，使用的是演示设备。点击可查看大图；这些预览不代表已在商店上架或已正式发布。
 
-| 项目 | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
-| --- | --- | --- | --- | --- |
-| 主要用途 | 持续远程工作区、自适应大小、跨设备接管 | 游戏和桌面串流 | 远程控制与支持 | 交互式远程桌面与协作 |
-| 桌面主机 | macOS Apple Silicon、Linux x86_64、Windows x64 | Windows、macOS、Linux、FreeBSD | Windows、macOS、Linux | Windows、macOS；Linux 不能作为主机 |
-| 桌面客户端 | macOS Apple Silicon、Linux x86_64、Windows x64 | Windows、macOS、Linux 等 | Windows、macOS、Linux | Windows、macOS、Linux、兼容 Chromium 浏览器 |
-| 移动客户端 | iPhone/iPad 已发布；Android 开发中 | iOS/iPadOS、Android | iOS/iPadOS、Android | Android；不支持 iOS/iPadOS |
-| 配置方式 | 原生桌面包内置主机，设备端请求授权 | 单独配置 Sunshine 后配对 Moonlight | 公共服务器或自建服务器 | Parsec 账号与应用 |
-| 网络路径 | 自备局域网/VPN，无 DeskPort 中继服务 | 自建串流，配置网络可达性 | 公共服务或自建 OSS/Pro 服务 | Parsec 账号/服务体系 |
+| 设备与分组 | 每设备显示设置 | 内置使用手册 |
+| --- | --- | --- |
+| [![设备与分组](../media/devices.png)](../media/devices.png) | [![每设备显示设置](../media/device-settings.png)](../media/device-settings.png) | [![内置使用手册](../media/manual.png)](../media/manual.png) |
 
-官方来源和完整说明见[英文对比表](../../README.md#comparison-with-similar-products)。Intel Mac 和 ARM Linux 尚不属于 DeskPort 已验证发布平台；Flatpak 仅为客户端。
+## 支持的平台
 
-## 平台进度
-
-| 平台 | 角色 | 进度 | 获取 |
+| 平台 | 角色 | 发布状态 | 下载 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 查看端 + 主机端 + 虚拟显示器 | ✅ 稳定版 — 0.6.0，已经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
-| **Linux x86-64** | 查看端 + 主机端 | ✅ 已发布 — 0.7.1：Nix / DEB / RPM / Arch / AppImage / 便携包；Flatpak 仅客户端 | [发布页](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
-| **Linux ARM64** | 查看端 + 主机端 | 🧪 仅有 Nix 包定义，构建与运行尚未验证 | — |
-| **Windows x64** | 查看端 + 主机端 + 虚拟显示器 | 0.6.0 安装包及便携 ZIP | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
-| **iOS / iPadOS** | 📱 仅客户端 | ✅ 已上架 — App Store 售价 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
-| **Android**（8.0+） | 📱 仅客户端 | 🚧 开发中 — 原生界面与 MediaCodec；Google Play 同为 4.99 美元 | — |
+| macOS Apple Silicon，macOS 26+ | 查看端 + 主机端 + 原生虚拟显示器 | **0.7.1 稳定版**，已用 Developer ID 签名并经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg) |
+| Linux x86_64 | 查看端 + 主机端；符合条件的 KDE 主机支持自适应虚拟工作区 | **0.7.1 稳定版**：DEB、RPM、Arch、AppImage、便携包与 Nix | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.1) · [安装指南](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | 仅查看端 | **0.7.1 稳定版**，Freedesktop Platform 25.08 | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.1) |
+| iPhone / iPad，iOS/iPadOS 15+ | 仅客户端 | 已上架 App Store；较新的版本另在 TestFlight 测试 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
+| Android 8.0+ | 仅客户端 | 开发中；正在实机检查，尚未在商店公开发布 | 暂不可用 |
+| Windows x64 | 查看端 + 主机端 + 虚拟显示器 | **0.7.1 稳定版**；安装包与便携 ZIP；验证范围见下方 | [安装包](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
+| Linux ARM64 / Intel Mac | 未验证 | 没有经过验证的发布包 | — |
 
-> **Windows 杀毒软件提示（2026-09-24）：** 0.6.0 最终安装包已通过三轮保持防护开启的安装、启动和扫描。
-> 微软另已将此前提交的 0.5.6 r4 显示助手判定为 **Not malware**，并注明检测已移除。
-> 该结论只对应送检的旧样本，不代表所有新版已获微软确认。请保持防护开启，不添加排除项或恢复隔离文件绕过检测。
-> [样本详情与申诉状态](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
+> **Windows 杀毒软件提示：** 杀毒软件有可能将 DeskPort 的 Windows 辅助组件误报为威胁。
+> 我们自测时未遇到这种情况。请保持 Defender 开启；如果出现警告，
+> 请查看发布附带的验证报告和[样本记录](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
 
-> **移动端范围：** iOS/iPadOS 与 Android 目前**只规划做客户端功能**。它们连接已授权的
-> DeskPort 主机，不提供任何主机端能力——没有屏幕采集、虚拟显示器或本地输入注入。
-> 主机端仍然由 macOS、Linux 以及 Windows 承担。移动端客户端在另一个仓库开发。
+原生 Linux 包需要 glibc 2.39+：Ubuntu 24.04+/Debian 13+、Fedora 44、
+最新的 Arch。AppImage 自带私有运行时，可用于 glibc 较旧的桌面；主机能力仍取决于硬件驱动
+与合成器支持。KDE 虚拟显示器主机需要合成器授权条目。原生包与 Nix 包提供固定的条目；
+0.7.1 的 AppImage 与便携版会在开始共享时自动注册当前显示助手的路径。主机输入仍需要设备权限。
+移动应用不能作为桌面主机。
+仅有包定义或能编译成功，并不代表该平台受支持。
 
 ## 安装
 
-**iPhone / iPad** — [App Store 上的 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)，
-**售价 4.99 美元，一次买断**。面向已授权 DeskPort 主机的原生客户端，支持直接触控、
-办公键盘模式，并可在已绑定的主机上自适应工作区尺寸。Android 客户端上架 Google Play 后
-也会是同样的 4.99 美元。
+**macOS：** 打开[经公证的 DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg)，
+把 DeskPort 拖入「应用程序」后打开。如需使用主机端功能，请授予「屏幕录制」和
+「辅助功能」权限。无需 Nix 或 Homebrew。
 
-> 💚 **感谢你对 DeskPort 的支持。** 桌面端始终免费并保持开源；移动端的收入是这个项目
-> 得以继续的来源。每一笔购买都会回到开发者账号、代码签名、测试设备，以及继续开发所需的
-> 时间上。如果你已经购买——真心感谢。如果还没有，提 issue、参与翻译和给出反馈同样珍贵。
+**Linux：** 选择适合你系统的 [0.7.1 安装包](https://github.com/keithxc/deskport/releases/tag/v0.7.1)，
+并按照[安装指南](../LINUX_PACKAGES.md)操作，包括主机输入权限的设置。使用 Nix：`nix run github:keithxc/deskport/v0.7.1`。
+Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt)。
 
-**macOS** — 面向 macOS 26 及以上 Apple Silicon 的
-[Apple 公证 DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg)。
-打开 DMG，把 DeskPort 拖入「应用程序」，然后启动即可。主机端功能会在首次使用时请求
-「屏幕录制」和「辅助功能」授权。无需另外安装 Sunshine、Qt、Nix 或 Homebrew。
+**iPhone / iPad：** 从 [App Store 安装 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)。
+移动应用为一次性付费购买，当地价格以你所在地区的商店为准。
+桌面版始终免费并保持开源。你的购买会用于代码签名、测试设备和后续开发。
 
-**Linux** — 0.7.1 提供 DEB、RPM、Arch、AppImage、便携包、仅客户端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.7.1`，或按 [Linux 安装指南](../LINUX_PACKAGES.md) 安装对应格式。原生包需要 x86_64 与 glibc 2.39+。发布附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt)。
+在主机上开始共享，在客户端上选择该主机，然后在主机上批准该设备。两台设备之间需要网络可达：
+使用局域网或你自己的 VPN（如 Tailscale）。DeskPort 不提供账号服务、托管桌面、中继
+或网络隧道。旧版 Sunshine PIN 配对仍然可用。
 
-**Linux 软件仓库状态（2026-09-27）：** 正式安装包与上游 Nix flake 已可用；AUR `deskport-bin` 配方已准备，AUR 暂停新账号注册，暂未发布；Nixpkgs `deskport` 已提交[PR #567358](https://github.com/NixOS/nixpkgs/pull/567358)，维护者已审阅，等待上游评审，尚未合并。现在可用 `nix run github:keithxc/deskport/v0.7.1`，或下载 Arch 包后用 `pacman -U` 安装。请勿把它们理解为已经支持 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。本地构建配方、NixOS 配置以及主机输入／防火墙要求见 [Linux 安装指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
+**浏览器访问：** 桌面主机提供 HTTPS 远程桌面，支持 30 秒登录码、可选的七天浏览器配对、
+自适应尺寸和全屏。见 [0.7.1 发行说明](../RELEASE_0.7.1.md)与
+[浏览器使用指南](../BROWSER_ACCESS.md)。AppImage 内含私有的 glibc 运行时；
+原生包仍需要 glibc 2.39。
 
-## DeskPort 是什么
+### Linux 软件仓库状态
 
-**稳定版本：0.6.0 — 开箱即装的桌面安装包。** DeskPort 把查看端与可选的主机端合并在一个
-应用里，共用设备列表、双向绑定与权限控制。macOS 安装包内含 Sunshine 和原生虚拟显示器；
-Linux 原生包与 AppImage 内含面向现有桌面的 Sunshine 主机端。Flatpak 只提供客户端；Nix 依然支持。
+| 渠道 | 状态 | 安装方式 |
+| --- | --- | --- |
+| GitHub 发布包 | 可用，0.7.1 | 在上方下载适合你发行版的安装包 |
+| 上游 Nix flake | 可用，0.7.1 | `nix run github:keithxc/deskport/v0.7.1` |
+| AUR `deskport-bin` | 配方已测试；因 AUR 暂停新账号注册而无法发布 | [在本地构建配方](../LINUX_PACKAGES.md#arch-linux-and-aur) |
+| Nixpkgs `deskport` | 已提交 [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) 等待审核；尚未合并 | 合并前请使用上游 flake |
+| Arch 官方仓库 / Flathub | 未收录 | 使用发布页下载；Flatpak 仅为查看端 |
 
-macOS 上的专用工作区会跟随客户端窗口的可绘制像素尺寸。缩放在 150% 及以上的客户端会请求
-2× HiDPI 工作区以获得清晰文字。调整尺寸时视频会短暂重连，期间保留客户端窗口并显示加载动画。
-这不是无缝的编码器重配置。
+可下载的 Arch 包用 `pacman -U` 安装，并不意味着可以使用
+`pacman -S deskport`。同样，上游 flake 也不会让 Nixpkgs 中出现
+`pkgs.deskport`。主机输入、采集权限与防火墙设置独立于应用安装之外；见
+[Linux 安装指南](../LINUX_PACKAGES.md#nixos-and-nix)。
 
-参见[发行说明](../RELEASE_0.6.0.md)、[架构说明](../ARCHITECTURE.md)与
-[macOS 安装指南](../MACOS_PACKAGE.md)。持久化的隐藏/显示已经实现；原生长时间会话的验收仍未完成。
-共享显示策略支持具备条件的 macOS 与 KDE 主机。选择加入的已绑定 DeskPort 设备会立即共享文本，
-并按需获取图片与文件。Windows 已提供安装包，剪贴板及最终包实机串流验收范围见发行说明。已知限制见发行说明。
+## 同类产品对比
+
+这是工作流程与平台的对比，依据所链接的官方文档于 **2026-09-20** 核对，
+并非延迟或画质测试。各产品的功能与平台限制可能会变化。
+
+| 方面 | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
+| --- | --- | --- | --- | --- |
+| 主要工作流程 | 持续的远程桌面工作区、自适应尺寸与跨设备接管 | 通过独立的客户端与主机应用进行游戏/桌面串流 | 通用远程控制与支持 | 交互式远程桌面与协作 |
+| 桌面主机平台 | macOS Apple Silicon、Linux x86_64 与 Windows x64 | Windows、macOS、Linux 与 FreeBSD，受各平台限制 | Windows、macOS 与 Linux | Windows 与 macOS；Linux 不能作为主机 |
+| 桌面客户端 | macOS Apple Silicon、Linux x86_64 与 Windows x64 | Windows、macOS、Linux 等 | Windows、macOS 与 Linux | Windows、macOS、Linux 与受支持的 Chromium 浏览器 |
+| 移动客户端 | iPhone/iPad 已发布；Android 开发中 | iOS/iPadOS 与 Android | iOS/iPadOS 与 Android；iOS 不能作为主机 | Android；无 iOS/iPadOS 客户端 |
+| 配置方式 | 原生桌面包内置主机；在 DeskPort 中批准设备 | 单独安装并配置 Sunshine，再与 Moonlight 配对 | 公共服务器或自建服务器 | Parsec 账号与应用 |
+| 网络/服务模式 | 自备局域网/VPN 可达性；无 DeskPort 中继 | 自建串流；自行配置网络可达性 | 公共服务或自建 OSS/Pro 服务器 | Parsec 账号/服务体系 |
+| 源码与分发 | GPL 桌面版，桌面安装包免费；付费 Apple 应用单独分发 | 开源客户端与主机端 | 开源客户端与 OSS 服务器；另有商业 Pro 服务器 | 专有应用/服务 |
+
+来源：[Moonlight](https://moonlight-stream.org/)、
+[Sunshine installation and platform support](https://docs.lizardbyte.dev/projects/sunshine/latest/md_docs_2getting__started.html)、
+[RustDesk clients](https://rustdesk.com/docs/en/client/)、
+[RustDesk self-hosting](https://rustdesk.com/docs/en/self-host/)、
+[Parsec platform compatibility](https://support.parsec.app/hc/en-us/articles/32381568346644-Hardware-and-Software-Compatibility)、
+[Parsec Linux setup](https://support.parsec.app/hc/en-us/articles/32381552552340-Install-Parsec-App-on-Linux)。
+DeskPort 当前的平台限制见上文；本表并不意味着各操作系统功能完全一致，
+也不代表经过测量的性能优势。
+
+参见 [0.7.1 发行说明](../RELEASE_0.7.1.md)、
+[架构说明](../ARCHITECTURE.md)与[路线图](../ROADMAP.md)。
 
 ## 在 Linux 上构建与运行
 
@@ -130,10 +158,13 @@ nix build
 ./result/bin/deskport
 ```
 
-所有第三方依赖都已内置在本仓库中，因此 Nix 构建无需额外下载；见
-[docs/VENDORED.md](../VENDORED.md)。`nix run . -- --help` 会打印沿用自上游的命令行接口。
-连接前先在主机上开始共享并绑定设备。旧版 Sunshine PIN 配对同样可用。本项目不包含、也不会从
-Moonlight 导入任何个人主机或配对凭据。
+查看端的第三方源码依赖已内置（vendored）；共享核心与 Nix 构建输入仍为锁定的外部依赖。
+原生构建需要初始化 `shared/deskport-core`。见 [docs/VENDORED.md](../VENDORED.md)。
+SSH 设置、本地主机管理、VPS 前提条件以及 Omarchy/Hyprland 请参阅
+[命令行指南](../CLI.md)。`deskport doctor` 检查主机运行的前提条件；
+`deskport status --json` 无需打开窗口即可查看正在运行的实例。
+`nix run . -- --help` 会列出命令行接口。连接前先在主机上开始共享并绑定设备。旧版
+Sunshine PIN 配对同样可用。本项目不包含、也不会从 Moonlight 导入任何个人主机或配对凭据。
 新建的手动地址默认使用 DeskPort 的端口 `48989`。如果不同，请填写主机共享页面上显示的端口；
 若要显式连接默认的独立 Sunshine 安装，可使用 `host:47989`。已保存或发现的端点保留各自的端口。
 
@@ -151,7 +182,7 @@ make -j4
 
 上游项目的文件名保持不变，以便这个分支仍然易于审阅。
 
-## 与 Moonlight 有何不同
+## 与 Moonlight 有何不同？
 
 - 内置 Sunshine 主机端，支持设备授权、接管与每设备设置。
 - 查看端隐藏时会话保持连接；可从托盘/菜单栏唤回。
@@ -169,17 +200,16 @@ make -j4
 
 ## 平台范围
 
-各平台的发布状态见上方的[平台进度表](#平台进度)。桌面版覆盖 macOS Apple Silicon、Linux x86_64
+各平台的发布状态见上方的[平台表](#支持的平台)。桌面版覆盖 macOS Apple Silicon、Linux x86_64
 与 Windows x64，均可作为查看端和主机端；移动应用仅为客户端。
 
-客户端平台支持与主机端支持是相互独立的：
-Mac 主机并不要求使用 DeskPort 的 Mac 客户端。硬件解码、实时输入、画质与召回延迟都需要真实
-会话测试，构建成功并不能说明这些。
+客户端平台支持与主机端支持是相互独立的：Mac 主机并不要求使用 DeskPort 的 Mac 客户端。
+硬件解码、实时输入、画质与唤回延迟都需要真实会话测试，构建成功并不能说明这些。
 
 ## 下一个里程碑
 
 让一个会话在 **50 次隐藏/显示循环**中保持连接，把窗口显示在当前工作区，并可靠地交还本地输入。
-新鲜画面延迟与后台资源占用要与窗口出现时间分开测量。
+新画面延迟与后台资源占用要与窗口出现时间分开测量。
 
 验收标准与延后的功能见[路线图](../ROADMAP.md)，来源与维护边界见
 [上游说明](../UPSTREAM.md)。
@@ -195,13 +225,15 @@ python3 scripts/deskport-smoke.py ./result
 
 ## 日常桌面操作
 
-关闭窗口后 DeskPort 仍在托盘/菜单栏运行。用**打开 DeskPort** 召回它，用**断开查看端**只结束
-当前连接，或用**退出 DeskPort** 结束整个服务。查看端关闭时，本地共享继续运行。
+关闭窗口后 DeskPort 仍在托盘/菜单栏运行。用 **Open DeskPort** 唤回它，用 **Disconnect viewer** 只结束
+当前连接，或用 **Quit DeskPort** 结束整个服务。查看端关闭时，本地共享继续运行。
 
 两端绑定设备默认启用纯文本剪贴板共享与系统快捷键捕获。设置更改在重新连接后生效。只共享新的
-复制内容，上限 1 MiB；兼容且已启用共享的桌面设备之间可按需获取图片与文件。在桌面指针模式下，键盘路由跟随位于聚焦视频内的指针。
-**Ctrl+Alt+Shift+Z** 释放输入；**Ctrl+Alt+Shift+Q** 断开查看端。显式释放后，点击画面内部即可
-重新获得输入。系统保留的快捷键取决于桌面合成器。
+复制内容，上限 1 MiB。兼容且已启用该选项的桌面设备之间可按需获取受支持的图片与文件；见[限制](../CLIPBOARD.md)。
+在桌面指针模式下，键盘路由跟随位于聚焦视频内的指针。
+**Ctrl+Alt+Shift+Z** 释放输入；
+**Ctrl+Alt+Shift+Q** 断开查看端。显式释放后，点击画面内部即可重新获得输入。
+系统保留的快捷键取决于桌面合成器。
 
 登录启动与恢复需要处于活动的图形登录会话。在依赖某台电脑进行无人值守访问之前，请先阅读
 [验收检查与限制](../INPUT_SERVICE_ACCEPTANCE.md)。
@@ -210,9 +242,15 @@ python3 scripts/deskport-smoke.py ./result
 
 DeskPort 是 [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt) 的独立衍生项目，
 最初基于 v6.1.0，并非官方的 Moonlight 或 Sunshine 发行版。Moonlight 提供串流基础；
-[Sunshine](https://github.com/LizardByte/Sunshine) 被打包进 macOS、Windows 与 Linux 主机包（仅客户端的 Flatpak 除外），
+[Sunshine](https://github.com/LizardByte/Sunshine) 被打包进 macOS、Windows 与 Linux 主机包（仅查看端的 Flatpak 除外），
 并由 Linux Nix 包提供。单独安装的 Sunshine 服务保持独立。
 
 GPL-3.0-or-later；见 [LICENSE](../../LICENSE)、保留的源码声明，以及
 [docs/VENDORED.md](../VENDORED.md) 中列出的每个内置依赖的许可证。原始文档保留在
 [README.upstream.md](README.upstream.md)。
+
+### 诊断与反馈
+
+诊断日志默认开启。复现问题后，生成日志 ZIP 并打开 GitHub issue 草稿。附加之前请先检查 ZIP 内容：
+GitHub issue 是公开的，DeskPort 不会替你上传或提交任何内容。
+见[诊断数据与限制](../DIAGNOSTICS.md)。

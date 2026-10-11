@@ -19,79 +19,133 @@
 
 <p align="center">
   以 Moonlight 與 Sunshine 為基礎的遠端桌面工作區。<br>
-  讓遠端桌面常駐背景，一個動作把它帶到目前的工作區，
+  讓遠端桌面常駐背景，一個動作就把它叫到目前的工作區，
   收起時也不必重新連線。
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.6.0"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.6.0-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.1"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.7.1-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
-  <a href="../../LICENSE"><img alt="授權" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
+  <a href="../../LICENSE"><img alt="授權條款" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
 
 ---
 
+## 主要功能
+
+- **一個桌面 App，既能檢視也能分享。** 內建 Sunshine、裝置核准、獨立的憑證與設定；
+  macOS、Windows 與 Linux 主機安裝套件不必另外安裝 Sunshine（僅供檢視的 Flatpak 除外）。
+- **工作區跟著你的用戶端走。** 在相容的 macOS 與 KDE 主機上自動調整大小，支援 HiDPI、
+  行動裝置直橫向版面與個別裝置的尺寸設定。調整大小時視訊會短暫重新連線，並非無縫切換編碼器。
+- **選擇主機的顯示策略。** 虛擬主螢幕並鏡像其他螢幕、虛擬主螢幕並關閉其他螢幕，或在符合條件的
+  主機上使用延伸工作區。工作階段結束時，DeskPort 會還原已儲存的螢幕配置。
+- **在已授權的裝置之間切換。** 接管進行中的工作階段前會先確認；被取代的用戶端會收到經過驗證的接管說明。
+- **桌面工作隨手可得。** 隱藏或叫回已連線的檢視器，隱藏時釋放遠端輸入，
+  也可以在不影響本機分享的情況下單獨中斷檢視。
+- **每台電腦分別儲存設定。** 畫面、音訊、輸入、桌面微調與位址編輯都跟著裝置保存；
+  另有卡片、釘選、主題與多語系介面。
+- **視需要分享桌面剪貼簿。** 文字即時更新；在已綁定且啟用此選項的桌面裝置之間，
+  支援的圖片與檔案會依需求取得。請參閱[剪貼簿範圍與限制](../CLIPBOARD.md)。
+- **原生行動裝置操控。** iPhone/iPad 與開發中的 Android 用戶端提供觸控/觸控板輸入、
+  鍵盤操控，並可直接進入遠端桌面。
+- **可選的登入時啟動與 macOS 復原。** 需要有效的圖形登入工作階段並取得系統授權；
+  它們不會解鎖 FileVault，也不會替你登入。
+
 ## 介面預覽
 
-以下為目前介面的示範裝置截圖，點擊可查看大圖；不代表商店審核或正式發佈已完成。
+目前介面的截圖，使用的是示範裝置。點選即可查看大圖；這些預覽不代表已在商店上架或已正式發布。
 
-| 裝置 | 設定 | 使用手冊 |
+| 裝置與群組 | 個別裝置顯示設定 | 內建使用手冊 |
 | --- | --- | --- |
-| [![Devices](../media/devices.png)](../media/devices.png) | [![Settings](../media/device-settings.png)](../media/device-settings.png) | [![Manual](../media/manual.png)](../media/manual.png) |
+| [![裝置與群組](../media/devices.png)](../media/devices.png) | [![個別裝置顯示設定](../media/device-settings.png)](../media/device-settings.png) | [![內建使用手冊](../media/manual.png)](../media/manual.png) |
 
-## 主要功能與產品比較
+## 支援的平台
 
-自適應工作區、每裝置桌面微調、確認接管、背景呼出與按需剪貼簿等功能，以及附官方來源的比較表，請見[完整說明](../../README.md#main-features)。比較核對日期：2026-09-20；不代表效能測試。
-
-## 平台進度
-
-| 平台 | 角色 | 進度 | 取得 |
+| 平台 | 角色 | 發布狀態 | 下載 |
 | --- | --- | --- | --- |
-| **macOS**（Apple Silicon，macOS 26+） | 檢視端 + 主機端 + 虛擬顯示器 | ✅ 穩定版 — 0.6.0，已通過 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg) |
-| **Linux x86-64** | 檢視端 + 主機端 | ✅ 已發佈 — 0.7.1：Nix / DEB / RPM / Arch / AppImage；Flatpak 僅客戶端 | [發佈頁](https://github.com/keithxc/deskport/releases) · [指南](../LINUX_PACKAGES.md) |
-| **Linux ARM64** | 檢視端 + 主機端 | 🧪 僅有 Nix 套件定義，建置與執行尚未驗證 | — |
-| **Windows x64** | 檢視端 + 主機端 + 虛擬顯示器 | 0.6.0 安裝程式與可攜式 ZIP | [發佈頁](https://github.com/keithxc/deskport/releases/tag/v0.6.0) |
-| **iOS / iPadOS** | 📱 僅客戶端 | ✅ 已上架 — App Store 售價 4.99 美元 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
-| **Android**（8.0+） | 📱 僅客戶端 | 🚧 開發中 — 原生介面與 MediaCodec；Google Play 同為 4.99 美元 | — |
+| macOS Apple Silicon，macOS 26+ | 檢視端 + 主機端 + 原生虛擬顯示器 | **0.7.1 穩定版**，已使用 Developer ID 簽署並經 Apple 公證 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg) |
+| Linux x86_64 | 檢視端 + 主機端；符合條件的 KDE 主機支援自動調整的虛擬工作區 | **0.7.1 穩定版**：DEB、RPM、Arch、AppImage、可攜式封存檔與 Nix | [發布頁面](https://github.com/keithxc/deskport/releases/tag/v0.7.1) · [安裝指南](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | 僅檢視端 | **0.7.1 穩定版**，Freedesktop Platform 25.08 | [發布頁面](https://github.com/keithxc/deskport/releases/tag/v0.7.1) |
+| iPhone / iPad，iOS/iPadOS 15+ | 僅用戶端 | 已在 App Store 上架；較新的版本另於 TestFlight 測試 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
+| Android 8.0+ | 僅用戶端 | 開發中；正在實機檢查，尚未在商店公開發布 | 尚未提供 |
+| Windows x64 | 檢視端 + 主機端 + 虛擬顯示器 | **0.7.1 穩定版**；安裝程式與可攜式 ZIP；驗證範圍請見下方 | [安裝程式](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
+| Linux ARM64 / Intel Mac | 未經驗證 | 沒有經過驗證的發布套件 | — |
 
-> **行動平台範圍：** iOS/iPadOS 與 Android 目前**只規劃客戶端功能**。它們連線到已授權的
-> DeskPort 主機，不提供任何主機端能力——沒有螢幕擷取、虛擬顯示器或本機輸入注入。
-> 主機端仍由 macOS、Linux 以及 Windows 負責。行動端客戶端在另一個儲存庫開發。
+> **Windows 防毒軟體提醒：** 防毒軟體有可能將 DeskPort 的 Windows 輔助元件誤判為威脅。
+> 我們自行測試時並未遇到這種情況。請保持 Defender 開啟；如果出現警告，
+> 請查看發布附帶的驗證報告與[樣本紀錄](../WINDOWS_DEVELOPMENT.md#windows-antivirus-notice)。
+
+原生 Linux 套件需要 glibc 2.39 以上：Ubuntu 24.04+/Debian 13+、Fedora 44、
+最新版 Arch。AppImage 內附私有執行環境，可用於 glibc 較舊的桌面；主機功能仍取決於硬體驅動程式
+與合成器支援。KDE 虛擬顯示器主機需要合成器授權項目。原生套件與 Nix 套件提供固定的項目；
+0.7.1 的 AppImage 與可攜版會在開始分享時自動註冊目前顯示輔助程式的路徑。主機輸入仍需要裝置權限。
+行動 App 無法作為桌面主機。
+只有套件定義或能成功編譯，並不代表該平台受到支援。
 
 ## 安裝
 
-**iPhone / iPad** — [App Store 上的 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)，
-**售價 4.99 美元，一次買斷**。這是連線到已授權 DeskPort 主機的原生客戶端，支援直接觸控、
-辦公鍵盤模式，並可在已綁定的主機上自動調整工作區尺寸。Android 客戶端上架 Google Play 後
-也會是同樣的 4.99 美元。
+**macOS：** 開啟[經過公證的 DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg)，
+把 DeskPort 拖進「應用程式」後開啟。若要使用主機端功能，請授予「螢幕錄製」與
+「輔助使用」權限。不需要 Nix 或 Homebrew。
 
-> 💚 **感謝你支持 DeskPort。** 桌面端始終免費且開放原始碼；行動端的收入是這個專案得以繼續的來源。
-> 每一筆購買都會回到開發者帳號、程式碼簽章、測試裝置，以及持續開發所需的時間上。
-> 如果你已經購買——由衷感謝。如果還沒有，提出 issue、參與翻譯與給予回饋同樣可貴。
+**Linux：** 選擇適合你系統的 [0.7.1 套件](https://github.com/keithxc/deskport/releases/tag/v0.7.1)，
+並依照[安裝指南](../LINUX_PACKAGES.md)操作，包括主機輸入權限的設定。使用 Nix：`nix run github:keithxc/deskport/v0.7.1`。
+Flatpak 僅提供檢視功能。發布檔案附有 [SHA-256 檢查碼](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt)與[驗證報告](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt)。
 
-**macOS** — 適用於 macOS 26 以上 Apple Silicon 的
-[Apple 公證 DMG](https://github.com/keithxc/deskport/releases/download/v0.6.0/DeskPort-0.6.0-macos-arm64.dmg)。
-開啟 DMG，把 DeskPort 拖進「應用程式」後啟動即可。主機端功能會在首次使用時要求
-「螢幕錄製」與「輔助使用」授權。不需要另外安裝 Sunshine、Qt、Nix 或 Homebrew。
+**iPhone / iPad：** 從 [App Store 安裝 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)。
+行動 App 為一次性付費購買，實際價格請以你所在地區的商店為準。
+桌面版永遠免費並維持開源。你的購買會用於程式碼簽署、測試硬體與後續開發。
 
-**Linux** — 0.7.1 提供 DEB、RPM、Arch、AppImage、僅客戶端的 Flatpak，以及 Nix/NixOS。使用 `nix run github:keithxc/deskport/v0.7.1`，或依照 [Linux 安裝指南](../LINUX_PACKAGES.md) 安裝。原生套件需要 x86_64 與 glibc 2.39+。
+在主機上開始分享，在用戶端選擇該主機，然後在主機上核准這台裝置。兩台裝置之間的網路必須互通：
+使用區域網路或你自己的 VPN（例如 Tailscale）。DeskPort 不提供帳號服務、代管桌面、中繼
+或網路通道。傳統的 Sunshine PIN 配對仍然可用。
 
-**Linux 軟體倉庫狀態（2026-09-27）：** 正式安裝包與上游 Nix flake 已可用；AUR `deskport-bin` 配方已準備，AUR 暫停新帳號註冊，暫未發佈；Nixpkgs `deskport` 已提交[PR #567358](https://github.com/NixOS/nixpkgs/pull/567358)，維護者已審閱，等待上游評審，尚未合併。目前可使用 `nix run github:keithxc/deskport/v0.7.1`，或下載 Arch 包後用 `pacman -U` 安裝。這不表示已支援 `yay -S deskport-bin`、`pacman -S deskport` 或 `pkgs.deskport`。配方、NixOS 設定及主機權限見 [Linux 安裝指南](../LINUX_PACKAGES.md#arch-linux-and-aur)。
+**瀏覽器存取：** 桌面主機提供 HTTPS 遠端桌面，支援 30 秒登入碼、可選的七天瀏覽器配對、
+自動調整大小與全螢幕。請參閱 [0.7.1 版本說明](../RELEASE_0.7.1.md)與
+[瀏覽器使用指南](../BROWSER_ACCESS.md)。AppImage 內含私有的 glibc 執行環境；
+原生套件仍需要 glibc 2.39。
 
-## DeskPort 是什麼
+### Linux 軟體庫狀態
 
-**穩定版本：0.6.0 — 可直接安裝的桌面套件。** DeskPort 把檢視端與選用的主機端整合在同一個
-應用程式中，共用裝置清單、雙向綁定與權限控制。macOS 套件內含 Sunshine 與原生虛擬顯示器；
-Linux 原生套件與 AppImage 內含供現有桌面使用的 Sunshine 主機端。Flatpak 只提供客戶端；Nix 持續支援。
+| 管道 | 狀態 | 安裝方式 |
+| --- | --- | --- |
+| GitHub 發布套件 | 可用，0.7.1 | 在上方下載適合你發行版的套件 |
+| 上游 Nix flake | 可用，0.7.1 | `nix run github:keithxc/deskport/v0.7.1` |
+| AUR `deskport-bin` | 配方已測試；因 AUR 暫停新帳號註冊而無法發布 | [在本機建置配方](../LINUX_PACKAGES.md#arch-linux-and-aur) |
+| Nixpkgs `deskport` | 已提交 [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) 等待審查；尚未合併 | 合併前請使用上游 flake |
+| Arch 官方軟體庫 / Flathub | 未收錄 | 請從發布頁面下載；Flatpak 僅為檢視端 |
 
-macOS 上的專用工作區會跟隨客戶端視窗的可繪製像素尺寸。縮放在 150% 以上的客戶端會要求
-2× HiDPI 工作區，讓文字更銳利。調整尺寸時視訊會短暫重新連線，期間保留客戶端視窗並顯示載入動畫。
-這並不是無縫的編碼器重新設定。
+可下載的 Arch 套件以 `pacman -U` 安裝，並不代表可以使用
+`pacman -S deskport`。同樣地，上游 flake 也不會讓 Nixpkgs 出現
+`pkgs.deskport`。主機輸入、擷取權限與防火牆設定都和 App 安裝分開處理；請參閱
+[Linux 安裝指南](../LINUX_PACKAGES.md#nixos-and-nix)。
 
-請見[發佈說明](../RELEASE_0.6.0.md)、[架構說明](../ARCHITECTURE.md)與
-[macOS 安裝指南](../MACOS_PACKAGE.md)。持續性的隱藏/顯示已經實作；原生長時間工作階段的驗收仍未完成。
-共用顯示策略支援條件符合的 macOS 與 KDE 主機。選擇加入的已綁定 DeskPort 裝置會立即共用文字，
-並在需要時取得圖片與檔案。Windows 已提供安裝程式；剪貼簿與最終套件實機驗收範圍請見發佈說明。已知限制請見發佈說明。
+## 與同類產品比較
+
+這是工作流程與平台的比較，依據所附連結的官方文件於 **2026-09-20** 查核，
+並非延遲或畫質評測。各產品的功能與平台限制可能會變動。
+
+| 面向 | DeskPort | Moonlight + Sunshine | RustDesk | Parsec |
+| --- | --- | --- | --- | --- |
+| 主要工作流程 | 常駐的遠端桌面工作區、自動調整大小與跨裝置接管 | 透過各自獨立的用戶端與主機 App 進行遊戲/桌面串流 | 一般遠端控制與技術支援 | 互動式遠端桌面與協作 |
+| 桌面主機平台 | macOS Apple Silicon、Linux x86_64 與 Windows x64 | Windows、macOS、Linux 與 FreeBSD，依各平台限制而定 | Windows、macOS 與 Linux | Windows 與 macOS；Linux 無法作為主機 |
+| 桌面用戶端 | macOS Apple Silicon、Linux x86_64 與 Windows x64 | Windows、macOS、Linux 等 | Windows、macOS 與 Linux | Windows、macOS、Linux 與支援的 Chromium 瀏覽器 |
+| 行動用戶端 | iPhone/iPad 已發布；Android 開發中 | iOS/iPadOS 與 Android | iOS/iPadOS 與 Android；iOS 無法作為主機 | Android；沒有 iOS/iPadOS 用戶端 |
+| 設定方式 | 原生桌面套件內建主機；在 DeskPort 中核准裝置 | 另外安裝並設定 Sunshine，再與 Moonlight 配對 | 公用伺服器或自架伺服器 | Parsec 帳號與 App |
+| 網路/服務模式 | 自備區域網路/VPN 連線；沒有 DeskPort 中繼 | 自架串流；需自行設定網路連通 | 公用基礎架構或自架 OSS/Pro 伺服器 | Parsec 帳號/服務基礎架構 |
+| 原始碼與發行 | GPL 桌面版，桌面套件免費；付費 Apple App 另行發行 | 開源用戶端與主機 | 開源用戶端與 OSS 伺服器；另有商業 Pro 伺服器 | 專有 App/服務 |
+
+資料來源：[Moonlight](https://moonlight-stream.org/)、
+[Sunshine installation and platform support](https://docs.lizardbyte.dev/projects/sunshine/latest/md_docs_2getting__started.html)、
+[RustDesk clients](https://rustdesk.com/docs/en/client/)、
+[RustDesk self-hosting](https://rustdesk.com/docs/en/self-host/)、
+[Parsec platform compatibility](https://support.parsec.app/hc/en-us/articles/32381568346644-Hardware-and-Software-Compatibility)、
+[Parsec Linux setup](https://support.parsec.app/hc/en-us/articles/32381552552340-Install-Parsec-App-on-Linux)。
+DeskPort 目前的平台限制列於上方；此表並不表示各作業系統的功能完全相同，
+也不代表經過量測的效能優勢。
+
+請參閱 [0.7.1 版本說明](../RELEASE_0.7.1.md)、
+[架構說明](../ARCHITECTURE.md)與[開發藍圖](../ROADMAP.md)。
 
 ## 在 Linux 上建置與執行
 
@@ -104,11 +158,14 @@ nix build
 ./result/bin/deskport
 ```
 
-所有第三方相依套件都已內建於本儲存庫，因此 Nix 建置不需額外下載；請見
-[docs/VENDORED.md](../VENDORED.md)。`nix run . -- --help` 會列出沿用自上游的命令列介面。
-連線前請先在主機開始共用並綁定裝置。舊版 Sunshine PIN 配對同樣可用。本專案不含、也不會從
-Moonlight 匯入任何個人主機或配對憑證。
-新建的手動位址預設使用 DeskPort 的連接埠 `48989`。若不同，請填入主機共用頁面顯示的連接埠；
+檢視端的第三方原始碼相依套件已內建（vendored）；共用核心與 Nix 建置輸入仍是鎖定版本的外部相依項目。
+原生建置需要初始化 `shared/deskport-core`。請參閱 [docs/VENDORED.md](../VENDORED.md)。
+SSH 設定、本機主機管理、VPS 先決條件以及 Omarchy/Hyprland 請參閱
+[命令列指南](../CLI.md)。`deskport doctor` 會檢查主機運作的先決條件；
+`deskport status --json` 不必開啟視窗就能查看執行中的實例。
+`nix run . -- --help` 會列出命令列介面。連線前請先在主機上開始分享並綁定裝置。傳統的
+Sunshine PIN 配對同樣可用。本專案不包含、也不會從 Moonlight 匯入任何個人主機或配對憑證。
+新增的手動位址預設使用 DeskPort 的連接埠 `48989`。若不同，請輸入主機分享頁面上顯示的連接埠；
 若要明確連線到預設的獨立 Sunshine 安裝，可使用 `host:47989`。已儲存或探索到的端點會保留各自的連接埠。
 
 可編輯的原生建置：
@@ -123,39 +180,38 @@ make -j4
 ./app/deskport
 ```
 
-上游專案的檔名維持不變，讓這個分支仍便於審閱。
+上游專案的檔名維持不變，讓這個分支依然方便審閱。
 
-## 與 Moonlight 有何不同
+## 和 Moonlight 有什麼不同？
 
-- 內建 Sunshine 主機端，支援裝置授權、接管與每裝置設定。
-- 檢視端隱藏時工作階段保持連線；可從系統匣/選單列喚回。
+- 內建 Sunshine 主機端，支援裝置核准、接管與個別裝置設定。
+- 檢視器隱藏時工作階段保持連線；可從系統匣/選單列叫回。
 - 桌面主機提供 HTTPS 瀏覽器存取。
 - 獨立的 `deskport` 執行檔、`DeskPort` Qt 設定命名空間，以及
   `io.github.keithxc.DeskPort` Linux 應用程式 ID。
-- 預設為視窗化串流與絕對指標控制。
-- 失去焦點時靜音；預設停用遊戲最佳化、手把滑鼠、多手把模式、背景手把輸入與 Discord 狀態。
-- 這個獨立應用程式不會出現上游 Moonlight 的更新提示。
-- 鎖定的 Nix 環境與一套 Linux 建置流程。
+- 預設以視窗模式串流並使用絕對指標控制。
+- 失去焦點時靜音；預設關閉遊戲最佳化、手把滑鼠、多手把模式、背景手把輸入與 Discord 狀態。
+- 這個獨立 App 不會顯示上游 Moonlight 的更新提示。
+- 鎖定版本的 Nix 環境與一套 Linux 建置流程。
 
-桌面介面提供裝置、共用與設定頁面，含語言選擇與獨立的主機權限。關閉檢視端會保留其工作階段
+桌面介面提供裝置、分享與設定頁面，包含語言選擇與獨立的主機權限。關閉檢視器會保留其工作階段
 並開啟裝置清單。使用中的裝置會提供「返回桌面」，其他裝置在目前工作階段中斷前只顯示詳細資訊。
-可以釘選常用裝置，並在精簡清單與卡片之間切換。外觀跟隨系統，也可強制淺色或深色。
+可以釘選常用裝置，並在精簡清單與卡片之間切換。外觀跟隨系統，也可強制使用淺色或深色。
 
 ## 平台範圍
 
-各平台的發佈狀態請見上方的[平台進度表](#平台進度)。桌面版涵蓋 macOS Apple Silicon、Linux x86_64
-與 Windows x64，皆可作為檢視端與主機端；行動應用程式僅為客戶端。
+各平台的發布狀態請見上方的[平台表](#支援的平台)。桌面版涵蓋 macOS Apple Silicon、Linux x86_64
+與 Windows x64，皆可作為檢視端與主機端；行動 App 僅為用戶端。
 
-客戶端平台支援與主機端支援彼此獨立：
-Mac 主機並不需要 DeskPort 的 Mac 客戶端。硬體解碼、即時輸入、畫質與喚回延遲都需要真實
-工作階段測試，建置成功並不足以證明這些。
+用戶端平台支援與主機端支援是彼此獨立的：Mac 主機不需要使用 DeskPort 的 Mac 用戶端。
+硬體解碼、即時輸入、畫質與叫回延遲都需要實際工作階段測試，建置成功並不能證明這些。
 
 ## 下一個里程碑
 
-讓單一工作階段跨越 **50 次隱藏/顯示循環**保持連線，把視窗顯示在目前的工作區，並可靠地交還
-本機輸入。新畫面延遲與背景資源使用需與視窗出現時間分開量測。
+讓一個工作階段在 **50 次隱藏/顯示循環**中保持連線，把視窗顯示在目前的工作區，並穩定地交還本機輸入。
+新畫面的延遲與背景資源用量，要和視窗出現時間分開量測。
 
-驗收標準與延後的功能請見[藍圖](../ROADMAP.md)，來源與維護邊界請見
+驗收標準與延後的功能請見[開發藍圖](../ROADMAP.md)，來源與維護範圍請見
 [上游說明](../UPSTREAM.md)。
 
 ## 驗證
@@ -165,28 +221,36 @@ nix build
 python3 scripts/deskport-smoke.py ./result
 ```
 
-煙霧測試使用暫時的 XDG 設定/快取目錄與離屏 Qt 平台。它不會與主機配對、啟動串流或注入輸入。
+冒煙測試使用暫時的 XDG 設定/快取目錄與離屏 Qt 平台。它不會與主機配對、啟動串流或注入輸入。
 
 ## 日常桌面操作
 
-關閉視窗後 DeskPort 仍會在系統匣/選單列執行。用**開啟 DeskPort** 喚回它，用**中斷檢視端**
-只結束目前的連線，或用**結束 DeskPort** 終止整個服務。檢視端關閉時，本機共用會繼續。
+關閉視窗後，DeskPort 仍會在系統匣/選單列執行。用 **Open DeskPort** 叫回它，用 **Disconnect viewer** 只結束
+目前的連線，或用 **Quit DeskPort** 結束整個服務。檢視器關閉時，本機分享會繼續執行。
 
-兩端綁定裝置預設啟用純文字剪貼簿共用與系統快速鍵擷取。設定變更在重新連線後生效。只會共用新的
-複製內容，上限 1 MiB；相容且已啟用共享的桌面裝置之間可按需取得圖片與檔案。在桌面指標模式下，鍵盤路由會跟隨位於聚焦視訊內的指標。
-**Ctrl+Alt+Shift+Z** 釋放輸入；**Ctrl+Alt+Shift+Q** 中斷檢視端。明確釋放後，點按畫面內部即可
-重新取得輸入。系統保留的快速鍵取決於桌面合成器。
+雙方已綁定的裝置預設啟用純文字剪貼簿分享與系統快速鍵擷取。設定變更會在重新連線後生效。只會分享新的
+複製內容，上限 1 MiB。相容且已啟用此選項的桌面裝置之間，可依需求取得支援的圖片與檔案；請參閱[限制](../CLIPBOARD.md)。
+在桌面指標模式下，鍵盤輸入會跟著位於焦點視訊內的指標。
+**Ctrl+Alt+Shift+Z** 釋放輸入；
+**Ctrl+Alt+Shift+Q** 中斷檢視器。明確釋放後，點一下畫面內部即可重新取得輸入。
+系統保留的快速鍵取決於桌面合成器。
 
-登入啟動與復原需要有作用中的圖形登入工作階段。在依賴某台電腦進行無人值守存取之前，請先閱讀
+登入時啟動與復原需要有效的圖形登入工作階段。在依賴某台電腦進行無人值守存取之前，請先閱讀
 [驗收檢查與限制](../INPUT_SERVICE_ACCEPTANCE.md)。
 
 ## 授權與致謝
 
 DeskPort 是 [Moonlight Qt](https://github.com/moonlight-stream/moonlight-qt) 的獨立衍生專案，
-最初以 v6.1.0 為基礎，並非官方的 Moonlight 或 Sunshine 發行版。Moonlight 提供串流基礎；
-[Sunshine](https://github.com/LizardByte/Sunshine) 內含於 macOS、Windows 與 Linux 主機套件（僅客戶端的 Flatpak 除外），
-並由 Linux Nix 套件提供。另外自行安裝的 Sunshine 服務維持獨立。
+最初以 v6.1.0 為基礎，並非 Moonlight 或 Sunshine 的官方發行版。Moonlight 提供串流基礎；
+[Sunshine](https://github.com/LizardByte/Sunshine) 已內建於 macOS、Windows 與 Linux 主機套件（僅供檢視的 Flatpak 除外），
+並由 Linux Nix 套件提供。另外安裝的 Sunshine 服務維持獨立。
 
-GPL-3.0-or-later；請見 [LICENSE](../../LICENSE)、保留的原始碼聲明，以及
-[docs/VENDORED.md](../VENDORED.md) 中列出的每個內建相依套件的授權。原始文件保留於
+GPL-3.0-or-later；請參閱 [LICENSE](../../LICENSE)、保留的原始碼聲明，以及
+[docs/VENDORED.md](../VENDORED.md) 中列出的各內建相依套件授權條款。原始文件保留在
 [README.upstream.md](README.upstream.md)。
+
+### 診斷與意見回饋
+
+診斷紀錄預設為開啟。重現問題後，產生紀錄 ZIP 並開啟 GitHub issue 草稿。附加前請先檢查 ZIP 內容：
+GitHub issue 是公開的，DeskPort 不會替你上傳或提交任何內容。
+請參閱[診斷資料與限制](../DIAGNOSTICS.md)。
