@@ -2633,12 +2633,19 @@ void Session::execInternal()
         m_Clipboard.reset();
     };
     m_InputDispatching = true;
+    // Pause the host's video only after the viewer has stayed hidden for a
+    // while. Hiding and showing it again in quick succession, such as repeated
+    // tray clicks, then never waits for the stream to resume.
+    QElapsedTimer viewerHidden;
     for (;;) {
         if (!m_ThreadedExec && serviceEvents.elapsed() >= 20) {
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        if (m_AdaptiveDisplay && LiHasVideoKeyFrame()) m_AdaptiveDisplay->setVideoPaused(!m_ViewerRequested);
+        if (m_ViewerRequested) viewerHidden.invalidate();
+        else if (!viewerHidden.isValid()) viewerHidden.start();
+        if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
+            m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);
         if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();
             if (m_Clipboard->status() != clipboardStatus) {

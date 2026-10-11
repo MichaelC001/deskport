@@ -2730,3 +2730,13 @@ The page now asks for 60 fps. The host keeps H.264 within Level 5.2: the largest
 frames (near 4096 × 2304) run slightly below 60 fps, and the bitrate grows with
 the frame rate up to 40 Mbit/s. The size limit of about 4K is unchanged; going
 beyond it would need HEVC for browsers.
+
+### Delayed video pause for hidden viewers — 2026-10-11
+
+Reason: hiding the viewer paused the host's video at once, so showing it again
+waited for the encoder to resume and send a key frame. Repeated tray clicks
+paused and resumed the stream each time.
+
+The session now pauses the host's video only after the viewer has stayed hidden
+for five seconds; showing it again within that time keeps the stream running.
+Input is still released as soon as the viewer hides.
