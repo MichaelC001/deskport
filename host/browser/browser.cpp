@@ -88,9 +88,9 @@ public:
     int64_t stoppedAt = 0, startedAt = 0;
     std::shared_ptr<RtcSession> rtc;
     // Encode the workspace at its own resolution so desktop text stays sharp,
-    // within the host H.264 encoder limit and Level 5.1 (about 4K at 30 fps).
+    // within the host H.264 encoder limit and Level 5.2 (about 4K at 60 fps).
     // The SDP keeps advertising 42e01f like browsers' own WebRTC senders; the
-    // bitstream carries the level matching the encoded size.
+    // bitstream carries the level matching the encoded size and frame rate.
     static std::pair<int, int> encodedSize(const Json& body) {
         const int width = integer(body, "width", 320, 7680), height = integer(body, "height", 200, 4320);
         if ((width | height) & 1) throw std::invalid_argument("Video dimensions must be even");
@@ -98,17 +98,25 @@ public:
                                        std::sqrt(3840.0 * 2160.0 / (double(width) * height))});
         return {std::max(320, int(width * scale) / 4 * 4), std::max(200, int(height * scale) / 4 * 4)};
     }
-    // The page asks for a bitrate at 720p; larger frames need more for the same
-    // text quality. Scale with the linear size, bounded for LAN and tailnet use.
-    static int scaledBitrate(int base, int width, int height) {
-        const double factor = std::clamp(std::sqrt(double(width) * height / (1280.0 * 720.0)), 1.0, 2.5);
-        return std::min(30000, int(base * factor));
+    // Level 5.2 decodes at most 2073600 macroblocks per second, so the largest
+    // frames run slightly below 60 fps.
+    static int frameRate(int requested, int width, int height) {
+        const int macroblocks = ((width + 15) / 16) * ((height + 15) / 16);
+        return std::clamp(std::min(requested, 2073600 / macroblocks), 1, 60);
+    }
+    // The page asks for a bitrate at 720p and 30 fps; larger and faster frames
+    // need more for the same text quality. Bounded for LAN and tailnet use.
+    static int scaledBitrate(int base, int width, int height, int fps) {
+        const double size = std::clamp(std::sqrt(double(width) * height / (1280.0 * 720.0)), 1.0, 2.5);
+        const double rate = std::clamp(std::sqrt(fps / 30.0), 1.0, std::sqrt(2.0));
+        return std::min(40000, int(base * size * rate));
     }
     void start(const Json& body) {
         const auto [width, height] = encodedSize(body);
-        const int fps = std::min(30, integer(body, "fps", 1, 60));
+        requestedFps = integer(body, "fps", 1, 60);
+        const int fps = frameRate(requestedFps, width, height);
         baseBitrate = std::min(14000, integer(body, "bitrateKbps", 1000, 40000));
-        const int bitrate = scaledBitrate(baseBitrate, width, height);
+        const int bitrate = scaledBitrate(baseBitrate, width, height, fps);
         streamWidth = width; streamHeight = height; streamFps = fps; streamBitrate = bitrate;
         inputEnabled = body.value("input", true);
         const bool audioEnabled = body.value("audio", true);
@@ -197,7 +205,11 @@ public:
         if (stopped) return false;
         queues->mail->event<bool>(mail::shutdown)->reset();
         currentVideo.width = width; currentVideo.height = height;
-        currentVideo.bitrate = streamBitrate = scaledBitrate(baseBitrate, width, height);
+        currentVideo.framerate = streamFps = frameRate(requestedFps, width, height);
+#ifdef DESKPORT_BROWSER_FRAMERATE_X100
+        currentVideo.framerateX100 = streamFps * 100;
+#endif
+        currentVideo.bitrate = streamBitrate = scaledBitrate(baseBitrate, width, height, streamFps);
         streamWidth = width; streamHeight = height;
         startVideo();
         return true;
@@ -242,7 +254,7 @@ private:
     std::mutex inputMutex;
     bool inputEnabled = true, platformStarted = false;
     int64_t inputWindow = 0; unsigned inputCount = 0;
-    int streamWidth = 0, streamHeight = 0, streamFps = 0, streamBitrate = 0, baseBitrate = 0;
+    int streamWidth = 0, streamHeight = 0, streamFps = 0, streamBitrate = 0, baseBitrate = 0, requestedFps = 30;
     video::config_t currentVideo{};
     std::atomic<uint64_t> videoGeneration{0};
     void startVideo() {

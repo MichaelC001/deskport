@@ -270,7 +270,7 @@
     if (codecs && !videoCapabilities.length) throw new Error('此浏览器没有可用的 H.264 解码器，请使用较新的 Safari、Chrome 或 Edge。');
     return {
       width: Math.floor(width / 4) * 4, height: Math.floor(height / 4) * 4,
-      fps: 30, bitrateKbps: quality === 'smooth' ? 4500 : quality === 'sharp' ? 12000 : 8000,
+      fps: 60, bitrateKbps: quality === 'smooth' ? 4500 : quality === 'sharp' ? 12000 : 8000,
       audio: wantAudio, input: true, videoCapabilities,
       ...(capabilities.resize ? { ...layoutOptions(), displayPolicy: Number(ui['display-mode'].value) } : {})
     };

@@ -2719,3 +2719,13 @@ activates its surface through `xdg-activation-v1`. `DeskPortToggleWindow` became
 
 Validation: Linux build on pk4 and a live KDE check of raising from the tray.
 macOS behavior follows from the shared logic and needs a packaged check.
+
+### Browser stream at up to 60 fps — 2026-10-11
+
+Reason: the browser page, gateway and host each capped the stream at 30 fps,
+which made the web client visibly less smooth than the native viewer.
+
+The page now asks for 60 fps. The host keeps H.264 within Level 5.2: the largest
+frames (near 4096 × 2304) run slightly below 60 fps, and the bitrate grows with
+the frame rate up to 40 Mbit/s. The size limit of about 4K is unchanged; going
+beyond it would need HEVC for browsers.

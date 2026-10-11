@@ -224,7 +224,7 @@ try {
   check('native test-pattern stream negotiates H.264', codecStats.includes('video/H264'));
   check('receive-only audio negotiates Opus', codecStats.includes('audio/opus'));
   const start = requests.find(request => request.endpoint === '/api/session/start').body;
-  check('stream hint stays inside validated dimensions', start.width <= 1280 && start.height <= 720 && start.fps === 30 && start.bitrateKbps <= 14000 && start.width % 4 === 0 && start.height % 4 === 0);
+  check('stream hint stays inside validated dimensions', start.width <= 1280 && start.height <= 720 && start.fps === 60 && start.bitrateKbps <= 14000 && start.width % 4 === 0 && start.height % 4 === 0);
   check('H.264 capabilities sent for server negotiation', start.videoCapabilities.length > 0);
   check('start reports the drawable viewport for shared workspace policy',
     start.viewport?.width > 0 && start.viewport?.height > 0 && start.viewport?.ratio > 0 && start.zoom === 1 && start.displayPolicy === 0);

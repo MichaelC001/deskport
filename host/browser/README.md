@@ -25,8 +25,9 @@ error `code`.
 | `stop` | `keepReservation: true` (default) | Joins capture/transport and fences native input, retaining admission for display restoration. |
 | `release` | none | Clears the reservation after display restoration. |
 
-Start validates dimensions and constrains output to a 1280 × 720 bounding box,
-30 fps and 14 Mbps, returning the effective dimensions, frame rate and bitrate.
+Start validates dimensions and constrains output to about 3840 × 2160, 60 fps
+within H.264 Level 5.2 and a 14 Mbps base bitrate scaled up to 40 Mbps,
+returning the effective dimensions, frame rate and bitrate.
 The initial transport advertises H.264 Constrained Baseline, packetization mode 1, level 3.1, SDR
 4:2:0, plus 48 kHz stereo Opus. Supplied browser codec capabilities must contain
 H.264 Baseline with packetization mode 1 and receive level 3.1 or higher; unsupported profiles return

@@ -116,10 +116,12 @@ after pairing, including when a certificate is replaced.
 ## Available controls and boundaries
 
 - H.264 Constrained Baseline SDR desktop video at the remote desktop's own
-  resolution (up to about 3840 × 2160 at 30 frames per second, encoder level
-  chosen from the size); stereo Opus audio. The SDP advertises 42e01f with
+  resolution (up to about 3840 × 2160 at 60 frames per second, slightly less at
+  the largest sizes to stay within H.264 Level 5.2; encoder level chosen from
+  the size and rate); stereo Opus audio. The SDP advertises 42e01f with
   packetization mode 1 like browsers' own WebRTC senders. The bitrate selected
-  on the page applies at 720p and scales with the encoded size, up to 30 Mbit/s.
+  on the page applies at 720p and 30 fps and scales with the encoded size and
+  frame rate, up to 40 Mbit/s.
 - Adaptive desktop size. The page reports its drawable area, device pixel ratio
   and the chosen content size; the host derives the remote desktop from the same
   shared-core workspace policy as native clients, including the macOS minimum.

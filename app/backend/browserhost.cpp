@@ -181,7 +181,7 @@ void BrowserHost::begin(const QJsonObject& input, Completion done) {
     // Media encodes this desktop size down to its own transport limit.
     body["width"] = workspace.pixels.width(); body["height"] = workspace.pixels.height();
     body.remove("viewport"); body.remove("zoom"); body.remove("displayPolicy");
-    body["fps"] = std::clamp(body.value("fps").toInt(30), 1, 30);
+    body["fps"] = std::clamp(body.value("fps").toInt(30), 1, 60);
     body["bitrateKbps"] = std::clamp(body.value("bitrateKbps").toInt(8000), 1000, 14000);
     emit changed();
     m_Host->browserControl({{"action", "reserve"}, {"id", id}}, this,
