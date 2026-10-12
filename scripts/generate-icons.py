@@ -2,13 +2,15 @@
 """Stage DeskPort icons from app/res/deskport.svg outside the source checkout.
 
 Requires ImageMagick and Pillow. The SVG is the only geometry source, including
-Apple's layered artwork. Copy reviewed ICO, ICNS, PNG and .icon files into app/.
+Apple's layered artwork and tray templates. Copy reviewed assets into app/.
 """
 import argparse
 import copy
 import hashlib
 import json
+import math
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import xml.etree.ElementTree as ET
@@ -86,6 +88,103 @@ def apple_layers(source, output):
 def render_svg(tree, svg, png):
     ET.ElementTree(tree).write(svg, encoding='utf-8')
     subprocess.run(['magick', '-background', 'none', str(svg), '-depth', '8', str(png)], check=True)
+
+
+def rounded_rectangle_path(node):
+    """Convert a source SVG rect into a path for a portable even-odd cutout."""
+    x, y, width, height = (float(node.attrib[key]) for key in ('x', 'y', 'width', 'height'))
+    rx = min(float(node.attrib.get('rx', 0)), width / 2)
+    ry = min(float(node.attrib.get('ry', rx)), height / 2)
+    return (f'M{x + rx:g} {y:g}H{x + width - rx:g}'
+            f'A{rx:g} {ry:g} 0 0 1 {x + width:g} {y + ry:g}V{y + height - ry:g}'
+            f'A{rx:g} {ry:g} 0 0 1 {x + width - rx:g} {y + height:g}H{x + rx:g}'
+            f'A{rx:g} {ry:g} 0 0 1 {x:g} {y + height - ry:g}V{y + ry:g}'
+            f'A{rx:g} {ry:g} 0 0 1 {x + rx:g} {y:g}Z')
+
+
+def visible_tether(node, frame, transform):
+    """Keep the source cubic up to its first contact with the display frame.
+
+    Qt SVG does not support clipPath. Splitting the original curve preserves its
+    geometry while the opaque tray frame covers its round endpoint.
+    """
+    numbers = lambda value: [float(number) for number in re.findall(
+        r'[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?', value)]
+    points = numbers(node.attrib['d'])
+    if re.findall(r'[A-DF-Za-df-z]', node.attrib['d']) != ['M', 'C'] or len(points) != 8:
+        raise ValueError('tray tether must be one absolute cubic from the master SVG')
+    points = list(zip(points[::2], points[1::2]))
+    angle, pivot_x, pivot_y = numbers(transform)
+    sine, cosine = math.sin(math.radians(-angle)), math.cos(math.radians(-angle))
+    x, y, width, height = (float(frame.attrib[key]) for key in ('x', 'y', 'width', 'height'))
+    radius = float(frame.attrib['rx'])
+
+    def mix(a, b, fraction):
+        return tuple(start + (end - start) * fraction for start, end in zip(a, b))
+
+    def split(fraction):
+        a, b, c = (mix(points[index], points[index + 1], fraction) for index in range(3))
+        d, e = mix(a, b, fraction), mix(b, c, fraction)
+        return a, d, mix(d, e, fraction)
+
+    def inside(fraction):
+        px, py = split(fraction)[-1]
+        px, py = (cosine * (px - pivot_x) - sine * (py - pivot_y) + pivot_x,
+                  sine * (px - pivot_x) + cosine * (py - pivot_y) + pivot_y)
+        cx, cy = min(max(px, x + radius), x + width - radius), min(max(py, y + radius), y + height - radius)
+        return (px - cx) ** 2 + (py - cy) ** 2 <= radius ** 2
+
+    high = next((step / 256 for step in range(1, 257) if inside(step / 256)), None)
+    if high is None or inside(0):
+        raise ValueError('tray tether must start outside and enter the display frame')
+    low = high - 1 / 256
+    for _ in range(40):
+        middle = (low + high) / 2
+        if inside(middle):
+            high = middle
+        else:
+            low = middle
+    end = split((low + high) / 2)
+    result = copy.deepcopy(node)
+    pair = lambda point: ' '.join(f'{coordinate:.3f}' for coordinate in point)
+    result.attrib['d'] = 'M' + pair(points[0]) + 'C' + ' '.join(pair(point) for point in end)
+    return result
+
+
+def tray_assets(source, output):
+    """Derive small monochrome templates from the application's actual geometry."""
+    tree = ET.parse(source).getroot()
+    ET.register_namespace("", SVG[1:-1])
+    layers = {node.attrib['id']: node for node in tree if node.tag == SVG + 'g'}
+    frame = next(node for node in layers['monitor']
+                 if node.tag == SVG + 'rect' and node.attrib.get('fill') == 'url(#frame)')
+    screen = next(node for node in layers['screen'] if node.tag == SVG + 'rect')
+    kite = next(node for node in layers['kite'] if node.attrib.get('fill') == 'url(#mint)')
+    tether = visible_tether(list(layers['tether'])[0], frame, layers['monitor'].attrib['transform'])
+    for name, color in (('black', '#000000'), ('white', '#ffffff')):
+        icon = ET.Element(SVG + 'svg', {'width': '22', 'height': '22',
+                                      'viewBox': '128 128 800 800'})
+        icon.append(ET.Comment(' Generated from app/res/deskport.svg; do not redraw independently. '))
+
+        def outline(layer, node, weight):
+            group = ET.SubElement(icon, SVG + 'g',
+                                  {'transform': layers[layer].attrib['transform']}
+                                  if 'transform' in layers[layer].attrib else {})
+            path = copy.deepcopy(node)
+            path.attrib.update(fill='none', stroke=color, **{'stroke-width': str(weight)})
+            group.append(path)
+
+        # Wider optical weights replace highlights and tiny ribbon decoration.
+        outline('tether', tether, 44)
+        outline('stand', list(layers['stand'])[-1], 44)
+        monitor = ET.SubElement(icon, SVG + 'g', {'transform': layers['monitor'].attrib['transform']})
+        ET.SubElement(monitor, SVG + 'path', {
+            'd': rounded_rectangle_path(frame) + rounded_rectangle_path(screen),
+            'fill': color, 'fill-rule': 'evenodd'})
+        ET.SubElement(icon, SVG + 'path', {'d': kite.attrib['d'], 'fill': color})
+        ET.indent(icon, space='  ')
+        (output / f'deskport-tray-{name}.svg').write_bytes(
+            ET.tostring(icon, encoding='utf-8') + b'\n')
 
 
 def mobile_assets(source, output):
@@ -199,6 +298,7 @@ def main():
         else:
             icon.save(output / "deskport.icns")
     apple_layers(source, output)
+    tray_assets(source, output)
     if args.mobile:
         mobile_assets(source, output)
     print(f"Staged portable and Apple layered icons in {output}")

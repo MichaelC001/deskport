@@ -2807,3 +2807,19 @@ dark palette and two buttons; Escape and Return choose Cancel, as before. The
 native box remains only as a fallback without a connecting window. On Windows,
 the main process also lets a session worker take the foreground when the tray
 shows its viewer, which otherwise opened behind other windows.
+
+### Tray artwork derived from the application icon — 2026-10-12
+
+Reason: the tray used an independently drawn monitor and kite, which no longer
+matched the application icon's tilted display and terminal geometry.
+
+The icon generator now derives black and white tray templates from the canonical
+SVG, removing the tile and materials and strengthening strokes for status-bar
+sizes. The lift line ends at the display's outer silhouette, and the tiny terminal
+prompt is omitted to keep the screen interior clear. macOS retains native template
+coloring; other platforms retain their foreground-contrast selection.
+
+Validation: Qt SVG rendering at 16, 18, 22 and 24 points confirms matching black
+and white silhouettes, and an isolated native preview verifies both backgrounds.
+The Linux x86_64 Nix build passes. Deployed menu-bar and KDE panel appearance
+remain separate acceptance checks.

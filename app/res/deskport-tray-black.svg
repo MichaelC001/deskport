@@ -1,8 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-  <!-- Simplified monitor and kite silhouette for small system status areas. -->
-  <g fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="2" y="10" width="12" height="8" rx="1.5"/>
-    <path d="M8 18v2M5 20h6M13 12c4-1 0-4 3-5"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="128 128 800 800">
+  <!-- Generated from app/res/deskport.svg; do not redraw independently. -->
+  <g>
+    <path d="M663.000 513.000C664.559 553.134 644.103 565.787 615.534 570.896" fill="none" stroke="#000000" stroke-width="44" stroke-linecap="round" />
   </g>
-  <path d="M16 1.5 21 5 17 10 13 5Z" fill="#000000"/>
+  <g transform="rotate(-8 404 704)">
+    <path d="M407 822V868M333 871H481" fill="none" stroke="#000000" stroke-width="44" stroke-linecap="round" />
+  </g>
+  <g transform="rotate(-8 404 704)">
+    <path d="M230 548H584A48 48 0 0 1 632 596V782A48 48 0 0 1 584 830H230A48 48 0 0 1 182 782V596A48 48 0 0 1 230 548ZM237 588H577A15 15 0 0 1 592 603V775A15 15 0 0 1 577 790H237A15 15 0 0 1 222 775V603A15 15 0 0 1 237 588Z" fill="#000000" fill-rule="evenodd" />
+  </g>
+  <path d="M720 151L896 315L663 522L568 303Z" fill="#000000" />
 </svg>

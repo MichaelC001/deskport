@@ -3,8 +3,12 @@
 `app/res/deskport.svg` is the maintained geometry source: the mint/amber kite
 lifts a tilted teal terminal display from an ocean-blue tile. Broad silhouettes,
 a thicker frame and restrained highlights keep the mark readable at small sizes.
-Tray template artwork is separate because the system status bar needs monochrome
-glyphs rather than the application tile.
+The same source also generates monochrome tray templates: keep the actual kite,
+lift line, tilted display and stand geometry, remove the application tile/materials,
+terminal prompt and tiny ribbon decoration, and increase optical stroke weights
+for status-bar sizes. End the original lift curve at the display's outer silhouette
+so it cannot show through the transparent screen. Keep the screen interior empty
+at tray sizes. Do not redraw the tray artwork independently.
 
 Regenerate all platform assets into an external staging directory:
 
@@ -16,8 +20,12 @@ python3 scripts/generate-icons.py --output "$icons"
 
 This requires ImageMagick and Pillow. Review the PNGs at 16, 32, 48 and 128 pixels
 before copying `deskport.ico`, `deskport.icns`, `AppIcon.icon/` into `app/` and
-the size-specific PNGs into `app/res/icons/<size>/deskport.png`. The generator
-extracts every Apple SVG layer from the same master; do not edit the generated
+the size-specific PNGs into `app/res/icons/<size>/deskport.png`. It also produces
+`deskport-tray-black.svg` and `deskport-tray-white.svg`; copy these
+reviewed templates into `app/res/`. macOS keeps the black SVG as an AppKit template
+through `QIcon::setIsMask(true)`, while other platforms select the contrast variant.
+The templates have identical geometry and differ only in foreground color.
+The generator extracts every Apple SVG layer from the same master; do not edit the generated
 layer geometry independently. Apple's background palette comes from the master
 SVG; the generator defines its appearance materials. Apple supplies the outer
 mask and shadow, so the portable tile and baked shadows are not duplicated as
