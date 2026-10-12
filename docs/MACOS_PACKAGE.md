@@ -12,6 +12,13 @@ after the user confirms activation.
 
 ## Developer ID distribution
 
+The application icon uses the layered `app/AppIcon.icon` document compiled by
+Xcode's `actool` into `Assets.car`, with `deskport.icns` as the static fallback.
+qmake builds and bundles both resources; the bundle checker requires them and
+the matching `CFBundleIconName`/`CFBundleIconFile` entries. Full Xcode 26+ is
+required, selected per command through `DEVELOPER_DIR`. See
+[Application icon](APP_ICON.md) for the shared vector source and regeneration.
+
 Public macOS packages target Apple Silicon and macOS 26 or newer. Download the
 current signed and notarized package from the [stable release page](https://github.com/keithxc/deskport/releases/latest).
 Each release includes its SHA-256 checksums and verification report. The release

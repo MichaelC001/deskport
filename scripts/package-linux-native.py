@@ -64,6 +64,9 @@ config = {
                                  'pipewire', 'harfbuzz', 'fribidi', 'libsm', 'libice', 'bash', 'coreutils']},
     },
 }
+for icon in sorted((appdir / 'usr/share/icons/hicolor').glob('*x*/apps/deskport.png')):
+    config['contents'].append({'src': str(icon),
+                              'dst': '/' + str(icon.relative_to(appdir))})
 manifest = work / 'nfpm.json'
 manifest.write_text(json.dumps(config, indent=2) + '\n')
 for packager, name in [('deb', f'deskport_{version}-1_amd64.deb'),

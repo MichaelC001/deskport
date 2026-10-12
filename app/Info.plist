@@ -7,7 +7,9 @@
 	<key>CFBundleGetInfoString</key>
 	<string>Remote desktop workspace based on Moonlight</string>
 	<key>CFBundleIconFile</key>
-	<string>deskport</string>
+	<string>deskport.icns</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>io.github.keithxc.DeskPort</string>
 	<key>NSHighResolutionCapable</key>

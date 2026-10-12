@@ -1,3 +1,22 @@
+## Native application icon appearances — 2026-10-12
+
+Preserve DeskPort's mint/amber kite and tilted terminal display while improving
+their proportions, frame weight and material highlights. One maintained SVG now
+generates portable ICO/ICNS, Linux hicolor PNGs and Apple's layered .icon artwork.
+macOS builds compile Assets.car and preserve the system-selected Default, Dark
+and Clear appearances; bundle validation requires both native and fallback icons.
+Qt and SDL retain the native icon. Windows Setup/portable resources and Linux
+desktop/AppImage/Flatpak references use the same brand source. Native appearance
+and package validation are tracked separately from deployment and streaming.
+Apple uses only its system outer contour, without an inset second tile. The same
+generator exports native Apple and adaptive/themed Android client snapshots with
+source/asset hashes; brand packaging stays outside the shared protocol core.
+Validation: signed macOS package and Finder preview, native Apple appearance
+previews, pk4 Nix build with installed SVG/PNG checks, Windows executable build
+with all seven ICO images verified, and native/Flatpak icon-staging checks passed.
+The mobile consumers also pass isolated iOS/Android compilation and packaged-icon
+checks. Physical Windows/phone launcher acceptance and deployment remain separate.
+
 ## Desktop 0.7.1 formal release — 2026-10-11
 
 Released the stable PC matrix as [0.7.1](https://github.com/keithxc/deskport/releases/tag/v0.7.1)

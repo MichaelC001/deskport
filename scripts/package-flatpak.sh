@@ -27,6 +27,13 @@ cp "$appdir/usr/share/applications/$id.desktop" "$stage/files/share/applications
 sed -i 's/^Icon=deskport$/Icon=io.github.keithxc.DeskPort/' "$stage/files/share/applications/$id.desktop"
 cp "$appdir/usr/share/icons/hicolor/scalable/apps/deskport.svg" \
     "$stage/files/share/icons/hicolor/scalable/apps/$id.svg"
+for size in 16 32 48 64 128 256 512; do
+    icon="$appdir/usr/share/icons/hicolor/${size}x${size}/apps/deskport.png"
+    if [ -f "$icon" ]; then
+        mkdir -p "$stage/files/share/icons/hicolor/${size}x${size}/apps"
+        cp "$icon" "$stage/files/share/icons/hicolor/${size}x${size}/apps/$id.png"
+    fi
+done
 cp "$appdir/usr/share/metainfo/$id.appdata.xml" "$stage/files/share/metainfo/"
 cat > "$stage/metadata" <<EOF
 [Application]

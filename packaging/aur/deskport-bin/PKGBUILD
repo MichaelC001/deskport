@@ -30,6 +30,11 @@ package() {
         "${pkgdir}/usr/share/applications/io.github.keithxc.DeskPort.desktop"
     install -Dm644 DeskPort.AppDir/usr/share/icons/hicolor/scalable/apps/deskport.svg \
         "${pkgdir}/usr/share/icons/hicolor/scalable/apps/deskport.svg"
+    local icon
+    for icon in DeskPort.AppDir/usr/share/icons/hicolor/*x*/apps/deskport.png; do
+        [[ -f ${icon} ]] || continue
+        install -Dm644 "${icon}" "${pkgdir}/${icon#DeskPort.AppDir/}"
+    done
     install -Dm644 DeskPort.AppDir/usr/share/metainfo/io.github.keithxc.DeskPort.appdata.xml \
         "${pkgdir}/usr/share/metainfo/io.github.keithxc.DeskPort.appdata.xml"
 

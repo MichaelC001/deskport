@@ -632,9 +632,16 @@ unix:!macx: {
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
     INSTALLS += target desktop icons appstream
+    APP_ICON_SIZES = 16 32 48 64 128 256 512
+    for(icon_size, APP_ICON_SIZES) {
+        icon_target = icon_$${icon_size}
+        eval($${icon_target}.files = res/icons/$${icon_size}/deskport.png)
+        eval($${icon_target}.path = $$PREFIX/$$DATADIR/icons/hicolor/$${icon_size}x$${icon_size}/apps/)
+        INSTALLS += $$icon_target
+    }
 }
 win32 {
-    # DeskPort branding: generated from res/deskport.svg for this cross build.
+    # Generated with the other platform icons from res/deskport.svg.
     RC_ICONS = deskport.ico
     QMAKE_TARGET_COMPANY = DeskPort contributors
     QMAKE_TARGET_DESCRIPTION = DeskPort Remote Desktop Client
@@ -664,6 +671,17 @@ macx {
     APP_BUNDLE_PLIST.path = Contents
 
     QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_PLIST
+
+    # Compile native default/dark/clear materials; Qt must not flatten this icon.
+    APP_ICON_OUTPUT = $$OUT_PWD/app-icon
+    app_icon.target = app-icon/Assets.car
+    app_icon.depends = $$PWD/AppIcon.icon/icon.json $$files($$PWD/AppIcon.icon/Assets/*.svg) $$PWD/../scripts/compile-macos-icon.sh
+    app_icon.commands = bash $$shell_quote($$PWD/../scripts/compile-macos-icon.sh) $$shell_quote($$APP_ICON_OUTPUT)
+    QMAKE_EXTRA_TARGETS += app_icon
+    PRE_TARGETDEPS += $$app_icon.target
+    APP_BUNDLE_NATIVE_ICON.files = $$APP_ICON_OUTPUT/Assets.car
+    APP_BUNDLE_NATIVE_ICON.path = Contents/Resources
+    QMAKE_BUNDLE_DATA += APP_BUNDLE_NATIVE_ICON
 
     !disable-prebuilts {
         APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true) $$files(../libs/mac/lib/*.dylib, true)

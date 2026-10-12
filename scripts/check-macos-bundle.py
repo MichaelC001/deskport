@@ -17,6 +17,14 @@ with (root / 'Contents/Info.plist').open('rb') as stream:
     info = plistlib.load(stream)
 if not info.get('NSMicrophoneUsageDescription', '').strip():
     errors.append('Outer app is missing its microphone usage description')
+resources = root / 'Contents/Resources'
+if info.get('CFBundleIconName') != 'AppIcon':
+    errors.append('Outer app is missing its native AppIcon name')
+if info.get('CFBundleIconFile') != 'deskport.icns':
+    errors.append('Outer app is missing its portable icon fallback')
+for icon in ('Assets.car', 'deskport.icns'):
+    if not (resources / icon).is_file() or not (resources / icon).stat().st_size:
+        errors.append('Outer app is missing its icon resource: ' + icon)
 recovery = root / 'Contents/Library/LaunchDaemons/io.github.keithxc.DeskPort.Recovery.plist'
 try:
     service = plistlib.loads(recovery.read_bytes())
