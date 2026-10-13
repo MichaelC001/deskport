@@ -14,7 +14,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-transition-') as temporary:
 CONFIG += console c++17
 CONFIG -= app_bundle
 QMAKE_CXXFLAGS += -UNDEBUG
-SOURCES += "{root}/tests/transition-window.cpp" "{root}/app/streaming/transitionwindow.cpp" "{root}/app/streaming/waylandloading.cpp"
+SOURCES += "{root}/tests/transition-window.cpp" "{root}/app/streaming/transitionwindow.cpp" "{root}/app/streaming/waylandloading.cpp" "{root}/app/streaming/windowactivation.cpp"
 INCLUDEPATH += "{root}/app/streaming"
 TARGET = transition-test
 '''
@@ -26,7 +26,7 @@ LIBS += -F"{sdl}" -framework SDL2
 QMAKE_RPATHDIR += "{sdl}"
 '''
     else:
-        project += 'CONFIG += link_pkgconfig\nPKGCONFIG += sdl2 wayland-client\nDEFINES += HAS_WAYLAND\n'
+        project += f'CONFIG += link_pkgconfig\nPKGCONFIG += sdl2 wayland-client\nDEFINES += HAS_WAYLAND\nSOURCES += "{root}/app/streaming/xdg-activation-v1.c"\n'
     (work / 'test.pro').write_text(project)
     subprocess.run([os.environ.get('DESKPORT_QMAKE', 'qmake'), 'test.pro'], cwd=work, check=True)
     subprocess.run(['make', '-j' + str(max(1, min(4, int(os.environ.get('JOBS', '2')))))], cwd=work, check=True, stdout=subprocess.DEVNULL)
