@@ -1,0 +1,77 @@
+diff --git a/src/platform/macos/macos_backend.cpp b/src/platform/macos/macos_backend.cpp
+index 136d621..45fdb85 100644
+--- a/src/platform/macos/macos_backend.cpp
++++ b/src/platform/macos/macos_backend.cpp
+@@ -703,7 +703,8 @@ namespace lvh::detail {
+         CGEventType type,
+         CGPoint raw_location,
+         CGPoint previous_location,
+-        int click_count
++        int click_count,
++        bool warp = true
+       ) const {
+         const auto display_bounds = CGDisplayBounds(state_->display);
+         const auto location = CGPoint {
+@@ -716,6 +717,11 @@ namespace lvh::detail {
+         CGEventSetLocation(event, location);
+         CGEventSetIntegerValueField(event, kCGMouseEventButtonNumber, button);
+         CGEventSetIntegerValueField(event, kCGMouseEventClickState, click_count);
++        // Match CGEventCreateMouseEvent: held-button events carry full pressure.
++        const bool held = type == kCGEventLeftMouseDown || type == kCGEventRightMouseDown ||
++          type == kCGEventOtherMouseDown || type == kCGEventLeftMouseDragged ||
++          type == kCGEventRightMouseDragged || type == kCGEventOtherMouseDragged;
++        CGEventSetDoubleValueField(event, kCGMouseEventPressure, held ? 1.0 : 0.0);
+         CGEventSetDoubleValueField(event, kCGMouseEventDeltaX, raw_location.x - previous_location.x);
+         CGEventSetDoubleValueField(event, kCGMouseEventDeltaY, raw_location.y - previous_location.y);
+ 
+@@ -725,7 +731,11 @@ namespace lvh::detail {
+         }
+ 
+         CGEventPost(kCGHIDEventTap, event);
+-        CGWarpMouseCursorPosition(location);
++        // A HID-tap event already moves the cursor. An extra warp after every
++        // drag event can stall window moves and selections on the host.
++        if (warp) {
++          CGWarpMouseCursorPosition(location);
++        }
+         return OperationStatus::success();
+       }
+ 
+@@ -733,14 +743,17 @@ namespace lvh::detail {
+         const auto current = current_location();
+         const auto location = CGPoint {current.x + delta_x, current.y + delta_y};
+         const auto motion = macos_mouse_motion(mouse_down_);
+-        return post_mouse(motion.button, motion.event_type, location, current, 0);
++        return post_mouse(motion.button, motion.event_type, location, current, motion.event_type != kCGEventMouseMoved ? drag_click_count_ : 0);
+       }
+ 
+       OperationStatus submit_absolute_motion(const MouseEvent &event) {
+         const auto display_bounds = CGDisplayBounds(state_->display);
+         const auto location = absolute_mouse_location(event, display_bounds);
+         const auto motion = macos_mouse_motion(mouse_down_);
+-        return post_mouse(motion.button, motion.event_type, location, current_location(), 0);
++        const bool dragging = motion.event_type != kCGEventMouseMoved;
++        // Absolute drags need no warp; relative motion still uses it so the next
++        // delta starts from the updated cursor position.
++        return post_mouse(motion.button, motion.event_type, location, current_location(), dragging ? drag_click_count_ : 0, !dragging);
+       }
+ 
+       OperationStatus submit_button(const MouseEvent &event) {
+@@ -758,6 +771,9 @@ namespace lvh::detail {
+         const auto click_count = now < last_mouse_event_[button->index][release_index] + multi_click_delay ? 2 : 1;
+ 
+         last_mouse_event_[button->index][release_index] = now;
++        if (event.pressed) {
++          drag_click_count_ = click_count;
++        }
+         return post_mouse(button->button, event.pressed ? button->down_event : button->up_event, mouse_position, mouse_position, click_count);
+       }
+ 
+@@ -783,6 +799,7 @@ namespace lvh::detail {
+ 
+       std::shared_ptr<MacosInputState> state_;
+       std::array<bool, 3> mouse_down_ {};
++      int drag_click_count_ = 1;  ///< Click state carried by drag events, as AppKit reports it.
+       std::array<std::array<std::chrono::steady_clock::time_point, 2>, 3> last_mouse_event_ {};
+       std::mutex mutex_;
+       bool open_ = true;

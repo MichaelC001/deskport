@@ -17,6 +17,13 @@ if git -C "$hid" apply --check "$patch"; then
 else
     git -C "$hid" apply --reverse --check "$patch"
 fi
+# Absolute drags post HID events without a per-event cursor warp.
+drag_patch="$repo/host/macos/patches/libvirtualhid-smooth-drag.patch"
+if git -C "$hid" apply --check "$drag_patch"; then
+    git -C "$hid" apply "$drag_patch"
+else
+    git -C "$hid" apply --reverse --check "$drag_patch"
+fi
 python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir" --revert

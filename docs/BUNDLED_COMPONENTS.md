@@ -10,6 +10,8 @@ cb72dffa3233c5815cd5ba88f09f049dd679ba75. Its libvirtualhid dependency at commit
 6fdb8bd4de3b68d96c30e5303ac2ebb333c09746 receives the patch in
 `host/macos/patches/libvirtualhid-target-display.patch`: input follows DeskPort's
 verified capture display without changing the physical main display.
+`libvirtualhid-smooth-drag.patch` posts absolute drag events without a per-event
+cursor warp and gives held-button events AppKit's click state and pressure.
 `sunshine-capture-timeout.patch` bounds the capture first-frame wait;
 `sunshine-idr-diagnostics.patch` adds submitted/returned frame timestamps to
 keyframe failure logs without changing encoder settings or packet contents.
