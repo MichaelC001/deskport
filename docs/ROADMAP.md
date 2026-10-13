@@ -1499,10 +1499,23 @@ frame 262 ms. The re-settle repeated a quiet interval the size had already
 passed; it now commits an unchanged size immediately. SDL joystick enumeration
 took 430–490 ms on pk4 with no gamepads attached; the subsystems now stay
 initialized across a retained-window continuation and present gamepads are
-re-announced. Together these are expected to remove about 1 s per resize; live
-pk4/mm4 timing has not yet confirmed it. Remaining candidates: overlapping the
-mode change with stream teardown (needs host capture-restart evidence), reusing
-the probed decoder, showing the scaled last frame, and in-band IDR reconfiguration.
+re-announced. A live pk4 → mm4 A/B run (30 resizes per build, KWin-scripted
+window sizes) measured stop-to-first-frame at a median 2626 ms (p90 2774) for
+0.7.1 and 1646 ms (p90 1738) after the change; re-settle fell from 523 to 8 ms
+and input setup from 510 to 24 ms, with other stages unchanged.
+
+Reconnect transitions now paint a small blurred picture of the previous stream
+behind the progress indicator through both the stopping and connecting phases,
+instead of a flat background. The renderer converts one frame every 3 s, and a
+fresh one when a resize begins, on a worker thread joined before the decoder is
+released. First connections, HDR streams and frames that cannot be transferred
+keep the flat background. A 15-resize run showed no latency change (1671 ms
+median). Screenshots confirmed the picture in both phases; the gap between the
+loading surface and the first decoded frame was not captured.
+
+Remaining candidates: overlapping the mode change with stream teardown (needs
+host capture-restart evidence), reusing the probed decoder, and in-band IDR
+reconfiguration.
 
 ## Then: daily development
 
