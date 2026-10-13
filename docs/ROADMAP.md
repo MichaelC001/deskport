@@ -739,7 +739,7 @@ Reason: user approved the audited backlog and Mac/iPad/Android emulator checks.
 Implement explicit device actions, authenticated desktop fullscreen release,
 on-demand macOS/Linux displays and bounded network recovery, and finish host source
 vendoring. Preserve physical topology, exclusive ownership and old-client
-compatibility. See [the active checklist](../todo.md). Mobile auto-reconnect and
+compatibility. Mobile auto-reconnect and
 mobile vendoring are separate; simulator results do not establish real streams.
 
 ## Stable desktop 0.4.2 (2026-09-20)

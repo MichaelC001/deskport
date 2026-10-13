@@ -51,8 +51,8 @@ records. See [the local update route](LOCAL_UPDATE.md). The wire contract is in 
 | Existing mobile protocol adapters | Apple workspace and Android display/TLS checks passed |
 | Translations | Seven source and compiled catalogs updated; placeholder/coverage checks passed |
 
-Linux development builds and isolated KWin capture/layout runs are recorded in the
-active [TODO](../todo.md). These tests use a private compositor, bus and state
+Linux development builds and isolated KWin capture/layout runs were validated during
+the 2026-09-20 session lifecycle work. These tests use a private compositor, bus and state
 directory; they do not reconfigure the installed desktop session.
 
 ## Remaining acceptance and delivery
