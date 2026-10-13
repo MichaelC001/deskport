@@ -55,6 +55,8 @@ public:
     SDL_Window* takeWindow();
     bool rendering() const { return bool(m_Renderer) || (m_Wayland && m_Wayland->valid()); }
     const QImage& frame() const { return m_Frame; }
+    const QImage& backdrop() const { return m_Backdrop; }
+    const QString& label() const { return m_Label; }
     unsigned presentedFrames() const { return m_PresentedFrames; }
     // Asks a two-choice question inside this window, styled like the app, in
     // place of a native message box. takeAnswer() returns -1 until the user

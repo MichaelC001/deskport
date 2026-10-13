@@ -2496,7 +2496,13 @@ void Session::execInternal()
 #endif
 
     const bool hadTransitionWindow = bool(m_TransitionWindow);
+    // The loading window shown during connection continues the same picture
+    // and message rather than switching to a plain "connecting" state.
+    QImage transitionBackdrop;
+    QString transitionLabel = tr("Connecting to desktop…");
     if (m_TransitionWindow) {
+        transitionBackdrop = m_TransitionWindow->backdrop();
+        transitionLabel = m_TransitionWindow->label();
         m_Window = m_TransitionWindow->takeWindow();
         m_TransitionWindow.reset();
         qInfo() << "Adaptive display retained client window:" << SDL_GetWindowID(m_Window);
@@ -2566,7 +2572,7 @@ void Session::execInternal()
     // Establish a real, recallable loading window before host launch/RTSP can
     // block. The SDL owner keeps pumping it even on Linux's exec worker.
     if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
-    m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, tr("Connecting to desktop…"));
+    m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, transitionLabel, transitionBackdrop);
     m_Window = nullptr;
     if (!m_TransitionWindow->rendering()) {
         emit displayLaunchError(tr("Unable to display the connection window."));

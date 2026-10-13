@@ -33,7 +33,7 @@ public:
     // Three box passes approximate a Gaussian blur on the small picture.
     static void blur(QImage& image) {
         image = image.convertToFormat(QImage::Format_RGB32);
-        const int radius = std::max(2, image.width() / 48);
+        const int radius = std::max(1, image.width() / 96);
         for (int pass = 0; pass < 3; ++pass) {
             boxBlur(image, radius, true);
             boxBlur(image, radius, false);

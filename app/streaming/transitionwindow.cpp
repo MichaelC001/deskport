@@ -111,7 +111,7 @@ void TransitionWindow::pump() {
                             fitted.width(), fitted.height());
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.drawImage(QRectF(0, 0, w, h), m_Backdrop, source);
-        painter.fillRect(QRect(0, 0, w, h), QColor(16, 18, 22, 110));
+        painter.fillRect(QRect(0, 0, w, h), QColor(16, 18, 22, 90));
     }
     if (m_Asking) {
         drawQuestion(painter, w, h, m_QuestionScale);
