@@ -2823,3 +2823,15 @@ Validation: Qt SVG rendering at 16, 18, 22 and 24 points confirms matching black
 and white silhouettes, and an isolated native preview verifies both backgrounds.
 The Linux x86_64 Nix build passes. Deployed menu-bar and KDE panel appearance
 remain separate acceptance checks.
+
+### Tray toggle while connecting, completed — 2026-10-13
+
+Reason: the tray still could not hide a connecting window. The longest
+connecting phase, waiting for the stream to start, pumped the window directly
+and never reported its focus or presentation; and while several desktops
+connected at once, the wanted viewer was never recorded as visible because the
+others were still hiding.
+
+The connection wait now pumps through the session, which reports focus and
+presentation, and the tray treats the wanted viewer as in front when its own
+focus report says so.

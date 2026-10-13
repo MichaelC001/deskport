@@ -2569,7 +2569,7 @@ void Session::execInternal()
     setViewerReady(true);
 
     AsyncConnectionStartThread asyncConnThread(this);
-    waitForDesktopConnection(asyncConnThread, *m_TransitionWindow, !m_ThreadedExec, [this] {
+    waitForDesktopConnection(asyncConnThread, [this] { pumpTransitionWindow(); }, !m_ThreadedExec, [this] {
         if (m_TransitionWindow->cancelled() || m_RecoveryCancelled ||
             (m_RecoveryDeadline && QDateTime::currentMSecsSinceEpoch() >= m_RecoveryDeadline)) {
             m_RecoveryCancelled = true;

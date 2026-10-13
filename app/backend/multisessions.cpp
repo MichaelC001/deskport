@@ -213,8 +213,15 @@ void MultiSessions::selectNext() {
     }
 }
 bool MultiSessions::viewerInFront() const {
-    const auto entry = m_Entries.value(m_Visible);
-    return entry && (entry->focused || (entry->focusLost.isValid() && entry->focusLost.elapsed() < 600));
+    // While several desktops connect, the wanted viewer can be on screen before
+    // the others finish hiding, so it is never recorded as visible. Its own
+    // focus report is the evidence that it is the window in front.
+    for (const auto& id : {m_Visible, m_Wanted}) {
+        const auto entry = m_Entries.value(id);
+        if (entry && entry->exposed &&
+            (entry->focused || (entry->focusLost.isValid() && entry->focusLost.elapsed() < 600))) return true;
+    }
+    return false;
 }
 bool MultiSessions::recall() {
     if (m_Shutdown) return false;

@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
         struct DelayedConnection : QThread { void run() override { msleep(650); } } connection;
         int ticks = 0;
         auto send = [](int code) { SDL_Event e {}; e.type = SDL_USEREVENT; e.user.code = code; assert(SDL_PushEvent(&e) == 1); };
-        waitForDesktopConnection(connection, pending, serviceQt, [&] {
+        waitForDesktopConnection(connection, [&] { pending.pump(); }, serviceQt, [&] {
             ++ticks;
             if (ticks == 3) send(DeskPortShowDevices);
             if (ticks == 5) { assert(!desktopWindowVisible(window)); send(DeskPortRecallWindow); }
