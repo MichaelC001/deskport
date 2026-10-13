@@ -399,4 +399,7 @@ private:
     // Guards s_ActiveSession against the detached termination callback thread.
     static QMutex s_ActiveSessionLock;
     static quint64 s_ConnectionGeneration;
+    // Main-thread reference keeping gamepad subsystems alive between sessions.
+    static bool s_InputSubsystemsRetained;
+    static void releaseRetainedInputSubsystems();
 };

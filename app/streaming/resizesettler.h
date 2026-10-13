@@ -8,6 +8,11 @@ class ResizeSettler {
 public:
     static constexpr quint32 QuietMs = 500;
     void reset() { m_Valid = false; }
+    // Starts from a size already known to have settled, so an unchanged size
+    // commits on the next update instead of waiting another quiet interval.
+    void settled(QSize size, int scale, quint32 now) {
+        m_Size = size; m_Scale = scale; m_ChangedAt = now - QuietMs; m_Valid = size.isValid();
+    }
     bool update(QSize size, int scale, quint32 now, bool dragging) {
         if (!size.isValid()) { m_Valid = false; return false; }
         if (!m_Valid || size != m_Size || scale != m_Scale || dragging) {

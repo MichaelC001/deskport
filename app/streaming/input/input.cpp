@@ -148,12 +148,17 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES, streamIgnoreDevices.toUtf8());
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT, streamIgnoreDevicesExcept.toUtf8());
 
+    // An adaptive resize can keep the subsystems initialized between sessions,
+    // because joystick initialization alone takes about half a second on Linux.
+    // SDL then reports no arrival events, so present gamepads are re-announced.
+    const bool retained = SDL_WasInit(SDL_INIT_JOYSTICK) && SDL_WasInit(SDL_INIT_GAMECONTROLLER);
+
     // We must initialize joystick explicitly before gamecontroller in order
     // to ensure we receive gamecontroller attach events for gamepads where
     // SDL doesn't have a built-in mapping. By starting joystick first, we
     // can allow mapping manager to update the mappings before GC attach
     // events are generated.
-    SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
+    SDL_assert(retained || !SDL_WasInit(SDL_INIT_JOYSTICK));
     if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_JOYSTICK) failed: %s",
@@ -171,11 +176,22 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
-    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
+    SDL_assert(retained || !SDL_WasInit(SDL_INIT_GAMECONTROLLER));
     if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
+    }
+    else if (retained) {
+        // Duplicate arrivals of an already opened gamepad are ignored.
+        for (int i = 0; i < SDL_NumJoysticks(); i++) {
+            if (!SDL_IsGameController(i)) continue;
+            SDL_Event event = {};
+            event.type = SDL_CONTROLLERDEVICEADDED;
+            event.cdevice.type = SDL_CONTROLLERDEVICEADDED;
+            event.cdevice.which = i;
+            SDL_PushEvent(&event);
+        }
     }
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
@@ -225,11 +241,9 @@ SdlInputHandler::~SdlInputHandler()
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
 #endif
 
+    // The session may hold its own reference across an adaptive resize.
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
-    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
-
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-    SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
 
     // Return background event handling to off
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");

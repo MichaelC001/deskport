@@ -77,6 +77,23 @@ private slots:
         QVERIFY(wrap.update({1280, 720}, 1, 244, false));
     }
 
+    void resumeCommitsAnAlreadySettledSizeImmediately() {
+        ResizeSettler settle;
+        settle.settled({2868, 1568}, 2, 1000);
+        QVERIFY(settle.update({2868, 1568}, 2, 1000, false));
+        settle.settled({2868, 1568}, 2, 1000);
+        QVERIFY(!settle.update({2868, 1568}, 2, 1010, true)); // Dragging again.
+        QVERIFY(!settle.update({2868, 1568}, 2, 1509, false));
+        QVERIFY(settle.update({2868, 1568}, 2, 1510, false));
+        settle.settled({2868, 1568}, 2, 2000);
+        QVERIFY(!settle.update({3000, 1568}, 2, 2010, false)); // Resized during stop.
+        QVERIFY(settle.update({3000, 1568}, 2, 2510, false));
+        settle.settled({2868, 1568}, 2, 3000);
+        QVERIFY(!settle.update({2868, 1568}, 1, 3010, false)); // Scale changed.
+        settle.settled({}, 2, 100); // An invalid size never commits.
+        QVERIFY(!settle.update({2868, 1568}, 2, 100, false));
+    }
+
     void hiddenTimeDoesNotSettleARecalledWindow() {
         ResizeSettler settle;
         QVERIFY(!settle.update({2420, 1200}, 1, 0, false));

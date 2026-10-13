@@ -118,6 +118,14 @@ Session* Session::s_ActiveSession;
 QSemaphore Session::s_ActiveSessionSemaphore(1);
 QMutex Session::s_ActiveSessionLock;
 quint64 Session::s_ConnectionGeneration;
+bool Session::s_InputSubsystemsRetained = false;
+
+void Session::releaseRetainedInputSubsystems()
+{
+    if (!s_InputSubsystemsRetained) return;
+    s_InputSubsystemsRetained = false;
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK);
+}
 
 void Session::clStageStarting(int stage)
 {
@@ -873,7 +881,10 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     // The retained native window has received any intervening drag events.
     // Read its newest size once before committing the next host request.
     if (m_AdaptiveResume && m_TransitionWindow) {
+        // The committed size already waited out the quiet interval before the
+        // old stream stopped; only a change or a pressed button since restarts it.
         ResizeSettler settling;
+        if (m_AdaptiveNextSize.isValid()) settling.settled(m_AdaptiveNextSize, m_AdaptiveScale, SDL_GetTicks());
         auto retained = m_TransitionWindow->window();
         while (!m_TransitionWindow->cancelled() && desktopWindowVisible(retained)) {
             pumpTransitionWindow();
@@ -2409,6 +2420,7 @@ void Session::execInternal()
     if (!initialized || (m_TransitionWindow && m_TransitionWindow->cancelled())) {
         if (initialized) SDL_QuitSubSystem(SDL_INIT_VIDEO);
         m_TransitionWindow.reset();
+        releaseRetainedInputSubsystems();
         m_AdaptiveNextSize = {};
         m_AdaptiveDisplay.reset();
         emit sessionFinished(0);
@@ -2429,6 +2441,7 @@ void Session::execInternal()
     // NB: m_InputHandler must be initialize before starting the connection.
     deskportResizeStage("input-init-begin");
     m_InputHandler = new SdlInputHandler(*m_Preferences, m_StreamConfig.width, m_StreamConfig.height);
+    releaseRetainedInputSubsystems();
     deskportResizeStage("input-init-end");
 
     int x, y, width, height;
@@ -3132,6 +3145,11 @@ DispatchDeferredCleanup:
 
     // Raise any keys that are still down
     m_InputHandler->raiseAllKeys();
+
+    // A session that keeps its window comes straight back; keep the gamepad
+    // subsystems so the next input handler need not enumerate devices again.
+    if (m_Window && adaptiveRestartPending() && !m_ManualReconnect && !s_InputSubsystemsRetained)
+        s_InputSubsystemsRetained = SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) == 0;
 
     // Destroy the input handler now. This must be destroyed
     // before allowwing the UI to continue execution or it could
