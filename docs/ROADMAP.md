@@ -1490,6 +1490,20 @@ during transition, and eventually change resolution in-band at an IDR without
 restarting the stream (as RDP 8.1 dynamic resolution does). Rate-limit layout
 updates and wait for each transition to finish before sending another.
 
+Adaptive resize stage baseline (2026-10-13): 147 pk4 → mm4 resizes from client
+diagnostics took a median 500 ms quiet interval plus 2970 ms (p90 6851 ms) from
+stopping the old stream to the first new frame. Median stages: stop 268 ms,
+resume-time re-settle 521 ms, display mode change 534 ms, decoder probe 103 ms,
+input-handler setup 643 ms, /resume 460 ms, RTSP/decoder setup 215 ms and first
+frame 262 ms. The re-settle repeated a quiet interval the size had already
+passed; it now commits an unchanged size immediately. SDL joystick enumeration
+took 430–490 ms on pk4 with no gamepads attached; the subsystems now stay
+initialized across a retained-window continuation and present gamepads are
+re-announced. Together these are expected to remove about 1 s per resize; live
+pk4/mm4 timing has not yet confirmed it. Remaining candidates: overlapping the
+mode change with stream teardown (needs host capture-restart evidence), reusing
+the probed decoder, showing the scaled last frame, and in-band IDR reconfiguration.
+
 ## Then: daily development
 
 ### Dedicated display, client-size resolution and physical mirroring (updated 2026-09-10)
