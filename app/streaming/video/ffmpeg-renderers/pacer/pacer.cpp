@@ -1,6 +1,12 @@
 #include "../../../resizetrace.h"
 #include "pacer.h"
 #include "streaming/streamutils.h"
+#include "streaming/streamsnapshot.h"
+
+extern "C" {
+#include <libavutil/hwcontext.h>
+#include <libswscale/swscale.h>
+}
 
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -67,6 +73,9 @@ Pacer::~Pacer()
         // NB: This must happen on the same thread that calls renderFrame().
         m_VsyncRenderer->cleanupRenderContext();
     }
+
+    // No further frames can start a capture; the decoder is still alive.
+    if (m_SnapshotWorker.joinable()) m_SnapshotWorker.join();
 
     // Delete any remaining unconsumed frames
     while (!m_RenderQueue.isEmpty()) {
@@ -331,11 +340,58 @@ void Pacer::signalVsync()
     m_VsyncSignalled.wakeOne();
 }
 
+static QImage snapshotImage(const AVFrame* frame)
+{
+    // PQ/HLG content would look washed out after an SDR conversion.
+    if (frame->color_trc == AVCOL_TRC_SMPTE2084 || frame->color_trc == AVCOL_TRC_ARIB_STD_B67) return {};
+    AVFrame* transferred = nullptr;
+    const AVFrame* source = frame;
+    if (frame->hw_frames_ctx) {
+        transferred = av_frame_alloc();
+        if (!transferred || av_hwframe_transfer_data(transferred, frame, 0) < 0) { av_frame_free(&transferred); return {}; }
+        source = transferred;
+    }
+    QImage image;
+    if (source->width > 0 && source->height > 0) {
+        const int width = qMin(source->width, 480), height = qMax(1, source->height * width / source->width);
+        SwsContext* context = sws_getContext(source->width, source->height, AVPixelFormat(source->format),
+                                             width, height, AV_PIX_FMT_BGRA, SWS_AREA, nullptr, nullptr, nullptr);
+        if (context) {
+            const int* coefficients = sws_getCoefficients(source->colorspace == AVCOL_SPC_BT709 ? SWS_CS_ITU709 : SWS_CS_DEFAULT);
+            sws_setColorspaceDetails(context, coefficients, source->color_range == AVCOL_RANGE_JPEG,
+                                     sws_getCoefficients(SWS_CS_DEFAULT), 1, 0, 1 << 16, 1 << 16);
+            image = QImage(width, height, QImage::Format_RGB32);
+            uint8_t* planes[4] = {image.bits(), nullptr, nullptr, nullptr};
+            int strides[4] = {int(image.bytesPerLine()), 0, 0, 0};
+            if (sws_scale(context, source->data, source->linesize, 0, source->height, planes, strides) <= 0) image = QImage();
+            sws_freeContext(context);
+        }
+    }
+    av_frame_free(&transferred);
+    return image;
+}
+
+void Pacer::captureSnapshot(AVFrame* frame)
+{
+    if (m_SnapshotWorker.joinable()) m_SnapshotWorker.join();
+    AVFrame* copy = av_frame_clone(frame);
+    if (!copy) return;
+    StreamSnapshot::captured(SDL_GetTicks());
+    m_SnapshotBusy = true;
+    m_SnapshotWorker = std::thread([this, copy]() mutable {
+        StreamSnapshot::store(snapshotImage(copy));
+        av_frame_free(&copy);
+        m_SnapshotBusy = false;
+    });
+}
+
 void Pacer::renderFrame(AVFrame* frame)
 {
     // Count time spent in Pacer's queues
     Uint32 beforeRender = SDL_GetTicks();
     m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
+
+    if (!m_SnapshotBusy && StreamSnapshot::due(beforeRender)) captureSnapshot(frame);
 
     // Render it
     const int submittedWidth = frame->width, submittedHeight = frame->height;

@@ -4,6 +4,7 @@
 #include <QPointer>
 #include "streaming/sessionlifetime.h"
 #include "streaming/resizesettler.h"
+#include "streaming/streamsnapshot.h"
 #include "backend/sessionwindowstate.h"
 #include "settings/streamingpreferences.h"
 namespace WMUtils { bool isRunningWayland() { return false; } }
@@ -92,6 +93,33 @@ private slots:
         QVERIFY(!settle.update({2868, 1568}, 1, 3010, false)); // Scale changed.
         settle.settled({}, 2, 100); // An invalid size never commits.
         QVERIFY(!settle.update({2868, 1568}, 2, 100, false));
+    }
+
+    void streamSnapshotIsPeriodicRequestableAndBlurred() {
+        StreamSnapshot::clear();
+        QVERIFY(StreamSnapshot::due(5000)); // The first rendered frame is captured.
+        StreamSnapshot::captured(5000);
+        QVERIFY(!StreamSnapshot::due(5000 + StreamSnapshot::IntervalMs - 1));
+        QVERIFY(StreamSnapshot::due(5000 + StreamSnapshot::IntervalMs));
+        StreamSnapshot::captured(9000);
+        StreamSnapshot::request(); // A resize asks for a newer picture.
+        QVERIFY(StreamSnapshot::due(9001));
+        QVERIFY(!StreamSnapshot::due(9002));
+
+        QImage edge(96, 54, QImage::Format_RGB32);
+        edge.fill(Qt::black);
+        for (int y = 0; y < edge.height(); ++y)
+            for (int x = edge.width() / 2; x < edge.width(); ++x) edge.setPixel(x, y, qRgb(255, 255, 255));
+        StreamSnapshot::store(edge);
+        const QImage blurred = StreamSnapshot::take();
+        QCOMPARE(blurred.size(), edge.size());
+        const int middle = qRed(blurred.pixel(edge.width() / 2, 20));
+        QVERIFY(middle > 40 && middle < 215); // The hard edge is softened.
+        QCOMPARE(qRed(blurred.pixel(0, 20)), 0);
+        QCOMPARE(qRed(blurred.pixel(edge.width() - 1, 20)), 255);
+        QVERIFY(StreamSnapshot::take().isNull()); // A picture is used once.
+        StreamSnapshot::store(QImage());
+        QVERIFY(StreamSnapshot::take().isNull());
     }
 
     void hiddenTimeDoesNotSettleARecalledWindow() {

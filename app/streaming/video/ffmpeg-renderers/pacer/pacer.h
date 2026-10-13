@@ -6,6 +6,8 @@
 #include <QQueue>
 #include <QMutex>
 #include <QWaitCondition>
+#include <atomic>
+#include <thread>
 
 class IVsyncSource {
 public:
@@ -50,6 +52,8 @@ private:
 
     void dropFrameForEnqueue(QQueue<AVFrame*>& queue);
 
+    void captureSnapshot(AVFrame* frame);
+
     QQueue<AVFrame*> m_RenderQueue;
     QQueue<AVFrame*> m_PacingQueue;
     QQueue<int> m_PacingQueueHistory;
@@ -62,6 +66,10 @@ private:
     SDL_Thread* m_VsyncThread;
     bool m_Stopping;
     bool m_FirstPresentation = true;
+    // Converts an occasional frame for transition backdrops off the render path.
+    // Joined before the decoder and its hardware device are released.
+    std::thread m_SnapshotWorker;
+    std::atomic<bool> m_SnapshotBusy{false};
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;

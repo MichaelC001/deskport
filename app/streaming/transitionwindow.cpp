@@ -6,7 +6,8 @@
 #include <algorithm>
 #include <cmath>
 
-TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text) : m_Window(window) {
+TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text, QImage backdrop)
+    : m_Window(window), m_Backdrop(std::move(backdrop)) {
     // Keep SDL video alive after the old session releases its reference.
     SDL_InitSubSystem(SDL_INIT_VIDEO);
     SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -101,6 +102,17 @@ void TransitionWindow::pump() {
     if (m_Frame.size() != QSize(w, h)) m_Frame = QImage(w, h, QImage::Format_ARGB32);
     m_Frame.fill(QColor(24, 27, 33));
     QPainter painter(&m_Frame); painter.setRenderHint(QPainter::Antialiasing);
+    if (!m_Backdrop.isNull()) {
+        // Fill the window with the blurred previous picture, cropping rather
+        // than stretching it when the window has a new aspect ratio, and dim it
+        // so the progress indicator stays readable.
+        const QSizeF fitted = QSizeF(w, h).scaled(m_Backdrop.size(), Qt::KeepAspectRatio);
+        const QRectF source((m_Backdrop.width() - fitted.width()) / 2, (m_Backdrop.height() - fitted.height()) / 2,
+                            fitted.width(), fitted.height());
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        painter.drawImage(QRectF(0, 0, w, h), m_Backdrop, source);
+        painter.fillRect(QRect(0, 0, w, h), QColor(16, 18, 22, 110));
+    }
     if (m_Asking) {
         drawQuestion(painter, w, h, m_QuestionScale);
     } else {

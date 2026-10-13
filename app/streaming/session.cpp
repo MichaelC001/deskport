@@ -996,6 +996,8 @@ bool Session::checkAdaptiveResize() {
         (SDL_GetGlobalMouseState(nullptr, nullptr) | SDL_GetMouseState(nullptr, nullptr)) != 0);
     if (size != m_AdaptiveObservedSize || scale != m_AdaptiveObservedScale) {
         m_AdaptiveObservedSize = size; m_AdaptiveObservedScale = scale;
+        // Capture a current picture for the transition while the stream still runs.
+        StreamSnapshot::request();
         deskportResizeStage("observed", size.width(), size.height()); return false;
     }
     if (m_AdaptiveDisplay->selectedSize(size) == QSize(m_StreamConfig.width, m_StreamConfig.height) && m_AdaptiveDisplay->selectedScale(scale) == m_AdaptiveScale) {
@@ -3198,10 +3200,11 @@ DispatchDeferredCleanup:
     // one that the compositor would raise and focus.
     if (m_Window && adaptiveRestartPending() && !m_ManualReconnect) {
         m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window,
-            m_NetworkRetry ? tr("Connection interrupted. Reconnecting…") : tr("Adjusting resolution…"));
+            m_NetworkRetry ? tr("Connection interrupted. Reconnecting…") : tr("Adjusting resolution…"),
+            StreamSnapshot::take());
         qInfo() << "Adaptive display keeping client window:" << SDL_GetWindowID(m_Window);
     }
-    else SDL_DestroyWindow(m_Window);
+    else { StreamSnapshot::clear(); SDL_DestroyWindow(m_Window); }
     m_Window = nullptr;
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);

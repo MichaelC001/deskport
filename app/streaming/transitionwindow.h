@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <QString>
 #include <QRectF>
+#include <QImage>
 class QPainter;
 #include "windowactivation.h"
 #include "waylandloading.h"
@@ -44,7 +45,8 @@ inline bool desktopWindowInFront(SDL_Window* window) {
 // by the current SDL event owner; ownership moves only after its thread exits.
 class TransitionWindow {
 public:
-    TransitionWindow(SDL_Window* window, const QString& text);
+    // backdrop is a blurred picture of the previous stream, if one exists.
+    TransitionWindow(SDL_Window* window, const QString& text, QImage backdrop = {});
     ~TransitionWindow();
     void pump();
     bool takePresentationShown() { const bool shown=m_PresentationShown; m_PresentationShown=false; return shown; }
@@ -69,7 +71,7 @@ private:
     SDL_Renderer* m_Renderer = nullptr;
     std::unique_ptr<WaylandLoading> m_Wayland;
     QString m_Label;
-    QImage m_Frame;
+    QImage m_Frame, m_Backdrop;
     bool m_Cancelled = false;
     bool m_PresentationShown = false;
     bool m_Pumping = false;

@@ -4,6 +4,7 @@
 #include "clipboardsync.h"
 #include "sessionlifetime.h"
 #include "resizesettler.h"
+#include "streamsnapshot.h"
 
 #include <QSemaphore>
 #include <QMutex>

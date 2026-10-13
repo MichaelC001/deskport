@@ -719,7 +719,7 @@ HEADERS += backend/adaptivedisplay.h
 HEADERS += backend/sessiongraph.h
 
 HEADERS += backend/streambudget.h
-HEADERS += backend/workspaceresolution.h backend/sessionwindowstate.h streaming/sessionlifetime.h streaming/resizesettler.h
+HEADERS += backend/workspaceresolution.h backend/sessionwindowstate.h streaming/sessionlifetime.h streaming/resizesettler.h streaming/streamsnapshot.h
 
 SOURCES += streaming/transitionwindow.cpp
 HEADERS += streaming/transitionwindow.h
