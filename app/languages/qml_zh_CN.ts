@@ -1486,6 +1486,30 @@
         <source>Data saver off: automatic bitrate</source>
         <translation>省流量已关闭：自动比特率</translation>
     </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>今日 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>每日流量预算</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>每日上限</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>今日：已用 %1，上限 %2（%3%）</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>统计本机所有连接，每天本地时间零点重新计算。用满 100% 时，当天剩余时间自动开启省流量。</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
     <message><source>Connecting…</source><translation>连接中…</translation></message>
     <message><source>Disconnecting…</source><translation>正在断开…</translation></message>
     <message><source>Failed</source><translation>失败</translation></message>

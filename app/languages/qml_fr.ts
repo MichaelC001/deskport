@@ -1454,6 +1454,30 @@
         <source>Data saver off: automatic bitrate</source>
         <translation>Économiseur de données désactivé : débit automatique</translation>
     </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>Aujourd’hui %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>Budget de données quotidien</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>Limite par jour</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>Aujourd’hui : %1 sur %2 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>Compte toutes les sessions de cet ordinateur et repart de zéro à minuit (heure locale). À 100 %, l’économiseur de données s’active pour le reste de la journée.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Réinitialiser</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>Impossible d’enregistrer la suppression de l’appareil. Réessayez.</translation></message>
     <message><source>Editing</source><translation>Modification</translation></message>
     <message><source>Memory %1</source><translation>Mémoire %1</translation></message>

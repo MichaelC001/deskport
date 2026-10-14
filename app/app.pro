@@ -1,4 +1,4 @@
-SOURCES += backend/multisessions.cpp backend/sessionworker.cpp
+SOURCES += backend/multisessions.cpp backend/sessionworker.cpp backend/trafficbudget.cpp
 SOURCES += backend/browsergateway.cpp backend/browserhost.cpp
 HEADERS += backend/browsergateway.h backend/browserhost.h
 RESOURCES += browser/browser.qrc
@@ -8,7 +8,7 @@ SOURCES += cli/hostcontrol.cpp cli/hostsetup.cpp cli/hostdaemon.cpp
 SOURCES += ../third_party/qrcodegen/qrcodegen.cpp
 HEADERS += ../third_party/qrcodegen/qrcodegen.hpp cli/terminalqr.h backend/pairinginvite.h
 HEADERS += cli/hostcontrol.h cli/hostsetup.h cli/hostdaemon.h
-HEADERS += backend/multisessions.h backend/sessionworker.h
+HEADERS += backend/multisessions.h backend/sessionworker.h backend/trafficbudget.h backend/trafficaccount.h
 SOURCES += backend/diagnostics.cpp
 HEADERS += backend/diagnostics.h
 HEADERS += backend/smalltcp.h backend/smalltcptunnel.h

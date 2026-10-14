@@ -13,6 +13,7 @@
 #include "backend/hostmanager.h"
 #include "backend/browserhost.h"
 #include "backend/multisessions.h"
+#include "backend/trafficbudget.h"
 #include "backend/sessionworker.h"
 #include "backend/peermanager.h"
 #include "backend/singleinstance.h"
@@ -1155,6 +1156,23 @@ int main(int argc, char *argv[])
         if (!engine.rootObjects().isEmpty()) if(auto window=qobject_cast<QWindow*>(engine.rootObjects().first())) window->hide();
     });
     engine.rootContext()->setContextProperty("sessionManager", &managedSessions);
+    // Daily traffic budget: worker sessions report through the shell; an
+    // in-process session is sampled here once a second.
+    auto& trafficBudget = TrafficBudget::instance();
+    engine.rootContext()->setContextProperty("trafficBudget", &trafficBudget);
+    QObject::connect(&managedSessions, &MultiSessions::sessionTraffic, &trafficBudget,
+                     [&trafficBudget](QString id, double total) { trafficBudget.account(id, qint64(total)); });
+    QObject::connect(&managedSessions, &MultiSessions::sessionClosed, &trafficBudget,
+                     [&trafficBudget](QString id) { trafficBudget.forget(id); });
+    auto* inProcessTraffic = new QTimer(&app);
+    QObject::connect(inProcessTraffic, &QTimer::timeout, &trafficBudget, [&trafficBudget] {
+        if (auto* session = Session::get()) {
+            const auto traffic = session->traffic();
+            trafficBudget.account(QStringLiteral("in-process"),
+                                  qint64(traffic.value("received").toDouble() + traffic.value("sent").toDouble()));
+        }
+    });
+    inProcessTraffic->start(1000);
     instance.activate = showDevices;
     QObject::connect(&hostManager, &HostManager::openRequested, &app, showDevices);
     QObject::connect(&hostManager, &HostManager::showDevicesRequested, &app, showDevices);

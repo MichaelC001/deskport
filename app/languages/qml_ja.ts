@@ -1457,6 +1457,30 @@
         <source>Data saver off: automatic bitrate</source>
         <translation>データセーバーオフ：ビットレート自動</translation>
     </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>今日 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>1日のデータ予算</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>1日の上限</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>今日：%1 / %2（%3%）</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>このコンピューターのすべての接続を集計し、毎日現地時間の0時にリセットされます。100%に達すると、その日の残りはデータセーバーが自動でオンになります。</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>リセット</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>デバイスの削除を保存できませんでした。再試行してください。</translation></message>
     <message><source>Editing</source><translation>編集中</translation></message>
     <message><source>Memory %1</source><translation>メモリ %1</translation></message>

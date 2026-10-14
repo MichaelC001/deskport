@@ -24,6 +24,10 @@ Done buttons; secondary content opens as a floating panel or expands in place.
   the host lowers it live on a congested remote path. On, video is limited to a
   quarter of that budget, 3–12 Mbps; manual bitrates are capped the same way.
   Live sessions reconnect once to apply the change; resolution never changes.
+- **Daily data budget** (in the panel opened from the traffic chip): a daily limit
+  for every session on this computer, reset at local midnight or with Reset. The
+  chip shows today's percentage and turns amber at 70% and red at 85%; at 100%
+  data saver turns on for the rest of the day.
   Choices open option panels; privacy and licences open as reading panels.
   Streaming preferences belong to each device's settings.
 

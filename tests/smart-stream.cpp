@@ -5,6 +5,7 @@
 #include "host/common/ratecontrol.h"
 #include "host/macos/scroll-pacer.h"
 #include "app/backend/streambudget.h"
+#include "app/backend/trafficaccount.h"
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
@@ -144,6 +145,29 @@ int main() {
     pacer.add(120, 0); pacer.take(40); pacer.add(-80, 0); // reversal cancels pending distance
     assert(!pacer.pending());
     pacer.add(30, 0); pacer.clear(); assert(!pacer.pending());
+
+    // Daily traffic: cumulative counters per session, new sessions start at
+    // zero, midnight starts a new day, levels at 70/85/100%.
+    DeskPortTraffic::DailyUsage today;
+    assert(today.account("2026-10-15", "a", 100) == 100);
+    assert(today.account("2026-10-15", "a", 250) == 150);
+    assert(today.account("2026-10-15", "b", 50) == 50 && today.used == 300);
+    assert(today.account("2026-10-15", "a", 250) == 0);
+    assert(today.account("2026-10-15", "a", 30) == 30);   // restarted session
+    assert(today.account("2026-10-15", "a", -5) == 0 && today.used == 330);
+    today.forget("b");
+    assert(today.account("2026-10-15", "b", 70) == 70 && today.used == 400);
+    assert(today.account("2026-10-16", "a", 40) == 10 && today.used == 10 && today.day == "2026-10-16");
+    today.reset(); assert(today.used == 0);
+    using DeskPortTraffic::Level;
+    assert(DeskPortTraffic::level(699, 1000) == Level::Normal);
+    assert(DeskPortTraffic::level(700, 1000) == Level::Warning);
+    assert(DeskPortTraffic::level(849, 1000) == Level::Warning);
+    assert(DeskPortTraffic::level(850, 1000) == Level::Critical);
+    assert(DeskPortTraffic::level(1000, 1000) == Level::Exceeded);
+    assert(DeskPortTraffic::level(5, 0) == Level::Normal);
+    assert(DeskPortTraffic::level(8000000000LL, 10000000000LL) == Level::Warning);
+    assert(DeskPortTraffic::level(9000000000LL, 10000000000LL) == Level::Critical);
     // Distinct strides/padding; a one-byte change anywhere must be detected.
     std::vector<unsigned char> a(128*80,42), b(160*80,42);
     for(int y=0;y<80;++y) b[y*160+120]=99;
@@ -251,5 +275,5 @@ int main() {
     assert(!pending.admit(12600000,false,false)); // then the idle floor
     deskport::FrameCadence other(30);
     assert(other.floor(12068000)==1); // no cross-session input state
-    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control, scroll pacing\n";
+    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control, scroll pacing, daily traffic\n";
 }

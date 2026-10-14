@@ -1454,6 +1454,30 @@
         <source>Data saver off: automatic bitrate</source>
         <translation>Datensparmodus aus: automatische Bitrate</translation>
     </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>Heute %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>Tägliches Datenbudget</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>Limit pro Tag</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>Heute: %1 von %2 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>Zählt alle Verbindungen dieses Computers und beginnt um Mitternacht (Ortszeit) neu. Bei 100% wird der Datensparmodus für den Rest des Tages eingeschaltet.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Zurücksetzen</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>Das Löschen des Geräts konnte nicht gespeichert werden. Bitte erneut versuchen.</translation></message>
     <message><source>Editing</source><translation>Bearbeiten</translation></message>
     <message><source>Memory %1</source><translation>Speicher %1</translation></message>

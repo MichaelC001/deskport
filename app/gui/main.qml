@@ -113,6 +113,19 @@ ApplicationWindow {
         }
         return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
     }
+    // Data saver applies to every device; live sessions reconnect once so their
+    // next negotiation uses the new limit.
+    function setDataSaver(on) {
+        if (StreamingPreferences.dataSaver === on) return
+        StreamingPreferences.dataSaver = on
+        StreamingPreferences.save()
+        if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.reconnectAll()
+        else if (activeStreamPage && activeStreamPage.session) activeStreamPage.session.requestReconnect()
+    }
+    Connections {
+        target: typeof trafficBudget !== "undefined" ? trafficBudget : null
+        function onExceeded() { window.setDataSaver(true) }
+    }
     function showDevices() {
         if (typeof sessionManager !== "undefined") sessionManager.showDevices()
         if (activeStreamPage) {
@@ -420,6 +433,10 @@ ApplicationWindow {
                 flat: true; font.pixelSize: ui.small
                 readonly property bool connected: activeHostId.length > 0
                 readonly property bool counting: connected && StreamingPreferences.showTraffic && Qt.platform.os !== "windows"
+                // Daily budget: amber from 70%, red from 85% of the limit.
+                readonly property bool budgeting: typeof trafficBudget !== "undefined" && trafficBudget.enabled && Qt.platform.os !== "windows"
+                readonly property int budgetLevel: budgeting ? trafficBudget.level : 0
+                labelColor: budgetLevel >= 2 ? ui.danger : budgetLevel === 1 ? ui.warning : ui.text
                 property real received: 0
                 property real sent: 0
                 property real downRate: 0
@@ -441,12 +458,13 @@ ApplicationWindow {
                 }
                 onCountingChanged: { sampledAt = 0; if (counting) sample() }
                 // Narrow windows keep the connection and download speed only.
-                text: !connected ? "○  " + qsTr("Not connected")
+                text: (!connected ? "○  " + qsTr("Not connected")
                     : "●  " + activeHostName + (!counting ? "" : topBar.compact
                         ? "  ↓ " + amount(downRate) + "/s"
-                        : "  " + amount(received + sent) + "  ↓ " + amount(downRate) + "/s  ↑ " + amount(upRate) + "/s")
+                        : "  " + amount(received + sent) + "  ↓ " + amount(downRate) + "/s  ↑ " + amount(upRate) + "/s"))
+                    + (budgeting ? "  · " + qsTr("Today %1%").arg(Math.floor(trafficBudget.fraction * 100)) : "")
                 Accessible.name: connected ? qsTr("Session data") + " · " + activeHostName : qsTr("Not connected")
-                onClicked: if (connected) trafficDetails.open()
+                onClicked: trafficDetails.open()
                 Timer { interval: 1000; repeat: true; running: trafficSummary.counting && window.visible; onTriggered: trafficSummary.sample() }
             }
             // One switch for every device: automatic bitrate, or a quarter of it
@@ -466,12 +484,7 @@ ApplicationWindow {
                 Accessible.name: qsTr("Data saver")
                 ToolTip.visible: hovered
                 ToolTip.text: checked ? qsTr("Data saver on: video limited to 3–12 Mbps") : qsTr("Data saver off: automatic bitrate")
-                onToggled: {
-                    StreamingPreferences.dataSaver = checked
-                    StreamingPreferences.save()
-                    if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.reconnectAll()
-                    else if (activeStreamPage && activeStreamPage.session) activeStreamPage.session.requestReconnect()
-                }
+                onToggled: window.setDataSaver(checked)
             }
             UiButton {
                 id: memorySummary; objectName: "memorySummary"
@@ -697,9 +710,61 @@ ApplicationWindow {
         id: trafficDetails; title: qsTr("Session data")
         contentItem: ColumnLayout {
             spacing: 12
-            Label { text: qsTr("Received: %1").arg(trafficSummary.amount(trafficSummary.received)); color: ui.text }
-            Label { text: qsTr("Sent: %1").arg(trafficSummary.amount(trafficSummary.sent)); color: ui.text }
-            Label { text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            Label { visible: trafficSummary.connected; text: qsTr("Received: %1").arg(trafficSummary.amount(trafficSummary.received)); color: ui.text }
+            Label { visible: trafficSummary.connected; text: qsTr("Sent: %1").arg(trafficSummary.amount(trafficSummary.sent)); color: ui.text }
+            Label { visible: trafficSummary.connected; text: qsTr("Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+            // Daily budget across every session on this computer.
+            ColumnLayout {
+                objectName: "trafficBudgetSection"
+                visible: typeof trafficBudget !== "undefined" && Qt.platform.os !== "windows"
+                Layout.fillWidth: true; spacing: 10
+                Rectangle { Layout.fillWidth: true; height: 1; color: ui.line }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Label { text: qsTr("Daily data budget"); color: ui.text; Layout.fillWidth: true }
+                    Switch {
+                        objectName: "trafficBudgetSwitch"
+                        checked: typeof trafficBudget !== "undefined" && trafficBudget.enabled
+                        onToggled: trafficBudget.enabled = checked
+                    }
+                }
+                RowLayout {
+                    visible: typeof trafficBudget !== "undefined" && trafficBudget.enabled
+                    Layout.fillWidth: true
+                    Label { text: qsTr("Limit per day"); color: ui.text; Layout.fillWidth: true }
+                    SpinBox {
+                        objectName: "trafficBudgetLimit"
+                        from: 1; to: 2000; stepSize: 1; editable: true
+                        value: typeof trafficBudget !== "undefined" ? Math.round(trafficBudget.limitGb * 2) : 10
+                        textFromValue: function(value) { return (value / 2).toFixed(1) + " GB" }
+                        valueFromText: function(text) { return Math.round(parseFloat(text) * 2) }
+                        onValueModified: trafficBudget.limitGb = value / 2
+                    }
+                }
+                Label {
+                    visible: typeof trafficBudget !== "undefined" && trafficBudget.enabled
+                    text: typeof trafficBudget === "undefined" ? "" : qsTr("Today: %1 of %2 (%3%)")
+                        .arg(trafficSummary.amount(trafficBudget.usedBytes)).arg(trafficBudget.limitGb.toFixed(1) + " GB")
+                        .arg(Math.floor(trafficBudget.fraction * 100))
+                    color: trafficSummary.budgetLevel >= 2 ? ui.danger : trafficSummary.budgetLevel === 1 ? ui.warning : ui.text
+                }
+                Rectangle {
+                    objectName: "trafficBudgetBar"
+                    visible: typeof trafficBudget !== "undefined" && trafficBudget.enabled
+                    Layout.fillWidth: true; height: 8; radius: 4; color: ui.raised
+                    Rectangle {
+                        width: parent.width * Math.min(1, typeof trafficBudget !== "undefined" ? trafficBudget.fraction : 0)
+                        height: parent.height; radius: 4
+                        color: trafficSummary.budgetLevel >= 2 ? ui.danger : trafficSummary.budgetLevel === 1 ? ui.warning : ui.accent
+                    }
+                }
+                RowLayout {
+                    visible: typeof trafficBudget !== "undefined" && trafficBudget.enabled
+                    Layout.fillWidth: true
+                    Label { text: qsTr("Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    UiButton { objectName: "trafficBudgetReset"; text: qsTr("Reset"); onClicked: trafficBudget.reset() }
+                }
+            }
         }
     }
     NavigableDialog {

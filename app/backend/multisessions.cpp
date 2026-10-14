@@ -157,6 +157,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
             if (value >= 0 && value < 1e18) entry->traffic[key]=value;
         }
         emit trafficChanged();
+        emit sessionTraffic(entry->id, entry->traffic.value("received").toDouble() + entry->traffic.value("sent").toDouble());
         const bool limited = message.value("tuningLimited").toBool();
         if (limited != entry->tuningLimited) { entry->tuningLimited = limited; emit changed(); }
         return;
@@ -311,6 +312,7 @@ void MultiSessions::fullscreen(QString id) {
 void MultiSessions::suspend() { for (auto entry : m_Entries) disconnectSession(entry->id); }
 void MultiSessions::shutdown() { m_Shutdown=true; for (auto entry : m_Entries) disconnectSession(entry->id); }
 void MultiSessions::ended(Entry* entry, const QString& error) {
+    emit sessionClosed(entry->id);
     if (entry->reserved) { SessionGraph::release(m_Identity,entry->token); entry->reserved=false; }
     if (entry->socket) { entry->socket->abort(); entry->socket=nullptr; }
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;

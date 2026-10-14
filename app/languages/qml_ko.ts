@@ -1454,6 +1454,30 @@
         <source>Data saver off: automatic bitrate</source>
         <translation>데이터 세이버 꺼짐: 자동 비트레이트</translation>
     </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>오늘 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>일일 데이터 예산</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>하루 한도</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>오늘: %2 중 %1 사용 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>이 컴퓨터의 모든 연결을 집계하며 매일 현지 시간 자정에 다시 시작합니다. 100%에 도달하면 그날 남은 시간 동안 데이터 세이버가 자동으로 켜집니다.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>초기화</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>기기 삭제를 저장하지 못했습니다. 다시 시도하세요.</translation></message>
     <message><source>Editing</source><translation>편집 중</translation></message>
     <message><source>Memory %1</source><translation>메모리 %1</translation></message>

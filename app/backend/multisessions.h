@@ -58,6 +58,9 @@ public:
 signals:
     void changed();
     void trafficChanged();
+    // Cumulative received + sent bytes of one live session, and its end.
+    void sessionTraffic(QString id, double total);
+    void sessionClosed(QString id);
     void devicesRequested();
     void viewerShown();
 private:

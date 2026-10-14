@@ -18,8 +18,25 @@ above the saved 25 Mbps limit on a LAN.
 - Validation: policy tests, 27 UI page checks (switch placement, narrow widths),
   translation coverage and compiled catalogs.
 
-Backlog (user request, not implemented): a daily traffic budget with a reset
-button, yellow above 70% and red above 85%; proposed to enable data saver at 100%.
+## Daily traffic budget — 2026-10-15
+
+Reason: the user wants a daily data allowance with a reset, amber above 70% and
+red above 85%.
+
+- `app/backend/trafficaccount.h` adds cumulative per-session counters (a falling
+  counter is a new session) and rolls over at local midnight; `TrafficBudget`
+  keeps the enabled flag, limit (GB), today's usage and the day in local settings,
+  writing at most every 10 s. Worker sessions report through the shell; an
+  in-process session is sampled once a second.
+- The top-bar traffic chip shows today's percentage while the budget is on and
+  turns amber at 70% and red at 85%. Clicking it always opens the panel, now with
+  a daily budget switch, limit (0.5 GB steps), usage bar and Reset.
+- At 100% data saver turns on once for the rest of the day (a reset re-arms it);
+  nothing disconnects. Counts application bytes of every session on this computer,
+  not IP/VPN overhead or the carrier's bill. Hidden on Windows, which has no
+  session byte counters.
+- Validation: accounting policy tests, UI checks for chip colours, panel controls,
+  once-per-day exceeded signal and day rollover, translation checks.
 
 ## Slow remote links — 2026-10-14
 
