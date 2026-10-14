@@ -40,13 +40,22 @@ int main() {
     assert(encoded.bytes == 0 && encoded.keys == 0 && encoded.maxPacketBytes == 0);
     assert(!encoded.add(6000, 100, false) && encoded.mbps(6000) == 0.0);
 
-    assert(initialBitrate(25000,2560,1440,60,false)==15000);
-    assert(initialBitrate(7000,3840,2160,60,false)==7000);
-    assert(initialBitrate(40000,1280,720,30,false)==5000);
-    assert(initialBitrate(40000,2560,1440,60,true)==30000);
-    assert(initialBitrate(80000,5104,2720,60,false)==56489); // 5K workspace budget
-    assert(initialBitrate(25000,5104,2720,60,false)==25000); // user limit still wins
-    assert(initialBitrate(200000,7680,4320,60,false)==80000);
+    // Automatic: resolution-aware budget; the saved manual bitrate is ignored.
+    assert(automaticBitrate(2560,1440,60,false)==15000);
+    assert(automaticBitrate(1280,720,30,false)==5000);
+    assert(automaticBitrate(2560,1440,60,true)==30000);
+    assert(automaticBitrate(5104,2720,60,false)==56489); // 5K workspace
+    assert(automaticBitrate(7680,4320,60,false)==80000);
+    assert(sessionBitrate(true,false,25000,5104,2720,60,false)==56489);
+    // Manual keeps the saved value.
+    assert(sessionBitrate(false,false,25000,5104,2720,60,false)==25000);
+    // Data saver: a quarter of the automatic budget, 3-12 Mbps, caps either mode.
+    assert(dataSaverBitrate(56489)==12000 && dataSaverBitrate(15000)==3750 && dataSaverBitrate(5000)==3000);
+    assert(sessionBitrate(true,true,25000,5104,2720,60,false)==12000);
+    assert(sessionBitrate(true,true,25000,2560,1440,60,false)==3750);
+    assert(sessionBitrate(true,true,25000,1920,1080,60,false)==3000);
+    assert(sessionBitrate(false,true,60000,5104,2720,60,false)==12000);
+    assert(sessionBitrate(false,true,2000,5104,2720,60,false)==2000);
 
     // Remote classification: on-link/private paths keep LAN behavior.
     auto v4 = [](unsigned a, unsigned b, unsigned c, unsigned d) {

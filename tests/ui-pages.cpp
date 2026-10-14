@@ -1208,6 +1208,14 @@ QtObject {
         QVERIFY(std::abs(refresh->property("rotation").toReal()) > 1.0);
         QVERIFY(findVisual(window->contentItem(),"settingsButton"));
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
+        // The data saver switch is one icon beside the traffic chip and starts off.
+        auto saver=findVisual(window->contentItem(),"dataSaverButton"); QVERIFY(saver);
+        auto traffic=findVisual(window->contentItem(),"trafficSummary");
+        QVERIFY(saver->property("checkable").toBool());
+        QVERIFY(!saver->property("checked").toBool());
+        QVERIFY(saver->width() <= 44);
+        QVERIFY(traffic->mapToScene(QPointF()).x() < saver->mapToScene(QPointF()).x());
+        QVERIFY(saver->mapToScene(QPointF()).x() < arrange->mapToScene(QPointF()).x());
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
             window->resize(width, 620); QTest::qWait(10);
@@ -1218,6 +1226,9 @@ QtObject {
             QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
+            auto saverButton=findVisual(window->contentItem(),"dataSaverButton");
+            QVERIFY(saverButton->isVisible());
+            QVERIFY(saverButton->mapToScene(QPointF(saverButton->width(),0)).x() <= width);
         }
         // Exercise full rows across fractional widths and every column boundary.
         auto resizeModel=qobject_cast<TestComputers*>(grid->property("model").value<QObject*>());

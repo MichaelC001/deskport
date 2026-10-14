@@ -1454,6 +1454,18 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>省流量</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>省流量已開啟：視訊位元速率限制為 3–12 Mbps</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>省流量已關閉：自動位元速率</translation>
+    </message>
     <message><source>Connecting…</source><translation>連線中…</translation></message>
     <message><source>Disconnecting…</source><translation>正在中斷…</translation></message>
     <message><source>Failed</source><translation>失敗</translation></message>
@@ -3003,10 +3015,6 @@
         <translation>自訂</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>自動模式依解析度選擇頻寬上限。節省流量模式使用 30 fps，視訊上限為 5 Mbps。</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>跟隨用戶端視窗解析度</translation>
     </message>
@@ -3297,7 +3305,7 @@
         <source>Report a problem</source>
         <translation>回報問題</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>自動模式依解析度選擇頻寬上限。節省流量模式使用 30 fps，視訊上限為 5 Mbps。</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>自動模式依解析度設定頻寬，並適應網路狀況。節省流量模式使用 30 fps，視訊上限為 5 Mbps。頂端列的省流量開關會限制所有裝置的視訊位元速率。</translation></message>
     <message><source>Picture mode</source><translation>畫面模式</translation></message>
     <message><source>Automatic (recommended)</source><translation>自動（建議）</translation></message>
     <message><source>Clear</source><translation>清晰優先</translation></message>
@@ -3306,6 +3314,7 @@
     <message><source>Custom</source><translation>自訂</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>連線中也可以按 Ctrl+Alt+Shift+X 切換全螢幕。</translation></message>
     <message><source>Bandwidth</source><translation>頻寬</translation></message>
+    <message><source>Automatic</source><translation>自動</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
     <message><source>All streaming options</source><translation>所有串流選項</translation></message>
 </context>

@@ -1206,10 +1206,10 @@ bool Session::initialize()
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->smartStreaming
-        ? DeskPortStream::initialBitrate(m_Preferences->bitrateKbps, m_StreamConfig.width, m_StreamConfig.height,
-                                        m_StreamConfig.fps, m_Preferences->enableYUV444)
-        : m_Preferences->bitrateKbps;
+    m_StreamConfig.bitrate = DeskPortStream::sessionBitrate(m_Preferences->smartStreaming, m_Preferences->dataSaver,
+                                                            m_Preferences->bitrateKbps, m_StreamConfig.width,
+                                                            m_StreamConfig.height, m_StreamConfig.fps,
+                                                            m_Preferences->enableYUV444);
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform

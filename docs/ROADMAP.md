@@ -1,3 +1,26 @@
+## Automatic bitrate and data saver — 2026-10-15
+
+Reason: the user wants bitrate chosen automatically, with a single switch for
+saving data instead of a manual Mbps value. Measured 5K scrolling needed well
+above the saved 25 Mbps limit on a LAN.
+
+- Automatic picture mode (smart streaming) now uses the resolution-aware budget
+  (`DeskPortStream::automaticBitrate`, 5–80 Mbps) and ignores the saved manual
+  bitrate. Manual mode keeps the saved value.
+- A global data-saver switch in the top bar caps either mode at a quarter of the
+  automatic budget, 3–12 Mbps (`dataSaverBitrate`), stored as the device-
+  independent `datasaver` key. Toggling reconnects live sessions once, through
+  the existing manual-reconnect path that rereads the saved profile.
+- The Advanced page shows "Automatic" for bandwidth in automatic mode.
+- Resolution always follows negotiation. Host live rate control still lowers the
+  bitrate on congested remote paths. The seven maintained catalogs are
+  translated and pass the source and compiled translation checks.
+- Validation: policy tests, 27 UI page checks (switch placement, narrow widths),
+  translation coverage and compiled catalogs.
+
+Backlog (user request, not implemented): a daily traffic budget with a reset
+button, yellow above 70% and red above 85%; proposed to enable data saver at 100%.
+
 ## Slow remote links — 2026-10-14
 
 Reason: pk4 → mm4 over Tailscale measured 328 ms RTT through the DERP relay and

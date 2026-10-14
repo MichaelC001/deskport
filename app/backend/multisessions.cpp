@@ -289,6 +289,11 @@ void MultiSessions::disconnectSession(QString id) {
     emit changed();
 }
 void MultiSessions::reconnect(QString id) { auto entry=m_Entries.value(id.toLower()); if (entry) send(entry,{{"command","reconnect"}}); }
+// A global preference such as data saver applies when each live session reads
+// its saved profile again; reconnect keeps the window and admission.
+void MultiSessions::reconnectAll() {
+    for (auto entry : m_Entries) if (entry->state == "connected") send(entry, {{"command","reconnect"}});
+}
 void MultiSessions::setDesktopAdjustment(QString id, double value) {
     auto entry=m_Entries.value(id.toLower()); if (entry) send(entry,{{"command","tuning"},{"value",value}});
 }

@@ -393,6 +393,8 @@ ApplicationWindow {
                 MouseArea { anchors.fill: parent; onClicked: showDevices() }
             }
             Label {
+                // Very narrow windows keep the logo and give the wordmark's room to the switches.
+                visible: !topBar.narrow
                 text: "DeskPort"; font.pixelSize: 17; font.weight: Font.DemiBold; color: ui.text
                 MouseArea { anchors.fill: parent; onClicked: showDevices() }
             }
@@ -410,7 +412,8 @@ ApplicationWindow {
             }
             UiButton {
                 id: trafficSummary; objectName: "trafficSummary"
-                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 560 : 850)))
+                // The budget leaves room for the data saver switch beside it.
+                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 600 : 890)))
                 Layout.fillWidth: true; Layout.minimumWidth: Math.min(implicitWidth, 120)
                 visible: !topBar.narrow
                 Layout.leftMargin: 4
@@ -445,6 +448,30 @@ ApplicationWindow {
                 Accessible.name: connected ? qsTr("Session data") + " · " + activeHostName : qsTr("Not connected")
                 onClicked: if (connected) trafficDetails.open()
                 Timer { interval: 1000; repeat: true; running: trafficSummary.counting && window.visible; onTriggered: trafficSummary.sample() }
+            }
+            // One switch for every device: automatic bitrate, or a quarter of it
+            // (3-12 Mbps) to save data. Live sessions reconnect to apply it.
+            ToolButton {
+                objectName: "dataSaverButton"
+                Layout.preferredWidth: 40
+                checkable: true; checked: StreamingPreferences.dataSaver === true
+                icon.source: "qrc:/res/data-saver.svg"
+                icon.color: checked ? ui.accent : ui.muted
+                icon.width: 20; icon.height: 20
+                background: Rectangle {
+                    radius: 9; implicitWidth: 40; implicitHeight: 36
+                    color: parent.checked ? Qt.rgba(ui.accent.r, ui.accent.g, ui.accent.b, 0.16)
+                        : parent.hovered ? Qt.rgba(ui.text.r, ui.text.g, ui.text.b, 0.06) : "transparent"
+                }
+                Accessible.name: qsTr("Data saver")
+                ToolTip.visible: hovered
+                ToolTip.text: checked ? qsTr("Data saver on: video limited to 3–12 Mbps") : qsTr("Data saver off: automatic bitrate")
+                onToggled: {
+                    StreamingPreferences.dataSaver = checked
+                    StreamingPreferences.save()
+                    if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.reconnectAll()
+                    else if (activeStreamPage && activeStreamPage.session) activeStreamPage.session.requestReconnect()
+                }
             }
             UiButton {
                 id: memorySummary; objectName: "memorySummary"

@@ -137,7 +137,7 @@ private:
 public:
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
-    void requestReconnect();
+    Q_INVOKABLE void requestReconnect();
     bool leaveFullscreen();
     // Asks a multi-session shell to present its next connected desktop.
     void requestNextViewer();
