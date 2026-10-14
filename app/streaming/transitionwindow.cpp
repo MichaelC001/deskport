@@ -17,7 +17,18 @@ TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text, QIma
     if (qstrcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         m_Wayland = std::make_unique<WaylandLoading>(window);
     }
-    else m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+#ifdef Q_OS_WIN32
+    // A stream's flip-model swap chain keeps its last frame on screen over GDI
+    // output, so a software renderer would leave the old picture frozen there.
+    // Its own Direct3D 11 swap chain replaces that frame; the stream's renderer
+    // recreates one after this renderer is destroyed.
+    for (int i = 0; !m_Wayland && !m_Renderer && i < SDL_GetNumRenderDrivers(); ++i) {
+        SDL_RendererInfo info;
+        if (SDL_GetRenderDriverInfo(i, &info) == 0 && qstrcmp(info.name, "direct3d11") == 0)
+            m_Renderer = SDL_CreateRenderer(window, i, SDL_RENDERER_ACCELERATED);
+    }
+#endif
+    if (!m_Wayland && !m_Renderer) m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
     if (!rendering()) SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Loading renderer unavailable: %s", SDL_GetError());
     pump();
 }

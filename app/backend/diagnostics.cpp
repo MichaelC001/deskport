@@ -16,7 +16,7 @@
 
 namespace {
 const QStringList sources {"client", "host", "display"};
-const QStringList stages {"decoder-setup", "continuation", "mode-request", "mode-ready", "mode-failed", "observed", "stop-begin", "viewer-geometry-ready", "probe-begin", "probe-end", "stop-end", "resume-request", "resume-response", "initialize-begin", "input-init-begin", "input-init-end", "first-render-submit"};
+const QStringList stages {"decoder-setup", "continuation", "mode-request", "mode-ready", "mode-failed", "observed", "stop-begin", "viewer-geometry-ready", "probe-begin", "probe-end", "stop-end", "resume-request", "resume-response", "initialize-begin", "input-init-begin", "input-init-end", "first-render-submit", "snapshot-ready", "snapshot-skipped-hdr", "snapshot-transfer-failed", "snapshot-scale-failed"};
 const QStringList failureStages {"session-prepare", "virtual-display", "stream-launch", "capture", "encoder"};
 const QStringList failureCodes {"cancelled", "unauthorized", "busy", "stale", "cycle", "topology-unsupported", "topology-unavailable", "topology-invalid", "unavailable", "timeout", "display-failed", "policy-unsupported", "capture-encoder-failed", "capture-permission", "encoder-unavailable"};
 const QStringList runtimeBackends {"kwin", "portal", "wlr", "screen-capture-kit", "vaapi", "videotoolbox", "software", "nvenc", "amdvce", "quicksync"};
