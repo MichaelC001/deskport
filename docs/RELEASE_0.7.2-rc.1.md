@@ -41,3 +41,19 @@ client → macOS (14 resizes, maximize/restore and stepped drags, sampled about
 every 20 ms with no black or flat frame). Native modal border dragging on
 Windows, other GPUs and long sessions are not yet accepted. Mobile clients are
 distributed separately.
+
+## Published artifacts
+
+The [prerelease](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1) is
+not marked Latest; 0.7.1 remains the stable release. Tag `v0.7.2-rc.1` resolves to
+desktop source `617f03045dfe336e21f6aa995456e9cfaaea5d10`, with shared core
+`108ca7d24c023b443687971690b1066427012608`. The binaries were built from
+`eb130d2c`; `617f0304` only fixes the Windows material exporter.
+
+All 19 public assets were downloaded without login and matched their local bytes,
+GitHub sizes/digests and
+[SHA256SUMS.txt](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.1/SHA256SUMS.txt).
+[VERIFICATION.txt](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.1/VERIFICATION.txt)
+records notarization, native Windows checks, distribution installation tests, Nix
+and Flatpak validation, and the scope of live checks. Managed activation remains
+separate.
