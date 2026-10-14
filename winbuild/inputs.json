@@ -1,0 +1,351 @@
+{
+  "schema": 1,
+  "mirror": "https://github.com/keithxc/deskport/releases/download/windows-build-inputs-1/",
+  "note": "Pinned upstream sources for the Windows cross build. The mirror holds identical files.",
+  "inputs": [
+    {
+      "name": "qtbase",
+      "file": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "urls": [
+        "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtbase-everywhere-src-6.11.1.tar.xz",
+        "https://download.qt.io/archive/qt/6.11/6.11.1/submodules/qtbase-everywhere-src-6.11.1.tar.xz"
+      ],
+      "copy": "source-inputs/qtbase-everywhere-src-6.11.1.tar.xz",
+      "sha256": "d9594a31228aa23ad6b531719a29b45f0f3989fe6c136d45767ea179f233c1ac",
+      "bytes": 50648500
+    },
+    {
+      "name": "qtshadertools",
+      "file": "qtshadertools-everywhere-src-6.11.1.tar.xz",
+      "urls": [
+        "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtshadertools-everywhere-src-6.11.1.tar.xz",
+        "https://download.qt.io/archive/qt/6.11/6.11.1/submodules/qtshadertools-everywhere-src-6.11.1.tar.xz"
+      ],
+      "copy": "source-inputs/qtshadertools-everywhere-src-6.11.1.tar.xz",
+      "sha256": "2075052f9b23bcf9de045bbd180037084942f82cce870aab14a1454902c982fc",
+      "bytes": 1216568
+    },
+    {
+      "name": "qtdeclarative",
+      "file": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "urls": [
+        "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtdeclarative-everywhere-src-6.11.1.tar.xz",
+        "https://download.qt.io/archive/qt/6.11/6.11.1/submodules/qtdeclarative-everywhere-src-6.11.1.tar.xz"
+      ],
+      "copy": "source-inputs/qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "sha256": "52e670f670b0304f534b24f98c47ceb8a41bb710464414ebc9527ec71cc86aa4",
+      "bytes": 38744644
+    },
+    {
+      "name": "qtsvg",
+      "file": "qtsvg-everywhere-src-6.11.1.tar.xz",
+      "urls": [
+        "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtsvg-everywhere-src-6.11.1.tar.xz",
+        "https://download.qt.io/archive/qt/6.11/6.11.1/submodules/qtsvg-everywhere-src-6.11.1.tar.xz"
+      ],
+      "copy": "source-inputs/qtsvg-everywhere-src-6.11.1.tar.xz",
+      "sha256": "7f3cf02f4824bf03c2c5859ea6db173bf1482a1daf24e6cdf7bc78cfa26a8a94",
+      "bytes": 2336944
+    },
+    {
+      "name": "zlib",
+      "file": "zlib-1.3.2.tar.gz",
+      "urls": [
+        "https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.gz",
+        "https://zlib.net/zlib-1.3.2.tar.gz"
+      ],
+      "copy": "source-inputs/zlib-1.3.2.tar.gz",
+      "sha256": "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16",
+      "bytes": 1502830
+    },
+    {
+      "name": "openssl",
+      "file": "openssl-3.6.3.tar.gz",
+      "urls": [
+        "https://github.com/openssl/openssl/releases/download/openssl-3.6.3/openssl-3.6.3.tar.gz"
+      ],
+      "copy": "source-inputs/openssl-3.6.3.tar.gz",
+      "sha256": "243a86649cf6f23eeb6a2ff2456e09e5d77dd9018a54d3d96b0c6bdd6ba6c7f1",
+      "bytes": 54953005
+    },
+    {
+      "name": "opus",
+      "file": "opus-1.6.1.tar.gz",
+      "urls": [
+        "https://downloads.xiph.org/releases/opus/opus-1.6.1.tar.gz"
+      ],
+      "copy": "source-inputs/opus-1.6.1.tar.gz",
+      "sha256": "6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1",
+      "bytes": 10472813
+    },
+    {
+      "name": "SDL2",
+      "file": "SDL2-2.32.10.tar.gz",
+      "urls": [
+        "https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz"
+      ],
+      "copy": "source-inputs/SDL2-2.32.10.tar.gz",
+      "sha256": "5f5993c530f084535c65a6879e9b26ad441169b3e25d789d83287040a9ca5165",
+      "bytes": 7630262
+    },
+    {
+      "name": "SDL2_ttf",
+      "file": "SDL2_ttf-2.24.0.tar.gz",
+      "urls": [
+        "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.24.0/SDL2_ttf-2.24.0.tar.gz"
+      ],
+      "copy": "source-inputs/SDL2_ttf-2.24.0.tar.gz",
+      "sha256": "0b2bf1e7b6568adbdbc9bb924643f79d9dedafe061fa1ed687d1d9ac4e453bfd",
+      "bytes": 13335900
+    },
+    {
+      "name": "freetype",
+      "file": "freetype-2.14.3.tar.xz",
+      "urls": [
+        "https://download.savannah.gnu.org/releases/freetype/freetype-2.14.3.tar.xz",
+        "https://downloads.sourceforge.net/project/freetype/freetype2/2.14.3/freetype-2.14.3.tar.xz"
+      ],
+      "copy": "source-inputs/freetype-2.14.3.tar.xz",
+      "sha256": "36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f",
+      "bytes": 2670220
+    },
+    {
+      "name": "ffmpeg-client",
+      "file": "FFmpeg-n8.1.2.tar.gz",
+      "urls": [
+        "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n8.1.2.tar.gz"
+      ],
+      "extract": "source-inputs/ffmpeg",
+      "sha256": "9fd092511605bbebafe095ea6d38d9e40f34d12f7386e1258372df8be0576eb7",
+      "bytes": 16872873
+    },
+    {
+      "name": "dav1d",
+      "file": "dav1d-1.5.3.tar.xz",
+      "urls": [
+        "https://downloads.videolan.org/pub/videolan/dav1d/1.5.3/dav1d-1.5.3.tar.xz"
+      ],
+      "extract": "source-inputs/dav1d",
+      "sha256": "732010aa5ef461fa93355ed2c6c5fedb48ddc4b74e697eaabe8907eaeb943011",
+      "bytes": 1022836
+    },
+    {
+      "name": "glslang",
+      "file": "glslang-16.2.0.tar.gz",
+      "urls": [
+        "https://github.com/KhronosGroup/glslang/archive/refs/tags/16.2.0.tar.gz"
+      ],
+      "extract": "source-inputs/glslang",
+      "sha256": "01985335785c97906a91afe3cb5ee015997696181ec6c125bab5555602ba08e2",
+      "bytes": 4294235
+    },
+    {
+      "name": "libplacebo",
+      "file": "libplacebo-v7.360.1.tar.gz",
+      "urls": [
+        "https://github.com/haasn/libplacebo/archive/refs/tags/v7.360.1.tar.gz",
+        "https://code.videolan.org/videolan/libplacebo/-/archive/v7.360.1/libplacebo-v7.360.1.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo",
+      "sha256": "d05fdf90bea2f629eaa2d115e909fd356388ac639e54f77b87a018a6d76224bd",
+      "bytes": 862269
+    },
+    {
+      "name": "libplacebo-Vulkan-Headers",
+      "file": "Vulkan-Headers-450bd2232225d6c7728a4108055ac2e37cef6475.tar.gz",
+      "urls": [
+        "https://github.com/KhronosGroup/Vulkan-Headers/archive/450bd2232225d6c7728a4108055ac2e37cef6475.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/3rdparty/Vulkan-Headers",
+      "sha256": "26df9841c30806a994e2fdf42f7c87bcb1ced9db9a06033469123939fb3fa075",
+      "bytes": 2940820
+    },
+    {
+      "name": "libplacebo-fast_float",
+      "file": "fast_float-97b54ca9e75f5303507699d27c6b4f4efe4641a1.tar.gz",
+      "urls": [
+        "https://github.com/fastfloat/fast_float/archive/97b54ca9e75f5303507699d27c6b4f4efe4641a1.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/3rdparty/fast_float",
+      "sha256": "2b132274539286e41f37857cac22aa8441d21bd86d55de825a3342b149f66801",
+      "bytes": 120200
+    },
+    {
+      "name": "libplacebo-glad",
+      "file": "glad-73db193f853e2ee079bf3ca8a64aa2eaf6459043.tar.gz",
+      "urls": [
+        "https://github.com/Dav1dde/glad/archive/73db193f853e2ee079bf3ca8a64aa2eaf6459043.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/3rdparty/glad",
+      "sha256": "33dbeae44d8315ece57e14eba4b1b4a02ac5406d1c4f49cd20048c91522a6b9a",
+      "bytes": 645779
+    },
+    {
+      "name": "libplacebo-jinja",
+      "file": "jinja-15206881c006c79667fe5154fe80c01c65410679.tar.gz",
+      "urls": [
+        "https://github.com/pallets/jinja/archive/15206881c006c79667fe5154fe80c01c65410679.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/3rdparty/jinja",
+      "sha256": "b88a20dcc2e34072fcf4159325bc6c34cd4b29a81a8b83d15d2f28ba561da296",
+      "bytes": 276954
+    },
+    {
+      "name": "libplacebo-markupsafe",
+      "file": "markupsafe-297fc8e356e6836a62087949245d09a28e9f1b13.tar.gz",
+      "urls": [
+        "https://github.com/pallets/markupsafe/archive/297fc8e356e6836a62087949245d09a28e9f1b13.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/3rdparty/markupsafe",
+      "sha256": "da7c010c9c81a66ac73036558c1fcb6212b50482f43211cd1254035b94f82414",
+      "bytes": 83817
+    },
+    {
+      "name": "libplacebo-nuklear",
+      "file": "Nuklear-242f35efa067a46c595645eeda7b1771ea1f83b1.tar.gz",
+      "urls": [
+        "https://github.com/Immediate-Mode-UI/Nuklear/archive/242f35efa067a46c595645eeda7b1771ea1f83b1.tar.gz"
+      ],
+      "extract": "source-inputs/libplacebo/demos/3rdparty/nuklear",
+      "sha256": "ac567995f917c10a722409e0141d226e737d06488b0a31166f6e4925da8e58f0",
+      "bytes": 2339403
+    },
+    {
+      "name": "curl",
+      "file": "curl-8.19.0.tar.xz",
+      "urls": [
+        "https://curl.se/download/curl-8.19.0.tar.xz"
+      ],
+      "copy": "full/curl.tar.xz",
+      "sha256": "4eb41489790d19e190d7ac7e18e82857cdd68af8f4e66b292ced562d333f11df",
+      "bytes": 2787584
+    },
+    {
+      "name": "miniupnpc",
+      "file": "miniupnpc-2.3.3.tar.gz",
+      "urls": [
+        "https://miniupnp.tuxfamily.org/files/miniupnpc-2.3.3.tar.gz"
+      ],
+      "copy": "full/miniupnpc.tar.gz",
+      "sha256": "d52a0afa614ad6c088cc9ddff1ae7d29c8c595ac5fdd321170a05f41e634bd1a",
+      "bytes": 141281
+    },
+    {
+      "name": "minhook",
+      "file": "minhook-1.3.4.tar.gz",
+      "urls": [
+        "https://github.com/TsudaKageyu/minhook/archive/refs/tags/v1.3.4.tar.gz"
+      ],
+      "copy": "full/minhook.tar.gz",
+      "sha256": "1aebeae4ca898330c507860acc2fca2eb335fe446a3a2b8444c3bf8b2660a14e",
+      "bytes": 29674
+    },
+    {
+      "name": "onevpl",
+      "file": "libvpl-2.15.0.tar.gz",
+      "urls": [
+        "https://github.com/intel/libvpl/archive/refs/tags/v2.15.0.tar.gz"
+      ],
+      "copy": "full/onevpl.tar.gz",
+      "sha256": "7218c3b8206b123204c3827ce0cf7c008d5c693c1f58ab461958d05fe6f847b3",
+      "bytes": 12969762
+    },
+    {
+      "name": "media-FFmpeg",
+      "file": "FFmpeg-38b88335f99e76ed89ff3c93f877fdefce736c13.tar.gz",
+      "urls": [
+        "https://github.com/FFmpeg/FFmpeg/archive/38b88335f99e76ed89ff3c93f877fdefce736c13.tar.gz"
+      ],
+      "extract": "full/media-source/FFmpeg",
+      "sha256": "2ae7e42343cfffb811d15cfe98b6d005f082595fcdf034d30a4ff90cfed9f9c6",
+      "bytes": 16894057
+    },
+    {
+      "name": "media-x264",
+      "file": "x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.gz",
+      "urls": [
+        "https://github.com/LizardByte-infrastructure/x264/archive/b35605ace3ddf7c1a5d67a2eb553f034aef41d55.tar.gz"
+      ],
+      "extract": "full/media-source/x264",
+      "sha256": "cd71a7515b0e9a012e1ac9b1f8415bebcaf6fc97d4db32286642ac4c0fbe24f9",
+      "bytes": 1040327
+    },
+    {
+      "name": "media-x265_git",
+      "file": "x265_git-1d117bed4747758b51bd2c124d738527e30392cb.tar.gz",
+      "urls": [
+        "https://github.com/LizardByte-infrastructure/x265_git/archive/1d117bed4747758b51bd2c124d738527e30392cb.tar.gz"
+      ],
+      "extract": "full/media-source/x265_git",
+      "sha256": "2fc3a96c2423db101f29b714d3551f1126a35c94dc5f5160633c70d482d1af6d",
+      "bytes": 1727480
+    },
+    {
+      "name": "media-SVT-AV1",
+      "file": "SVT-AV1-9292ec8e32bce26f781f277ec8739b53426c4300.tar.gz",
+      "urls": [
+        "https://github.com/LizardByte-infrastructure/SVT-AV1/archive/9292ec8e32bce26f781f277ec8739b53426c4300.tar.gz"
+      ],
+      "extract": "full/media-source/SVT-AV1",
+      "sha256": "bf7e53dd132ff423d611af86f58bdc6dc18a2b3456f572097a5386ec8f83cc95",
+      "bytes": 11077766
+    },
+    {
+      "name": "amf",
+      "file": "AMF-eadd00804d5f7e5cd8c85d540073198312870776.tar.gz",
+      "urls": [
+        "https://github.com/GPUOpen-LibrariesAndSDKs/AMF/archive/eadd00804d5f7e5cd8c85d540073198312870776.tar.gz"
+      ],
+      "extract": "full/amf/include",
+      "member": "amf/public/include",
+      "sha256": "d9cde24be31e847e78d31e4d01cfc6a461eac35c77557578436a407f621de26b",
+      "bytes": 398304897
+    },
+    {
+      "name": "vdd",
+      "file": "Signed-Driver-v24.12.24-x64.zip",
+      "urls": [
+        "https://github.com/VirtualDrivers/Virtual-Display-Driver/releases/download/24.12.24/Signed-Driver-v24.12.24-x64.zip"
+      ],
+      "extract": "full/vdd",
+      "strip": 0,
+      "sha256": "f93e7ce3d640c83c419b1b72d2c83b2d8e34d83e8b7ba11f3328a40d2da82fa4",
+      "bytes": 134079
+    },
+    {
+      "name": "vdd-license",
+      "file": "Virtual-Display-Driver-24.12.24-LICENSE",
+      "urls": [
+        "https://raw.githubusercontent.com/VirtualDrivers/Virtual-Display-Driver/24.12.24/LICENSE"
+      ],
+      "copy": "full/VDD-LICENSE",
+      "sha256": "c2285c867ddc9b88f43b4f8fa2c77a9eec66207166c1217b37353a2ccd62ac03",
+      "bytes": 1072
+    },
+    {
+      "name": "sunshine-assets",
+      "file": "Sunshine-Windows-AMD64-lite-v2026.906.222525.zip",
+      "urls": [
+        "https://github.com/LizardByte/Sunshine/releases/download/v2026.906.222525/Sunshine-Windows-AMD64-lite.zip"
+      ],
+      "extract": "full/upstream-assets/assets",
+      "member": "Sunshine/assets",
+      "strip": 0,
+      "sha256": "50f4123dd15a6817513589c912581260c34cc4a58e9a5f3071ebac3d92c94c15",
+      "bytes": 37875640
+    },
+    {
+      "name": "cppwinrt",
+      "file": "mingw-w64-x86_64-cppwinrt-2.0.250303.1-2-any.pkg.tar.zst",
+      "urls": [
+        "https://repo.msys2.org/mingw/mingw64/mingw-w64-x86_64-cppwinrt-2.0.250303.1-2-any.pkg.tar.zst"
+      ],
+      "extract": "compat-include/winrt",
+      "member": "mingw64/include/winrt",
+      "strip": 0,
+      "lowercase_copies": true,
+      "sha256": "ca3cb1fee300c4b8c8d21437cb964dccccae8b9a131e10aad911fb7fcd351c8d",
+      "bytes": 3569766
+    }
+  ]
+}

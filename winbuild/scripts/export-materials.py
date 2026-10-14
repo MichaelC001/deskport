@@ -39,7 +39,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         p=root/name
         if not name or name=='shared/deskport-core' or not p.is_file(): continue
         tar.add(p,arcname='deskport/'+name,recursive=False)
-    for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices','winbuild/THIRD-PARTY-NOTICES.txt'):
+    for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices'):
         tar.add(root/name,arcname='deskport/'+name,filter=filter_source)
     shell_nix = out.parent / 'shell.nix'
     if shell_nix.exists():

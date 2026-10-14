@@ -22,10 +22,15 @@ in pkgs.mkShell {
     pkgs.p7zip pkgs.unzip pkgs.zip pkgs.file pkgs.which pkgs.gnumake
     pkgs.gnupatch pkgs.autoconf pkgs.automake pkgs.libtool pkgs.util-linux
     pkgs.coreutils pkgs.nsis pkgs.msitools pkgs.osslsigncode pkgs.xxd
-    pkgs.imagemagick
+    pkgs.imagemagick pkgs.zstd
   ];
+  # Toolchain notices come from the sources of the locked toolchain itself.
   shellHook = ''
     export QT_HOST_PATH=${qtHost}
     export NIX_HOST_QT=${qtHost}
+    export GCC_SOURCE=${cross.buildPackages.gcc.cc.src}
+    export MINGW_W64_SOURCE=${cross.windows.mingw_w64.src}
+    export NSIS_SOURCE=${pkgs.nsis.src}
+    export MCFGTHREAD_SOURCE=${cross.windows.mcfgthreads.src}
   '';
 }

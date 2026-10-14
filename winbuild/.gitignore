@@ -1,5 +1,6 @@
 *
 !.gitignore
+!inputs.json
 !scripts/
 scripts/*
 !scripts/*.sh

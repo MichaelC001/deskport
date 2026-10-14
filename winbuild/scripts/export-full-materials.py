@@ -55,7 +55,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         p=root/name
         if not name or name=='shared/deskport-core' or not p.exists(): continue
         tar.add(p,arcname='deskport/'+name,recursive=p.is_dir(),filter=filter_source)
-    for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices','winbuild/THIRD-PARTY-NOTICES.txt','winbuild/THIRD-PARTY-NOTICES-full.txt','host/windows','app/clipboard/windowsnative.h'):
+    for name in ('shared/deskport-core','app/deskport.ico','winbuild/scripts','winbuild/toolchain-notices','host/windows','app/clipboard/windowsnative.h'):
         p = wb / name.removeprefix('winbuild/') if name.startswith('winbuild/') else root / name
         tar.add(p,arcname='deskport/'+name,filter=filter_source)
     shell_nix = out.parent / 'shell.nix'
@@ -69,6 +69,14 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
     for name in host_names:
         p = full/name
         if p.exists(): tar.add(p,arcname='deskport/winbuild/full/'+name,filter=filter_source)
+    # Every pinned input must be present and verified; a partial archive cannot rebuild.
+    manifest = json.loads((root/'winbuild'/'inputs.json').read_text())
+    cache = Path(os.environ.get('DESKPORT_WINDOWS_INPUT_CACHE', wb/'input-cache'))
+    for entry in manifest['inputs']:
+        p = cache/entry['file']
+        if not p.is_file() or hashlib.file_digest(p.open('rb'),'sha256').hexdigest() != entry['sha256']:
+            raise SystemExit(f"Missing or unverified build input {entry['file']} in {cache}; run fetch-inputs.py")
+        tar.add(p,arcname='deskport/winbuild/input-cache/'+entry['file'])
     tar.add(host_source, arcname=host_source_arcname, filter=filter_source)
     for p in full.glob('*.tar.*'):
         tar.add(p,arcname='deskport/winbuild/full/'+p.name,filter=filter_source)

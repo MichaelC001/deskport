@@ -3,13 +3,19 @@
 # The client prefix and its completed Qt/FFmpeg build are never modified.
 source "$(dirname "$0")/env.sh"
 FULL="$WB/full"
-DEPS="$FULL/sunshine/third-party/build-deps"
+# Patches, CMake metadata and nv-codec-headers come from the prepared host
+# source; the media trees and AMF headers are pinned inputs (fetch-inputs.py).
+DEPS="${DESKPORT_HOST_SOURCE_DIR:-$FULL/sunshine-prepared}/third-party/build-deps"
+AMF_INCLUDE="$FULL/amf/include"
+[ -d "$AMF_INCLUDE" ] || AMF_INCLUDE="$DEPS/third-party/FFmpeg/AMF/amf/public/include"
 MEDIA="$FULL/media-source"
 DEST="$FULL/media-prefix"
 mkdir -p "$MEDIA" "$DEST"
 export PKG_CONFIG_LIBDIR="$DEST/lib/pkgconfig:$FULL/prefix/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 for component in x264 x265_git SVT-AV1 FFmpeg; do
   if [ ! -d "$MEDIA/$component" ]; then
+    [ -d "$DEPS/third-party/FFmpeg/$component" ] && [ -n "$(ls -A "$DEPS/third-party/FFmpeg/$component")" ] ||
+      { echo "Missing host media source $component; run fetch-inputs.py" >&2; exit 1; }
     cp -R "$DEPS/third-party/FFmpeg/$component" "$MEDIA/$component"
     rm -f "$MEDIA/$component/.git"
   fi
@@ -36,7 +42,7 @@ cmake -S "$MEDIA/SVT-AV1" -B "$FULL/svt-build" "${common[@]}" -DBUILD_APPS=OFF -
 cmake --build "$FULL/svt-build" --parallel "$JOBS"
 cmake --install "$FULL/svt-build"
 mkdir -p "$DEST/include/AMF" "$DEST/include/ffnvcodec"
-cp -R "$DEPS/third-party/FFmpeg/AMF/amf/public/include/"* "$DEST/include/AMF/"
+cp -R "$AMF_INCLUDE/"* "$DEST/include/AMF/"
 cp -R "$DEPS/third-party/FFmpeg/nv-codec-headers/include/ffnvcodec/"* "$DEST/include/ffnvcodec/"
 sed "s#@@PREFIX@@#$DEST#g" "$DEPS/third-party/FFmpeg/nv-codec-headers/ffnvcodec.pc.in" > "$DEST/lib/pkgconfig/ffnvcodec.pc"
 mkdir -p "$FULL/ffmpeg-build"

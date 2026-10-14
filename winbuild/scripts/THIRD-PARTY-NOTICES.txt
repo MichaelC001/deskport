@@ -1,0 +1,69 @@
+DeskPort for Windows (x64) — third-party notices
+================================================
+
+DeskPort itself is licensed under the GNU General Public License v3.0
+(see LICENSE.txt). DeskPort is derived from Moonlight (moonlight-qt) and
+keeps the upstream notices.
+
+Application libraries and the MinGW C++ runtime are statically linked. Windows
+system APIs, the system C runtime (msvcrt.dll), and graphics drivers remain
+dynamic. NSIS uses its own installer plugin DLLs. The following components are
+compiled into DeskPort.exe. Source license texts and Qt attribution metadata are in the "licenses" directory.
+The Qt notice collection is deliberately a superset of the linked modules.
+
+  Qt 6.11.1 ................ LGPL-3.0-only (statically linked)
+                             https://www.qt.io/
+                             Bundled Qt third-party code (FreeType, HarfBuzz,
+                             PCRE2, libpng, libjpeg, zlib, md4c, ...) keeps the
+                             licences shipped in the Qt sources.
+  FFmpeg 8.1.2 ............. LGPL-2.1-or-later (statically linked, LGPL subset:
+                             no GPL components, no libx264/libx265)
+  SDL2 2.32.10 ............. zlib licence
+  SDL2_ttf 2.24.0 .......... zlib licence
+  FreeType 2.14.3 .......... FreeType Licence (FTL) / GPLv2 dual licence
+  OpenSSL 3.6.3 ............ Apache-2.0
+  Opus 1.6.1 ............... BSD-3-Clause
+  zlib 1.3.2 ............... zlib licence
+  moonlight-common-c ....... see licenses/moonlight-common-c.txt
+  qmdnsengine .............. MIT
+  libsoundio ............... MIT
+  h264bitstream ............ LGPL-2.1
+  libplacebo 7.360.1 ....... LGPL-2.1-or-later (Vulkan renderer)
+  glslang 16.2.0 ........... BSD-3-Clause / Apache-2.0 (used by libplacebo)
+  SDL_GameControllerDB ..... see licenses/SDL_GameControllerDB.txt
+
+LGPL relinking notice
+---------------------
+Qt (LGPL-3.0), FFmpeg (LGPL-2.1) and libplacebo (LGPL-2.1) are statically linked into DeskPort.exe.
+The LGPL requires that recipients be able to relink the application against a
+modified version of those libraries. Build and relinking material is supplied alongside this evaluation package in
+source-materials-binding-fix.tar.gz and relink-materials-binding-fix.tar.gz. These contain application
+sources, dependency source inputs, build scripts, objects and static libraries.
+See BUILD_REPORT.md for paths, commands, limitations and hashes.
+The build recipe (the scripts in
+winbuild/scripts of the DeskPort source tree used for this build, together with
+the pinned source revisions listed in BUILD_REPORT.md) identifies the selected
+toolchain (byte-for-byte reproducibility has not been tested), and the intermediate object files and static libraries of this build
+are retained in the build tree so that relinking is possible. Anyone
+redistributing this binary must keep that material available.
+
+Build scope
+-----------
+Windows client evaluation only. The selected source revision does not implement
+Windows integrated hosting. Sunshine, display helpers, AntiHooking/Detours and
+Discord RPC are not included. AV1 uses hardware decoding only (no dav1d).
+The installer and application are unsigned. Native Windows acceptance is pending.
+The portable ZIP contains portable.dat; launch with its directory as the working
+directory to select portable settings. The installer uses the normal DeskPort profile.
+
+Runtime/toolchain notices
+-------------------------
+MinGW-w64 runtime, GCC runtime exception, and NSIS license materials are included
+in licenses/toolchain. See these original texts for their respective terms.
+
+Binding-fix evaluation revision
+-------------------------------
+Windows now requests outbound host access using the existing client-only role.
+It does not advertise or start a local host/listener. Host approval, TLS identity
+pins and final binding confirmation are required. This does not add Windows
+hosting. See BUILD-INFO.txt for the binary hash and build variant.

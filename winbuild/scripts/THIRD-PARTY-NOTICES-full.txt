@@ -1,0 +1,103 @@
+DeskPort for Windows x64 — full integration evaluation
+======================================================
+
+This package contains the DeskPort client, a privately managed patched Sunshine
+host, separate lifecycle/display helpers, and the original signed Virtual Display
+Driver package. It is an unaccepted evaluation build, not a public release.
+The unresolved Windows Defender detection and normal-protection retest gate are
+recorded in the accompanying task reports. No false-positive determination is made.
+
+DeskPort derives from Moonlight and is GPL-3.0. Upstream notices are preserved.
+The Windows host is Sunshine cb72dffa3233c5815cd5ba88f09f049dd679ba75,
+also GPL-3.0, with the DeskPort session-settings and takeover protocol patches and
+small Windows output-selection/private-state integration patches. It is not an
+unmodified upstream host. Corresponding patches are included under licenses.
+
+Client linked components
+-------------------------
+Qt 6.11.1 (LGPL-3.0), FFmpeg 8.1.2 (LGPL-2.1-or-later subset, no GPL codecs),
+SDL2 2.32.10 (zlib), SDL2_ttf 2.24.0 (zlib), FreeType 2.14.3 (FTL/GPL dual),
+OpenSSL 3.6.3 (Apache-2.0), Opus 1.6.1 (BSD-3-Clause), zlib 1.3.2 (zlib),
+libplacebo 7.360.1 (LGPL-2.1-or-later), glslang 16.2.0 (BSD/Apache-2.0),
+moonlight-common-c, qmdnsengine (MIT), libsoundio (MIT), h264bitstream (LGPL-2.1),
+and SDL_GameControllerDB. See the exact original component texts under licenses.
+Qt attribution metadata and bundled third-party notices are retained as a superset
+of the linked Qt modules. AV1 client decoding uses hardware where available;
+a software dav1d decoder is not included.
+
+Host linked components and driver
+----------------------------------
+The host uses the pinned upstream build-deps sources for FFmpeg with GPL codecs,
+x264, x265 and SVT-AV1. This is separate from the client's LGPL-only FFmpeg build.
+The original component licenses, including codec patent notices where supplied,
+are included under licenses/host-media-*. Other linked dependencies include
+Boost (BSL-1.0), curl (curl license), miniupnpc (BSD-3-Clause), MinHook (BSD-2-Clause),
+oneVPL (MIT), OpenSSL, libdisplaydevice, libvirtualhid and upstream protocol
+libraries, nlohmann/json (MIT), AMD AMF and the pinned NV codec headers.
+Their original licenses, including header-embedded notices, are retained under
+licenses/host-source-notices. Original notices under licenses govern; the source/build manifest
+identifies the exact inputs. NVAPI and ViGEmClient notices are retained where
+upstream source/build inputs contain them; this does not imply those drivers or
+all optional hardware features are installed.
+
+The libvirtualhid Win32 fallback uses its MIT-licensed SendInput-based path.
+No proprietary SAL broker or proprietary virtual-input driver is included.
+No ViGEm bus driver is installed, and gamepad emulation is not an accepted feature.
+DeskPort clipboard transport and Sunshine input provide the required clipboard,
+keyboard and mouse paths. No Deskflow executable/service is embedded or required
+by this implementation. The mere availability of an upstream protocol feature
+does not constitute native Windows acceptance.
+
+Virtual Display Driver 24.12.24 x64 is MIT licensed. Its original signed INF,
+catalog and driver DLL are distributed unchanged. A DeskPort-specific XML mode
+list is provided separately. The installed root device and configuration pointer
+are explicitly owned and recovered by DeskPort. Signing and Secure Boot policy
+must not be weakened. The observed SignPath signatures are not represented as
+Microsoft attestation or proof of acceptance on every Windows machine.
+
+Runtime and relinking
+----------------------
+Application libraries and MinGW C++ runtimes are statically linked where supported.
+Windows system APIs, msvcrt.dll and graphics/system drivers remain dynamic.
+Separate host/helpers and the signed driver remain separate binaries by design.
+NSIS uses its own installer plugin DLLs. MinGW-w64, GCC Runtime Library Exception,
+mcfgthread and NSIS original license texts are included under licenses/toolchain.
+Application, host and helpers are unsigned; the third-party driver retains its
+original signatures. No new trust store entry or signing-policy change is made.
+
+LGPL recipients must be able to relink against modified libraries. Exact sources,
+patches, dependency inputs, build recipes, object files and static libraries are
+retained with this evaluation workspace. The accompanying full-source/relink
+material manifest documents their paths, hashes and archive composition. Earlier
+client-only binding-fix archives do not by themselves describe this full revision.
+Redistributors must provide the complete matching corresponding source and
+applicable relinking material; this evaluation package is not a publication grant
+or a completed release-compliance determination. Absolute build paths and pinned
+Nix store paths are present; relocation requires rerunning the documented recipes.
+Byte-for-byte reproducibility has not been established.
+
+Installation scope
+-------------------
+DeskPort uses its own profile, certificates, pairing state and managed host ports.
+It must not adopt or alter independent Sunshine/Moonlight settings or services.
+The installer creates application-scoped inbound rules for private/domain local
+networks and a dedicated boot recovery task, and provisions the owned virtual
+display disabled at rest. Public-network access requires a deliberate user network
+trust decision; the installer does not reclassify networks or disable protection.
+User settings and bindings are retained on upgrade and uninstall. See actual
+acceptance reports for which cleanup and lifecycle paths have been tested.
+The portable ZIP has portable.dat and must be launched with that directory as its
+working directory. It does not silently install a driver or privileged task;
+use the installer for the provisioned managed virtual-display integration.
+
+Shared DeskPort core: pinned desktop gitlink, GPL-3.0; separately authored portable product catalog MIT. Exact license and provenance notices are included in licenses/deskport-core-*.
+
+Browser media transport (0.7.0)
+-------------------------------
+The host statically links libdatachannel 0.24.1 (MPL-2.0,
+https://github.com/paullouisageneau/libdatachannel/tree/v0.24.1) with its bundled
+libjuice (MPL-2.0), usrsctp (BSD-3-Clause), libsrtp (BSD-3-Clause), plog (MIT) and
+nlohmann/json (MIT), built against the same static OpenSSL as the host. The exact
+library source, including these dependencies, is in the corresponding source
+materials under winbuild/full/libdatachannel, and their license texts are under
+licenses/host-source-notices/libdatachannel.

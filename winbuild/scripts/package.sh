@@ -46,7 +46,7 @@ if [ -f "$PREFIX/lib/libplacebo.a" ]; then
   cp "$WORK/libplacebo/LICENSE"  "$STAGE/licenses/libplacebo.txt"
   cp "$WORK/glslang/LICENSE.txt" "$STAGE/licenses/glslang.txt"
 fi
-cp "$WB/THIRD-PARTY-NOTICES.txt" "$STAGE/THIRD-PARTY-NOTICES.txt"
+cp "$WB/scripts/THIRD-PARTY-NOTICES.txt" "$STAGE/THIRD-PARTY-NOTICES.txt"
 
 {
   echo "DeskPort $VERSION Windows x64"
