@@ -44,6 +44,9 @@ int main() {
     assert(initialBitrate(7000,3840,2160,60,false)==7000);
     assert(initialBitrate(40000,1280,720,30,false)==5000);
     assert(initialBitrate(40000,2560,1440,60,true)==30000);
+    assert(initialBitrate(80000,5104,2720,60,false)==56489); // 5K workspace budget
+    assert(initialBitrate(25000,5104,2720,60,false)==25000); // user limit still wins
+    assert(initialBitrate(200000,7680,4320,60,false)==80000);
 
     // Remote classification: on-link/private paths keep LAN behavior.
     auto v4 = [](unsigned a, unsigned b, unsigned c, unsigned d) {
@@ -111,22 +114,25 @@ int main() {
     assert(deskport::remotePacketsPerMs(1, 1 << 20) == 1);
 
     // Scroll pacing: bounded steps, total and direction preserved.
+    assert(deskport::scrollStepPoints(1.0) == 40 && deskport::scrollStepPoints(2.0) == 20);
+    assert(deskport::scrollStepPoints(0.0) == 40 && deskport::scrollStepPoints(16.0) == 4);
     deskport::ScrollPacer pacer;
     pacer.add(-50, 0);
-    auto step = pacer.take();
-    assert(step.vertical == -40 && step.horizontal == 0 && pacer.pending());
-    step = pacer.take();
+    auto step = pacer.take(20);
+    assert(step.vertical == -20 && step.horizontal == 0 && pacer.pending());
+    pacer.take(20);
+    step = pacer.take(20);
     assert(step.vertical == -10 && !pacer.pending());
-    assert(pacer.take().empty());
+    assert(pacer.take(20).empty());
     pacer.add(250, -90);
     int v = 0, h = 0, steps = 0;
     while (pacer.pending()) {
-        step = pacer.take(); ++steps;
-        assert(std::abs(step.vertical) <= deskport::kMaxScrollStep && std::abs(step.horizontal) <= deskport::kMaxScrollStep);
+        step = pacer.take(40); ++steps;
+        assert(std::abs(step.vertical) <= 40 && std::abs(step.horizontal) <= 40);
         v += step.vertical; h += step.horizontal;
     }
     assert(v == 250 && h == -90 && steps == 7);
-    pacer.add(120, 0); pacer.take(); pacer.add(-80, 0); // reversal cancels pending distance
+    pacer.add(120, 0); pacer.take(40); pacer.add(-80, 0); // reversal cancels pending distance
     assert(!pacer.pending());
     pacer.add(30, 0); pacer.clear(); assert(!pacer.pending());
     // Distinct strides/padding; a one-byte change anywhere must be detected.

@@ -1,5 +1,5 @@
 diff --git a/src/platform/macos/macos_backend.cpp b/src/platform/macos/macos_backend.cpp
-index 45fdb85..771d76d 100644
+index 45fdb85..085446b 100644
 --- a/src/platform/macos/macos_backend.cpp
 +++ b/src/platform/macos/macos_backend.cpp
 @@ -13,6 +13,8 @@
@@ -50,7 +50,7 @@ index 45fdb85..771d76d 100644
          const auto source_pixels_per_line = CGEventSourceGetPixelsPerLine(state_->source);
          const auto pixels_per_line = source_pixels_per_line > 0 ? static_cast<int>(source_pixels_per_line + 0.5) : 10;
          const auto vertical = scroll_pixels(high_resolution_vertical, pixels_per_line, state_->scroll_lines_per_detent_value);
-@@ -786,7 +800,32 @@ namespace lvh::detail {
+@@ -786,7 +800,45 @@ namespace lvh::detail {
            return OperationStatus::success();
          }
  
@@ -63,9 +63,10 @@ index 45fdb85..771d76d 100644
 +        {
 +          std::lock_guard lock {scroll_mutex_};
 +          scroll_pacer_.add(vertical, horizontal);
++          scroll_step_points_ = deskport::scrollStepPoints(backing_scale());
 +          const auto now = std::chrono::steady_clock::now();
 +          if (now - last_scroll_post_ >= std::chrono::milliseconds(deskport::kScrollStepMs)) {
-+            now_step = scroll_pacer_.take();
++            now_step = scroll_pacer_.take(scroll_step_points_);
 +            last_scroll_post_ = now;
 +          }
 +          remainder = scroll_pacer_.pending();
@@ -79,12 +80,24 @@ index 45fdb85..771d76d 100644
 +        return now_step.empty() ? OperationStatus::success() : post_scroll(now_step);
 +      }
 +
++      // Captured pixels per point: the stream encodes the display's backing pixels.
++      double backing_scale() const {
++        const auto mode = CGDisplayCopyDisplayMode(state_->display);
++        if (!mode) {
++          return 1.0;
++        }
++        const auto points = static_cast<double>(CGDisplayModeGetWidth(mode));
++        const auto pixels = static_cast<double>(CGDisplayModeGetPixelWidth(mode));
++        CGDisplayModeRelease(mode);
++        return points > 0 ? pixels / points : 1.0;
++      }
++
 +      OperationStatus post_scroll(deskport::ScrollStep step) const {
 +        const auto event = CGEventCreateScrollWheelEvent(state_->source, kCGScrollEventUnitPixel, 2, step.vertical, step.horizontal);
          if (!event) {
            return OperationStatus::failure(ErrorCode::backend_failure, "create macOS scroll event");
          }
-@@ -797,12 +836,40 @@ namespace lvh::detail {
+@@ -797,12 +849,41 @@ namespace lvh::detail {
          return OperationStatus::success();
        }
  
@@ -99,7 +112,7 @@ index 45fdb85..771d76d 100644
 +          if (scroll_cv_.wait_until(lock, due, [this] { return scroll_stop_; })) {
 +            break;
 +          }
-+          const auto step = scroll_pacer_.take();
++          const auto step = scroll_pacer_.take(scroll_step_points_);
 +          last_scroll_post_ = std::chrono::steady_clock::now();
 +          if (step.empty()) {
 +            continue;
@@ -119,6 +132,7 @@ index 45fdb85..771d76d 100644
 +      std::mutex scroll_mutex_;  ///< Guards paced scroll state, separate from submit().
 +      std::condition_variable scroll_cv_;
 +      deskport::ScrollPacer scroll_pacer_;
++      int scroll_step_points_ = deskport::kMaxScrollStepPixels;
 +      std::chrono::steady_clock::time_point last_scroll_post_ {};
 +      bool scroll_stop_ = false;
 +      std::thread scroll_thread_;

@@ -61,6 +61,18 @@ immediate, total distance and direction preserved. Live fast-scroll baseline
 before this change (a notch every 30 ms): mid-scroll Laplacian variance about
 7000 against 11200 settled. Linux host encoders were not measured.
 
+That first version did not change the live result. Measured on mm4: the pk4
+session encodes the full 5104×2720 backing workspace (1 pt = 2 px) at about
+33 fps, so a 40 pt / 16 ms step still moved 100–200 px per encoded frame (page
+log: median 50 pt, p90 80 pt per 30 ms). At 5104×2720 the cliff is the same
+~90 px; below it the 19 Mbps ceiling (the saved 25 Mbps setting minus FEC) also
+limited quality: 80 px/frame scored 43 dB mean at 19 Mbps but 51 dB at a 40 Mbps
+ceiling while only using about 21 Mbps, and 52 dB at 60 Mbps. Steps are now
+bounded to 40 captured pixels per 16 ms using the display's backing scale (20 pt
+at 2x). The smart budget clamp rises from 40 to 80 Mbps so a 5K workspace can
+use its computed budget when the user's limit allows; the host adapts on slow
+links. The user's saved bitrate remains the ceiling.
+
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
 3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames
