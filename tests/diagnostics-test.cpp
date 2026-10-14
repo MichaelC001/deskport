@@ -144,6 +144,10 @@ private slots:
         QCOMPARE(rate.value("quality_floor").toString(), QString("off"));
         rate["source"] = "host"; rate["run"] = QString(32, 'b'); rate["elapsed_ms"] = 5;
         QCOMPARE(Diagnostics::validate(rate).value("baseline_ms").toInt(), 330);
+        auto start = Diagnostics::project("[2026-10-14 16:00:00.000]: Info: DeskPort remote rate control: ceiling_kbps=14268, floor_kbps=1783, resume_kbps=0, live_encoder=yes");
+        QCOMPARE(start.value("ceiling_kbps").toInt(), 14268);
+        start["source"] = "host"; start["run"] = QString(32, 'b'); start["elapsed_ms"] = 5;
+        QCOMPARE(Diagnostics::validate(start).value("live_encoder").toString(), QString("yes"));
         auto encoded = Diagnostics::project("[2026-10-14 16:00:00.000]: Info: DeskPort encoded video: Mbps=0.410372, packets=168, keyframes=0, max_packet_bytes=8944 (before transport/FEC)");
         QCOMPARE(encoded.value("event").toString(), QString("encoded"));
         QCOMPARE(encoded.value("encoded_kbps").toInt(), 410);

@@ -5,8 +5,9 @@ roughly 3 Mbps of TCP throughput, while smart streaming started at 15 Mbps for
 2560×1440. The negotiated resolution is never reduced; only bitrate, pacing and
 encoder quality floor adapt.
 
-- Client: smart sessions on VPN or public routes start at no more than 8 Mbps
-  (`DeskPortStream::remoteBitrate`). LAN and custom packet-size sessions unchanged.
+- Client: the smart budget is unchanged on every route. An initial 8 Mbps remote
+  cap was withdrawn the same day: Tailscale paths on a fast LAN count as remote,
+  and it visibly blurred scrolling text. The host adapts on slow links instead.
 - Host (both pinned revisions, `scripts/patch-host-remote-rate.py`): sessions
   whose video peer is not on-link/private (Tailscale 100.64/10 and
   fd7a:115c:a1e0::/48 count as remote) sample the existing ENet control RTT twice
@@ -27,7 +28,21 @@ encoder quality floor adapt.
 - Contiguous frame numbers: rate-controlled encoders may drop frames. A numbering
   gap made the client treat it as network loss and request an IDR; packets are now
   numbered by produced frame. Recovery matching still uses the original PTS.
-- Diagnostics: numeric network, rate and encoded-video records (see DIAGNOSTICS.md).
+- Still-picture refinement: after the last captured change, duplicates are
+  encoded at the full (congestion-limited) cadence for 500 ms instead of the
+  one-fps idle floor, on both the async (macOS) and sync (Linux) paths.
+- Diagnostics: numeric network, rate and encoded-video records, including the
+  controller start (ceiling, floor, resumed rate, live encoder support).
+
+Live LAN check (pk4 viewer → mm4 host over its Tailscale address, 2026-10-14):
+the session was classified remote with 5–9 ms RTT and no drops. A 40 s
+competing bulk transfer to pk4 raised RTT to 37 ms; the target fell from 5708 to
+3995 kbps within about three seconds and returned to the ceiling about 30 s after
+the load, with no client network drops. A static text page scrolled with real
+wheel input on pk4 showed the cause of blurry text: frames compared against the
+fully settled picture stayed at 21 dB PSNR for about two seconds after scrolling
+stopped, then improved about once per second (37, 44, 49, 60 dB) until identical
+after about six seconds — the one-fps refinement cadence.
 
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to

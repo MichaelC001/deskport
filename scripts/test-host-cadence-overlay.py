@@ -24,6 +24,8 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         assert 'pos->deskport_timestamp.reset()' in video
         assert video.count('av_packet->pts -= session.deskport_pts_shift;') == 1
         assert video.count('deskport_rate->rtt(now_us / 1000, *rtt);') == 1
+        assert video.count('deskport::refineFrameRate(absolute_ms, deskport_last_change_ms,') == 1
+        assert video.count('deskport_last_change_ms = std::chrono::duration_cast') == 1
         # Compile the actual upstream mailbox template: the older bool event
         # cannot instantiate timed pop(), while optional<int> works on both.
         mailbox = target / 'cadence-mailbox.cpp'

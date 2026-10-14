@@ -129,7 +129,18 @@ patch('src/video.cpp', '''    deskport::StreamPolicy policy(config.framerate);
     const int deskport_ceiling_kbps = config::video.max_bitrate > 0 ? std::min(config.bitrate, config::video.max_bitrate) : config.bitrate;
     int deskport_applied_kbps = deskport_ceiling_kbps;
     int deskport_last_rtt = 0;
-    bool deskport_live = false;''')
+    bool deskport_live = false;
+    std::int64_t deskport_last_change_ms = -1;''')
+
+# Refine a still picture at the full cadence for a short window after the last
+# captured change; the idle floor alone left scrolled text blurry for seconds.
+patch('src/video.cpp', '''        const int fps = deskport::activityFrameRate(boost, absolute_ms, policy.frameRate(now_us / 1000));''', '''        const int fps = std::max(deskport::activityFrameRate(boost, absolute_ms, policy.frameRate(now_us / 1000)),
+                                 deskport::refineFrameRate(absolute_ms, deskport_last_change_ms, policy.frameRate(now_us / 1000)));''')
+patch('src/video.cpp', '''          frame_timestamp = img->frame_timestamp;
+          if (session->convert(*img)) {''', '''          frame_timestamp = img->frame_timestamp;
+          deskport_last_change_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+              std::chrono::steady_clock::now().time_since_epoch()).count();
+          if (session->convert(*img)) {''')
 
 # Per-session transport state.
 patch('src/stream.cpp', '''    deskport::EncodedWindow deskport_encoded;''', '''    deskport::EncodedWindow deskport_encoded;

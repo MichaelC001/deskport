@@ -2286,15 +2286,6 @@ bool Session::startConnectionAsync()
             m_StreamConfig.streamingRemotely = STREAM_CFG_REMOTE;
             break;
         }
-
-        if (m_Preferences->smartStreaming && m_StreamConfig.streamingRemotely == STREAM_CFG_REMOTE) {
-            // Keep the negotiated resolution; only start remote video at a
-            // desktop-sized bitrate. A live-rate host adapts below this.
-            m_StreamConfig.bitrate = DeskPortStream::remoteBitrate(m_StreamConfig.bitrate);
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Remote route video bitrate: %d kbps",
-                        m_StreamConfig.bitrate);
-        }
     }
 
     // If the user has chosen YUV444 without adjusting the bitrate but the host doesn't

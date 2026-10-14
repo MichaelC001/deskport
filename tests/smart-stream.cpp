@@ -42,7 +42,6 @@ int main() {
     assert(initialBitrate(7000,3840,2160,60,false)==7000);
     assert(initialBitrate(40000,1280,720,30,false)==5000);
     assert(initialBitrate(40000,2560,1440,60,true)==30000);
-    assert(remoteBitrate(15000)==8000 && remoteBitrate(5000)==5000);
 
     // Remote classification: on-link/private paths keep LAN behavior.
     auto v4 = [](unsigned a, unsigned b, unsigned c, unsigned d) {
@@ -200,14 +199,19 @@ int main() {
     assert(cadence.admit(2020000,false,false)); // input wakes duplicates immediately
     assert(!cadence.admit(2030000,false,false));
     assert(cadence.admit(2040000,false,false));
-    assert(!cadence.admit(2350000,false,false)); // expired hold returns to idle
-    assert(cadence.admit(2350001,false,true)); // recovery does not wait for idle
+    assert(cadence.admit(2350000,false,false)); // still refining the last change
+    assert(!cadence.admit(2600000,false,false)); // refinement over: idle floor
+    assert(cadence.admit(2600001,false,true)); // recovery does not wait for idle
+    assert(deskport::refineFrameRate(1499,1000,60)==60 && deskport::refineFrameRate(1500,1000,60)==1);
+    assert(deskport::refineFrameRate(1200,1000,15)==15 && deskport::refineFrameRate(1200,-1,60)==1);
     deskport::FrameCadence pending(60);
     pending.policy.loss(8000); pending.policy.loss(9500); pending.policy.loss(11000);
     assert(pending.admit(12000000,true,false));
     assert(!pending.admit(12005000,true,false));
     assert(pending.admit(12034000,false,false)); // final update survives denied slot
-    assert(!pending.admit(12068000,false,false)); // no healthy-frame recovery from idle
+    assert(pending.admit(12068000,false,false)); // refinement at the congestion ceiling
+    assert(!pending.admit(12090000,false,false));
+    assert(!pending.admit(12600000,false,false)); // then the idle floor
     deskport::FrameCadence other(30);
     assert(other.floor(12068000)==1); // no cross-session input state
     std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control\n";

@@ -10,8 +10,4 @@ inline int initialBitrate(int limit, int width, int height, int fps, bool yuv444
     const auto budget = pixels * std::min(120, std::max(1, fps)) * 15000 / (2560LL * 1440 * 60);
     return std::min(limit, int(std::clamp<std::int64_t>(budget * (yuv444 ? 2 : 1), 5000, 40000)));
 }
-// VPN and public routes start from a desktop-sized ceiling. A host with live
-// rate control lowers it further on congestion; resolution is never reduced.
-constexpr int kRemoteBitrateKbps = 8000;
-inline int remoteBitrate(int bitrate) { return std::min(bitrate, kRemoteBitrateKbps); }
 }
