@@ -79,6 +79,14 @@ scale. Its CoreGraphics mode cache can miss the per-session virtual display, as
 `admitted-display.h` already documents; the pacer now takes the scale from the
 owner's published admitted-display mode first and falls back to CoreGraphics.
 
+After activating 260ecf22 (and a 60 Mbps saved limit, 44 Mbps ceiling after
+FEC/audio): Chrome received 20 pt wheel steps (458 of 479 events); per 30 ms the
+page moved a median 40 pt (80 captured px), at most 60 pt. Mid-scroll Laplacian
+variance rose from about 7000 to 8700–11100 against 11200 settled. Cost: pacing
+limits throughput to about 1250 pt/s on a 2x display, so a 33-notch/s spin
+(3.0 s of input) finished scrolling 4.3 s after it began; ordinary speeds below
+about 25 notches/s see no backlog.
+
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
 3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames
