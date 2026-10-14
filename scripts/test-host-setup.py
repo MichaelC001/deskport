@@ -77,7 +77,7 @@ else:
                XDG_DATA_HOME=str(work / "data"), XDG_CACHE_HOME=str(work / "cache"),
                XDG_RUNTIME_DIR=str(runtime), DBUS_SESSION_BUS_ADDRESS="unix:path=/fixture-only-do-not-connect",
                PATH=str(fakebin), SETUP_EVENTS=str(events), SECRET_TEST_VALUE="PRIVATE-ENV-SENTINEL")
-    for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP", "HYPRLAND_INSTANCE_SIGNATURE", "APPIMAGE"):
+    for key in ("DISPLAY", "WAYLAND_DISPLAY", "XDG_CURRENT_DESKTOP", "HYPRLAND_INSTANCE_SIGNATURE", "APPIMAGE", "APPDIR"):
         env.pop(key, None)
 
     count = 0
@@ -180,6 +180,15 @@ else:
     launcher.rename(binary_dir / "launcher-saved")
     invoke("service", "install", code=1)
     (binary_dir / "launcher-saved").rename(launcher)
+    extracted = work / "extracted AppImage"
+    (extracted / "usr/shared/bin").mkdir(parents=True)
+    binary = extracted / "usr/shared/bin/deskport"
+    shutil.copy2(work / "setup-driver", binary)
+    app_run = extracted / "AppRun"
+    app_run.write_text("#!/bin/sh\nexit 0\n")
+    app_run.chmod(0o755)
+    invoke("service", "install", extra={"APPDIR": str(extracted)})
+    assert f'ExecStart="{app_run.resolve()}"' in unit.read_text(), unit.read_text()
     history = [json.loads(line) for line in events.read_text().splitlines()]
     assert all(not set(command) & {"start", "stop", "enable", "disable", "restart", "--now", "show-environment"}
                for command in history), history

@@ -9,6 +9,55 @@
 #include "nvaddress.h"
 #include "localhostfilter.h"
 #include "peerstore.h"
+#ifdef Q_OS_LINUX
+#include <csignal>
+#include <sys/prctl.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+#ifdef Q_OS_LINUX
+namespace {
+qint64 fixtureChildPid(const QString& path) {
+    QFile pidFile(path);
+    return pidFile.open(QIODevice::ReadOnly) ? pidFile.readAll().trimmed().toLongLong() : 0;
+}
+bool fixtureChildExited(const QString& path) {
+    const auto pid = fixtureChildPid(path);
+    if (pid <= 1) return false;
+    QFile status(QString("/proc/%1/stat").arg(pid));
+    if (!status.open(QIODevice::ReadOnly)) return true;
+    const auto bytes = status.readAll();
+    const auto state = bytes.indexOf(") ") + 2;
+    return state > 1 && state < bytes.size() && bytes.at(state) == 'Z';
+}
+class FixtureSubreaper {
+public:
+    explicit FixtureSubreaper(const QString& directory) : directory(directory) {
+        ::prctl(PR_GET_CHILD_SUBREAPER, &previous);
+        ::prctl(PR_SET_CHILD_SUBREAPER, 1);
+    }
+    ~FixtureSubreaper() {
+        for (const auto& name : {"auth-pid", "host-pid", "display-pid"}) {
+            QFile file(directory + "/" + name);
+            if (!file.open(QIODevice::ReadOnly)) continue;
+            const auto pid = pid_t(file.readAll().trimmed().toLongLong());
+            if (pid <= 1) continue;
+            // Clean up only a fixture child adopted by this test process.
+            int status;
+            if (::waitpid(pid, &status, WNOHANG) == 0) {
+                ::kill(pid, SIGKILL);
+                ::waitpid(pid, &status, 0);
+            }
+        }
+        ::prctl(PR_SET_CHILD_SUBREAPER, previous);
+    }
+private:
+    QString directory;
+    int previous = 0;
+};
+}
+#endif
 
 static QAction* trayAction(const QString& title) {
     for (auto widget : QApplication::topLevelWidgets())
@@ -21,6 +70,54 @@ class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
     void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void parentCrashReleasesOwnedSunshineChildren_data() {
+        QTest::addColumn<QByteArray>("mode");
+        QTest::addColumn<QString>("pidFile");
+        QTest::newRow("authentication") << QByteArray("auth-slow") << QString("auth-pid");
+        QTest::newRow("server-ignores-sigterm") << QByteArray("stubborn") << QString("host-pid");
+    }
+    void parentCrashReleasesOwnedSunshineChildren() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux owned-child parent-death signal");
+#else
+        QFETCH(QByteArray, mode); QFETCH(QString, pidFile);
+        QTemporaryDir state; FixtureSubreaper children(state.path());
+        QProcess owner;
+        auto environment = QProcessEnvironment::systemEnvironment();
+        environment.insert("DESKPORT_TEST_MODE", QString::fromUtf8(mode));
+        environment.insert("DESKPORT_TEST_CRASH_OWNER", state.path());
+        owner.setProcessEnvironment(environment);
+        owner.start(QCoreApplication::applicationFilePath(), {});
+        QVERIFY(owner.waitForStarted(3000));
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(state.filePath(pidFile.section('-', 0, 0) + "-started")), 5000);
+        owner.kill(); QVERIFY(owner.waitForFinished(3000));
+        QTRY_VERIFY_WITH_TIMEOUT(fixtureChildExited(state.filePath(pidFile)), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(state.filePath("display-closed")), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(fixtureChildExited(state.filePath("display-pid")), 3000);
+#endif
+    }
+    void parentCrashDuringStartupLeavesNoFixtureChildren() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux startup race");
+#else
+        for (const int delay : {0, 1, 5, 15, 50, 100}) {
+            QTemporaryDir state; FixtureSubreaper children(state.path());
+            QProcess owner;
+            auto environment = QProcessEnvironment::systemEnvironment();
+            environment.insert("DESKPORT_TEST_CRASH_OWNER", state.path());
+            environment.insert("DESKPORT_TEST_MODE", "stubborn");
+            owner.setProcessEnvironment(environment);
+            owner.start(QCoreApplication::applicationFilePath(), {});
+            QVERIFY(owner.waitForStarted(3000));
+            QTest::qWait(delay);
+            owner.kill(); QVERIFY(owner.waitForFinished(3000));
+            QTest::qWait(100);
+            for (const auto& name : {"auth-pid", "host-pid", "display-pid"})
+                if (fixtureChildPid(state.filePath(name)) > 1)
+                    QTRY_VERIFY_WITH_TIMEOUT(fixtureChildExited(state.filePath(name)), 3000);
+        }
+#endif
+    }
     void trayActionsReturnBeforeDispatch() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path());
         QSignalSpy opened(&host,&HostManager::showDevicesRequested);
@@ -466,6 +563,32 @@ private slots:
         QVERIFY2(longestGap < 1000, qPrintable(QString::number(longestGap)));
         QCOMPARE(host.status(), QString("Sharing is off"));
     }
+    void slowDisplayRecoveryGetsItsOwnShutdownGrace() {
+        qputenv("DESKPORT_TEST_MODE", "stubborn-slow-display");
+        QTemporaryDir state; HostManager host(nullptr, state.path());
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.canPair() && QFile::exists(state.filePath("host-started")), 5000);
+        QElapsedTimer elapsed; elapsed.start();
+        host.stop();
+        QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 8000);
+        // The host needs its 2.5 s forced-stop grace, then the display fixture
+        // needs another 1.5 s to restore. A global 3.5 s deadline kills it early.
+        QVERIFY(elapsed.elapsed() >= 3500);
+        QVERIFY(QFile::exists(state.filePath("display-closed")));
+        QCOMPARE(host.status(), QString("Sharing is off"));
+    }
 };
-QTEST_MAIN(HostLifecycle)
+int main(int argc, char** argv) {
+    QApplication app(argc, argv);
+#ifdef Q_OS_LINUX
+    const auto crashOwner = qEnvironmentVariable("DESKPORT_TEST_CRASH_OWNER");
+    if (!crashOwner.isEmpty()) {
+        HostManager host(nullptr, crashOwner, false);
+        host.start(2560, 1440);
+        return app.exec();
+    }
+#endif
+    HostLifecycle test;
+    return QTest::qExec(&test, argc, argv);
+}
 #include "host-lifecycle.moc"

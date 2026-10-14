@@ -100,5 +100,9 @@ deskport_graphics_env() {
     fi
     export SHARUN_LDNAME="$dp_loader"
     export SHARUN_EXTRA_LIBRARY_PATH="$dp_cache"
+    # sharun consumes SHARUN_EXTRA_LIBRARY_PATH before entering the viewer.
+    # Keep the selected cohort for later display-helper/recovery launches; each
+    # private tree's .env restores the consumed value for every sharun process.
+    export DESKPORT_APPIMAGE_GRAPHICS_RUNTIME="$dp_cache"
     printf 'DeskPort AppImage graphics runtime: host glibc/driver cohort (%s)\n' "$dp_glibc" >&2
 }

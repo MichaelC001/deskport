@@ -23,6 +23,31 @@ private slots:
         QVERIFY(QFile::remove(image));
         QCOMPARE(DeskPortService::persistentExecutable(native, image), native);
     }
+    void extractedAppImageLoginUsesAppRun() {
+        QTemporaryDir dir;
+        const auto root = dir.filePath("extracted image with spaces");
+        QVERIFY(QDir().mkpath(root + "/usr/shared/bin"));
+        const auto native = root + "/usr/shared/bin/deskport";
+        const auto launcher = root + "/AppRun";
+        const auto write = [&](const QString& path) {
+            QFile file(path);
+            return file.open(QIODevice::WriteOnly) && file.write("#!/bin/sh\nexit 0\n") > 0 &&
+                file.setPermissions(QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner);
+        };
+        QVERIFY(write(native)); QVERIFY(write(launcher));
+        QCOMPARE(DeskPortService::persistentExecutable(native, {}, root), QFileInfo(launcher).canonicalFilePath());
+        QCOMPARE(DeskPortService::persistentExecutable(native, {}, "relative/AppDir"), native);
+        const auto other = dir.filePath("deskport"); QVERIFY(write(other));
+        QCOMPARE(DeskPortService::persistentExecutable(other, {}, root), other);
+        const auto image = dir.filePath("original.AppImage"); QVERIFY(write(image));
+        QCOMPARE(DeskPortService::persistentExecutable(native, image, root), image);
+        const auto unit = dir.filePath("extracted.service");
+        QFile file(unit); QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write(DeskPortService::systemdUnit(launcher).toUtf8()); file.close();
+        QVERIFY(DeskPortService::guiManagedUnit(unit));
+        QVERIFY(QFile::remove(launcher));
+        QCOMPARE(DeskPortService::persistentExecutable(native, {}, root), native);
+    }
     void startupSupervisesTheRealProcess() {
         const auto plist = DeskPortService::launchAgent();
         QXmlStreamReader reader(plist); while (!reader.atEnd()) reader.readNext();

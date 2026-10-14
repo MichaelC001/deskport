@@ -55,14 +55,16 @@ class GraphicsRuntime(unittest.TestCase):
         env.update(overrides)
         env.pop('SHARUN_LDNAME', None)
         env.pop('SHARUN_EXTRA_LIBRARY_PATH', None)
-        command = '. "$1"; deskport_graphics_env "$2" deskport; printf "%s\\n%s\\n" "${SHARUN_LDNAME:-}" "${SHARUN_EXTRA_LIBRARY_PATH:-}"'
+        env.pop('DESKPORT_APPIMAGE_GRAPHICS_RUNTIME', None)
+        command = '. "$1"; deskport_graphics_env "$2" deskport; printf "%s\\n%s\\n%s\\n" "${SHARUN_LDNAME:-}" "${SHARUN_EXTRA_LIBRARY_PATH:-}" "${DESKPORT_APPIMAGE_GRAPHICS_RUNTIME:-}"'
         return subprocess.run(['sh', '-eu', '-c', command, 'test', str(self.script), str(self.prefix)],
                               env=env, capture_output=True, text=True, timeout=10, check=True)
 
     def test_modern_host_selects_matching_loader_and_only_graphics_closure(self):
         result = self.run_selection()
-        loader, directory = result.stdout.splitlines()
+        loader, directory, persistent = result.stdout.splitlines()
         self.assertEqual(loader, str(self.loader))
+        self.assertEqual(persistent, directory)
         cache = Path(directory)
         for name in ('libc.so.6', 'libm.so.6', 'libstdc++.so.6', 'libdrm.so.2'):
             self.assertEqual((cache / name).resolve(), self.system / name)
@@ -75,7 +77,7 @@ class GraphicsRuntime(unittest.TestCase):
 
     def test_old_host_keeps_private_runtime(self):
         result = self.run_selection(MOCK_GLIBC='2.35')
-        self.assertEqual(result.stdout, '\n\n')
+        self.assertEqual(result.stdout, '\n\n\n')
         self.assertFalse((self.root / 'cache with spaces').exists())
 
     def test_cache_reuse_does_not_require_diffutils(self):
@@ -99,23 +101,24 @@ class GraphicsRuntime(unittest.TestCase):
             + 'case "$1" in *dri32*) printf "libc.so.6 => /lib/libc.so.6 (0x1)\\n/lib/ld-linux.so.2 (0x2)\\n"; exit 0 ;; esac\n')
         self.executable('ldd', mock)
         result = self.run_selection(LIBVA_DRIVERS_PATH=str(self.dri) + ':' + str(dri32))
-        loader, directory = result.stdout.splitlines()
+        loader, directory, persistent = result.stdout.splitlines()
         self.assertEqual(loader, str(self.loader))
+        self.assertEqual(persistent, directory)
         self.assertNotIn('/lib/libc.so.6', (Path(directory) / 'inputs').read_text())
 
     def test_explicit_private_runtime_does_not_probe_the_host(self):
         result = self.run_selection(DESKPORT_APPIMAGE_RUNTIME='private')
-        self.assertEqual(result.stdout, '\n\n')
+        self.assertEqual(result.stdout, '\n\n\n')
         self.assertFalse((self.root / 'cache with spaces').exists())
 
     def test_incomplete_driver_closure_is_not_selected(self):
         result = self.run_selection(MOCK_MISSING='1')
-        self.assertEqual(result.stdout, '\n\n')
+        self.assertEqual(result.stdout, '\n\n\n')
         self.assertFalse(list((self.root / 'cache with spaces/DeskPort/graphics-runtime').glob('.resolve.*')))
 
     def test_loader_preflight_failure_keeps_private_runtime(self):
         result = self.run_selection(MOCK_LOADER_FAILURE='1')
-        self.assertEqual(result.stdout, '\n\n')
+        self.assertEqual(result.stdout, '\n\n\n')
         self.assertIn('incompatible host cohort', result.stderr)
 
 

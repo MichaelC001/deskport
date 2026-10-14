@@ -1,3 +1,33 @@
+## Bazzite AppImage runtime and disconnect recovery — 2026-10-14
+
+The reporter confirmed issue #5's KWin output-registry and VA-API fixes on
+Bazzite 44 / KWin 6.7.5, then reported a helper glibc mismatch and a Qt Wayland
+disconnect crash. Reproduce these follow-ups using the official Bazzite 44 image
+and the reported glibc 2.43-9 package cohort, with an isolated compositor and
+application profile.
+
+AppImage child launchers now retain the selected host loader's matching library
+cohort, including the independent display-recovery process. Viewer and Sunshine
+launchers still select their own graphics runtimes. Automatic KWin grants use
+the actual running helper identity; extracted AppImage login startup returns to
+AppRun instead of bypassing its environment setup.
+
+Disconnect and exact-size output replacement restore local outputs before
+releasing the virtual primary. Normal helper EOF first requests restoration
+through its independent recovery connection, with bounded retries. Display
+shutdown gets its full recovery grace after stdin closes, including when
+Sunshine is slow to terminate. Owned Sunshine children are terminated on Linux
+parent death; existing display recovery and journal retention remain in place.
+These are native lifecycle and packaging fixes, with no shared wire or media
+policy change.
+
+Validation is in progress: require the final extracted AppImage's bundled Qt
+Wayland GUI and persistent offscreen-surface fixture to survive repeated resize,
+disconnect and reconnect while observing every output event, plus coherent
+viewer/helper/recovery libc mappings, automatic permission identity, native Nix
+build and isolated supervision/startup regressions. Network streaming and input
+acceptance on the reporter's physical machine remain separate.
+
 ## Native application icon appearances — 2026-10-12
 
 Preserve DeskPort's mint/amber kite and tilted terminal display while improving

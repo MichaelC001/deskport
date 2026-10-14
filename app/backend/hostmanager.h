@@ -200,6 +200,7 @@ private:
     bool m_TrustBusy = false;
     bool m_Starting = false;
     bool m_Stopping = false;
+    bool m_DisplayClosing = false;
     bool m_Isolated = false;
     bool m_ServerRequested = false;
     bool m_RestartRequested = false;

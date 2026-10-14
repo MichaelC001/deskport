@@ -20,6 +20,16 @@ SPA_PLUGINS = ('support/libspa-support.so',
                'videoconvert/libspa-videoconvert.so')
 
 
+def write_sharun_environment(prefix):
+    """Restore the selected host cohort when sharun launches a child process."""
+    # sharun removes the one-shot EXTRA_LIBRARY_PATH but retains LDNAME. Without
+    # this, a display helper inherits the host loader and loads the private libc.
+    # dotenv expands the persistent environment value without exporting bundled
+    # libraries through LD_LIBRARY_PATH into system tools.
+    (prefix / '.env').write_text(
+        'SHARUN_EXTRA_LIBRARY_PATH="${DESKPORT_APPIMAGE_GRAPHICS_RUNTIME}"\n')
+
+
 def copy_pipewire_runtime(prefix, system, share):
     """Copy dynamically loaded client inputs; ldd cannot discover these."""
     inputs = [(system / 'spa-0.2' / name,
@@ -183,6 +193,7 @@ def bundle(root, sharun, executables, excluded=None, libva=None):
     # The runtime supplies glibc; existing deployed libraries retain their ABI.
     (runtime / 'lib.path').write_text('+\n+/../../lib\n')
     (runtime / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    write_sharun_environment(prefix)
     # qt.conf remains adjacent to the public binary, as with linuxdeploy.
     for relative in executables:
         public = prefix / relative
@@ -221,7 +232,7 @@ def main():
     (root / 'AppRun').write_text('''#!/bin/sh
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
+unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH DESKPORT_APPIMAGE_GRAPHICS_RUNTIME LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
 export APPDIR="$root"
 export QML2_IMPORT_PATH="$root/usr/qml"
 export SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"
@@ -239,7 +250,7 @@ exec "$root/usr/bin/deskport" "$@"
     (root / 'AppRun').chmod(0o755)
     launcher = root / 'usr/libexec/deskport-host'
     content = launcher.read_text().replace('unset APPIMAGE APPDIR LD_LIBRARY_PATH',
-                                          'unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH APPIMAGE APPDIR LD_LIBRARY_PATH')
+                                          'unset SHARUN_DIR SHARUN_LDNAME SHARUN_EXTRA_LIBRARY_PATH DESKPORT_APPIMAGE_GRAPHICS_RUNTIME APPIMAGE APPDIR LD_LIBRARY_PATH')
     content = content.replace('export LD_LIBRARY_PATH="$root/usr/lib"\n', '')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport __EGL_VENDOR_LIBRARY_DIRS="${__EGL_VENDOR_LIBRARY_DIRS:+$__EGL_VENDOR_LIBRARY_DIRS:}/run/opengl-driver/share/glvnd/egl_vendor.d:/usr/share/glvnd/egl_vendor.d:$root/usr/share/glvnd/egl_vendor.d"')
     content = content.replace('export APPDIR="$root"', 'export APPDIR="$root"\nexport SPA_PLUGIN_DIR="$root/usr/shared/lib/spa-0.2"\nexport PIPEWIRE_MODULE_DIR="$root/usr/shared/lib/pipewire-0.3"\nexport PIPEWIRE_CONFIG_DIR="$root/usr/share/pipewire"')
