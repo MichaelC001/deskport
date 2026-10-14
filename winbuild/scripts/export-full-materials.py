@@ -70,9 +70,9 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         p = full/name
         if p.exists(): tar.add(p,arcname='deskport/winbuild/full/'+name,filter=filter_source)
     # Every pinned input must be present and verified; a partial archive cannot rebuild.
-    manifest = json.loads((root/'winbuild'/'inputs.json').read_text())
+    pinned = json.loads((root/'winbuild'/'inputs.json').read_text())
     cache = Path(os.environ.get('DESKPORT_WINDOWS_INPUT_CACHE', wb/'input-cache'))
-    for entry in manifest['inputs']:
+    for entry in pinned['inputs']:
         p = cache/entry['file']
         if not p.is_file() or hashlib.file_digest(p.open('rb'),'sha256').hexdigest() != entry['sha256']:
             raise SystemExit(f"Missing or unverified build input {entry['file']} in {cache}; run fetch-inputs.py")
