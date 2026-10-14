@@ -73,6 +73,12 @@ at 2x). The smart budget clamp rises from 40 to 80 Mbps so a 5K workspace can
 use its computed budget when the user's limit allows; the host adapts on slow
 links. The user's saved bitrate remains the ceiling.
 
+Live check of that build: Chrome received paced wheel events (40 + 10 pt about
+every 16–20 ms), but the step stayed 40 pt — the host process resolved a 1×
+scale. Its CoreGraphics mode cache can miss the per-session virtual display, as
+`admitted-display.h` already documents; the pacer now takes the scale from the
+owner's published admitted-display mode first and falls back to CoreGraphics.
+
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
 3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames

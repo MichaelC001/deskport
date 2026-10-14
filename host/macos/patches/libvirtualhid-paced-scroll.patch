@@ -1,5 +1,5 @@
 diff --git a/src/platform/macos/macos_backend.cpp b/src/platform/macos/macos_backend.cpp
-index 45fdb85..085446b 100644
+index 45fdb85..75f4ce4 100644
 --- a/src/platform/macos/macos_backend.cpp
 +++ b/src/platform/macos/macos_backend.cpp
 @@ -13,6 +13,8 @@
@@ -11,15 +11,16 @@ index 45fdb85..085446b 100644
  
  // platform includes
  #include <ApplicationServices/ApplicationServices.h>
-@@ -25,6 +27,7 @@
+@@ -25,6 +27,8 @@
  
  // local includes
  #include "core/backend.hpp"
 +#include "deskport-scroll-pacer.h"
++#include "deskport-admitted-display.h"
  
  namespace lvh::detail {
    namespace macos {
-@@ -680,8 +683,19 @@ namespace lvh::detail {
+@@ -680,8 +684,19 @@ namespace lvh::detail {
        }
  
        OperationStatus close() override {
@@ -41,7 +42,7 @@ index 45fdb85..085446b 100644
          return OperationStatus::success();
        }
  
-@@ -777,7 +791,7 @@ namespace lvh::detail {
+@@ -777,7 +792,7 @@ namespace lvh::detail {
          return post_mouse(button->button, event.pressed ? button->down_event : button->up_event, mouse_position, mouse_position, click_count);
        }
  
@@ -50,7 +51,7 @@ index 45fdb85..085446b 100644
          const auto source_pixels_per_line = CGEventSourceGetPixelsPerLine(state_->source);
          const auto pixels_per_line = source_pixels_per_line > 0 ? static_cast<int>(source_pixels_per_line + 0.5) : 10;
          const auto vertical = scroll_pixels(high_resolution_vertical, pixels_per_line, state_->scroll_lines_per_detent_value);
-@@ -786,7 +800,45 @@ namespace lvh::detail {
+@@ -786,7 +801,51 @@ namespace lvh::detail {
            return OperationStatus::success();
          }
  
@@ -81,7 +82,13 @@ index 45fdb85..085446b 100644
 +      }
 +
 +      // Captured pixels per point: the stream encodes the display's backing pixels.
++      // Prefer the owner's published mode: this process's CoreGraphics mode
++      // cache can miss a virtual display created after host startup.
 +      double backing_scale() const {
++        int width = 0, height = 0, scale = 0;
++        if (dp_admitted_display_mode(state_->display, &width, &height, &scale)) {
++          return scale;
++        }
 +        const auto mode = CGDisplayCopyDisplayMode(state_->display);
 +        if (!mode) {
 +          return 1.0;
@@ -97,7 +104,7 @@ index 45fdb85..085446b 100644
          if (!event) {
            return OperationStatus::failure(ErrorCode::backend_failure, "create macOS scroll event");
          }
-@@ -797,12 +849,41 @@ namespace lvh::detail {
+@@ -797,12 +856,41 @@ namespace lvh::detail {
          return OperationStatus::success();
        }
  
