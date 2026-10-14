@@ -111,6 +111,11 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
+**0.7.2 release candidate:** [0.7.2-rc.1 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
+reconnects about a second faster after a window resize, shows a blurred picture of
+the previous stream while it reconnects, and smooths drags on macOS hosts. See the
+[release notes](docs/RELEASE_0.7.2-rc.1.md); 0.7.1 remains the stable release.
+
 **Browser access:** Desktop hosts serve an HTTPS remote desktop with a
 30-second sign-in code, optional browser pairing for seven days, adaptive sizing
 and fullscreen. See the [0.7.1 release notes](docs/RELEASE_0.7.1.md) and
