@@ -1513,6 +1513,17 @@ keep the flat background. A 15-resize run showed no latency change (1671 ms
 median). Screenshots confirmed the picture in both phases; the gap between the
 loading surface and the first decoded frame was not captured.
 
+Windows (2026-10-14): the first build captured the picture but never showed it.
+The stream's Direct3D 11 flip-model swap chain kept its last frame over the
+software renderer's GDI output, so the old picture stayed frozen until the new
+stream started. The transition window now uses SDL's Direct3D 11 renderer on
+Windows, with software rendering as the fallback. On the wmn test machine, a
+normal tray session to mm1 went sharp → blurred → sharp in all 14 resizes
+(six direct sizes, four 20-step drag emulations, two maximize/restore pairs),
+sampled about every 20 ms, with no black or flat frame and with every stream
+recreated. Native modal border dragging was not injected. Capture outcomes are
+now recorded as `snapshot-*` resize stages in client diagnostics.
+
 Remaining candidates: overlapping the mode change with stream teardown (needs
 host capture-restart evidence), reusing the probed decoder, and in-band IDR
 reconfiguration.
