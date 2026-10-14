@@ -340,15 +340,26 @@ void Pacer::signalVsync()
     m_VsyncSignalled.wakeOne();
 }
 
-static QImage snapshotImage(const AVFrame* frame)
+// A reported outcome is recorded as a resize stage, so a missing transition
+// picture can be diagnosed from client diagnostics without raw logging.
+static QImage snapshotImage(const AVFrame* frame, bool report)
 {
     // PQ/HLG content would look washed out after an SDR conversion.
-    if (frame->color_trc == AVCOL_TRC_SMPTE2084 || frame->color_trc == AVCOL_TRC_ARIB_STD_B67) return {};
+    if (frame->color_trc == AVCOL_TRC_SMPTE2084 || frame->color_trc == AVCOL_TRC_ARIB_STD_B67) {
+        if (report) deskportResizeStage("snapshot-skipped-hdr", frame->format, frame->color_trc);
+        return {};
+    }
     AVFrame* transferred = nullptr;
     const AVFrame* source = frame;
     if (frame->hw_frames_ctx) {
         transferred = av_frame_alloc();
-        if (!transferred || av_hwframe_transfer_data(transferred, frame, 0) < 0) { av_frame_free(&transferred); return {}; }
+        const int err = transferred ? av_hwframe_transfer_data(transferred, frame, 0) : AVERROR(ENOMEM);
+        if (err < 0) {
+            // Diagnostics accept five-digit fields; errno-style codes fit.
+            if (report) deskportResizeStage("snapshot-transfer-failed", qBound(0, -err, 99999), frame->format);
+            av_frame_free(&transferred);
+            return {};
+        }
         source = transferred;
     }
     QImage image;
@@ -367,19 +378,24 @@ static QImage snapshotImage(const AVFrame* frame)
             sws_freeContext(context);
         }
     }
+    if (report && image.isNull()) deskportResizeStage("snapshot-scale-failed", source->format, frame->format);
+    else if (report) deskportResizeStage("snapshot-ready", image.width(), image.height());
     av_frame_free(&transferred);
     return image;
 }
 
-void Pacer::captureSnapshot(AVFrame* frame)
+void Pacer::captureSnapshot(AVFrame* frame, bool report)
 {
     if (m_SnapshotWorker.joinable()) m_SnapshotWorker.join();
     AVFrame* copy = av_frame_clone(frame);
     if (!copy) return;
     StreamSnapshot::captured(SDL_GetTicks());
     m_SnapshotBusy = true;
-    m_SnapshotWorker = std::thread([this, copy]() mutable {
-        StreamSnapshot::store(snapshotImage(copy));
+    // Periodic captures stay silent after the first one of a stream.
+    report = report || !m_SnapshotReported;
+    m_SnapshotReported = true;
+    m_SnapshotWorker = std::thread([this, copy, report]() mutable {
+        StreamSnapshot::store(snapshotImage(copy, report));
         av_frame_free(&copy);
         m_SnapshotBusy = false;
     });
@@ -391,7 +407,8 @@ void Pacer::renderFrame(AVFrame* frame)
     Uint32 beforeRender = SDL_GetTicks();
     m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
 
-    if (!m_SnapshotBusy && StreamSnapshot::due(beforeRender)) captureSnapshot(frame);
+    bool snapshotRequested = false;
+    if (!m_SnapshotBusy && StreamSnapshot::due(beforeRender, &snapshotRequested)) captureSnapshot(frame, snapshotRequested);
 
     // Render it
     const int submittedWidth = frame->width, submittedHeight = frame->height;

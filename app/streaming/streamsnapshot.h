@@ -15,8 +15,11 @@ public:
     // Asks the renderer for a newer picture, e.g. when a resize begins.
     static void request() { requested().store(true); }
     // Whether a frame rendered at now should be captured.
-    static bool due(quint32 now) {
-        return requested().exchange(false) || !lastCapture().load() || quint32(now - lastCapture().load()) >= IntervalMs;
+    // requestedNow tells whether this capture answers request().
+    static bool due(quint32 now, bool* requestedNow = nullptr) {
+        const bool wanted = requested().exchange(false);
+        if (requestedNow) *requestedNow = wanted;
+        return wanted || !lastCapture().load() || quint32(now - lastCapture().load()) >= IntervalMs;
     }
     static void captured(quint32 now) { lastCapture().store(now ? now : 1); }
     static void store(QImage image) {
