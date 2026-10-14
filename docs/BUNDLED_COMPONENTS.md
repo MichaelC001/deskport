@@ -172,6 +172,24 @@ Cache entries are under `$XDG_CACHE_HOME/DeskPort/graphics-runtime` (or
 `DESKPORT_APPIMAGE_RUNTIME=private` explicitly selects the self-contained
 fallback for diagnostics; it does not claim hardware-driver compatibility.
 
+### AppImage Qt Wayland screen lifetime backport
+
+The viewer's Qt Wayland Client stays at version 6.4.2 and includes the upstream
+[placeholder screen lifetime fix](https://github.com/qt/qtwayland/commit/e038d0b750cf238fef6eeb07a90b7fc1b52e4640).
+It clears the placeholder pointer before screen-removal callbacks can enter a
+nested event loop. Only `libQt6WaylandClient.so.6` is rebuilt; the existing Qt
+base, platform plugins, Sunshine host and media libraries retain their versions.
+
+`scripts/build-appimage-qt-wayland.sh` verifies the original Qt 6.4.2 source
+archive, applies the retained patch and builds against the matching Ubuntu SDK.
+The complete archive, upstream license notices, patch and rebuild/relink recipe
+are included in `usr/share/doc/deskport/qtwayland-backport` inside the AppImage
+and copied to the packaging output. The library remains dynamically linked and
+replaceable in the viewer's `usr/lib` directory. Runtime manifests and
+`AppImage-runtime-sources.json` mark this library as modified and record hashes
+for the installed library and all corresponding materials. They distinguish it
+from unmodified Ubuntu runtime binaries with the same upstream version.
+
 See `scripts/test-appimage-graphics.py` for offline selection/fallback checks and
 `tests/va-runtime-probe.c` / `tests/vaapi-codec-probe.c` for explicit synthetic
 GPU validation. This selection is not a claim of universal GPU/vendor support.

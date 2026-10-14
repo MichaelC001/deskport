@@ -33,6 +33,9 @@
 #include "kde-output-management-v2.h"
 
 static constexpr int LayoutPreparationGraceMs = 5000;
+// The independent guard can use sync (4 s), removal (2 s), then restore
+// (sync/apply/final sync, 12 s). Keep that whole post-removal path alive.
+static constexpr int LayoutFinalRecoveryGraceMs = 20000;
 
 static void reply(const QJsonObject& object) {
     const auto bytes = QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n';
@@ -104,7 +107,11 @@ public:
         if (display) { wl_display_flush(display); wl_display_disconnect(display); display = nullptr; }
         if (recovery) {
             recovery->closeWriteChannel();
-            if (!recovery->waitForFinished(3000)) fprintf(stderr, "KWin layout recovery did not finish promptly\n");
+            if (recovery->state() != QProcess::NotRunning && !recovery->waitForFinished(LayoutFinalRecoveryGraceMs)) {
+                recordLayoutEvent("KWin layout recovery timed out after owned output removal; observed layout is the last snapshot");
+                recovery->kill();
+                recovery->waitForFinished(1000);
+            }
         }
     }
     static bool valid(int width, int height, int scale) {

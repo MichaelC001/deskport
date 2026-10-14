@@ -59,7 +59,13 @@
 #include "macunattended.h"
 #endif
 namespace {
+#ifdef Q_OS_LINUX
+// KWin EOF recovery: pre-removal preparation (5 s), final recovery (20 s),
+// and owned recovery-process reap (1 s). The timer starts at display EOF.
+constexpr int DisplayShutdownGraceMs = 26000;
+#else
 constexpr int DisplayShutdownGraceMs = 9000;
+#endif
 // Explicit troubleshooting opt-in only. Diagnostics keep fixed event classes and
 // drop raw text; DESKPORT_HOST_LOG names a private file that receives the
 // helpers' raw output (addresses and paths included), capped at 32 MiB.

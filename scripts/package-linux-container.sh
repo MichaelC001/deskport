@@ -9,8 +9,8 @@ version=$(cat "$repo/app/version.txt")
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 apt-get install -y --no-install-recommends \
-    build-essential git ca-certificates curl file patchelf squashfs-tools zstd python3 \
-    qt6-base-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools qt6-wayland qt6-wayland-dev \
+    build-essential git ca-certificates curl file patch patchelf squashfs-tools zstd python3 \
+    qt6-base-dev qt6-base-private-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools qt6-wayland qt6-wayland-dev \
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript \
     libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \
@@ -107,8 +107,11 @@ appimage_dir="$work/DeskPort-AppImage.AppDir"
 rm -rf "$appimage_dir"
 cp -a "$appdir" "$appimage_dir"
 bash "$repo/scripts/build-appimage-libva.sh"
+bash "$repo/scripts/build-appimage-qt-wayland.sh"
 python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun" \
-    --libva-prefix "$work/cache/libva-2.23.0-runtime"
+    --libva-prefix "$work/cache/libva-2.23.0-runtime" \
+    --qt-wayland-prefix "$work/cache/qtwayland-6.4.2-runtime"
+cp -a "$appimage_dir/usr/share/doc/deskport/qtwayland-backport" "$work/output/"
 mkdir -p "$work/build/appimage-runtime-test"
 TMPDIR="$work/build/appimage-runtime-test" PYTHONPYCACHEPREFIX="$work/cache/pycache" \
     DESKPORT_TEST_SHARUN="$work/cache/sharun" python3 "$repo/scripts/test-appimage-runtime.py"

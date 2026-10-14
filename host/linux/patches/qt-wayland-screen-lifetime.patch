@@ -1,0 +1,45 @@
+From e038d0b750cf238fef6eeb07a90b7fc1b52e4640 Mon Sep 17 00:00:00 2001
+From: Eskil Abrahamsen Blomfeldt <eskil.abrahamsen-blomfeldt@qt.io>
+Date: Thu, 19 Dec 2024 10:26:34 +0100
+Subject: [PATCH] Avoid calling handleScreenRemoved() recursively
+
+Backport of the upstream Qt Wayland fix to Qt 6.4.2. The original source
+copyright and LGPL/GPL license notices are preserved. Upstream commit:
+https://github.com/qt/qtwayland/commit/e038d0b750cf238fef6eeb07a90b7fc1b52e4640
+
+In some cases where a nested event loop is run as a result
+of a screen being removed (for instance if it's called from
+primaryScreenChanged() or similar signals) and multiple
+screens were added to the system, then we could end
+up calling handleScreenRemoved() for the placeholder screen
+recursively. This would cause a crash if anyone actually
+used the QScreen pointer passed through the screenRemoved()
+signal.
+
+This makes sure we set the placeholder screen to null before
+calling handleScreenRemoved() so that we don't call it again
+if we happen to end up in the same function in a nested
+event loop.
+
+Pick-to: 6.5 6.8 6.9
+Change-Id: I237946851ed4dce03fd53093baba102c9686be46
+Reviewed-by: David Edmundson <davidedmundson@kde.org>
+---
+ src/client/qwaylanddisplay.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/client/qwaylanddisplay.cpp b/src/client/qwaylanddisplay.cpp
+--- a/src/client/qwaylanddisplay.cpp
++++ b/src/client/qwaylanddisplay.cpp
+@@ -469,9 +469,10 @@ void QWaylandDisplay::handleScreenInitialized(QWaylandScreen *screen)
+     mScreens.append(screen);
+     QWindowSystemInterface::handleScreenAdded(screen);
+     if (mPlaceholderScreen) {
+-        QWindowSystemInterface::handleScreenRemoved(mPlaceholderScreen);
+         // handleScreenRemoved deletes the platform screen
++        QPlatformScreen *s = mPlaceholderScreen;
+         mPlaceholderScreen = nullptr;
++        QWindowSystemInterface::handleScreenRemoved(s);
+     }
+ }
+ 

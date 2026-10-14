@@ -5,6 +5,7 @@ Run inside the Linux packaging container after linuxdeploy. Native packages keep
 using the original AppDir. sharun is pinned and verified by linux-tools.json.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,56 @@ PIPEWIRE_MODULES = ('rt', 'protocol-native', 'client-node', 'client-device',
 SPA_PLUGINS = ('support/libspa-support.so',
                'audioconvert/libspa-audioconvert.so',
                'videoconvert/libspa-videoconvert.so')
+
+
+def file_checksum(path):
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return 'SHA256:' + digest.hexdigest()
+
+
+def copy_qt_wayland_runtime(prefix, stage):
+    """Install the viewer-only backport with verified corresponding materials."""
+    name = 'libQt6WaylandClient.so.6'
+    library = stage / 'usr/lib' / name
+    metadata = json.loads((stage / 'source.json').read_text())
+    if metadata.get('modified') is not True:
+        raise RuntimeError('Qt Wayland backport must be recorded as modified source')
+    if not library.is_file() or not (stage / 'COPYING').is_file():
+        raise RuntimeError('Missing Qt Wayland backport library or license')
+    materials = metadata.get('materials', [])
+    if not materials:
+        raise RuntimeError('Missing Qt Wayland source, patch and relinking materials')
+    verified = []
+    for item in materials:
+        relative = Path(item['path'])
+        source = stage / relative
+        if relative.is_absolute() or '..' in relative.parts or not source.is_file():
+            raise RuntimeError(f'Invalid Qt Wayland material path: {relative}')
+        if item['bytes'] != source.stat().st_size or item['checksum'] != file_checksum(source):
+            raise RuntimeError(f'Qt Wayland material checksum mismatch: {relative}')
+        verified.append((item, source, relative))
+    # Validate the entire input before replacing the linuxdeploy binary. A
+    # missing source/patch must never leave a partially updated candidate.
+    documents = prefix / 'share/doc/deskport/qtwayland-backport'
+    bundled = []
+    for item, source, relative in verified:
+        target = documents / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target, follow_symlinks=True)
+        bundled.append(dict(item, path=str(target.relative_to(prefix.parent))))
+    (prefix / 'lib').mkdir(parents=True, exist_ok=True)
+    for old in (prefix / 'lib').glob('libQt6WaylandClient.so*'):
+        old.unlink()
+    target = prefix / 'lib' / name
+    shutil.copy2(library, target, follow_symlinks=True)
+    metadata = dict(metadata, materials=bundled, runtime_files=[dict(
+        path=str(target.relative_to(prefix.parent)), bytes=target.stat().st_size,
+        checksum=file_checksum(target))])
+    (documents / 'source.json').write_text(json.dumps(metadata, indent=2) + '\n')
+    return metadata, library
 
 
 def write_sharun_environment(prefix):
@@ -57,7 +108,7 @@ def elf(path):
         return False
 
 
-def bundle(root, sharun, executables, excluded=None, libva=None):
+def bundle(root, sharun, executables, excluded=None, libva=None, qt_wayland=None):
     prefix = root / 'usr'
     va_metadata = None
     if libva is not None:
@@ -72,6 +123,9 @@ def bundle(root, sharun, executables, excluded=None, libva=None):
             old.unlink()
         for name in required:
             shutil.copy2(libva / 'usr/lib' / name, prefix / 'lib' / name)
+    qt_metadata = None
+    if qt_wayland is not None:
+        qt_metadata, qt_library = copy_qt_wayland_runtime(prefix, qt_wayland)
     runtime = prefix / 'shared/lib'
     runtime.mkdir(parents=True)
     binaries = prefix / 'shared/bin'
@@ -98,6 +152,10 @@ def bundle(root, sharun, executables, excluded=None, libva=None):
         shutil.copy2(libva / 'COPYING', notices / 'libva-upstream.copyright')
         for name in required:
             manifest[name] = {'path': str(libva / 'usr/lib' / name), **va_metadata}
+    if qt_metadata is not None:
+        packages['qtwayland-backport'] = qt_metadata
+        shutil.copy2(qt_wayland / 'COPYING', notices / 'qtwayland-backport.copyright')
+        manifest['libQt6WaylandClient.so.6'] = {'path': str(qt_library), **qt_metadata}
 
     def provenance(source):
         candidates = dict.fromkeys(str(path) for path in (source, source.resolve()))
@@ -217,11 +275,14 @@ def main():
     parser.add_argument('sharun', type=Path)
     parser.add_argument('--libva-prefix', type=Path, required=True,
                         help='Pinned libva build including source.json and COPYING')
+    parser.add_argument('--qt-wayland-prefix', '--qtwayland-prefix', type=Path,
+                        help='Viewer Qt 6.4.2 Wayland backport with source/relink materials')
     args = parser.parse_args()
     root = args.appdir.resolve()
     host = root / 'usr/libexec/sunshine'
     bundle(host, args.sharun, ['bin/sunshine'], libva=args.libva_prefix)
-    bundle(root, args.sharun, ['bin/deskport'], excluded=host, libva=args.libva_prefix)
+    bundle(root, args.sharun, ['bin/deskport'], excluded=host, libva=args.libva_prefix,
+           qt_wayland=args.qt_wayland_prefix)
     graphics_env = Path(__file__).with_name('appimage-graphics-env.sh')
     for tree in (root, host):
         (tree / 'usr/libexec').mkdir(exist_ok=True)

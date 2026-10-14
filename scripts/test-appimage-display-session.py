@@ -250,6 +250,19 @@ exec "$loader" --library-path "${cohort:+$cohort:}$prefix/shared/lib:$prefix/lib
             expected = [p for p in appdir.glob('usr/**/' + path.name) if p.is_file()]
             assert expected and any(digest(p) == digest(path) for p in expected), f'{label} loaded Qt outside the selected bundle: {path}'
             checked.append({'path': str(path), 'sha256': digest(path)})
+        backport = appdir / 'usr/share/doc/deskport/qtwayland-backport/source.json'
+        if backport.is_file():
+            metadata = json.loads(backport.read_text())
+            assert metadata.get('modified') is True, metadata
+            files = metadata['runtime_files']
+            assert len(files) == 1, files
+            expected_library = appdir / files[0]['path']
+            expected_hash = files[0]['checksum'].removeprefix('SHA256:')
+            assert digest(expected_library) == expected_hash, 'Modified Qt library does not match its provenance'
+            wayland = [item for item in checked if Path(item['path']).name.startswith('libQt6WaylandClient.so')]
+            assert len(wayland) == 1 and wayland[0]['sha256'] == expected_hash, f'{label} did not load the verified Qt Wayland backport: {wayland}'
+            evidence[label + 'QtWaylandBackport'] = dict(upstreamFix=metadata['upstream_fix'],
+                library=wayland[0], modified=True)
         evidence[label + 'QtMappings'] = checked
         return verify_libc(child.pid, label)
     def outputs(devices=False):
@@ -370,7 +383,7 @@ exec "$loader" --library-path "${cohort:+$cohort:}$prefix/shared/lib:$prefix/lib
                 evidence.setdefault('permissionEntries', []).append({'path': str(entry), 'content': entry.read_text()})
             seq = 0
             for cycle in range(args.cycles):
-                for width, height, scale in ((1920, 1080, 1), (1668, 1888, 2), (1764, 1888, 2)):
+                for width, height, scale in ((2560, 1440, 1), (1668, 1888, 2), (1764, 1888, 2)):
                     seq += 1
                     ack = send(display, json.dumps({'displayPolicy': policy, 'seq': seq, 'width': width, 'height': height, 'scale': scale, 'session': True}))
                     assert {key: ack[key] for key in ('seq', 'width', 'height', 'scale')} == {'seq': seq, 'width': width, 'height': height, 'scale': scale}, ack

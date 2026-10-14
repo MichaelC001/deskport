@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record exact Ubuntu source archives for added AppImage runtime packages.
+"""Record exact sources and modifications for added AppImage runtime packages.
 
 The packaging container must have deb-src indices for its binary repositories.
 Publish this index alongside the AppImage to provide corresponding-source links.
@@ -39,26 +39,57 @@ def archived_source(name, version):
                              filename=filename, bytes=int(size), checksum='SHA256:' + digest))
     return archives
 
+
+def source_record(root, name, version, package, archives):
+    record = dict(source=name, version=version, archives=archives)
+    if package.get('modified'):
+        if package['modified'] is not True:
+            raise RuntimeError(f'Invalid modified-source marker: {name} {version}')
+        for group in ('materials', 'runtime_files'):
+            if not package.get(group):
+                raise RuntimeError(f'Missing modified runtime {group}: {name} {version}')
+            for item in package[group]:
+                relative = Path(item['path'])
+                path = root / relative
+                if relative.is_absolute() or '..' in relative.parts or not path.is_file():
+                    raise RuntimeError(f'Invalid bundled source material: {relative}')
+                digest = hashlib.sha256()
+                with path.open('rb') as stream:
+                    for block in iter(lambda: stream.read(1024 * 1024), b''):
+                        digest.update(block)
+                if item['bytes'] != path.stat().st_size or item['checksum'] != 'SHA256:' + digest.hexdigest():
+                    raise RuntimeError(f'Bundled modified-source checksum mismatch: {relative}')
+        record.update(modified=True, binary=package['binary'], binary_version=package['version'],
+                      materials=package['materials'], runtime_files=package['runtime_files'])
+        for key in ('patches', 'modifications', 'upstream_fix', 'build', 'license'):
+            if key in package:
+                record[key] = package[key]
+    return record
+
+
 root = Path(sys.argv[1])
 packages = {}
 for manifest in root.rglob('runtime-licenses/packages.json'):
     for item in json.loads(manifest.read_text()).values():
-        packages[(item['source'], item['source_version'])] = item
+        # A patched build and an original distro binary may share upstream
+        # identity. Keep both records rather than overwriting the modification.
+        variant = item['binary'] if item.get('modified') else ''
+        packages[(item['source'], item['source_version'], variant)] = item
 result = []
-for (name, version), package in sorted(packages.items()):
+for (name, version, _), package in sorted(packages.items()):
     if 'archives' in package:
         archives = package['archives']
         if not archives or any(not re.fullmatch(r'SHA256:[0-9a-f]{64}', item['checksum'])
                                or not item['url'].startswith('https://') for item in archives):
             raise RuntimeError(f'Invalid pinned upstream source: {name} {version}')
-        result.append(dict(source=name, version=version, archives=archives))
+        result.append(source_record(root, name, version, package, archives))
         continue
     try:
         output = subprocess.check_output(['apt-get', '--print-uris', '--only-source',
             'source', '--download-only', f'{name}={version}'], text=True)
     except subprocess.CalledProcessError:
         archives = archived_source(name, version)
-        result.append(dict(source=name, version=version, archives=archives))
+        result.append(source_record(root, name, version, package, archives))
         print(f'Indexed archived Ubuntu source: {name} {version}')
         continue
     archives = []
@@ -70,6 +101,6 @@ for (name, version), package in sorted(packages.items()):
                                  filename=filename, bytes=int(size), checksum=checksum))
     if not archives or not any(x['filename'].endswith('.dsc') for x in archives):
         raise RuntimeError(f'No exact corresponding source archives: {name} {version}')
-    result.append(dict(source=name, version=version, archives=archives))
+    result.append(source_record(root, name, version, package, archives))
 Path(sys.argv[2]).write_text(json.dumps(result, indent=2) + '\n')
 print(f'Indexed exact corresponding sources for {len(result)} runtime source packages')
