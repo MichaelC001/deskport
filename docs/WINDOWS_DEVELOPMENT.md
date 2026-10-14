@@ -115,18 +115,46 @@ Set `DESKPORT_WINDOWS_SOURCE_ROOT` to the source checkout and
 build root before invoking the recipes. All dependency, work, notice and
 material-export paths follow the selected build root.
 
-Prepare the cached inputs first. Client recipes use `winbuild/source-inputs`
-(or matching `S_*` overrides). Host curl/miniupnpc/minhook/onevpl archives,
-prepared media libraries, signed VDD payload and immutable host assets are
-currently required under `winbuild/full`; this is not yet a one-command bootstrap
-from an empty cache. Enter `nix-shell winbuild/scripts/shell.nix` on Linux for
-the repository-locked cross compiler, Qt host tools, npm and NSIS. The host recipe verifies the
-vendored Sunshine archive, creates `winbuild/full/sunshine-prepared`, applies
-the Windows and common DeskPort overlays, and builds into
-`winbuild/full/host-build-prepared`:
+### Build from a clean checkout — 2026-10-14
+
+The installer builds from a clean clone and an empty build root on x86_64 Linux:
 
 ```sh
-nix-shell winbuild/scripts/shell.nix
+git clone --recurse-submodules https://github.com/keithxc/deskport.git
+cd deskport
+export DESKPORT_WINDOWS_BUILD_ROOT=/path/outside/the/checkout
+nix-shell winbuild/scripts/shell.nix --run 'bash winbuild/scripts/bootstrap.sh'
+```
+
+`winbuild/inputs.json` pins every third-party input that is not part of this
+repository: Qt 6.11.1 modules, the static client libraries, libplacebo and its
+submodules, the host's curl/miniupnpc/MinHook/oneVPL, the build-deps media
+sources and AMF headers, the signed Virtual Display Driver, Sunshine's web
+assets and the C++/WinRT headers. Each entry records upstream URLs, the size and
+SHA-256. `fetch-inputs.py` tries the upstream URLs, then the byte-identical
+mirror release
+[`windows-build-inputs-1`](https://github.com/keithxc/deskport/releases/tag/windows-build-inputs-1),
+and places a file only after verification. `DESKPORT_WINDOWS_INPUT_CACHE` can
+share the verified downloads between build roots. The Nix shell locks the
+cross compiler, Qt host tools, NSIS and the toolchain sources whose notices are
+packaged. Sunshine's CMake still fetches its pinned Boost and JSON sources.
+
+`bootstrap.sh` runs `inputs deps vulkan qt notices host-deps host-source
+host-media app maintenance host package audit` in order; `--from STEP` resumes
+after a failure and `--only STEP` repeats one step. Changing an input means
+updating `inputs.json` and uploading the identical file to a new mirror tag.
+Material export (`export-full-materials.py`) now fails when any pinned input is
+missing from the verified cache instead of omitting it.
+
+Before 2026-10-14, these inputs lived only in local build caches. After those
+caches were removed, the 0.7.1 relink/source materials were incomplete: they
+lacked the VDD and Sunshine archives because the exporter skipped missing files.
+Each restored input was compared with its upstream download (file SHA-256, or
+directory digest after extraction) before being pinned.
+
+The individual recipes remain usable inside the same shell, for example:
+
+```sh
 winbuild/scripts/build-host-deps.sh
 winbuild/scripts/build-host-media.sh
 winbuild/scripts/build-host.sh
