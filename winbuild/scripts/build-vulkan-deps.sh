@@ -23,8 +23,11 @@ build_glslang() {
 build_libplacebo() {
   unpack "$S_LIBPLACEBO" "$WORK/libplacebo"
   # libplacebo looks for an unprefixed dlltool to build its UCRT math import lib.
+  # Invoked by that name, dlltool would run a native `as`; name the cross one.
   mkdir -p "$WB/toolshim"
-  ln -sfn "$(command -v "$TRIPLE-dlltool")" "$WB/toolshim/dlltool"
+  rm -f "$WB/toolshim/dlltool"
+  printf '#!/usr/bin/env bash\nexec %q --as=%q "$@"\n' "$(command -v "$TRIPLE-dlltool")" "$(command -v "$TRIPLE-as")" > "$WB/toolshim/dlltool"
+  chmod +x "$WB/toolshim/dlltool"
   export PATH="$WB/toolshim:$PATH"
   # Meson cross builds ignore CFLAGS/LDFLAGS, so bake the prefix into a
   # generated cross file.
