@@ -70,6 +70,10 @@ cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
 cp "$repo/host/common/framecadence.h" "$source_dir/src/deskport/common/"
 python3 "$repo/scripts/patch-host-sync-cadence.py" "$source_dir"
+# After the input/cadence overlays: it extends their congestion handling.
+cp "$repo/host/common/ratecontrol.h" "$source_dir/src/deskport/common/ratecontrol.h"
+cp "$repo/host/macos/vtbitrate.h" "$source_dir/src/deskport/macos/vtbitrate.h"
+python3 "$repo/scripts/patch-host-remote-rate.py" "$source_dir"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir"
 python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser"
 sdk=$(xcrun --sdk macosx --show-sdk-path)

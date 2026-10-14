@@ -150,6 +150,8 @@ stdenv.mkDerivation (finalAttrs: {
     python3 ${deskportSource}/scripts/patch-host-memory-diagnostics.py . ${deskportSource}/host/common/memorydiagnostics.h
     cp ${deskportSource}/host/common/encoderpolicy.h src/deskport/common/encoderpolicy.h
     python3 ${deskportSource}/scripts/patch-host-encoder-policy.py .
+    cp ${deskportSource}/host/common/ratecontrol.h src/deskport/common/ratecontrol.h
+    python3 ${deskportSource}/scripts/patch-host-remote-rate.py .
   '';
 
   nativeBuildInputs = [

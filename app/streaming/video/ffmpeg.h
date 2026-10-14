@@ -40,6 +40,7 @@ private:
     void stringifyVideoStats(VIDEO_STATS& stats, char* output, int length);
 
     void logVideoStats(VIDEO_STATS& stats, const char* title);
+    void logNetworkStats(VIDEO_STATS& stats);
 
     void addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst);
 

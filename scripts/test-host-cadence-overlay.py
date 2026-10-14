@@ -10,14 +10,20 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
             f.extractall(target, filter='data')
         if not (target / 'src').exists():
             target = next(p for p in target.iterdir() if (p / 'src').exists())
-        for name in ('smart-stream', 'session-settings', 'session-takeover', 'linux-display', 'input-activity', 'sync-cadence', 'linux-cadence', 'pipewire-memory', 'encoder-policy'):
+        for name in ('smart-stream', 'session-settings', 'session-takeover', 'linux-display', 'input-activity', 'sync-cadence', 'linux-cadence', 'pipewire-memory', 'encoder-policy', 'remote-rate'):
             subprocess.run(['python3', str(root / f'scripts/patch-host-{name}.py'), str(target)], check=True)
         subprocess.run(['python3', str(root / 'scripts/patch-host-encoder-policy.py'), str(target)], check=True)
+        subprocess.run(['python3', str(root / 'scripts/patch-host-remote-rate.py'), str(target)], check=True)
+        stream = (target / 'src/stream.cpp').read_text()
+        assert stream.count('deskport::remotePacketsPerMs(') == 1
+        assert stream.count('event<int>("deskport_rtt")->raise(') == 1
         video = (target / 'src/video.cpp').read_text()
         assert 'const bool smart = config.deskport_smart;' in video
         assert 'ctx->config.deskport_smart' in video
         assert 'deskport_cadence.emplace(ctx.config.framerate,' in video
         assert 'pos->deskport_timestamp.reset()' in video
+        assert video.count('av_packet->pts -= session.deskport_pts_shift;') == 1
+        assert video.count('deskport_rate->rtt(now_us / 1000, *rtt);') == 1
         # Compile the actual upstream mailbox template: the older bool event
         # cannot instantiate timed pop(), while optional<int> works on both.
         mailbox = target / 'cadence-mailbox.cpp'

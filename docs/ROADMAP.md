@@ -1,3 +1,47 @@
+## Slow remote links — 2026-10-14
+
+Reason: pk4 → mm4 over Tailscale measured 328 ms RTT through the DERP relay and
+roughly 3 Mbps of TCP throughput, while smart streaming started at 15 Mbps for
+2560×1440. The negotiated resolution is never reduced; only bitrate, pacing and
+encoder quality floor adapt.
+
+- Client: smart sessions on VPN or public routes start at no more than 8 Mbps
+  (`DeskPortStream::remoteBitrate`). LAN and custom packet-size sessions unchanged.
+- Host (both pinned revisions, `scripts/patch-host-remote-rate.py`): sessions
+  whose video peer is not on-link/private (Tailscale 100.64/10 and
+  fd7a:115c:a1e0::/48 count as remote) sample the existing ENet control RTT twice
+  a second. `host/common/ratecontrol.h` lowers the target by 30% when RTT stays
+  above the 30-second minimum by max(30 ms, 25%) or on unrecoverable FEC, at most
+  every two seconds, then restores 5% of the ceiling every three quiet seconds.
+  Floor is max(1 Mbps, ceiling/8). The learned rate survives adaptive-resize
+  reconnects for five minutes. LAN sessions never receive samples.
+- Live encoder rate: only FFmpeg VideoToolbox (H.264/HEVC) implements it, by
+  reading the pinned FFmpeg encoder's session prefix and verifying the
+  CoreFoundation type (`host/macos/vtbitrate.h`). Other backends log
+  `live_encoder=no` and keep the negotiated rate.
+- Frame size: below half the ceiling, VideoToolbox gets MinAllowedFrameQP 32.
+  Short DataRateLimits windows were measured to have no effect on content-change
+  frames, so they are not used.
+- Remote pacing: four times the live target, at least 20 Mbps, instead of about
+  800 Mbps, with send batches limited to one pacing slot. LAN pacing unchanged.
+- Contiguous frame numbers: rate-controlled encoders may drop frames. A numbering
+  gap made the client treat it as network loss and request an IDR; packets are now
+  numbered by produced frame. Recovery matching still uses the original PTS.
+- Diagnostics: numeric network, rate and encoded-video records (see DIAGNOSTICS.md).
+
+Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
+content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
+3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames
+dropped by VideoToolbox. Content-change frames stayed about 400 KB with 100 ms
+limits; QP floor 32 reduced them to about 280–310 KB (static scene). Policy
+regressions are in `tests/smart-stream.cpp`; both host overlays pass
+`scripts/test-host-cadence-overlay.py`.
+
+Not yet verified: live streams over the real relayed path, host CPU, visual
+quality at the floor, and whether pacing helps on this TCP-relayed path. Restoring
+a direct Tailscale path (or a nearby DERP) remains the largest improvement and
+belongs to the system configuration, not DeskPort.
+
 ## Native application icon appearances — 2026-10-12
 
 Preserve DeskPort's mint/amber kite and tilted terminal display while improving

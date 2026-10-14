@@ -2,6 +2,7 @@
 #include "host/common/encoderpolicy.h"
 #include "host/common/inputactivity.h"
 #include "host/common/framecadence.h"
+#include "host/common/ratecontrol.h"
 #include "app/backend/streambudget.h"
 #include <cassert>
 #include <iostream>
@@ -41,6 +42,72 @@ int main() {
     assert(initialBitrate(7000,3840,2160,60,false)==7000);
     assert(initialBitrate(40000,1280,720,30,false)==5000);
     assert(initialBitrate(40000,2560,1440,60,true)==30000);
+    assert(remoteBitrate(15000)==8000 && remoteBitrate(5000)==5000);
+
+    // Remote classification: on-link/private paths keep LAN behavior.
+    auto v4 = [](unsigned a, unsigned b, unsigned c, unsigned d) {
+        const unsigned char bytes[4] = {(unsigned char)a, (unsigned char)b, (unsigned char)c, (unsigned char)d};
+        return deskport::remotePeer(bytes, 4);
+    };
+    assert(!v4(192,168,0,9) && !v4(10,1,2,3) && !v4(172,16,0,1) && !v4(172,31,255,1));
+    assert(!v4(127,0,0,1) && !v4(169,254,1,1));
+    assert(v4(172,32,0,1) && v4(100,64,0,9) && v4(202,104,119,10));
+    auto v6 = [](std::initializer_list<unsigned> prefix, unsigned last) {
+        unsigned char bytes[16]{}; int i = 0;
+        for (auto b : prefix) bytes[i++] = (unsigned char)b;
+        bytes[15] = (unsigned char)last;
+        return deskport::remotePeer(bytes, 16);
+    };
+    assert(!v6({}, 1) && !v6({0xfe,0x80}, 5) && !v6({0xfd,0x12}, 5));
+    assert(v6({0xfd,0x7a,0x11,0x5c,0xa1,0xe0}, 0x0e) && v6({0x24,0x08}, 1));
+    assert(!v6({0,0,0,0,0,0,0,0,0,0,0xff,0xff,192,168,0}, 1));
+    assert(v6({0,0,0,0,0,0,0,0,0,0,0xff,0xff,100,64,0}, 9));
+    assert(!deskport::remotePeer(nullptr, 4) && !deskport::remotePeer((const unsigned char*)"abc", 3));
+
+    // Remote rate: queueing delay or unrecoverable loss lowers the target,
+    // quiet periods restore it gradually, bounds always hold.
+    deskport::BitrateController rate(8000, 0);
+    assert(rate.floorKbps() == 1000 && rate.targetKbps(0) == 8000 && !rate.constrained());
+    for (int t = 0; t <= 4000; t += 500) rate.rtt(t, 330);
+    assert(rate.baselineMs() == 330 && rate.targetKbps(4000) == 8000);
+    rate.rtt(4500, 420); // One delayed sample is jitter, not congestion.
+    rate.rtt(5000, 330);
+    assert(rate.targetKbps(5000) == 8000);
+    rate.rtt(5500, 420); rate.rtt(6000, 430);
+    assert(rate.targetKbps(6000) == 5600);
+    rate.rtt(6500, 440); rate.rtt(7000, 450);
+    assert(rate.targetKbps(7000) == 5600); // Let the queue drain first.
+    rate.rtt(8000, 450); // Still queued two seconds after the first decrease.
+    assert(rate.targetKbps(8000) == 3920 && rate.constrained());
+    for (int t = 8500; t < 13000; t += 500) rate.rtt(t, 330);
+    assert(rate.targetKbps(12999) == 3920);
+    assert(rate.targetKbps(13000) == 4320 && !rate.constrained());
+    assert(rate.targetKbps(15999) == 4320); // One step per three seconds.
+    for (int t = 16500; t < 80000; t += 3000) rate.targetKbps(t);
+    assert(rate.targetKbps(80000) == 8000);
+    for (int t = 90000; t < 200000; t += 2000) rate.loss(t);
+    assert(rate.targetKbps(200000) == 1000); // Floor holds.
+    deskport::BitrateController slow(2000, 0);
+    assert(slow.floorKbps() == 1000);
+    deskport::BitrateController tiny(600, 0);
+    assert(tiny.floorKbps() == 600 && tiny.targetKbps(0) == 600);
+    // A stale minimum expires, so a lasting route change becomes the baseline.
+    deskport::BitrateController route(8000, 0);
+    route.rtt(0, 20);
+    for (int t = 40000; t < 41000; t += 500) route.rtt(t, 330);
+    assert(route.baselineMs() == 330);
+    deskport::BitrateController resumed(8000, 50000);
+    resumed.resume(500); assert(resumed.targetKbps(50000) == 1000);
+    resumed.resume(3000); assert(resumed.targetKbps(52999) == 3000 && resumed.targetKbps(53000) == 3400);
+    resumed.resume(20000); assert(resumed.targetKbps(53000) == 8000);
+    deskport::RateMemory memory;
+    assert(memory.resumeFor(8000, 0) == 0);
+    memory.store(8000, 3000, 1000);
+    assert(memory.resumeFor(8000, 301000) == 3000);
+    assert(memory.resumeFor(8000, 301001) == 0 && memory.resumeFor(15000, 2000) == 0);
+    assert(deskport::remotePacketsPerMs(3000, 1040) == 2);   // 20 Mbps floor
+    assert(deskport::remotePacketsPerMs(15000, 1040) == 7);  // 4x target
+    assert(deskport::remotePacketsPerMs(1, 1 << 20) == 1);
     // Distinct strides/padding; a one-byte change anywhere must be detected.
     std::vector<unsigned char> a(128*80,42), b(160*80,42);
     for(int y=0;y<80;++y) b[y*160+120]=99;
@@ -143,5 +210,5 @@ int main() {
     assert(!pending.admit(12068000,false,false)); // no healthy-frame recovery from idle
     deskport::FrameCadence other(30);
     assert(other.floor(12068000)==1); // no cross-session input state
-    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings\n";
+    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control\n";
 }

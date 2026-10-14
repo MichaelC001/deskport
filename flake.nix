@@ -57,6 +57,8 @@
               python3 ${./scripts/patch-host-memory-diagnostics.py} . ${./host/common/memorydiagnostics.h}
               cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
               python3 ${./scripts/patch-host-encoder-policy.py} .
+              cp ${./host/common/ratecontrol.h} src/deskport/common/ratecontrol.h
+              python3 ${./scripts/patch-host-remote-rate.py} .
               python3 ${./scripts/patch-host-video-pause.py} .
               python3 ${./scripts/patch-host-browser.py} . ${./host/browser}
             '';

@@ -32,6 +32,11 @@ expressions. It records:
 - Relative milliseconds. Recognized resize traces also include their allowed
   stage name, monotonic tick and numeric width/height, including input-init and
   first-render milestones.
+- Network measurements (2026-10-14), integers only: the viewer's control RTT and
+  variance, received/rendered FPS, network and presentation drop per mille and
+  received video kbps every ten seconds; the host's path class (`remote` or
+  `local`, never the address), live rate target, RTT and RTT baseline, and
+  five-second encoded kbps, frame/keyframe counts and largest frame size.
 - Export metadata: numeric DeskPort version (or `development`), OS family,
   diagnostic switch state, schema revision and number of diagnostic files.
 
