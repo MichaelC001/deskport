@@ -43,6 +43,10 @@ wheel input on pk4 showed the cause of blurry text: frames compared against the
 fully settled picture stayed at 21 dB PSNR for about two seconds after scrolling
 stopped, then improved about once per second (37, 44, 49, 60 dB) until identical
 after about six seconds — the one-fps refinement cadence.
+After activating 9ec33772 on pk4/mm4/mm1, the same page and probe gave 41 dB
+at the first capture after scrolling stopped and an identical picture by the
+next capture (about one second), in both directions. The session started with an
+18988 kbps ceiling and `live_encoder=yes`; client network drops stayed zero.
 
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
