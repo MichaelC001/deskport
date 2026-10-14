@@ -107,6 +107,15 @@ build_ffmpeg() {
     "${NICE_WRAP[@]}" make -j"$JOBS" && "${NICE_WRAP[@]}" make install )
 }
 
+# FreeType's installed CMake package links ZLIB::ZLIB without finding ZLIB.
+# CMake 4 rejects that missing target in every later Qt module configure.
+declare_freetype_zlib() {
+  local config="$PREFIX/lib/cmake/freetype/freetype-config.cmake"
+  [ -f "$config" ] && ! grep -q 'find_dependency(ZLIB)' "$config" || return 0
+  { printf 'include(CMakeFindDependencyMacro)\nfind_dependency(ZLIB)\n'; cat "$config"; } > "$config.tmp"
+  mv "$config.tmp" "$config"
+}
+
 for t in "$@"; do
   if stamp "$t"; then echo "== skip $t (already built)"; continue; fi
   echo "== building $t"
@@ -114,3 +123,4 @@ for t in "$@"; do
   done_stamp "$t"
   echo "== done $t"
 done
+declare_freetype_zlib
