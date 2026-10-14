@@ -48,6 +48,19 @@ at the first capture after scrolling stopped and an identical picture by the
 next capture (about one second), in both directions. The session started with an
 18988 kbps ceiling and `live_encoder=yes`; client network drops stayed zero.
 
+Scrolling clarity while moving: an offline VideoToolbox HEVC sweep (same host
+options, 2560×1440 rendered text, luma PSNR against exact source rows) found a
+cliff between 88 and 96 px of vertical motion per frame: 51 dB below it at any
+bitrate from 15 to 40 Mbps, about 20–25 dB above it even at 40 Mbps, while the
+encoder spent its whole budget. One instant 100 px jump scored 24–35 dB; the
+same 100 px over four frames scored 51 dB at 3.3 instead of 19 Mbps. Bitrate,
+30 fps, H.264 and a max-QP cap did not move the cliff. The macOS host now paces
+injected wheel scrolling (`host/macos/scroll-pacer.h`,
+`libvirtualhid-paced-scroll.patch`): at most 40 pt per 16 ms step, first step
+immediate, total distance and direction preserved. Live fast-scroll baseline
+before this change (a notch every 30 ms): mid-scroll Laplacian variance about
+7000 against 11200 settled. Linux host encoders were not measured.
+
 Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
 content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
 3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames

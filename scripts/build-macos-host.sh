@@ -24,6 +24,13 @@ if git -C "$hid" apply --check "$drag_patch"; then
 else
     git -C "$hid" apply --reverse --check "$drag_patch"
 fi
+# Pace large wheel deltas so one captured frame stays within motion search.
+scroll_patch="$repo/host/macos/patches/libvirtualhid-paced-scroll.patch"
+if git -C "$hid" apply --check "$scroll_patch"; then
+    git -C "$hid" apply "$scroll_patch"
+else
+    git -C "$hid" apply --reverse --check "$scroll_patch"
+fi
 python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir" --revert
@@ -61,6 +68,7 @@ git -C "$source_dir" apply "$sck_patch"
 cp "$repo/host/macos/screen-video.h" "$repo/host/macos/screen-video.m" "$source_dir/src/deskport/macos/"
 cp "$repo/host/macos/admitted-display.h" "$source_dir/src/deskport/macos/"
 cp "$repo/host/macos/admitted-display.h" "$hid/src/platform/macos/deskport-admitted-display.h"
+cp "$repo/host/macos/scroll-pacer.h" "$hid/src/platform/macos/deskport-scroll-pacer.h"
 python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
 cp "$repo/host/common/encoderpolicy.h" "$source_dir/src/deskport/common/encoderpolicy.h"

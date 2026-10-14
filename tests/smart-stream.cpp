@@ -3,8 +3,10 @@
 #include "host/common/inputactivity.h"
 #include "host/common/framecadence.h"
 #include "host/common/ratecontrol.h"
+#include "host/macos/scroll-pacer.h"
 #include "app/backend/streambudget.h"
 #include <cassert>
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 int main() {
@@ -107,6 +109,26 @@ int main() {
     assert(deskport::remotePacketsPerMs(3000, 1040) == 2);   // 20 Mbps floor
     assert(deskport::remotePacketsPerMs(15000, 1040) == 7);  // 4x target
     assert(deskport::remotePacketsPerMs(1, 1 << 20) == 1);
+
+    // Scroll pacing: bounded steps, total and direction preserved.
+    deskport::ScrollPacer pacer;
+    pacer.add(-50, 0);
+    auto step = pacer.take();
+    assert(step.vertical == -40 && step.horizontal == 0 && pacer.pending());
+    step = pacer.take();
+    assert(step.vertical == -10 && !pacer.pending());
+    assert(pacer.take().empty());
+    pacer.add(250, -90);
+    int v = 0, h = 0, steps = 0;
+    while (pacer.pending()) {
+        step = pacer.take(); ++steps;
+        assert(std::abs(step.vertical) <= deskport::kMaxScrollStep && std::abs(step.horizontal) <= deskport::kMaxScrollStep);
+        v += step.vertical; h += step.horizontal;
+    }
+    assert(v == 250 && h == -90 && steps == 7);
+    pacer.add(120, 0); pacer.take(); pacer.add(-80, 0); // reversal cancels pending distance
+    assert(!pacer.pending());
+    pacer.add(30, 0); pacer.clear(); assert(!pacer.pending());
     // Distinct strides/padding; a one-byte change anywhere must be detected.
     std::vector<unsigned char> a(128*80,42), b(160*80,42);
     for(int y=0;y<80;++y) b[y*160+120]=99;
@@ -214,5 +236,5 @@ int main() {
     assert(!pending.admit(12600000,false,false)); // then the idle floor
     deskport::FrameCadence other(30);
     assert(other.floor(12068000)==1); // no cross-session input state
-    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control\n";
+    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control, scroll pacing\n";
 }
