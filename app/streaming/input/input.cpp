@@ -341,6 +341,13 @@ void SdlInputHandler::notifyFocusLost()
 
 void SdlInputHandler::notifyFocusGained()
 {
+    // Desktop mode only routes input while the pointer is over the picture,
+    // so a viewer that comes back into focus (recalled from the tray, a new
+    // connection, Alt+Tab) takes input again without a click that would be
+    // swallowed. Relative mode still waits for a click before it grabs the
+    // pointer, and an explicit release stays in effect.
+    if (m_AbsoluteMouseMode && !isCaptureActive() && !m_CaptureReleasedByUser)
+        setCaptureActive(true);
     notifyPointerPosition();
     if (m_AbsoluteMouseMode && isCaptureActive())
         SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);

@@ -25,6 +25,11 @@ Reason: switching data saver reconnected the stream (about 2.7 s on 5G).
   resident client is a user service outside any session), so video pauses 5 s
   after the screen locks and resumes on unlock. Client sleep already ends the
   session before suspend through the logind delay inhibitor.
+- Desktop mode takes input again when the viewer regains focus (recalled from
+  the tray, a new connection, Alt+Tab) instead of waiting for a click that was
+  swallowed. Routing still needs focus and the pointer over the picture.
+  Relative mode keeps click-to-grab, and Ctrl+Alt+Shift+Z stays released until
+  the next click inside.
 - 5G comparison of 68ce0e4e against the previous build (19 vs 24 min, same
   path): key frames 2.2 vs 3.6 per minute, no 5 s window with three or more key
   frames (was 6, up to 8), rate at the floor once (was 8). Two windows still lost

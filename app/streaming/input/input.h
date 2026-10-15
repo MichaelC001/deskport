@@ -191,6 +191,8 @@ private:
     QSet<int> m_ButtonsDown;
     bool m_PointerInside = false;
     bool m_FakeCaptureActive;
+    // Set by the release shortcut; a click inside clears it again.
+    bool m_CaptureReleasedByUser = false;
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
     QStringList m_IgnoreDeviceGuids;
