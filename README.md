@@ -97,8 +97,9 @@ drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
 
 **Linux:** Choose the [0.7.1 package](https://github.com/keithxc/deskport/releases/tag/v0.7.1)
-for your system and follow the [installation guide](docs/LINUX_PACKAGES.md),
-including host input permissions. With Nix: `nix run github:keithxc/deskport/v0.7.1`.
+for your system and follow the [distribution-specific steps below](#linux-installation-by-distribution),
+including the [host input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
+With Nix: `nix run github:keithxc/deskport/v0.7.1`.
 Flatpak provides viewing only. Release assets include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
@@ -126,6 +127,226 @@ the previous stream while it reconnects, and smooths drags on macOS hosts. See t
 and fullscreen. See the [0.7.1 release notes](docs/RELEASE_0.7.1.md) and
 [browser guide](docs/BROWSER_ACCESS.md). The AppImage includes a private glibc
 runtime; native packages retain their glibc 2.39 requirement.
+
+### Linux installation by distribution
+
+These instructions target **x86_64** desktop systems. The stable native packages
+are **0.7.1** and require glibc 2.39 or newer. They are upstream downloads rather
+than packages from a DeskPort distribution repository; install future releases by
+downloading and verifying the new package again.
+
+For the Bazzite/KDE Wayland problems in [issue #5](https://github.com/keithxc/deskport/issues/5),
+use the **0.7.2-rc.2 AppImage candidate** below. It includes the portable-runtime,
+display-restoration, process-teardown, permission and login-startup fixes, plus a
+small Qt Wayland 6.4.2 backport. This is an **AppImage-only prerelease**: there are
+no rc.2 DEB, RPM or Arch packages, and the stable native packages do not contain
+that AppImage backport. Reporter acceptance remains pending; see the
+[candidate verification scope](docs/RELEASE_0.7.2-rc.2.md).
+
+New complete-VM installation checks for the six desktops below are pending.
+Package installation and GUI launch alone do not verify live capture, hardware
+video decoding, remote input, visual quality or latency.
+
+| Distribution / desktop | Download route |
+| --- | --- |
+| Ubuntu 26.04 GNOME | Stable DEB, installed with APT |
+| Debian 13 KDE | Stable DEB, installed with APT |
+| Fedora 44 KDE | Stable RPM, installed with DNF |
+| Arch Linux KDE | Stable local Arch package, installed with `pacman -U` |
+| Bazzite KDE | 0.7.2-rc.2 AppImage candidate for issue #5 |
+| Omarchy / Hyprland | Stable local Arch package, installed with `pacman -U` |
+
+Open a terminal in your normal desktop session. Each command sequence verifies
+the download before installing it; the checksum must report its filename as `OK`.
+Launch DeskPort as your ordinary user after installation.
+Before an upgrade, stop sharing and fully quit the old DeskPort instance using
+its **Quit** action, such as the tray menu. Closing the window may only hide it.
+Launch the newly installed version afterwards so it runs the new binary.
+
+<details>
+<summary><strong>Ubuntu 26.04 GNOME</strong> — download, install, update and remove</summary>
+
+Download [deskport_0.7.1-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.1/deskport_0.7.1-1_amd64.deb),
+then open a terminal in the directory containing that file:
+
+```sh
+printf '%s  %s\n' d55515a84d0abc38a66687ef67430d74e925d7f566e41fc8013673995c242d51 deskport_0.7.1-1_amd64.deb | sha256sum --check - &&
+sudo apt update &&
+sudo apt install ./deskport_0.7.1-1_amd64.deb &&
+deskport
+```
+
+APT installs dependencies from your configured Ubuntu repositories. The leading
+`./` selects the downloaded file. For later launches, open DeskPort from the
+application menu. For an upgrade, download the next compatible DEB, verify its
+checksum and repeat `sudo apt install ./NEW_FILENAME.deb` with its actual filename.
+Remove the installed package with `sudo apt remove deskport`.
+
+Ubuntu 24.04 also meets the native package's glibc minimum. Ubuntu 22.04 needs the
+AppImage, viewer-only Flatpak or a separately supported Nix/source build.
+GNOME hosting depends on the installed Mutter/capture capabilities; see the
+[adaptive-display requirements](docs/LINUX_ADAPTIVE_DISPLAY.md).
+
+</details>
+
+<details>
+<summary><strong>Debian 13 KDE</strong> — download, install, update and remove</summary>
+
+Download [deskport_0.7.1-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.1/deskport_0.7.1-1_amd64.deb),
+then open a terminal in its download directory:
+
+```sh
+printf '%s  %s\n' d55515a84d0abc38a66687ef67430d74e925d7f566e41fc8013673995c242d51 deskport_0.7.1-1_amd64.deb | sha256sum --check - &&
+sudo apt update &&
+sudo apt install ./deskport_0.7.1-1_amd64.deb &&
+deskport
+```
+
+APT resolves the package's dependencies. Open DeskPort from the application menu
+on later launches. Upgrade by downloading and verifying the next compatible DEB,
+then installing that file with `sudo apt install ./NEW_FILENAME.deb`. Remove with
+`sudo apt remove deskport`. Debian 12 does not meet the native package's glibc
+minimum; use the AppImage, viewer-only Flatpak or a supported Nix/source build.
+
+For KDE hosting, check the [compositor and input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting)
+before starting sharing.
+
+</details>
+
+<details>
+<summary><strong>Fedora 44 KDE</strong> — download, install, update and remove</summary>
+
+Download [deskport-0.7.1-1.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.1/deskport-0.7.1-1.x86_64.rpm),
+then open a terminal in its download directory:
+
+```sh
+printf '%s  %s\n' 1fe1eb4013104069a6fd258e57137bfc6738c47de8ceb9633c15860113daf421 deskport-0.7.1-1.x86_64.rpm | sha256sum --check - &&
+sudo dnf install ./deskport-0.7.1-1.x86_64.rpm &&
+deskport
+```
+
+DNF resolves dependencies from enabled Fedora repositories. Open DeskPort from
+the application menu on later launches. Upgrade by downloading and verifying the
+next compatible RPM, then installing that file with
+`sudo dnf install ./NEW_FILENAME.rpm`. Remove with `sudo dnf remove deskport`.
+This route targets regular Fedora; use the AppImage instructions for Bazzite.
+For KDE hosting, also check the [compositor and input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
+
+</details>
+
+<details>
+<summary><strong>Arch Linux KDE</strong> — download, install, update and remove</summary>
+
+Complete your usual full Arch system update, then download
+[deskport-0.7.1-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.1/deskport-0.7.1-1-x86_64.pkg.tar.zst).
+Open a terminal in its download directory:
+
+```sh
+printf '%s  %s\n' 0bd5a119ebb8543219b586e33413b791620438f5331a8ef7befc185961aff036 deskport-0.7.1-1-x86_64.pkg.tar.zst | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst &&
+deskport
+```
+
+`pacman -U` installs the local package and resolves dependencies from configured
+repositories. Open DeskPort from the application menu on later launches. Install
+future downloaded packages with `sudo pacman -U ./NEW_FILENAME.pkg.tar.zst` after
+verifying their checksums. Remove with `sudo pacman -R deskport`. This download
+does not add DeskPort to the official repositories or AUR.
+For KDE hosting, also check the [compositor and input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
+
+</details>
+
+<details>
+<summary><strong>Bazzite KDE</strong> — AppImage test candidate, startup and removal</summary>
+
+For issue #5, use
+[DeskPort-0.7.2-rc.2-x86_64.AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/DeskPort-0.7.2-rc.2-x86_64.AppImage).
+Stop sharing and use **Quit** to fully exit any older DeskPort instance; closing
+its window may leave it running. Save the new AppImage in a permanent location
+before enabling login startup:
+
+```sh
+mkdir -p "$HOME/Applications/DeskPort" &&
+cd "$HOME/Applications/DeskPort" &&
+curl --fail --location --output DeskPort-0.7.2-rc.2-x86_64.AppImage https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/DeskPort-0.7.2-rc.2-x86_64.AppImage &&
+printf '%s  %s\n' d6a11b45ceebc82a80014bc2b7fad9af2c97b62eaea70601bed621ac3476034d DeskPort-0.7.2-rc.2-x86_64.AppImage | sha256sum --check - &&
+chmod +x DeskPort-0.7.2-rc.2-x86_64.AppImage &&
+./DeskPort-0.7.2-rc.2-x86_64.AppImage
+```
+
+Launch normally; no bundled libraries need to be removed or relocated. If login
+startup referenced an older AppImage, open the new file at its final path and
+refresh login startup. To test the same candidate on another listed x86_64
+distribution, follow these AppImage steps instead of installing the stable package.
+
+Bazzite's [AppImage guide](https://docs.bazzite.gg/Installing_and_Managing_Software/AppImage/)
+describes Gear Lever for application-menu integration. If an integration tool
+moves the file, refresh DeskPort startup from its final location afterwards.
+Upgrades require downloading and verifying the new AppImage. To remove it,
+disable DeskPort login startup, quit DeskPort, delete the file, and remove any
+menu entry through the integration tool that created it. Run the AppImage on
+the Bazzite host for desktop sharing; a Distrobox installation does not establish
+host-desktop integration. The Flatpak below provides viewing only.
+
+</details>
+
+<details>
+<summary><strong>Omarchy / Hyprland</strong> — local Arch package and hosting requirements</summary>
+
+Complete Omarchy's normal system update, then download
+[deskport-0.7.1-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.1/deskport-0.7.1-1-x86_64.pkg.tar.zst).
+Open a terminal in its download directory:
+
+```sh
+printf '%s  %s\n' 0bd5a119ebb8543219b586e33413b791620438f5331a8ef7befc185961aff036 deskport-0.7.1-1-x86_64.pkg.tar.zst | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst &&
+deskport
+```
+
+Use the application launcher for later starts. Upgrade by downloading and verifying
+the next local Arch package, then installing it with
+`sudo pacman -U ./NEW_FILENAME.pkg.tar.zst`. Remove with `sudo pacman -R deskport`.
+Omarchy's repository/AUR package menu does not make this GitHub download a
+repository package.
+
+Hyprland hosting uses a dedicated headless output as an extended workspace.
+The KDE policies that mirror or disable physical displays do not apply to this
+integration. Follow the [Omarchy/Hyprland host guide](docs/CLI.md#omarchy-and-hyprland)
+for the active compositor, capture permission and SSH-service requirements.
+Check the installed Hyprland version before applying permission syntax.
+Package installation alone does not configure unattended desktop login or verify
+a working stream.
+
+</details>
+
+<details>
+<summary><strong>Flatpak alternative</strong> — viewing only, on systems with Flatpak configured</summary>
+
+Download [DeskPort-0.7.1-client-x86_64.flatpak](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-client-x86_64.flatpak),
+then open a terminal in its download directory:
+
+```sh
+printf '%s  %s\n' 83a6680a3997c311154458f56b138f94607fb0aecfc2113f4c0e95ee1a144a71 DeskPort-0.7.1-client-x86_64.flatpak | sha256sum --check - &&
+flatpak install --user ./DeskPort-0.7.1-client-x86_64.flatpak &&
+flatpak run io.github.keithxc.DeskPort
+```
+
+The local bundle may download its Freedesktop Platform 25.08 runtime. It provides
+viewing only, without Sunshine hosting or desktop login-service integration.
+Install future downloaded bundles with `flatpak install --user --or-update ./NEW_FILENAME.flatpak`
+after verifying their checksums. Remove with
+`flatpak uninstall --user io.github.keithxc.DeskPort`. This is a GitHub release
+bundle; the installation does not require a DeskPort Flathub listing.
+
+</details>
+
+For hosting, use the normal logged-in graphical session and configure the
+[capture and input prerequisites](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
+Test sharing with a client on your intended LAN or VPN before enabling optional
+login startup. Package installation does not configure network reachability or
+grant host input access. Stop sharing and quit DeskPort before package removal;
+disable any login startup you enabled. Package removal preserves DeskPort settings
+in your home directory.
 
 ### Linux repository availability
 
