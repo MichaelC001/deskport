@@ -1,3 +1,40 @@
+## Desktop 0.7.2 formal release — 2026-10-15
+
+Published the stable desktop matrix as
+[0.7.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2): macOS arm64
+DMG/ZIP, Windows x64 Setup/portable ZIP, Linux x86_64 native packages, AppImage,
+portable archive, viewer-only Flatpak and the Nix flake. The 21 release assets
+include corresponding application/dependency sources, relinking materials,
+package inventories and verification metadata. Packages and the immutable tag
+use application `922c38c2c35b93a43477a7bd02c75baa63e265c8` and shared core
+`4064059f51d41bcd0b460b5353be57554e361bd6`; later documentation updates do not
+change those binary source identities.
+
+Exact-source CI, macOS Developer ID/notarization/stapling and extracted-ZIP
+Gatekeeper checks passed. Windows package/CLI/Defender checks and a visible Setup
+upgrade from 0.7.1 to 0.7.2 passed: all 694 payload files matched, 122 existing
+configuration files and HKCU settings were unchanged before first launch, and
+pairing and keys were preserved after the GUI checks. Disconnected local GUI
+checks covered shortcut launch, Settings/About, close-to-tray, recall and Quit.
+The Linux Nix build, isolated native-package containers and Flatpak checks passed
+within their recorded scope. The final AppImage also passed a fresh Bazzite KDE Wayland VM
+run: normal FUSE startup, a visible GUI alive for 30.34 seconds, verified bundled
+Qt/backport mappings, matching GUI/helper/recovery loader/libc, and one 1280x720
+virtual-output creation/release with layout restoration. SELinux stayed
+Enforcing; baseline integrity and owned process/socket/lock teardown passed.
+
+The Bazzite VM used software virtual graphics. Physical GPU/codec, real
+streaming/input, audio, latency and the reporter's installed-system retest remain
+separate. Windows uninstall and planned real streaming/input acceptance remain
+untested. During Windows GUI automation, a focus race caused an unintended
+connection to an existing paired host. After the client quit, read-only checks
+confirmed zero active sessions, no reserved lease and the original display
+layout restored. The incident is not streaming acceptance, and diagnostics
+cannot establish that no remote input was transmitted. Additional Seamless
+supervisor/diagnostic development is excluded; experimental Seamless remains
+incomplete. Managed activation on other targets remains user-controlled.
+See the [release notes](RELEASE_0.7.2.md) and published verification records.
+
 ## Bazzite AppImage runtime and disconnect recovery — 2026-10-15
 
 Delivered as the Linux x86_64 [0.7.2-rc.2 AppImage test release](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2),
