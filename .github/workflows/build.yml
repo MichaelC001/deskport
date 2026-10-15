@@ -25,6 +25,7 @@ jobs:
         run: |
           python3 scripts/test-appimage-graphics.py
           python3 scripts/test-appimage-pipewire.py
+          python3 scripts/test-appimage-qt-runtime.py
           python3 scripts/test-appimage-source-index.py
       - name: CLI and desktop-entry smoke check
         run: python3 scripts/deskport-smoke.py ./result

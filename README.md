@@ -111,6 +111,11 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
+**Linux AppImage test candidate:** [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
+integrates the current main branch and the Bazzite runtime/disconnect fixes for
+[issue #5](https://github.com/keithxc/deskport/issues/5). See the
+[candidate notes](docs/RELEASE_0.7.2-rc.2.md) for validation scope.
+
 **0.7.2 release candidate:** [0.7.2-rc.1 prerelease](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 reconnects about a second faster after a window resize, shows a blurred picture of
 the previous stream while it reconnects, and smooths drags on macOS hosts. See the

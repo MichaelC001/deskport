@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Real KWin/Mutter output and capture tests in isolated desktop sessions."""
+"""Real isolated KWin/Mutter tests; DESKPORT_TEST_OUTPUT_EVENTS preserves topology evidence."""
+import base64
 import json
 import os
 from pathlib import Path
@@ -8,20 +9,38 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 
 helper = str(Path(sys.argv[1]).resolve())
 gnome = '--gnome' in sys.argv
 policy = int(os.environ.get('DESKPORT_TEST_POLICY', '0'))
 auto_permission = '--auto-permission' in sys.argv
+post_delay = '--restore-eof-post-delay' in sys.argv or '--restore-eof-post-delay-short-grace' in sys.argv
 if '--inside' not in sys.argv:
+    native_helper = None
+    if auto_permission:
+        # Nix's launcher adds its package data (including static grants). This
+        # fixture removes package grants to exercise dynamic first-use setup, so
+        # use the actual native ELF without those launcher additions. Nix KWin
+        # also normalizes .*-wrapped identities, so give the copied ELF the
+        # ordinary helper filename used by a portable package.
+        candidate = Path(helper).parent / '.deskport-display-wrapped'
+        if Path(helper).as_posix().startswith('/nix/store/') and candidate.is_file():
+            native_helper = candidate
     with tempfile.TemporaryDirectory(prefix='deskport-display-test-') as tmp:
+        if native_helper:
+            native_fixture = Path(tmp) / 'dynamic-native/bin/deskport-display'
+            native_fixture.parent.mkdir(parents=True)
+            shutil.copy2(native_helper, native_fixture)
+            helper = str(native_fixture)
+            print('FIXTURE: copied unwrapped Nix native ELF as deskport-display for dynamic first-use permission', flush=True)
         project = Path(tmp) / 'probe.pro'
         source = Path(__file__).resolve().parents[1] / 'tests/linux-output-probe.cpp'
         project.write_text(f'QT = core\nCONFIG += console c++17 link_pkgconfig\nPKGCONFIG += wayland-client\nTARGET = output-probe\nSOURCES += "{source}" "{source.parent.parent}/host/linux/kde-output-device-v2.c" "{source.parent.parent}/host/linux/kde-output-management-v2.c"\n')
         subprocess.run(['qmake', str(project)], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
         subprocess.run(['make', '-j2'], cwd=tmp, check=True, stdout=subprocess.DEVNULL)
-        if '--initial-mode-mismatch' in sys.argv or '--restore-failure' in sys.argv:
+        if any(flag in sys.argv for flag in ('--initial-mode-mismatch', '--restore-failure', '--restore-eof-retry', '--restore-eof-delay', '--restore-eof-post-delay-short-grace')) or post_delay:
             # Fault injection: emulate a compositor choosing a different initial
             # size/scale, while keeping the helper's requested target unchanged.
             fixture = Path(tmp) / 'initial-mode-fixture'
@@ -41,16 +60,48 @@ if '--inside' not in sys.argv:
                 end = 'ZKDE_SCREENCAST_UNSTABLE_V1_POINTER_EMBEDDED);'
                 assert text.count(end) == 1
                 text = text.replace(end, end + '\n        testInitialModeMismatchPending = false;')
-            if '--restore-failure' in sys.argv:
+            if '--restore-failure' in sys.argv or '--restore-eof-retry' in sys.argv:
                 for signature in ('bool restore(const QJsonArray& state) {', 'bool mirror(int policy) {'):
                     assert text.count(signature) == 1
                     text = text.replace(signature, signature + '\n        if (QFile::exists(qEnvironmentVariable("XDG_RUNTIME_DIR") + "/reject-local-layout")) { error="Injected local layout failure"; return false; }')
+            if '--restore-eof-delay' in sys.argv:
+                signature = 'bool restore(const QJsonArray& state) {'
+                assert text.count(signature) == 1
+                text = text.replace(signature, signature + '\n        static bool delayed = false; if (!delayed && QFile::exists(qEnvironmentVariable("XDG_RUNTIME_DIR") + "/delay-local-layout")) { delayed = true; QThread::msleep(3500); }')
+            if post_delay:
+                if '--restore-eof-post-delay-short-grace' in sys.argv:
+                    # Negative control changes only this copied fault fixture.
+                    grace = 'LayoutFinalRecoveryGraceMs = 20000;'
+                    assert text.count(grace) == 1
+                    text = text.replace(grace, 'LayoutFinalRecoveryGraceMs = 3000;')
+                signature = 'bool restore(const QJsonArray& state) {'
+                assert text.count(signature) == 1
+                text = text.replace(signature, signature + '''
+        static int guardRestoreRequests = 0;
+        const QString postDelayMarker = qEnvironmentVariable("XDG_RUNTIME_DIR") + "/delay-post-local-layout";
+        const bool delayedPostRestore = QCoreApplication::arguments().value(1) == "--restore-kwin" &&
+            QFile::exists(postDelayMarker) && ++guardRestoreRequests == 2;
+        if (delayedPostRestore) QThread::msleep(3500);''')
+                completed = '        return true;\n    }\n    bool removeOutput() {'
+                assert text.count(completed) == 1
+                text = text.replace(completed, '''        if (delayedPostRestore) {
+            QFile marker(postDelayMarker + ".completed");
+            if (!marker.open(QIODevice::WriteOnly)) { error="Cannot record completed post-removal restore"; return false; }
+            marker.write("restored\\n");
+        }
+''' + completed)
             cpp.write_text(text)
             subprocess.run(['qmake', str(fixture / 'linux.pro')], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
             subprocess.run(['make', '-j2'], cwd=fixture, check=True, stdout=subprocess.DEVNULL)
             helper = str(fixture / 'deskport-display')
+        (Path(tmp) / 'cache').mkdir()
+        # KService hashes GenericDataLocation to choose its cache. Distinct Nix
+        # wrappers prefix different data directories; one explicit private cache
+        # keeps compositor and refresh tool in the same isolated desktop.
+        # KSycoca::absoluteFilePath supports KDESYCOCA for this purpose.
         env = dict(os.environ, XDG_RUNTIME_DIR=tmp, XDG_CONFIG_HOME=tmp + '/config',
                    XDG_DATA_HOME=tmp + '/data', XDG_CACHE_HOME=tmp + '/cache', XDG_DATA_DIRS=tmp + '/data:' + os.environ.get('XDG_DATA_DIRS', '/usr/share'),
+                   KDESYCOCA=tmp + '/cache/ksycoca6-deskport-test',
                    WAYLAND_DISPLAY='deskport-test', QT_QPA_PLATFORM='offscreen',
                    KWIN_COMPOSE='O2', QT_FORCE_STDERR_LOGGING='1', QT_LOGGING_TO_CONSOLE='1',
                    LIBGL_ALWAYS_SOFTWARE='1')
@@ -89,7 +140,7 @@ if '--inside' not in sys.argv:
         # race removal of its isolated configuration/data directories.
         bus_config = Path(tmp) / 'session-bus.conf'
         bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
-        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--auto-permission'] if auto_permission else []) + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []),
+        subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--auto-permission'] if auto_permission else []) + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []) + (['--restore-eof-retry'] if '--restore-eof-retry' in sys.argv else []) + (['--restore-eof-delay'] if '--restore-eof-delay' in sys.argv else []) + (['--restore-eof-post-delay'] if post_delay else []) + (['--restore-eof-post-delay-short-grace'] if '--restore-eof-post-delay-short-grace' in sys.argv else []),
                        env=env, check=True, timeout=180)
     raise SystemExit(0)
 
@@ -125,6 +176,23 @@ try:
         return {o['name']: {k:v for k,v in o.items() if k != 'id'} for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE']], timeout=5))}
     def devices():
         return {o['name']: o for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE'], '--devices'], timeout=5))}
+    event_path = Path(os.environ.get('DESKPORT_TEST_OUTPUT_EVENTS', str(Path(os.environ['XDG_RUNTIME_DIR']) / 'output-events.jsonl')))
+    event_path.parent.mkdir(parents=True, exist_ok=True)
+    event_log = event_path.open('w')
+    output_watch = subprocess.Popen([os.environ['DESKPORT_OUTPUT_PROBE'], '--watch-outputs'],
+                                    stdin=subprocess.PIPE, stdout=event_log, text=True)
+    track(output_watch)
+    deadline = time.monotonic() + 5
+    while not event_path.stat().st_size and time.monotonic() < deadline: time.sleep(.02)
+    assert event_path.stat().st_size, 'Output observer did not start'
+    def finish_output_watch():
+        if output_watch.stdin and not output_watch.stdin.closed: output_watch.stdin.close()
+        assert output_watch.wait(timeout=5) == 0, 'Output observer failed'
+        event_log.close()
+        events = [json.loads(line) for line in event_path.read_text().splitlines()]
+        assert events and events[0]['event'] == 'ready', events
+        assert not any(event['zeroOutputs'] for event in events), ('A Wayland client observed zero outputs', events)
+        print(f'PASS: {len(events)} live wl_output events without a zero-output interval; evidence={event_path}', flush=True)
     if '--disabled-output' in sys.argv:
         assert not gnome
         before = devices()
@@ -209,6 +277,23 @@ try:
             return {p.name: (p.read_bytes(), p.stat().st_mtime_ns) for p in applications.glob('*.desktop')}
         registered = entries()
         assert len(registered) == 1, registered
+        def verify_permission_identity(proc):
+            actual = str(Path(f'/proc/{proc.pid}/exe').resolve())
+            matching = []
+            for content, _ in entries().values():
+                values = dict(line.split('=', 1) for line in content.decode().splitlines()
+                              if '=' in line)
+                encoded = values.get('X-DeskPort-Executable')
+                if encoded and base64.b64decode(encoded).decode() == actual:
+                    matching.append(values)
+            assert len(matching) == 1, 'No unique permission entry for the running helper executable'
+            # The helper is a sharun ELF launcher in a portable AppImage. Grant
+            # the identity KWin actually observes, including when the real ELF
+            # runs from shared/bin; a public bin/libexec pathname is insufficient.
+            command = ('"' + actual.replace('"', '"""') + '"').replace('\\', '\\\\')
+            command = command.replace('\n', '\\n').replace('\r', '\\r')
+            assert matching[0]['Exec'] == command, matching[0]
+            assert matching[0]['X-KDE-Wayland-Interfaces'] == 'zkde_screencast_unstable_v1'
         def check_start(executable, extra_env=None):
             proc = subprocess.Popen([str(executable), '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                     text=True, env=dict(helper_env, DESKPORT_DISPLAY_ON_DEMAND='1', **(extra_env or {})))
@@ -216,8 +301,7 @@ try:
             assert select.select([proc.stdout], [], [], 12)[0], 'Permission setup timed out'
             result = json.loads(proc.stdout.readline())
             assert result.get('ready'), result
-            if (Path(executable).resolve().parent.parent / 'sharun').exists():
-                assert Path(f'/proc/{proc.pid}/exe').resolve() == Path(executable).resolve()
+            verify_permission_identity(proc)
             proc.stdin.close()
             assert proc.wait(timeout=5) == 0
             assert restored()
@@ -370,7 +454,7 @@ try:
         fault.touch()
         p.stdin.write(json.dumps(dict(seq=100, width=1280, height=720, scale=1, session=False)) + '\n'); p.stdin.flush()
         assert 'error' in receive(allow_error=True)
-        assert owned not in outputs(), 'Old virtual output was not removed'
+        assert owned in outputs(), 'Failed physical recovery removed the workspace before local control was safe'
         next_policy = (policy + 1) % 3
         p.stdin.write(json.dumps(dict(displayPolicy=next_policy, seq=101, width=1920, height=1888, scale=2, session=True)) + '\n'); p.stdin.flush()
         resumed = receive()
@@ -389,6 +473,7 @@ try:
             if restored(): break
             time.sleep(.05)
         assert restored(), 'Pending recovery did not restore after fault removal'
+        finish_output_watch()
         print('PASS: failed KDE restore, different-policy takeover, verified 1920x1888@2, local failure diagnostics and eventual recovery')
         raise SystemExit(0)
     # Session ends without stopping sharing: the output itself must disappear.
@@ -403,12 +488,44 @@ try:
         initial = resumed; owned = resumed['outputName']
     else: verify_mirror(owned)
     capture(1920, 1080, 1)
+    if '--restore-eof-retry' in sys.argv:
+        assert not gnome
+        fault = Path(os.environ['XDG_RUNTIME_DIR']) / 'reject-local-layout'
+        fault.touch()
+        retry_release = threading.Timer(2, lambda: fault.unlink(missing_ok=True))
+        retry_release.daemon = True
+        retry_release.start()
+        eof_started = time.monotonic()
+    if '--restore-eof-delay' in sys.argv:
+        assert not gnome
+        (Path(os.environ['XDG_RUNTIME_DIR']) / 'delay-local-layout').touch()
+        eof_started = time.monotonic()
+    if post_delay:
+        assert not gnome
+        post_delay_marker = Path(os.environ['XDG_RUNTIME_DIR']) / 'delay-post-local-layout'
+        post_delay_marker.touch()
+        eof_started = time.monotonic()
     p.stdin.close()
-    assert p.wait(timeout=5) == 0
+    assert p.wait(timeout=27 if post_delay else 9) == 0
+    eof_completed = time.monotonic()
     for _ in range(50):
         if restored(): break
         time.sleep(.05)
     assert restored(), 'Layout was not restored after helper EOF'
+    finish_output_watch()
+    if '--restore-eof-retry' in sys.argv:
+        assert time.monotonic() - eof_started >= 1.8, 'EOF skipped the temporary recovery rejection'
+        assert not fault.exists(), 'Recovery fixture did not clear the temporary rejection'
+        print('PASS: EOF retries temporary physical-layout rejection for 2 s before virtual-output removal', flush=True)
+    if '--restore-eof-delay' in sys.argv:
+        assert time.monotonic() - eof_started >= 3.3, 'EOF skipped the delayed recovery acknowledgment'
+        print('PASS: EOF waits for a 3.5 s physical-layout recovery acknowledgment before virtual-output removal', flush=True)
+    if post_delay:
+        completed_marker = post_delay_marker.with_name(post_delay_marker.name + '.completed')
+        assert completed_marker.is_file(), 'Post-removal guard was terminated before physical-layout verification completed'
+        assert completed_marker.read_text() == 'restored\n', 'Post-removal guard did not finish physical-layout verification'
+        assert eof_completed - eof_started >= 3.3, 'EOF skipped the delayed post-removal recovery'
+        print('PASS: EOF waits for a 3.5 s post-removal restore and verifies the physical baseline before guard exit', flush=True)
     capture(1280, 720, 1, missing=True)
     p = subprocess.Popen([helper, '1280', '720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=helper_env)
     track(p)

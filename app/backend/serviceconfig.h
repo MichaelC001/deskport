@@ -8,11 +8,24 @@
 #include <QStandardPaths>
 
 namespace DeskPortService {
-inline QString persistentExecutable(const QString& native, const QString& appImage) {
+inline QString persistentExecutable(const QString& native, const QString& appImage, const QString& appDir = {}) {
     const QFileInfo portable(appImage);
     // AppImage mount paths disappear on exit; login must launch the original file.
-    return !appImage.isEmpty() && portable.isAbsolute() && portable.isFile() && portable.isExecutable()
-        ? portable.absoluteFilePath() : native;
+    if (!appImage.isEmpty() && portable.isAbsolute() && portable.isFile() && portable.isExecutable())
+        return portable.absoluteFilePath();
+    // Extracted AppImages need AppRun's runtime setup on every login too. Only
+    // use the declared AppDir when this executable belongs to its viewer tree.
+    const QFileInfo directory(appDir);
+    if (!appDir.isEmpty() && directory.isAbsolute() && directory.isDir()) {
+        const auto root = directory.canonicalFilePath();
+        const auto executable = QFileInfo(native).canonicalFilePath();
+        const QFileInfo launcher(root + "/AppRun");
+        if ((executable == QFileInfo(root + "/usr/bin/deskport").canonicalFilePath() ||
+             executable == QFileInfo(root + "/usr/shared/bin/deskport").canonicalFilePath()) &&
+            !executable.isEmpty() && launcher.isFile() && launcher.isExecutable())
+            return launcher.absoluteFilePath();
+    }
+    return native;
 }
 #ifdef Q_OS_LINUX
 inline QString autostartPath() {
@@ -84,7 +97,8 @@ inline bool guiManagedUnit(const QString& path) {
             else if (command[i] == '"') quotedPath = false;
         }
         if (quotedPath && !command.isEmpty() && !command.contains('\n') && !command.contains('\r') &&
-            (command.endsWith("/deskport") || command.endsWith("/DeskPort") || command.endsWith(".AppImage"))) return true;
+            (command.endsWith("/deskport") || command.endsWith("/DeskPort") || command.endsWith(".AppImage") ||
+             command.endsWith("/AppRun"))) return true;
     }
     return false;
 }

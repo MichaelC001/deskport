@@ -274,7 +274,8 @@ int serviceCommand(const QStringList& args) {
             return reportError("Disable and stop the unit explicitly before uninstalling: systemctl --user disable --now " + unitName);
         if (!QFile::remove(path)) return reportError("Could not remove the owned user unit.");
     } else {
-        QString executable = DeskPortService::persistentExecutable(QCoreApplication::applicationFilePath(), qEnvironmentVariable("APPIMAGE"));
+        QString executable = DeskPortService::persistentExecutable(QCoreApplication::applicationFilePath(),
+            qEnvironmentVariable("APPIMAGE"), qEnvironmentVariable("APPDIR"));
         const QFileInfo executableInfo(executable);
         // Nix wrapQtAppsHook launches the real binary as .deskport-wrapped.
         // The sibling launcher restores Qt/plugin/library search paths after

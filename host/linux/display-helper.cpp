@@ -32,6 +32,11 @@
 #include "kde-output-device-v2.h"
 #include "kde-output-management-v2.h"
 
+static constexpr int LayoutPreparationGraceMs = 5000;
+// The independent guard can use sync (4 s), removal (2 s), then restore
+// (sync/apply/final sync, 12 s). Keep that whole post-removal path alive.
+static constexpr int LayoutFinalRecoveryGraceMs = 20000;
+
 static void reply(const QJsonObject& object) {
     const auto bytes = QJsonDocument(object).toJson(QJsonDocument::Compact) + '\n';
     fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout); fflush(stdout);
@@ -75,13 +80,38 @@ class Display {
 public:
     const QString name = "DeskPort-" + QUuid::createUuid().toString(QUuid::WithoutBraces);
     ~Display() {
-        // Remove our output before recovery: topology changes may otherwise
-        // overwrite the recovered policy and re-enable previously disabled screens.
+        // Restore from the independent recovery connection while our virtual
+        // output still exists. Closing a mirrored/sole primary first leaves
+        // QtWayland clients with no wl_output and can crash the sharing GUI.
+        if (stream && recovery && recovery->state() == QProcess::Running) {
+            QElapsedTimer deadline; deadline.start();
+            bool prepared = false, pending = false;
+            while (recovery->state() == QProcess::Running && deadline.elapsed() < LayoutPreparationGraceMs) {
+                if (!pending) {
+                    recovery->write("{\"restore\":true}\n");
+                    pending = true;
+                }
+                // Keep one request in flight. A delayed reply must not queue
+                // more recovery transactions or restart the overall deadline.
+                const int remaining = LayoutPreparationGraceMs - int(deadline.elapsed());
+                if (remaining <= 0 || !recovery->waitForReadyRead(remaining)) break;
+                const auto response = recovery->readLine();
+                if (response == "restored\n") { prepared = true; break; }
+                pending = false;
+                QThread::msleep(std::min(100, std::max(0, LayoutPreparationGraceMs - int(deadline.elapsed()))));
+            }
+            if (!prepared)
+                recordLayoutEvent("Local layout recovery remained unavailable before owned output removal");
+        }
         if (stream) zkde_screencast_stream_unstable_v1_close(stream);
         if (display) { wl_display_flush(display); wl_display_disconnect(display); display = nullptr; }
         if (recovery) {
             recovery->closeWriteChannel();
-            if (!recovery->waitForFinished(3000)) fprintf(stderr, "KWin layout recovery did not finish promptly\n");
+            if (recovery->state() != QProcess::NotRunning && !recovery->waitForFinished(LayoutFinalRecoveryGraceMs)) {
+                recordLayoutEvent("KWin layout recovery timed out after owned output removal; observed layout is the last snapshot");
+                recovery->kill();
+                recovery->waitForFinished(1000);
+            }
         }
     }
     static bool valid(int width, int height, int scale) {
@@ -308,7 +338,9 @@ public:
         if (!owned && !stream && !sessionActive && !recoveryPending) return true;
         // Lease ownership ends even if physical-layout recovery fails.
         sessionActive = false; sessionPolicy = -1;
-        if (!removeOutput() || !restore(baseline)) { deferLocalLayout(); return false; }
+        // Keep the workspace alive if physical recovery is rejected. Removing
+        // the only logical output cannot safely complete a failed disconnect.
+        if (!restore(baseline) || !removeOutput() || !restore(baseline)) { deferLocalLayout(); return false; }
         recordLayoutEvent("Local layout recovery verified; detached outputs were skipped");
         recoveryPending = false;
         return saveRecovery({});
@@ -322,7 +354,10 @@ public:
         // Retain the original recovery target across failed restores. Never
         // replace it with the damaged local layout at the next connection.
         if (!recoveryPending) baseline = layout();
-        else recordLayoutEvent("New client takes over while local recovery remains pending");
+        else {
+            layoutWarning = "Local layout recovery remains pending";
+            recordLayoutEvent("New client takes over while local recovery remains pending");
+        }
         if (!saveRecovery(baseline)) return false;
         if (!owned && !createOutput(width, height)) return false;
         sessionActive = true; sessionPolicy = policy;
@@ -335,6 +370,17 @@ public:
                 (entry.second->name == outputName || entry.second->name == "Virtual-" + outputName)) return false;
             return true;
         }, 2000);
+    }
+    bool prepareRemoval(const QString& outputName, const QJsonArray& state) {
+        if (!sync()) return false;
+        for (const auto& entry : outputs) if (!entry.second->removed &&
+            (entry.second->name == outputName || entry.second->name == "Virtual-" + outputName))
+            owned = entry.second.get();
+        const bool ok = restore(state);
+        // This connection observes the output but does not own its stream.
+        // Removal after preparation is expected, not a broken helper session.
+        owned = nullptr;
+        return ok;
     }
     bool start(int width, int height) {
         if (!connectSession()) return false;
@@ -479,7 +525,7 @@ public:
                 // session policy and original recovery snapshot. Sunshine reopens
                 // that name on PipeWire disconnect; physical fallback stays forbidden.
                 fprintf(stderr, "KWin custom mode is not exact; replacing owned output at %dx%d\n", width, height);
-                if (!removeOutput() || !createOutput(width, height)) return false;
+                if (!restore(baseline) || !removeOutput() || !createOutput(width, height)) return false;
                 return resize(width, height, scale, false);
             }
             if (!selected) { error = "KWin did not advertise the requested virtual mode"; return false; }
@@ -585,7 +631,13 @@ int main(int argc, char** argv) {
             if (byte != '\n') { buffer.append(byte); if (buffer.size() > 65536) return 2; continue; }
             QJsonParseError parse;
             const auto document = QJsonDocument::fromJson(buffer, &parse); buffer.clear();
-            if (parse.error != QJsonParseError::NoError || !document.isArray()) return 2;
+            if (parse.error != QJsonParseError::NoError) return 2;
+            if (document.isObject() && document.object()["restore"].toBool()) {
+                const bool ok = state.isEmpty() || restore.prepareRemoval(args[2], state);
+                fputs(ok ? "restored\n" : "failed\n", stdout); fflush(stdout);
+                continue;
+            }
+            if (!document.isArray()) return 2;
             state = document.array();
             fputs("ready\n", stdout); fflush(stdout);
         }

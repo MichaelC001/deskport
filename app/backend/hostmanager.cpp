@@ -3,6 +3,12 @@
 #ifdef Q_OS_WIN
 #include <windows.h>
 #endif
+#ifdef Q_OS_LINUX
+#include <cerrno>
+#include <csignal>
+#include <sys/prctl.h>
+#include <unistd.h>
+#endif
 #include "hostmanager.h"
 #include "hostcaretmonitor.h"
 #include <QScreen>
@@ -53,6 +59,13 @@
 #include "macunattended.h"
 #endif
 namespace {
+#ifdef Q_OS_LINUX
+// KWin EOF recovery: pre-removal preparation (5 s), final recovery (20 s),
+// and owned recovery-process reap (1 s). The timer starts at display EOF.
+constexpr int DisplayShutdownGraceMs = 26000;
+#else
+constexpr int DisplayShutdownGraceMs = 9000;
+#endif
 // Explicit troubleshooting opt-in only. Diagnostics keep fixed event classes and
 // drop raw text; DESKPORT_HOST_LOG names a private file that receives the
 // helpers' raw output (addresses and paths included), capped at 32 MiB.
@@ -76,6 +89,26 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
     connect(&m_Display,qOverload<int,QProcess::ExitStatus>(&QProcess::finished),this,[this]{m_CaretMonitor->stop();});
 #endif
     m_Isolated = !directory.isEmpty();
+#ifdef Q_OS_LINUX
+    // Only our Sunshine children own these ports. A crashed GUI must release
+    // them even if the child ignores SIGTERM; the display helper separately
+    // receives stdin EOF so it can restore the physical layout first.
+    for (auto child : {&m_Server, &m_Credentials}) {
+        const auto parentPid = ::getpid();
+        child->setChildProcessModifier([child, parentPid] {
+            if (::prctl(PR_SET_PDEATHSIG, SIGKILL) != 0) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 7, 0)
+                child->failChildProcessModifier("prctl(PR_SET_PDEATHSIG)", errno);
+#else
+                ::_exit(127);
+#endif
+            }
+            // The parent may die between fork and installing the signal. A
+            // subreaper can adopt us, so comparing against PID 1 is insufficient.
+            if (::getppid() != parentPid) ::_exit(127);
+        });
+    }
+#endif
 #ifdef Q_OS_WIN
     // Own only our QProcess children. Never look up or terminate hosts by name.
     auto job = CreateJobObjectW(nullptr, nullptr);
@@ -546,7 +579,8 @@ HostManager::~HostManager() {
     for (auto process : {&m_Credentials, &m_Server, &m_Display}) {
         process->disconnect(this);
         if (process == &m_Display) process->closeWriteChannel();
-        if (process->state() != QProcess::NotRunning && !process->waitForFinished(2500)) {
+        const int grace = process == &m_Display ? DisplayShutdownGraceMs : 2500;
+        if (process->state() != QProcess::NotRunning && !process->waitForFinished(grace)) {
             process->kill(); process->waitForFinished(1000);
         }
     }
@@ -812,6 +846,7 @@ void HostManager::beginStop(const QString &status) {
     m_DisplaySequence = 0; m_QueuedDisplayRequest = {}; ++m_DisplayGeneration;
     if (m_Stopping) return;
     m_Stopping = true;
+    m_DisplayClosing = false;
     const auto generation = ++m_Generation;
     m_Starting = false;
     m_StopStatus = status;
@@ -827,17 +862,26 @@ void HostManager::beginStop(const QString &status) {
         }
         finishStop();
     });
-    QTimer::singleShot(3500, this, [this, generation] {
-        if (!m_Stopping || generation != m_Generation) return;
-        if (m_Display.state() != QProcess::NotRunning) m_Display.kill();
-        finishStop();
-    });
 }
 void HostManager::finishStop() {
     if (!m_Stopping) return;
     if (m_Credentials.state() != QProcess::NotRunning || m_Server.state() != QProcess::NotRunning) return;
     // Release the display only after the host has stopped using it.
-    if (m_Display.state() != QProcess::NotRunning) { m_Display.closeWriteChannel(); return; }
+    if (m_Display.state() != QProcess::NotRunning) {
+        if (!m_DisplayClosing) {
+            m_DisplayClosing = true;
+            m_Display.closeWriteChannel();
+            // Give layout recovery its full grace period after Sunshine exits,
+            // including both pre-removal preparation and final verification.
+            const auto generation = m_Generation;
+            QTimer::singleShot(DisplayShutdownGraceMs, this, [this, generation] {
+                if (!m_Stopping || generation != m_Generation) return;
+                if (m_Display.state() != QProcess::NotRunning) m_Display.kill();
+                finishStop();
+            });
+        }
+        return;
+    }
     // QProcess may emit errorOccurred and finished together. Keep cleanup active
     // through both signals so a terminated sibling cannot replace the root error.
     const auto generation = m_Generation;
@@ -1159,7 +1203,7 @@ void HostManager::setLoginStart(bool enabled) {
     if (enabled) {
         QDir().mkpath(QFileInfo(path).absolutePath());
         const QString executable = DeskPortService::persistentExecutable(
-            QCoreApplication::applicationDirPath() + "/deskport", QString::fromLocal8Bit(qgetenv("APPIMAGE")));
+            QCoreApplication::applicationDirPath() + "/deskport", qEnvironmentVariable("APPIMAGE"), qEnvironmentVariable("APPDIR"));
         const QString unitPath = DeskPortService::unitPath();
         QDir().mkpath(QFileInfo(unitPath).absolutePath());
         QSaveFile unit(unitPath);

@@ -17,10 +17,11 @@ with tempfile.TemporaryDirectory(prefix="deskport-lifecycle-") as temporary:
     (helpers / "Sunshine.app/Contents/MacOS").mkdir(parents=True)
     interpreter = shutil.which("python3")
     display = helpers / "deskport-display"
-    display.write_text(f"#!{interpreter}\n" + '''import json, os, select, sys, time
+    display.write_text(f"#!{interpreter}\n" + '''import json, os, pathlib, select, sys, time
 assert os.environ.get("DESKPORT_DISPLAY_ISOLATED") == "1"
 assert os.environ.get("DESKPORT_DISPLAY_STATE_DIR", "").startswith("/")
 assert int(os.environ.get("DESKPORT_DISPLAY_SERIAL", "0")) >= 0x80000000
+pathlib.Path(os.environ["DESKPORT_DISPLAY_STATE_DIR"]).joinpath("display-pid").write_text(str(os.getpid()))
 if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
@@ -44,6 +45,8 @@ for line in sys.stdin:
         request["active"] = request.get("session", True)
         if request["active"]: request.update(outputName="Meta-2", pipewireNode=43, pipewireSerial="143")
     print(json.dumps(request), flush=True)
+if os.environ.get("DESKPORT_TEST_MODE") == "stubborn-slow-display": time.sleep(1.5)
+pathlib.Path(os.environ["DESKPORT_DISPLAY_STATE_DIR"]).joinpath("display-closed").touch()
 ''')
     host = helpers / "Sunshine.app/Contents/MacOS/Sunshine"
     host.write_text(f"#!{interpreter}\n" + '''import os, pathlib, signal, sys, time
@@ -52,6 +55,7 @@ mode = os.environ.get("DESKPORT_TEST_MODE")
 if sys.platform == "darwin" and os.environ.get("DESKPORT_CAPTURE_DISPLAY") != "123":
     sys.exit(18)  # Both credentials and server must target the helper display.
 if "--creds" in sys.argv:
+    (state / "auth-pid").write_text(str(os.getpid()))
     (state / "auth-started").touch()
     if mode == "auth-fail": sys.exit(3)
     if mode == "auth-gated":
@@ -68,7 +72,8 @@ if mode == "host-fail": sys.exit(7)
 if mode == "host-crash-once" and not (state / "crashed-once").exists():
     (state / "crashed-once").touch()
     sys.exit(7)
-if mode == "stubborn": signal.signal(signal.SIGTERM, signal.SIG_IGN)
+if mode in ("stubborn", "stubborn-slow-display"): signal.signal(signal.SIGTERM, signal.SIG_IGN)
+(state / "host-pid").write_text(str(os.getpid()))
 (state / "host-started").touch()
 print("Connection started 192.0.2.99 token=fixture-secret", flush=True)
 # Loopback-only, certificate-pinned management fixture; never a personal host.

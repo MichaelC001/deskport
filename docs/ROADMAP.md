@@ -1,3 +1,51 @@
+## Bazzite AppImage runtime and disconnect recovery — 2026-10-15
+
+The reporter confirmed issue #5's KWin output-registry and VA-API fixes on
+Bazzite 44 / KWin 6.7.5, then reported a helper glibc mismatch and a Qt Wayland
+disconnect crash. Reproduce these follow-ups using the official Bazzite 44 image
+and the reported glibc 2.43-9 package cohort, with an isolated compositor and
+application profile.
+
+AppImage child launchers now retain the selected host loader's matching library
+cohort, including the independent display-recovery process. Viewer and Sunshine
+launchers still select their own graphics runtimes. Automatic KWin grants use
+the actual running helper identity; extracted AppImage login startup returns to
+AppRun instead of bypassing its environment setup.
+
+Disconnect and exact-size output replacement restore local outputs before
+releasing the virtual primary. Normal helper EOF first requests restoration
+through its independent recovery connection, with bounded retries. Display
+shutdown gets its full recovery grace after stdin closes, including when
+Sunshine is slow to terminate. Owned Sunshine children are terminated on Linux
+parent death; existing display recovery and journal retention remain in place.
+These are native lifecycle and packaging fixes, with no shared wire or media
+policy change.
+
+The original 2560x1440 regression also reproduced the reporter's exact Qt
+`QScreen::geometry()` null-pointer stack even when raw Wayland outputs never
+reached zero. Qt Wayland 6.4.2 retained its deleted placeholder in the virtual
+screen siblings during offscreen-surface reconstruction. The AppImage viewer
+backports upstream fix `e038d0b750cf238fef6eeb07a90b7fc1b52e4640`, clearing that
+pointer before removal callbacks. Only Wayland Client is rebuilt against the
+matching 6.4.2 SDK; complete sources, notices and rebuild materials accompany it.
+
+Validation: the final compressed AppImage, extracted without library removal,
+passed 20 disconnect/reconnect cycles and 60 exact resizes under Bazzite 44,
+glibc 2.43-9 and KWin 6.7.5. Its real GUI and persistent Qt offscreen/window
+fixture used the verified backport, observed 483 output events and 488 Qt screen
+events, and restored every baseline without a zero-output interval. Actual
+viewer/helper/recovery libc and loader hashes agreed, and automatic permission
+entries matched the running helper. The old Qt runtime crashed in the same
+original-resolution case; the old 3-second recovery budget failed the delayed
+post-removal verification while the new budget passed all three policies.
+
+The final native Nix build, 39 supervision tests, KWin 6.6.6/6.7.5 baselines,
+actual software capture/encoder probes, and service/runtime/source checks passed.
+Owned test processes and ports were released. The reproducible lab uses an
+isolated official Bazzite container userspace and headless compositor on a
+NixOS kernel. Issue #5 remains open for the reporter's new-package retest;
+physical streaming, input and latency acceptance remain separate.
+
 ## Data saver that actually saves — 2026-10-15
 
 Reason: a 100-minute remote session with data saver on still averaged 1.4 Mbps of

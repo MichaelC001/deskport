@@ -6,15 +6,30 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <map>
 #include <vector>
+#include <unistd.h>
 #include <wayland-client.h>
 #include "../host/linux/kde-output-device-v2.h"
 #include "../host/linux/kde-output-management-v2.h"
 static kde_output_management_v2* management = nullptr;
 struct Output { wl_output* proxy; QJsonObject state; bool removed = false; };
+struct Outputs {
+    std::map<uint32_t, Output> records;
+    bool watching = false;
+    QElapsedTimer elapsed;
+    void changed(const char* event) const {
+        if (!watching) return;
+        int count = 0;
+        for (const auto& record : records) if (!record.second.removed) ++count;
+        const auto bytes = QJsonDocument(QJsonObject{{"event", event}, {"outputs", count},
+            {"zeroOutputs", count == 0}, {"elapsedMs", double(elapsed.elapsed())}}).toJson(QJsonDocument::Compact) + '\n';
+        fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout); fflush(stdout);
+    }
+};
 struct Device {
     kde_output_device_v2* proxy = nullptr;
     bool removed = false;
@@ -142,7 +157,7 @@ int main(int argc, char** argv) {
         fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout);
         return 0;
     }
-    std::map<uint32_t, Output> outputs;
+    Outputs outputs;
     auto registry = wl_display_get_registry(display);
     static const wl_output_listener outputListener = {
         [](void* p, wl_output*, int32_t x, int32_t y, int32_t, int32_t, int32_t, const char*, const char*, int32_t transform) { auto& s = static_cast<Output*>(p)->state; s["x"] = x; s["y"] = y; s["transform"] = transform; },
@@ -155,20 +170,47 @@ int main(int argc, char** argv) {
     static const wl_registry_listener registryListener = {
         [](void* p, wl_registry* registry, uint32_t id, const char* name, uint32_t version) {
             if (strcmp(name, "wl_output") || version < 4) return;
-            auto& out = (*static_cast<std::map<uint32_t, Output>*>(p))[id];
+            auto self = static_cast<Outputs*>(p);
+            auto& out = self->records[id];
             out.proxy = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 4));
             out.state["id"] = int(id);
             wl_output_add_listener(out.proxy, &outputListener, &out);
+            self->changed("added");
         }, [](void* p, wl_registry*, uint32_t id) {
-            auto& outputs = *static_cast<std::map<uint32_t, Output>*>(p);
-            if (auto it = outputs.find(id); it != outputs.end()) it->second.removed = true;
+            auto self = static_cast<Outputs*>(p);
+            if (auto it = self->records.find(id); it != self->records.end()) {
+                it->second.removed = true;
+                self->changed("removed");
+            }
         }
     };
     wl_registry_add_listener(registry, &registryListener, &outputs);
     if (wl_display_roundtrip(display) < 0 || wl_display_roundtrip(display) < 0) return 1;
+    if (app.arguments().contains("--watch-outputs")) {
+        outputs.elapsed.start();
+        outputs.watching = true;
+        outputs.changed("ready");
+        // A separate Wayland connection records every registry event, including
+        // transient zero-output intervals invisible to one-shot layout probes.
+        while (true) {
+            if (wl_display_dispatch_pending(display) < 0) return 1;
+            if (wl_display_flush(display) < 0 && errno != EAGAIN) return 1;
+            pollfd fds[] = {{STDIN_FILENO, POLLIN, 0}, {wl_display_get_fd(display), POLLIN, 0}};
+            const auto result = poll(fds, 2, -1);
+            if (result < 0 && errno == EINTR) continue;
+            if (result < 0) return 1;
+            if (fds[1].revents && (!(fds[1].revents & POLLIN) || wl_display_dispatch(display) < 0)) return 1;
+            if (fds[0].revents) {
+                char byte;
+                if (read(STDIN_FILENO, &byte, 1) <= 0) break;
+            }
+        }
+        if (wl_display_roundtrip(display) < 0) return 1;
+    }
     QJsonArray result;
-    for (const auto& out : outputs) { if (!out.second.removed) result.append(out.second.state); wl_output_destroy(out.second.proxy); }
+    for (const auto& out : outputs.records) { if (!out.second.removed) result.append(out.second.state); wl_output_destroy(out.second.proxy); }
     wl_registry_destroy(registry); wl_display_disconnect(display);
+    if (outputs.watching) return 0;
     const auto bytes = QJsonDocument(result).toJson(QJsonDocument::Compact);
     fwrite(bytes.constData(), 1, size_t(bytes.size()), stdout);
     return 0;
