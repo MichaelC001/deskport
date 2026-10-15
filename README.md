@@ -143,7 +143,8 @@ no rc.2 DEB, RPM or Arch packages, and the stable native packages do not contain
 that AppImage backport. Reporter acceptance remains pending; see the
 [candidate verification scope](docs/RELEASE_0.7.2-rc.2.md).
 
-New complete-VM installation checks for the six desktops below are pending.
+Native package installation, update and removal checks in complete VMs remain
+pending; an AppImage GUI smoke does not verify those native package operations.
 Package installation and GUI launch alone do not verify live capture, hardware
 video decoding, remote input, visual quality or latency.
 
