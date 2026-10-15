@@ -112,6 +112,11 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
+**0.7.2 release preparation:** The next stable desktop packages combine the
+resize, remote-streaming, data-saver and Linux runtime improvements described in
+the [0.7.2 release notes](docs/RELEASE_0.7.2.md). Final package validation is in
+progress; the stable downloads below remain 0.7.1 until publication.
+
 **Linux AppImage test candidate:** [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
 integrates the current main branch and the Bazzite runtime/disconnect fixes for
 [issue #5](https://github.com/keithxc/deskport/issues/5). See the

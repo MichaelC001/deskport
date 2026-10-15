@@ -3178,3 +3178,15 @@ others were still hiding.
 The connection wait now pumps through the session, which reports focus and
 presentation, and the tray treats the wanted viewer as in front when its own
 focus report says so.
+
+### Desktop 0.7.2 stable release preparation — 2026-10-15
+
+Reason: consolidate the resize, remote-rate, data-saver, input recovery and
+Linux AppImage improvements from the 0.7.2 candidates into the next full
+desktop release. See [0.7.2 release notes](RELEASE_0.7.2.md).
+
+The unfinished Seamless supervisor and local diagnostic changes remain on a
+separate development branch. Final desktop packages require their own exact
+artifact verification; earlier candidate checks do not establish final package
+or physical streaming acceptance. Publication and managed activation remain
+separate from source and package preparation.
