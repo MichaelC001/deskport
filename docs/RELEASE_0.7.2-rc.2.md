@@ -41,3 +41,36 @@ For the reporter's retest, extract into a fresh directory and launch AppRun with
 all bundled libraries present. Use the default Wayland platform and the normal
 virtual-primary display policy, then check resize, disconnect, reconnect, local
 layout restoration and process/port cleanup. Issue #5 stays open for that retest.
+
+## Published artifacts
+
+[Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2): eight assets,
+with all asset sizes/digests checked through GitHub and all downloads verified
+anonymously. The stable Latest remains 0.7.1.
+
+- [Linux x86_64 AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/DeskPort-0.7.2-rc.2-x86_64.AppImage)
+- [Checksums](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/SHA256SUMS.txt)
+- [Verification](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/VERIFICATION.md)
+- [Provenance](https://github.com/keithxc/deskport/releases/download/v0.7.2-rc.2/PROVENANCE.json)
+
+AppImage SHA256: `d6a11b45ceebc82a80014bc2b7fad9af2c97b62eaea70601bed621ac3476034d`
+(219,834,872 bytes). Tag source: `4124e6318d3432d6dc6e4cb7638d5155e1ca49d8`;
+binary source: `75cba028b591892357e13e88dd6911907ab493ae`; their Git trees are
+identical. Core: `4064059f51d41bcd0b460b5353be57554e361bd6`.
+The public source-archive NAR matched independently on macOS and Linux:
+`sha256-031OMsLXM2TotqqGlbKGlR4yaZuyXJXsqCMVhbLnb/4=`.
+
+The final AppImage passed 20 disconnect/reconnect cycles and 60 exact resizes,
+with 483 registry events, 490 Qt screen events and 614 fixture frames. The real
+GUI remained alive, baseline layouts returned and no tracked test process remained.
+The native build, core checks, lifecycle 39, binding 172, service 13 and UI 27
+tests passed. KWin 6.6.6/6.7.5 disabled-output baselines passed, as did four actual
+Sunshine software H.264 capture/encoder probes. Exact relink inputs passed a
+separate offline linker/CLI/dependency smoke test.
+
+Tag-source CI: [Linux](https://github.com/keithxc/deskport/actions/runs/38682402312),
+[display](https://github.com/keithxc/deskport/actions/runs/38682402379),
+[Windows source](https://github.com/keithxc/deskport/actions/runs/38682402290).
+All passed. These headless/container results leave physical GPU/driver, sustained
+streaming, input and latency acceptance for the reporter's installed-system retest.
+Issue #5 stays open; no mynix or deployed-service activation is included.

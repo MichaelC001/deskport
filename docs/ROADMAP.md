@@ -1,5 +1,19 @@
 ## Bazzite AppImage runtime and disconnect recovery — 2026-10-15
 
+Delivered as the Linux x86_64 [0.7.2-rc.2 AppImage test release](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2),
+after merging the fixes with main through `bda002ff`. Tag source `4124e631`
+and binary source `75cba028` have identical trees; both pin core `4064059`.
+The integrated compressed artifact passed a fresh 20 disconnect/reconnect cycles
+and 60 exact resizes: 483 output events, 490 Qt screen events and 614 fixture
+frames, with the real GUI alive and every baseline restored. The integrated
+native checks passed 39 lifecycle, 172 binding, 13 service and 27 UI tests,
+plus KWin 6.6.6/6.7.5 baselines and four Sunshine software capture/encoder probes.
+All tag-source GitHub checks passed, eight public assets were anonymously
+downloaded and verified, and the resource audit found no owned process,
+container, active socket or occupied test port. Complete source and tested
+relinking materials accompany the artifact. See the release verification record
+for exact hashes, historical controls and device-acceptance limits.
+
 The reporter confirmed issue #5's KWin output-registry and VA-API fixes on
 Bazzite 44 / KWin 6.7.5, then reported a helper glibc mismatch and a Qt Wayland
 disconnect crash. Reproduce these follow-ups using the official Bazzite 44 image
@@ -29,7 +43,8 @@ backports upstream fix `e038d0b750cf238fef6eeb07a90b7fc1b52e4640`, clearing that
 pointer before removal callbacks. Only Wayland Client is rebuilt against the
 matching 6.4.2 SDK; complete sources, notices and rebuild materials accompany it.
 
-Validation: the final compressed AppImage, extracted without library removal,
+Historical validation before the main integration (`dd8af971` candidate): the
+compressed AppImage, extracted without library removal,
 passed 20 disconnect/reconnect cycles and 60 exact resizes under Bazzite 44,
 glibc 2.43-9 and KWin 6.7.5. Its real GUI and persistent Qt offscreen/window
 fixture used the verified backport, observed 483 output events and 488 Qt screen
