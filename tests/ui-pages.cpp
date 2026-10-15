@@ -1222,22 +1222,34 @@ QtObject {
         QVERIFY(traffic->mapToScene(QPointF()).x() < saver->mapToScene(QPointF()).x());
         QVERIFY(saver->mapToScene(QPointF()).x() < arrange->mapToScene(QPointF()).x());
         // Daily budget: the chip turns amber at 70% and red at 85% of the limit.
-        const auto normalColor = traffic->property("labelColor").value<QColor>();
+        auto budgetChip = findVisual(window->contentItem(),"trafficBudgetChip"); QVERIFY(budgetChip);
+        QVERIFY(!budgetChip->isVisible());
         budget.setEnabled(true); budget.setLimitGb(1.0);
+        QTRY_VERIFY(budgetChip->isVisible());
+        const auto normalColor = budgetChip->property("labelColor").value<QColor>();
         budget.account("test-session", 750000000);
         QCOMPARE(budget.level(), 1);
-        QTRY_VERIFY(traffic->property("text").toString().contains("75%"));
-        const auto warningColor = traffic->property("labelColor").value<QColor>();
+        QTRY_VERIFY(budgetChip->property("text").toString().contains("75%"));
+        const auto warningColor = budgetChip->property("labelColor").value<QColor>();
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QVERIFY(QMetaObject::invokeMethod(saver,"toggle"));
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/topbar-budget.png"));
+            QVERIFY(QMetaObject::invokeMethod(saver,"toggle"));
+        }
         budget.account("test-session", 900000000);
         QCOMPARE(budget.level(), 2);
-        const auto criticalColor = traffic->property("labelColor").value<QColor>();
+        const auto criticalColor = budgetChip->property("labelColor").value<QColor>();
+        // The budget chip sits between the traffic chip and the data saver switch.
+        QTRY_VERIFY(traffic->mapToScene(QPointF()).x() < budgetChip->mapToScene(QPointF()).x());
+        QTRY_VERIFY(budgetChip->mapToScene(QPointF()).x() < saver->mapToScene(QPointF()).x());
         QVERIFY(normalColor != warningColor && warningColor != criticalColor && normalColor != criticalColor);
         auto budgetSection = window->findChild<QObject*>("trafficBudgetSection");
         QVERIFY(budgetSection);
         QVERIFY(window->findChild<QObject*>("trafficBudgetReset"));
         QVERIFY(window->findChild<QObject*>("trafficBudgetLimit"));
         budget.reset(); QCOMPARE(budget.usedBytes(), 0.0); QCOMPARE(budget.level(), 0);
-        QTRY_COMPARE(traffic->property("labelColor").value<QColor>(), normalColor);
+        QTRY_COMPARE(budgetChip->property("labelColor").value<QColor>(), normalColor);
         budget.setEnabled(false);
         // Exceeding an enabled budget is reported once per day; a reset re-arms it.
         TrafficBudget detached(nullptr, false);

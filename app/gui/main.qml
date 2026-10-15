@@ -426,7 +426,8 @@ ApplicationWindow {
             UiButton {
                 id: trafficSummary; objectName: "trafficSummary"
                 // The budget leaves room for the data saver switch beside it.
-                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 600 : 890)))
+                Layout.maximumWidth: Math.min(implicitWidth, Math.max(120, window.width - (topBar.compact ? 600 : 890)
+                    - (budgetChip.visible ? budgetChip.implicitWidth + 8 : 0)))
                 Layout.fillWidth: true; Layout.minimumWidth: Math.min(implicitWidth, 120)
                 visible: !topBar.narrow
                 Layout.leftMargin: 4
@@ -436,7 +437,7 @@ ApplicationWindow {
                 // Daily budget: amber from 70%, red from 85% of the limit.
                 readonly property bool budgeting: typeof trafficBudget !== "undefined" && trafficBudget.enabled && Qt.platform.os !== "windows"
                 readonly property int budgetLevel: budgeting ? trafficBudget.level : 0
-                labelColor: budgetLevel >= 2 ? ui.danger : budgetLevel === 1 ? ui.warning : ui.text
+
                 property real received: 0
                 property real sent: 0
                 property real downRate: 0
@@ -458,26 +459,50 @@ ApplicationWindow {
                 }
                 onCountingChanged: { sampledAt = 0; if (counting) sample() }
                 // Narrow windows keep the connection and download speed only.
-                text: (!connected ? "○  " + qsTr("Not connected")
+                // Rates only; the session total is in the panel, and today's
+                // budget has its own chip so it is never the part that is elided.
+                text: !connected ? "○  " + qsTr("Not connected")
                     : "●  " + activeHostName + (!counting ? "" : topBar.compact
                         ? "  ↓ " + amount(downRate) + "/s"
-                        : "  " + amount(received + sent) + "  ↓ " + amount(downRate) + "/s  ↑ " + amount(upRate) + "/s"))
-                    + (budgeting ? "  · " + qsTr("Today %1%").arg(Math.floor(trafficBudget.fraction * 100)) : "")
+                        : "  ↓ " + amount(downRate) + "/s  ↑ " + amount(upRate) + "/s")
                 Accessible.name: connected ? qsTr("Session data") + " · " + activeHostName : qsTr("Not connected")
                 onClicked: trafficDetails.open()
                 Timer { interval: 1000; repeat: true; running: trafficSummary.counting && window.visible; onTriggered: trafficSummary.sample() }
+            }
+            // Today's share of the daily budget: amber from 70%, red from 85%.
+            UiButton {
+                id: budgetChip; objectName: "trafficBudgetChip"
+                visible: trafficSummary.budgeting && !topBar.narrow
+                flat: true; font.pixelSize: ui.small
+                implicitWidth: contentItem.implicitWidth + 20
+                leftPadding: 10; rightPadding: 10
+                readonly property color levelColor: trafficSummary.budgetLevel >= 2 ? ui.danger
+                    : trafficSummary.budgetLevel === 1 ? ui.warning : ui.accent
+                labelColor: trafficSummary.budgetLevel >= 1 ? levelColor : ui.text
+                text: visible ? qsTr("Today %1%").arg(Math.floor(trafficBudget.fraction * 100)) : ""
+                Accessible.name: qsTr("Daily data budget") + " · " + text
+                onClicked: trafficDetails.open()
+                Rectangle {
+                    anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                    anchors.leftMargin: 10; anchors.rightMargin: 10; anchors.bottomMargin: 6
+                    height: 3; radius: 1.5; color: ui.raised
+                    Rectangle {
+                        width: parent.width * Math.min(1, trafficSummary.budgeting ? trafficBudget.fraction : 0)
+                        height: parent.height; radius: 1.5; color: budgetChip.levelColor
+                    }
+                }
             }
             // One switch for every device: automatic bitrate, or a quarter of it
             // (3-12 Mbps) to save data. Live sessions reconnect to apply it.
             ToolButton {
                 objectName: "dataSaverButton"
-                Layout.preferredWidth: 40
+                Layout.preferredWidth: 34; Layout.preferredHeight: 32
                 checkable: true; checked: StreamingPreferences.dataSaver === true
                 icon.source: "qrc:/res/data-saver.svg"
                 icon.color: checked ? ui.accent : ui.muted
-                icon.width: 20; icon.height: 20
+                icon.width: 18; icon.height: 18
                 background: Rectangle {
-                    radius: 9; implicitWidth: 40; implicitHeight: 36
+                    radius: 8; implicitWidth: 32; implicitHeight: 30
                     color: parent.checked ? Qt.rgba(ui.accent.r, ui.accent.g, ui.accent.b, 0.16)
                         : parent.hovered ? Qt.rgba(ui.text.r, ui.text.g, ui.text.b, 0.06) : "transparent"
                 }
