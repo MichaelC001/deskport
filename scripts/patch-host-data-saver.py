@@ -26,7 +26,8 @@ patch('src/rtsp.cpp', '''      deskport::liveCeilingPermille = deskport::ceiling
 
 # Asynchronous encoder (VideoToolbox and other FFmpeg encoders).
 patch('src/video.cpp', '''    deskport::KeyframeGate deskport_key_gate;''', '''    deskport::KeyframeGate deskport_key_gate;
-    deskport::SaverGate deskport_saver_gate;''')
+    deskport::SaverGate deskport_saver_gate;
+    bool deskport_saver_pending = false;''')
 patch('src/video.cpp', '''      if (smart) {
         if (auto event = activity->pop(0ms)) boost = *event;''', '''      const bool deskport_saving = smart && deskport::liveSaver.load() == 1;
       if (smart) {
@@ -37,8 +38,33 @@ patch('src/video.cpp', '''        const int fps = std::max(deskport::activityFra
             : std::max(deskport::activityFrameRate(boost, absolute_ms, policy.frameRate(now_us / 1000)),
                        deskport::refineFrameRate(absolute_ms, deskport_last_change_ms, policy.frameRate(now_us / 1000)));''')
 patch('src/video.cpp', '''        if (config.deskport_saver && fps <= 1) max_frametime = std::chrono::duration<double, std::milli>(5000.0);''', '''        if (deskport_saving && fps <= 1) max_frametime = std::chrono::duration<double, std::milli>(double(deskport::kSaverIdleMs));''')
-patch('src/video.cpp', '''          if (!policy.admit(captured_us, requested_idr_frame)) {''', '''          if ((deskport_saving && !deskport_saver_gate.admit(captured_us, requested_idr_frame)) ||
-              !policy.admit(captured_us, requested_idr_frame)) {''')
+# Content frames: most images arrive while the loop waits in pop(), so the gate
+# applies after a pop. A denied image is still converted (the encoder input holds
+# the latest picture) and is sent as soon as the gate opens.
+patch('src/video.cpp', '''          if (session->convert(*img)) {
+            BOOST_LOG(error) << "Could not convert image"sv;
+            return;
+          }
+        } else if (!images->running()) {
+          break;
+        } else if (smart && !requested_idr_frame''', '''          if (session->convert(*img)) {
+            BOOST_LOG(error) << "Could not convert image"sv;
+            return;
+          }
+          const auto deskport_saver_us = std::chrono::duration_cast<std::chrono::microseconds>(
+              std::chrono::steady_clock::now() - smart_start).count();
+          if (deskport_saving && !deskport_saver_gate.admit(deskport_saver_us, requested_idr_frame)) {
+            deskport_saver_pending = true;
+            continue;
+          }
+          deskport_saver_pending = false;
+        } else if (!images->running()) {
+          break;
+        } else if (deskport_saving && deskport_saver_pending &&
+                   deskport_saver_gate.admit(std::chrono::duration_cast<std::chrono::microseconds>(
+                       std::chrono::steady_clock::now() - smart_start).count(), false)) {
+          deskport_saver_pending = false; // the held picture goes out now
+        } else if (smart && !requested_idr_frame''')
 
 # Synchronous encoder (VAAPI and other shared-capture encoders).
 patch('src/video.cpp', '''            const int floor = cadence.floor(now_us);''', '''            cadence.saver = deskport::liveSaver.load() == 1;

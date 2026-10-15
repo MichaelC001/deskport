@@ -90,6 +90,10 @@ parity packets, so frame count, not picture content, set the cost.
 - Validation: data saver cadence/gate/FEC policy tests, both host overlays,
   peer-binding `saver` relay, echo, invalid and conflicting duplicate cases.
   Live traffic on the 5G path is still to be measured.
+- First live check (bda002ff): the host still encoded 56 fps with data saver on.
+  The content gate only saw images already queued, while most images arrive
+  during the encoder's 2-10 ms wait in `pop()`. The gate now applies after a pop:
+  a denied picture is converted and held, and sent once the gate opens.
 
 ## Live data saver and background pause — 2026-10-15
 
