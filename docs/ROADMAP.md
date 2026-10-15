@@ -1,7 +1,6 @@
 ## Live data saver and background pause — 2026-10-15
 
-Reason: switching data saver reconnected the stream (about 2.7 s on 5G), and a
-minimized viewer kept streaming in the background.
+Reason: switching data saver reconnected the stream (about 2.7 s on 5G).
 
 - Core contract `protocol/VIDEO_RATE.md` (core `369d0fb`, branch `video-rate`):
   hosts advertise `videoRate: 1`; opted-in viewers send `video-rate` with a
@@ -13,9 +12,13 @@ minimized viewer kept streaming in the background.
   pass the data saver ceiling as `deskportRateCap` in launch/resume; toggling
   then only moves the ceiling. Sunshine exposes `rate` on the lease-checked
   loopback API (`patch-host-rate-api.py`, after the video pause overlay).
-- A minimized viewer now counts as hidden: video transmission pauses after it
-  stays minimized or hidden for 5 s and resumes with a new key frame as soon as
-  it is shown; control, input and audio stay connected.
+- Background pause stays limited to a viewer hidden from the tray: video
+  pauses after 5 s hidden and resumes with a new key frame when it is shown.
+  Minimizing is not used. On KDE Wayland a client receives no minimize event;
+  KWin's xdg_toplevel `suspended` state (minimized, other desktop or activity,
+  show desktop, lock screen, display off; never mere overlap) would be exact,
+  but sdl2-compat drops SDL3's occluded event and masks its flag, so reading
+  it would mean bypassing the compat layer. Deferred until there is a reason.
 - 5G comparison of 68ce0e4e against the previous build (19 vs 24 min, same
   path): key frames 2.2 vs 3.6 per minute, no 5 s window with three or more key
   frames (was 6, up to 8), rate at the floor once (was 8). Two windows still lost

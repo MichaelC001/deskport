@@ -211,8 +211,6 @@ signals:
 private:
     std::atomic<bool> m_InputDispatching{false};
     std::atomic<bool> m_ViewerReady{false}, m_ViewerRequested{true};
-    // A minimized viewer counts as hidden for the delayed video pause.
-    std::atomic<bool> m_WindowMinimized{false};
     // Live ceiling state: negotiated at the full budget with a capped start.
     bool m_LiveRateNegotiated = false;
     int m_AutomaticKbps = 0, m_RateCapKbps = 0;

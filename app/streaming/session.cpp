@@ -2720,9 +2720,7 @@ void Session::execInternal()
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        // Hidden by DeskPort or minimized: pause after 5 s so quick window
-        // switches never pause; showing it again resumes at once.
-        if (m_ViewerRequested && !m_WindowMinimized) viewerHidden.invalidate();
+        if (m_ViewerRequested) viewerHidden.invalidate();
         else if (!viewerHidden.isValid()) viewerHidden.start();
         if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
             m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);
@@ -2892,7 +2890,6 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_HIDDEN:
             case SDL_WINDOWEVENT_MINIMIZED:
             case SDL_WINDOWEVENT_FOCUS_LOST:
-                if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) m_WindowMinimized = true;
                 if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                     noteDesktopWindowFocusLost();
                     reportViewerFocus(false);
@@ -2902,13 +2899,7 @@ void Session::execInternal()
                 }
                 m_InputHandler->notifyFocusLost();
                 break;
-            case SDL_WINDOWEVENT_RESTORED:
-            case SDL_WINDOWEVENT_MAXIMIZED:
-            case SDL_WINDOWEVENT_SHOWN:
-                m_WindowMinimized = false;
-                break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
-                m_WindowMinimized = false;
                 reportViewerFocus(true);
                 if (!m_ViewerRequested) break;
                 m_InputHandler->notifyFocusGained();
