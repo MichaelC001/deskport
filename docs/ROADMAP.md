@@ -19,6 +19,12 @@ Reason: switching data saver reconnected the stream (about 2.7 s on 5G).
   show desktop, lock screen, display off; never mere overlap) would be exact,
   but sdl2-compat drops SDL3's occluded event and masks its flag, so reading
   it would mean bypassing the compat layer. Deferred until there is a reason.
+- Closing the viewer with its close button hides it the same way. On Linux a
+  locked screen also counts as hidden: `ScreenLockMonitor` follows logind's
+  `LockedHint` of the user's graphical session (`User.Display`, since the
+  resident client is a user service outside any session), so video pauses 5 s
+  after the screen locks and resumes on unlock. Client sleep already ends the
+  session before suspend through the logind delay inhibitor.
 - 5G comparison of 68ce0e4e against the previous build (19 vs 24 min, same
   path): key frames 2.2 vs 3.6 per minute, no 5 s window with three or more key
   frames (was 6, up to 8), rate at the floor once (was 8). Two windows still lost

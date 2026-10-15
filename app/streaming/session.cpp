@@ -13,6 +13,9 @@
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
 #endif
+#ifdef Q_OS_LINUX
+#include "backend/sleepmonitor.h"
+#endif
 #include "backend/peerstore.h"
 #include "backend/streambudget.h"
 #include "backend/sessionwindowstate.h"
@@ -2720,7 +2723,13 @@ void Session::execInternal()
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        if (m_ViewerRequested) viewerHidden.invalidate();
+        // Hidden from the tray or closed, or the screen is locked.
+#ifdef Q_OS_LINUX
+        const bool screenLocked = ScreenLockMonitor::locked();
+#else
+        const bool screenLocked = false;
+#endif
+        if (m_ViewerRequested && !screenLocked) viewerHidden.invalidate();
         else if (!viewerHidden.isValid()) viewerHidden.start();
         if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
             m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);

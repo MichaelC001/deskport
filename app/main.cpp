@@ -748,6 +748,10 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#ifdef Q_OS_LINUX
+    // Streaming sessions pause video while the screen is locked.
+    ScreenLockMonitor screenLock;
+#endif
     if (app.arguments().value(1) == "--session-worker") {
         const auto endpoint = qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT");
         const auto token = qEnvironmentVariable("DESKPORT_SESSION_TOKEN");
