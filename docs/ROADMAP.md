@@ -1,3 +1,33 @@
+## Data saver that actually saves — 2026-10-15
+
+Reason: a 100-minute remote session with data saver on still averaged 1.4 Mbps of
+video (2.7 Mbps on the Tailscale interface, about 5-10 GB per working day). The
+picture was never idle: a blinking caret or typing re-armed the 500 ms full-rate
+refinement and the input boost, so the encoder ran at 57-58 fps of ~3 KB frames.
+On a remote path each frame pads to a full 1 KB packet and carries at least two
+parity packets, so frame count, not picture content, set the cost.
+
+- Data saver now has its own cadence on the host (`host/common/framecadence.h`,
+  `scripts/patch-host-data-saver.py`): a change is sent at once, continuous change
+  at most 20 fps, four refinement duplicates per second for one second after a
+  change or input, then a 5 s refresh. Resolution and the negotiated frame rate are
+  unchanged; recovery key frames are never delayed. Both encoder paths (async
+  VideoToolbox and the synchronous VAAPI loop) use it.
+- FEC: with data saver on and no unrecoverable block for 60 s, a frame carries one
+  parity shard instead of the viewer's minimum of two; any unrecoverable block
+  restores the minimum for a minute.
+- The host learns the state at launch (`deskportSaver`) and from the optional
+  `saver` field of `video-rate` (core contract), so a live toggle switches the
+  cadence too, including a manual bitrate below the saver cap.
+- Audio is unchanged: the macOS host currently sends almost none (17 packets/s
+  with video paused). A stereo stream would add about 0.3 Mbps (96 kbps CBR in 5 ms
+  packets with 50% FEC); revisit if audio capture is enabled.
+- Desktop mode no longer swallows the first click: a press inside the picture
+  takes input back and is sent to the host.
+- Validation: data saver cadence/gate/FEC policy tests, both host overlays,
+  peer-binding `saver` relay, echo, invalid and conflicting duplicate cases.
+  Live traffic on the 5G path is still to be measured.
+
 ## Live data saver and background pause — 2026-10-15
 
 Reason: switching data saver reconnected the stream (about 2.7 s on 5G).

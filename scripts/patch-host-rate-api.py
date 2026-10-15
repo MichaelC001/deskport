@@ -21,11 +21,17 @@ patch('src/confighttp.cpp', '#include "confighttp.h"', '#include "confighttp.h"\
 patch('src/confighttp.cpp', '''        if (action == "video") {''', '''        if (action == "rate") {
           const auto ceiling = input.contains("ceilingKbps") && input["ceilingKbps"].is_number_integer()
             ? input["ceilingKbps"].get<long long>() : -1;
+          // Optional data saver state; absent keeps the current one.
+          const bool saver_valid = !input.contains("saver") || input["saver"].is_boolean();
           if (deskport_admission::lease.empty() || input.value("lease", "") != deskport_admission::lease ||
-              ceiling < 500 || ceiling > 200000 || rtsp_stream::session_count() > 1) {
+              ceiling < 500 || ceiling > 200000 || !saver_valid || rtsp_stream::session_count() > 1) {
             output["status"] = false; output["code"] = "unauthorized";
           } else {
             deskport::liveCeilingPermille = deskport::ceilingPermille(ceiling, deskport::requestedKbps.load());
+            if (input.contains("saver")) {
+              deskport::liveSaver = input["saver"].get<bool>() ? 1 : 0;
+              output["saver"] = input["saver"].get<bool>();
+            }
             output["status"] = true;
             output["ceilingKbps"] = ceiling;
             output["live"] = deskport::liveEncoder.load() == 1;

@@ -807,7 +807,7 @@ void Session::setDataSaver(bool on) {
         const int cap = std::min(m_StreamConfig.bitrate, DeskPortStream::dataSaverBitrate(m_AutomaticKbps));
         m_RateCapKbps = on && cap < m_StreamConfig.bitrate ? cap : 0;
         // Lifting the ceiling sends the negotiated bitrate, which removes it.
-        m_AdaptiveDisplay->setRateCeiling(m_RateCapKbps ? m_RateCapKbps : m_StreamConfig.bitrate);
+        m_AdaptiveDisplay->setRateCeiling(m_RateCapKbps ? m_RateCapKbps : m_StreamConfig.bitrate, on);
         return;
     }
     requestReconnect();

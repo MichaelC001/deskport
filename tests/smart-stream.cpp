@@ -317,5 +317,30 @@ int main() {
     assert(!pending.admit(12600000,false,false)); // then the idle floor
     deskport::FrameCadence other(30);
     assert(other.floor(12068000)==1); // no cross-session input state
-    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control, scroll pacing, daily traffic\n";
+    // Data saver: a change goes out at once, continuous change at most 20 fps,
+    // four duplicates per second for a second after a change or input, then a
+    // 5 s refresh; recovery is never delayed.
+    assert(deskport::saverFrameRate(1999,1000,{},60)==4 && deskport::saverFrameRate(2000,1000,{},60)==1);
+    assert(deskport::saverFrameRate(1500,-1,{1600,60},60)==4 && deskport::saverFrameRate(1500,1000,{},2)==2);
+    deskport::SaverGate saverGate;
+    assert(saverGate.admit(1000000,false) && !saverGate.admit(1049999,false) && saverGate.admit(1050000,false));
+    assert(saverGate.admit(1060000,true) && !saverGate.admit(1100000,false) && saverGate.admit(1110000,false));
+    deskport::FrameCadence saving(60);
+    saving.saver = true;
+    assert(saving.admit(20000000,true,false));  // a single change is not delayed
+    assert(!saving.admit(20030000,true,false)); // continuous change waits for the gate
+    assert(saving.admit(20050000,false,false)); // and still sends the final picture
+    assert(!saving.admit(20200000,false,false));
+    assert(saving.admit(20300000,false,false)); // refinement at 4 fps
+    assert(saving.admit(21000000,false,false));
+    assert(!saving.admit(21100000,false,false)); // refinement over: 5 s refresh
+    assert(!saving.admit(25999999,false,false));
+    assert(saving.admit(26000000,false,false));
+    assert(saving.admit(26000001,false,true)); // recovery does not wait
+    // Data saver FEC: one parity shard on a clean link, the viewer's minimum
+    // for a minute after an unrecoverable block.
+    assert(deskport::saverMinParity(true,2,100000,0)==1 && deskport::saverMinParity(true,2,100000,50000)==2);
+    assert(deskport::saverMinParity(false,2,100000,0)==2 && deskport::saverMinParity(true,1,100000,0)==1);
+    assert(deskport::saverMinParity(true,0,100000,0)==0);
+    std::cout << "PASS: exact pixels, malformed/repaired FEC, burst hysteresis, frame cadence, recovery bypass, idle recovery guard, bandwidth ceilings, remote rate control, data saver cadence and FEC, scroll pacing, daily traffic\n";
 }

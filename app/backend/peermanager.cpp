@@ -840,23 +840,30 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         const auto peer = m_Peers.value(link->fingerprint).toObject();
         const int seq = message["seq"].toInt();
         const int ceiling = message["ceilingKbps"].toInt();
+        // Optional data saver state; absent keeps the launch state on the host.
+        const bool hasSaver = message.contains("saver");
+        if (hasSaver && !message["saver"].isBool()) { fail(link, tr("Invalid video rate request")); return; }
         if (!link->incoming || !link->videoRate || !link->sessionAdmitted || link != m_SessionLink ||
             link->recovering || m_SessionOperation || !peer["ready"].toBool() || !peer["granted"].toBool() ||
             m_Revoking == link->fingerprint || seq <= 0 || message["seq"].toDouble() != seq ||
             message["ceilingKbps"].toDouble() != ceiling || ceiling < DP_VIDEO_RATE_MIN_KBPS ||
             ceiling > DP_VIDEO_RATE_MAX_KBPS) { fail(link, tr("Invalid video rate request")); return; }
         if (seq == link->rateSequence && !link->rateResult.isEmpty() &&
-            message["ceilingKbps"] == link->rateResult["ceilingKbps"]) { send(link, link->rateResult); return; }
+            message["ceilingKbps"] == link->rateResult["ceilingKbps"] &&
+            message["saver"] == link->rateResult["saver"]) { send(link, link->rateResult); return; }
         if (link->ratePending || seq != link->rateSequence + 1) { fail(link, tr("Invalid video rate sequence")); return; }
         link->ratePending = true;
         link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
         const QString lease = link->sessionLease;
-        m_Host->sessionControl({{"action", "rate"}, {"lease", lease}, {"ceilingKbps", ceiling}}, link,
-            [this, link, lease, ceiling, seq](QJsonObject result) {
+        QJsonObject control{{"action", "rate"}, {"lease", lease}, {"ceilingKbps", ceiling}};
+        if (hasSaver) control["saver"] = message["saver"];
+        m_Host->sessionControl(control, link,
+            [this, link, lease, ceiling, seq, hasSaver, saver = message["saver"]](QJsonObject result) {
                 if (link->ended || link != m_SessionLink || lease != link->sessionLease) return;
                 link->ratePending = false;
                 QJsonObject reply{{"type", DP_MESSAGE_VIDEO_RATE_RESULT}, {"seq", seq}, {"ceilingKbps", ceiling},
                                   {"live", result["status"].toBool() && result["live"].toBool()}};
+                if (hasSaver) reply["saver"] = saver;
                 if (!result["status"].toBool()) reply["error"] = "unavailable";
                 link->rateSequence = seq; link->rateResult = reply;
                 send(link, reply);

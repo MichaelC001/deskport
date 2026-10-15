@@ -141,6 +141,5 @@ updating a core pin.
 
 ## Live video rate candidate — 2026-10-15
 
-Both pins use core `369d0fb` from branch `video-rate` for the optional live
-bitrate ceiling (`protocol/VIDEO_RATE.md`). It is reachable on GitHub for Nix and
-test builds; merge it into core main and repin before a public release.
+The optional live bitrate ceiling (`protocol/VIDEO_RATE.md`) is on core main
+since `369d0fb`; its optional `saver` field since `4064059`.

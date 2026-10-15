@@ -138,6 +138,16 @@ private:
 inline std::atomic<int> requestedKbps {0};
 inline std::atomic<int> liveCeilingPermille {0};
 inline std::atomic<int> liveEncoder {-1};
+// Viewer's data saver state: from the launch request, then from video-rate.
+inline std::atomic<int> liveSaver {0};
+
+// Data saver FEC: one parity shard per block instead of the viewer's minimum
+// (two) while no block has been unrecoverable for kSaverCleanMs. A small frame
+// then costs one packet less; any unrecoverable block restores the minimum.
+constexpr std::int64_t kSaverCleanMs = 60000;
+inline std::size_t saverMinParity(bool saver, std::size_t requested, std::int64_t nowMs, std::int64_t lastLossMs) {
+    return saver && requested > 1 && nowMs - lastLossMs >= kSaverCleanMs ? 1 : requested;
+}
 inline int ceilingPermille(long long ceilingKbps, long long requested) {
     if (ceilingKbps <= 0 || requested <= 0 || ceilingKbps >= requested) return 0;
     return int(std::max<long long>(1, ceilingKbps * 1000 / requested));

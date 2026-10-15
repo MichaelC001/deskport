@@ -14,6 +14,8 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
             subprocess.run(['python3', str(root / f'scripts/patch-host-{name}.py'), str(target)], check=True)
         subprocess.run(['python3', str(root / 'scripts/patch-host-encoder-policy.py'), str(target)], check=True)
         subprocess.run(['python3', str(root / 'scripts/patch-host-remote-rate.py'), str(target)], check=True)
+        for _ in range(2):
+            subprocess.run(['python3', str(root / 'scripts/patch-host-data-saver.py'), str(target)], check=True)
         stream = (target / 'src/stream.cpp').read_text()
         assert stream.count('deskport::remotePacketsPerMs(') == 1
         assert stream.count('event<int>("deskport_rtt")->raise(') == 1
@@ -27,7 +29,13 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         assert video.count('deskport::refineFrameRate(absolute_ms, deskport_last_change_ms,') == 1
         assert video.count('deskport_last_change_ms = std::chrono::duration_cast') == 1
         assert video.count('deskport_key_gate.allow(deskport_key_ms, deskport_last_rtt)') == 2
-        assert video.count('if (config.deskport_saver && fps <= 1)') == 1
+        assert video.count('if (deskport_saving && fps <= 1)') == 1
+        assert video.count('deskport::saverFrameRate(absolute_ms, deskport_last_change_ms, boost,') == 1
+        assert video.count('deskport_saver_gate.admit(captured_us, requested_idr_frame)') == 1
+        assert video.count('cadence.saver = deskport::liveSaver.load() == 1;') == 1
+        assert stream.count('deskport::saverMinParity(deskport::liveSaver.load() == 1,') == 1
+        assert stream.count('session->deskport_unrecoverable_ms = ') == 1
+        assert (target / 'src/rtsp.cpp').read_text().count('deskport::liveSaver = session.deskport_saver') == 1
         assert (target / 'src/nvhttp.cpp').read_text().count('get_arg(args, "deskportSaver", "0")') == 1
         # Compile the actual upstream mailbox template: the older bool event
         # cannot instantiate timed pop(), while optional<int> works on both.

@@ -110,6 +110,7 @@ if (state / "credentials/cert.pem").exists():
                     output["status"] = bool(current["lease"]) and current["lease"] == body.get("lease") and current["sessions"] <= 1
                     if output["status"]:
                         current["rateCeiling"] = body["ceilingKbps"]
+                        if "saver" in body: current["rateSaver"] = body["saver"]
                         current["rateCommands"] = current.get("rateCommands", 0) + 1
                         output["live"] = current.get("rateLive", True)
                         output["ceilingKbps"] = body["ceilingKbps"]

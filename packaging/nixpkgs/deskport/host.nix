@@ -152,6 +152,7 @@ stdenv.mkDerivation (finalAttrs: {
     python3 ${deskportSource}/scripts/patch-host-encoder-policy.py .
     cp ${deskportSource}/host/common/ratecontrol.h src/deskport/common/ratecontrol.h
     python3 ${deskportSource}/scripts/patch-host-remote-rate.py .
+    python3 ${deskportSource}/scripts/patch-host-data-saver.py .
   '';
 
   nativeBuildInputs = [
