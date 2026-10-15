@@ -16,6 +16,12 @@ minimized viewer kept streaming in the background.
 - A minimized viewer now counts as hidden: video transmission pauses after it
   stays minimized or hidden for 5 s and resumes with a new key frame as soon as
   it is shown; control, input and audio stay connected.
+- 5G comparison of 68ce0e4e against the previous build (19 vs 24 min, same
+  path): key frames 2.2 vs 3.6 per minute, no 5 s window with three or more key
+  frames (was 6, up to 8), rate at the floor once (was 8). Two windows still lost
+  over half their frames after a large frame was lost: with data saver a still
+  picture refreshed only every 5 s, so a lost recovery key frame was noticed late.
+  A recovery key frame now starts the 500 ms full-rate refinement window.
 - Validation: 9 new protocol cases (host: live, recorded, legacy, intruder,
   invalid; viewer: legacy, live, recorded fallback, error) among 170 binding
   checks, ceiling policy tests, diagnostics, UI and multi-session suites.

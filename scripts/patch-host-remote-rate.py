@@ -257,6 +257,10 @@ patch('src/video.cpp', '''      while (invalidate_ref_frames_events->peek()) {
         requested_idr_frame = true;
         idr_events->pop();
         if (smart && !deskport_key_gate.allow(deskport_key_ms, deskport_last_rtt)) requested_idr_frame = false;
+        // Follow a recovery key frame with the short full-rate refinement: a
+        // still picture otherwise sends nothing for up to 5 s (data saver), so
+        // a lost key frame could not be noticed and requested again sooner.
+        if (requested_idr_frame) deskport_last_change_ms = deskport_key_ms;
       }
       if (smart && deskport_key_gate.coalesced != deskport_coalesced_logged &&
           deskport_key_ms - deskport_coalesced_log_ms >= 5000) {
