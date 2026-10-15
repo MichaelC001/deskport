@@ -104,6 +104,7 @@ void SessionWorker::command(const QJsonObject& message) {
         if(m_Session) m_Session->applyDesktopAdjustment(value); else m_PendingTuning=value;
     }
     else if(action=="fullscreen" && m_Session && m_Visible) postEvent(DeskPortFullscreen);
+    else if(action=="datasaver" && m_Session && message.value("on").isBool()) m_Session->setDataSaver(message.value("on").toBool());
 }
 void SessionWorker::showDevicesDuringSession() { m_Visible=false; if(m_Session)m_Session->setViewerRequested(false); send({{"type","devices"}}); }
 void SessionWorker::prepareViewerRecall() { send({{"type","devices"}}); }

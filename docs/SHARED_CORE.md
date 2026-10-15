@@ -138,3 +138,9 @@ through merge `b5472b7`, whose tree is identical to `e7b4a47`. The remote Nix
 input retains the verified local snapshot's NAR hash. Core/pin verification and
 adapter tests remain required. No release or host activation is performed by
 updating a core pin.
+
+## Live video rate candidate — 2026-10-15
+
+Both pins use core `369d0fb` from branch `video-rate` for the optional live
+bitrate ceiling (`protocol/VIDEO_RATE.md`). It is reachable on GitHub for Nix and
+test builds; merge it into core main and repin before a public release.

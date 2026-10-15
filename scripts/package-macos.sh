@@ -97,7 +97,7 @@ cp host/macos/patches/sunshine-smart-streaming.patch host/macos/patches/sunshine
 mkdir -p "$host_app/Contents/Resources/deskport-smart-source/common" "$host_app/Contents/Resources/deskport-smart-source/macos"
 cp host/common/smartstream.h host/common/inputactivity.h host/common/framecadence.h host/common/encoderpolicy.h host/common/ratecontrol.h "$host_app/Contents/Resources/deskport-smart-source/common/"
 cp host/macos/admitted-display.h host/macos/pixelmatch.h host/macos/screen-video.h host/macos/screen-video.m host/macos/vtbitrate.h host/macos/scroll-pacer.h "$host_app/Contents/Resources/deskport-smart-source/macos/"
-cp scripts/build-macos-host.sh scripts/build-paths.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py scripts/patch-host-encoder-policy.py scripts/patch-host-remote-rate.py "$host_app/Contents/Resources/"
+cp scripts/build-macos-host.sh scripts/build-paths.sh scripts/patch-host-smart-stream.py scripts/patch-host-sync-cadence.py scripts/patch-host-input-activity.py scripts/patch-host-encoder-policy.py scripts/patch-host-remote-rate.py scripts/patch-host-rate-api.py "$host_app/Contents/Resources/"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime \
     --entitlements host/macos/entitlements.plist "$host_app"
 codesign --force --sign "$DESKPORT_SIGN_IDENTITY" --timestamp=none --options runtime "$app/Contents/Helpers/deskport-recovery"

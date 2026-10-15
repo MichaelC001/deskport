@@ -540,7 +540,7 @@ private slots:
     }
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder", "seamless-preflight-active-link"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder", "rate-live", "rate-recorded", "rate-legacy", "rate-intruder", "rate-invalid", "seamless-preflight-active-link"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -650,6 +650,34 @@ private slots:
                 send(old,pause);
                 if (scenario == "video-stale") { QTest::qWait(150); QCOMPARE(state()["videoCommands"].toInt(),1); }
                 else { QVERIFY(!receive(old).contains("error")); QVERIFY(!state()["paused"].toBool()); QCOMPARE(state()["videoCommands"].toInt(),2); }
+            }
+            old.abort(); incoming.abort(); host.stop(); return;
+        }
+        if (scenario.startsWith("rate-")) {
+            auto rateQuery = query;
+            if (scenario != "rate-legacy") rateQuery["videoRate"] = 1;
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,rateQuery); QVERIFY(receive(old)["admitted"].toBool());
+            auto active = state(); active["sessions"] = 1; if (scenario == "rate-recorded") active["rateLive"] = false; writeState(active);
+            QJsonObject rate{{"type","video-rate"},{"seq",1},{"ceilingKbps",12000}};
+            if (scenario == "rate-intruder") {
+                connectPeer(incoming,"TEST_CERT_C","TEST_KEY_C"); send(incoming,rate);
+                QTest::qWait(150); QCOMPARE(state()["rateCommands"].toInt(),0);
+                send(old,{{"type","display-ping"}}); QCOMPARE(receive(old)["type"].toString(),QString("display-pong"));
+            } else if (scenario == "rate-legacy") {
+                send(old,rate); QTest::qWait(150); QCOMPARE(state()["rateCommands"].toInt(),0);
+            } else if (scenario == "rate-invalid") {
+                rate["ceilingKbps"] = 100; send(old,rate);
+                QTRY_COMPARE(old.state(),QAbstractSocket::UnconnectedState); QCOMPARE(state()["rateCommands"].toInt(),0);
+            } else {
+                send(old,rate); const auto first = receive(old);
+                QCOMPARE(first["type"].toString(),QString("video-rate-result")); QVERIFY(!first.contains("error"));
+                QCOMPARE(first["ceilingKbps"].toInt(),12000);
+                QCOMPARE(first["live"].toBool(), scenario == "rate-live");
+                QCOMPARE(state()["rateCeiling"].toInt(),12000);
+                send(old,rate); QCOMPARE(receive(old),first); QCOMPARE(state()["rateCommands"].toInt(),1);
+                rate["seq"] = 2; rate["ceilingKbps"] = 56000; send(old,rate);
+                QVERIFY(!receive(old).contains("error")); QCOMPARE(state()["rateCeiling"].toInt(),56000);
+                QCOMPARE(state()["rateCommands"].toInt(),2);
             }
             old.abort(); incoming.abort(); host.stop(); return;
         }
@@ -1382,6 +1410,55 @@ private slots:
         request = server.messages.takeFirst();
         QCOMPARE(request["seq"].toInt(),firstSequence+1); QVERIFY(!request["paused"].toBool());
         server.send({{"type","video-result"},{"seq",firstSequence+1},{"paused",false}});
+        QTest::qWait(150); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed());
+    }
+    void videoRateNegotiation_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* value : {"legacy", "live", "recorded", "error"}) QTest::newRow(value) << QString(value);
+    }
+    void videoRateNegotiation() {
+        QFETCH(QString, scenario);
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"), 0);
+        auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280,720), 1); });
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
+        QJsonObject meta{{"adaptiveDisplay",1},{"sessionTakeover",1},{"sessionTopology",1}};
+        if (scenario != "legacy") meta["videoRate"] = 1;
+        server.send({{"type","hello"},{"meta",meta}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        const auto query = server.messages.takeFirst();
+        QCOMPARE(query["videoRate"].toInt(), scenario == "legacy" ? 0 : 1);
+        server.send({{"type","session-state"},{"admitted",true}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        auto request = server.messages.takeFirst();
+        server.send({{"type","display-result"},{"seq",request["seq"]},{"width",1280},{"height",720}});
+        QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready,5000);
+        QVERIFY(result.get());
+        QCOMPARE(channel.liveRateSupported(), scenario != "legacy");
+        channel.setRateCeiling(12000);
+        if (scenario == "legacy") {
+            // Older hosts never receive the message; the session reconnects instead.
+            QTest::qWait(300); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed()); return;
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["type"].toString(),QString("video-rate"));
+        QCOMPARE(request["seq"].toInt(),1); QCOMPARE(request["ceilingKbps"].toInt(),12000);
+        // Changes while one command is in flight coalesce to the latest ceiling.
+        channel.setRateCeiling(30000); channel.setRateCeiling(56000);
+        QTest::qWait(100); QVERIFY(server.messages.isEmpty());
+        QJsonObject reply{{"type","video-rate-result"},{"seq",1},{"ceilingKbps",12000},{"live",scenario != "recorded"}};
+        if (scenario == "error") reply["error"] = "unavailable";
+        server.send(reply);
+        if (scenario == "error") { QTRY_VERIFY_WITH_TIMEOUT(channel.failed(),5000); return; }
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(),1500);
+        request = server.messages.takeFirst();
+        QCOMPARE(request["seq"].toInt(),2); QCOMPARE(request["ceilingKbps"].toInt(),56000);
+        QCOMPARE(channel.takeRateFallback(), scenario == "recorded");
+        QVERIFY(!channel.takeRateFallback()); // reported once
+        server.send({{"type","video-rate-result"},{"seq",2},{"ceilingKbps",56000},{"live",true}});
         QTest::qWait(150); QVERIFY(server.messages.isEmpty()); QVERIFY(!channel.failed());
     }
     void adaptiveDisplayNegotiatesFiniteModes() {

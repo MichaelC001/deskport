@@ -85,22 +85,37 @@ patch('src/video.cpp', '      if (smart && congestion->pop(0ms)) policy.loss(now
       if (smart && rtt) {
         if (!deskport_rate) {
           deskport_rate.emplace(deskport_ceiling_kbps, now_us / 1000);
+          if (deskport_permille > 0) deskport_rate->setCeiling(deskport::applyPermille(deskport_ceiling_kbps, deskport_permille));
           int resume = 0;
           {
             std::lock_guard lock {deskport_rate_memory_mutex};
             resume = deskport_rate_memory.resumeFor(deskport_ceiling_kbps, deskport_wall_ms());
           }
-          deskport_live = session->deskport_set_bitrate(deskport_ceiling_kbps, false);
+          deskport_live = session->deskport_set_bitrate(deskport_rate->ceilingKbps(), false);
           if (deskport_live && resume) deskport_rate->resume(resume);
           BOOST_LOG(info) << "DeskPort remote rate control: ceiling_kbps=" << deskport_ceiling_kbps
                           << ", floor_kbps=" << deskport_rate->floorKbps()
                           << ", resume_kbps=" << resume
                           << ", live_encoder=" << (deskport_live ? "yes" : "no");
-          deskport_applied_kbps = deskport_ceiling_kbps;
-          mail->event<int>("deskport_rate_kbps")->raise(deskport_ceiling_kbps);
+          deskport_applied_kbps = deskport_rate->ceilingKbps();
+          mail->event<int>("deskport_rate_kbps")->raise(deskport_applied_kbps);
         }
         deskport_rate->rtt(now_us / 1000, *rtt);
         deskport_last_rtt = *rtt;
+      }
+      // Live viewer ceiling (data saver) from the authenticated local API.
+      if (smart) {
+        const int permille = deskport::liveCeilingPermille.load();
+        if (permille != deskport_permille) {
+          deskport_permille = permille;
+          const int capped = deskport::applyPermille(deskport_ceiling_kbps, permille);
+          if (deskport_rate) {
+            deskport_rate->setCeiling(capped);
+          } else if (deskport::liveEncoder.load() == 1 && session->deskport_set_bitrate(capped, false)) {
+            deskport_applied_kbps = capped;
+          }
+          BOOST_LOG(info) << "DeskPort live ceiling: kbps=" << capped << ", permille=" << permille;
+        }
       }
       if (auto sent = deskport_sent->pop(0ms); deskport_rate && sent) deskport_rate->sent(*sent);
       if (deskport_rate) {
@@ -250,6 +265,26 @@ patch('src/video.cpp', '''      while (invalidate_ref_frames_events->peek()) {
         deskport_coalesced_log_ms = deskport_key_ms;
       }''')
 patch('src/video.cpp', '''    std::int64_t deskport_last_change_ms = -1;''', '''    std::int64_t deskport_last_change_ms = -1;
+    // Whether this encoder changes rate live; reported to the viewer's ceiling
+    // requests. Starts at the launch ceiling, which never exceeds the negotiated rate.
+    int deskport_permille = deskport::liveCeilingPermille.load();
+    if (smart) {
+      const int start = deskport::applyPermille(deskport_ceiling_kbps, deskport_permille);
+      deskport::liveEncoder = session->deskport_set_bitrate(start, false) ? 1 : 0;
+      if (deskport::liveEncoder.load() == 1) deskport_applied_kbps = start;
+    }
     deskport::KeyframeGate deskport_key_gate;
     std::uint64_t deskport_coalesced_logged = 0;
     std::int64_t deskport_coalesced_log_ms = 0;''')
+
+# Live ceiling: the launch request may carry one, and the stream records the
+# bitrate the viewer requested so later ceilings scale the encoder target.
+patch('src/rtsp.h', '''    bool deskport_saver = false;''', '''    bool deskport_saver = false;
+    int deskport_rate_cap = 0;''')
+patch('src/nvhttp.cpp', '''    launch_session->deskport_saver = get_arg(args, "deskportSaver", "0") == "1";''', '''    launch_session->deskport_saver = get_arg(args, "deskportSaver", "0") == "1";
+    launch_session->deskport_rate_cap = std::max(0, std::atoi(get_arg(args, "deskportRateCap", "0").c_str()));''')
+patch('src/rtsp.cpp', '''#include "rtsp.h"''', '''#include "rtsp.h"
+#include "deskport/common/ratecontrol.h"''')
+patch('src/rtsp.cpp', '''      BOOST_LOG(debug) << "Client configured bitrate is "sv << configuredBitrateKbps << " Kbps"sv;''', '''      BOOST_LOG(debug) << "Client configured bitrate is "sv << configuredBitrateKbps << " Kbps"sv;
+      deskport::requestedKbps = (int) configuredBitrateKbps;
+      deskport::liveCeilingPermille = deskport::ceilingPermille(session.deskport_rate_cap, configuredBitrateKbps);''')

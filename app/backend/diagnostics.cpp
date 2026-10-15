@@ -169,6 +169,10 @@ QJsonObject Diagnostics::project(const QString& message) {
     if (match.hasMatch())
         return {{"event", "rate"}, {"ceiling_kbps", match.captured(1).toDouble()}, {"floor_kbps", match.captured(2).toDouble()},
                 {"resume_kbps", match.captured(3).toDouble()}, {"live_encoder", match.captured(4)}};
+    static const QRegularExpression liveCeiling("DeskPort live ceiling: kbps=([0-9]{1,8}), permille=([0-9]{1,4})\\s*$");
+    match = liveCeiling.match(message);
+    if (match.hasMatch())
+        return {{"event", "rate"}, {"ceiling_kbps", match.captured(1).toDouble()}, {"live_encoder", "yes"}};
     static const QRegularExpression encoded("DeskPort encoded video: Mbps=([0-9]{1,6})(?:\\.([0-9]{1,9}))?, packets=([0-9]{1,9}), keyframes=([0-9]{1,9}), max_packet_bytes=([0-9]{1,10}) \\(before transport/FEC\\)\\s*$");
     match = encoded.match(message);
     if (match.hasMatch()) {

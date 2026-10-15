@@ -134,6 +134,21 @@ int main() {
     assert(saturated.targetKbps(10500) == 14000); // our own queue: 30%
     saturated.rtt(12500, 300); saturated.rtt(13000, 310);
     assert(saturated.targetKbps(13000) == 9800); // still growing: cut again
+    // Live viewer ceiling: scales the encoder target from the requested bitrate,
+    // never above the negotiated rate; lifting it restores the full range.
+    assert(deskport::ceilingPermille(12000, 56000) == 214);
+    assert(deskport::ceilingPermille(56000, 56000) == 0 && deskport::ceilingPermille(90000, 56000) == 0);
+    assert(deskport::ceilingPermille(0, 56000) == 0 && deskport::ceilingPermille(5000, 0) == 0);
+    assert(deskport::applyPermille(44179, 214) == 9454 && deskport::applyPermille(44179, 0) == 44179);
+    deskport::BitrateController capped(40000, 0);
+    capped.setCeiling(9000);
+    assert(capped.ceilingKbps() == 9000 && capped.targetKbps(0) == 9000 && capped.floorKbps() == 5000);
+    capped.setCeiling(4000); // below the usual floor: the floor follows the ceiling
+    assert(capped.floorKbps() == 4000 && capped.targetKbps(0) == 4000);
+    capped.setCeiling(90000); // never above the negotiated rate
+    assert(capped.ceilingKbps() == 40000 && capped.floorKbps() == 5000 && capped.targetKbps(0) == 5000);
+    for (int t = 0; t < 120000; t += 3000) capped.targetKbps(t);
+    assert(capped.targetKbps(120000) == 40000);
     deskport::KeyframeGate gate;
     assert(gate.allow(1000, 50));                 // first request
     assert(!gate.allow(1100, 50) && !gate.allow(1249, 50)); // 250 ms minimum

@@ -24,6 +24,7 @@ for patch in display-ownership egl-query-lifetime; do
 done
 python3 "$repo/scripts/patch-host-vulkan-lifetime.py" "$source" "$repo/host/linux/vulkan-driver-lifetime.h"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source"
+python3 "$repo/scripts/patch-host-rate-api.py" "$source"
 # Browser access: WebRTC transport over the existing capture and encoders.
 python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser"
 datachannel=$(bash "$repo/scripts/build-linux-libdatachannel.sh" | tail -n 1)

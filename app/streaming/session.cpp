@@ -798,6 +798,17 @@ bool Session::applyPendingDesktopAdjustment() {
     m_ManualReconnect = true;
     return true;
 }
+void Session::setDataSaver(bool on) {
+    m_Preferences->dataSaver = on;
+    if (m_LiveRateNegotiated && m_AdaptiveDisplay && m_AdaptiveDisplay->liveRateSupported()) {
+        const int cap = std::min(m_StreamConfig.bitrate, DeskPortStream::dataSaverBitrate(m_AutomaticKbps));
+        m_RateCapKbps = on && cap < m_StreamConfig.bitrate ? cap : 0;
+        // Lifting the ceiling sends the negotiated bitrate, which removes it.
+        m_AdaptiveDisplay->setRateCeiling(m_RateCapKbps ? m_RateCapKbps : m_StreamConfig.bitrate);
+        return;
+    }
+    requestReconnect();
+}
 void Session::requestReconnect() {
     // SDL owns session state on Linux; marshal tray requests to that thread.
     SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortReconnect;
@@ -1206,10 +1217,21 @@ bool Session::initialize()
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = DeskPortStream::sessionBitrate(m_Preferences->smartStreaming, m_Preferences->dataSaver,
+    m_AutomaticKbps = DeskPortStream::automaticBitrate(m_StreamConfig.width, m_StreamConfig.height,
+                                                       m_StreamConfig.fps, m_Preferences->enableYUV444);
+    m_LiveRateNegotiated = m_AdaptiveDisplay && m_AdaptiveDisplay->liveRateSupported();
+    // A host with live ceilings negotiates the full budget once; data saver is a
+    // ceiling below it that can be lifted or applied without reconnecting.
+    m_StreamConfig.bitrate = DeskPortStream::sessionBitrate(m_Preferences->smartStreaming,
+                                                            m_Preferences->dataSaver && !m_LiveRateNegotiated,
                                                             m_Preferences->bitrateKbps, m_StreamConfig.width,
                                                             m_StreamConfig.height, m_StreamConfig.fps,
                                                             m_Preferences->enableYUV444);
+    m_RateCapKbps = 0;
+    if (m_LiveRateNegotiated && m_Preferences->dataSaver) {
+        const int cap = std::min(m_StreamConfig.bitrate, DeskPortStream::dataSaverBitrate(m_AutomaticKbps));
+        if (cap < m_StreamConfig.bitrate) m_RateCapKbps = cap;
+    }
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -2187,7 +2209,7 @@ bool Session::startConnectionAsync()
                               rtspSessionUrl,
                               m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
                               m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming,
-                              m_Preferences->dataSaver);
+                              m_Preferences->dataSaver, m_RateCapKbps);
                 break;
             } catch (const GfeHttpResponseException& e) {
 #ifdef Q_OS_WIN
@@ -2698,10 +2720,13 @@ void Session::execInternal()
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        if (m_ViewerRequested) viewerHidden.invalidate();
+        // Hidden by DeskPort or minimized: pause after 5 s so quick window
+        // switches never pause; showing it again resumes at once.
+        if (m_ViewerRequested && !m_WindowMinimized) viewerHidden.invalidate();
         else if (!viewerHidden.isValid()) viewerHidden.start();
         if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
             m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);
+        if (m_AdaptiveDisplay && m_AdaptiveDisplay->takeRateFallback()) requestReconnect();
         if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();
             if (m_Clipboard->status() != clipboardStatus) {
@@ -2867,6 +2892,7 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_HIDDEN:
             case SDL_WINDOWEVENT_MINIMIZED:
             case SDL_WINDOWEVENT_FOCUS_LOST:
+                if (event.window.event == SDL_WINDOWEVENT_MINIMIZED) m_WindowMinimized = true;
                 if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                     noteDesktopWindowFocusLost();
                     reportViewerFocus(false);
@@ -2876,7 +2902,13 @@ void Session::execInternal()
                 }
                 m_InputHandler->notifyFocusLost();
                 break;
+            case SDL_WINDOWEVENT_RESTORED:
+            case SDL_WINDOWEVENT_MAXIMIZED:
+            case SDL_WINDOWEVENT_SHOWN:
+                m_WindowMinimized = false;
+                break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
+                m_WindowMinimized = false;
                 reportViewerFocus(true);
                 if (!m_ViewerRequested) break;
                 m_InputHandler->notifyFocusGained();

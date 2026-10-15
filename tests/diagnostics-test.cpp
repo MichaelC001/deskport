@@ -148,6 +148,9 @@ private slots:
         QCOMPARE(start.value("ceiling_kbps").toInt(), 14268);
         start["source"] = "host"; start["run"] = QString(32, 'b'); start["elapsed_ms"] = 5;
         QCOMPARE(Diagnostics::validate(start).value("live_encoder").toString(), QString("yes"));
+        auto ceiling = Diagnostics::project("[2026-10-15 10:00:00.000]: Info: DeskPort live ceiling: kbps=9454, permille=214");
+        QCOMPARE(ceiling.value("event").toString(), QString("rate"));
+        QCOMPARE(ceiling.value("ceiling_kbps").toInt(), 9454);
         auto encoded = Diagnostics::project("[2026-10-14 16:00:00.000]: Info: DeskPort encoded video: Mbps=0.410372, packets=168, keyframes=0, max_packet_bytes=8944 (before transport/FEC)");
         QCOMPARE(encoded.value("event").toString(), QString("encoded"));
         QCOMPARE(encoded.value("encoded_kbps").toInt(), 410);

@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  inputs.deskport-core = { url = "github:keithxc/deskport-core/108ca7d24c023b443687971690b1066427012608"; flake = false; };
+  inputs.deskport-core = { url = "github:keithxc/deskport-core/369d0fb95a8f21df25026b468ed33d45d2073641"; flake = false; };
 
   outputs = { self, nixpkgs, deskport-core }:
     let
@@ -60,6 +60,7 @@
               cp ${./host/common/ratecontrol.h} src/deskport/common/ratecontrol.h
               python3 ${./scripts/patch-host-remote-rate.py} .
               python3 ${./scripts/patch-host-video-pause.py} .
+              python3 ${./scripts/patch-host-rate-api.py} .
               python3 ${./scripts/patch-host-browser.py} . ${./host/browser}
             '';
           });

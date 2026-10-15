@@ -177,7 +177,7 @@ public:
              // that is already running for an adaptive resize cannot, and the
              // picture is gone while the client waits.
              int timeoutMs = 0, bool remoteAudio = true, bool remoteInput = true, bool smart = true,
-             bool dataSaver = false);
+             bool dataSaver = false, int rateCapKbps = 0);
 
     QVector<NvApp>
     getAppList();

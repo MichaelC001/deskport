@@ -113,14 +113,14 @@ ApplicationWindow {
         }
         return activeStreamPage && activeStreamPage.session ? activeStreamPage.session.hostName : ""
     }
-    // Data saver applies to every device; live sessions reconnect once so their
-    // next negotiation uses the new limit.
+    // Data saver applies to every device. Live sessions change their bitrate
+    // ceiling in place where the host supports it, otherwise reconnect once.
     function setDataSaver(on) {
         if (StreamingPreferences.dataSaver === on) return
         StreamingPreferences.dataSaver = on
         StreamingPreferences.save()
-        if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.reconnectAll()
-        else if (activeStreamPage && activeStreamPage.session) activeStreamPage.session.requestReconnect()
+        if (typeof sessionManager !== "undefined" && sessionManager.busy) sessionManager.setDataSaverAll(on)
+        else if (activeStreamPage && activeStreamPage.session) activeStreamPage.session.setDataSaver(on)
     }
     Connections {
         target: typeof trafficBudget !== "undefined" ? trafficBudget : null

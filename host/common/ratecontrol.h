@@ -2,6 +2,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 
@@ -34,7 +35,7 @@ inline bool remotePeer(const unsigned char* bytes, int size) {
 class BitrateController {
 public:
     BitrateController(int ceilingKbps, std::int64_t startMs)
-        : ceiling(std::max(1, ceilingKbps)), floorValue(std::min(ceiling, std::max(1000, ceiling / 8))),
+        : negotiated(std::max(1, ceilingKbps)), ceiling(std::max(1, ceilingKbps)), floorValue(std::min(ceiling, std::max(1000, ceiling / 8))),
           target(ceiling), lastChange(startMs), lastCongestion(startMs - 60000), lastDecrease(startMs - 60000) {
         mins.fill(-1);
     }
@@ -42,6 +43,13 @@ public:
     // reconnect, instead of probing the slow link from the ceiling again.
     void resume(int kbps) { target = std::clamp(kbps, floorValue, ceiling); }
     int ceilingKbps() const { return ceiling; }
+    // Live viewer ceiling (data saver). The negotiated rate stays the maximum;
+    // the floor never exceeds the ceiling and the target never exceeds it.
+    void setCeiling(int kbps) {
+        ceiling = std::max(1, std::min(kbps, negotiated));
+        floorValue = std::min(ceiling, std::max(1000, negotiated / 8));
+        target = std::clamp(target, floorValue, ceiling);
+    }
     int floorKbps() const { return floorValue; }
     int baselineMs() const {
         int best = -1;
@@ -89,7 +97,7 @@ private:
         decreaseRtt = rttMs;
         delayed = 0;
     }
-    int ceiling, floorValue, target, delayed = 0, decreaseRtt = -1, sentKbps = -1;
+    int negotiated, ceiling, floorValue, target, delayed = 0, decreaseRtt = -1, sentKbps = -1;
     std::int64_t lastChange, lastCongestion, lastDecrease;
     std::array<int, 6> mins {};
     std::array<std::int64_t, 6> bucketTime {-1, -1, -1, -1, -1, -1};
@@ -123,6 +131,20 @@ public:
 private:
     std::int64_t last = -1;
 };
+
+// Live ceiling shared by the authenticated local API and the encoder thread of
+// the single admitted stream: the viewer's ceiling in per mille of the bitrate
+// it requested at launch (0 = none), and whether the encoder changes rate live.
+inline std::atomic<int> requestedKbps {0};
+inline std::atomic<int> liveCeilingPermille {0};
+inline std::atomic<int> liveEncoder {-1};
+inline int ceilingPermille(long long ceilingKbps, long long requested) {
+    if (ceilingKbps <= 0 || requested <= 0 || ceilingKbps >= requested) return 0;
+    return int(std::max<long long>(1, ceilingKbps * 1000 / requested));
+}
+inline int applyPermille(int kbps, int permille) {
+    return permille > 0 ? std::max(1, int((long long)kbps * permille / 1000)) : kbps;
+}
 
 // Packets per millisecond for the inherited pacer. Remote sessions pace at four
 // times the live target (at least 20 Mbps) instead of about 800 Mbps.

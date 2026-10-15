@@ -83,6 +83,7 @@ cp "$repo/host/common/ratecontrol.h" "$source_dir/src/deskport/common/ratecontro
 cp "$repo/host/macos/vtbitrate.h" "$source_dir/src/deskport/macos/vtbitrate.h"
 python3 "$repo/scripts/patch-host-remote-rate.py" "$source_dir"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir"
+python3 "$repo/scripts/patch-host-rate-api.py" "$source_dir"
 python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"

@@ -1,3 +1,26 @@
+## Live data saver and background pause — 2026-10-15
+
+Reason: switching data saver reconnected the stream (about 2.7 s on 5G), and a
+minimized viewer kept streaming in the background.
+
+- Core contract `protocol/VIDEO_RATE.md` (core `369d0fb`, branch `video-rate`):
+  hosts advertise `videoRate: 1`; opted-in viewers send `video-rate` with a
+  ceiling in requested-bitrate units and receive `live`. The host scales its
+  encoder target by min(1, ceiling / requested) without a key frame or a
+  resolution change. Hosts that cannot change rate live answer `live: false`
+  and the viewer reconnects, as it does with older hosts.
+- Viewers that see the capability negotiate the full automatic budget once and
+  pass the data saver ceiling as `deskportRateCap` in launch/resume; toggling
+  then only moves the ceiling. Sunshine exposes `rate` on the lease-checked
+  loopback API (`patch-host-rate-api.py`, after the video pause overlay).
+- A minimized viewer now counts as hidden: video transmission pauses after it
+  stays minimized or hidden for 5 s and resumes with a new key frame as soon as
+  it is shown; control, input and audio stay connected.
+- Validation: 9 new protocol cases (host: live, recorded, legacy, intruder,
+  invalid; viewer: legacy, live, recorded fallback, error) among 170 binding
+  checks, ceiling policy tests, diagnostics, UI and multi-session suites.
+- Before a public release, merge core `video-rate` and pin a core main commit.
+
 ## 5G session fixes — 2026-10-15
 
 Reason: a recorded pk4 → mm4 session over a direct Tailscale path on 5G

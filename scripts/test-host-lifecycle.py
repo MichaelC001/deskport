@@ -106,6 +106,13 @@ if (state / "credentials/cert.pem").exists():
                     if output["status"]:
                         current["paused"] = body["paused"]
                         current["videoCommands"] = current.get("videoCommands", 0) + 1
+                elif body.get("action") == "rate":
+                    output["status"] = bool(current["lease"]) and current["lease"] == body.get("lease") and current["sessions"] <= 1
+                    if output["status"]:
+                        current["rateCeiling"] = body["ceilingKbps"]
+                        current["rateCommands"] = current.get("rateCommands", 0) + 1
+                        output["live"] = current.get("rateLive", True)
+                        output["ceilingKbps"] = body["ceilingKbps"]
                 elif body.get("action") == "release":
                     if current["lease"] == body.get("lease"):
                         current.update(lease="", generation=current["generation"] + 1)
