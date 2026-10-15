@@ -92,6 +92,10 @@ struct PeerManager::Link : QObject {
     bool videoPause = false, videoPending = false;
     int videoSequence = 0;
     QJsonObject videoResult;
+    // Optional live bitrate ceiling (protocol/VIDEO_RATE.md).
+    bool videoRate = false, ratePending = false;
+    int rateSequence = 0;
+    QJsonObject rateResult;
     bool lifecycle = false, recovering = false;
     int displaySequence = 0;
     qint64 lastDisplayRequest = 0;
@@ -386,6 +390,7 @@ QJsonObject PeerManager::metadata() const {
     meta["clientWindow"] = DP_CLIENT_WINDOW_VERSION;
 #if defined(Q_OS_MACOS) || defined(Q_OS_LINUX)
     meta["videoPause"] = DP_VIDEO_PAUSE_VERSION;
+    meta["videoRate"] = DP_VIDEO_RATE_VERSION;
 #endif
     meta["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION;
     if (m_SeamlessHost && m_SeamlessAvailable)
@@ -831,6 +836,40 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
             });
         return;
     }
+    if (type == DP_MESSAGE_VIDEO_RATE) {
+        const auto peer = m_Peers.value(link->fingerprint).toObject();
+        const int seq = message["seq"].toInt();
+        const int ceiling = message["ceilingKbps"].toInt();
+        // Optional data saver state; absent keeps the launch state on the host.
+        const bool hasSaver = message.contains("saver");
+        if (hasSaver && !message["saver"].isBool()) { fail(link, tr("Invalid video rate request")); return; }
+        if (!link->incoming || !link->videoRate || !link->sessionAdmitted || link != m_SessionLink ||
+            link->recovering || m_SessionOperation || !peer["ready"].toBool() || !peer["granted"].toBool() ||
+            m_Revoking == link->fingerprint || seq <= 0 || message["seq"].toDouble() != seq ||
+            message["ceilingKbps"].toDouble() != ceiling || ceiling < DP_VIDEO_RATE_MIN_KBPS ||
+            ceiling > DP_VIDEO_RATE_MAX_KBPS) { fail(link, tr("Invalid video rate request")); return; }
+        if (seq == link->rateSequence && !link->rateResult.isEmpty() &&
+            message["ceilingKbps"] == link->rateResult["ceilingKbps"] &&
+            message["saver"] == link->rateResult["saver"]) { send(link, link->rateResult); return; }
+        if (link->ratePending || seq != link->rateSequence + 1) { fail(link, tr("Invalid video rate sequence")); return; }
+        link->ratePending = true;
+        link->lastDisplayRequest = QDateTime::currentMSecsSinceEpoch();
+        const QString lease = link->sessionLease;
+        QJsonObject control{{"action", "rate"}, {"lease", lease}, {"ceilingKbps", ceiling}};
+        if (hasSaver) control["saver"] = message["saver"];
+        m_Host->sessionControl(control, link,
+            [this, link, lease, ceiling, seq, hasSaver, saver = message["saver"]](QJsonObject result) {
+                if (link->ended || link != m_SessionLink || lease != link->sessionLease) return;
+                link->ratePending = false;
+                QJsonObject reply{{"type", DP_MESSAGE_VIDEO_RATE_RESULT}, {"seq", seq}, {"ceilingKbps", ceiling},
+                                  {"live", result["status"].toBool() && result["live"].toBool()}};
+                if (hasSaver) reply["saver"] = saver;
+                if (!result["status"].toBool()) reply["error"] = "unavailable";
+                link->rateSequence = seq; link->rateResult = reply;
+                send(link, reply);
+            });
+        return;
+    }
     if (type == DP_MESSAGE_DISPLAY_RESIZE || type == DP_MESSAGE_DISPLAY_PING) {
         const auto peer = m_Peers[link->fingerprint].toObject();
         if (!link->incoming || link->requested || !peer["ready"].toBool() || !peer["granted"].toBool() ||
@@ -1067,6 +1106,7 @@ void PeerManager::sessionRequest(Link* link, const QJsonObject& message) {
     const bool takeover = message["type"] == DP_MESSAGE_SESSION_TAKEOVER;
     if (takeover && !link->sessionOptIn) { sessionError(link, "unauthorized"); return; }
     if (!takeover) link->videoPause = message["videoPause"].toInt() == DP_VIDEO_PAUSE_VERSION;
+    if (!takeover) link->videoRate = message["videoRate"].toInt() == DP_VIDEO_RATE_VERSION;
     if (!takeover) link->topologyOptIn = message["sessionTopology"].toInt() == DP_SESSION_TOPOLOGY_VERSION;
     // Old client-only mobile peers cannot be a host in a return path. Desktop
     // peers must register pending edges; otherwise concurrent cycles are unsafe.

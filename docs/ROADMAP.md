@@ -46,6 +46,244 @@ isolated official Bazzite container userspace and headless compositor on a
 NixOS kernel. Issue #5 remains open for the reporter's new-package retest;
 physical streaming, input and latency acceptance remain separate.
 
+## Data saver that actually saves — 2026-10-15
+
+Reason: a 100-minute remote session with data saver on still averaged 1.4 Mbps of
+video (2.7 Mbps on the Tailscale interface, about 5-10 GB per working day). The
+picture was never idle: a blinking caret or typing re-armed the 500 ms full-rate
+refinement and the input boost, so the encoder ran at 57-58 fps of ~3 KB frames.
+On a remote path each frame pads to a full 1 KB packet and carries at least two
+parity packets, so frame count, not picture content, set the cost.
+
+- Data saver now has its own cadence on the host (`host/common/framecadence.h`,
+  `scripts/patch-host-data-saver.py`): a change is sent at once, continuous change
+  at most 20 fps, four refinement duplicates per second for one second after a
+  change or input, then a 5 s refresh. Resolution and the negotiated frame rate are
+  unchanged; recovery key frames are never delayed. Both encoder paths (async
+  VideoToolbox and the synchronous VAAPI loop) use it.
+- FEC: with data saver on and no unrecoverable block for 60 s, a frame carries one
+  parity shard instead of the viewer's minimum of two; any unrecoverable block
+  restores the minimum for a minute.
+- The host learns the state at launch (`deskportSaver`) and from the optional
+  `saver` field of `video-rate` (core contract), so a live toggle switches the
+  cadence too, including a manual bitrate below the saver cap.
+- Audio is unchanged: the macOS host currently sends almost none (17 packets/s
+  with video paused). A stereo stream would add about 0.3 Mbps (96 kbps CBR in 5 ms
+  packets with 50% FEC); revisit if audio capture is enabled.
+- Desktop mode no longer swallows the first click: a press inside the picture
+  takes input back and is sent to the host.
+- Validation: data saver cadence/gate/FEC policy tests, both host overlays,
+  peer-binding `saver` relay, echo, invalid and conflicting duplicate cases.
+  Live traffic on the 5G path is still to be measured.
+
+## Live data saver and background pause — 2026-10-15
+
+Reason: switching data saver reconnected the stream (about 2.7 s on 5G).
+
+- Core contract `protocol/VIDEO_RATE.md` (core `369d0fb`, branch `video-rate`):
+  hosts advertise `videoRate: 1`; opted-in viewers send `video-rate` with a
+  ceiling in requested-bitrate units and receive `live`. The host scales its
+  encoder target by min(1, ceiling / requested) without a key frame or a
+  resolution change. Hosts that cannot change rate live answer `live: false`
+  and the viewer reconnects, as it does with older hosts.
+- Viewers that see the capability negotiate the full automatic budget once and
+  pass the data saver ceiling as `deskportRateCap` in launch/resume; toggling
+  then only moves the ceiling. Sunshine exposes `rate` on the lease-checked
+  loopback API (`patch-host-rate-api.py`, after the video pause overlay).
+- Background pause stays limited to a viewer hidden from the tray: video
+  pauses after 5 s hidden and resumes with a new key frame when it is shown.
+  Minimizing is not used. On KDE Wayland a client receives no minimize event;
+  KWin's xdg_toplevel `suspended` state (minimized, other desktop or activity,
+  show desktop, lock screen, display off; never mere overlap) would be exact,
+  but sdl2-compat drops SDL3's occluded event and masks its flag, so reading
+  it would mean bypassing the compat layer. Deferred until there is a reason.
+- Closing the viewer with its close button hides it the same way. On Linux a
+  locked screen also counts as hidden: `ScreenLockMonitor` follows logind's
+  `LockedHint` of the user's graphical session (`User.Display`, since the
+  resident client is a user service outside any session), so video pauses 5 s
+  after the screen locks and resumes on unlock. Client sleep already ends the
+  session before suspend through the logind delay inhibitor.
+- Desktop mode takes input again when the viewer regains focus (recalled from
+  the tray, a new connection, Alt+Tab) instead of waiting for a click that was
+  swallowed. Routing still needs focus and the pointer over the picture.
+  Relative mode keeps click-to-grab, and Ctrl+Alt+Shift+Z stays released until
+  the next click inside.
+- 5G comparison of 68ce0e4e against the previous build (19 vs 24 min, same
+  path): key frames 2.2 vs 3.6 per minute, no 5 s window with three or more key
+  frames (was 6, up to 8), rate at the floor once (was 8). Two windows still lost
+  over half their frames after a large frame was lost: with data saver a still
+  picture refreshed only every 5 s, so a lost recovery key frame was noticed late.
+  A recovery key frame now starts the 500 ms full-rate refinement window.
+- Validation: 9 new protocol cases (host: live, recorded, legacy, intruder,
+  invalid; viewer: legacy, live, recorded fallback, error) among 170 binding
+  checks, ceiling policy tests, diagnostics, UI and multi-session suites.
+- Before a public release, merge core `video-rate` and pin a core main commit.
+
+## 5G session fixes — 2026-10-15
+
+Reason: a recorded pk4 → mm4 session over a direct Tailscale path on 5G
+(IPv6, 40–70 ms RTT) showed three problems.
+
+- Rate control cut repeatedly to the floor while an external RTT spike was
+  already draining (279 → 205 → 135 → 98 ms) and the stream sent only about
+  1.2 Mbps. The controller now holds while RTT is at least 10% below the value
+  at the last cut (for up to 6 s), and cuts 15% instead of 30% when the measured
+  send rate is under half the target. The network thread reports the send rate
+  once a second.
+- Key-frame storms: after 5G loss the client asked again for nearly every frame,
+  producing eight 113 KB key frames in five seconds and a 97% frame-loss window
+  (and 95% again a minute later). `deskport::KeyframeGate` coalesces recovery
+  requests for max(250 ms, 2×RTT) up to 1 s; FFmpeg encoders answer reference
+  invalidation with a key frame, so both share the gate.
+- Data saver now also lowers the still-picture refresh from 1 fps to 0.2 fps
+  (`deskportSaver` launch argument; older hosts ignore it). A lost final frame is
+  then noticed up to 5 s later.
+- Switching data saver still reconnects once (about 2.7 s on this path). A live
+  ceiling change over the display-control channel is the next step and needs a
+  shared-core contract change.
+
+## Automatic bitrate and data saver — 2026-10-15
+
+Reason: the user wants bitrate chosen automatically, with a single switch for
+saving data instead of a manual Mbps value. Measured 5K scrolling needed well
+above the saved 25 Mbps limit on a LAN.
+
+- Automatic picture mode (smart streaming) now uses the resolution-aware budget
+  (`DeskPortStream::automaticBitrate`, 5–80 Mbps) and ignores the saved manual
+  bitrate. Manual mode keeps the saved value.
+- A global data-saver switch in the top bar caps either mode at a quarter of the
+  automatic budget, 3–12 Mbps (`dataSaverBitrate`), stored as the device-
+  independent `datasaver` key. Toggling reconnects live sessions once, through
+  the existing manual-reconnect path that rereads the saved profile.
+- The Advanced page shows "Automatic" for bandwidth in automatic mode.
+- Resolution always follows negotiation. Host live rate control still lowers the
+  bitrate on congested remote paths. The seven maintained catalogs are
+  translated and pass the source and compiled translation checks.
+- Validation: policy tests, 27 UI page checks (switch placement, narrow widths),
+  translation coverage and compiled catalogs.
+
+## Daily traffic budget — 2026-10-15
+
+Reason: the user wants a daily data allowance with a reset, amber above 70% and
+red above 85%.
+
+- `app/backend/trafficaccount.h` adds cumulative per-session counters (a falling
+  counter is a new session) and rolls over at local midnight; `TrafficBudget`
+  keeps the enabled flag, limit (GB), today's usage and the day in local settings,
+  writing at most every 10 s. Worker sessions report through the shell; an
+  in-process session is sampled once a second.
+- The top-bar traffic chip shows today's percentage while the budget is on and
+  turns amber at 70% and red at 85%. Clicking it always opens the panel, now with
+  a daily budget switch, limit (0.5 GB steps), usage bar and Reset.
+- At 100% data saver turns on once for the rest of the day (a reset re-arms it);
+  nothing disconnects. Counts application bytes of every session on this computer,
+  not IP/VPN overhead or the carrier's bill. Hidden on Windows, which has no
+  session byte counters.
+- Validation: accounting policy tests, UI checks for chip colours, panel controls,
+  once-per-day exceeded signal and day rollover, translation checks.
+
+## Slow remote links — 2026-10-14
+
+Reason: pk4 → mm4 over Tailscale measured 328 ms RTT through the DERP relay and
+roughly 3 Mbps of TCP throughput, while smart streaming started at 15 Mbps for
+2560×1440. The negotiated resolution is never reduced; only bitrate, pacing and
+encoder quality floor adapt.
+
+- Client: the smart budget is unchanged on every route. An initial 8 Mbps remote
+  cap was withdrawn the same day: Tailscale paths on a fast LAN count as remote,
+  and it visibly blurred scrolling text. The host adapts on slow links instead.
+- Host (both pinned revisions, `scripts/patch-host-remote-rate.py`): sessions
+  whose video peer is not on-link/private (Tailscale 100.64/10 and
+  fd7a:115c:a1e0::/48 count as remote) sample the existing ENet control RTT twice
+  a second. `host/common/ratecontrol.h` lowers the target by 30% when RTT stays
+  above the 30-second minimum by max(30 ms, 25%) or on unrecoverable FEC, at most
+  every two seconds, then restores 5% of the ceiling every three quiet seconds.
+  Floor is max(1 Mbps, ceiling/8). The learned rate survives adaptive-resize
+  reconnects for five minutes. LAN sessions never receive samples.
+- Live encoder rate: only FFmpeg VideoToolbox (H.264/HEVC) implements it, by
+  reading the pinned FFmpeg encoder's session prefix and verifying the
+  CoreFoundation type (`host/macos/vtbitrate.h`). Other backends log
+  `live_encoder=no` and keep the negotiated rate.
+- Frame size: below half the ceiling, VideoToolbox gets MinAllowedFrameQP 32.
+  Short DataRateLimits windows were measured to have no effect on content-change
+  frames, so they are not used.
+- Remote pacing: four times the live target, at least 20 Mbps, instead of about
+  800 Mbps, with send batches limited to one pacing slot. LAN pacing unchanged.
+- Contiguous frame numbers: rate-controlled encoders may drop frames. A numbering
+  gap made the client treat it as network loss and request an IDR; packets are now
+  numbered by produced frame. Recovery matching still uses the original PTS.
+- Still-picture refinement: after the last captured change, duplicates are
+  encoded at the full (congestion-limited) cadence for 500 ms instead of the
+  one-fps idle floor, on both the async (macOS) and sync (Linux) paths.
+- Diagnostics: numeric network, rate and encoded-video records, including the
+  controller start (ceiling, floor, resumed rate, live encoder support).
+
+Live LAN check (pk4 viewer → mm4 host over its Tailscale address, 2026-10-14):
+the session was classified remote with 5–9 ms RTT and no drops. A 40 s
+competing bulk transfer to pk4 raised RTT to 37 ms; the target fell from 5708 to
+3995 kbps within about three seconds and returned to the ceiling about 30 s after
+the load, with no client network drops. A static text page scrolled with real
+wheel input on pk4 showed the cause of blurry text: frames compared against the
+fully settled picture stayed at 21 dB PSNR for about two seconds after scrolling
+stopped, then improved about once per second (37, 44, 49, 60 dB) until identical
+after about six seconds — the one-fps refinement cadence.
+After activating 9ec33772 on pk4/mm4/mm1, the same page and probe gave 41 dB
+at the first capture after scrolling stopped and an identical picture by the
+next capture (about one second), in both directions. The session started with an
+18988 kbps ceiling and `live_encoder=yes`; client network drops stayed zero.
+
+Scrolling clarity while moving: an offline VideoToolbox HEVC sweep (same host
+options, 2560×1440 rendered text, luma PSNR against exact source rows) found a
+cliff between 88 and 96 px of vertical motion per frame: 51 dB below it at any
+bitrate from 15 to 40 Mbps, about 20–25 dB above it even at 40 Mbps, while the
+encoder spent its whole budget. One instant 100 px jump scored 24–35 dB; the
+same 100 px over four frames scored 51 dB at 3.3 instead of 19 Mbps. Bitrate,
+30 fps, H.264 and a max-QP cap did not move the cliff. The macOS host now paces
+injected wheel scrolling (`host/macos/scroll-pacer.h`,
+`libvirtualhid-paced-scroll.patch`): at most 40 pt per 16 ms step, first step
+immediate, total distance and direction preserved. Live fast-scroll baseline
+before this change (a notch every 30 ms): mid-scroll Laplacian variance about
+7000 against 11200 settled. Linux host encoders were not measured.
+
+That first version did not change the live result. Measured on mm4: the pk4
+session encodes the full 5104×2720 backing workspace (1 pt = 2 px) at about
+33 fps, so a 40 pt / 16 ms step still moved 100–200 px per encoded frame (page
+log: median 50 pt, p90 80 pt per 30 ms). At 5104×2720 the cliff is the same
+~90 px; below it the 19 Mbps ceiling (the saved 25 Mbps setting minus FEC) also
+limited quality: 80 px/frame scored 43 dB mean at 19 Mbps but 51 dB at a 40 Mbps
+ceiling while only using about 21 Mbps, and 52 dB at 60 Mbps. Steps are now
+bounded to 40 captured pixels per 16 ms using the display's backing scale (20 pt
+at 2x). The smart budget clamp rises from 40 to 80 Mbps so a 5K workspace can
+use its computed budget when the user's limit allows; the host adapts on slow
+links. The user's saved bitrate remains the ceiling.
+
+Live check of that build: Chrome received paced wheel events (40 + 10 pt about
+every 16–20 ms), but the step stayed 40 pt — the host process resolved a 1×
+scale. Its CoreGraphics mode cache can miss the per-session virtual display, as
+`admitted-display.h` already documents; the pacer now takes the scale from the
+owner's published admitted-display mode first and falls back to CoreGraphics.
+
+After activating 260ecf22 (and a 60 Mbps saved limit, 44 Mbps ceiling after
+FEC/audio): Chrome received 20 pt wheel steps (458 of 479 events); per 30 ms the
+page moved a median 40 pt (80 captured px), at most 60 pt. Mid-scroll Laplacian
+variance rose from about 7000 to 8700–11100 against 11200 settled. Cost: pacing
+limits throughput to about 1250 pt/s on a 2x display, so a 33-notch/s spin
+(3.0 s of input) finished scrolling 4.3 s after it began; ordinary speeds below
+about 25 notches/s see no backlog.
+
+Evidence: `tests/vt-live-rate.cpp` (same prebuilt FFmpeg, 2560×1440 synthetic
+content, no capture/input) on mm4. Lowering a live HEVC/H.264 session from 15 to
+3 Mbps cut high-motion output from about 14–15 Mbps to about 2 Mbps, with frames
+dropped by VideoToolbox. Content-change frames stayed about 400 KB with 100 ms
+limits; QP floor 32 reduced them to about 280–310 KB (static scene). Policy
+regressions are in `tests/smart-stream.cpp`; both host overlays pass
+`scripts/test-host-cadence-overlay.py`.
+
+Not yet verified: live streams over the real relayed path, host CPU, visual
+quality at the floor, and whether pacing helps on this TCP-relayed path. Restoring
+a direct Tailscale path (or a nearby DERP) remains the largest improvement and
+belongs to the system configuration, not DeskPort.
+
 ## Native application icon appearances — 2026-10-12
 
 Preserve DeskPort's mint/amber kite and tilted terminal display while improving

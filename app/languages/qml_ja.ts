@@ -1445,6 +1445,42 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>データセーバー</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>データセーバーオン：映像を3–12 Mbpsに制限</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>データセーバーオフ：ビットレート自動</translation>
+    </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>今日 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>1日のデータ予算</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>1日の上限</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>今日：%1 / %2（%3%）</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>このコンピューターのすべての接続を集計し、毎日現地時間の0時にリセットされます。100%に達すると、その日の残りはデータセーバーが自動でオンになります。</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>リセット</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>デバイスの削除を保存できませんでした。再試行してください。</translation></message>
     <message><source>Editing</source><translation>編集中</translation></message>
     <message><source>Memory %1</source><translation>メモリ %1</translation></message>
@@ -2990,10 +3026,6 @@
         <translation>カスタム</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>自動は解像度に応じた帯域上限を使用します。データ節約は30 fps、映像上限5 Mbpsです。</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>クライアントのウィンドウ解像度に合わせる</translation>
     </message>
@@ -3284,7 +3316,7 @@
         <source>Report a problem</source>
         <translation>問題を報告</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>自動は解像度に応じた帯域上限を使用します。データ節約は30 fps、映像上限5 Mbpsです。</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>自動は解像度に応じて帯域幅を設定し、ネットワークに合わせて調整します。データ節約は30 fps、映像上限5 Mbpsです。上部バーのデータセーバースイッチはすべてのデバイスの映像ビットレートを制限します。</translation></message>
     <message><source>Picture mode</source><translation>画質モード</translation></message>
     <message><source>Automatic (recommended)</source><translation>自動（推奨）</translation></message>
     <message><source>Clear</source><translation>鮮明さ優先</translation></message>
@@ -3293,6 +3325,7 @@
     <message><source>Custom</source><translation>カスタム</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation></message>
     <message><source>Bandwidth</source><translation>帯域幅</translation></message>
+    <message><source>Automatic</source><translation>自動</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
     <message><source>All streaming options</source><translation>すべての配信オプション</translation></message>
 </context>

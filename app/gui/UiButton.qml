@@ -9,6 +9,8 @@ Button {
     // themselves, so panel buttons set this instead.
     property bool filled: highlighted
     property var theme: typeof ui !== "undefined" ? ui : fallbackTheme
+    // Text colour; callers may override it, for example for a warning state.
+    property color labelColor: filled ? (destructive ? (theme.luminance(theme.danger) > 0.179 ? "#000000" : "#ffffff") : theme.accentText) : destructive ? theme.danger : tinted ? theme.accent : theme.text
     UiTheme { id: fallbackTheme }
     implicitHeight: 40
     implicitWidth: Math.max(80, contentItem.implicitWidth + 28)
@@ -26,7 +28,7 @@ Button {
         opacity: deskButton.enabled ? 1 : 0.45
     }
     contentItem: Text {
-        text: deskButton.text; font.pixelSize: deskButton.font.pixelSize; font.weight: deskButton.filled || deskButton.tinted ? Font.DemiBold : Font.Medium; color: deskButton.filled ? (deskButton.destructive ? (deskButton.theme.luminance(deskButton.theme.danger) > 0.179 ? "#000000" : "#ffffff") : deskButton.theme.accentText) : deskButton.destructive ? deskButton.theme.danger : deskButton.tinted ? deskButton.theme.accent : deskButton.theme.text
+        text: deskButton.text; font.pixelSize: deskButton.font.pixelSize; font.weight: deskButton.filled || deskButton.tinted ? Font.DemiBold : Font.Medium; color: deskButton.labelColor
         opacity: deskButton.enabled ? 1 : 0.45
         horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight

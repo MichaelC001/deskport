@@ -16,7 +16,7 @@ ColumnLayout {
 
     UiGroup {
         title: qsTr("Picture")
-        footnote: qsTr("Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.")
+        footnote: qsTr("Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.")
         UiChoiceRow {
             objectName: "devicePictureMode"
             iconSource: "qrc:/res/ui/picture.svg"
@@ -70,7 +70,7 @@ ColumnLayout {
                     Layout.fillWidth: true; spacing: 12
                     UiIconTile { source: "qrc:/res/ui/bandwidth.svg" }
                     Label { text: qsTr("Bandwidth"); color: ui.text; Layout.fillWidth: true }
-                    Label { text: qsTr("%1 Mbps").arg(Math.round(preferences.bitrateKbps/1000)); color: ui.muted }
+                    Label { text: preferences.smartStreaming ? qsTr("Automatic") : qsTr("%1 Mbps").arg(Math.round(preferences.bitrateKbps/1000)); color: ui.muted }
                 }
                 Slider {
                     objectName: "bitrateSlider"; from: 5; to: 100; stepSize: 1; value: preferences.bitrateKbps/1000

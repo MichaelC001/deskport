@@ -137,7 +137,10 @@ private:
 public:
     // The transport cannot survive client sleep; stop without quitting the host app.
     void endForSystemSleep();
-    void requestReconnect();
+    Q_INVOKABLE void requestReconnect();
+    // Applies the global data saver to this stream: live when the host accepts
+    // a bitrate ceiling (protocol/VIDEO_RATE.md), otherwise by reconnecting.
+    Q_INVOKABLE void setDataSaver(bool on);
     bool leaveFullscreen();
     // Asks a multi-session shell to present its next connected desktop.
     void requestNextViewer();
@@ -208,6 +211,9 @@ signals:
 private:
     std::atomic<bool> m_InputDispatching{false};
     std::atomic<bool> m_ViewerReady{false}, m_ViewerRequested{true};
+    // Live ceiling state: negotiated at the full budget with a capped start.
+    bool m_LiveRateNegotiated = false;
+    int m_AutomaticKbps = 0, m_RateCapKbps = 0;
     void setViewerReady(bool ready) { if (m_ViewerReady.exchange(ready) != ready) emit viewerReadyChanged(); }
     ResizeSettler m_ResizeSettler;
     // Window state before a presentation hide. Wayland compositors can map a

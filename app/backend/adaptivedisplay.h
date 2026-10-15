@@ -36,6 +36,13 @@ public:
     bool wasTakenOver(int timeoutMs = 0);
     bool admissionRequired();
     void setVideoPaused(bool paused);
+    // Live bitrate ceiling (protocol/VIDEO_RATE.md). Known after the host hello.
+    bool liveRateSupported();
+    // saver tells the host that data saver is on (optional field of the contract).
+    void setRateCeiling(int kbps, bool saver);
+    // True once if the host recorded a ceiling but cannot apply it live; the
+    // viewer then applies it by reconnecting.
+    bool takeRateFallback();
 private:
     void run() override;
     QString m_Address;
@@ -56,5 +63,8 @@ private:
     bool m_GraphReserved = false;
     bool m_AdmissionRequired = true, m_ConfirmationNeeded = false, m_ConfirmationReady = false, m_Confirmed = false;
     bool m_VideoPaused = false;
+    bool m_RateSupported = false, m_RateFallback = false;
+    int m_RateCeiling = 0;
+    bool m_RateSaver = false;
     bool m_Pending = false, m_Complete = false, m_Result = false, m_Failed = false;
 };

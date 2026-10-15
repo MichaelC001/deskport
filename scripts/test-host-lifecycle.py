@@ -111,6 +111,14 @@ if (state / "credentials/cert.pem").exists():
                     if output["status"]:
                         current["paused"] = body["paused"]
                         current["videoCommands"] = current.get("videoCommands", 0) + 1
+                elif body.get("action") == "rate":
+                    output["status"] = bool(current["lease"]) and current["lease"] == body.get("lease") and current["sessions"] <= 1
+                    if output["status"]:
+                        current["rateCeiling"] = body["ceilingKbps"]
+                        if "saver" in body: current["rateSaver"] = body["saver"]
+                        current["rateCommands"] = current.get("rateCommands", 0) + 1
+                        output["live"] = current.get("rateLive", True)
+                        output["ceilingKbps"] = body["ceilingKbps"]
                 elif body.get("action") == "release":
                     if current["lease"] == body.get("lease"):
                         current.update(lease="", generation=current["generation"] + 1)
@@ -142,7 +150,7 @@ else:
         linux_display = linux_host.parent / "deskport-display"
         linux_display.write_text(display.read_text())
         linux_display.chmod(0o700)
-    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"] + sorted("ui/" + p.name for p in (root / "app/res/ui").glob("*.svg"))
+    icons = ["os/apple.svg", "os/windows.svg", "os/nixos.svg", "os/ubuntu.svg", "os/debian.svg", "os/fedora.svg", "os/arch.svg", "os/linux.svg", "os/computer.svg", "baseline-help_outline-24px.svg", "baseline-error_outline-24px.svg", "deskport.svg", "edit-square.svg", "refresh.svg", "data-saver.svg", "fullscreen-exit.svg", "devices-grid.svg", "share-screen.svg", "manual.svg", "settings.svg", "done.svg", "add-device.svg", "add-group.svg", "deskport-tray-black.svg", "deskport-tray-white.svg"] + sorted("ui/" + p.name for p in (root / "app/res/ui").glob("*.svg"))
     (work / "test-resources.qrc").write_text('<RCC><qresource prefix="/res">' + ''.join(
         f'<file alias="{name}">{root}/app/res/{name}</file>' for name in icons) + '</qresource></RCC>')
     if "--ui" in sys.argv:
@@ -159,8 +167,8 @@ else:
     if "--cli" in sys.argv:
         extra_sources += f' "{root}/app/cli/hostcontrol.cpp" "{root}/third_party/qrcodegen/qrcodegen.cpp"'
     if "--ui" in sys.argv:
-        extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp"'
-        extra_headers += f' "{root}/app/gui/manual.h"'
+        extra_sources += f' "{root}/app/gui/hostlayout.cpp" "{root}/app/gui/manual.cpp" "{root}/app/backend/trafficbudget.cpp"'
+        extra_headers += f' "{root}/app/gui/manual.h" "{root}/app/backend/trafficbudget.h"'
     if "--clipboard" in sys.argv:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     if "--sessions" in sys.argv:

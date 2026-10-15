@@ -1442,6 +1442,42 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>데이터 세이버</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>데이터 세이버 켜짐: 영상 비트레이트를 3–12 Mbps로 제한</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>데이터 세이버 꺼짐: 자동 비트레이트</translation>
+    </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>오늘 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>일일 데이터 예산</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>하루 한도</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>오늘: %2 중 %1 사용 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>이 컴퓨터의 모든 연결을 집계하며 매일 현지 시간 자정에 다시 시작합니다. 100%에 도달하면 그날 남은 시간 동안 데이터 세이버가 자동으로 켜집니다.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>초기화</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>기기 삭제를 저장하지 못했습니다. 다시 시도하세요.</translation></message>
     <message><source>Editing</source><translation>편집 중</translation></message>
     <message><source>Memory %1</source><translation>메모리 %1</translation></message>
@@ -2987,10 +3023,6 @@
         <translation>사용자 정의</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>자동은 해상도에 따라 대역폭 상한을 선택합니다. 데이터 절약은 30 fps, 영상 상한 5 Mbps입니다.</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>클라이언트 창 해상도에 맞추기</translation>
     </message>
@@ -3276,7 +3308,7 @@
         <source>Report a problem</source>
         <translation>문제 신고</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>자동은 해상도에 따라 대역폭 상한을 선택합니다. 데이터 절약은 30 fps, 영상 상한 5 Mbps입니다.</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>자동은 해상도에 따라 대역폭을 설정하고 네트워크에 맞게 조정합니다. 데이터 절약은 30 fps, 영상 상한 5 Mbps입니다. 상단 바의 데이터 세이버 스위치는 모든 기기의 영상 비트레이트를 제한합니다.</translation></message>
     <message><source>Picture mode</source><translation>화면 모드</translation></message>
     <message><source>Automatic (recommended)</source><translation>자동(권장)</translation></message>
     <message><source>Clear</source><translation>선명도 우선</translation></message>
@@ -3285,6 +3317,7 @@
     <message><source>Custom</source><translation>사용자 정의</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>연결 중에는 Ctrl+Alt+Shift+X로도 전체 화면을 전환할 수 있습니다.</translation></message>
     <message><source>Bandwidth</source><translation>대역폭</translation></message>
+    <message><source>Automatic</source><translation>자동</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
     <message><source>All streaming options</source><translation>모든 스트리밍 옵션</translation></message>
 </context>

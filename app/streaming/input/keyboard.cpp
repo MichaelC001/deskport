@@ -37,6 +37,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         // Stop handling future input
         setCaptureActive(!isCaptureActive());
+        m_CaptureReleasedByUser = !isCaptureActive();
 
         // Force raise all keys to ensure they aren't stuck,
         // since we won't get their key up events.

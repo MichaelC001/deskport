@@ -39,6 +39,7 @@ public:
     Q_INVOKABLE void showDevices();
     Q_INVOKABLE void disconnectSession(QString id);
     Q_INVOKABLE void reconnect(QString id);
+    Q_INVOKABLE void setDataSaverAll(bool on);
     // Applies a saved desktop tuning value to that desktop's running stream.
     Q_INVOKABLE void setDesktopAdjustment(QString id, double value);
     Q_INVOKABLE void fullscreen(QString id = QString());
@@ -57,6 +58,9 @@ public:
 signals:
     void changed();
     void trafficChanged();
+    // Cumulative received + sent bytes of one live session, and its end.
+    void sessionTraffic(QString id, double total);
+    void sessionClosed(QString id);
     void devicesRequested();
     void viewerShown();
 private:

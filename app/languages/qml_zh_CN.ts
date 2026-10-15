@@ -1474,6 +1474,42 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>省流量</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>省流量已开启：视频比特率限制为 3–12 Mbps</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>省流量已关闭：自动比特率</translation>
+    </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>今日 %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>每日流量预算</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>每日上限</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>今日：已用 %1，上限 %2（%3%）</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>统计本机所有连接，每天本地时间零点重新计算。用满 100% 时，当天剩余时间自动开启省流量。</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>重置</translation>
+    </message>
     <message><source>Connecting…</source><translation>连接中…</translation></message>
     <message><source>Disconnecting…</source><translation>正在断开…</translation></message>
     <message><source>Failed</source><translation>失败</translation></message>
@@ -3026,10 +3062,6 @@
         <translation>自定义</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>自动模式按分辨率选择带宽上限。节省流量模式使用 30 fps，视频上限为 5 Mbps。</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>跟随客户端窗口分辨率</translation>
     </message>
@@ -3329,7 +3361,7 @@
         <source>Report a problem</source>
         <translation>报告问题</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>自动模式按分辨率选择带宽上限。节省流量模式使用 30 fps，视频上限为 5 Mbps。</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>自动模式按分辨率设置带宽，并适应网络状况。节省流量模式使用 30 fps，视频上限为 5 Mbps。顶栏的省流量开关会限制所有设备的视频比特率。</translation></message>
     <message><source>Picture mode</source><translation>画面模式</translation></message>
     <message><source>Automatic (recommended)</source><translation>自动（推荐）</translation></message>
     <message><source>Clear</source><translation>清晰优先</translation></message>
@@ -3338,6 +3370,7 @@
     <message><source>Custom</source><translation>自定义</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>连接中也可以按 Ctrl+Alt+Shift+X 切换全屏。</translation></message>
     <message><source>Bandwidth</source><translation>带宽</translation></message>
+    <message><source>Automatic</source><translation>自动</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
     <message><source>All streaming options</source><translation>全部串流选项</translation></message>
 </context>

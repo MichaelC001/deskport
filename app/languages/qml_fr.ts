@@ -1442,6 +1442,42 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>Économiseur de données</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>Économiseur de données activé : vidéo limitée à 3–12 Mbps</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>Économiseur de données désactivé : débit automatique</translation>
+    </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>Aujourd’hui %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>Budget de données quotidien</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>Limite par jour</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>Aujourd’hui : %1 sur %2 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>Compte toutes les sessions de cet ordinateur et repart de zéro à minuit (heure locale). À 100 %, l’économiseur de données s’active pour le reste de la journée.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Réinitialiser</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>Impossible d’enregistrer la suppression de l’appareil. Réessayez.</translation></message>
     <message><source>Editing</source><translation>Modification</translation></message>
     <message><source>Memory %1</source><translation>Mémoire %1</translation></message>
@@ -2987,10 +3023,6 @@
         <translation>Personnalisé</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>Le mode automatique adapte la limite à la résolution. L’économie utilise 30 ips et limite la vidéo à 5 Mbps.</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>Adapter la résolution à la fenêtre du client</translation>
     </message>
@@ -3276,7 +3308,7 @@
         <source>Report a problem</source>
         <translation>Signaler un problème</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>Le mode automatique adapte la limite à la résolution. L’économie utilise 30 ips et limite la vidéo à 5 Mbps.</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>Le mode automatique règle la bande passante selon la résolution et s’adapte au réseau. Le mode « Économiser les données » utilise 30 ips et limite la vidéo à 5 Mbps. Le bouton « Économiseur de données » de la barre supérieure limite la vidéo sur tous les appareils.</translation></message>
     <message><source>Picture mode</source><translation>Mode d’image</translation></message>
     <message><source>Automatic (recommended)</source><translation>Automatique (recommandé)</translation></message>
     <message><source>Clear</source><translation>Netteté</translation></message>
@@ -3285,6 +3317,7 @@
     <message><source>Custom</source><translation>Personnalisé</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>Pendant une connexion, Ctrl+Alt+Maj+X bascule aussi le plein écran.</translation></message>
     <message><source>Bandwidth</source><translation>Bande passante</translation></message>
+    <message><source>Automatic</source><translation>Automatique</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbit/s</translation></message>
     <message><source>All streaming options</source><translation>Toutes les options de streaming</translation></message>
 </context>

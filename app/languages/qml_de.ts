@@ -1442,6 +1442,42 @@
 </context>
 <context>
     <name>main</name>
+    <message>
+        <source>Data saver</source>
+        <translation>Datensparmodus</translation>
+    </message>
+    <message>
+        <source>Data saver on: video limited to 3–12 Mbps</source>
+        <translation>Datensparmodus an: Video auf 3–12 Mbps begrenzt</translation>
+    </message>
+    <message>
+        <source>Data saver off: automatic bitrate</source>
+        <translation>Datensparmodus aus: automatische Bitrate</translation>
+    </message>
+    <message>
+        <source>Today %1%</source>
+        <translation>Heute %1%</translation>
+    </message>
+    <message>
+        <source>Daily data budget</source>
+        <translation>Tägliches Datenbudget</translation>
+    </message>
+    <message>
+        <source>Limit per day</source>
+        <translation>Limit pro Tag</translation>
+    </message>
+    <message>
+        <source>Today: %1 of %2 (%3%)</source>
+        <translation>Heute: %1 von %2 (%3%)</translation>
+    </message>
+    <message>
+        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+        <translation>Zählt alle Verbindungen dieses Computers und beginnt um Mitternacht (Ortszeit) neu. Bei 100% wird der Datensparmodus für den Rest des Tages eingeschaltet.</translation>
+    </message>
+    <message>
+        <source>Reset</source>
+        <translation>Zurücksetzen</translation>
+    </message>
     <message><source>Could not save device removal. Please retry.</source><translation>Das Löschen des Geräts konnte nicht gespeichert werden. Bitte erneut versuchen.</translation></message>
     <message><source>Editing</source><translation>Bearbeiten</translation></message>
     <message><source>Memory %1</source><translation>Speicher %1</translation></message>
@@ -2987,10 +3023,6 @@
         <translation>Eigene</translation>
     </message>
     <message>
-        <source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source>
-        <translation>Automatisch begrenzt die Bandbreite je nach Auflösung. Daten sparen nutzt 30 fps und höchstens 5 Mbps für Video.</translation>
-    </message>
-    <message>
         <source>Match the client window resolution</source>
         <translation>Auflösung an das Clientfenster anpassen</translation>
     </message>
@@ -3276,7 +3308,7 @@
         <source>Report a problem</source>
         <translation>Problem melden</translation>
     </message>
-    <message><source>Automatic uses a resolution-aware bandwidth limit. Save data uses 30 fps with a 5 Mbps video limit.</source><translation>Automatisch begrenzt die Bandbreite je nach Auflösung. Daten sparen nutzt 30 fps und höchstens 5 Mbps für Video.</translation></message>
+    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>Automatisch legt die Bandbreite anhand der Auflösung fest und passt sie an das Netzwerk an. Der Modus „Daten sparen“ nutzt 30 fps und höchstens 5 Mbps für Video. Der Schalter für den Datensparmodus in der oberen Leiste begrenzt die Videobitrate auf allen Geräten.</translation></message>
     <message><source>Picture mode</source><translation>Bildmodus</translation></message>
     <message><source>Automatic (recommended)</source><translation>Automatisch (empfohlen)</translation></message>
     <message><source>Clear</source><translation>Scharf</translation></message>
@@ -3285,6 +3317,7 @@
     <message><source>Custom</source><translation>Eigene</translation></message>
     <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>Während einer Verbindung schaltet Strg+Alt+Umschalt+X ebenfalls den Vollbildmodus um.</translation></message>
     <message><source>Bandwidth</source><translation>Bandbreite</translation></message>
+    <message><source>Automatic</source><translation>Automatisch</translation></message>
     <message><source>%1 Mbps</source><translation>%1 Mbit/s</translation></message>
     <message><source>All streaming options</source><translation>Alle Streaming-Optionen</translation></message>
 </context>

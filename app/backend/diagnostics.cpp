@@ -21,7 +21,11 @@ const QStringList failureStages {"session-prepare", "virtual-display", "stream-l
 const QStringList failureCodes {"cancelled", "unauthorized", "busy", "stale", "cycle", "topology-unsupported", "topology-unavailable", "topology-invalid", "unavailable", "timeout", "display-failed", "policy-unsupported", "capture-encoder-failed", "capture-permission", "encoder-unavailable"};
 const QStringList runtimeBackends {"kwin", "portal", "wlr", "screen-capture-kit", "vaapi", "videotoolbox", "software", "nvenc", "amdvce", "quicksync"};
 const QStringList navigationStages {"devices-request", "devices-ready", "devices-frame", "event-loop-delay"};
-const QStringList events {"failure","runtime","navigation","started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled"};
+const QStringList events {"failure","runtime","navigation","started", "stopped", "failed", "timeout", "connection", "display", "encoder", "decoder", "input", "capture", "recovery", "permission", "resize", "enabled", "network", "rate", "encoded"};
+// Integer measurements only; each record type keeps its own fixed key set.
+const QStringList networkKeys {"rtt_ms", "rtt_var_ms", "received_fps", "rendered_fps", "network_drop_permille", "pacer_drop_permille", "received_kbps"};
+const QStringList rateKeys {"target_kbps", "rtt_ms", "baseline_ms", "ceiling_kbps", "floor_kbps", "resume_kbps"};
+const QStringList encodedKeys {"encoded_kbps", "frames", "keyframes", "max_frame_bytes"};
 QStringList names() {
     QStringList result;
     for (const auto& source : sources) for (int i = 0; i < 3; ++i)
@@ -143,6 +147,40 @@ QJsonObject Diagnostics::project(const QString& message) {
     match = navigation.match(message);
     if (match.hasMatch() && navigationStages.contains(match.captured(1)))
         return {{"event", "navigation"}, {"stage", match.captured(1)}, {"duration_ms", match.captured(2).toDouble()}};
+    static const QRegularExpression network("DeskPort network rtt_ms=([0-9]{1,6}) rtt_var_ms=([0-9]{1,6}) received_fps=([0-9]{1,4}) rendered_fps=([0-9]{1,4}) network_drop_permille=([0-9]{1,4}) pacer_drop_permille=([0-9]{1,4}) received_kbps=([0-9]{1,8})\\s*$");
+    match = network.match(message);
+    if (match.hasMatch()) {
+        QJsonObject record {{"event", "network"}};
+        for (int i = 0; i < networkKeys.size(); ++i) record[networkKeys[i]] = match.captured(i + 1).toDouble();
+        return record;
+    }
+    static const QRegularExpression path("DeskPort network path: (remote|local)\\s*$");
+    match = path.match(message);
+    if (match.hasMatch()) return {{"event", "network"}, {"path", match.captured(1)}};
+    static const QRegularExpression rate("DeskPort remote rate: target_kbps=([0-9]{1,8}), rtt_ms=([0-9]{1,6}), baseline_ms=([0-9]{1,6}), quality_floor=(on|off)\\s*$");
+    match = rate.match(message);
+    if (match.hasMatch()) {
+        QJsonObject record {{"event", "rate"}, {"quality_floor", match.captured(4)}};
+        for (int i = 0; i < rateKeys.size(); ++i) record[rateKeys[i]] = match.captured(i + 1).toDouble();
+        return record;
+    }
+    static const QRegularExpression rateStart("DeskPort remote rate control: ceiling_kbps=([0-9]{1,8}), floor_kbps=([0-9]{1,8}), resume_kbps=([0-9]{1,8}), live_encoder=(yes|no)\\s*$");
+    match = rateStart.match(message);
+    if (match.hasMatch())
+        return {{"event", "rate"}, {"ceiling_kbps", match.captured(1).toDouble()}, {"floor_kbps", match.captured(2).toDouble()},
+                {"resume_kbps", match.captured(3).toDouble()}, {"live_encoder", match.captured(4)}};
+    static const QRegularExpression liveCeiling("DeskPort live ceiling: kbps=([0-9]{1,8}), permille=([0-9]{1,4})\\s*$");
+    match = liveCeiling.match(message);
+    if (match.hasMatch())
+        return {{"event", "rate"}, {"ceiling_kbps", match.captured(1).toDouble()}, {"live_encoder", "yes"}};
+    static const QRegularExpression encoded("DeskPort encoded video: Mbps=([0-9]{1,6})(?:\\.([0-9]{1,9}))?, packets=([0-9]{1,9}), keyframes=([0-9]{1,9}), max_packet_bytes=([0-9]{1,10}) \\(before transport/FEC\\)\\s*$");
+    match = encoded.match(message);
+    if (match.hasMatch()) {
+        const double mbps = (match.captured(1) + "." + (match.captured(2).isEmpty() ? QString("0") : match.captured(2))).toDouble();
+        return {{"event", "encoded"}, {"encoded_kbps", double(qRound64(mbps * 1000))},
+                {"frames", match.captured(3).toDouble()}, {"keyframes", match.captured(4).toDouble()},
+                {"max_frame_bytes", match.captured(5).toDouble()}};
+    }
     const QList<QPair<QString,QString>> classes {
         {"diagnostics enabled","enabled"},{"permission","permission"},{"timeout","timeout"},
         {"failed","failed"},{"error","failed"},{"recovery","recovery"},{"stopped","stopped"},
@@ -165,6 +203,15 @@ QJsonObject Diagnostics::validate(const QJsonObject& o) {
         if (v.isDouble() && v.toDouble()>=-2147483648.0 && v.toDouble()<=2147483647.0 && v.toDouble()==double(v.toInt())) result[QLatin1String(key)]=v;
     }
     if (QStringList{"starting","failed","terminated"}.contains(o.value("state").toString())) result["state"]=o.value("state");
+    const auto event = o.value("event").toString();
+    const QStringList& measured = event == "network" ? networkKeys : event == "rate" ? rateKeys : event == "encoded" ? encodedKeys : QStringList();
+    for (const auto& key : measured) {
+        auto v=o.value(key);
+        if (v.isDouble() && v.toDouble()>=0 && v.toDouble()<=4294967295.0 && v.toDouble()==double(quint64(v.toDouble()))) result[key]=v;
+    }
+    if (event == "network" && QStringList{"remote","local"}.contains(o.value("path").toString())) result["path"]=o.value("path");
+    if (event == "rate" && QStringList{"on","off"}.contains(o.value("quality_floor").toString())) result["quality_floor"]=o.value("quality_floor");
+    if (event == "rate" && QStringList{"yes","no"}.contains(o.value("live_encoder").toString())) result["live_encoder"]=o.value("live_encoder");
     if (!result.contains("elapsed_ms")) return {};
     if (stages.contains(o.value("stage").toString()) ||
         (o.value("event") == "navigation" && navigationStages.contains(o.value("stage").toString()))) result["stage"]=o.value("stage");

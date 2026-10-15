@@ -1,3 +1,5 @@
+#include "trafficbudget.h"
+#include <QSignalSpy>
 #include "diagnostics.h"
 #include <QDesktopServices>
 #include <cmath>
@@ -1003,6 +1005,9 @@ QtObject {
         engine.rootContext()->setContextProperty("startInBackground", true);
         engine.rootContext()->setContextProperty("startSharingPage", false);
         engine.rootContext()->setContextProperty("testSession", &session);
+        TrafficBudget budget(nullptr, false);
+        budget.today = [] { return QStringLiteral("2026-10-15"); };
+        engine.rootContext()->setContextProperty("trafficBudget", &budget);
         QFile source(qEnvironmentVariable("TEST_GUI_DIR")+"/main.qml"); QVERIFY(source.open(QIODevice::ReadOnly));
         auto qml=source.readAll();
         qml.insert(qml.lastIndexOf('}'), R"(
@@ -1208,6 +1213,55 @@ QtObject {
         QVERIFY(std::abs(refresh->property("rotation").toReal()) > 1.0);
         QVERIFY(findVisual(window->contentItem(),"settingsButton"));
         QVERIFY(findVisual(window->contentItem(),"sharingButton")); QVERIFY(findVisual(window->contentItem(),"trafficSummary"));
+        // The data saver switch is one icon beside the traffic chip and starts off.
+        auto saver=findVisual(window->contentItem(),"dataSaverButton"); QVERIFY(saver);
+        auto traffic=findVisual(window->contentItem(),"trafficSummary");
+        QVERIFY(saver->property("checkable").toBool());
+        QVERIFY(!saver->property("checked").toBool());
+        QVERIFY(saver->width() <= 44);
+        QVERIFY(traffic->mapToScene(QPointF()).x() < saver->mapToScene(QPointF()).x());
+        QVERIFY(saver->mapToScene(QPointF()).x() < arrange->mapToScene(QPointF()).x());
+        // Daily budget: the chip turns amber at 70% and red at 85% of the limit.
+        auto budgetChip = findVisual(window->contentItem(),"trafficBudgetChip"); QVERIFY(budgetChip);
+        QVERIFY(!budgetChip->isVisible());
+        budget.setEnabled(true); budget.setLimitGb(1.0);
+        QTRY_VERIFY(budgetChip->isVisible());
+        const auto normalColor = budgetChip->property("labelColor").value<QColor>();
+        budget.account("test-session", 750000000);
+        QCOMPARE(budget.level(), 1);
+        QTRY_VERIFY(budgetChip->property("text").toString().contains("75%"));
+        const auto warningColor = budgetChip->property("labelColor").value<QColor>();
+        if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
+            QVERIFY(QMetaObject::invokeMethod(saver,"toggle"));
+            QTest::qWait(200);
+            QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/topbar-budget.png"));
+            QVERIFY(QMetaObject::invokeMethod(saver,"toggle"));
+        }
+        budget.account("test-session", 900000000);
+        QCOMPARE(budget.level(), 2);
+        const auto criticalColor = budgetChip->property("labelColor").value<QColor>();
+        // The budget chip sits between the traffic chip and the data saver switch.
+        QTRY_VERIFY(traffic->mapToScene(QPointF()).x() < budgetChip->mapToScene(QPointF()).x());
+        QTRY_VERIFY(budgetChip->mapToScene(QPointF()).x() < saver->mapToScene(QPointF()).x());
+        QVERIFY(normalColor != warningColor && warningColor != criticalColor && normalColor != criticalColor);
+        auto budgetSection = window->findChild<QObject*>("trafficBudgetSection");
+        QVERIFY(budgetSection);
+        QVERIFY(window->findChild<QObject*>("trafficBudgetReset"));
+        QVERIFY(window->findChild<QObject*>("trafficBudgetLimit"));
+        budget.reset(); QCOMPARE(budget.usedBytes(), 0.0); QCOMPARE(budget.level(), 0);
+        QTRY_COMPARE(budgetChip->property("labelColor").value<QColor>(), normalColor);
+        budget.setEnabled(false);
+        // Exceeding an enabled budget is reported once per day; a reset re-arms it.
+        TrafficBudget detached(nullptr, false);
+        detached.today = [] { return QStringLiteral("2026-10-15"); };
+        QSignalSpy exceeded(&detached, &TrafficBudget::exceeded);
+        detached.setLimitGb(0.5);
+        detached.account("s", 600000000); QCOMPARE(exceeded.count(), 0); // disabled
+        detached.setEnabled(true); QCOMPARE(exceeded.count(), 1);
+        detached.account("s", 700000000); QCOMPARE(exceeded.count(), 1);
+        detached.reset(); detached.account("s", 1300000000); QCOMPARE(exceeded.count(), 2);
+        detached.today = [] { return QStringLiteral("2026-10-16"); };
+        detached.account("s", 1400000000); QCOMPARE(detached.usedBytes(), 100000000.0); QCOMPARE(detached.level(), 0);
         // The right-hand buttons stay inside the window at every width.
         for (int width : {1120, 800, 640}) {
             window->resize(width, 620); QTest::qWait(10);
@@ -1218,6 +1272,9 @@ QtObject {
             QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
+            auto saverButton=findVisual(window->contentItem(),"dataSaverButton");
+            QVERIFY(saverButton->isVisible());
+            QVERIFY(saverButton->mapToScene(QPointF(saverButton->width(),0)).x() <= width);
         }
         // Exercise full rows across fractional widths and every column boundary.
         auto resizeModel=qobject_cast<TestComputers*>(grid->property("model").value<QObject*>());

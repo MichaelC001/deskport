@@ -51,6 +51,19 @@ QSize AdaptiveDisplay::selectedSize(QSize requested) {
 int AdaptiveDisplay::selectedScale(int requested) { QMutexLocker lock(&m_Mutex); return m_Modes.isEmpty()?requested:1; }
 QSize AdaptiveDisplay::negotiatedSize() { QMutexLocker lock(&m_Mutex); return m_NegotiatedSize; }
 bool AdaptiveDisplay::admissionRequired() { QMutexLocker lock(&m_Mutex); return m_AdmissionRequired; }
+bool AdaptiveDisplay::liveRateSupported() { QMutexLocker lock(&m_Mutex); return m_RateSupported; }
+void AdaptiveDisplay::setRateCeiling(int kbps, bool saver) {
+    QMutexLocker lock(&m_Mutex);
+    m_RateCeiling = qBound(DP_VIDEO_RATE_MIN_KBPS, kbps, DP_VIDEO_RATE_MAX_KBPS);
+    m_RateSaver = saver;
+    m_Wake.wakeAll();
+}
+bool AdaptiveDisplay::takeRateFallback() {
+    QMutexLocker lock(&m_Mutex);
+    const bool fallback = m_RateFallback;
+    m_RateFallback = false;
+    return fallback;
+}
 void AdaptiveDisplay::setVideoPaused(bool paused) { QMutexLocker lock(&m_Mutex); m_VideoPaused = paused; }
 void AdaptiveDisplay::setFullScreen(bool fullScreen) { QMutexLocker lock(&m_Mutex); m_FullScreen = fullScreen; }
 bool AdaptiveDisplay::takeLeaveFullscreen() { QMutexLocker lock(&m_Mutex); bool value = m_LeaveFullscreen; m_LeaveFullscreen = false; return value; }
@@ -145,6 +158,7 @@ void AdaptiveDisplay::run() {
         connected = hello["type"].toString() == "hello" && hello["meta"].toObject()["adaptiveDisplay"].toInt() == 1;
         { QMutexLocker lock(&m_Mutex); m_Lifecycle = hello["meta"].toObject()["sessionLifecycle"].toInt() == DP_SESSION_LIFECYCLE_VERSION; }
         videoPauseSupported = hello["meta"].toObject()["videoPause"].toInt() == DP_VIDEO_PAUSE_VERSION;
+        { QMutexLocker lock(&m_Mutex); m_RateSupported = hello["meta"].toObject()["videoRate"].toInt() == DP_VIDEO_RATE_VERSION; }
         windowSupported = hello["meta"].toObject()["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;
         policySupported = hello["meta"].toObject()["displayPolicy"].toInt() == DP_DISPLAY_POLICY_VERSION;
         const auto advertised=hello["meta"].toObject()["displayModes"].toArray();
@@ -165,6 +179,7 @@ void AdaptiveDisplay::run() {
             QJsonObject query{{"type", DP_MESSAGE_SESSION_STATUS}, {"sessionTakeover", DP_SESSION_TAKEOVER_VERSION},
                               {"sessionTopology", DP_SESSION_TOPOLOGY_VERSION}};
             if (videoPauseSupported) query["videoPause"] = DP_VIDEO_PAUSE_VERSION;
+            if ([&] { QMutexLocker lock(&m_Mutex); return m_RateSupported; }()) query["videoRate"] = DP_VIDEO_RATE_VERSION;
             if (m_Lifecycle) { query["sessionLifecycle"] = DP_SESSION_LIFECYCLE_VERSION; query["resumeToken"] = m_ResumeToken; }
             send(query);
             auto state = receive();
@@ -201,7 +216,8 @@ void AdaptiveDisplay::run() {
         }
         if (!connected) qWarning() << "The host does not support the selected virtual screen policy";
     }
-    int sequence = 0, videoSequence = 0;
+    int sequence = 0, videoSequence = 0, rateSequence = 0, rateSent = 0;
+    bool rateSaverSent = false;
     bool videoPaused = false;
     QElapsedTimer heartbeat; heartbeat.start();
     while (connected && !isInterruptionRequested()) {
@@ -235,6 +251,24 @@ void AdaptiveDisplay::run() {
             if (connected) { videoPaused = desired; videoStateUnknown = false; }
             // A lost acknowledgment leaves remote state uncertain. End control
             // rather than silently treating a paused server as a running one.
+            if (!connected) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
+            heartbeat.restart();
+        } else if ([&] { QMutexLocker lock(&m_Mutex); return m_RateSupported && m_RateCeiling > 0 &&
+                (m_RateCeiling != rateSent || m_RateSaver != rateSaverSent); }()) {
+            int desired; bool saver;
+            { QMutexLocker lock(&m_Mutex); desired = m_RateCeiling; saver = m_RateSaver; }
+            send({{"type", DP_MESSAGE_VIDEO_RATE}, {"seq", ++rateSequence}, {"ceilingKbps", desired}, {"saver", saver}});
+            const auto reply = receive(12000);
+            // Hosts predating the saver field omit its echo; that is still applied.
+            connected = reply["type"].toString() == DP_MESSAGE_VIDEO_RATE_RESULT &&
+                reply["seq"].toInt() == rateSequence && reply["ceilingKbps"].toInt() == desired &&
+                reply["live"].isBool() && !reply.contains("error") &&
+                (!reply.contains("saver") || reply["saver"] == saver);
+            if (connected) {
+                rateSent = desired; rateSaverSent = saver;
+                if (!reply["live"].toBool()) { QMutexLocker lock(&m_Mutex); m_RateFallback = true; }
+            }
+            // Same rule as video-state: an unacknowledged change is not applied.
             if (!connected) { QMutexLocker lock(&m_Mutex); m_Retryable = false; }
             heartbeat.restart();
         } else if (heartbeat.elapsed() >= 5000) {

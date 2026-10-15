@@ -15,8 +15,8 @@ for patch in session-settings session-takeover linux-display; do
     python3 "$repo/scripts/patch-host-$patch.py" "$source"
 done
 mkdir -p "$source/src/deskport/common"
-cp "$repo"/host/common/{smartstream,inputactivity,framecadence,encoderpolicy}.h "$source/src/deskport/common/"
-for patch in input-activity sync-cadence linux-cadence pipewire-memory encoder-policy; do
+cp "$repo"/host/common/{smartstream,inputactivity,framecadence,encoderpolicy,ratecontrol}.h "$source/src/deskport/common/"
+for patch in input-activity sync-cadence linux-cadence pipewire-memory encoder-policy remote-rate data-saver; do
     python3 "$repo/scripts/patch-host-$patch.py" "$source"
 done
 for patch in display-ownership egl-query-lifetime; do
@@ -24,6 +24,7 @@ for patch in display-ownership egl-query-lifetime; do
 done
 python3 "$repo/scripts/patch-host-vulkan-lifetime.py" "$source" "$repo/host/linux/vulkan-driver-lifetime.h"
 python3 "$repo/scripts/patch-host-video-pause.py" "$source"
+python3 "$repo/scripts/patch-host-rate-api.py" "$source"
 # Browser access: WebRTC transport over the existing capture and encoders.
 python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser"
 datachannel=$(bash "$repo/scripts/build-linux-libdatachannel.sh" | tail -n 1)

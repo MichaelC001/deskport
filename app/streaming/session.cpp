@@ -13,6 +13,9 @@
 #ifdef Q_OS_MACOS
 #include "backend/macdock.h"
 #endif
+#ifdef Q_OS_LINUX
+#include "backend/sleepmonitor.h"
+#endif
 #include "backend/peerstore.h"
 #include "backend/streambudget.h"
 #include "backend/sessionwindowstate.h"
@@ -798,6 +801,17 @@ bool Session::applyPendingDesktopAdjustment() {
     m_ManualReconnect = true;
     return true;
 }
+void Session::setDataSaver(bool on) {
+    m_Preferences->dataSaver = on;
+    if (m_LiveRateNegotiated && m_AdaptiveDisplay && m_AdaptiveDisplay->liveRateSupported()) {
+        const int cap = std::min(m_StreamConfig.bitrate, DeskPortStream::dataSaverBitrate(m_AutomaticKbps));
+        m_RateCapKbps = on && cap < m_StreamConfig.bitrate ? cap : 0;
+        // Lifting the ceiling sends the negotiated bitrate, which removes it.
+        m_AdaptiveDisplay->setRateCeiling(m_RateCapKbps ? m_RateCapKbps : m_StreamConfig.bitrate, on);
+        return;
+    }
+    requestReconnect();
+}
 void Session::requestReconnect() {
     // SDL owns session state on Linux; marshal tray requests to that thread.
     SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortReconnect;
@@ -1206,10 +1220,21 @@ bool Session::initialize()
     m_VideoCallbacks.setup = drSetup;
 
     m_StreamConfig.fps = m_Preferences->fps;
-    m_StreamConfig.bitrate = m_Preferences->smartStreaming
-        ? DeskPortStream::initialBitrate(m_Preferences->bitrateKbps, m_StreamConfig.width, m_StreamConfig.height,
-                                        m_StreamConfig.fps, m_Preferences->enableYUV444)
-        : m_Preferences->bitrateKbps;
+    m_AutomaticKbps = DeskPortStream::automaticBitrate(m_StreamConfig.width, m_StreamConfig.height,
+                                                       m_StreamConfig.fps, m_Preferences->enableYUV444);
+    m_LiveRateNegotiated = m_AdaptiveDisplay && m_AdaptiveDisplay->liveRateSupported();
+    // A host with live ceilings negotiates the full budget once; data saver is a
+    // ceiling below it that can be lifted or applied without reconnecting.
+    m_StreamConfig.bitrate = DeskPortStream::sessionBitrate(m_Preferences->smartStreaming,
+                                                            m_Preferences->dataSaver && !m_LiveRateNegotiated,
+                                                            m_Preferences->bitrateKbps, m_StreamConfig.width,
+                                                            m_StreamConfig.height, m_StreamConfig.fps,
+                                                            m_Preferences->enableYUV444);
+    m_RateCapKbps = 0;
+    if (m_LiveRateNegotiated && m_Preferences->dataSaver) {
+        const int cap = std::min(m_StreamConfig.bitrate, DeskPortStream::dataSaverBitrate(m_AutomaticKbps));
+        if (cap < m_StreamConfig.bitrate) m_RateCapKbps = cap;
+    }
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
@@ -2186,7 +2211,8 @@ bool Session::startConnectionAsync()
                               !m_Preferences->multiController,
                               rtspSessionUrl,
                               m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
-                              m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
+                              m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming,
+                              m_Preferences->dataSaver, m_RateCapKbps);
                 break;
             } catch (const GfeHttpResponseException& e) {
 #ifdef Q_OS_WIN
@@ -2697,10 +2723,17 @@ void Session::execInternal()
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
         }
-        if (m_ViewerRequested) viewerHidden.invalidate();
+        // Hidden from the tray or closed, or the screen is locked.
+#ifdef Q_OS_LINUX
+        const bool screenLocked = ScreenLockMonitor::locked();
+#else
+        const bool screenLocked = false;
+#endif
+        if (m_ViewerRequested && !screenLocked) viewerHidden.invalidate();
         else if (!viewerHidden.isValid()) viewerHidden.start();
         if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
             m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);
+        if (m_AdaptiveDisplay && m_AdaptiveDisplay->takeRateFallback()) requestReconnect();
         if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();
             if (m_Clipboard->status() != clipboardStatus) {

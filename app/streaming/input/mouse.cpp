@@ -13,6 +13,13 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         // Ignore synthetic mouse events
         return;
     }
+    else if (!isCaptureActive() && m_AbsoluteMouseMode && m_RemoteInputEnabled &&
+             event->state == SDL_PRESSED && isMouseInVideoRegion(event->x, event->y)) {
+        // Desktop mode: the click that takes input back is also the user's
+        // first click on the remote desktop, so capture and send it.
+        setCaptureActive(true);
+        m_CaptureReleasedByUser = false;
+    }
     else if (!isCaptureActive()) {
         if (event->button == SDL_BUTTON_LEFT && event->state == SDL_RELEASED &&
                 isMouseInVideoRegion(event->x, event->y)) {
@@ -22,6 +29,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             // event to the host when clicking into our window (since
             // the pressed event was consumed by this code).
             setCaptureActive(true);
+            m_CaptureReleasedByUser = false;
         }
 
         // Not capturing

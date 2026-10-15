@@ -660,6 +660,7 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.totalDecodeTime += src.totalDecodeTime;
     dst.totalPacerTime += src.totalPacerTime;
     dst.totalRenderTime += src.totalRenderTime;
+    dst.receivedBytes += src.receivedBytes;
 
     if (dst.minHostProcessingLatency == 0) {
         dst.minHostProcessingLatency = src.minHostProcessingLatency;
@@ -853,6 +854,24 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
         offset += ret;
     }
+}
+
+// Numeric-only record for the bounded diagnostics sink. Received bytes are
+// elementary-stream payload after FEC recovery, not wire throughput.
+void FFmpegVideoDecoder::logNetworkStats(VIDEO_STATS& stats)
+{
+    const Uint32 elapsed = SDL_GetTicks() - stats.measurementStartTimestamp;
+    if (elapsed == 0 || stats.totalFrames == 0) {
+        return;
+    }
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "DeskPort network rtt_ms=%u rtt_var_ms=%u received_fps=%u rendered_fps=%u "
+                "network_drop_permille=%u pacer_drop_permille=%u received_kbps=%u",
+                stats.lastRtt, stats.lastRttVariance,
+                (unsigned)(stats.receivedFps + 0.5f), (unsigned)(stats.renderedFps + 0.5f),
+                (unsigned)((uint64_t)stats.networkDroppedFrames * 1000 / stats.totalFrames),
+                (unsigned)((uint64_t)stats.pacerDroppedFrames * 1000 / stats.totalFrames),
+                (unsigned)(stats.receivedBytes * 8 / elapsed));
 }
 
 void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
@@ -1770,6 +1789,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             addVideoStats(m_LastWndVideoStats, recent);
             addVideoStats(m_ActiveWndVideoStats, recent);
             logVideoStats(recent, "Recent video stats (intentional idle FPS may be lower)");
+            logNetworkStats(recent);
             m_LastStatsLogTime = SDL_GetTicks();
         }
 
@@ -1796,6 +1816,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     m_ActiveWndVideoStats.receivedFrames++;
     m_ActiveWndVideoStats.totalFrames++;
+    m_ActiveWndVideoStats.receivedBytes += du->fullLength;
 
     int requiredBufferSize = du->fullLength;
     if (du->frameType == FRAME_TYPE_IDR) {
