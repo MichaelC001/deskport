@@ -59,9 +59,12 @@ public:
         const int base = baselineMs();
         const bool queued = base >= 0 && rttMs > base + std::max(30, base / 4);
         delayed = queued ? delayed + 1 : 0;
-        if (delayed >= 2) congested(nowMs);
+        if (delayed >= 2) congested(nowMs, rttMs);
     }
-    void loss(std::int64_t nowMs) { congested(nowMs); }
+    void loss(std::int64_t nowMs) { congested(nowMs, -1); }
+    // Measured video send rate. When it is far below the target, a delay spike
+    // was not caused by this stream, so the target falls gently.
+    void sent(int kbps) { sentKbps = kbps; }
     int targetKbps(std::int64_t nowMs) {
         if (target < ceiling && nowMs - lastCongestion >= 5000 && nowMs - lastChange >= 3000) {
             target = std::min(ceiling, target + std::max(250, ceiling / 20));
@@ -73,14 +76,20 @@ public:
     // produces frames that take most of a second to cross the link.
     bool constrained() const { return target * 2 < ceiling; }
 private:
-    void congested(std::int64_t nowMs) {
+    void congested(std::int64_t nowMs, int rttMs) {
         lastCongestion = nowMs;
         if (nowMs - lastDecrease < 2000) return; // Let the queue drain first.
-        target = std::max(floorValue, target * 7 / 10);
+        // Still draining since the last cut (RTT down by 10% or more): cutting
+        // again only lowers quality. Live 5G showed repeated cuts to the floor
+        // while RTT fell 279 -> 205 -> 135 -> 98 ms at about 1 Mbps actual.
+        if (rttMs > 0 && decreaseRtt > 0 && nowMs - lastDecrease < 6000 && rttMs * 10 <= decreaseRtt * 9) return;
+        const bool underused = sentKbps >= 0 && sentKbps * 2 < target;
+        target = std::max(floorValue, underused ? target * 85 / 100 : target * 7 / 10);
         lastDecrease = lastChange = nowMs;
+        decreaseRtt = rttMs;
         delayed = 0;
     }
-    int ceiling, floorValue, target, delayed = 0;
+    int ceiling, floorValue, target, delayed = 0, decreaseRtt = -1, sentKbps = -1;
     std::int64_t lastChange, lastCongestion, lastDecrease;
     std::array<int, 6> mins {};
     std::array<std::int64_t, 6> bucketTime {-1, -1, -1, -1, -1, -1};
@@ -95,6 +104,24 @@ struct RateMemory {
         return ceiling == ceilingKbps && targetKbps > 0 && nowMs - updatedMs <= 300000 ? targetKbps : 0;
     }
     void store(int ceiling, int target, std::int64_t nowMs) { ceilingKbps = ceiling; targetKbps = target; updatedMs = nowMs; }
+};
+
+// Coalesces recovery key frames. After a loss the client asks again for nearly
+// every frame until a complete key frame arrives; on a lossy 5G link that
+// produced eight 113 KB key frames in five seconds and a 97% frame loss window.
+// One key frame already in flight satisfies repeats; a lost one is requested
+// again after the window, which follows the path RTT (250 ms to 1 s).
+class KeyframeGate {
+public:
+    bool allow(std::int64_t nowMs, int rttMs) {
+        const std::int64_t window = std::clamp<std::int64_t>(std::int64_t(rttMs) * 2, 250, 1000);
+        if (last >= 0 && nowMs - last < window) { ++coalesced; return false; }
+        last = nowMs;
+        return true;
+    }
+    std::uint64_t coalesced = 0;
+private:
+    std::int64_t last = -1;
 };
 
 // Packets per millisecond for the inherited pacer. Remote sessions pace at four

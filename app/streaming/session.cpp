@@ -2186,7 +2186,8 @@ bool Session::startConnectionAsync()
                               !m_Preferences->multiController,
                               rtspSessionUrl,
                               m_RecoveryDeadline ? qBound(1, int(m_RecoveryDeadline - QDateTime::currentMSecsSinceEpoch()), ADAPTIVE_RESUME_TIMEOUT_MS) : m_AdaptiveResume ? ADAPTIVE_RESUME_TIMEOUT_MS : 0,
-                              m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming);
+                              m_Preferences->remoteAudio, m_Preferences->remoteInput, m_Preferences->smartStreaming,
+                              m_Preferences->dataSaver);
                 break;
             } catch (const GfeHttpResponseException& e) {
 #ifdef Q_OS_WIN

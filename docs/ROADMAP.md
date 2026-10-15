@@ -1,3 +1,26 @@
+## 5G session fixes — 2026-10-15
+
+Reason: a recorded pk4 → mm4 session over a direct Tailscale path on 5G
+(IPv6, 40–70 ms RTT) showed three problems.
+
+- Rate control cut repeatedly to the floor while an external RTT spike was
+  already draining (279 → 205 → 135 → 98 ms) and the stream sent only about
+  1.2 Mbps. The controller now holds while RTT is at least 10% below the value
+  at the last cut (for up to 6 s), and cuts 15% instead of 30% when the measured
+  send rate is under half the target. The network thread reports the send rate
+  once a second.
+- Key-frame storms: after 5G loss the client asked again for nearly every frame,
+  producing eight 113 KB key frames in five seconds and a 97% frame-loss window
+  (and 95% again a minute later). `deskport::KeyframeGate` coalesces recovery
+  requests for max(250 ms, 2×RTT) up to 1 s; FFmpeg encoders answer reference
+  invalidation with a key frame, so both share the gate.
+- Data saver now also lowers the still-picture refresh from 1 fps to 0.2 fps
+  (`deskportSaver` launch argument; older hosts ignore it). A lost final frame is
+  then noticed up to 5 s later.
+- Switching data saver still reconnects once (about 2.7 s on this path). A live
+  ceiling change over the display-control channel is the next step and needs a
+  shared-core contract change.
+
 ## Automatic bitrate and data saver — 2026-10-15
 
 Reason: the user wants bitrate chosen automatically, with a single switch for

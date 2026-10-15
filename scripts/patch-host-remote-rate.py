@@ -102,6 +102,7 @@ patch('src/video.cpp', '      if (smart && congestion->pop(0ms)) policy.loss(now
         deskport_rate->rtt(now_us / 1000, *rtt);
         deskport_last_rtt = *rtt;
       }
+      if (auto sent = deskport_sent->pop(0ms); deskport_rate && sent) deskport_rate->sent(*sent);
       if (deskport_rate) {
         if (deskport_lost) deskport_rate->loss(now_us / 1000);
         const int kbps = deskport_rate->targetKbps(now_us / 1000);
@@ -125,6 +126,7 @@ patch('src/video.cpp', '''    deskport::StreamPolicy policy(config.framerate);
     auto congestion = mail->event<int>("deskport_congestion");''', '''    deskport::StreamPolicy policy(config.framerate);
     auto congestion = mail->event<int>("deskport_congestion");
     auto deskport_rtt = mail->event<int>("deskport_rtt");
+    auto deskport_sent = mail->event<int>("deskport_sent_kbps");
     std::optional<deskport::BitrateController> deskport_rate;
     const int deskport_ceiling_kbps = config::video.max_bitrate > 0 ? std::min(config.bitrate, config::video.max_bitrate) : config.bitrate;
     int deskport_applied_kbps = deskport_ceiling_kbps;
@@ -146,7 +148,9 @@ patch('src/video.cpp', '''          frame_timestamp = img->frame_timestamp;
 patch('src/stream.cpp', '''    deskport::EncodedWindow deskport_encoded;''', '''    deskport::EncodedWindow deskport_encoded;
     std::atomic<int> deskport_remote {-1};
     int deskport_pace_kbps = 0;
-    std::chrono::steady_clock::time_point deskport_rtt_sample {};''')
+    std::chrono::steady_clock::time_point deskport_rtt_sample {};
+    std::uint64_t deskport_sent_bytes = 0;
+    std::chrono::steady_clock::time_point deskport_sent_since {};''')
 
 # Sample the existing ENet control RTT for remote sessions only.
 patch('src/stream.cpp', '''          if (!session->control.peer) {
@@ -182,7 +186,70 @@ patch('src/stream.cpp', '''        size_t ratecontrol_packets_in_1ms = std::giga
           if (auto kbps = session->mail->event<int>("deskport_rate_kbps")->pop(0ms)) session->deskport_pace_kbps = *kbps;
           ratecontrol_packets_in_1ms = deskport::remotePacketsPerMs(
               session->deskport_pace_kbps > 0 ? session->deskport_pace_kbps : session->config.monitor.bitrate, blocksize);
+          // Actual video payload rate, once a second, for the rate controller.
+          const auto sent_now = std::chrono::steady_clock::now();
+          session->deskport_sent_bytes += payload.size();
+          if (session->deskport_sent_since == std::chrono::steady_clock::time_point {}) {
+            session->deskport_sent_since = sent_now;
+          } else if (sent_now - session->deskport_sent_since >= 1s) {
+            const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(sent_now - session->deskport_sent_since).count();
+            session->mail->event<int>("deskport_sent_kbps")->raise(int(session->deskport_sent_bytes * 8 / std::max<long long>(1, ms)));
+            session->deskport_sent_bytes = 0;
+            session->deskport_sent_since = sent_now;
+          }
         }''')
 patch('src/stream.cpp', '''        send_batch_size = std::min<size_t>(64, send_batch_size);''', '''        send_batch_size = std::min<size_t>(64, send_batch_size);
         if (deskport_paced) send_batch_size = std::min(send_batch_size, ratecontrol_packets_in_1ms);''')
 
+# Data saver from the launch/resume request (absent from older clients: off).
+patch('src/rtsp.h', '''    bool deskport_smart = true;''', '''    bool deskport_smart = true;
+    bool deskport_saver = false;''')
+patch('src/video.h', '''    bool deskport_smart = true;''', '''    bool deskport_smart = true;
+    bool deskport_saver = false;''')
+patch('src/nvhttp.cpp', '''    launch_session->deskport_smart = get_arg(args, "deskportSmart", "1") == "1";''', '''    launch_session->deskport_smart = get_arg(args, "deskportSmart", "1") == "1";
+    launch_session->deskport_saver = get_arg(args, "deskportSaver", "0") == "1";''')
+patch('src/rtsp.cpp', '''    config.monitor.deskport_smart = session.deskport_smart;''', '''    config.monitor.deskport_smart = session.deskport_smart;
+    config.monitor.deskport_saver = session.deskport_saver;''')
+# An unchanged picture is refreshed every 5 s instead of every second while
+# saving data; a lost final frame is then noticed up to 5 s later.
+patch('src/video.cpp', '''        max_frametime = std::chrono::duration<double, std::milli>(1000.0 / fps);''', '''        max_frametime = std::chrono::duration<double, std::milli>(1000.0 / fps);
+        if (config.deskport_saver && fps <= 1) max_frametime = std::chrono::duration<double, std::milli>(5000.0);''')
+
+# Coalesce recovery key frames while the previous one is still in flight.
+patch('src/video.cpp', '''      while (invalidate_ref_frames_events->peek()) {
+        if (auto frames = invalidate_ref_frames_events->pop(0ms)) {
+          session->invalidate_ref_frames(frames->first, frames->second);
+        }
+      }
+
+      if (idr_events->peek()) {
+        requested_idr_frame = true;
+        idr_events->pop();
+      }''', '''      const auto deskport_key_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::steady_clock::now().time_since_epoch()).count();
+      // FFmpeg encoders answer reference invalidation with a key frame, so
+      // both requests share one gate; true invalidation encoders are untouched.
+      const bool deskport_idr_only = dynamic_cast<avcodec_encode_session_t *>(session.get()) != nullptr;
+      while (invalidate_ref_frames_events->peek()) {
+        if (auto frames = invalidate_ref_frames_events->pop(0ms)) {
+          if (!smart || !deskport_idr_only || deskport_key_gate.allow(deskport_key_ms, deskport_last_rtt)) {
+            session->invalidate_ref_frames(frames->first, frames->second);
+          }
+        }
+      }
+
+      if (idr_events->peek()) {
+        requested_idr_frame = true;
+        idr_events->pop();
+        if (smart && !deskport_key_gate.allow(deskport_key_ms, deskport_last_rtt)) requested_idr_frame = false;
+      }
+      if (smart && deskport_key_gate.coalesced != deskport_coalesced_logged &&
+          deskport_key_ms - deskport_coalesced_log_ms >= 5000) {
+        BOOST_LOG(info) << "DeskPort coalesced key frame requests: " << deskport_key_gate.coalesced;
+        deskport_coalesced_logged = deskport_key_gate.coalesced;
+        deskport_coalesced_log_ms = deskport_key_ms;
+      }''')
+patch('src/video.cpp', '''    std::int64_t deskport_last_change_ms = -1;''', '''    std::int64_t deskport_last_change_ms = -1;
+    deskport::KeyframeGate deskport_key_gate;
+    std::uint64_t deskport_coalesced_logged = 0;
+    std::int64_t deskport_coalesced_log_ms = 0;''')

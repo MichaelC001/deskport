@@ -197,7 +197,7 @@ NvHTTP::startApp(QString verb,
                  int gamepadMask,
                  bool persistGameControllersOnDisconnect,
                  QString& rtspSessionUrl,
-                 int timeoutMs, bool remoteAudio, bool remoteInput, bool smart)
+                 int timeoutMs, bool remoteAudio, bool remoteInput, bool smart, bool dataSaver)
 {
     if (httpsPort() == 0) getServerInfo(NVLL_NONE);
     // Capability decisions must come from the pinned endpoint, never the
@@ -211,7 +211,9 @@ NvHTTP::startApp(QString verb,
     const QString options = sessionSettings ?
         "&deskportAudio=" + QString::number(remoteAudio ? 1 : 0) +
         "&deskportInput=" + QString::number(remoteInput ? 1 : 0) +
-        "&deskportSmart=" + QString::number(smart ? 1 : 0) : QString();
+        "&deskportSmart=" + QString::number(smart ? 1 : 0) +
+        // Older hosts ignore it; newer ones refresh a still picture less often.
+        "&deskportSaver=" + QString::number(dataSaver ? 1 : 0) : QString();
     int riKeyId;
 
     memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));

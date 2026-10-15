@@ -114,6 +114,33 @@ int main() {
     resumed.resume(500); assert(resumed.targetKbps(50000) == 1000);
     resumed.resume(3000); assert(resumed.targetKbps(52999) == 3000 && resumed.targetKbps(53000) == 3400);
     resumed.resume(20000); assert(resumed.targetKbps(53000) == 8000);
+    // Live 5G trace: one external delay spike that drains while the stream
+    // sends ~1.2 Mbps. One cut, holds while RTT falls, later cuts are gentle.
+    deskport::BitrateController cellular(20000, 0);
+    for (int t = 0; t <= 4000; t += 500) cellular.rtt(t, 41);
+    cellular.sent(1200);
+    cellular.rtt(10000, 250); cellular.rtt(10500, 279);
+    assert(cellular.targetKbps(10500) == 17000); // underused: 15%, not 30%
+    cellular.rtt(12500, 205); cellular.rtt(13000, 200);
+    assert(cellular.targetKbps(13000) == 17000); // draining: hold
+    cellular.rtt(14500, 135); cellular.rtt(15000, 130);
+    assert(cellular.targetKbps(15000) == 17000);
+    cellular.rtt(16500, 98); cellular.rtt(17000, 96);
+    assert(cellular.targetKbps(17000) == 14450); // 6.5 s later and still high
+    deskport::BitrateController saturated(20000, 0);
+    for (int t = 0; t <= 4000; t += 500) saturated.rtt(t, 41);
+    saturated.sent(19000);
+    saturated.rtt(10000, 250); saturated.rtt(10500, 279);
+    assert(saturated.targetKbps(10500) == 14000); // our own queue: 30%
+    saturated.rtt(12500, 300); saturated.rtt(13000, 310);
+    assert(saturated.targetKbps(13000) == 9800); // still growing: cut again
+    deskport::KeyframeGate gate;
+    assert(gate.allow(1000, 50));                 // first request
+    assert(!gate.allow(1100, 50) && !gate.allow(1249, 50)); // 250 ms minimum
+    assert(gate.allow(1250, 50));
+    assert(!gate.allow(1700, 300) && gate.allow(1850, 300)); // 2 x RTT
+    assert(!gate.allow(2800, 900) && gate.allow(2850, 900)); // capped at 1 s
+    assert(gate.coalesced == 4);
     deskport::RateMemory memory;
     assert(memory.resumeFor(8000, 0) == 0);
     memory.store(8000, 3000, 1000);
