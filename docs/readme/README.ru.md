@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -69,12 +69,12 @@
 
 | Платформа | Роль | Статус выпуска | Загрузка |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Просмотр + хост + нативный виртуальный дисплей | **0.7.1 stable**, подписано Developer ID и нотаризовано Apple | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg) |
-| Linux x86_64 | Просмотр + хост; адаптивное виртуальное рабочее пространство на подходящих хостах KDE | **0.7.1 stable**: DEB, RPM, Arch, AppImage, переносной архив и Nix | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.1) · [руководство по установке](../LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Только просмотр | **0.7.1 stable**, Freedesktop Platform 25.08 | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.1) |
+| macOS Apple Silicon, macOS 26+ | Просмотр + хост + нативный виртуальный дисплей | **0.7.2 stable**, подписано Developer ID и нотаризовано Apple | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
+| Linux x86_64 | Просмотр + хост; адаптивное виртуальное рабочее пространство на подходящих хостах KDE | **0.7.2 stable**: DEB, RPM, Arch, AppImage, переносной архив и Nix | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [руководство по установке](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Только просмотр | **0.7.2 stable**, Freedesktop Platform 25.08 | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
 | iPhone / iPad, iOS/iPadOS 15+ | Только клиент | App Store; новые сборки отдельно тестируются в TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Только клиент | В разработке; проверки на физических устройствах, публичного выпуска в магазине пока нет | Пока недоступно |
-| Windows x64 | Просмотр + хост + виртуальный дисплей | **0.7.1 stable**; установщик и переносной ZIP; объём проверки см. ниже | [Установщик](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
+| Windows x64 | Просмотр + хост + виртуальный дисплей | **0.7.2 stable**; установщик и переносной ZIP; объём проверки см. ниже | [Установщик](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | Не квалифицировано | Нет проверенного пакета выпуска | — |
 
 > **Примечание об антивирусах Windows:** Антивирусы могут ошибочно помечать вспомогательные компоненты DeskPort для Windows как угрозу.
@@ -85,21 +85,21 @@
 актуальный Arch. AppImage включает собственную среду выполнения для систем со старой glibc;
 возможности хоста по-прежнему зависят от драйверов оборудования и поддержки композитора. Хостингу с виртуальным дисплеем в KDE нужны
 записи разрешений композитора. Нативные пакеты и Nix предоставляют фиксированные записи; сборки
-AppImage и переносные сборки 0.7.1 автоматически регистрируют текущий путь вспомогательного модуля дисплея
+AppImage и переносные сборки 0.7.2 автоматически регистрируют текущий путь вспомогательного модуля дисплея
 при запуске демонстрации. Для ввода на хосте по-прежнему нужны разрешения на устройства. Мобильные приложения
 не выступают хостом рабочего стола.
 Наличие определения в исходниках или успешная компиляция сами по себе не делают платформу поддерживаемой.
 
 ## Установка
 
-**macOS:** Откройте [нотаризованный DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg),
+**macOS:** Откройте [нотаризованный DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg),
 перетащите DeskPort в «Программы» и запустите. Предоставьте разрешения «Запись экрана» и
 «Универсальный доступ», чтобы использовать функции хоста. Nix и Homebrew не нужны.
 
-**Linux:** Выберите [пакет 0.7.1](https://github.com/keithxc/deskport/releases/tag/v0.7.1)
+**Linux:** Выберите [пакет 0.7.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 для своей системы и следуйте [руководству по установке](../LINUX_PACKAGES.md),
-включая разрешения на ввод для хоста. Через Nix: `nix run github:keithxc/deskport/v0.7.1`.
-Flatpak обеспечивает только просмотр. В файлах выпуска есть [контрольные суммы SHA-256](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt) и [отчёт о проверке](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt).
+включая разрешения на ввод для хоста. Через Nix: `nix run github:keithxc/deskport/v0.7.2`.
+Flatpak обеспечивает только просмотр. В файлах выпуска есть [контрольные суммы SHA-256](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt) и [отчёт о проверке](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt).
 
 **iPhone / iPad:** Установите [DeskPort из App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 Мобильное приложение — платная разовая покупка; актуальную местную цену см. в вашем магазине.
@@ -111,6 +111,8 @@ Flatpak обеспечивает только просмотр. В файлах 
 Tailscale. DeskPort не предоставляет сервис учётных записей, размещённые рабочие столы, ретранслятор
 или сетевой туннель. Классическое сопряжение Sunshine по PIN-коду по-прежнему доступно.
 
+**0.7.2 стабильная:** [Настольный выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.2) объединяет улучшения изменения размера, удалённой трансляции, экономии трафика и среды выполнения Linux, а также исправляет проблемы AppImage в Bazzite/KDE Wayland. См. [примечания к выпуску 0.7.2](../RELEASE_0.7.2.md); шаги установки для разных дистрибутивов Linux — в [английском README](../../README.md#linux-installation-by-distribution).
+
 **Доступ через браузер:** Настольные хосты предоставляют удалённый рабочий стол по HTTPS с
 30-секундным кодом входа, необязательным сопряжением браузера на семь дней, адаптивным размером
 и полноэкранным режимом. См. [примечания к выпуску 0.7.1](../RELEASE_0.7.1.md) и
@@ -121,8 +123,8 @@ Tailscale. DeskPort не предоставляет сервис учётных 
 
 | Канал | Статус | Установка |
 | --- | --- | --- |
-| Пакеты выпуска на GitHub | Доступно, 0.7.1 | Загрузите пакет для своего дистрибутива выше |
-| Upstream Nix flake | Доступно, 0.7.1 | `nix run github:keithxc/deskport/v0.7.1` |
+| Пакеты выпуска на GitHub | Доступно, 0.7.2 | Загрузите пакет для своего дистрибутива выше |
+| Upstream Nix flake | Доступно, 0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
 | AUR `deskport-bin` | Рецепт протестирован; публикация заблокирована приостановкой регистрации новых аккаунтов | [Соберите рецепт локально](../LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) отправлен на рецензию; не слит | До включения используйте upstream flake |
 | Официальные репозитории Arch / Flathub | Нет в списке | Используйте загрузки выпуска; Flatpak работает только для просмотра |
@@ -158,7 +160,7 @@ Tailscale. DeskPort не предоставляет сервис учётных 
 Текущие ограничения платформ DeskPort перечислены выше; эта таблица не подразумевает
 одинаковых возможностей на всех ОС или измеренного преимущества в производительности.
 
-См. [примечания к выпуску 0.7.1](../RELEASE_0.7.1.md),
+См. [примечания к выпуску 0.7.2](../RELEASE_0.7.2.md),
 [архитектуру](../ARCHITECTURE.md) и [дорожную карту](../ROADMAP.md).
 
 ## Сборка и запуск в Linux

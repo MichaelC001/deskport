@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -69,12 +69,12 @@
 
 | 플랫폼 | 역할 | 릴리스 상태 | 다운로드 |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | 뷰어 + 호스트 + 네이티브 가상 디스플레이 | **0.7.1 stable**, Developer ID 서명 및 Apple 공증 완료 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg) |
-| Linux x86_64 | 뷰어 + 호스트, 지원 KDE 호스트에서 적응형 가상 작업 공간 | **0.7.1 stable**: DEB, RPM, Arch, AppImage, 포터블 아카이브, Nix | [릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.1) · [설치 가이드](../LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | 뷰어 전용 | **0.7.1 stable**, Freedesktop Platform 25.08 | [릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.1) |
+| macOS Apple Silicon, macOS 26+ | 뷰어 + 호스트 + 네이티브 가상 디스플레이 | **0.7.2 stable**, Developer ID 서명 및 Apple 공증 완료 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
+| Linux x86_64 | 뷰어 + 호스트, 지원 KDE 호스트에서 적응형 가상 작업 공간 | **0.7.2 stable**: DEB, RPM, Arch, AppImage, 포터블 아카이브, Nix | [릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [설치 가이드](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | 뷰어 전용 | **0.7.2 stable**, Freedesktop Platform 25.08 | [릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
 | iPhone / iPad, iOS/iPadOS 15+ | 클라이언트 전용 | App Store, 최신 빌드는 TestFlight에서 별도 테스트 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | 클라이언트 전용 | 개발 중, 실기기 검사 진행, 아직 공개 스토어 출시 없음 | 아직 제공되지 않음 |
-| Windows x64 | 뷰어 + 호스트 + 가상 디스플레이 | **0.7.1 stable**, 설치 프로그램 및 포터블 ZIP, 아래 검증 범위 참고 | [설치 프로그램](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
+| Windows x64 | 뷰어 + 호스트 + 가상 디스플레이 | **0.7.2 stable**, 설치 프로그램 및 포터블 ZIP, 아래 검증 범위 참고 | [설치 프로그램](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | 검증되지 않음 | 검증된 릴리스 패키지 없음 | — |
 
 > **Windows 백신 안내:** 백신 프로그램이 DeskPort의 Windows 헬퍼 구성 요소를 오탐지할 수 있습니다.
@@ -84,21 +84,21 @@
 네이티브 Linux 패키지에는 glibc 2.39+가 필요합니다: Ubuntu 24.04+/Debian 13+, Fedora 44,
 최신 Arch. AppImage에는 오래된 glibc 데스크톱을 위한 전용 런타임이 포함되어 있지만,
 호스트 기능은 여전히 하드웨어 드라이버와 컴포지터 지원에 따라 달라집니다. KDE 가상 디스플레이 호스팅에는
-컴포지터 권한 항목이 필요합니다. 네이티브/Nix 패키지는 고정 항목을 제공하며, 0.7.1
+컴포지터 권한 항목이 필요합니다. 네이티브/Nix 패키지는 고정 항목을 제공하며, 0.7.2
 AppImage와 포터블 빌드는 공유를 시작할 때 현재 디스플레이 헬퍼 경로를 자동으로 등록합니다.
 호스트 입력에는 여전히 장치 권한이 필요합니다. 모바일 앱은 데스크톱을 호스팅하지 않습니다.
 소스 정의나 성공적인 컴파일만으로는 지원 플랫폼이 되지 않습니다.
 
 ## 설치
 
-**macOS:** [공증된 DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg)를 열고,
+**macOS:** [공증된 DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg)를 열고,
 DeskPort를 응용 프로그램 폴더로 끌어다 놓은 뒤 실행합니다. 호스트 기능을 사용하려면 화면 기록과
 손쉬운 사용 권한을 허용하세요. Nix와 Homebrew는 필요하지 않습니다.
 
-**Linux:** 시스템에 맞는 [0.7.1 패키지](https://github.com/keithxc/deskport/releases/tag/v0.7.1)를
+**Linux:** 시스템에 맞는 [0.7.2 패키지](https://github.com/keithxc/deskport/releases/tag/v0.7.2)를
 선택하고 호스트 입력 권한을 포함해 [설치 가이드](../LINUX_PACKAGES.md)를 따르세요.
-Nix 사용 시: `nix run github:keithxc/deskport/v0.7.1`.
-Flatpak은 보기 기능만 제공합니다. 릴리스 자산에는 [SHA-256 체크섬](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt)과 [검증 보고서](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt)가 포함되어 있습니다.
+Nix 사용 시: `nix run github:keithxc/deskport/v0.7.2`.
+Flatpak은 보기 기능만 제공합니다. 릴리스 자산에는 [SHA-256 체크섬](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt)과 [검증 보고서](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt)가 포함되어 있습니다.
 
 **iPhone / iPad:** [App Store에서 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)를 설치하세요.
 모바일 앱은 유료 일회성 구매이며, 현재 현지 가격은 해당 스토어에서 확인하세요.
@@ -110,6 +110,8 @@ Flatpak은 보기 기능만 제공합니다. 릴리스 자산에는 [SHA-256 체
 자체 VPN을 사용하세요. DeskPort는 계정 서비스, 호스팅 데스크톱, 릴레이,
 네트워크 터널을 제공하지 않습니다. 기존 Sunshine PIN 페어링도 계속 사용할 수 있습니다.
 
+**0.7.2 안정 버전:** [데스크톱 릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.2)는 크기 조정, 원격 스트리밍, 데이터 절약, Linux 런타임 개선을 담고 있으며 Bazzite/KDE Wayland의 AppImage 문제를 수정했습니다. 자세한 내용은 [0.7.2 릴리스 노트](../RELEASE_0.7.2.md)를, 배포판별 Linux 설치 방법은 [영문 README](../../README.md#linux-installation-by-distribution)를 참고하세요.
+
 **브라우저 접속:** 데스크톱 호스트는 30초 로그인 코드, 선택적 7일 브라우저 페어링,
 적응형 크기 조정, 전체 화면을 갖춘 HTTPS 원격 데스크톱을 제공합니다.
 [0.7.1 릴리스 노트](../RELEASE_0.7.1.md)와 [브라우저 가이드](../BROWSER_ACCESS.md)를 참고하세요.
@@ -119,8 +121,8 @@ AppImage에는 전용 glibc 런타임이 포함되어 있으며, 네이티브 �
 
 | 채널 | 상태 | 설치 |
 | --- | --- | --- |
-| GitHub 릴리스 패키지 | 제공 중, 0.7.1 | 위에서 배포판에 맞는 패키지를 다운로드 |
-| 업스트림 Nix flake | 제공 중, 0.7.1 | `nix run github:keithxc/deskport/v0.7.1` |
+| GitHub 릴리스 패키지 | 제공 중, 0.7.2 | 위에서 배포판에 맞는 패키지를 다운로드 |
+| 업스트림 Nix flake | 제공 중, 0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
 | AUR `deskport-bin` | 레시피 테스트 완료, 신규 계정 등록 중단으로 게시 보류 | [로컬에서 레시피 빌드](../LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) 리뷰 요청됨, 아직 병합되지 않음 | 포함될 때까지 업스트림 flake 사용 |
 | Arch 공식 저장소 / Flathub | 등재되지 않음 | 릴리스 다운로드 사용, Flatpak은 뷰어 전용 |
@@ -155,7 +157,7 @@ AppImage에는 전용 glibc 런타임이 포함되어 있으며, 네이티브 �
 DeskPort의 현재 플랫폼 제한은 위에 나와 있으며, 이 표가 모든 OS에서의 기능 동등성이나
 측정된 성능 우위를 의미하지는 않습니다.
 
-[0.7.1 릴리스 노트](../RELEASE_0.7.1.md),
+[0.7.2 릴리스 노트](../RELEASE_0.7.2.md),
 [아키텍처](../ARCHITECTURE.md), [로드맵](../ROADMAP.md)을 참고하세요.
 
 ## Linux에서 빌드 및 실행

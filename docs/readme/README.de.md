@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.1"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.1-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -69,12 +69,12 @@ um das Bild in voller Größe zu sehen; diese Vorschauen implizieren keine Verf�
 
 | Plattform | Rolle | Release-Status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + Host + native virtuelle Anzeige | **0.7.1 stable**, mit Developer ID signiert und von Apple notarisiert | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + Host; adaptiver virtueller Arbeitsbereich auf geeigneten KDE-Hosts | **0.7.1 stable**: DEB, RPM, Arch, AppImage, portables Archiv und Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.1) · [Installationsanleitung](../LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Nur Viewer | **0.7.1 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.1) |
+| macOS Apple Silicon, macOS 26+ | Viewer + Host + native virtuelle Anzeige | **0.7.2 stable**, mit Developer ID signiert und von Apple notarisiert | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + Host; adaptiver virtueller Arbeitsbereich auf geeigneten KDE-Hosts | **0.7.2 stable**: DEB, RPM, Arch, AppImage, portables Archiv und Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [Installationsanleitung](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Nur Viewer | **0.7.2 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
 | iPhone / iPad, iOS/iPadOS 15+ | Nur Client | App Store; neuere Builds werden separat in TestFlight getestet | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Nur Client | In Entwicklung; Prüfungen auf physischen Geräten, noch keine öffentliche Store-Veröffentlichung | Noch nicht verfügbar |
-| Windows x64 | Viewer + Host + virtuelle Anzeige | **0.7.1 stable**; Installer und portables ZIP; siehe Prüfumfang unten | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-windows-x64-setup-full.exe) |
+| Windows x64 | Viewer + Host + virtuelle Anzeige | **0.7.2 stable**; Installer und portables ZIP; siehe Prüfumfang unten | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | Nicht qualifiziert | Kein verifiziertes Release-Paket | — |
 
 > **Hinweis zu Windows-Virenschutz:** Virenschutzprogramme könnten die Windows-Hilfskomponenten von DeskPort fälschlicherweise als Bedrohung melden.
@@ -85,21 +85,21 @@ Native Linux-Pakete erfordern glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
 aktuelles Arch. Das AppImage bündelt eine private Laufzeitumgebung für Desktops mit älterem glibc;
 Hardwaretreiber und Compositor-Unterstützung bestimmen weiterhin die Host-Fähigkeiten. KDE-Hosting mit
 virtueller Anzeige benötigt Compositor-Berechtigungseinträge. Native/Nix-Pakete liefern feste Einträge; die
-AppImage- und portablen Builds von 0.7.1 registrieren den aktuellen Pfad des Display-Helpers automatisch,
+AppImage- und portablen Builds von 0.7.2 registrieren den aktuellen Pfad des Display-Helpers automatisch,
 wenn die Freigabe startet. Host-Eingaben erfordern weiterhin Geräteberechtigungen. Mobile Apps
 hosten keine Desktops.
 Eine Quelldefinition oder eine erfolgreiche Kompilierung allein ist keine unterstützte Plattform.
 
 ## Installation
 
-**macOS:** Öffnen Sie das [notarisierte DMG](https://github.com/keithxc/deskport/releases/download/v0.7.1/DeskPort-0.7.1-macos-arm64.dmg),
+**macOS:** Öffnen Sie das [notarisierte DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg),
 ziehen Sie DeskPort in „Programme“ und öffnen Sie es. Erteilen Sie die Berechtigungen für Bildschirmaufnahme und
 Bedienungshilfen, um Host-Funktionen zu nutzen. Nix und Homebrew werden nicht benötigt.
 
-**Linux:** Wählen Sie das [0.7.1-Paket](https://github.com/keithxc/deskport/releases/tag/v0.7.1)
+**Linux:** Wählen Sie das [0.7.2-Paket](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 für Ihr System und folgen Sie der [Installationsanleitung](../LINUX_PACKAGES.md),
-einschließlich der Berechtigungen für Host-Eingaben. Mit Nix: `nix run github:keithxc/deskport/v0.7.1`.
-Flatpak bietet nur das Ansehen. Die Release-Assets enthalten [SHA-256-Prüfsummen](https://github.com/keithxc/deskport/releases/download/v0.7.1/SHA256SUMS.txt) und einen [Prüfbericht](https://github.com/keithxc/deskport/releases/download/v0.7.1/VERIFICATION.txt).
+einschließlich der Berechtigungen für Host-Eingaben. Mit Nix: `nix run github:keithxc/deskport/v0.7.2`.
+Flatpak bietet nur das Ansehen. Die Release-Assets enthalten [SHA-256-Prüfsummen](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt) und einen [Prüfbericht](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt).
 
 **iPhone / iPad:** Installieren Sie [DeskPort aus dem App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 Die mobile App ist ein kostenpflichtiger Einmalkauf; den aktuellen lokalen Preis finden Sie in Ihrem Store.
@@ -111,6 +111,8 @@ Host. Beide Geräte benötigen eine funktionierende Netzwerkverbindung: Verwende
 Tailscale. DeskPort bietet keinen Kontodienst, keine gehosteten Desktops, kein Relay
 und keinen Netzwerktunnel. Das klassische Sunshine-PIN-Pairing bleibt verfügbar.
 
+**0.7.2 stabil:** Das [Desktop-Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) bündelt Verbesserungen bei Größenänderung, Remote-Streaming, Datensparmodus und Linux-Laufzeit und behebt AppImage-Probleme unter Bazzite/KDE Wayland. Details in den [Release Notes zu 0.7.2](../RELEASE_0.7.2.md); Installationsschritte je Linux-Distribution stehen in der [englischen README](../../README.md#linux-installation-by-distribution).
+
 **Browserzugriff:** Desktop-Hosts stellen einen HTTPS-Remote-Desktop bereit, mit einem
 30-Sekunden-Anmeldecode, optionalem Browser-Pairing für sieben Tage, adaptiver Größenanpassung
 und Vollbild. Siehe die [Release Notes zu 0.7.1](../RELEASE_0.7.1.md) und die
@@ -121,8 +123,8 @@ native Pakete behalten ihre Anforderung an glibc 2.39.
 
 | Kanal | Status | Installation |
 | --- | --- | --- |
-| GitHub-Release-Pakete | Verfügbar, 0.7.1 | Laden Sie oben das Paket für Ihre Distribution herunter |
-| Upstream-Nix-Flake | Verfügbar, 0.7.1 | `nix run github:keithxc/deskport/v0.7.1` |
+| GitHub-Release-Pakete | Verfügbar, 0.7.2 | Laden Sie oben das Paket für Ihre Distribution herunter |
+| Upstream-Nix-Flake | Verfügbar, 0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
 | AUR `deskport-bin` | Rezept getestet; Veröffentlichung durch Pausierung der Neuregistrierung von Konten blockiert | [Rezept lokal bauen](../LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) zur Prüfung eingereicht; nicht gemergt | Bis zur Aufnahme das Upstream-Flake verwenden |
 | Offizielle Arch-Repositorys / Flathub | Nicht gelistet | Release-Downloads verwenden; Flatpak ist nur ein Viewer |
@@ -158,7 +160,7 @@ Quellen: [Moonlight](https://moonlight-stream.org/),
 Die aktuellen Plattformgrenzen von DeskPort sind oben aufgeführt; diese Tabelle impliziert weder
 Funktionsgleichheit auf allen Betriebssystemen noch einen gemessenen Leistungsvorteil.
 
-Siehe die [Release Notes zu 0.7.1](../RELEASE_0.7.1.md),
+Siehe die [Release Notes zu 0.7.2](../RELEASE_0.7.2.md),
 die [Architektur](../ARCHITECTURE.md) und die [Roadmap](../ROADMAP.md).
 
 ## Unter Linux bauen und ausführen
