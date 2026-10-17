@@ -4,8 +4,8 @@ The Linux native/Nix host creates a dedicated virtual desktop on supported
 Wayland compositors. A bound client can resize it over the existing authenticated
 display-control connection. The output stays alive during an active display-control session, including video
 reconnects. Full disconnection removes it after a short grace period; a later
-connection recreates it. Sharing startup briefly creates an output for encoder
-probing, then removes it while waiting for a client. This lifecycle requires a
+connection recreates it. Sharing startup leaves the output absent until an authenticated display lease
+admits a client; capture/encoder probing waits for that owned target. This lifecycle requires a
 DeskPort client with display control.
 
 ## Backends
@@ -28,6 +28,14 @@ DeskPort client with display control.
   negotiation and temporary DisplayConfig scaling. The owned output is verified
   against the current monitor state. Sunshine attaches to that output's PipeWire
   object serial; it does not open a second screen picker. Tested with Mutter 50.4.
+- **Hyprland / Omarchy:** a dedicated headless output through public Lua/text
+  runtime monitor APIs, with direct WLR capture. Development sources implement
+  the shared mirror, turn-off-others and extension policies behind native
+  capability checks. A locked guardian journals original topology and normal
+  workspace assignments, excludes later outputs, verifies restoration and
+  handles helper/host failure. Stable physical EDID identity, ordinary 8-bit
+  sRGB and VRR-off state are required for physical topology leases; limited
+  setups retain extension with a warning. See [Hyprland display leases](HYPRLAND_DISPLAY.md).
 - Other desktops retain existing-screen portal capture and do not advertise
   adaptive-display support. An unavailable native backend reports an error rather
   than silently capturing another screen.

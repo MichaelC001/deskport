@@ -187,6 +187,8 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxGnome = object["gnome"].toBool();
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
+                m_LinuxHyprlandPolicies = m_LinuxHyprland && object.value("displayPolicy").toBool();
+                m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
                     beginStop(tr("Invalid virtual display identity")); return;
                 }
@@ -198,7 +200,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
             if (object.contains("seq")) {
                 if (object["seq"].toInt() == m_DisplayWireSequence && m_DisplaySequence != 0) {
                     const int sequence = m_DisplaySequence; m_DisplaySequence = 0;
-                    m_DisplayWarning = object.contains("layoutWarning") ? tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.") : QString();
+                    m_DisplayWarning = (object.contains("layoutWarning") || (m_LinuxHyprland && !m_LinuxHyprlandPolicies)) ? tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.") : QString();
 #ifdef Q_OS_WIN
                     if(object["dpiLimited"].toBool())m_DisplayWarning=tr("The host's minimum desktop size limits scaling. Use full screen or a larger window.");
 #endif
@@ -294,6 +296,8 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
+                m_LinuxHyprlandPolicies = m_LinuxHyprland && object.value("displayPolicy").toBool();
+                m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
@@ -1355,7 +1359,7 @@ bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
     return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
-    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxHyprland;
+    return adaptiveDisplayAvailable() && !m_LinuxGnome && (!m_LinuxHyprland || m_LinuxHyprlandPolicies);
 #else
     return adaptiveDisplayAvailable();
 #endif
@@ -1381,6 +1385,12 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
     m_DisplaySequence = sequence;
     m_DisplayWireSequence = m_DisplayWireSequence == std::numeric_limits<int>::max() ? 1 : m_DisplayWireSequence + 1;
     const auto generation = ++m_DisplayGeneration;
+    // An unadvertised Hyprland policy contract retains its legacy extension
+    // behavior. Older helpers still receive their legacy ID 0. A negotiated
+    // request is passed through without substitution.
+#ifdef Q_OS_LINUX
+    if (m_LinuxHyprlandPolicyRequests && !m_LinuxHyprlandPolicies && policy == 0) policy = 2;
+#endif
     m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}, {"displayPolicy", policy}}).toJson(QJsonDocument::Compact) + '\n');
     QTimer::singleShot(DisplayChangeTimeoutMs, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {

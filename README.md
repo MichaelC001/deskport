@@ -324,9 +324,10 @@ the next local Arch package, then installing it with
 Omarchy's repository/AUR package menu does not make this GitHub download a
 repository package.
 
-Hyprland hosting uses a dedicated headless output as an extended workspace.
-The KDE policies that mirror or disable physical displays do not apply to this
-integration. Follow the [Omarchy/Hyprland host guide](docs/CLI.md#omarchy-and-hyprland)
+Hyprland hosting uses a dedicated headless output. Development sources support
+mirror, turn-off-others and extension policies when monitor identity and runtime
+state can be restored safely; see [Hyprland display leases](docs/HYPRLAND_DISPLAY.md).
+Follow the [Omarchy/Hyprland host guide](docs/CLI.md#omarchy-and-hyprland)
 for the active compositor, capture permission and SSH-service requirements.
 Check the installed Hyprland version before applying permission syntax.
 Package installation alone does not configure unattended desktop login or verify

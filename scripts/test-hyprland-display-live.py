@@ -7,6 +7,7 @@ this nested test. Set DESKPORT_TEST_HOST to include actual WLR/software encoder
 probing and refusal to capture a lost output. It never injects live input.
 """
 import argparse
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
@@ -17,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import uuid
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--helper')
@@ -43,17 +45,28 @@ def receive(process):
 
 
 def request(process, seq, width=1280, height=720, scale=1, **extra):
-    process.stdin.write(json.dumps(dict(seq=seq, width=width, height=height, scale=scale, **extra)) + '\n')
+    process.stdin.write(json.dumps(dict(seq=seq, width=width, height=height, scale=scale, **dict({'displayPolicy': 2}, **extra))) + '\n')
     process.stdin.flush()
     response = receive(process)
     assert response.get('seq') == seq and 'error' not in response, response
     return response
 
 
+@contextmanager
+def short_workspace(target):
+    link = Path('/tmp') / ('dphy-' + uuid.uuid4().hex[:8])
+    link.symlink_to(target, target_is_directory=True)
+    try:
+        yield link
+    finally:
+        link.unlink()
+
+
 if not args.inside:
     # Hyprland's instance signatures are long; UNIX sockets need a short root.
-    with tempfile.TemporaryDirectory(prefix='dphy-', dir='/tmp') as tmp:
-        work = Path(tmp)
+    test_root = Path(subprocess.check_output(['bash', str(root / 'scripts/build-paths.sh'), 'checkout'], text=True).strip()) / 'tests'
+    test_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='hyprland-live-', dir=test_root) as tmp, short_workspace(tmp) as work:
         helper = str(Path(args.helper).resolve()) if args.helper else str(work / 'helper')
         if not args.helper:
             subprocess.run([sys.executable, str(root / 'scripts/test-hyprland-display.py'), '--build-only', helper], check=True)
@@ -69,7 +82,7 @@ if not args.inside:
         for key in ['DISPLAY', 'WAYLAND_DISPLAY', 'HYPRLAND_INSTANCE_SIGNATURE', 'DBUS_SESSION_BUS_ADDRESS']:
             env.pop(key, None)
         bus_config = work / 'session-bus.conf'
-        bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
+        bus_config.write_text(f'<busconfig><type>session</type><listen>unix:path={work}/runtime/session-bus</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
         result = subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable,
                                  str(Path(__file__).resolve()), '--inside', '--helper', helper] + (['--lua'] if args.lua else []), env=env)
         if result.returncode:
@@ -82,6 +95,28 @@ work = Path(os.environ['DESKPORT_TEST_WORK'])
 assert str(work / 'runtime') == os.environ['XDG_RUNTIME_DIR']
 env = dict(os.environ)
 children = []
+guardians = {}
+forced_guard_cleanup = False
+
+
+def record_guardians():
+    for lock in (work / 'runtime/deskport-hyprland').glob('*/lease.lock'):
+        try:
+            pid = int(lock.read_text().splitlines()[0])
+            fields = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
+            guardians[pid] = fields[19]
+        except (OSError, ValueError, IndexError):
+            pass
+
+
+def guardian_alive(pid, started):
+    try:
+        fields = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
+        return fields[19] == started and fields[0] != 'Z'
+    except (OSError, IndexError):
+        return False
+
+
 try:
     kwin_log = open(work / 'kwin.log', 'w')
     kwin_binary = shutil.which('kwin_wayland', path=os.pathsep.join(p for p in env['PATH'].split(os.pathsep) if '/wrappers/' not in p))
@@ -107,11 +142,28 @@ try:
     def monitors():
         return json.loads(subprocess.check_output(['hyprctl', '-j', 'monitors', 'all'], env=env, text=True))
 
+    def ctl(*arguments):
+        result = subprocess.check_output(['hyprctl', *arguments], env=env, text=True).strip()
+        assert result == 'ok', (arguments, result)
+
+    names = {m['name'] for m in monitors()}
+    ctl('output', 'create', 'headless')
+    original_headless = until(lambda: next((m['name'] for m in monitors() if m['name'] not in names), None), 'second original output missing')
+    # Give originals stable private rules. A software output removed/recreated
+    # later should return to its rule, rather than being appended after hotplug
+    # outputs by Hyprland's automatic placement algorithm.
+    for m in monitors():
+        position = '1280x0' if m['name'] == original_headless else '0x0'
+        if args.lua:
+            ctl('eval', f'hl.monitor({{ output = "{m["name"]}", mode = "1280x720@60", position = "{position}", scale = 1 }})')
+        else:
+            ctl('keyword', 'monitor', f'{m["name"]},1280x720@60,{position},1')
+    until(lambda: all(m['x'] == (1280 if m['name'] == original_headless else 0) and m['y'] == 0 for m in monitors()), 'original private layout did not settle')
     baseline = until(lambda: monitors(), 'isolated Hyprland has no initial output')
-    original = {m['name']: (m['width'], m['height'], m['scale'], m['x'], m['y'], m['transform']) for m in baseline}
+    original = {m['name']: (m['width'], m['height'], m['scale'], m['x'], m['y'], m['transform'], m['mirrorOf'], m['disabled']) for m in baseline}
 
     def check_original():
-        current = {m['name']: (m['width'], m['height'], m['scale'], m['x'], m['y'], m['transform'])
+        current = {m['name']: (m['width'], m['height'], m['scale'], m['x'], m['y'], m['transform'], m['mirrorOf'], m['disabled'])
                    for m in monitors() if m['name'] in original}
         assert current == original, (current, original)
 
@@ -187,6 +239,7 @@ log_path = {case}/sunshine.log
                                    stdout=subprocess.PIPE, stderr=helper_log, text=True, start_new_session=True)
         children.append(process)
         assert receive(process)['ready']
+        record_guardians()
         assert clean()
         return process
 
@@ -204,18 +257,121 @@ log_path = {case}/sunshine.log
     helper.stdin.close()
     assert helper.wait(timeout=8) == 0
     until(clean, 'EOF did not remove the owned output')
-    helper = start(); request(helper, 6)
-    helper.kill(); helper.wait()
-    until(clean, 'SIGKILL did not remove the owned output')
-    helper = start(); request(helper, 7)
-    os.killpg(helper.pid, signal.SIGTERM); helper.wait(timeout=8)
+    # Apply each topology policy against real outputs; mode/scale changes keep
+    # the initial recovery snapshot. A later hotplug is never a policy target.
+    for policy in [0, 1, 2]:
+        helper = start()
+        response = request(helper, 10, displayPolicy=policy)
+        owned = response['outputName']
+        current = monitors()
+        target = next(m for m in current if m['name'] == owned)
+        for m in current:
+            if m['name'] not in original: continue
+            if policy == 0: assert str(m['mirrorOf']) in [str(target['id']), owned], m
+            if policy == 1: assert m['disabled'], m
+        capture(response)
+        # The synthetic added screen lives only in this nested compositor.
+        ctl('output', 'create', 'headless', 'DeskPortTest-Hotplug')
+        added = until(lambda: next((m for m in monitors() if m['name'] == 'DeskPortTest-Hotplug'), None), 'hotplug output missing')
+        request(helper, 11, 1668, 2388, 2, displayPolicy=policy)
+        current = next(m for m in monitors() if m['name'] == added['name'])
+        assert not current['disabled'] and current['mirrorOf'] == added['mirrorOf'], current
+        if policy == 0:
+            # Guardian death must restore through the durable runtime journal.
+            lock = next((work / 'runtime/deskport-hyprland').glob('*/lease.lock'))
+            guard = int(lock.read_text().splitlines()[0]); os.kill(guard, signal.SIGKILL)
+            assert 'error' in receive(helper)
+            assert helper.wait(timeout=20) == 1
+        elif policy == 1:
+            helper.kill(); helper.wait()
+        else:
+            ctl('output', 'remove', original_headless)
+            until(lambda: not any(m['name'] == original_headless for m in monitors()), 'original output did not detach')
+            helper.stdin.close(); assert helper.wait(timeout=15) == 0
+        until(clean, 'policy/crash cleanup did not remove owned output')
+        if policy == 2:
+            ctl('output', 'create', 'headless', original_headless)
+            until(lambda: any(m['name'] == original_headless for m in monitors()), 'original output did not return')
+        check_original()
+        ctl('output', 'remove', added['name'])
+        until(lambda: not any(m['name'] == added['name'] for m in monitors()), 'hotplug output did not detach')
+        print(f'PASS: policy {policy}, resize/2x, hotplug exclusion and restoration', flush=True)
+    # Retain real persistent workspace IDs as well as tolerating Hyprland's
+    # automatic empty-workspace destruction/reuse in the earlier cases.
+    spaces = json.loads(subprocess.check_output(['hyprctl', '-j', 'workspaces'], env=env, text=True))
+    saved_spaces = {w['id']: w['monitor'] for w in spaces if w['monitor'] in original}
+    for wid in saved_spaces:
+        if args.lua: ctl('eval', f'hl.workspace_rule({{ workspace = "{wid}", persistent = true }})')
+        else: ctl('keyword', 'workspace', f'{wid},persistent:true')
+    persistent_ids = set(saved_spaces)
+    until(lambda: {w['id'] for w in json.loads(subprocess.check_output(['hyprctl', '-j', 'workspaces'], env=env, text=True)) if w.get('ispersistent') and w['id'] in persistent_ids} == persistent_ids, 'private persistent workspace rules did not apply')
+    # Persistent-rule activation can recreate an empty workspace on the default
+    # output. Snapshot the settled fixture state that the lease actually sees.
+    spaces = json.loads(subprocess.check_output(['hyprctl', '-j', 'workspaces'], env=env, text=True))
+    saved_spaces = {w['id']: w['monitor'] for w in spaces if w.get('ispersistent') and w['monitor'] in original}
+    assert saved_spaces, 'no persistent workspace survived fixture setup'
+    def check_spaces():
+        spaces = json.loads(subprocess.check_output(['hyprctl', '-j', 'workspaces'], env=env, text=True))
+        assert {w['id']: w['monitor'] for w in spaces if w['id'] in saved_spaces} == saved_spaces
+    helper = start(); request(helper, 7, displayPolicy=0)
+    os.killpg(helper.pid, signal.SIGTERM); helper.wait(timeout=15)
     until(clean, 'process-group SIGTERM did not remove the owned output')
+    check_original(); check_spaces()
+    # Preserve a pre-existing mirror graph as well as independent displays.
+    # Switching mirror sources must not leave an old source's replication list.
+    source = next(m for m in monitors() if m['name'] in original and m['name'] != original_headless)
+    if args.lua:
+        ctl('eval', f'hl.monitor({{ output = "{original_headless}", mode = "1280x720@60", position = "0x0", scale = 1, transform = 0, mirror = "{source["name"]}", disabled = false }})')
+    else:
+        ctl('keyword', 'monitor', f'{original_headless},1280x720@60,0x0,1,transform,0,mirror,{source["name"]}')
+    until(lambda: next(m for m in monitors() if m['name'] == original_headless)['mirrorOf'] == str(source['id']), 'pre-existing mirror did not activate')
+    original = {m['name']: (m['width'], m['height'], m['scale'], m['x'], m['y'], m['transform'], m['mirrorOf'], m['disabled']) for m in monitors()}
+    for policy in [0, 1]:
+        helper = start()
+        response = request(helper, 30, 1668, 2388, 2, displayPolicy=policy)
+        assert not response.get('layoutWarning'), response
+        capture(response)
+        helper.stdin.close(); assert helper.wait(timeout=20) == 0
+        until(clean, 'pre-existing mirror lease did not clean up')
+        check_original()
+        print(f'PASS: policy {policy} restores the original mirror graph after removing the owned source', flush=True)
     check_original()
-    print('Real isolated Hyprland passed: 3 pixel/scale modes, original layout, release/recreate, EOF, SIGKILL and group SIGTERM cleanup')
+    print('Real isolated Hyprland passed: 3 pixel/scale modes, 3 policies, hotplug exclusion, original/mirrored layouts, release/recreate, EOF, owner/guardian SIGKILL and group SIGTERM cleanup')
     if host: print('Host probes used a private network namespace' if host_namespace else 'Host probes bound loopback only; user network namespaces were unavailable')
+except BaseException:
+    # Preserve failure state before the private compositor is torn down.
+    try:
+        print('Failure monitors: ' + json.dumps(monitors()), file=sys.stderr)
+        print('Failure workspaces: ' + subprocess.check_output(['hyprctl', '-j', 'workspaces'], env=env, text=True), file=sys.stderr)
+        for journal in (work / 'runtime/deskport-hyprland').glob('*/recovery.json'):
+            print('Failure recovery journal: ' + journal.read_text(), file=sys.stderr)
+        for child in children:
+            if child.poll() is not None and child.stdout is not None:
+                print('Exited helper output: ' + child.stdout.read(), file=sys.stderr)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    raise
 finally:
+    record_guardians()
     for child in reversed(children):
+        if child in [locals().get('hyprland'), locals().get('kwin')]:
+            # Let EOF recovery finish before stopping its private compositor.
+            # PID plus kernel start time prevents touching a reused PID.
+            record_guardians()
+            for pid, started in guardians.items():
+                end = time.monotonic() + 12
+                while guardian_alive(pid, started) and time.monotonic() < end:
+                    time.sleep(.05)
+                if guardian_alive(pid, started):
+                    forced_guard_cleanup = True
+                    os.kill(pid, signal.SIGKILL)
+                    until(lambda: not guardian_alive(pid, started), 'owned guardian did not stop', timeout=3)
+                    print('Forced cleanup of a failed guardian in the private compositor', file=sys.stderr)
         if child.poll() is None:
             child.terminate()
             try: child.wait(timeout=5)
             except subprocess.TimeoutExpired: child.kill(); child.wait()
+
+    assert all(child.poll() is not None for child in children), 'owned child process survived teardown'
+    assert not any(guardian_alive(pid, started) for pid, started in guardians.items()), 'owned guardian survived teardown'
+    assert not forced_guard_cleanup, 'guardian required forced teardown'

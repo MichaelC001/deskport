@@ -59,11 +59,14 @@ are not modified by this implementation.
 
 ## Platform scope
 
-Qt desktop clients and the Apple native client send the policy to macOS and
-KDE hosts. The Linux adaptive-display branch is integrated in this development
+Qt desktop clients and the Apple native client send the policy to capable desktop
+hosts. The Linux adaptive-display branch is integrated in this development
 release. KDE snapshots enabled state, modes, scale, transform, position, priority
 and replication source; it verifies restoration before disarming its independent
-recovery process. GNOME preserves the existing extended display behavior and
+recovery process. Hyprland uses the same core policy IDs through public runtime monitor APIs,
+with a per-compositor recovery guardian and journal. See
+[Hyprland display leases](HYPRLAND_DISPLAY.md) for capability checks and limits.
+GNOME preserves the existing extended display behavior and
 does not advertise the three-policy capability. Nondefault choices are refused.
 Android address editing is implemented in the native-client repository; Android's
 authenticated virtual-display transport is a separate missing adapter.

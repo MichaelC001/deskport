@@ -27,6 +27,9 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-idle": initial = dict(ready=True, active=False, gnome=True, outputName="DeskPort-pending")
+if "DESKPORT_TEST_HYPR_POLICY" in os.environ:
+    initial = dict(ready=True, active=False, backend="hyprland", displayPolicy=os.environ["DESKPORT_TEST_HYPR_POLICY"] == "1", outputName="DeskPort-Hyprland")
+    if os.environ["DESKPORT_TEST_HYPR_POLICY"] == "legacy": initial.pop("displayPolicy")
 print("display started private.example.net", file=sys.stderr, flush=True)
 print(json.dumps(initial), flush=True)
 if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
@@ -34,6 +37,11 @@ if os.environ.get("DESKPORT_TEST_MODE") == "display-late-fail":
     sys.exit(4)
 for line in sys.stdin:
     request = json.loads(line)
+    if "DESKPORT_TEST_HYPR_POLICY" in os.environ:
+        pathlib.Path(os.environ["DESKPORT_DISPLAY_STATE_DIR"]).joinpath("last-display-request.json").write_text(json.dumps(request))
+        request.update(outputName="DeskPort-Hyprland", active=request.get("session", True))
+        if os.environ["DESKPORT_TEST_HYPR_POLICY"] == "0": request["layoutWarning"] = True
+        if os.environ["DESKPORT_TEST_HYPR_POLICY"] == "legacy" and request.get("displayPolicy") != 0: request["error"] = "Legacy helper only accepts policy ID 0"
     if os.environ.get("DESKPORT_TEST_MODE") == "restore-slow" and not request.get("session", True): time.sleep(0.8)
     if os.environ.get("DESKPORT_TEST_MODE") == "restore-reject" and not request.get("session", True):
         time.sleep(0.2)
