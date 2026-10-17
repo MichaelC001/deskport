@@ -157,8 +157,9 @@ normal FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM
 with SELinux Enforcing and software graphics. The reporter's installed-system
 retest remains separate; see the [final verification scope](docs/RELEASE_0.7.2.md#validation-boundary).
 
-Native package installation, update and removal checks in complete VMs remain
-pending; an AppImage GUI smoke does not verify those native package operations.
+Full-VM installation, upgrade, rollback, removal and configuration-retention
+results are tracked in the [desktop lifecycle matrix](docs/LINUX_DESKTOP_ACCEPTANCE.md).
+An AppImage GUI smoke does not verify native package operations.
 Package installation and GUI launch alone do not verify live capture, hardware
 video decoding, remote input, visual quality or latency.
 

@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """Wrap the tested portable payload in DEB, RPM and pacman packages."""
+import argparse
 import json
 import pathlib
 import subprocess
-import sys
 
-appdir, work = (pathlib.Path(p).resolve() for p in sys.argv[1:3])
-version = sys.argv[3]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('appdir', type=pathlib.Path)
+parser.add_argument('work', type=pathlib.Path)
+parser.add_argument('version')
+parser.add_argument('--format', action='append', choices=('deb', 'rpm', 'archlinux'),
+                    help='Package only this existing format; default builds all three')
+args = parser.parse_args()
+appdir, work = args.appdir.resolve(), args.work.resolve()
+version = args.version
 cache = work / 'cache'
 subprocess.run(['tar', '-xzf', str(cache / 'nfpm.tar.gz'), '-C', str(cache)], check=True)
 launcher = work / 'deskport-launcher'
@@ -72,5 +79,7 @@ manifest.write_text(json.dumps(config, indent=2) + '\n')
 for packager, name in [('deb', f'deskport_{version}-1_amd64.deb'),
                        ('rpm', f'deskport-{version}-1.x86_64.rpm'),
                        ('archlinux', f'deskport-{version}-1-x86_64.pkg.tar.zst')]:
+    if args.format and packager not in args.format:
+        continue
     subprocess.run([str(cache / 'nfpm'), 'package', '--config', str(manifest),
                     '--packager', packager, '--target', str(work / 'output' / name)], check=True)

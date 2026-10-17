@@ -1,5 +1,9 @@
 # Linux release packages
 
+For full desktop VM install/upgrade/rollback/removal coverage and its limits,
+see [Linux desktop acceptance](LINUX_DESKTOP_ACCEPTANCE.md). Container package
+checks and AppImage GUI smoke do not establish that lifecycle matrix.
+
 DeskPort 0.7.1 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package.

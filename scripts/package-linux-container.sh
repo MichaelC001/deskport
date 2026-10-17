@@ -101,12 +101,13 @@ chmod +x "$appdir/usr/libexec/deskport-host"
 mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
 cp -r "$work/cache/libdatachannel-notices" "$appdir/usr/share/doc/deskport/libdatachannel"
+bash "$repo/scripts/build-appimage-libva.sh"
+python3 "$repo/scripts/install-linux-libva.py" "$appdir" "$work/cache/libva-2.23.0-runtime"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
-# Keep the native-package runtime unchanged; only AppImage bundles glibc.
+# All portable formats share libva; only AppImage bundles glibc.
 appimage_dir="$work/DeskPort-AppImage.AppDir"
 rm -rf "$appimage_dir"
 cp -a "$appdir" "$appimage_dir"
-bash "$repo/scripts/build-appimage-libva.sh"
 bash "$repo/scripts/build-appimage-qt-wayland.sh"
 python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun" \
     --libva-prefix "$work/cache/libva-2.23.0-runtime" \

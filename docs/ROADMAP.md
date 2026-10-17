@@ -1,3 +1,28 @@
+## Linux desktop lifecycle acceptance — 2026-10-17
+
+Add a repeatable full-VM layer for retained 0.7.1 → 0.7.2 installation,
+upgrade, rollback, removal and synthetic configuration retention. It reuses the
+existing distro-lab baselines, serializes ownership with the shared VM lock,
+retains image/package hashes and verifies baseline/VM teardown on failure as
+well as success. AppImage updates use atomic replacement; owned daemonized FUSE
+processes are included in per-stage cleanup. The current AppImage also exercises
+two display-helper create/release cycles. Flatpak remains viewer-only and needs
+an already available runtime. See [the matrix and boundaries](LINUX_DESKTOP_ACCEPTANCE.md).
+
+These package scenarios do not establish sustained media, remote clipboard/input,
+window focus/visibility, an installed X11 desktop or physical GPU acceptance.
+Denied uinput access is retained as a prerequisite failure; no security policy
+is changed to turn it into a pass. Seamless remains deferred.
+
+Full VM checks also reproduced a native GUI startup crash on Ubuntu 26.04
+GNOME: GDB locates it inside the bundled older `libva-wayland` during hardware
+capability probing. All portable formats now reuse the existing pinned libva
+2.23.0 input in both private trees, with matching source/license/file hashes.
+The source fix changes no decoder algorithm or system driver. Old release
+assets remain immutable; candidate and legacy rollback results stay separate.
+The released AppImage's second Mutter output creation failure is still recorded
+as an independent acceptance gap.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

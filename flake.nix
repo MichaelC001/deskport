@@ -76,6 +76,8 @@
             filter = path: type: !(builtins.elem (baseNameOf path) [
               ".github" "docs" "AGENTS.md" "README.md"
               "flake.nix" "flake.lock" "libs"
+              # Off-device VM drivers are not part of the application runtime.
+              "run-linux-desktop-lifecycle.py" "test-linux-desktop-lifecycle.py"
             ]);
           };
           # Every third-party dependency is vendored in this repository; only the
