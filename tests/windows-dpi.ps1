@@ -81,7 +81,7 @@ function Assert-Dpi($Reply,[int]$Expected,[switch]$PhysicalPresent) {
  if($PhysicalPresent -and (Physical $rows) -ne $script:physical){throw 'Physical display DPI/layout changed'}
  return $owned[0]
 }
-$script:physical=Physical (Observe);$results=@();$h=$null;$original=0;$script:sequence=0
+$script:physical=Physical (Observe);$results=@();$disconnects=@();$h=$null;$original=0;$script:sequence=0
 try {
  foreach($round in 1..$Rounds){foreach($policy in @(2,1)) {
   $h=Start-Helper;$initial=@(Observe|Where-Object{$_.owned})[0];if(!$original){$original=$initial.percent}
@@ -100,6 +100,7 @@ try {
   $null=Assert-Dpi (Request $h (++$script:sequence) 2560 1440 2 $policy) 200 -PhysicalPresent:($policy -eq 2)
   $h.p.StandardInput.WriteLine((@{seq=++$script:sequence;session=$false}|ConvertTo-Json -Compress));$null=Reply $h.p
   $restored=@(Observe|Where-Object{$_.owned})[0];if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw 'Disconnect failed to restore the original 125% DPI'}
+  $disconnects+=@{round=$round;policy=$policy;restored=$restored};$disconnects|ConvertTo-Json -Depth 5|Set-Content (Join-Path $OutputDirectory 'disconnect-restores.json')
   $null=Observe $original;Finish-Helper $h;$h=$null
  }}
  # Mirroring inherits the physical desktop; a 2x request must not change
@@ -119,7 +120,7 @@ try {
  @{passed=$true;systemDpiWritesRequired=$false;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'mirror.json')
  foreach($failure in @('helper','broker')) {
   if($failure -eq 'broker' -and !$BrokerCrash){continue}
-  $h=Start-Helper;$null=Observe 125;$reply=Request $h (++$script:sequence) 2560 1440 2 2;$null=Assert-Dpi $reply 200 -PhysicalPresent
+  $h=Start-Helper;$baseline=Observe 125;$reply=Request $h (++$script:sequence) 2560 1440 2 2;$scaled=Assert-Dpi $reply 200 -PhysicalPresent
   if($failure -eq 'helper'){$h.p.Kill();$h.p.WaitForExit()}
   else {
    'ready'|Set-Content (Join-Path $OutputDirectory 'broker-armed')
@@ -132,8 +133,15 @@ try {
    $h.p.Kill();$h.p.WaitForExit()
   }
   Finish-Helper $h -Killed;$h=$null
-  Start-Sleep -Seconds 6
-  $h=Start-Helper;$restored=@(Observe|Where-Object{$_.owned})[0];if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw "$failure crash failed to restore original virtual DPI"}
+  if($failure -eq 'broker') {
+   # SCM retains its failure count across upgrades: the configured second and
+   # subsequent restart delay is 30 seconds, not the first-crash 5 seconds.
+   $deadline=(Get-Date).AddSeconds(65)
+   do{Start-Sleep -Milliseconds 250;$running=(Get-Service DeskPortDisplayService).Status -eq 'Running'}while(!$running -and (Get-Date) -lt $deadline)
+   if(!$running){throw 'SCM did not restart the automatic display service'}
+   Start-Sleep -Milliseconds 500
+  }else{Start-Sleep -Seconds 6}
+  $h=Start-Helper;$restored=@(Observe|Where-Object{$_.owned})[0];@{baseline=$baseline;scaled=$scaled;reenabled=$restored}|ConvertTo-Json -Depth 7|Set-Content (Join-Path $OutputDirectory "$failure-observation.json");if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw "$failure crash failed to restore original virtual DPI"}
   $null=Observe $original;Finish-Helper $h;$h=$null
   @{failure=$failure;originalPercentRestored=125;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory "$failure-recovery.json")
  }
