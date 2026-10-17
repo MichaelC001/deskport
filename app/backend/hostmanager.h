@@ -173,6 +173,8 @@ private:
     QString m_LinuxOutputName;
     bool m_LinuxGnome = false;
     bool m_LinuxHyprland = false;
+    bool m_LinuxX11 = false;
+    QString m_LinuxX11Lease;
     quint32 m_LinuxPipewireNode = 0;
     QString m_LinuxPipewireSerial;
     bool saveLinuxDisplayState();

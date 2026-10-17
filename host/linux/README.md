@@ -47,3 +47,10 @@ independent workspace. Physical-layout policy failures become recorded warnings
 when workspace pixels/scale are correct. Diagnostic layout snapshots are saved
 under `$XDG_DATA_HOME/DeskPort/display-layout-events.jsonl` (default
 `~/.local/share/DeskPort`). Wayland disconnects and unverified modes still fail.
+
+On X11, `x11-display.cpp` leases only an explicitly selected inactive
+xf86-video-dummy connector through an independent guardian. It adds exact modes,
+extends the software X screen and restores the root framebuffer on release.
+Only verified 1x is supported; global UI DPI, physical modes and system Xorg
+configuration are never changed. See [X11 adaptive display](../../docs/X11_ADAPTIVE_DISPLAY.md)
+for driver limits, ownership, journal recovery and isolated native checks.

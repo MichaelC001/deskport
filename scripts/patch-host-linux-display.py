@@ -117,6 +117,92 @@ edit('wlgrab.cpp', '      output = monitor->output;', '''      if (!owned_output
       output = monitor->output;''')
 edit('wlgrab.cpp', '    return display_names;', '''    if (config::video.output_name.starts_with("DeskPort-")) return {config::video.output_name};
     return display_names;''')
+# X11 leases are named RandR connectors, never Sunshine's unstable numeric
+# monitor index. Revalidate the exact connector and rectangle before every frame.
+edit('x11grab.cpp', '      _FN(FreeCrtcInfo, void, (XRRCrtcInfo * crtcInfo));', '''      _FN(FreeCrtcInfo, void, (XRRCrtcInfo * crtcInfo));
+      _FN(GetCrtcTransform, Status, (Display * dpy, RRCrtc crtc, XRRCrtcTransformAttributes **attributes));
+      _FN(GetPanning, XRRPanning *, (Display * dpy, XRRScreenResources *resources, RRCrtc crtc));
+      _FN(FreePanning, void, (XRRPanning *panning));''')
+edit('x11grab.cpp', '          {(dyn::apiproc *) &FreeCrtcInfo, "XRRFreeCrtcInfo"},', '''          {(dyn::apiproc *) &FreeCrtcInfo, "XRRFreeCrtcInfo"},
+          {(dyn::apiproc *) &GetCrtcTransform, "XRRGetCrtcTransform"},
+          {(dyn::apiproc *) &GetPanning, "XRRGetPanning"},
+          {(dyn::apiproc *) &FreePanning, "XRRFreePanning"},''')
+edit('x11grab.cpp', '#include <fstream>', '#include <fstream>\n#include <boost/property_tree/json_parser.hpp>')
+edit('x11grab.cpp', '    int init(const std::string &display_name, const ::video::config_t &config) {\n      if (!xdisplay) {', r'''    bool owned_x11_plain(XRRScreenResources* resources, RRCrtc crtc) {
+      XRRCrtcTransformAttributes* attributes = nullptr;
+      if (!x11::rr::GetCrtcTransform(xdisplay.get(), crtc, &attributes) || !attributes) return false;
+      bool plain = true;
+      for (int row = 0; row < 3; ++row) for (int col = 0; col < 3; ++col) {
+        const XFixed expected = row == col ? 65536 : 0;
+        plain &= attributes->currentTransform.matrix[row][col] == expected && attributes->pendingTransform.matrix[row][col] == expected;
+      }
+      x11::Free(attributes);
+      auto panning = x11::rr::GetPanning(xdisplay.get(), resources, crtc);
+      if (!panning) return false;
+      plain &= panning->width == 0 && panning->height == 0;
+      x11::rr::FreePanning(panning);
+      return plain;
+    }
+
+    bool owned_x11_target(bool initialize) {
+      const char* path = std::getenv("DESKPORT_VIRTUAL_DISPLAY");
+      if (!path) return true;
+      try {
+        boost::property_tree::ptree state;
+        boost::property_tree::read_json(path, state);
+        const auto wanted = state.get<std::string>("output");
+        const auto lease = state.get<std::string>("leaseToken");
+        const auto w = state.get<int>("width"), h = state.get<int>("height");
+        if (!wanted.starts_with("DUMMY") || lease.size() != 45 || !lease.starts_with("DeskPort-") || wanted != config::video.output_name ||
+            w < 640 || w > 7680 || h < 360 || h > 4320 || w % 4 || h % 4 || state.get<int>("scale") != 1) return false;
+        screen_res_t resources {x11::rr::GetScreenResources(xdisplay.get(), xwindow)};
+        if (!resources) return false;
+        for (int i = 0; i < resources->noutput; ++i) {
+          output_info_t output {x11::rr::GetOutputInfo(xdisplay.get(), resources.get(), resources->outputs[i])};
+          if (!output || std::string(output->name, output->nameLen) != wanted) continue;
+          if (!output->crtc) break;
+          crtc_info_t crtc {x11::rr::GetCrtcInfo(xdisplay.get(), resources.get(), output->crtc)};
+          if (!crtc || crtc->noutput != 1 || crtc->outputs[0] != resources->outputs[i] ||
+              crtc->width != w || crtc->height != h || crtc->rotation != RR_Rotate_0) break;
+          bool owned_mode = false;
+          for (int j = 0; j < resources->nmode; ++j) {
+            const auto& mode = resources->modes[j];
+            if (mode.id == crtc->mode && std::string(mode.name, mode.nameLength).starts_with(lease + "-")) owned_mode = true;
+          }
+          if (!owned_mode) break;
+          if (!owned_x11_plain(resources.get(), output->crtc)) break;
+          bool overlap = false;
+          for (int j = 0; j < resources->ncrtc; ++j) {
+            if (resources->crtcs[j] == output->crtc) continue;
+            crtc_info_t other {x11::rr::GetCrtcInfo(xdisplay.get(), resources.get(), resources->crtcs[j])};
+            if (other && other->mode && (!owned_x11_plain(resources.get(), resources->crtcs[j]) ||
+                (crtc->x < other->x + int(other->width) && other->x < crtc->x + int(crtc->width) &&
+                 crtc->y < other->y + int(other->height) && other->y < crtc->y + int(crtc->height)))) { overlap = true; break; }
+          }
+          if (overlap) break; // An overlapping scanout is a mirror, not an independent workspace.
+          if (initialize) {
+            width = w; height = h; offset_x = crtc->x; offset_y = crtc->y;
+            env_width = xattr.width; env_height = xattr.height;
+            BOOST_LOG(info) << "DeskPort owned X11 capture: " << wanted << " " << w << "x" << h;
+            return true;
+          }
+          return width == w && height == h && offset_x == crtc->x && offset_y == crtc->y;
+        }
+      } catch (const std::exception&) {}
+      BOOST_LOG(error) << "DeskPort owned X11 output unavailable; refusing physical display fallback";
+      return false;
+    }
+
+    int init(const std::string &display_name, const ::video::config_t &config) {
+      if (!xdisplay) {''')
+edit('x11grab.cpp', '      int streamedMonitor = -1;', '''      if (std::getenv("DESKPORT_VIRTUAL_DISPLAY")) return owned_x11_target(true) ? 0 : -1;
+      int streamedMonitor = -1;''')
+edit('x11grab.cpp', '  std::vector<std::string> x11_display_names() {', '''  std::vector<std::string> x11_display_names() {
+    if (std::getenv("DESKPORT_VIRTUAL_DISPLAY")) return {config::video.output_name};''')
+# Both XGetImage and MIT-SHM must revalidate the admission. Fail closed even when
+# the framebuffer stays the same size and the output is removed or moved.
+edit('x11grab.cpp', '      refresh();\n\n      // The whole X server changed', '      if (!owned_x11_target(false)) return capture_e::reinit;\n      refresh();\n\n      // The whole X server changed')
+edit('x11grab.cpp', '      // The whole X server changed, so we must reinit everything\n      if (xattr.width != env_width || xattr.height != env_height) {\n        BOOST_LOG(warning) << "X dimensions changed in SHM mode, request reinit"sv;', '      if (!owned_x11_target(false)) return capture_e::reinit;\n      // The whole X server changed, so we must reinit everything\n      if (xattr.width != env_width || xattr.height != env_height) {\n        BOOST_LOG(warning) << "X dimensions changed in SHM mode, request reinit"sv;')
 main = root / 'src/main.cpp'
 original = main.read_text()
 anchor = 'if (video::probe_encoders()) {'

@@ -69,7 +69,94 @@ static QAction* trayAction(const QString& title) {
 class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
-    void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void init() {
+        qputenv("DESKPORT_TEST_MODE", "normal");
+#ifdef Q_OS_LINUX
+        qputenv("WAYLAND_DISPLAY", "deskport-isolated-fake");
+        qputenv("XDG_SESSION_TYPE", "wayland");
+        qunsetenv("DESKPORT_X11_OUTPUT");
+#endif
+    }
+    void explicitX11SelectionNeverFallsBack_data() {
+        QTest::addColumn<bool>("wayland");
+        QTest::newRow("missing-display") << false;
+        QTest::newRow("wayland-session") << true;
+    }
+    void explicitX11SelectionNeverFallsBack() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux X11 adapter");
+#else
+        QFETCH(bool, wayland);
+        qputenv("DESKPORT_TEST_MODE", "x11-unavailable");
+        if (!wayland) { qunsetenv("WAYLAND_DISPLAY"); qputenv("XDG_SESSION_TYPE", "x11"); }
+        qunsetenv("DISPLAY"); qputenv("DESKPORT_X11_OUTPUT", "DUMMY1");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720);
+        QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+        QVERIFY(!host.running()); QVERIFY(!host.adaptiveDisplayAvailable());
+        QVERIFY(QFile::exists(dir.path() + "/display-pid"));
+        QVERIFY(!QFile::exists(dir.path() + "/auth-pid"));
+        QVERIFY(!QFile::exists(dir.path() + "/host-pid"));
+        QVERIFY(host.status().contains("unavailable"));
+#endif
+    }
+    void waylandSessionWithoutDisplayVariableKeepsPortalCapture() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux session detection");
+#else
+        qunsetenv("WAYLAND_DISPLAY"); qputenv("DISPLAY", ":99999");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720); QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
+        QVERIFY(!host.adaptiveDisplayAvailable());
+        QVERIFY(!QFile::exists(dir.path() + "/display-pid"));
+        QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
+        QVERIFY(config.readAll().contains("capture = portal\n"));
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+#endif
+    }
+    void x11UnselectedRetainsExistingCaptureWithoutAdaptiveLease() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux X11 adapter");
+#else
+        qunsetenv("WAYLAND_DISPLAY"); qputenv("XDG_SESSION_TYPE", "x11"); qputenv("DISPLAY", ":99999");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720); QTRY_VERIFY_WITH_TIMEOUT(host.running(), 5000);
+        QVERIFY(!host.adaptiveDisplayAvailable());
+        QVERIFY(!QFile::exists(dir.path() + "/display-pid"));
+        QVERIFY(!QFile::exists(dir.path() + "/virtual-display.json"));
+        QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
+        QVERIFY(config.readAll().contains("capture = x11\n"));
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+#endif
+    }
+    void x11LeaseUsesNamedCaptureWithoutTopologyPolicies() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux X11 adapter");
+#else
+        qputenv("DESKPORT_TEST_MODE", "x11-idle");
+        qunsetenv("WAYLAND_DISPLAY"); qputenv("XDG_SESSION_TYPE", "x11"); qputenv("DISPLAY", ":99999");
+        qputenv("DESKPORT_X11_OUTPUT", "DUMMY1");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QVERIFY(!host.displayPoliciesAvailable());
+        QVERIFY(!host.resizeDisplay(1280, 720, 1, 6, 2));
+        const auto path = dir.path() + "/virtual-display.json";
+        QVERIFY(!QFile::exists(path));
+        QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
+        const auto text = config.readAll();
+        QVERIFY(text.contains("capture = x11\n")); QVERIFY(text.contains("output_name = DUMMY1\n"));
+        QSignalSpy results(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1668, 2388, 1, 7));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 5000);
+        const auto state = PeerStore::read(path);
+        QCOMPARE(state["output"].toString(), QString("DUMMY1"));
+        QCOMPARE(state["leaseToken"].toString(), QString("DeskPort-00000000-0000-0000-0000-000000000000"));
+        QCOMPARE(state["width"].toInt(), 1668);
+        host.restoreDisplay(); QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 5000);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+#endif
+    }
     void parentCrashReleasesOwnedSunshineChildren_data() {
         QTest::addColumn<QByteArray>("mode");
         QTest::addColumn<QString>("pidFile");

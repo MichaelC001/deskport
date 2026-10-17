@@ -1,7 +1,9 @@
 # Linux adaptive workspace
 
 The Linux native/Nix host creates a dedicated virtual desktop on supported
-Wayland compositors. A bound client can resize it over the existing authenticated
+Wayland compositors. An explicit [X11 software-Xorg backend](X11_ADAPTIVE_DISPLAY.md)
+leases an existing inactive dummy-driver connector at 1×; it does not add a
+connector to ordinary physical-driver X11 sessions. A bound client can resize it over the existing authenticated
 display-control connection. The output stays alive during an active display-control session, including video
 reconnects. Full disconnection removes it after a short grace period; a later
 connection recreates it. Sharing startup briefly creates an output for encoder
@@ -28,6 +30,10 @@ DeskPort client with display control.
   negotiation and temporary DisplayConfig scaling. The owned output is verified
   against the current monitor state. Sunshine attaches to that output's PipeWire
   object serial; it does not open a second screen picker. Tested with Mutter 50.4.
+- **X11 / xf86-video-dummy:** explicitly selected inactive `DUMMY1`–`DUMMY15`,
+  exact dynamic modes and an independent extension at 1×, with EOF/crash recovery.
+  2× UI scaling and topology policies are unsupported and explicitly rejected.
+  No Xorg/driver installation or physical output fallback. See the X11 document.
 - Other desktops retain existing-screen portal capture and do not advertise
   adaptive-display support. An unavailable native backend reports an error rather
   than silently capturing another screen.
@@ -37,8 +43,9 @@ behavior depend on the compositor. It does not provide a universal arbitrary-mod
 resize command. Backend-specific operations are kept behind the same helper
 request/acknowledgment contract.
 
-Sizes are bounded to 640×360–7680×4320 pixels, aligned to four. Both 1× and 2×
-scales are supported when accepted by the compositor. Successful replies require
+Sizes are bounded to 640×360–7680×4320 pixels, aligned to four. Wayland backends
+support 1× and 2× scales when accepted by the compositor; the X11 backend accepts
+only observed 1×. Successful replies require
 observed pixels and scale, not just successful API submission. Failed or timed-out
 requests are reported; a lost helper stops capture instead of falling back to a
 physical screen. Only one approved device can control the display.

@@ -187,6 +187,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxGnome = object["gnome"].toBool();
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
+                m_LinuxX11 = object["backend"].toString() == "x11";
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
                     beginStop(tr("Invalid virtual display identity")); return;
                 }
@@ -223,6 +224,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                                 beginStop(tr("Invalid virtual display identity")); return;
                             }
                             m_LinuxOutputName = output;
+                            if (m_LinuxX11) m_LinuxX11Lease = object["leaseToken"].toString();
                             m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
                             if (object.contains("pipewireNode")) m_LinuxGnome = true;
                             m_LinuxPipewireSerial = object["pipewireSerial"].toString();
@@ -274,6 +276,15 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                     return;
                 }
 #endif
+#ifdef Q_OS_LINUX
+                if (m_LinuxX11) {
+                    // An explicit unsupported X11 selection needs repair or a
+                    // user retry, never physical fallback or an endless loop.
+                    m_DesiredSharing = false;
+                    m_RecoveryTimer.stop();
+                    if (!m_Isolated) QSettings().setValue("host/shareOnLaunch", false);
+                }
+#endif
 #ifdef Q_OS_WIN
                 // A missing/denied installed display broker needs repair or an
                 // explicit retry. Do not repeatedly request a failed lease.
@@ -294,6 +305,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxPipewireNode = quint32(object.value("pipewireNode").toDouble());
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
+                m_LinuxX11 = object["backend"].toString() == "x11";
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
@@ -698,12 +710,16 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     // stderr is consumed by the shared diagnostics sink; stdout is the control protocol.
 #ifdef Q_OS_LINUX
-    m_LinuxOutputName.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxHyprland = false;
+    m_LinuxOutputName.clear(); m_LinuxX11Lease.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxHyprland = false;
+    m_LinuxX11 = !qEnvironmentVariableIsEmpty("DESKPORT_X11_OUTPUT") ||
+        (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") && qgetenv("XDG_SESSION_TYPE").toLower() != "wayland" &&
+         !qEnvironmentVariableIsEmpty("DISPLAY"));
     QFile::remove(m_Directory + "/virtual-display.json");
     const auto desktops = qgetenv("XDG_CURRENT_DESKTOP").split(':');
     const bool hyprland = qgetenv("XDG_CURRENT_DESKTOP").toLower().split(':').contains("hyprland") ||
         !qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE");
-    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME") && !hyprland)) {
+    const bool x11Virtual = !qEnvironmentVariableIsEmpty("DESKPORT_X11_OUTPUT");
+    if (!x11Virtual && (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || (!desktops.contains("KDE") && !desktops.contains("GNOME") && !hyprland))) {
         setStatus(tr("Starting desktop sharing…"));
         startServer(0);
     } else
@@ -815,8 +831,8 @@ void HostManager::startServer(int displayId) {
 #ifdef Q_OS_LINUX
     config.write(QString("output_name = %1\n").arg(m_LinuxOutputName).toUtf8());
     Diagnostics::instance().record("host", "DeskPort runtime kind=capture backend=" +
-        QString(m_LinuxHyprland ? "wlr" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "kwin" : "portal"));
-    config.write(m_LinuxHyprland ? "capture = wlr\n" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
+        QString(m_LinuxX11 ? "x11" : m_LinuxHyprland ? "wlr" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "kwin" : "portal"));
+    config.write(m_LinuxX11 ? "capture = x11\n" : m_LinuxHyprland ? "capture = wlr\n" : !m_LinuxOutputName.isEmpty() && !m_LinuxGnome ? "capture = kwin\n" : "capture = portal\n");
 #endif
     if (!config.commit()) { beginStop(tr("Cannot save host configuration")); return; }
 #ifdef Q_OS_WIN
@@ -1329,7 +1345,7 @@ bool HostManager::saveLinuxDisplayState() {
     if (!m_LinuxOutputName.isEmpty()) {
         return PeerStore::write(m_Directory + "/virtual-display.json", {
             {"node", double(m_LinuxPipewireNode)}, {"serial", m_LinuxPipewireSerial}, {"output", m_LinuxOutputName},
-            {"width", m_DisplayWidth}, {"height", m_DisplayHeight}, {"scale", m_DisplayScale}});
+            {"width", m_DisplayWidth}, {"height", m_DisplayHeight}, {"scale", m_DisplayScale}, {"leaseToken", m_LinuxX11Lease}});
     }
 #endif
     return true;
@@ -1355,7 +1371,7 @@ bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
     return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
-    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxHyprland;
+    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxHyprland && !m_LinuxX11;
 #else
     return adaptiveDisplayAvailable();
 #endif
@@ -1368,6 +1384,9 @@ static constexpr int DisplayChangeTimeoutMs = 20000;
 static constexpr int DisplayChangeTimeoutMs = 5000;
 #endif
 bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, int policy) {
+#ifdef Q_OS_LINUX
+    if (m_LinuxX11 && policy != 0) return false;
+#endif
     if (policy < 0 || policy > 2 || !adaptiveDisplayAvailable() || !m_QueuedDisplayRequest.isEmpty() || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
         height < 360 || height > DeskPortDisplay::MaxHeight || width % 4 || height % 4 || (scale != 1 && scale != 2)) return false;
     if (m_DisplaySequence) {
@@ -1381,7 +1400,12 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
     m_DisplaySequence = sequence;
     m_DisplayWireSequence = m_DisplayWireSequence == std::numeric_limits<int>::max() ? 1 : m_DisplayWireSequence + 1;
     const auto generation = ++m_DisplayGeneration;
-    m_Display.write(QJsonDocument(QJsonObject{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}, {"displayPolicy", policy}}).toJson(QJsonDocument::Compact) + '\n');
+    QJsonObject request{{"seq", m_DisplayWireSequence}, {"width", width}, {"height", height}, {"scale", scale}, {"session", sequence > 0}};
+#ifdef Q_OS_LINUX
+    if (!m_LinuxX11)
+#endif
+        request["displayPolicy"] = policy;
+    m_Display.write(QJsonDocument(request).toJson(QJsonDocument::Compact) + '\n');
     QTimer::singleShot(DisplayChangeTimeoutMs, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {
             const auto sequence = m_DisplaySequence; m_DisplaySequence = 0;

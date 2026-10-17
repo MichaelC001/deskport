@@ -24,8 +24,12 @@ assert int(os.environ.get("DESKPORT_DISPLAY_SERIAL", "0")) >= 0x80000000
 pathlib.Path(os.environ["DESKPORT_DISPLAY_STATE_DIR"]).joinpath("display-pid").write_text(str(os.getpid()))
 if os.environ.get("DESKPORT_TEST_MODE") == "display-fail":
     sys.exit(4)
+if os.environ.get("DESKPORT_TEST_MODE") == "x11-unavailable":
+    print(json.dumps({"error": "The selected X11 DISPLAY is unavailable"}), flush=True)
+    sys.exit(1)
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
+if os.environ.get("DESKPORT_TEST_MODE") == "x11-idle": initial = dict(ready=True, active=False, backend="x11", outputName="DUMMY1")
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-idle": initial = dict(ready=True, active=False, gnome=True, outputName="DeskPort-pending")
 print("display started private.example.net", file=sys.stderr, flush=True)
 print(json.dumps(initial), flush=True)
@@ -40,6 +44,9 @@ for line in sys.stdin:
         request["error"] = "Local layout recovery is pending"
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-timeout": continue
     if os.environ.get("DESKPORT_TEST_MODE") == "resize-reject": request["error"] = "Mode rejected"
+    if os.environ.get("DESKPORT_TEST_MODE") == "x11-idle":
+        assert "displayPolicy" not in request
+        request.update(active=request.get("session", True), outputName="DUMMY1", leaseToken="DeskPort-00000000-0000-0000-0000-000000000000")
     request["displayId"] = 123
     if os.environ.get("DESKPORT_TEST_MODE") in ("gnome-display", "gnome-idle"):
         request["active"] = request.get("session", True)
