@@ -49,6 +49,13 @@ context, SCM broker and installed helper. Local lease objects allow only SYSTEM
 and that console logon. The broker stop event allows SYSTEM/administrators only
 and rejects pre-existing names.
 
+The environment contains canonical Windows/system-drive and common-data paths
+resolved inside the broker, including `SystemDrive`. A fresh SYSTEM process
+needs that variable to resolve its ProgramData known folder. Client environment,
+profile and PATH values are never inherited. Native testing caught an initial
+minimal-environment failure before any device mutation; the environment regression
+covers relocated Windows and common-data directories.
+
 Existing bounded dimensions, exact owned-device identity, protected journals and
 topology verification remain authoritative. Helper death/EOF, broker stop/death,
 console-session change and session end release the lease and attempt restoration.

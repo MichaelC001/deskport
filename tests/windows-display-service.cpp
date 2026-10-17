@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "host/windows/display-service-policy.h"
+#include "host/windows/display-service-environment.h"
 #include <cassert>
 #include <cstring>
+#include <cwchar>
 #include <iostream>
 
 using namespace deskport::display_service;
@@ -49,5 +51,16 @@ int main() {
     response.pid = 0; assert(validResponse(response));
     response.magic ^= 1; assert(!validResponse(response));
     response = {}; response.version = Version + 1; response.pid = 1; assert(!validResponse(response));
+    const auto environment = systemEnvironment(L"D:\\Windows", L"E:\\Shared Data");
+    std::vector<std::wstring> variables;
+    for (const auto* entry = environment.data(); *entry; entry += std::wcslen(entry) + 1) variables.emplace_back(entry);
+    assert((variables == std::vector<std::wstring>{L"ALLUSERSPROFILE=E:\\Shared Data", L"ProgramData=E:\\Shared Data",
+        L"SystemDrive=D:", L"SystemRoot=D:\\Windows", L"WINDIR=D:\\Windows"}));
+    assert(environment.size() >= 2 && environment[environment.size()-2] == 0 && environment.back() == 0);
+    for (const auto& path : {L"", L"relative", L"\\\\server\\share", L"C:\\bad\npath"}) {
+        assert(systemEnvironment(path, L"C:\\ProgramData").empty());
+        assert(systemEnvironment(L"C:\\Windows", path).empty());
+    }
     std::cout << "PASS display-service framing, nonce bounds, operations, authorization truth table and response validation\n";
+    std::cout << "PASS canonical SYSTEM common-data environment without inherited user variables\n";
 }

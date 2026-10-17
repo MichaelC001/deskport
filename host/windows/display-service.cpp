@@ -10,6 +10,8 @@
 #define _WIN32_WINNT 0x0601
 #endif
 #include "display-service-ipc.h"
+#include "display-service-environment.h"
+#include <shlobj.h>
 
 using namespace deskport::display_service;
 namespace {
@@ -110,9 +112,11 @@ DWORD launch(const Request& request, HANDLE parent, DWORD session, const std::ws
     wchar_t systemRoot[MAX_PATH]{};
     const auto length = GetWindowsDirectoryW(systemRoot, MAX_PATH);
     if (!length || length >= MAX_PATH) { LocalFree(processDescriptor); return ERROR_INVALID_DATA; }
-    std::wstring environment = L"SystemRoot=" + std::wstring(systemRoot);
-    environment.push_back(0); environment += L"WINDIR=" + std::wstring(systemRoot);
-    environment.push_back(0); environment.push_back(0);
+    PWSTR commonData = nullptr;
+    const auto located = SHGetKnownFolderPath(FOLDERID_ProgramData, 0, nullptr, &commonData);
+    auto environment = SUCCEEDED(located) && commonData ? systemEnvironment(systemRoot, commonData) : std::vector<wchar_t>();
+    if (commonData) CoTaskMemFree(commonData);
+    if (environment.empty()) { LocalFree(processDescriptor); return ERROR_PATH_NOT_FOUND; }
     std::wstring command = L"\"" + executable + L"\" service-lease " + std::to_wstring(GetProcessId(parent)) +
         L" " + nonce + L" " + std::to_wstring(GetCurrentProcessId()) + L" " +
         std::to_wstring(parentCreated) + L" " + std::to_wstring(brokerCreated);
