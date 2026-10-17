@@ -101,6 +101,16 @@ try {
   $restored=@(Observe|Where-Object{$_.owned})[0];if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw 'Disconnect failed to restore the original 125% DPI'}
   $null=Observe $original;Finish-Helper $h;$h=$null
  }}
+ # Mirroring inherits the physical desktop; a 2x request must not change
+ # either source's saved DPI. Use its existing size to avoid mode differences.
+ $h=Start-Helper;$mirrorBefore=@(Observe|Where-Object{$_.owned})[0]
+ $mirror=Request $h (++$script:sequence) 1920 1080 2 0
+ if($mirror.scale -ne 1){throw 'Mirror must retain the existing 1x downgrade'}
+ $rows=Observe;$mirrorAfter=@($rows|Where-Object{$_.owned})[0]
+ if($mirrorAfter.percent -ne $mirrorBefore.percent -or (Physical $rows) -ne $script:physical){throw 'Mirror changed saved virtual or physical DPI'}
+ $h.p.StandardInput.WriteLine((@{seq=++$script:sequence;session=$false}|ConvertTo-Json -Compress));$null=Reply $h.p
+ Finish-Helper $h;$h=$null
+ @{passed=$true;systemDpiWritesRequired=$false;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'mirror.json')
  foreach($failure in @('helper','broker')) {
   if($failure -eq 'broker' -and !$BrokerCrash){continue}
   $h=Start-Helper;$null=Observe 125;$reply=Request $h (++$script:sequence) 2560 1440 2 2;$null=Assert-Dpi $reply 200 -PhysicalPresent
