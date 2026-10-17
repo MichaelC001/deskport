@@ -45,3 +45,30 @@ padding explicitly cleared. The branch passed its macOS build and 27 UI checks;
 the combined Linux UI suite and build are checked separately for this batch.
 The private mobile repository and its same-named branch are outside this desktop
 integration.
+
+## Integration verification
+
+The combined core/regression snapshot is
+`49cd7a1a0134c6b428b99026750a812a5be2c88b`. Thirteen targeted groups passed:
+shared core and Qt workspace, source/compiled/browser translations, device
+preferences, host lifecycle (45), binding (172), Hyprland IPC, clipboard demand
+(8, with three non-Linux cases skipped), private-bus portal (19), local IME,
+Linux VA runtime and support-evidence validation.
+
+The later square-card snapshot is
+`ddf6e6eaacb806245ade99abdb425d4e2cbfab95`. Its only additional production change
+is `PcView.qml`; the combined Linux UI suite passed 27 cases. The full native
+Linux Nix build, including Sunshine, and the packaged CLI version check passed.
+The output is `/nix/store/05cqvvapqls095wlx4c7zpa3x58nx1pg-deskport-0.7.2`.
+
+Acceptance-only preBuild hooks constrain both actual Sunshine and client builders
+to CPU 0–3, nice 15 and at most four jobs. The initial build was cancelled when
+the dependency was observed outside those limits; its logs are retained separately.
+The successful retry preserves production sources and changes only those resource
+hooks in the exported flake. Actual compiler restrictions were recorded for both
+stages. No prior passing regression group was repeated for that hook change.
+
+Source verification covers all 1,611 tracked application blobs, with the explicitly
+hashed resource-only flake exception, and the matching shared-core NAR. Test/build
+processes exited and the task's canonical build lock was released. These results
+do not activate a package or extend the native acceptance scopes above.

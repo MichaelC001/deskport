@@ -351,6 +351,42 @@
       ],
       "package_sha256": null,
       "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "integration-regressions",
+      "date": "2026-10-18",
+      "source_sha": "49cd7a1a0134c6b428b99026750a812a5be2c88b",
+      "source_unknown_reason": "",
+      "package": "Native Nix acceptance output; source snapshots identified in the integration ledger",
+      "installed": "Not installed or activated",
+      "environment_kind": "isolated-fixture",
+      "environment": "Native Linux build host, CPU 0-3/nice 15/max four jobs; isolated Qt and private-bus fixtures",
+      "features": "Combined core and production adapter regression checks",
+      "result": "Thirteen groups passed: core/Qt/translations/preferences, 45 host lifecycle, 172 binding, Hyprland, 8 clipboard demand (3 platform skips), 19 private-bus portal, IME, VA runtime and provenance",
+      "limits": "No deployed application, physical GUI, real host stream or OS input used.",
+      "references": [
+        "docs/PC_TASK_INTEGRATION.md#integration-verification"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Nix store output and source hashes are recorded, not a distribution archive."
+    },
+    {
+      "id": "integration-cards-build",
+      "date": "2026-10-18",
+      "source_sha": "ddf6e6eaacb806245ade99abdb425d4e2cbfab95",
+      "source_unknown_reason": "",
+      "package": "Native Nix acceptance output; source snapshots identified in the integration ledger",
+      "installed": "Not installed or activated",
+      "environment_kind": "isolated-fixture",
+      "environment": "Native Linux build host, CPU 0-3/nice 15/max four jobs; isolated Qt and private-bus fixtures",
+      "features": "Square cards and complete native Linux build",
+      "result": "27 UI cases, resource-constrained Sunshine plus DeskPort Nix build, packaged CLI, 1611 tracked source blobs and core NAR checks passed",
+      "limits": "Resource-only exported-flake hooks; initial unconstrained dependency attempt cancelled and retained. The prior regression snapshot differs only in PcView.qml plus its UI tests and documentation. No deployed/native end-to-end acceptance inferred.",
+      "references": [
+        "docs/PC_TASK_INTEGRATION.md#integration-verification"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Nix store output and source hashes are recorded, not a distribution archive."
     }
   ],
   "ci": [

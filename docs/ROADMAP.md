@@ -10,6 +10,13 @@ Ten tasks remain on their branches; known GNOME capture/recovery failures and
 unrun build/native checks are not promoted to completion. No deployed service,
 installed package, release asset or mynix activation changes. Seamless stays deferred.
 
+Integration verification: 13 targeted groups passed, including 45 host lifecycle,
+172 binding and 19 private-bus portal cases; the added square-card UI passed all
+27 cases. A complete resource-constrained native Linux Nix build of Sunshine and
+DeskPort plus the packaged CLI check passed. Source and core hashes were verified;
+the task's build processes and lock were released. See the ledger for exact tested
+snapshots and the cancelled resource-policy attempt, retained separately.
+
 ## X11 independent software workspace candidate — 2026-10-17
 
 Add an explicit, driver-gated XRandR lease for an existing inactive

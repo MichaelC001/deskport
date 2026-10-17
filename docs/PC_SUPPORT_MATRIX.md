@@ -321,6 +321,30 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Feature / actual result | Pinned VA runtime, launcher isolation and package lifecycle. Ubuntu candidate GUI/API control, final Nix, 26 synthetic AV assertions and 28 VM teardowns passed |
 | Limits / pending | Old published DEB rollback and GNOME AppImage capture failures remain; KWin 6.3 unsupported. Physical GPUs and OS input/clipboard not qualified. |
 | References | [source 1](../docs/LINUX_DESKTOP_ACCEPTANCE.md) |
+
+### Evidence integration-regressions
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-18; `49cd7a1a0134c6b428b99026750a812a5be2c88b` |
+| Package / installed identity | Native Nix acceptance output; source snapshots identified in the integration ledger. Not installed or activated |
+| Package SHA-256 | Unknown: Nix store output and source hashes are recorded, not a distribution archive. |
+| Environment | isolated-fixture: Native Linux build host, CPU 0-3/nice 15/max four jobs; isolated Qt and private-bus fixtures |
+| Feature / actual result | Combined core and production adapter regression checks. Thirteen groups passed: core/Qt/translations/preferences, 45 host lifecycle, 172 binding, Hyprland, 8 clipboard demand (3 platform skips), 19 private-bus portal, IME, VA runtime and provenance |
+| Limits / pending | No deployed application, physical GUI, real host stream or OS input used. |
+| References | [source 1](../docs/PC_TASK_INTEGRATION.md#integration-verification) |
+
+### Evidence integration-cards-build
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-18; `ddf6e6eaacb806245ade99abdb425d4e2cbfab95` |
+| Package / installed identity | Native Nix acceptance output; source snapshots identified in the integration ledger. Not installed or activated |
+| Package SHA-256 | Unknown: Nix store output and source hashes are recorded, not a distribution archive. |
+| Environment | isolated-fixture: Native Linux build host, CPU 0-3/nice 15/max four jobs; isolated Qt and private-bus fixtures |
+| Feature / actual result | Square cards and complete native Linux build. 27 UI cases, resource-constrained Sunshine plus DeskPort Nix build, packaged CLI, 1611 tracked source blobs and core NAR checks passed |
+| Limits / pending | Resource-only exported-flake hooks; initial unconstrained dependency attempt cancelled and retained. The prior regression snapshot differs only in PcView.qml plus its UI tests and documentation. No deployed/native end-to-end acceptance inferred. |
+| References | [source 1](../docs/PC_TASK_INTEGRATION.md#integration-verification) |
 <!-- pc-support-evidence:end -->
 
 ## Updating after other PC work merges
