@@ -114,6 +114,8 @@ int main(int argc, char** argv) {
             else if (e.type == SDL_WINDOWEVENT) {
                 if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST || e.window.event == SDL_WINDOWEVENT_HIDDEN) input.setActive(false);
                 if (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) { input.setActive(false); input.setActive(true); }
+                if ((e.window.event == SDL_WINDOWEVENT_SHOWN || e.window.event == SDL_WINDOWEVENT_RESTORED) &&
+                    (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS)) input.setActive(true);
             } else if (e.type == SDL_TEXTEDITING) input.editing(e.edit.windowID,e.edit.timestamp,e.edit.text,e.edit.start,e.edit.length,id);
 #if SDL_VERSION_ATLEAST(2, 0, 22)
             else if (e.type == SDL_TEXTEDITING_EXT) { input.editing(e.editExt.windowID,e.editExt.timestamp,e.editExt.text,e.editExt.start,e.editExt.length,id); SDL_free(e.editExt.text); }

@@ -2918,6 +2918,14 @@ void Session::execInternal()
                 }
                 m_InputHandler->notifyFocusLost();
                 break;
+            case SDL_WINDOWEVENT_SHOWN:
+            case SDL_WINDOWEVENT_RESTORED:
+                // Win32 can preserve focus across hide/show without another
+                // FOCUS_GAINED event. Reattach the native IME when visible.
+                if (m_Preferences->localTextInput && m_ViewerRequested &&
+                    (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS))
+                    m_InputHandler->notifyFocusGained();
+                break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 reportViewerFocus(true);
                 if (!m_ViewerRequested) break;
