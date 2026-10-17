@@ -76,6 +76,12 @@
             filter = path: type: !(builtins.elem (baseNameOf path) [
               ".github" "docs" "AGENTS.md" "README.md"
               "flake.nix" "flake.lock" "libs"
+              # Isolated desktop test drivers/tool staging are not app runtime.
+              "run-linux-desktop-lifecycle.py" "test-linux-desktop-lifecycle.py"
+              "prepare-linux-desktop-media.py"
+              "test-browser-native.py" "test-browser-native.mjs"
+              # Portable-only launchers are checked by the package VM scenarios.
+              "package-linux-container.sh"
             ]);
           };
           # Every third-party dependency is vendored in this repository; only the

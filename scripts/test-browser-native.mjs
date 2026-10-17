@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import net from 'node:net';
 
 const fixtureIndex = process.argv.indexOf('--fixture');
 assert.ok(fixtureIndex >= 0 && process.argv[fixtureIndex + 1], 'Pass --fixture with an isolated browser.json file.');
@@ -98,6 +99,31 @@ async function stats() {
 async function connectAndMeasure(number) {
   // This media-only regression intentionally exercises a fresh temporary login
   // each time; durable pairing has its own real-profile acceptance driver.
+  if (number > 1) {
+    const replayStatus = await page.evaluate(async code => (await fetch('/api/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, remember: false })
+    })).status, fixture.code);
+    check(`session ${number}: consumed one-time code is rejected`, replayStatus === 401);
+  }
+  assert.ok(fixture.controlSocket, 'The native fixture must provide its private clock control socket.');
+  fixture.code = await new Promise((resolve, reject) => {
+    const socket = net.createConnection(fixture.controlSocket);
+    const timer = setTimeout(() => { socket.destroy(); reject(new Error('Fixture code control timeout')); }, 10000);
+    let data = '';
+    socket.on('connect', () => socket.write(JSON.stringify({ action: 'next-code' }) + '\n'));
+    socket.on('data', bytes => {
+      data += bytes;
+      if (!data.includes('\n')) return;
+      clearTimeout(timer); socket.destroy();
+      try {
+        const result = JSON.parse(data.split('\n')[0]);
+        assert.ok(result.ok && /^[0-9]{6}$/.test(result.code), 'Fixture did not return a fresh one-time code.');
+        resolve(result.code);
+      } catch (error) { reject(error); }
+    });
+    socket.on('error', error => { clearTimeout(timer); reject(error); });
+  });
   if (await page.locator('#remember-browser').isVisible()) await page.locator('#remember-browser').uncheck();
   await page.locator('#access-code').fill(fixture.code);
   await page.locator('#connect').click();
@@ -133,7 +159,7 @@ async function disconnect(number) {
   check(`session ${number}: production stop endpoint succeeds`, (await stopResponse).ok());
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle');
   check(`session ${number}: local media closed on disconnect`, await page.evaluate(() => document.getElementById('desktop-video').srcObject === null && window.deskportTestPeers.at(-1).connectionState === 'closed'));
-  check(`session ${number}: reconnect requires entering the same permanent code`, await page.locator('#access-code').inputValue() === '');
+  check(`session ${number}: reconnect requires entering a current one-time code`, await page.locator('#access-code').inputValue() === '');
 }
 
 let result;

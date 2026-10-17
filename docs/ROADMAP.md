@@ -114,6 +114,60 @@ shared build lock were released. Deferred Seamless fixtures are explicitly skipp
 no Seamless experiment, deployment, host connection, release or mynix change.
 See [browser access](BROWSER_ACCESS.md#shared-web-localization--2026-10-17).
 
+## Linux desktop lifecycle acceptance — 2026-10-17
+
+Add a repeatable full-VM layer for retained 0.7.1 → 0.7.2 installation,
+upgrade, rollback, removal and synthetic configuration retention. It reuses the
+existing distro-lab baselines, serializes ownership with the shared VM lock,
+retains image/package hashes and verifies baseline/VM teardown on failure as
+well as success. AppImage updates use atomic replacement; owned daemonized FUSE
+processes are included in per-stage cleanup. The current AppImage also exercises
+two display-helper create/release cycles. Flatpak remains viewer-only and needs
+an already available runtime. See [the matrix and boundaries](LINUX_DESKTOP_ACCEPTANCE.md).
+
+These package scenarios do not establish sustained media, remote clipboard/input,
+window focus or physical GPU acceptance. Debian's separate installed Plasma X11
+round verifies actual Xorg window mapping; Wayland visibility remains unverified.
+Denied uinput access is retained as a prerequisite failure; no security policy
+is changed to turn it into a pass. Seamless remains deferred.
+
+Full VM checks also reproduced a native GUI startup crash on Ubuntu 26.04
+GNOME: GDB locates it inside the bundled older `libva-wayland` during hardware
+capability probing. All portable formats now reuse the existing pinned libva
+2.23.0 input in both private trees, with matching source/license/file hashes.
+The source fix changes no decoder algorithm or system driver. Old release
+assets remain immutable; candidate and legacy rollback results stay separate.
+The released AppImage's second Mutter output creation failure is still recorded
+as an independent acceptance gap.
+
+Packaged capture/software H.264 probes also pass two owned-output cycles on
+Fedora/Bazzite KWin and Omarchy WLR, with original topology restored. The GNOME
+portal probe negotiates and encodes one frame but does not complete initialization
+within its deadline. Keep that failure distinct from native GUI startup and from
+the separately staged synthetic Xvfb/Pulse/WebRTC/browser AV fixture. Native OS
+input and physical GPU quality remain outside these VM results.
+
+The native loopback API regression additionally exposed private `LD_LIBRARY_PATH`
+leaking into newer system `dirname`/`mkdir` calls (`LIBSYSTEMD_254` mismatch).
+The portable native host launcher now runs those utilities before exporting its
+private runtime, and clears inherited private paths before resolving its root.
+The updated DEB candidate now passes the Ubuntu GUI/API comparison, including
+30 seconds alive and actual mappings/checksums for all four VA libraries.
+Legacy install/rollback crashes remain expected negative controls and actual
+product failures. The final Nix source build and its offline cache-identity check
+passed; all 28 completed VM rounds preserved their baselines and verified teardown.
+These results remain separate from the immutable released package results.
+
+The separate Fedora full-VM Xvfb/private-Pulse/WebRTC/browser fixture now passes
+two real synthetic media connections: continuing H.264 frames, changing visible
+pixels, Opus packets and decoded audio energy, stop/reconnect/admission cleanup,
+and consumed-code rejection. Correct the stale media driver's permanent-code
+assumption by obtaining a fresh one-time code through the existing fixture clock;
+production authentication is unchanged. All 26 assertions passed with SELinux
+Enforcing and native OS input disabled. See the retained run and counters in the
+acceptance matrix; this does not establish sustained Wayland media or hardware
+quality.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

@@ -157,14 +157,21 @@ normal FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM
 with SELinux Enforcing and software graphics. The reporter's installed-system
 retest remains separate; see the [final verification scope](docs/RELEASE_0.7.2.md#validation-boundary).
 
-Native package installation, update and removal checks in complete VMs remain
-pending; an AppImage GUI smoke does not verify those native package operations.
+Full-VM installation, upgrade, rollback, removal and configuration-retention
+results are tracked in the [desktop lifecycle matrix](docs/LINUX_DESKTOP_ACCEPTANCE.md).
+An AppImage GUI smoke does not verify native package operations.
 Package installation and GUI launch alone do not verify live capture, hardware
 video decoding, remote input, visual quality or latency.
 
+The retained Ubuntu 26.04 GNOME VM reproduces a startup crash in the published
+0.7.2 DEB's older private VA-API Wayland library. The 0.7.2 AppImage passes GUI
+startup there. The source packaging fix and its separate native candidate results
+are recorded in the lifecycle matrix; existing release assets keep their original
+hashes. Debian 13's KWin 6.3 also remains below the host display-helper's 6.6 minimum.
+
 | Distribution / desktop | Download route |
 | --- | --- |
-| Ubuntu 26.04 GNOME | Stable DEB, installed with APT |
+| Ubuntu 26.04 GNOME | AppImage; published DEB startup failure is recorded above |
 | Debian 13 KDE | Stable DEB, installed with APT |
 | Fedora 44 KDE | Stable RPM, installed with DNF |
 | Arch Linux KDE | Stable local Arch package, installed with `pacman -U` |

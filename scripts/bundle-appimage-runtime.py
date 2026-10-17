@@ -19,6 +19,7 @@ PIPEWIRE_MODULES = ('rt', 'protocol-native', 'client-node', 'client-device',
 SPA_PLUGINS = ('support/libspa-support.so',
                'audioconvert/libspa-audioconvert.so',
                'videoconvert/libspa-videoconvert.so')
+LIBVA_LIBRARIES = ('libva.so.2', 'libva-drm.so.2', 'libva-x11.so.2', 'libva-wayland.so.2')
 
 
 def file_checksum(path):
@@ -27,6 +28,31 @@ def file_checksum(path):
         for block in iter(lambda: stream.read(1024 * 1024), b''):
             digest.update(block)
     return 'SHA256:' + digest.hexdigest()
+
+
+def install_libva_runtime(prefix, stage):
+    """Use the same pinned VA interface in native, Flatpak and AppImage trees."""
+    metadata = json.loads((stage / 'source.json').read_text())
+    if metadata.get('source_version') != '2.23.0' or not (stage / 'COPYING').is_file():
+        raise RuntimeError('Missing pinned libva 2.23.0 source/license metadata')
+    for name in LIBVA_LIBRARIES:
+        if not elf(stage / 'usr/lib' / name):
+            raise RuntimeError(f'Missing pinned VA-API runtime: {name}')
+    # Validate all inputs before touching any existing library. Keep both the
+    # interface and its platform adapters at one version.
+    for old in (prefix / 'lib').glob('libva*.so*'):
+        old.unlink()
+    files = []
+    for name in LIBVA_LIBRARIES:
+        target = prefix / 'lib' / name
+        shutil.copy2(stage / 'usr/lib' / name, target)
+        files.append(dict(path=str(target.relative_to(prefix.parent)), bytes=target.stat().st_size,
+                          checksum=file_checksum(target)))
+    documents = prefix / 'share/doc/deskport/libva-runtime'
+    documents.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(stage / 'COPYING', documents / 'COPYING')
+    (documents / 'source.json').write_text(json.dumps(dict(metadata, runtime_files=files), indent=2) + '\n')
+    return metadata
 
 
 def copy_qt_wayland_runtime(prefix, stage):
@@ -112,17 +138,7 @@ def bundle(root, sharun, executables, excluded=None, libva=None, qt_wayland=None
     prefix = root / 'usr'
     va_metadata = None
     if libva is not None:
-        va_metadata = json.loads((libva / 'source.json').read_text())
-        required = ('libva.so.2', 'libva-drm.so.2', 'libva-x11.so.2', 'libva-wayland.so.2')
-        for name in required:
-            if not (libva / 'usr/lib' / name).is_file():
-                raise RuntimeError(f'Missing pinned VA-API runtime: {name}')
-        # Replace both the viewer's older distro libva and the upstream host's
-        # copy. Never leave a second, silently selected VA-API version behind.
-        for old in (prefix / 'lib').glob('libva*.so*'):
-            old.unlink()
-        for name in required:
-            shutil.copy2(libva / 'usr/lib' / name, prefix / 'lib' / name)
+        va_metadata = install_libva_runtime(prefix, libva)
     qt_metadata = None
     if qt_wayland is not None:
         qt_metadata, qt_library = copy_qt_wayland_runtime(prefix, qt_wayland)
@@ -150,7 +166,7 @@ def bundle(root, sharun, executables, excluded=None, libva=None, qt_wayland=None
     if va_metadata is not None:
         packages['libva-upstream'] = va_metadata
         shutil.copy2(libva / 'COPYING', notices / 'libva-upstream.copyright')
-        for name in required:
+        for name in LIBVA_LIBRARIES:
             manifest[name] = {'path': str(libva / 'usr/lib' / name), **va_metadata}
     if qt_metadata is not None:
         packages['qtwayland-backport'] = qt_metadata

@@ -80,11 +80,8 @@ LD_LIBRARY_PATH="$work/cache/libdatachannel-0.24.1/lib" "$work/cache/linuxdeploy
     --executable "$appdir/usr/libexec/sunshine/usr/bin/sunshine"
 cat > "$appdir/usr/libexec/deskport-host" <<'SH'
 #!/bin/sh
-root=$(CDPATH= cd -- "$(dirname -- "$0")/sunshine" && pwd)
 unset APPIMAGE APPDIR LD_LIBRARY_PATH QT_PLUGIN_PATH QML2_IMPORT_PATH QML_IMPORT_PATH
-export APPDIR="$root"
-export LD_LIBRARY_PATH="$root/usr/lib"
-export QT_PLUGIN_PATH="$root/usr/plugins"
+root=$(CDPATH= cd -- "$(dirname -- "$0")/sunshine" && pwd)
 unset CONFIGURATION_DIRECTORY
 export SUNSHINE_MIGRATE_CONFIG=0
 case "${1:-}" in
@@ -93,6 +90,10 @@ case "${1:-}" in
 esac
 mkdir -p "$XDG_CONFIG_HOME"
 cd "$root"
+# System utilities above must use the system runtime, including newer coreutils.
+export APPDIR="$root"
+export LD_LIBRARY_PATH="$root/usr/lib"
+export QT_PLUGIN_PATH="$root/usr/plugins"
 # Upstream AppRun creates ~/.config/sunshine and exposes --install service changes.
 # Call its executable directly, with the AppDir library/assets environment only.
 exec "$root/usr/bin/sunshine" "$@"
@@ -101,12 +102,13 @@ chmod +x "$appdir/usr/libexec/deskport-host"
 mkdir -p "$appdir/usr/share/doc/deskport"
 cp "$repo/LICENSE" "$repo/docs/BUNDLED_COMPONENTS.md" "$appdir/usr/share/doc/deskport/"
 cp -r "$work/cache/libdatachannel-notices" "$appdir/usr/share/doc/deskport/libdatachannel"
+bash "$repo/scripts/build-appimage-libva.sh"
+python3 "$repo/scripts/install-linux-libva.py" "$appdir" "$work/cache/libva-2.23.0-runtime"
 python3 "$repo/scripts/check-linux-package.py" "$appdir" "$version"
-# Keep the native-package runtime unchanged; only AppImage bundles glibc.
+# All portable formats share libva; only AppImage bundles glibc.
 appimage_dir="$work/DeskPort-AppImage.AppDir"
 rm -rf "$appimage_dir"
 cp -a "$appdir" "$appimage_dir"
-bash "$repo/scripts/build-appimage-libva.sh"
 bash "$repo/scripts/build-appimage-qt-wayland.sh"
 python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun" \
     --libva-prefix "$work/cache/libva-2.23.0-runtime" \

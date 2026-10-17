@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise a packaged viewer and host without a real desktop or personal state."""
 import base64
+import hashlib
 import json
 import os
 import ssl
@@ -15,6 +16,18 @@ import tempfile
 
 root = pathlib.Path(sys.argv[1]).resolve()
 version = sys.argv[2]
+for prefix in (root / 'usr', root / 'usr/libexec/sunshine/usr'):
+    metadata_path = prefix / 'share/doc/deskport/libva-runtime/source.json'
+    if metadata_path.exists():
+        metadata = json.loads(metadata_path.read_text())
+        assert metadata['source_version'] == '2.23.0'
+        assert (metadata_path.parent / 'COPYING').is_file()
+        assert {item['path'] for item in metadata['runtime_files']} == {
+            'usr/lib/' + name for name in ('libva.so.2', 'libva-drm.so.2', 'libva-x11.so.2', 'libva-wayland.so.2')}
+        for item in metadata['runtime_files']:
+            path = prefix.parent / item['path']
+            assert path.stat().st_size == item['bytes']
+            assert 'SHA256:' + hashlib.sha256(path.read_bytes()).hexdigest() == item['checksum']
 if str(root) == '/opt/deskport':
     for name, executable in [('display', 'deskport-display'),
                              ('host', 'sunshine/usr/bin/sunshine')]:
