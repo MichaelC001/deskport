@@ -3,7 +3,9 @@ param(
  [Parameter(Mandatory=$true)][string]$Probe,
  [Parameter(Mandatory=$true)][string]$OutputDirectory,
  [ValidateRange(1,10)][int]$Rounds=2,
- [switch]$BrokerCrash
+ [switch]$BrokerCrash,
+ [switch]$RecoveryOnly,
+ [switch]$AllowBrokerAdminRestart
 )
 # Explicit native acceptance only, in a reserved interactive console session.
 # Baseline fixture writes are limited to the exact owned virtual source and are
@@ -11,6 +13,7 @@ param(
 $ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue'
 $Executable=(Resolve-Path $Executable).Path;$Probe=(Resolve-Path $Probe).Path
 $OutputDirectory=(New-Item -ItemType Directory -Force $OutputDirectory).FullName
+if($RecoveryOnly -and !$BrokerCrash){throw 'Recovery-only requires the explicit broker crash test'}
 if((Get-Process -Id $PID).SessionId -eq 0){throw 'Interactive console required'}
 if(Get-Process deskport-display -ErrorAction SilentlyContinue){throw 'Stop sharing before DPI acceptance'}
 $recovery=Join-Path (Split-Path $Executable) 'deskport-display-recovery.exe'
@@ -83,6 +86,7 @@ function Assert-Dpi($Reply,[int]$Expected,[switch]$PhysicalPresent) {
 }
 $script:physical=Physical (Observe);$results=@();$disconnects=@();$h=$null;$original=0;$script:sequence=0
 try {
+ if(!$RecoveryOnly){
  foreach($round in 1..$Rounds){foreach($policy in @(2,1)) {
   $h=Start-Helper;$initial=@(Observe|Where-Object{$_.owned})[0];if(!$original){$original=$initial.percent}
   $null=Observe 125 # Deliberately non-default, owned-output-only fixture baseline.
@@ -118,9 +122,11 @@ try {
  if($mirrorRestored.percent -ne $mirrorBefore.percent -or $mirrorRestored.windowDpi -ne $mirrorBefore.windowDpi){throw 'Mirror changed saved virtual DPI after detach'}
  Finish-Helper $h;$h=$null
  @{passed=$true;systemDpiWritesRequired=$false;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'mirror.json')
+ }
  foreach($failure in @('helper','broker')) {
+  if($RecoveryOnly -and $failure -eq 'helper'){continue}
   if($failure -eq 'broker' -and !$BrokerCrash){continue}
-  $h=Start-Helper;$baseline=Observe 125;$reply=Request $h (++$script:sequence) 2560 1440 2 2;$scaled=Assert-Dpi $reply 200 -PhysicalPresent
+  $h=Start-Helper;$initial=@(Observe|Where-Object{$_.owned})[0];if(!$original){$original=$initial.percent};$baseline=Observe 125;$reply=Request $h (++$script:sequence) 2560 1440 2 2;$scaled=Assert-Dpi $reply 200 -PhysicalPresent
   if($failure -eq 'helper'){$h.p.Kill();$h.p.WaitForExit()}
   else {
    'ready'|Set-Content (Join-Path $OutputDirectory 'broker-armed')
@@ -134,18 +140,20 @@ try {
   }
   Finish-Helper $h -Killed;$h=$null
   if($failure -eq 'broker') {
-   # SCM retains its failure count across upgrades: the configured second and
-   # subsequent restart delay is 30 seconds, not the first-crash 5 seconds.
+   # SCM retains its failure count across upgrades and stops automatic retries
+   # after two crashes. An explicit admin coordinator can restart only after
+   # independent guardian recovery has been verified above.
+   if($AllowBrokerAdminRestart){'ready'|Set-Content (Join-Path $OutputDirectory 'broker-restart-request')}
    $deadline=(Get-Date).AddSeconds(65)
    do{Start-Sleep -Milliseconds 250;$running=(Get-Service DeskPortDisplayService).Status -eq 'Running'}while(!$running -and (Get-Date) -lt $deadline)
-   if(!$running){throw 'SCM did not restart the automatic display service'}
+   if(!$running){throw 'Broker restart pending; check the configured bounded SCM failure policy or explicitly authorize an admin recovery coordinator'}
    Start-Sleep -Milliseconds 500
   }else{Start-Sleep -Seconds 6}
   $h=Start-Helper;$restored=@(Observe|Where-Object{$_.owned})[0];@{baseline=$baseline;scaled=$scaled;reenabled=$restored}|ConvertTo-Json -Depth 7|Set-Content (Join-Path $OutputDirectory "$failure-observation.json");if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw "$failure crash failed to restore original virtual DPI"}
   $null=Observe $original;Finish-Helper $h;$h=$null
-  @{failure=$failure;originalPercentRestored=125;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory "$failure-recovery.json")
+  @{failure=$failure;originalPercentRestored=125;physicalDpiUntouched=$true;adminRestartCoordinator=$AllowBrokerAdminRestart.IsPresent}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory "$failure-recovery.json")
  }
- @{passed=$true;scaleCases=$results.Count;rounds=$Rounds;originalOwnedPercentage=$original;baselineFixturePercentage=125;physicalRestored=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'summary.json')
+ @{passed=$true;recoveryOnly=$RecoveryOnly.IsPresent;scaleCases=$results.Count;rounds=$Rounds;originalOwnedPercentage=$original;baselineFixturePercentage=125;physicalRestored=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'summary.json')
 } finally {
  if($h){try{if(!$h.p.HasExited){$h.p.StandardInput.WriteLine((@{seq=++$script:sequence;session=$false}|ConvertTo-Json -Compress));$null=Reply $h.p;if($original){$null=Observe $original}};Finish-Helper $h}catch{if($h.p -and !$h.p.HasExited){$h.p.Kill()};throw}}
 }
