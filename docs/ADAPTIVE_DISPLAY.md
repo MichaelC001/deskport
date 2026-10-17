@@ -1,5 +1,13 @@
 # Built-in adaptive workspace
 
+This document records the adaptive-workspace implementation in stages. The
+opening startup/idle/mirroring description is the original bootstrap, superseded
+by [session display ownership](SESSION_DISPLAY.md) and connection-scoped
+[lifecycle](SESSION_LIFECYCLE.md). Current sharing starts without a persistent
+idle virtual workspace (Linux may briefly probe an output); display admission
+owns the workspace. macOS physical policies and restoration are implemented.
+Use the [PC matrix](PC_SUPPORT_MATRIX.md) for current platform scope and acceptance.
+
 The shared wire contract and workspace policy now live in
 [`deskport-core`](../shared/deskport-core/protocol/SPEC.md); see
 [the integration guide](SHARED_CORE.md) for pinned dependency updates.
@@ -67,7 +75,8 @@ native Sunshine service and its configuration are not managed by this feature.
   pinning, unknown device rejection, exclusive resize control and transfer.
 - `python3 scripts/test-host-lifecycle.py --ui`: settings and actual stream-page
   replacement without dropping navigation or starting a quit request.
-- `python3 scripts/test-translations.py`: the eight primary UI languages.
+- `python3 scripts/test-translations.py`: catalogs in the pinned shared registry;
+  the historical eight-language count is not a current platform limit.
 - Signed macOS packaging and `nix build`: endpoint integration.
 
 Native acceptance also requires repeated client window resizing, maximize/full

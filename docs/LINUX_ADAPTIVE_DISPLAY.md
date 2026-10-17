@@ -1,5 +1,9 @@
 # Linux adaptive workspace
 
+Current backend scope reviewed 2026-10-17. See the
+[PC implementation and acceptance matrix](PC_SUPPORT_MATRIX.md) for dated evidence
+and gaps; historical compositor checks do not qualify every installed version.
+
 The Linux native/Nix host creates a dedicated virtual desktop on supported
 Wayland compositors. A bound client can resize it over the existing authenticated
 display-control connection. The output stays alive during an active display-control session, including video
@@ -28,6 +32,12 @@ DeskPort client with display control.
   negotiation and temporary DisplayConfig scaling. The owned output is verified
   against the current monitor state. Sunshine attaches to that output's PipeWire
   object serial; it does not open a second screen picker. Tested with Mutter 50.4.
+- **Hyprland / Omarchy:** `hyprctl` creates an owned headless output; the host
+  captures that exact output through WLR screencopy. Resizes verify pixels/scale,
+  and disconnect/EOF/crash cleanup removes the owned output. Physical layouts
+  remain unchanged; mirror/physical-disable policies are not offered. The active
+  compositor and its capture permissions are required; unavailable capture fails
+  explicitly. See [CLI setup and checks](CLI.md#omarchy-and-hyprland).
 - Other desktops retain existing-screen portal capture and do not advertise
   adaptive-display support. An unavailable native backend reports an error rather
   than silently capturing another screen.
@@ -49,9 +59,9 @@ Disconnecting restores the physical layout captured before the connection.
 This does not promise restoration of individual application window positions.
 Monitor hotplug or manual layout edits during sharing are not yet acceptance-tested.
 
-**GNOME still uses an extended virtual display.** Existing physical output settings
+**GNOME and Hyprland use an extended virtual display.** Existing physical output settings
 remain unchanged; move applications onto the dedicated display. Arbitrary-client-mode
-physical mirroring on Mutter is not implemented by this preview. Video may
+physical mirroring on these backends is not implemented. Video may
 briefly reconnect during mode changes. An active logged-in Wayland session,
 PipeWire and the existing Sunshine input permissions are required. This does not
 implement a GNOME login-screen service or automatic session login.
@@ -67,7 +77,7 @@ hosts or inject input. An independent Wayland observer checks modes, output
 identity, physical pixel modes, EOF cleanup and crash cleanup. KDE additionally
 checks mirrored outputs, virtual-primary priority and exact physical-policy
 restoration. Add `--disabled-output` to cover a previously disabled panel.
-Both backends check disconnect removal and recreation; GNOME checks unchanged
+The KDE/GNOME harness checks disconnect removal and recreation; GNOME checks unchanged
 other outputs. Set
 `DESKPORT_TEST_HOST=/path/to/deskport-host` to include real software-encoder
 capture at 1280×720@1×, 1668×2388@2× and 1920×1080@1× after recreation, plus refusal to capture another output
@@ -82,12 +92,18 @@ resize rejection/timeouts and capture-descriptor cleanup. `--binding` checks the
 existing authenticated control path. Hardware encoding, iPad rotation, text size,
 touch/mouse alignment and reconnect behavior still need real device acceptance.
 
+Hyprland has separate `scripts/test-hyprland-display.py` fixtures and
+`scripts/test-hyprland-display-live.py` isolated-compositor checks. The recorded
+2026-10-03 run exercised real software capture/encoding, three modes and
+target-loss/crash cleanup. It did not establish physical Omarchy input/audio,
+GPU encoding, reconnect or reboot/logout acceptance. See [CLI verification](CLI.md#isolated-verification).
+
 ## Upstream interfaces
 
 - [Portal ScreenCast](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.ScreenCast.html)
 - [KWin virtual output implementation](https://github.com/KDE/kwin/blob/Plasma/6.6/src/plugins/screencast/screencastmanager.cpp)
 - [Mutter ScreenCast interface](https://github.com/GNOME/mutter/blob/main/data/dbus-interfaces/org.gnome.Mutter.ScreenCast.xml)
 
-Both native compositor protocols are implementation-specific. Runtime capability
+These compositor integrations are implementation-specific. Runtime capability
 checks and explicit errors are intentional; this document does not promise
 compatibility with every historical or future compositor version.

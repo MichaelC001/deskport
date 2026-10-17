@@ -1,5 +1,11 @@
 # Session lifecycle development — 2026-09-20
 
+Historical development record. Use [PC implementation and acceptance](PC_SUPPORT_MATRIX.md)
+for current source/package scope. The local-only core/publication and pending
+Mutter statements below describe this dated checkpoint; later Linux on-demand
+checks are in [Linux adaptive workspace](LINUX_ADAPTIVE_DISPLAY.md). Windows
+signed-in broker/DPI evidence is in [Windows display service](WINDOWS_DISPLAY_SERVICE.md).
+
 This change is implemented locally and is not a public release. On 2026-09-20,
 the user separately authorized direct installation on the designated Mac and
 Linux machines for live acceptance; both candidates were activated with rollback

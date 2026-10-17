@@ -67,10 +67,15 @@ for the full-size image; these previews do not imply store or release availabili
 
 ## Supported platforms
 
+See the [PC implementation and acceptance matrix](docs/PC_SUPPORT_MATRIX.md)
+for current source versus installed-package scope, compositor capabilities,
+historical evidence and remaining native checks. Release availability below
+does not certify every feature on every GPU or OS session.
+
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
 | macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.2 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive virtual workspace on capable KDE hosts | **0.7.2 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.2 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [installation guide](docs/LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | Viewer only | **0.7.2 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |

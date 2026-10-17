@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-17",
+  "baseline_source_sha": "b0c28182b8048497e32eadbae3561147d2c1969f",
+  "baseline_core_sha": "e1850b07c072f283669a64ec8f312ffc73ba1219",
+  "evidence": [
+    {
+      "id": "windows-dpi",
+      "date": "2026-10-17",
+      "source_sha": "6a33b4ee4999ee23c40cc39eb15dd13f80e6f031",
+      "source_unknown_reason": "",
+      "package": "DeskPort-0.7.2-windows-x64-setup-full-test-20261017-184047-6a33b4ee.exe",
+      "installed": "Reported installed 0.7.2 / test-20261017-184047-6a33b4ee; installation not reread by this audit",
+      "environment_kind": "physical-hardware",
+      "environment": "Windows 11 x64 console; owned VDD; existing macOS viewer; synthetic animated desktop",
+      "features": "VDD 100%/200%, disconnect/crash restoration, signed-in sharing without repeated UAC",
+      "result": "Recorded pass: 24 scale cases, four 125% restorations, mirror preservation, pointer/keyboard, reconnect, four sharing cycles",
+      "limits": "Partial checkpoint, not a complete IME/audio/clipboard/latency or locked/pre-login matrix. Package ID and Setup SHA-256 were cross-checked against the existing private asset-verification record; no payload was installed or executed in this audit. Main SHA is not an installed version.",
+      "references": [
+        "docs/WINDOWS_DISPLAY_SERVICE.md#native-dpi-checkpoint--2026-10-17"
+      ],
+      "package_sha256": "dace6daa2b6478097f5596dd0d18b4dd85a9f980a6d0ec801c0a6ead13675a9b",
+      "package_hash_unknown_reason": ""
+    },
+    {
+      "id": "windows-broker",
+      "date": "2026-10-17",
+      "source_sha": "d659dac9ecf3e3acbdbe0c8909963ab60d114b59",
+      "source_unknown_reason": "",
+      "package": "Full Windows x64 candidate from d659dac9",
+      "installed": "Reported installed candidate at that checkpoint",
+      "environment_kind": "physical-hardware",
+      "environment": "Windows 11 x64 signed-in console, medium-integrity app/host/helper, SYSTEM broker/guardian",
+      "features": "Automatic SCM display broker, signed-in leases, identity retention, recovery and request denials",
+      "result": "Recorded pass: 20 sharing cycles, 21 display scenarios, broker death recovery, six denial cases, direct macOS video/pointer/keyboard",
+      "limits": "Not cold-boot verification, complete denial/lifecycle coverage, or a pre-login network host. No secure-desktop or credential-input acceptance.",
+      "references": [
+        "docs/WINDOWS_DISPLAY_SERVICE.md#native-checkpoint--2026-10-17"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "windows-old-lock-video",
+      "date": "2026-09-23",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "0.5.6 development candidate; exact package/hash absent from public summary",
+      "installed": "Historical installation; superseded by later candidates",
+      "environment_kind": "physical-hardware",
+      "environment": "Closed-lid Windows AMD laptop, Apple tablet/macOS viewers",
+      "features": "Lock-screen video, twelve orientation changes, display recovery",
+      "result": "Recorded partial pass: actual lock-screen frames and display/reconnect/takeover observations",
+      "limits": "Incomplete provenance; video alone does not establish credential input, secure-desktop transitions, pre-login hosting or current broker behavior.",
+      "references": [
+        "docs/WINDOWS_DEVELOPMENT.md#physical-windows-checkpoint--2026-09-23"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "linux-compositors",
+      "date": "2026-09-16",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "0.3.6 Linux preview; exact package/hash absent from public summary",
+      "installed": "Isolated fixture only; installed desktop untouched",
+      "environment_kind": "isolated-compositor",
+      "environment": "KWin 6.6.6 with permission checks; Mutter 50.4; private D-Bus/Wayland/PipeWire",
+      "features": "Virtual output resize/scale, software capture, EOF/crash cleanup",
+      "result": "Recorded pass: twelve mode/scale changes per backend and capture probes",
+      "limits": "Historical incomplete provenance. Does not qualify current compositor versions, physical GPU encoding, input or hotplug.",
+      "references": [
+        "docs/LINUX_ADAPTIVE_DISPLAY.md#validation"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "linux-hyprland",
+      "date": "2026-10-03",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "Development Nix package; exact package/hash absent from public summary",
+      "installed": "Isolated compositor; no Omarchy installation acceptance",
+      "environment_kind": "isolated-compositor",
+      "environment": "Real isolated Hyprland compositor, WLR capture and software H.264",
+      "features": "Owned headless output, three pixel/scale modes, target-loss rejection and cleanup",
+      "result": "Recorded pass: fixture and real-compositor checks; disconnect/EOF/SIGKILL/group SIGTERM cleanup",
+      "limits": "Not a physical Omarchy/GPU/input/audio/reboot result. Mirroring/physical-disable policy is not offered.",
+      "references": [
+        "docs/CLI.md#isolated-verification",
+        "docs/ROADMAP.md#ssh-host-management-and-omarchy--2026-10-03"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "clipboard",
+      "date": "2026-09-15",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "0.3.2 protocol checkpoint; Windows OLE follow-up 2026-09-20",
+      "installed": "Named macOS pasteboards/private compositor/VM fixtures only",
+      "environment_kind": "isolated-fixture",
+      "environment": "Synthetic Unicode, PNG and file trees; macOS, KWin and historical Windows VM OLE follow-up",
+      "features": "On-demand desktop text/images/files; source validation and cancellation",
+      "result": "Recorded pass: protocol exchanges, lazy reads and isolated native providers; partial Windows VM transfers",
+      "limits": "Not current three-platform installed clipboard acceptance. Browser explicit text/paste is separate. Historical summaries lack full package provenance.",
+      "references": [
+        "docs/CLIPBOARD.md#validation-and-manual-acceptance",
+        "docs/ROADMAP.md#display-recovery-incident-follow-up"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "browser",
+      "date": "2026-10-05",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "Browser integration fixture; exact source/package absent from summary",
+      "installed": "Disposable browser profiles and native Linux fixture; no personal installation",
+      "environment_kind": "isolated-fixture",
+      "environment": "Google Chrome 154; Linux Xvfb/PulseAudio capture; native input disabled",
+      "features": "HTTPS pairing persistence, H.264/Opus, reconnect and revocation",
+      "result": "Recorded pass: changing 720p30 frames, nonzero decoded audio, restart persistence and revocation",
+      "limits": "Does not qualify Safari/WebKit, Windows host WebRTC, physical audio/touch/IME or compositor restoration. Later up-to-60-fps implementation is not this 30-fps checkpoint.",
+      "references": [
+        "docs/BROWSER_ACCESS.md#implementation-and-validation"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "mac-browser",
+      "date": "2026-10-08",
+      "source_sha": null,
+      "source_unknown_reason": "The cited historical summary does not identify a complete source SHA.",
+      "package": "Isolated macOS host instance; exact binary/hash absent from summary",
+      "installed": "Used installed display policy with isolated instance; not general release acceptance",
+      "environment_kind": "physical-hardware",
+      "environment": "macOS host and headless Chrome client over private VPN",
+      "features": "Browser H.264/Opus, adaptive size and continued frame reception",
+      "result": "Recorded partial pass: changing video/audio, portrait/ultrawide/content size/fullscreen",
+      "limits": "Incomplete provenance; no physical Safari, actual audio playback quality, input/IME or latency qualification.",
+      "references": [
+        "docs/BROWSER_ACCESS.md#macos-host-checkpoint--2026-10-08"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "ci-linux",
+      "date": "2026-10-17",
+      "source_sha": "b0c28182b8048497e32eadbae3561147d2c1969f",
+      "source_unknown_reason": "",
+      "package": "CI source checkout at baseline; no installed package",
+      "installed": "No deployment",
+      "environment_kind": "hosted-ci",
+      "environment": "Linux build job on ubuntu-24.04",
+      "features": "Nix Linux package, CLI/desktop-entry smoke, isolated contracts and regressions",
+      "result": "Observed completed/success through GitHub run and job API",
+      "limits": "Hosted Ubuntu runner; no physical AMD/KDE session, native GPU/input/audio or distro installation acceptance.",
+      "references": [
+        ".github/workflows/build.yml",
+        "https://github.com/keithxc/deskport/actions/runs/39028059457"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "No package artifact is produced by this CI evidence row."
+    },
+    {
+      "id": "ci-macos",
+      "date": "2026-10-17",
+      "source_sha": "b0c28182b8048497e32eadbae3561147d2c1969f",
+      "source_unknown_reason": "",
+      "package": "CI source checkout at baseline; no installed package",
+      "installed": "No deployment",
+      "environment_kind": "hosted-ci",
+      "environment": "Display control contracts job on macos-15",
+      "features": "Core, binding, lifecycle and topology contracts",
+      "result": "Observed completed/success through GitHub run and job API",
+      "limits": "Hosted macOS runner; no signed/notarized app package, physical display/input, installation or latency acceptance.",
+      "references": [
+        ".github/workflows/core.yml",
+        "https://github.com/keithxc/deskport/actions/runs/39028059520"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "No package artifact is produced by this CI evidence row."
+    },
+    {
+      "id": "ci-windows",
+      "date": "2026-10-17",
+      "source_sha": "b0c28182b8048497e32eadbae3561147d2c1969f",
+      "source_unknown_reason": "",
+      "package": "CI source checkout at baseline; no installed package",
+      "installed": "No deployment",
+      "environment_kind": "hosted-ci",
+      "environment": "Windows source checks job on ubuntu-24.04",
+      "features": "Build-script syntax, source/network/smart-stream/translation checks",
+      "result": "Observed completed/success through GitHub run and job API",
+      "limits": "Linux runner; no Windows compilation, installation, SCM, native Windows UI or GPU acceptance.",
+      "references": [
+        ".github/workflows/windows-branch.yml",
+        "https://github.com/keithxc/deskport/actions/runs/39028059456"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "No package artifact is produced by this CI evidence row."
+    }
+  ],
+  "ci": [
+    {
+      "path": ".github/workflows/build.yml",
+      "job": "linux",
+      "runner": "ubuntu-24.04"
+    },
+    {
+      "path": ".github/workflows/core.yml",
+      "job": "display",
+      "runner": "macos-15"
+    },
+    {
+      "path": ".github/workflows/windows-branch.yml",
+      "job": "windows-source",
+      "runner": "ubuntu-24.04"
+    }
+  ]
+}

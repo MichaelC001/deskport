@@ -1,5 +1,12 @@
 # Shared clipboard
 
+Current desktop scope reviewed 2026-10-17: macOS pasteboard, Linux
+data-control/Qt and Windows OLE providers support text, images and files.
+Windows uses a native delayed OLE provider and pipe transport; it does not use
+the X11/Wayland Qt provider. The original protocol checkpoint below predates
+Windows integration. Current three-platform native acceptance remains scoped in
+the [PC matrix](PC_SUPPORT_MATRIX.md); browser explicit text/paste is separate.
+
 ## 0.3.2 prerelease (2026-09-15)
 
 The active, authenticated desktop session supports bidirectional UTF-8 text,

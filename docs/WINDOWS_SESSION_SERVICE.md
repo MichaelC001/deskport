@@ -1,5 +1,10 @@
 # Windows session-service boundary probe
 
+Historical 2026-09-23 probe. The installed display broker has since been
+implemented; the integration design below is not a request to rebuild it.
+Pre-login/credential/secure-desktop hosting remains a separate boundary and
+acceptance effort. See the [PC matrix](PC_SUPPORT_MATRIX.md).
+
 The installed display-only broker is described separately in
 [WINDOWS_DISPLAY_SERVICE.md](WINDOWS_DISPLAY_SERVICE.md). This original probe
 remains development-only; its historical tests are not native broker acceptance.
@@ -68,7 +73,7 @@ service restart. Stopping with a silent client completed in 3 ms. The PE imports
 only Windows system libraries. These observations do not prove video capture,
 secure-desktop input, password entry, or unattended operation.
 
-## Before production integration
+## Original production-integration requirements (historical)
 
 The next implementation must keep the GUI and its binding state unprivileged.
 Do not run an arbitrary user-editable Sunshine configuration as SYSTEM. Define

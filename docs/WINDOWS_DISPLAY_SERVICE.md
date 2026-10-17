@@ -1,5 +1,10 @@
 # Installed Windows display service
 
+Current source and evidence scope is indexed in the
+[PC implementation and acceptance matrix](PC_SUPPORT_MATRIX.md). Automatic
+service registration and signed-in sharing without repeated UAC are implemented;
+current pre-login/lock/secure-desktop acceptance is incomplete.
+
 ## Scope
 
 This candidate removes per-sharing UAC for an installed, signed-in physical
@@ -225,9 +230,11 @@ credentials, private clipboard data and work applications out of evidence.
 | Recovery | Owned helper/broker crash, SCM stop during preparation/resize, disconnect and console change leave no stuck input, orphan guardian or wrong-display fallback. |
 | Lifecycle | Upgrade/rollback/uninstall/reinstall retain identity, preserve foreign services/tasks and wait for recovery before payload replacement. |
 | Missing service | A sharing request fails once with a repair message, without UAC or a restart loop. Restore only test-owned state. |
-| Later desktop work | Separately implement and accept existing-session lock screen, credential desktop, UAC secure desktop and fresh pre-login hosting. |
+| Later desktop work | Establish current existing-session lock-screen transitions, credential/UAC-desktop video and input, and fresh pre-login hosting against the exact installed package; identify missing behavior from those results. Historical lock-screen video is partial evidence only. |
 
-The final row is unsupported in this phase. The old probe only opened/closed a
+The final row is outside this signed-in display-broker phase and is not accepted
+as a supported end-to-end capability. This does not erase old partial lock-screen
+video observations or classify every unrun case as missing code. The old probe only opened/closed a
 desktop handle. Neither that, WGC window permission, an elevated process, a running
 boot service nor a screenshot proves secure-desktop video, credential input or
 pre-login hosting. BitLocker pre-boot authentication, automatic login, weakened
