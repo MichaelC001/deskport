@@ -205,6 +205,11 @@ Nix compilation, package identity and short-TMPDIR isolated CLI checks. A long
 Unix-socket-path setup failure is retained separately; no physical streaming,
 input, audio, clipboard, HDR or Seamless acceptance is inferred.
 
+## Square device cards — 2026-10-18
+
+Device, group and add cards now keep a 1:1 aspect ratio as the window changes
+column count. Devices inside group folders use the same square geometry.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:
