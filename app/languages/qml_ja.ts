@@ -1,3383 +1,3781 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="ja" sourcelanguage="en_GB">
-<context>
-    <name>AppView</name>
-    <message>
-        <location filename="../gui/AppView.qml" line="145"/>
-        <location filename="../gui/AppView.qml" line="303"/>
-        <source>Resume Game</source>
-        <translation>ゲームを再開</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="173"/>
-        <location filename="../gui/AppView.qml" line="308"/>
-        <source>Quit Game</source>
-        <translation>ゲームを終了</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="303"/>
-        <source>Launch Game</source>
-        <translation>ゲームを起動</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="316"/>
-        <source>Direct Launch</source>
-        <translation>ダイレクト起動</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="320"/>
-        <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>ホストが選択された際、アプリ選択画面をスキップして直接このアプリを起動する。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="329"/>
-        <source>Hide Game</source>
-        <translation>ゲームを非表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="333"/>
-        <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>アプリ画面からこのゲームを非表示にする。非表示のゲームにアクセスするには、ホストを右クリックして%1を選択してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="333"/>
-        <source>View All Apps</source>
-        <translation>すべてのアプリを表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="348"/>
-        <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>本当に%1を終了しますか？未セーブの進行状況はすべて失われます。</translation>
-    </message>
-</context>
-<context>
-    <name>CliPair</name>
-    <message>
-        <location filename="../gui/CliPair.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation type="unfinished">PCとの接続を確立しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliPair.qml" line="13"/>
-        <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>ペアリング中... &apos;%1&apos; を %2 に入力してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliPair.qml" line="85"/>
-        <source>Pairing completed successfully</source>
-        <translation>ペアリング成功</translation>
-    </message>
-</context>
-<context>
-    <name>CliQuitStreamSegue</name>
-    <message>
-        <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation>PCとの接続を確立しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
-        <source>Quitting app...</source>
-        <translation>アプリを終了しています...</translation>
-    </message>
-</context>
-<context>
-    <name>CliStartStreamSegue</name>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation>PCとの接続を確立しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
-        <source>Loading app list...</source>
-        <translation>アプリ一覧をロードしています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
-        <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>本当に%1を終了しますか？未セーブの進行状況はすべて失われます。</translation>
-    </message>
-</context>
-<context>
-    <name>ComputerModel</name>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="50"/>
-        <source>Online</source>
-        <translation type="unfinished">オンライン</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="53"/>
-        <source>Offline</source>
-        <translation type="unfinished">オフライン</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="56"/>
-        <location filename="../gui/computermodel.cpp" line="68"/>
-        <location filename="../gui/computermodel.cpp" line="80"/>
-        <location filename="../gui/computermodel.cpp" line="82"/>
-        <location filename="../gui/computermodel.cpp" line="83"/>
-        <source>Unknown</source>
-        <translation>不明</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="62"/>
-        <source>Paired</source>
-        <translation>ペアされました</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="65"/>
-        <source>Unpaired</source>
-        <translation>ペア解除</translation>
-    </message>
-    <message>
-        <source>Alias: %1</source>
-        <translation>別名: %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="72"/>
-        <source>Name: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="73"/>
-        <source>Status: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="74"/>
-        <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="75"/>
-        <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="76"/>
-        <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="77"/>
-        <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="78"/>
-        <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="79"/>
-        <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="80"/>
-        <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="81"/>
-        <source>Pair State: %1</source>
-        <translation>ペア状況</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="82"/>
-        <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="83"/>
-        <source>HTTPS Port: %1</source>
-        <translation>HTTPSポート</translation>
-    </message>
-    <message>
-        <source>Group</source>
-        <translation>グループ</translation>
-    </message>
-</context>
-<context>
-    <name>GamepadMapper</name>
-    <message>
-        <location filename="../gui/GamepadMapper.qml" line="4"/>
-        <source>Gamepad Mapping</source>
-        <translation>ゲームパッドのマッピング</translation>
-    </message>
-</context>
-<context>
-    <name>NvHTTP</name>
-    <message>
-        <location filename="../backend/nvhttp.cpp" line="359"/>
-        <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>オーディオキャプチャーデバイスがありません。GeForce Experienceを再インストールすることでこのエラーが解決されます。</translation>
-    </message>
-    <message>
-        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
-        <translation>このホストはセッションごとの音声取得や閲覧専用モードに対応していません。DeskPort ホストを更新して再接続してください。</translation>
-    </message>
-</context>
-<context>
-    <name>PcView</name>
-    <message><source>Removing device…</source><translation>デバイスを削除中…</translation></message>
-    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>このコンピュータから「%1」と保存済みのペアリング、デバイス設定を削除しますか？</translation></message>
-    <message><source>Change address</source><translation>アドレスを変更</translation></message>
-    <message>
-        <location filename="../gui/PcView.qml" line="21"/>
-        <source>Computers</source>
-        <translation>コンピュータ</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="68"/>
-        <source>Unable to connect to the specified PC.</source>
-        <translation>指定したPCに接続できません。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="71"/>
-        <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>このPCのインターネット接続がMoonlightをブロックしています。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="74"/>
-        <source>Click the Help button for possible solutions.</source>
-        <translation>ヘルプボタンをクリックすると、可能な解決方法が表示されます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="104"/>
-        <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>PCの自動検出が無効になっています。手動でPCを追加してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="103"/>
-        <source>Searching for compatible hosts on your local network...</source>
-        <translation>接続できるホストをローカルネットワーク上探しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="188"/>
-        <source>Wake PC</source>
-        <translation>PCを起動</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="194"/>
-        <source>Test Network</source>
-        <translation>ネットワークをテスト</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="203"/>
-        <source>Rename PC</source>
-        <translation>PCの名前を変更</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="212"/>
-        <source>Delete PC</source>
-        <translation>PCを削除</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="221"/>
-        <source>View Details</source>
-        <translation>詳細表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="233"/>
-        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="336"/>
-        <source>This may take a few seconds…</source>
-        <translation>これには数秒かかることがあります…</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="347"/>
-        <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>このネットワークはMoonlightをブロックしていないようです。それでも接続に問題がある場合は、PCのファイアウォール設定を確認してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="347"/>
-        <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>インターネット経由でストリーミングを行う場合は、ゲーミングPCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行してゲーミングPCのインターネット接続を確認してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="351"/>
-        <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>PCの現在のネットワーク接続がMoonlightをブロックしているようです。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="351"/>
-        <source>The following network ports were blocked:</source>
-        <translation>次のネットワークポートがブロックされました:</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="343"/>
-        <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>このPCからMoonlightの接続テスト用サーバーにアクセスできなかったため、ネットワークテストを実行できませんでした。インターネット接続を確認するか、後ほど再試行してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>PC Status: %1</source>
-        <translation>PCステータス: %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>Online</source>
-        <translation>オンライン</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>Offline</source>
-        <translation>オフライン</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="178"/>
-        <source>View All Apps</source>
-        <translation>すべてのアプリを表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="309"/>
-        <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>接続される側のコンピュータに %1 を入力してください。このダイアログはペアリング終了時に閉じます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="310"/>
-        <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation>コンピュータで Sunshine がはしっている場合、Sunshine のウエブUIにPINを入力してください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="322"/>
-        <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation>本当に &apos;%1&apos; を削除しますか？</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="336"/>
-        <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation>Moonlight はブロックされているポートがないかを確かめるためネットワーク接続テストを実施しています。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter an alias for this device. Leave empty to use its original name:</source>
-        <translation>このデバイスの別名を入力します。空欄にすると元の名前を使用します：</translation>
-    </message>
-    <message>
-        <source>Devices</source>
-        <translation>デバイス</translation>
-    </message>
-    <message>
-        <source>Connect your first device.</source>
-        <translation>最初のデバイスに接続しましょう。</translation>
-    </message>
-    <message>
-        <source>Add a device by IP address or name. Confirm once on the other computer, then connect in either direction.</source>
-        <translation>IP アドレスか名前で追加し、相手側で一度承認すると双方向に接続できます。</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>デバイスを追加</translation>
-    </message>
-    <message>
-        <source>Nearby devices appear here automatically</source>
-        <translation>近くのデバイスは自動的に表示されます</translation>
-    </message>
-    <message>
-        <source>Nearby discovery is off in Settings</source>
-        <translation>設定で自動検出が無効になっています</translation>
-    </message>
-    <message>
-        <source>Applications</source>
-        <translation>アプリ</translation>
-    </message>
-    <message>
-        <source>Pair with a legacy PIN</source>
-        <translation>従来の PIN でペアリング</translation>
-    </message>
-    <message>
-        <source>Set alias</source>
-        <translation>別名を設定</translation>
-    </message>
-    <message>
-        <source>Remove from list</source>
-        <translation>リストから削除</translation>
-    </message>
-    <message>
-        <source>The host on %1 uses an unsupported protocol version. Update the host and DeskPort before connecting.</source>
-        <translation>%1 のホストのプロトコルに対応していません。ホストと DeskPort を更新してください。</translation>
-    </message>
-    <message>
-        <source>Connected · workspace stays open</source>
-        <translation>接続中 · ワークスペースは開いたまま</translation>
-    </message>
-    <message>
-        <source>Return to desktop</source>
-        <translation>デスクトップに戻る</translation>
-    </message>
-    <message>
-        <source>Your computers</source>
-        <translation>コンピューター</translation>
-    </message>
-    <message>
-        <source>Card view</source>
-        <translation>カード表示</translation>
-    </message>
-    <message>
-        <source>List view</source>
-        <translation>リスト表示</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>完了</translation>
-    </message>
-    <message>
-        <source>Drag devices to change their order.</source>
-        <translation>デバイスをドラッグして順序を変更します。</translation>
-    </message>
-    <message>
-        <source>Move to front</source>
-        <translation>先頭に移動</translation>
-    </message>
-    <message>
-        <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
-        <translation>%1 とのセッションが開いています。他のコンピューターに接続する前にトレイメニューから切断してください。</translation>
-    </message>
-    <message>
-        <source>Device settings</source>
-        <translation>デバイス設定</translation>
-    </message>
-    <message>
-        <source>Nearby discovery is off</source>
-        <translation>近くのデバイスの検出はオフです</translation>
-    </message>
-    <message>
-        <source>Toggle fullscreen</source>
-        <translation>全画面表示を切り替え</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation>切断</translation>
-    </message>
-    <message>
-        <source>Reconnect</source>
-        <translation>再接続</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>編集</translation>
-    </message>
-    <message>
-        <source>New group</source>
-        <translation>新規グループ</translation>
-    </message>
-    <message>
-        <source>All devices</source>
-        <translation>すべてのデバイス</translation>
-    </message>
-    <message>
-        <source>Group actions</source>
-        <translation>グループの操作</translation>
-    </message>
-    <message>
-        <source>Rename group</source>
-        <translation>グループ名を変更</translation>
-    </message>
-    <message>
-        <source>Delete group</source>
-        <translation>グループを削除</translation>
-    </message>
-    <message>
-        <source>Move out of group</source>
-        <translation>グループから出す</translation>
-    </message>
-    <message>
-        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
-        <translation>このグループは空です。編集モードでデバイスをグループにドラッグすると追加できます。</translation>
-    </message>
-    <message>
-        <source>Drag cards to change their order, or onto another device to make a group.</source>
-        <translation>カードをドラッグして並べ替えます。別のデバイスに重ねるとグループになります。</translation>
-    </message>
-    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>%1 とのセッションが開いています。別のコンピューターに接続する前に切断してください。</translation></message>
-    <message><source>Finish editing</source><translation>編集を終了</translation></message>
-    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>デバイスをドラッグして並べ替えます。パネルの外へドラッグするとグループから外れます。</translation></message>
-    <message><source>Checking…</source><translation>確認中…</translation></message>
-    <message><source>Computer</source><translation>コンピュータ</translation></message>
-    <message><source>This group is empty.</source><translation>このグループは空です。</translation></message>
-    <message><source>Remove device?</source><translation>デバイスを削除しますか？</translation></message>
-    <message><source>Remove</source><translation>削除</translation></message>
-    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>グループを削除しても中のデバイスは残り、デバイス一覧に戻ります。</translation></message>
-    <message><source>Open group</source><translation>グループを開く</translation></message>
-    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>このコンピューターでのみ表示されます。空欄にすると元の名前を使います。</translation></message>
-</context>
-<context>
-    <name>PendingPairingTask</name>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="586"/>
-        <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>コンピュータのPINが一致しませんでした。再度お試しください。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="590"/>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">ホストPCで前回のセッションが実行している間はペアリングできません。実行中のゲームを終了するかホストPCを再起動した後に、再度ペアリングしてください。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="593"/>
-        <source>Pairing failed. Please try again.</source>
-        <translation>ペアリングが失敗しました。再度お試しください。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="597"/>
-        <source>Another pairing attempt is already in progress.</source>
-        <translation>別のペアリング試行がすでに試行中です。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="607"/>
-        <source>GeForce Experience returned error: %1</source>
-        <translation>GeForce Experienceがエラーを返しました: %1</translation>
-    </message>
-</context>
-<context>
-    <name>PendingQuitTask</name>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="657"/>
-        <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>実行中のゲームはこのPCで開始されたものではありません。ホストPCでゲームを手動で終了するか、最初にゲームを開始したデバイスを使用する必要があります。</translation>
-    </message>
-</context>
-<context>
-    <name>QObject</name>
-    <message>
-        <location filename="../cli/pair.cpp" line="80"/>
-        <source>%1 is already paired</source>
-        <translation>%1 は既にペアリングされています</translation>
-    </message>
-    <message>
-        <location filename="../cli/pair.cpp" line="109"/>
-        <location filename="../cli/quitstream.cpp" line="76"/>
-        <location filename="../cli/startstream.cpp" line="133"/>
-        <source>Failed to connect to %1</source>
-        <translation>%1への接続に失敗</translation>
-    </message>
-    <message>
-        <location filename="../cli/quitstream.cpp" line="88"/>
-        <location filename="../cli/startstream.cpp" line="89"/>
-        <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>コンピュータ %1はペアリングされていません。ストリーミングを開始する前にMoonlightを開いてペアリングをしてください。</translation>
-    </message>
-    <message>
-        <location filename="../cli/quitstream.cpp" line="102"/>
-        <location filename="../cli/startstream.cpp" line="126"/>
-        <source>Quitting app failed, reason: %1</source>
-        <translation>アプリの終了に失敗、理由: %1</translation>
-    </message>
-    <message>
-        <location filename="../cli/startstream.cpp" line="137"/>
-        <source>Failed to find application %1</source>
-        <translation>アプリケーション%1の検出に失敗</translation>
-    </message>
-    <message>
-        <location filename="../cli/listapps.cpp" line="99"/>
-        <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>コンピュータ %1 はペアされてません。ゲームリストを再取得する前にMoonlightwを開けてください。</translation>
-    </message>
-</context>
-<context>
-    <name>QPlatformTheme</name>
-    <message>
-        <location filename="../main.cpp" line="620"/>
-        <source>&amp;Yes</source>
-        <translation>はい(&amp;Y)</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="621"/>
-        <source>&amp;No</source>
-        <translation>いいえ(&amp;N)</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="622"/>
-        <source>OK</source>
-        <translation>OK</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="623"/>
-        <source>Help</source>
-        <translation>ヘルプ</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="624"/>
-        <source>Cancel</source>
-        <translation>キャンセル</translation>
-    </message>
-</context>
-<context>
-    <name>QuitSegue</name>
-    <message>
-        <location filename="../gui/QuitSegue.qml" line="13"/>
-        <source>Quitting %1...</source>
-        <translation>%1を終了しています...</translation>
-    </message>
-</context>
-<context>
-    <name>Session</name>
-    <message><source>Adjusting resolution…</source><translation>解像度を調整中…</translation></message>
-    <message><source>Connection interrupted. Reconnecting…</source><translation>接続が中断されました。再接続中…</translation></message>
-    <message>
-        <location filename="../streaming/session.cpp" line="112"/>
-        <source>No video received from host.</source>
-        <translation>ホストから映像を受信していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="113"/>
-        <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="118"/>
-        <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>ネットワーク接続がうまくいっていません。ビデオビットレートの設定を下げるか、より高速な回線を使用してください。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="124"/>
-        <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>ストリーミングを開始する際に、ホストPCで何か問題が発生しました。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="125"/>
-        <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>ホストPCでDRM保護コンテンツを開いていないことを確認してください。また、ホストPCの再起動もお試しください。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="130"/>
-        <source>The host PC reported a fatal video encoding error.</source>
-        <translation>ホーストのPCが再起不能なビデオエンコードエラーを起こしました。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="131"/>
-        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation>HDRモードを無効にしたり、ストリーミング解像度を変更したり、ホストPCのディスプレイ解像度を変更したりしてみてください。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="139"/>
-        <source>Connection terminated</source>
-        <translation>接続が終了しました</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="140"/>
-        <source>Error code: %1</source>
-        <translation>エラーコード: %1</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="931"/>
-        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="936"/>
-        <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>リモートデスクトップマウスモードを有効にすると、ゲームで問題が発生する場合があります。</translation>
-    </message>
-    <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">ソフトウェアデコードではHDRに対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="940"/>
-        <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>ソフトウェアデコードを強制する設定になっていると、ストリーミングのパフォーマンスが低下する場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="970"/>
-        <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation>ホストPCがHEVCエンコーディングをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="987"/>
-        <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>GPUをサポートしていないHEVCを強制する設定を選択したため、ソフトウェアデコーディングを使用しています。これによってストリーミングパフォーマンスが低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="946"/>
-        <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>ホストソフトウェアまたはGPUがAV1エンコーディングをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="963"/>
-        <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>GPUサポートなしでAV1を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1029"/>
-        <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation>ホストPCがHDRストリーミングをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1021"/>
-        <source>HDR is not supported using the H.264 codec.</source>
-        <translation>HDRはH.264コーデックでは対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
-        <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation>このPCのGPUはHDRストリーミング用のAV1 Main10デコーディングをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1025"/>
-        <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation>このPCのGPUはHDRストリーミング用の10ビットHEVCまたはAV1デコーディングをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1077"/>
-        <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation>ホストPCとクライアントPCが同じHDRビデオコーデックをサポートしていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1170"/>
-        <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation>4Kを超えるビデオ解像度はH.264コーデックではサポートされていません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1554"/>
-        <source>Host returned error: %1</source>
-        <translation>ホストがエラーを返しました：%1</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1001"/>
-        <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>GPUサポートなしでH.264を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1011"/>
-        <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>ホストPCとクライアントPCが同じビデオコーデックをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1014"/>
-        <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation>クライアントのGPUがH.264デコーディングをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1050"/>
-        <location filename="../streaming/session.cpp" line="1068"/>
-        <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1062"/>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>このPCのGPUはHDRストリーミングのHEVC Main10デコーディングに対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1084"/>
-        <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1092"/>
-        <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1107"/>
-        <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1113"/>
-        <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1122"/>
-        <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>4KストリーミングにはGeForce Experience 3.0以降が必要です。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1137"/>
-        <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>選択したサラウンド音声設定は現在のオーディオデバイスに対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1143"/>
-        <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>オーディオデバイスのオープンに失敗しました。このセッションでは音声は利用できません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1148"/>
-        <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>接続されたゲームパッドはマッピングされていないため、使用できません。この問題を解決するには、Moonlightのヘルプをご覧ください。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1166"/>
-        <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>ホストPCのGPUは4Kを超えるビデオ解像度でのストリーミングに対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1184"/>
-        <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>このPCのGPUはハードウェアデコードに対応していないため、ハードウェアデコードを強制するという選択を満たすことができません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1187"/>
-        <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>選択したコーデックとハードウェアデコードを強制する設定には互換性がありません。このPCのGPUは、選択したコーデックのデコードに対応していません。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="2219"/>
-        <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>ビデオデコーダを初期化できませんでした。ストリーミングの設定を確認して再度お試しください。</translation>
-    </message>
-    <message>
-        <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
-        <translation>ホストが新しいサイズでデスクトップを再開できませんでした。再接続して作業を続けてください。</translation>
-    </message>
-
-<message><source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source><translation>選択した仮想ディスプレイモードは使用できません。ホストを更新するか、別のモードを選んでください。</translation></message>
-<message><source>Virtual screen control ended. Reconnect to apply the selected mode.</source><translation>仮想ディスプレイの制御が終了しました。再接続して選択したモードを適用してください。</translation></message>
-
-    <message><source>Connecting to desktop…</source><translation>デスクトップに接続中…</translation></message>
-    <message>
-        <source>This connection would create a loop. Disconnect one of the existing links first.</source>
-        <translation>この接続はループを作成します。先に既存の接続のいずれかを切断してください。</translation>
-    </message>
-    <message>
-        <source>The connection path could not be verified. Update DeskPort on every desktop in the chain and try again.</source>
-        <translation>接続経路を確認できませんでした。経路上のすべてのコンピューターの DeskPort を更新して、再試行してください。</translation>
-    </message>
-</context>
-<context>
-    <name>SettingsView</name>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="13"/>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="116"/>
-        <source>Resolution and FPS</source>
-        <translation>解像度とFPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="124"/>
-        <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>PCやネットワーク接続に対して大きすぎる値を設定すると、ラグやスタッタリング、エラーの原因となる場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="106"/>
-        <source>Basic Settings</source>
-        <translation>基本設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="250"/>
-        <source>720p</source>
-        <translation>720p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="256"/>
-        <source>1080p</source>
-        <translation>1080p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="262"/>
-        <source>1440p</source>
-        <translation>1440p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="268"/>
-        <source>4K</source>
-        <translation>4K</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="373"/>
-        <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>カスタム解像度はGeForce Experienceで公式にサポートされていないため、ホストディスプレイの解像度は設定されません。ゲーム内で手動で設定する必要があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="374"/>
-        <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>クライアントやホストPCが対応していない解像度では、ストリーミングエラーが発生する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="380"/>
-        <source>Enter a custom resolution:</source>
-        <translation>カスタム解像度を入力:</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="600"/>
-        <source>%1 FPS</source>
-        <translation>%1 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="668"/>
-        <source>Video bitrate:</source>
-        <translation>映像ビットレート:</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="676"/>
-        <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>低速回線ではビットレートを下げてください。画質を上げるにはビットレートを上げてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="694"/>
-        <source>Video bitrate: %1 Mbps</source>
-        <translation>映像ビットレート: %1 Mbps</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="707"/>
-        <source>Display mode</source>
-        <translation>表示モード</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="737"/>
-        <source>(Recommended)</source>
-        <translation>(推奨)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="718"/>
-        <location filename="../gui/SettingsView.qml" line="1181"/>
-        <source>Fullscreen</source>
-        <translation>全画面表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="787"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>一般的には全画面表示が最も優れたパフォーマンスを発揮しますが、macOSの操作スペース、Alt+Tab、スクリーンショットツール、オンスクリーンオーバーレイなどの機能を使用する場合は、ボーダレスウィンドウがより効果的です。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="723"/>
-        <source>Borderless windowed</source>
-        <translation>ボーダレスウィンドウ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="182"/>
-        <source>Native</source>
-        <translation>ネイティブ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="183"/>
-        <source>Native (Excluding Notch)</source>
-        <translation>ネイティブ（ノッチ除く）</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="728"/>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
-        <source>Windowed</source>
-        <translation>ウィンドウ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="794"/>
-        <source>V-Sync</source>
-        <translation>垂直同期</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="804"/>
-        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>垂直同期を無効にすると、サブフレームのレンダリング遅延が発生しますが、目に見えるティアリングが表示されることがあります</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="811"/>
-        <source>Frame pacing</source>
-        <translation>フレームペーシング</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="821"/>
-        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>フレーム・ペーシングは、早すぎるフレームを遅らせることで、マイクロスタッターを軽減します</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="831"/>
-        <source>Audio Settings</source>
-        <translation>音声設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="866"/>
-        <source>Stereo</source>
-        <translation>ステレオ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="870"/>
-        <source>5.1 surround sound</source>
-        <translation>5.1サラウンドサウンド</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="874"/>
-        <source>7.1 surround sound</source>
-        <translation>7.1サラウンドサウンド</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="888"/>
-        <source>Mute host PC speakers while streaming</source>
-        <translation>ストリーミング中にホストPCのスピーカーをミュートする</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="898"/>
-        <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>この設定を有効にするには、現在進行中のゲームを再起動する必要があります</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="904"/>
-        <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>Moonlightがアクティブなウィンドウでないときに音声ストリームをミュートする</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="915"/>
-        <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>ストリーミングからAlt+Tabで抜けたり、別のウィンドウをクリックしたりすると、Moonlightの音声をミュートします。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="964"/>
-        <source>UI Settings</source>
-        <translation>UI設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="974"/>
-        <source>Language</source>
-        <translation>言語</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1000"/>
-        <source>Automatic</source>
-        <translation>自動</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1123"/>
-        <source>You must restart Moonlight for this change to take effect</source>
-        <translation>この変更を有効にするには、Moonlightを再起動する必要があります</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1140"/>
-        <source>GUI display mode</source>
-        <translation>GUI表示モード</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1177"/>
-        <source>Maximized</source>
-        <translation>最大化</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1250"/>
-        <source>Input Settings</source>
-        <translation>入力設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1271"/>
-        <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>これにより、クライアントのマウスカーソルをキャプチャすることなく、シームレスなマウスコントロールが可能になります。リモートデスクトップでの使用に最適ですが、ほとんどのゲームでは動作しません。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1273"/>
-        <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>注: GeForce Experienceのバグにより、ホストPCにマルチモニターがある場合、このオプションは正しく動作しない可能性があります。</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">HDR を有効にすると、手動で選択したデコーダーが上書きされます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1588"/>
-        <source>Enable HDR (Experimental)</source>
-        <translation>HDRを有効にする（実験的）</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1603"/>
-        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>ストリームはHDR対応になりますが、一部のゲームではHDRモードを有効にするためにホストPCにHDRモニターが必要な場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1605"/>
-        <source>HDR streaming is not supported on this PC.</source>
-        <translation>このPCではHDRストリーミングはサポートされていません。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1690"/>
-        <source>Show performance stats while streaming</source>
-        <translation>ストリーミング中にパフォーマンス統計を表示する</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1700"/>
-        <source>Display real-time stream performance information while streaming.</source>
-        <translation>ストリーミング中にリアルタイムのストリーム パフォーマンス情報を表示します。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1701"/>
-        <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation>ストリーミング中はいつでも、Ctrl+Alt+Shift+SまたはSelect+L1+R1+Xを使用して切り替えることができます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1702"/>
-        <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation>パフォーマンスオーバーレイはSteam LinkまたはRaspberry Piではサポートされていません。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1292"/>
-        <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation>注: WindowsのCtrl+Alt+Delのような特定のキーボードショートカットは、Moonlightを含むいかなるアプリケーションでも傍受することができません。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1355"/>
-        <source>Use touchscreen as a virtual trackpad</source>
-        <translation>タッチスクリーンを仮想トラックパッドとして使用する</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1372"/>
-        <source>Swap left and right mouse buttons</source>
-        <translation>マウスの左右のボタンを入れ替える</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1384"/>
-        <source>Reverse mouse scrolling direction</source>
-        <translation>マウスのスクロール方向を逆にする</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1398"/>
-        <source>Gamepad Settings</source>
-        <translation>ゲームパッドの設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1408"/>
-        <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>ゲームパッドのA/BとX/Yボタンを入れ替える</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1418"/>
-        <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>ゲームパッドを任天堂スタイルのボタン配置に変更します</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1424"/>
-        <source>Force gamepad #1 always connected</source>
-        <translation>ゲームパッド#1を常時接続するよう強制</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1434"/>
-        <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>実際にはゲームパッドがPCに接続されていなくても、1台のゲームパッドが常にホストに接続されているように強制します。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1272"/>
-        <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>ストリーミング中でもCtrl+Alt+Shift+Mで切り替えることができます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1442"/>
-        <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>ゲームパッドで「スタート」ボタンを押しながらマウス操作ができるようにする</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1453"/>
-        <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Moonlightがバックグラウンドで動作しているときにゲームパッドの入力を処理する</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1464"/>
-        <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>現在のウィンドウがフォーカスされていない場合でも、Moonlightがゲームパッドの入力をキャプチャできるようにします</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="924"/>
-        <source>Host Settings</source>
-        <translation>ホスト設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1473"/>
-        <source>Advanced Settings</source>
-        <translation>高度な設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="841"/>
-        <source>Audio configuration</source>
-        <translation>オーディオ構成</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1194"/>
-        <source>Show connection quality warnings</source>
-        <translation>接続品質に関する警告の表示</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1206"/>
-        <source>Discord Rich Presence integration</source>
-        <translation>Discord Rich Presenceの統合</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1216"/>
-        <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Discordのステータスを更新して、ストリーミングしているゲームの名前を表示します。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1435"/>
-        <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation>起動後のゲームパッドの接続をサポートしていないゲームをストリーミングする場合のみ、このオプションを有効にしてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1261"/>
-        <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>ゲームではなくリモートデスクトップにマウスを最適化</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="508"/>
-        <location filename="../gui/SettingsView.qml" line="618"/>
-        <source>Custom (%1 FPS)</source>
-        <translation>カスタム (%1 FPS)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="523"/>
-        <source>Enter a custom frame rate:</source>
-        <translation>カスタムフレームを入力:</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="219"/>
-        <location filename="../gui/SettingsView.qml" line="228"/>
-        <location filename="../gui/SettingsView.qml" line="621"/>
-        <source>Custom</source>
-        <translation>カスタム</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="639"/>
-        <source>30 FPS</source>
-        <translation>30 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="644"/>
-        <source>60 FPS</source>
-        <translation>60 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1222"/>
-        <source>Keep the display awake while streaming</source>
-        <translation>ストリーミング中にディスプレイをスリープさせない</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1232"/>
-        <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>ストリーミング中にスクリーンセーバーの起動やディスプレイのスリープを防止します</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1283"/>
-        <source>Capture system keyboard shortcuts</source>
-        <translation>システムのキーボードショートカットをキャプチャ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1291"/>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>これにより、通常はストリーミング中にクライアントOSが処理するAlt+Tabなどのシステム全体のキーボードショートカットをキャプチャすることができます。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1321"/>
-        <source>in fullscreen</source>
-        <translation>フルスクリーン時</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1325"/>
-        <source>always</source>
-        <translation>常時</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1365"/>
-        <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation>チェックすると、タッチスクリーンはトラックパッドのように動作します。チェックを外すと、タッチスクリーンが直接マウスポインターを操作するようになります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="934"/>
-        <source>Optimize game settings for streaming</source>
-        <translation>ストリーミング用にゲーム設定を最適化</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="945"/>
-        <source>Quit app on host PC after ending stream</source>
-        <translation>ストリーミング終了後にホストPCのアプリを終了させる</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="955"/>
-        <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>ストリーミングを終了すると、ストリーミング中のアプリやゲームが終了します。保存されていない進行状況は失われます！</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1483"/>
-        <source>Video decoder</source>
-        <translation>映像デコーダ</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1508"/>
-        <location filename="../gui/SettingsView.qml" line="1561"/>
-        <source>Automatic (Recommended)</source>
-        <translation>自動 (推奨)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1512"/>
-        <source>Force software decoding</source>
-        <translation>ソフトウェアデコードを強制</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1516"/>
-        <source>Force hardware decoding</source>
-        <translation>ハードウェアデコードを強制</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1531"/>
-        <source>Video codec</source>
-        <translation>ビデオコーデック</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1565"/>
-        <source>H.264</source>
-        <translation>H.264</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1569"/>
-        <source>HEVC (H.265)</source>
-        <translation>HEVC (H.265)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1573"/>
-        <source>AV1 (Experimental)</source>
-        <translation>AV1 (実験的)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1611"/>
-        <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1631"/>
-        <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1633"/>
-        <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1639"/>
-        <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1652"/>
-        <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1658"/>
-        <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>ローカルネットワーク上のPCを自動的に検出 (推奨)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1679"/>
-        <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>ブロックされた接続を自動的に検出 (推奨)</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>詳細設定</translation>
-    </message>
-    <message>
-        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
-        <translation>再接続すると適用されます。このコンピューターの言語や検出設定は変更されません。</translation>
-    </message>
-    <message>
-        <source>Session behavior</source>
-        <translation>セッション動作</translation>
-    </message>
-</context>
-<context>
-    <name>StreamSegue</name>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="11"/>
-        <source>Resuming %1...</source>
-        <translation>%1を再開しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="12"/>
-        <location filename="../gui/StreamSegue.qml" line="19"/>
-        <source>Starting %1...</source>
-        <translation>%1を起動しています...</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="25"/>
-        <source>Starting %1 failed: Error %2</source>
-        <translation>%1の起動に失敗しました: エラー %2</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="28"/>
-        <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="76"/>
-        <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>このPCのインターネット接続がMoonlightをブロックしています。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
-        <source>Tip:</source>
-        <translation>ヒント:</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
-        <source>Press %1 to disconnect your session</source>
-        <translation>%1を押してセッションを切断します</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
-        <source>Start+Select+L1+R1</source>
-        <translation>Start+Select+L1+R1</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
-        <source>Ctrl+Alt+Shift+Q</source>
-        <translation>Ctrl+Alt+Shift+Q</translation>
-    </message>
-    <message>
-        <source>Connection interrupted. Reconnecting…</source>
-        <translation>接続が中断されました。再接続中…</translation>
-    </message>
-    <message>
-        <source>Cancel reconnect</source>
-        <translation>再接続をキャンセル</translation>
-    </message>
-    <message>
-        <source>Press %1 to leave fullscreen; press again to disconnect</source>
-        <translation>%1 で全画面表示を解除、もう一度押すと切断</translation>
-    </message>
-
-    <message><source>Waiting for desktop video…</source><translation>デスクトップ映像を待機中…</translation></message>
-    <message><source>Cancel connection</source><translation>接続をキャンセル</translation></message>
-</context>
-<context>
-    <name>main</name>
-    <message>
-        <source>Data saver</source>
-        <translation>データセーバー</translation>
-    </message>
-    <message>
-        <source>Data saver on: video limited to 3–12 Mbps</source>
-        <translation>データセーバーオン：映像を3–12 Mbpsに制限</translation>
-    </message>
-    <message>
-        <source>Data saver off: automatic bitrate</source>
-        <translation>データセーバーオフ：ビットレート自動</translation>
-    </message>
-    <message>
-        <source>Today %1%</source>
-        <translation>今日 %1%</translation>
-    </message>
-    <message>
-        <source>Daily data budget</source>
-        <translation>1日のデータ予算</translation>
-    </message>
-    <message>
-        <source>Limit per day</source>
-        <translation>1日の上限</translation>
-    </message>
-    <message>
-        <source>Today: %1 of %2 (%3%)</source>
-        <translation>今日：%1 / %2（%3%）</translation>
-    </message>
-    <message>
-        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
-        <translation>このコンピューターのすべての接続を集計し、毎日現地時間の0時にリセットされます。100%に達すると、その日の残りはデータセーバーが自動でオンになります。</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>リセット</translation>
-    </message>
-    <message><source>Could not save device removal. Please retry.</source><translation>デバイスの削除を保存できませんでした。再試行してください。</translation></message>
-    <message><source>Editing</source><translation>編集中</translation></message>
-    <message><source>Memory %1</source><translation>メモリ %1</translation></message>
-    <message><source>Local memory usage</source><translation>この端末のメモリ使用量</translation></message>
-    <message><source>Unavailable</source><translation>取得できません</translation></message>
-    <message><source>Client: %1</source><translation>クライアント: %1</translation></message>
-    <message><source>Sharing host: %1</source><translation>共有ホスト: %1</translation></message>
-    <message><source>Helpers: %1</source><translation>補助プロセス: %1</translation></message>
-    <message><source>Some processes could not be sampled.</source><translation>一部のプロセスを測定できませんでした。</translation></message>
-    <message><source>Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak.</source><translation>このクライアントと直接の子プロセスの常駐メモリです。ウィンドウの表示中は3秒ごとに更新します。共有ページは重複して計上される場合があります。リモート端末と一部のGPUメモリは含みません。使用量の増加だけではメモリリークとは判断できません。</translation></message>
-    <message>
-        <location filename="../gui/main.qml" line="415"/>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="262"/>
-        <source>Version %1</source>
-        <translation>バージョン %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="278"/>
-        <source>Join our community on Discord</source>
-        <translation>Discordコミュニティに参加する</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="297"/>
-        <source>Add PC manually</source>
-        <translation>手動でPCを追加</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="337"/>
-        <source>Update available for Moonlight: Version %1</source>
-        <translation>Moonlightで利用可能なアップデート: バージョン %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="384"/>
-        <source>Gamepad Mapper</source>
-        <translation>ゲームパッドマッパー</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="430"/>
-        <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation>XWaylandではハードウェアアクセラレーションが動作しません。XWaylandで続行すると、ストリーミングのパフォーマンスが低下する可能性があります。QT_QPA_PLATFORM=waylandで実行するか、X11に切り替えてみてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="439"/>
-        <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation>このバージョンのMoonlightは、お使いのPCに最適化されていません。最高のストリーミングパフォーマンスを実現するには、Moonlightの&apos;%1&apos;バージョンをダウンロードしてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="448"/>
-        <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlightはマッピングのないゲームパッドを検出しました:</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="361"/>
-        <source>Help</source>
-        <translation>ヘルプ</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="422"/>
-        <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Moonlightはハードウェアアクセラレーションされたビデオデコーダーを検出できませんでした。この構成ではストリーミングのパフォーマンスが著しく低下する可能性があります。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="424"/>
-        <source>Click the Help button for more information on solving this problem.</source>
-        <translation>この問題を解決するための詳細情報については、ヘルプボタンをクリックしてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="432"/>
-        <source>Click the Help button for more information.</source>
-        <translation>詳細については、ヘルプボタンをクリックしてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="450"/>
-        <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>ゲームパッドをマップする方法については、ヘルプボタンをクリックしてください。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="458"/>
-        <source>Are you sure you want to quit?</source>
-        <translation>本当に終了しますか？</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="488"/>
-        <source>Enter the IP address of your host PC:</source>
-        <translation>ホストPCのIPアドレスを入力してください:</translation>
-    </message>
-    <message>
-        <source>Devices</source>
-        <translation>デバイス</translation>
-    </message>
-    <message>
-        <source>Sharing</source>
-        <translation>共有</translation>
-    </message>
-    <message>
-        <source>Getting started</source>
-        <translation>初期設定</translation>
-    </message>
-    <message>
-        <source>Sharing on</source>
-        <translation>共有オン</translation>
-    </message>
-    <message>
-        <source>Sharing off</source>
-        <translation>共有オフ</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>戻る</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>デバイスを追加</translation>
-    </message>
-    <message>
-        <source>Enter the host IP address or hostname:</source>
-        <translation>ホストの IP アドレスまたはホスト名：</translation>
-    </message>
-    <message>
-        <source>DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.</source>
-        <translation>DeskPort の既定値は :48989 です。共有ページのポートが異なる場合は アドレス:ポート を入力してください。標準の Sunshine は :47989 です。</translation>
-    </message>
-    <message>
-        <source>Check permissions</source>
-        <translation>権限を確認</translation>
-    </message>
-    <message>
-        <source>Sharing service on</source>
-        <translation>共有サービス有効</translation>
-    </message>
-    <message>
-        <source>Current connection</source>
-        <translation>現在の接続</translation>
-    </message>
-    <message>
-        <source>Connected</source>
-        <translation>接続済み</translation>
-    </message>
-    <message>
-        <source>Return</source>
-        <translation>デスクトップへ</translation>
-    </message>
-    <message>
-        <source>Session data</source>
-        <translation>今回の通信量</translation>
-    </message>
-    <message>
-        <source>Details</source>
-        <translation>詳細</translation>
-    </message>
-    <message>
-        <source>Received: %1</source>
-        <translation>受信：%1</translation>
-    </message>
-    <message>
-        <source>Sent: %1</source>
-        <translation>送信：%1</translation>
-    </message>
-    <message>
-        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
-        <translation>一時的な再接続を含む映像・音声、制御、クリップボードの通信量です。IP/VPN、クリップボードのTLS、デバイス検出、本機の共有通信は含みません。通信会社の請求額とは異なります。</translation>
-    </message>
-    <message>
-        <source>Update available</source>
-        <translation>更新があります</translation>
-    </message>
-    <message>
-        <source>DeskPort updates</source>
-        <translation>DeskPort の更新</translation>
-    </message>
-    <message>
-        <source>Checking for updates…</source>
-        <translation>更新を確認中…</translation>
-    </message>
-    <message>
-        <source>New version: %1</source>
-        <translation>新しいバージョン: %1</translation>
-    </message>
-    <message>
-        <source>No newer stable release is available.</source>
-        <translation>新しい安定版はありません。</translation>
-    </message>
-    <message>
-        <source>Could not check for updates. Please try again.</source>
-        <translation>更新を確認できませんでした。もう一度お試しください。</translation>
-    </message>
-    <message>
-        <source>Published: %1</source>
-        <translation>公開日: %1</translation>
-    </message>
-    <message>
-        <source>No release notes provided.</source>
-        <translation>リリースノートはありません。</translation>
-    </message>
-    <message>
-        <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
-        <translation>GitHub のリリースページを開きます。通常の方法でインストールしてください。Nix で管理している場合は Nix 経由で更新してください。</translation>
-    </message>
-    <message>
-        <source>Check again</source>
-        <translation>再確認</translation>
-    </message>
-    <message>
-        <source>Open download page</source>
-        <translation>ダウンロードページを開く</translation>
-    </message>
-    <message>
-        <source>Not connected</source>
-        <translation>未接続</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>編集</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>完了</translation>
-    </message>
-    <message>
-        <source>Refresh devices</source>
-        <translation>デバイスを更新</translation>
-    </message>
-    <message>
-        <source>Check saved devices and look for new ones</source>
-        <translation>保存済みデバイスの状態を確認し、新しいデバイスを探します</translation>
-    </message>
-    <message>
-        <source>Ask client to leave full screen</source>
-        <translation>クライアントにフルスクリーンの終了を依頼</translation>
-    </message>
-    <message>
-        <source>Ask the connected client to leave full screen</source>
-        <translation>接続中のクライアントにフルスクリーンの終了を依頼します</translation>
-    </message>
-    <message>
-        <source>Manual</source>
-        <translation>マニュアル</translation>
-    </message>
-    <message>
-        <source>How to use DeskPort</source>
-        <translation>DeskPort の使い方</translation>
-    </message>
-    <message><source>Add a legacy host</source><translation>従来のホストを追加</translation></message>
-    <message>
-        <source>Connecting…</source>
-        <translation>接続中…</translation>
-    </message>
-    <message>
-        <source>Disconnecting…</source>
-        <translation>切断中…</translation>
-    </message>
-    <message>
-        <source>Failed</source>
-        <translation>失敗</translation>
-    </message>
-</context>
-<context>
-    <name>SettingsHome</name>
-    <message><source>Send this computer's audio to connected devices</source><translation>このコンピューターの音声を接続先のデバイスに送信</translation></message>
-    <message><source>Off by default: sound stays on this computer. Changes apply after restarting sharing.</source><translation>既定ではオフで、音声はこのコンピューターで再生されます。変更は共有の再起動後に適用されます。</translation></message>
-
-    <message><source>Always show a local pointer in desktop mode</source><translation>デスクトップモードでローカルポインターを常に表示</translation></message>
-    <message><source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source><translation>ホストがカーソルを隠してもポインターを表示します。2つ表示される場合はオフにしてください。</translation></message>
-    <message><source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source><translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation></message>
-    <message>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <source>Make DeskPort your own.</source>
-        <translation>DeskPort を自分好みに。</translation>
-    </message>
-    <message>
-        <source>Language changes apply immediately. Connection preferences apply to your next connection from this computer.</source>
-        <translation>言語はすぐに切り替わります。接続設定は、このコンピューターからの次回の接続に適用されます。</translation>
-    </message>
-    <message>
-        <source>Language</source>
-        <translation>言語</translation>
-    </message>
-    <message>
-        <source>Follow system</source>
-        <translation>システムに合わせる</translation>
-    </message>
-    <message>
-        <source>Restart DeskPort to apply this language.</source>
-        <translation>この言語を適用するには DeskPort を再起動してください。</translation>
-    </message>
-    <message>
-        <source>Saved on this computer. Missing translations appear in English.</source>
-        <translation>このコンピューターに保存されます。未翻訳の項目は英語で表示されます。</translation>
-    </message>
-    <message>
-        <source>Picture</source>
-        <translation>映像</translation>
-    </message>
-    <message>
-        <source>Input</source>
-        <translation>入力</translation>
-    </message>
-    <message>
-        <source>Sound</source>
-        <translation>サウンド</translation>
-    </message>
-    <message>
-        <source>Connections</source>
-        <translation>接続</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>詳細</translation>
-    </message>
-    <message>
-        <source>Resolution</source>
-        <translation>解像度</translation>
-    </message>
-    <message>
-        <source>Connection window</source>
-        <translation>接続ウィンドウ</translation>
-    </message>
-    <message>
-        <source>Full screen</source>
-        <translation>全画面</translation>
-    </message>
-    <message>
-        <source>Borderless full screen</source>
-        <translation>ボーダーレス全画面</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>ウィンドウ</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>フレームレート</translation>
-    </message>
-    <message>
-        <source>Bandwidth · %1 Mbps</source>
-        <translation>帯域幅 · %1 Mbps</translation>
-    </message>
-    <message>
-        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
-        <translation>値を上げると画質と帯域使用量が増えます。スライダーを動かさない限り、既存の詳細設定値を維持します。</translation>
-    </message>
-    <message>
-        <source>Synchronize frames to this display</source>
-        <translation>このディスプレイにフレームを同期</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; pointer</source>
-        <translation>キーボードとポインター</translation>
-    </message>
-    <message>
-        <source>Use a desktop-style pointer</source>
-        <translation>デスクトップ用ポインターを使う</translation>
-    </message>
-    <message>
-        <source>Reverse scrolling direction</source>
-        <translation>スクロール方向を反転</translation>
-    </message>
-    <message>
-        <source>Send system shortcuts to the remote computer</source>
-        <translation>システムのショートカットをリモートに送信</translation>
-    </message>
-    <message>
-        <source>Never</source>
-        <translation>しない</translation>
-    </message>
-    <message>
-        <source>Only in full screen</source>
-        <translation>全画面のみ</translation>
-    </message>
-    <message>
-        <source>Always</source>
-        <translation>常に</translation>
-    </message>
-    <message>
-        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
-        <translation>Ctrl + Alt + Shift + Z でリモート入力を解除します。</translation>
-    </message>
-    <message>
-        <source>Mute when DeskPort loses focus</source>
-        <translation>DeskPort が非アクティブのとき消音</translation>
-    </message>
-    <message>
-        <source>Also play audio on the host</source>
-        <translation>ホストでも音声を再生</translation>
-    </message>
-    <message>
-        <source>Discover nearby devices</source>
-        <translation>近くのデバイスを検出</translation>
-    </message>
-    <message>
-        <source>Keep this computer awake while connected</source>
-        <translation>接続中はスリープを防止</translation>
-    </message>
-    <message>
-        <source>Manage saved access</source>
-        <translation>保存済みアクセスを管理</translation>
-    </message>
-    <message>
-        <source>Advanced &amp; support</source>
-        <translation>詳細設定とサポート</translation>
-    </message>
-    <message>
-        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
-        <translation>カスタム解像度、コーデック、HDR、サラウンド、コントローラーは詳細設定で変更できます。</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>詳細設定</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>権限ガイド</translation>
-    </message>
-    <message>
-        <source>Report a problem</source>
-        <translation>問題を報告</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>クライアントのウィンドウ解像度に合わせる</translation>
-    </message>
-    <message>
-        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
-        <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
-    </message>
-    <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
-        <translation>ペアリング済みの両端末で有効にして再接続してください。新しくコピーしたテキストのみ、上限 128 MiB。画像とファイルは共有されません。</translation>
-    </message>
-    <message>
-        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
-        <translation>フォーカス中の映像内ではキーボードがポインターに従います。外に出るとキーとボタンを解放します。クリックでフォーカスし、システム予約キーはローカルに残る場合があります。</translation>
-    </message>
-    <message>
-        <source>Saved · connection changes apply next time you connect.</source>
-        <translation>保存済み · 接続設定は次回接続時に適用されます。</translation>
-    </message>
-    <message>
-        <source>Appearance</source>
-        <translation>外観</translation>
-    </message>
-    <message>
-        <source>Light</source>
-        <translation>ライト</translation>
-    </message>
-    <message>
-        <source>Dark</source>
-        <translation>ダーク</translation>
-    </message>
-    <message>
-        <source>Appearance changes apply immediately.</source>
-        <translation>外観の変更はすぐに適用されます。</translation>
-    </message>
-    <message>
-        <source>Connecting to remote computers</source>
-        <translation>リモートコンピューターへの接続</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>画質プリセット</translation>
-    </message>
-    <message>
-        <source>Choose a preset…</source>
-        <translation>プリセットを選択…</translation>
-    </message>
-    <message>
-        <source>Office · 30 fps / 10 Mbps</source>
-        <translation>オフィス · 30 fps / 10 Mbps</translation>
-    </message>
-    <message>
-        <source>Clear · 60 fps / 40 Mbps</source>
-        <translation>鮮明 · 60 fps / 40 Mbps</translation>
-    </message>
-    <message>
-        <source>Smooth · 60 fps / 15 Mbps</source>
-        <translation>スムーズ · 60 fps / 15 Mbps</translation>
-    </message>
-    <message>
-        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
-        <translation>プリセットはフレームレートと帯域幅のみ変更します。下でネットワークに合わせて調整できます。</translation>
-    </message>
-    <message>
-        <source>Fallback resolution</source>
-        <translation>代替解像度</translation>
-    </message>
-    <message>
-        <source>Sound from the remote computer</source>
-        <translation>リモートコンピューターの音声</translation>
-    </message>
-    <message>
-        <source>Sharing this computer</source>
-        <translation>このコンピューターの共有</translation>
-    </message>
-    <message>
-        <source>Manage incoming access, shared audio and login startup on the Sharing page.</source>
-        <translation>共有ページでアクセス許可、音声共有、ログイン時の起動を管理します。</translation>
-    </message>
-    <message>
-        <source>Open sharing settings</source>
-        <translation>共有設定を開く</translation>
-    </message>
-    <message>
-        <source>Picture adjustments</source>
-        <translation>映像の調整</translation>
-    </message>
-    <message>
-        <source>Smart streaming</source>
-        <translation>スマートストリーミング</translation>
-    </message>
-    <message>
-        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
-        <translation>解像度に応じた帯域上限と滑らかなフレーム表示を使用します。手動設定を使うにはオフにしてください。</translation>
-    </message>
-    <message>
-        <source>Smooth frame pacing</source>
-        <translation>フレーム表示を平滑化</translation>
-    </message>
-    <message>
-        <source>Show streaming statistics</source>
-        <translation>ストリーミング統計を表示</translation>
-    </message>
-    <message>
-        <source>Device connection port</source>
-        <translation>デバイス接続ポート</translation>
-    </message>
-    <message>
-        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
-        <translation>通常は両方のコンピューターで 48991 のままにします。映像と音声のポートは自動管理されます。保存済みデバイスには以前の接続ポートも維持されます。</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>適用</translation>
-    </message>
-    <message>
-        <source>Settings for %1</source>
-        <translation>%1 の設定</translation>
-    </message>
-    <message>
-        <source>These settings apply only to this device. Reconnect to apply changes.</source>
-        <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
-    </message>
-    <message>
-        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
-        <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>保存しました。再接続すると適用されます。</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
-    </message>
-    <message>
-        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
-        <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
-    </message>
-    <message>
-        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
-        <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>このデバイスの音声を受信</translation>
-    </message>
-    <message>
-        <source>Appearance and preferences for this computer only.</source>
-        <translation>このコンピュータの外観と設定です。</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>テーマ</translation>
-    </message>
-    <message>
-        <source>Accent color</source>
-        <translation>アクセントカラー</translation>
-    </message>
-    <message>
-        <source>Blue</source>
-        <translation>ブルー</translation>
-    </message>
-    <message>
-        <source>Green</source>
-        <translation>グリーン</translation>
-    </message>
-    <message>
-        <source>Purple</source>
-        <translation>パープル</translation>
-    </message>
-    <message>
-        <source>Orange</source>
-        <translation>オレンジ</translation>
-    </message>
-    <message>
-        <source>Show data usage in the top bar</source>
-        <translation>上部バーにデータ使用量を表示</translation>
-    </message>
-    <message>
-        <source>Diagnostics and feedback</source>
-        <translation>診断とフィードバック</translation>
-    </message>
-    <message>
-        <source>Enable diagnostic logs</source>
-        <translation>診断ログを有効にする</translation>
-    </message>
-    <message>
-        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
-        <translation>初期設定はオフです。アプリ、内蔵ホスト、画面ヘルパーの接続、操作準備、実行イベント、時刻差、解像度を記録します。変更は即時反映されます。上限は 9 MiB で、実行中に 7 日を超えたログを削除します。</translation>
-    </message>
-    <message>
-        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
-        <translation>IP、ドメイン、デバイス名、自由形式のメッセージは自動的に省略します。入力文字、クリップボード、画面内容は収集しません。起動ごとにランダムな匿名 ID を使用します。詳細が省略されるため、すべての問題を診断できるわけではありません。共有前に確認してください。</translation>
-    </message>
-    <message>
-        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
-        <translation>GitHub の Issue と添付ファイルは公開されます。ZIP を作成し、Issue の下書きを開きます。自動送信はしません。ZIP を確認して Issue にドラッグし、ご自身で送信してください。</translation>
-    </message>
-    <message>
-        <source>Create logs ZIP and open GitHub…</source>
-        <translation>ログ ZIP を作成して GitHub を開く…</translation>
-    </message>
-    <message>
-        <source>Show ZIP in folder</source>
-        <translation>ZIP のフォルダーを開く</translation>
-    </message>
-    <message>
-        <source>Clear saved diagnostics</source>
-        <translation>保存した診断データを削除</translation>
-    </message>
-    <message>
-        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
-        <translation>オフにすると新しい記録を停止します。診断データの削除で既存ログと ZIP を消去します。旧バージョンの生ログは含めません。</translation>
-    </message>
-    <message><source>System</source><translation>システム</translation></message>
-    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>既定ではオフです。ログは共有しない限りこのコンピューターに残ります。記録内容は「プライバシー」を参照してください。</translation></message>
-    <message><source>About</source><translation>このアプリについて</translation></message>
-    <message><source>Version</source><translation>バージョン</translation></message>
-    <message><source>Privacy</source><translation>プライバシー</translation></message>
-    <message><source>Licenses</source><translation>ライセンス</translation></message>
-    <message><source>Create ZIP and open issue</source><translation>ZIP を作成して Issue を開く</translation></message>
-    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort にはアカウントも DeskPort のサーバーもありません。デバイス同士が直接接続します。設定、保存したデバイス、許可はこのコンピューターにのみ保存されます。</translation></message>
-    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>更新の確認では、DeskPort が GitHub に最新リリースを問い合わせます。Moonlight と同様に、公開されているホスト互換性データとコントローラーのマッピングを moonlight-stream.org からダウンロードします。問題の報告はブラウザーで Issue の下書きを開くだけで、送信内容はご自身で決めます。</translation></message>
-    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort は GNU General Public License バージョン 3 以降のもとで提供されるフリーソフトウェアです。Moonlight Qt から派生し、改変した Sunshine ホストを含みます。</translation></message>
-    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>共有の DeskPort カタログは MIT ライセンスで提供されます。OS アイコンはパブリックドメイン（CC0 1.0）です。</translation></message>
-    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt、FFmpeg、SDL などの同梱ライブラリにはそれぞれのライセンスが適用されます。各パッケージにその告知が含まれています。</translation></message>
-    <message><source>Source code and modifications: %1</source><translation>ソースコードと変更内容：%1</translation></message>
-</context>
-<context>
-    <name>DeviceCard</name>
-    <message>
-        <source>Checking</source>
-        <translation>確認中</translation>
-    </message>
-    <message>
-        <source>Online</source>
-        <translation>オンライン</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>オフライン</translation>
-    </message>
-    <message>
-        <source>Device actions</source>
-        <translation>デバイス操作</translation>
-    </message>
-    <message>
-        <source>Looking for an address</source>
-        <translation>アドレスを検索中</translation>
-    </message>
-    <message>
-        <source>Checking connection…</source>
-        <translation>接続を確認中…</translation>
-    </message>
-    <message>
-        <source>Unavailable · check device or network</source>
-        <translation>利用不可 · デバイスやネットワークを確認</translation>
-    </message>
-    <message>
-        <source>Connect to desktop  →</source>
-        <translation>デスクトップに接続  →</translation>
-    </message>
-    <message>
-        <source>Set up access  →</source>
-        <translation>アクセスを設定  →</translation>
-    </message>
-    <message>
-        <source>Return to desktop</source>
-        <translation>デスクトップに戻る</translation>
-    </message>
-    <message>
-        <source>View details</source>
-        <translation>詳細を表示</translation>
-    </message>
-    <message>
-        <source>Checking…</source>
-        <translation>確認中…</translation>
-    </message>
-    <message>
-        <source>Troubleshoot</source>
-        <translation>接続を診断</translation>
-    </message>
-    <message>
-        <source>Connect</source>
-        <translation>接続</translation>
-    </message>
-    <message>
-        <source>Set up access</source>
-        <translation>アクセスを設定</translation>
-    </message>
-    <message>
-        <source>Connected</source>
-        <translation>接続済み</translation>
-    </message>
-    <message>
-        <source>Checking availability</source>
-        <translation>利用可能か確認中</translation>
-    </message>
-    <message>
-        <source>Device settings</source>
-        <translation>デバイス設定</translation>
-    </message>
-    <message>
-        <source>Computer</source>
-        <translation>コンピュータ</translation>
-    </message>
-    <message>
-        <source>Device details</source>
-        <translation>デバイスの詳細</translation>
-    </message>
-    <message>
-        <source>Open</source>
-        <translation>開く</translation>
-    </message>
-    <message>
-        <source>Group actions</source>
-        <translation>グループの操作</translation>
-    </message>
-    <message>
-        <source>1 device</source>
-        <translation>1 台のデバイス</translation>
-    </message>
-    <message>
-        <source>%1 devices</source>
-        <translation>%1 台のデバイス</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>デバイスを追加</translation>
-    </message>
-    <message>
-        <source>New group</source>
-        <translation>新規グループ</translation>
-    </message>
-</context>
-<context>
-    <name>HostView</name>
-    <message>
-        <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
-        <translation>別のデバイスで QR コードを読み取るか URL を開き、ここまたは認証アプリに表示される 6 桁のコードを入力してください。コードは 30 秒ごとに変わります。</translation>
-    </message>
-    <message>
-        <source>Changes in %1 s</source>
-        <translation>%1 秒後に変更</translation>
-    </message>
-    <message>
-        <source>Too many wrong codes. Code sign-in is paused until %1.</source>
-        <translation>誤ったコードが多すぎます。コードでのサインインは %1 まで停止しています。</translation>
-    </message>
-    <message>
-        <source>Hide authenticator QR</source>
-        <translation>認証アプリ用 QR を隠す</translation>
-    </message>
-    <message>
-        <source>Add to authenticator app</source>
-        <translation>認証アプリに追加</translation>
-    </message>
-    <message>
-        <source>Reset code secret</source>
-        <translation>コードの秘密鍵をリセット</translation>
-    </message>
-    <message>
-        <source>Could not save a new code secret. Please try again.</source>
-        <translation>新しいコードの秘密鍵を保存できませんでした。もう一度お試しください。</translation>
-    </message>
-    <message>
-        <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
-        <translation>Ente Auth などの認証アプリで読み取ると、スマートフォンにも同じコードが表示されます。この QR コードを持つ人は誰でもブラウザーからサインインできます。秘密鍵をリセットすると、すべての認証アプリが無効になります。</translation>
-    </message>
-    <message>
-        <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
-        <translation>記憶しないブラウザーは、閉じた後に新しいコードが必要です。接続する前に共有を開始してください。接続するデバイスでローカル HTTPS 証明書を信頼する必要があります。</translation>
-    </message>
-    <message>
-        <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
-        <translation>接続時に「このブラウザーを 7 日間記憶」を選ぶと、そのブラウザーではコードの入力を省略できます。</translation>
-    </message>
-    <message>
-        <source>Browser access is not running.</source>
-        <translation>ブラウザーアクセスは実行されていません。</translation>
-    </message>
-    <message>
-        <source>Browser access is on for this network and your Tailscale network.</source>
-        <translation>ブラウザーアクセスは、このネットワークとあなたの Tailscale ネットワークで有効です。</translation>
-    </message>
-    <message>
-        <source>Browser access is on for this network.</source>
-        <translation>ブラウザーアクセスはこのネットワークで有効です。</translation>
-    </message>
-    <message>
-        <source>Devices signed in to the same Tailscale account connect without the code.</source>
-        <translation>同じ Tailscale アカウントにサインインしているデバイスは、コードなしで接続できます。</translation>
-    </message>
-    <message>
-        <source>Show code</source>
-        <translation>コードを表示</translation>
-    </message>
-    <message>
-        <source>Hide code</source>
-        <translation>コードを隠す</translation>
-    </message>
-    <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>切断すると仮想ディスプレイを削除し、物理画面の配置を復元します。再接続すると新しい仮想ディスプレイを作成します。</translation></message>
-    <message>
-        <source>Sharing</source>
-        <translation>共有</translation>
-    </message>
-    <message>
-        <source>Share this computer.</source>
-        <translation>このコンピューターを共有。</translation>
-    </message>
-    <message>
-        <source>Share a dedicated virtual display. DeskPort stays available when its window is hidden.</source>
-        <translation>専用仮想ディスプレイを共有します。ウィンドウを隠しても利用できます。</translation>
-    </message>
-    <message>
-        <source>Share your current desktop. DeskPort stays available when its window is hidden.</source>
-        <translation>現在のデスクトップを共有します。ウィンドウを隠しても利用できます。</translation>
-    </message>
-    <message>
-        <source>Updating sharing…</source>
-        <translation>共有を更新中…</translation>
-    </message>
-    <message>
-        <source>Sharing is on</source>
-        <translation>共有は有効です</translation>
-    </message>
-    <message>
-        <source>Sharing is off</source>
-        <translation>共有は無効です</translation>
-    </message>
-    <message>
-        <source>Stop sharing</source>
-        <translation>共有を停止</translation>
-    </message>
-    <message>
-        <source>Start sharing</source>
-        <translation>共有を開始</translation>
-    </message>
-    <message>
-        <source>Browser access</source>
-        <translation>ブラウザーアクセス</translation>
-    </message>
-    <message>
-        <source>Browser access code</source>
-        <translation>ブラウザーアクセスコード</translation>
-    </message>
-    <message>
-        <source>Browser URL</source>
-        <translation>ブラウザーURL</translation>
-    </message>
-    <message>
-        <source>Paired browsers</source>
-        <translation>ペアリング済みブラウザー</translation>
-    </message>
-    <message>
-        <source>Remove pairing</source>
-        <translation>ペアリングを解除</translation>
-    </message>
-    <message>
-        <source>Could not save the pairing removal. Please try again.</source>
-        <translation>ペアリングの解除を保存できませんでした。もう一度お試しください。</translation>
-    </message>
-    <message>
-        <source>Access &amp; permissions</source>
-        <translation>アクセスと権限</translation>
-    </message>
-    <message>
-        <source>Only devices you approve can connect. A saved binding does not grant system recording or input permissions.</source>
-        <translation>承認したデバイスのみ接続できます。保存済みの連携はシステムの録画・入力権限を付与しません。</translation>
-    </message>
-    <message>
-        <source>Review permissions</source>
-        <translation>権限を確認</translation>
-    </message>
-    <message>
-        <source>Manage devices</source>
-        <translation>デバイスを管理</translation>
-    </message>
-    <message>
-        <source>Sharing preferences</source>
-        <translation>共有設定</translation>
-    </message>
-    <message>
-        <source>Virtual display size</source>
-        <translation>仮想ディスプレイのサイズ</translation>
-    </message>
-    <message>
-        <source>Choose before starting sharing. Changing size during a session is not available yet.</source>
-        <translation>共有開始前に選択してください。接続中のサイズ変更にはまだ対応していません。</translation>
-    </message>
-    <message>
-        <source>Start sharing when I log in</source>
-        <translation>ログイン時に共有を開始</translation>
-    </message>
-    <message>
-        <source>Hide compatibility &amp; diagnostics</source>
-        <translation>互換性と診断を隠す</translation>
-    </message>
-    <message>
-        <source>Compatibility &amp; diagnostics</source>
-        <translation>互換性と診断</translation>
-    </message>
-    <message>
-        <source>Legacy PIN pairing</source>
-        <translation>従来の PIN ペアリング</translation>
-    </message>
-    <message>
-        <source>For Moonlight or other clients without mutual binding. Enter the PIN shown on that client. This grants access in one direction.</source>
-        <translation>相互連携に非対応の Moonlight などで使用します。クライアントの PIN を入力すると片方向のアクセスを許可します。</translation>
-    </message>
-    <message>
-        <source>Device name</source>
-        <translation>デバイス名</translation>
-    </message>
-    <message>
-        <source>PIN</source>
-        <translation>PIN</translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation>許可</translation>
-    </message>
-    <message>
-        <source>Host port: %1  ·  Binding port: %2</source>
-        <translation>ホストポート：%1  ·  連携ポート：%2</translation>
-    </message>
-    <message>
-        <source>Open host logs</source>
-        <translation>ホストログを開く</translation>
-    </message>
-    <message>
-        <source>Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected.</source>
-        <translation>DeskPort に内蔵されているため、BetterDisplay は不要です。これは待機時の解像度です。承認済みクライアントの接続中は自動調整できます。</translation>
-    </message>
-    <message>
-        <source>Built-in virtual display</source>
-        <translation>内蔵仮想ディスプレイ</translation>
-    </message>
-    <message>
-        <source>Active · %1 × %2 pixels</source>
-        <translation>稼働中 · %1 × %2 ピクセル</translation>
-    </message>
-    <message>
-        <source>Created automatically when sharing starts</source>
-        <translation>共有開始時に自動作成</translation>
-    </message>
-    <message>
-        <source>Your remote workspace stays open when the client window is hidden. After disconnecting, its resolution returns to the idle size. Stopping sharing removes this virtual display.</source>
-        <translation>クライアントのウィンドウを隠してもリモートワークスペースは維持されます。切断後は待機時の解像度に戻り、共有を停止すると仮想ディスプレイが削除されます。</translation>
-    </message>
-    <message>
-        <source>Workspace · %1 × %2 · %3× scaling</source>
-        <translation>ワークスペース · %1 × %2 · %3倍表示</translation>
-    </message>
-    <message>
-        <source>Login startup is installed by this computer's system configuration. Change it there, not here.</source>
-        <translation>ログイン時の起動は、このコンピューターのシステム設定で管理されています。変更はそちらで行ってください。</translation>
-    </message>
-    <message>
-        <source>Sharing service is running</source>
-        <translation>共有サービス実行中</translation>
-    </message>
-    <message>
-        <source>Connection readiness</source>
-        <translation>接続の準備状況</translation>
-    </message>
-    <message>
-        <source>Start sharing to accept connections.</source>
-        <translation>共有を開始すると接続を受け付けます。</translation>
-    </message>
-    <message>
-        <source>Sharing needs permission. Review the items below.</source>
-        <translation>共有には権限が必要です。以下を確認してください。</translation>
-    </message>
-    <message>
-        <source>Service available. Verify picture and control from an approved device.</source>
-        <translation>サービスは利用可能です。承認済みの端末で映像と操作を確認してください。</translation>
-    </message>
-    <message>
-        <source>Allowed</source>
-        <translation>許可済み</translation>
-    </message>
-    <message>
-        <source>Verify when sharing</source>
-        <translation>共有時に確認</translation>
-    </message>
-    <message>
-        <source>Optional · audio is off</source>
-        <translation>任意 · 音声共有はオフ</translation>
-    </message>
-    <message>
-        <source>Needs attention</source>
-        <translation>確認が必要</translation>
-    </message>
-    <message>
-        <source>Open system settings</source>
-        <translation>システム設定を開く</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>権限ガイド</translation>
-    </message>
-    <message>
-        <source>Approved DeskPort devices: %1</source>
-        <translation>承認済みの DeskPort 端末：%1</translation>
-    </message>
-    <message>
-        <source>Saved approval and network reachability are separate. Legacy PIN clients are managed separately.</source>
-        <translation>承認の保存とネットワーク到達性は別です。従来の PIN クライアントは個別に管理します。</translation>
-    </message>
-    <message>
-        <source>Share this computer's sound</source>
-        <translation>このコンピューターの音声を共有</translation>
-    </message>
-    <message>
-        <source>Saved · restart sharing to apply audio changes.</source>
-        <translation>保存済み · 音声設定は共有の再起動後に適用されます。</translation>
-    </message>
-    <message>
-        <source>Save bandwidth on static screens</source>
-        <translation>静止画面で帯域を節約</translation>
-    </message>
-    <message>
-        <source>Skips unchanged frames and reduces frame rate during repeated packet loss. Applies when sharing restarts.</source>
-        <translation>変化のないフレームを省略し、パケット損失が続くとフレームレートを下げます。共有の再起動後に適用されます。</translation>
-    </message>
-    <message>
-        <source>Saved · restart sharing to apply changes.</source>
-        <translation>保存済み · 変更を適用するには共有を再起動してください。</translation>
-    </message>
-    <message>
-        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
-        <translation>映像・音声・入力は接続するデバイスで設定します。再接続後に適用されます。</translation>
-    </message>
-    <message>
-        <source>Device connection port</source>
-        <translation>デバイス接続ポート</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>適用</translation>
-    </message>
-    <message>
-        <source>Unattended operation</source>
-        <translation>無人運用</translation>
-    </message>
-    <message>
-        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
-        <translation>DeskPort を自動起動し、停止した場合は復旧します。システム設定での初回承認と、デスクトップへのログインが必要です。FileVault のロック解除や自動ログインの設定は行いません。</translation>
-    </message>
-    <message>
-        <source>Open background permissions</source>
-        <translation>バックグラウンド権限を開く</translation>
-    </message>
-    <message>
-        <source>Ask client to leave fullscreen</source>
-        <translation>クライアントの全画面表示を解除</translation>
-    </message>
-    <message>
-        <source>Created when an approved client connects</source>
-        <translation>承認済みクライアントの接続時に作成</translation>
-    </message>
-    <message>
-        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
-        <translation>切断すると物理ディスプレイを復元し、仮想ディスプレイを削除します。短いネットワーク切断では復旧のため作業領域を維持します。</translation>
-    </message>
-    <message>
-        <source>Report a problem…</source>
-        <translation>問題を報告…</translation>
-    </message>
-    <message>
-        <source>Shared Windows display</source>
-        <translation>共有 Windows ディスプレイ</translation>
-    </message>
-    <message>
-        <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
-        <translation>この Windows デスクトップを共有します。切断後、対応する解像度に復元されます</translation>
-    </message>
-    <message>
-        <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
-        <translation>この Windows デスクトップを使用します。切断すると元の解像度に戻ります。未対応のサイズはディスプレイを変更せずに通知されます。</translation>
-    </message>
-    <message>
-        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
-        <translation>クライアントのウィンドウサイズに合わせて仮想デスクトップを作成します。クライアントでミラー、専用、拡張を選択できます。切断すると以前の画面配置に戻ります。</translation>
-    </message>
-</context>
-<context>
-    <name>BindView</name>
-    <message>
-        <source>Add a device</source>
-        <translation>デバイスを追加</translation>
-    </message>
-    <message>
-        <source>One confirmation. Both directions.</source>
-        <translation>一度の承認で双方向に接続。</translation>
-    </message>
-    <message>
-        <source>Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.</source>
-        <translation>両方で DeskPort を開き、アドレスを入力して相手側で承認してください。</translation>
-    </message>
-    <message>
-        <source>Where do you want to connect?</source>
-        <translation>接続先を指定</translation>
-    </message>
-    <message>
-        <source>IP address or computer name</source>
-        <translation>IP アドレスまたはコンピューター名</translation>
-    </message>
-    <message>
-        <source>Send request</source>
-        <translation>リクエストを送信</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>キャンセル</translation>
-    </message>
-    <message>
-        <source>Approval lets both computers view and control each other. System permissions are still required on each device.</source>
-        <translation>承認すると互いの画面表示と操作が可能になります。システム権限は各デバイスで必要です。</translation>
-    </message>
-    <message>
-        <source>Saved access</source>
-        <translation>保存済みアクセス</translation>
-    </message>
-    <message>
-        <source>Your approved devices will appear here.</source>
-        <translation>承認済みデバイスがここに表示されます。</translation>
-    </message>
-    <message>
-        <source>Bound both ways</source>
-        <translation>相互連携済み</translation>
-    </message>
-    <message>
-        <source>Incomplete</source>
-        <translation>未完了</translation>
-    </message>
-    <message>
-        <source>Remove access to this computer</source>
-        <translation>このコンピューターへのアクセスを削除</translation>
-    </message>
-    <message>
-        <source>Connecting another way?</source>
-        <translation>別の方法で接続しますか？</translation>
-    </message>
-    <message>
-        <source>For a custom binding port, enter address:port. Moonlight and independent Sunshine hosts use legacy pairing instead.</source>
-        <translation>カスタム連携ポートは アドレス:ポート で指定します。Moonlight と独立した Sunshine は従来のペアリングを使います。</translation>
-    </message>
-    <message>
-        <source>Add a legacy host</source>
-        <translation>従来のホストを追加</translation>
-    </message>
-    <message>
-        <source>Remove device access?</source>
-        <translation>デバイスのアクセスを削除しますか？</translation>
-    </message>
-    <message>
-        <source>%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.</source>
-        <translation>%1 はこのコンピューターを操作できなくなります。双方向で解除するには相手側の連携も削除してください。</translation>
-    </message>
-    <message><source>Edit device</source><translation>デバイスを編集</translation></message>
-    <message><source>Device name</source><translation>デバイス名</translation></message>
-    <message><source>Domain name or IP address</source><translation>ドメイン名または IP アドレス</translation></message>
-    <message><source>Computer name or IP, without port</source><translation>コンピューター名または IP（ポートなし）</translation></message>
-    <message><source>A domain name is saved as entered and resolved again when connecting.</source><translation>ドメイン名は入力どおりに保存され、接続時に再解決されます。</translation></message>
-    <message><source>Host port</source><translation>ホストポート</translation></message>
-    <message><source>Binding port</source><translation>バインドポート</translation></message>
-    <message><source>Save</source><translation>保存</translation></message>
-    <message>
-        <source>Advanced port overrides</source>
-        <translation>ポートの詳細設定</translation>
-    </message>
-    <message>
-        <source>Client access</source>
-        <translation>クライアントアクセス</translation>
-    </message>
-    <message>
-        <source>Discover nearby devices</source>
-        <translation>近くのデバイスを検出</translation>
-    </message>
-    <message>
-        <source>Request access to a computer</source>
-        <translation>コンピューターへのアクセスを要求</translation>
-    </message>
-    <message>
-        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
-        <translation>承認すると、このデバイスから相手のコンピューターを表示・操作できます。このデバイス自身のデスクトップは共有されません。</translation>
-    </message>
-    <message>
-        <source>Host access</source>
-        <translation>ホストアクセス</translation>
-    </message>
-    <message>
-        <source>Forget saved binding</source>
-        <translation>保存済みの連携を削除</translation>
-    </message>
-    <message>
-        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
-        <translation>このデバイスに保存された %1 の連携を削除しますか？デバイス一覧からは別途削除してください。このデバイスのアクセス権を取り消すには、ホスト側でも削除してください。</translation>
-    </message>
-    <message><source>Remove</source><translation>削除</translation></message>
-</context>
-<context>
-    <name>SetupView</name>
-    <message>
-        <source>Getting started</source>
-        <translation>初期設定</translation>
-    </message>
-    <message>
-        <source>Set up this computer.</source>
-        <translation>このコンピューターを設定。</translation>
-    </message>
-    <message>
-        <source>Connect to another computer right away. To share this one, review its permissions below.</source>
-        <translation>他のコンピューターにはすぐ接続できます。このコンピューターを共有する場合は以下の権限を確認してください。</translation>
-    </message>
-    <message>
-        <source>Allowed</source>
-        <translation>許可済み</translation>
-    </message>
-    <message>
-        <source>Checked when sharing</source>
-        <translation>共有時に確認</translation>
-    </message>
-    <message>
-        <source>Not requested</source>
-        <translation>未要求</translation>
-    </message>
-    <message>
-        <source>Restricted by system</source>
-        <translation>システムによる制限</translation>
-    </message>
-    <message>
-        <source>Needs attention</source>
-        <translation>確認が必要</translation>
-    </message>
-    <message>
-        <source>Skip for now · only connect to other devices</source>
-        <translation>今はスキップ · 他のデバイスへの接続のみ</translation>
-    </message>
-    <message>
-        <source>1. Review permissions    2. Add a device    3. Confirm and connect</source>
-        <translation>1. 権限を確認    2. デバイスを追加    3. 承認して接続</translation>
-    </message>
-    <message>
-        <source>Open system settings</source>
-        <translation>システム設定を開く</translation>
-    </message>
-    <message>
-        <source>Your Linux configuration must allow your user to access /dev/uinput. Connecting to other computers does not need this permission.</source>
-        <translation>Linux ではユーザーに /dev/uinput へのアクセスが必要です。他のコンピューターへの接続には不要です。</translation>
-    </message>
-    <message>
-        <source>Authorize the installed DeskPort app</source>
-        <translation>インストール済み DeskPort に権限を付与</translation>
-    </message>
-    <message>
-        <source>If a settings pane accepts adding an app, drag the tile below into its list, then turn the switch on. Otherwise use Reveal in Finder. Some panes list DeskPort only after sharing has requested access.</source>
-        <translation>アプリを追加できる設定では、下のタイルをリストにドラッグして有効にします。それ以外は「Finder に表示」を使います。共有が権限を要求した後にのみ DeskPort が表示される場合もあります。</translation>
-    </message>
-    <message>
-        <source>DeskPort.app  ·  Drag to Settings</source>
-        <translation>DeskPort.app  ·  設定にドラッグ</translation>
-    </message>
-    <message>
-        <source>Reveal in Finder</source>
-        <translation>Finder に表示</translation>
-    </message>
-    <message>
-        <source>After changing permissions, restart sharing. If macOS asks you to reopen DeskPort, follow that prompt. Permission checks do not replace a real picture and input test.</source>
-        <translation>権限変更後に共有を再開してください。macOS が DeskPort の再起動を求めたら従ってください。実際の映像と入力も確認する必要があります。</translation>
-    </message>
-    <message>
-        <source>Check again</source>
-        <translation>再確認</translation>
-    </message>
-    <message>
-        <source>Continue to devices</source>
-        <translation>デバイス一覧へ</translation>
-    </message>
-</context>
-<context>
-    <name>BindingApproval</name>
-    <message>
-        <source>Bind with this device?</source>
-        <translation>このデバイスと連携しますか？</translation>
-    </message>
-    <message>
-        <source>Not now</source>
-        <translation>後で</translation>
-    </message>
-    <message>
-        <source>Allow &amp; bind</source>
-        <translation>許可して連携</translation>
-    </message>
-    <message>
-        <source>Allow this device and this computer to view and control each other? Binding saves permission without starting a connection or interrupting existing sessions. Choose Connect when you are ready. Accept only a request you are expecting.</source>
-        <translation>このデバイスとコンピューターの相互表示・操作を許可しますか？登録は権限のみを保存し、接続を開始したり既存のセッションを中断したりしません。準備ができたら接続を選択してください。心当たりのある要求のみ承認してください。</translation>
-    </message>
-    <message>
-        <source>Allow this device to view and control this computer? Binding saves permission without starting a connection or interrupting existing sessions. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
-        <translation>このデバイスによるコンピューターの表示と操作を許可しますか？登録は権限のみを保存し、接続を開始したり既存のセッションを中断したりしません。要求元のデバイスへのアクセスは許可されません。心当たりのある要求のみ承認してください。</translation>
-    </message>
-</context>
-<context>
-    <name>HostManager</name>
-    <message>
-        <source>Restart</source>
-        <translation>再起動</translation>
-    </message>
-    <message>
-        <source>Quit</source>
-        <translation>終了</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation>切断</translation>
-    </message>
-    <message>
-        <source>Restart DeskPort</source>
-        <translation>DeskPort を再起動</translation>
-    </message>
-    <message>
-        <source>Sharing</source>
-        <translation>共有</translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>ウィンドウ</translation>
-    </message>
-    <message>
-        <source>Applications</source>
-        <translation>アプリ</translation>
-    </message>
-    <message>
-        <source>Sharing is off</source>
-        <translation>共有は無効です</translation>
-    </message>
-    <message>
-        <source>Stop sharing</source>
-        <translation>共有を停止</translation>
-    </message>
-    <message>
-        <source>PIN</source>
-        <translation>PIN</translation>
-    </message>
-    <message>
-        <source>Screen &amp; system audio</source>
-        <translation>画面とシステム音声</translation>
-    </message>
-    <message>
-        <source>Let a connected device see this desktop and hear its sound.</source>
-        <translation>接続したデバイスに画面と音声を共有します。</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; mouse</source>
-        <translation>キーボードとマウス</translation>
-    </message>
-    <message>
-        <source>Let a device you approve control this computer.</source>
-        <translation>承認済みデバイスによる操作を許可します。</translation>
-    </message>
-    <message>
-        <source>Audio input</source>
-        <translation>音声入力</translation>
-    </message>
-    <message>
-        <source>Needed only when your sharing audio path uses microphone access.</source>
-        <translation>音声共有でマイクへのアクセスを使う場合のみ必要です。</translation>
-    </message>
-    <message>
-        <source>Desktop capture</source>
-        <translation>デスクトップのキャプチャ</translation>
-    </message>
-    <message>
-        <source>KDE uses the current desktop. Other desktops may ask you to choose a screen when sharing starts.</source>
-        <translation>KDE は現在のデスクトップを使用します。他の環境では共有開始時に画面選択を求める場合があります。</translation>
-    </message>
-    <message>
-        <source>Remote control requires access to the system input device.</source>
-        <translation>リモート操作にはシステム入力デバイスへのアクセスが必要です。</translation>
-    </message>
-    <message>
-        <source>Open DeskPort</source>
-        <translation>DeskPort を開く</translation>
-    </message>
-    <message>
-        <source>Quit DeskPort</source>
-        <translation>DeskPort を終了</translation>
-    </message>
-    <message>
-        <source>Disconnect viewer</source>
-        <translation>ビューアーを切断</translation>
-    </message>
-    <message>
-        <source> Retrying automatically in %1 seconds.</source>
-        <translation> %1 秒後に自動で再試行します。</translation>
-    </message>
-    <message>
-        <source>Reconnect</source>
-        <translation>再接続</translation>
-    </message>
-    <message>
-        <source>Unattended operation</source>
-        <translation>無人運用</translation>
-    </message>
-    <message>
-        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
-        <translation>自動復旧を一時停止して終了しますか？次回 DeskPort を開くと再開します。</translation>
-    </message>
-    <message>
-        <source>Pause and quit</source>
-        <translation>一時停止して終了</translation>
-    </message>
-    <message>
-        <source>Turn off unattended operation before disabling login startup.</source>
-        <translation>ログイン時の起動を無効にする前に、無人運用をオフにしてください。</translation>
-    </message>
-    <message>
-        <source>Cannot save unattended preferences.</source>
-        <translation>無人運用の設定を保存できません。</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>オフ</translation>
-    </message>
-    <message>
-        <source>Waiting for approval in System Settings</source>
-        <translation>システム設定での承認待ち</translation>
-    </message>
-    <message>
-        <source>Recovery service needs setup. Turn it off and on to try again.</source>
-        <translation>復旧サービスの設定が必要です。オフにしてからオンにしてください。</translation>
-    </message>
-    <message>
-        <source>Enabled; waiting for the recovery service to check in</source>
-        <translation>有効：復旧サービスの確認待ち</translation>
-    </message>
-    <message>
-        <source>Recovery has not checked in. Review background permissions.</source>
-        <translation>復旧サービスから応答がありません。バックグラウンド権限を確認してください。</translation>
-    </message>
-    <message>
-        <source>Enabled; recovery service is checking this Mac</source>
-        <translation>有効：復旧サービスがこの Mac を確認しています</translation>
-    </message>
-    <message>
-        <source>Waiting for a logged-in desktop session</source>
-        <translation>デスクトップへのログイン待ち</translation>
-    </message>
-    <message>
-        <source>Recovery needs attention. Check login startup and background permissions.</source>
-        <translation>復旧に対応が必要です。ログイン時の起動とバックグラウンド権限を確認してください。</translation>
-    </message>
-    <message>
-        <source>Install DeskPort in Applications before enabling unattended operation.</source>
-        <translation>無人運用を有効にする前に DeskPort を「アプリケーション」にインストールしてください。</translation>
-    </message>
-    <message>
-        <source>Cannot enable login startup.</source>
-        <translation>ログイン時の起動を有効にできません。</translation>
-    </message>
-</context>
-<context>
-<name>DesktopSegue</name>
-<message><source>This device has no Desktop entry. Open Applications from the device menu to choose an app.</source><translation>このデバイスに Desktop がありません。デバイスメニューの Applications からアプリを選択してください。</translation></message>
-<message><source>Another application is running on this device. Open Applications from the device menu to resume it or switch to Desktop.</source><translation>別のアプリが実行中です。デバイスメニューの Applications から再開するか Desktop に切り替えてください。</translation></message>
-<message><source>Unable to prepare the desktop connection. Try again.</source><translation>デスクトップ接続を準備できません。再試行してください。</translation></message>
-<message><source>The device disconnected. Return to Devices and try again.</source><translation>デバイスが切断されました。デバイス一覧に戻って再試行してください。</translation></message>
-<message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>デスクトップの読み込みがタイムアウトしました。デバイス一覧から再試行してください。</translation></message>
-<message><source>Connecting to desktop…</source><translation>デスクトップに接続中…</translation></message>
-<message><source>Back to devices</source><translation>デバイス一覧に戻る</translation></message>
-    <message><source>Close</source><translation>閉じる</translation></message>
-    <message><source>Cancel</source><translation>キャンセル</translation></message>
-</context>
-<context>
-    <name>DeviceSettings</name>
-    <message>
-        <source>Device settings</source>
-        <translation>デバイス設定</translation>
-    </message>
-    <message>
-        <source>Saved only for this device. Changes apply on the next connection.</source>
-        <translation>このデバイス専用の設定です。次回の接続時に適用されます。</translation>
-    </message>
-    <message>
-        <source>Picture mode</source>
-        <translation>画質モード</translation>
-    </message>
-    <message>
-        <source>Automatic (recommended)</source>
-        <translation>自動（推奨）</translation>
-    </message>
-    <message>
-        <source>Clear</source>
-        <translation>鮮明さ優先</translation>
-    </message>
-    <message>
-        <source>Smooth</source>
-        <translation>滑らかさ優先</translation>
-    </message>
-    <message>
-        <source>Save data</source>
-        <translation>データ節約</translation>
-    </message>
-    <message>
-        <source>Custom</source>
-        <translation>カスタム</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>クライアントのウィンドウ解像度に合わせる</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>このデバイスの音声を受信</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
-    </message>
-    <message>
-        <source>Advanced streaming settings</source>
-        <translation>配信の詳細設定</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>保存しました。再接続すると適用されます。</translation>
-    </message>
-
-    <message><source>Virtual screen</source><translation>仮想ディスプレイ</translation></message>
-    <message><source>Primary screen and mirror others (default)</source><translation>メインにして他の画面をミラーリング（既定）</translation></message>
-    <message><source>Primary screen and turn off others</source><translation>メインにして他の画面を無効にする</translation></message>
-    <message><source>Use client as an extended screen</source><translation>クライアントを拡張ディスプレイにする</translation></message>
-    <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>セッション終了時に元の画面配置を自動で復元します。</translation></message>
-    <message><source>Domain name or IP address</source><translation>ドメイン名または IP アドレス</translation></message>
-    <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>既存のペアリングは保持されます。再接続すると保存したアドレスを使用します。</translation></message>
-    <message><source>Computer name or IP, without port</source><translation>コンピュータ名または IP（ポートなし）</translation></message>
-    <message><source>Save</source><translation>保存</translation></message>
-    <message><source>Desktop adjustment</source><translation>デスクトップの微調整</translation></message>
-    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 では操作項目を大きく、0.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation></message>
-    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>macOS の最小デスクトップ（800 × 600）に達したため、このウィンドウではこれ以上拡大できません。全画面表示か、より大きなウィンドウを使用してください。</translation></message>
-    <message>
-        <source>Full screen</source>
-        <translation>フルスクリーン</translation>
-    </message>
-    <message>
-        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
-        <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
-    </message>
-    <message><source>Desktop fine tuning</source><translation>デスクトップの微調整</translation></message>
-    <message><source>Main + mirror</source><translation>メイン + ミラー</translation></message>
-    <message><source>Main only</source><translation>メインのみ</translation></message>
-    <message><source>Extended</source><translation>拡張</translation></message>
-    <message><source>Fit to window</source><translation>ウィンドウに合わせる</translation></message>
-    <message><source>Sound</source><translation>サウンド</translation></message>
-    <message><source>Input</source><translation>入力</translation></message>
-</context>
-<context>
-    <name>DeviceAdvanced</name>
-    <message>
-        <source>Advanced streaming settings</source>
-        <translation>配信の詳細設定</translation>
-    </message>
-    <message>
-        <source>Settings for %1</source>
-        <translation>%1 の設定</translation>
-    </message>
-    <message>
-        <source>Make DeskPort your own.</source>
-        <translation>DeskPort を自分好みに。</translation>
-    </message>
-    <message>
-        <source>These settings apply only to this device. Reconnect to apply changes.</source>
-        <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
-    </message>
-    <message>
-        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
-        <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>保存しました。再接続すると適用されます。</translation>
-    </message>
-    <message>
-        <source>Connecting to remote computers</source>
-        <translation>リモートコンピューターへの接続</translation>
-    </message>
-    <message>
-        <source>Picture</source>
-        <translation>映像</translation>
-    </message>
-    <message>
-        <source>Input</source>
-        <translation>入力</translation>
-    </message>
-    <message>
-        <source>Sound</source>
-        <translation>サウンド</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>詳細</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>クライアントのウィンドウ解像度に合わせる</translation>
-    </message>
-    <message>
-        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
-        <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
-    </message>
-    <message>
-        <source>Smart streaming</source>
-        <translation>スマートストリーミング</translation>
-    </message>
-    <message>
-        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
-        <translation>解像度に応じた帯域上限と滑らかなフレーム表示を使用します。手動設定を使うにはオフにしてください。</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>画質プリセット</translation>
-    </message>
-    <message>
-        <source>Choose a preset…</source>
-        <translation>プリセットを選択…</translation>
-    </message>
-    <message>
-        <source>Office · 30 fps / 10 Mbps</source>
-        <translation>オフィス · 30 fps / 10 Mbps</translation>
-    </message>
-    <message>
-        <source>Clear · 60 fps / 40 Mbps</source>
-        <translation>鮮明 · 60 fps / 40 Mbps</translation>
-    </message>
-    <message>
-        <source>Smooth · 60 fps / 15 Mbps</source>
-        <translation>スムーズ · 60 fps / 15 Mbps</translation>
-    </message>
-    <message>
-        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
-        <translation>プリセットはフレームレートと帯域幅のみ変更します。下でネットワークに合わせて調整できます。</translation>
-    </message>
-    <message>
-        <source>Picture adjustments</source>
-        <translation>映像の調整</translation>
-    </message>
-    <message>
-        <source>Fallback resolution</source>
-        <translation>代替解像度</translation>
-    </message>
-    <message>
-        <source>Resolution</source>
-        <translation>解像度</translation>
-    </message>
-    <message>
-        <source>Connection window</source>
-        <translation>接続ウィンドウ</translation>
-    </message>
-    <message>
-        <source>Full screen</source>
-        <translation>全画面</translation>
-    </message>
-    <message>
-        <source>Borderless full screen</source>
-        <translation>ボーダーレス全画面</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>ウィンドウ</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>フレームレート</translation>
-    </message>
-    <message>
-        <source>Bandwidth · %1 Mbps</source>
-        <translation>帯域幅 · %1 Mbps</translation>
-    </message>
-    <message>
-        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
-        <translation>値を上げると画質と帯域使用量が増えます。スライダーを動かさない限り、既存の詳細設定値を維持します。</translation>
-    </message>
-    <message>
-        <source>Smooth frame pacing</source>
-        <translation>フレーム表示を平滑化</translation>
-    </message>
-    <message>
-        <source>Show streaming statistics</source>
-        <translation>ストリーミング統計を表示</translation>
-    </message>
-    <message>
-        <source>Synchronize frames to this display</source>
-        <translation>このディスプレイにフレームを同期</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; pointer</source>
-        <translation>キーボードとポインター</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>キーボード・ポインター・コントローラー入力を許可</translation>
-    </message>
-    <message>
-        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
-        <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
-    </message>
-    <message>
-        <source>Use a desktop-style pointer</source>
-        <translation>デスクトップ用ポインターを使う</translation>
-    </message>
-    <message>
-        <source>Always show a local pointer in desktop mode</source>
-        <translation>デスクトップモードでローカルポインターを常に表示</translation>
-    </message>
-    <message>
-        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
-        <translation>ホストがカーソルを隠してもポインターを表示します。2つ表示される場合はオフにしてください。</translation>
-    </message>
-    <message>
-        <source>Reverse scrolling direction</source>
-        <translation>スクロール方向を反転</translation>
-    </message>
-    <message>
-        <source>Send system shortcuts to the remote computer</source>
-        <translation>システムのショートカットをリモートに送信</translation>
-    </message>
-    <message>
-        <source>Never</source>
-        <translation>しない</translation>
-    </message>
-    <message>
-        <source>Only in full screen</source>
-        <translation>全画面のみ</translation>
-    </message>
-    <message>
-        <source>Always</source>
-        <translation>常に</translation>
-    </message>
-    <message>
-        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
-        <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>セッション中にテキスト、画像、ファイルを共有</translation>
-    </message>
-    <message>
-        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
-        <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
-    </message>
-    <message>
-        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
-        <translation>フォーカス中の映像内ではキーボードがポインターに従います。外に出るとキーとボタンを解放します。クリックでフォーカスし、システム予約キーはローカルに残る場合があります。</translation>
-    </message>
-    <message>
-        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
-        <translation>Ctrl + Alt + Shift + Z でリモート入力を解除します。</translation>
-    </message>
-    <message>
-        <source>Sound from the remote computer</source>
-        <translation>リモートコンピューターの音声</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>このデバイスの音声を受信</translation>
-    </message>
-    <message>
-        <source>Mute when DeskPort loses focus</source>
-        <translation>DeskPort が非アクティブのとき消音</translation>
-    </message>
-    <message>
-        <source>Also play audio on the host</source>
-        <translation>ホストでも音声を再生</translation>
-    </message>
-    <message>
-        <source>Advanced &amp; support</source>
-        <translation>詳細設定とサポート</translation>
-    </message>
-    <message>
-        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
-        <translation>カスタム解像度、コーデック、HDR、サラウンド、コントローラーは詳細設定で変更できます。</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>詳細設定</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>権限ガイド</translation>
-    </message>
-    <message>
-        <source>Report a problem</source>
-        <translation>問題を報告</translation>
-    </message>
-    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>自動は解像度に応じて帯域幅を設定し、ネットワークに合わせて調整します。データ節約は30 fps、映像上限5 Mbpsです。上部バーのデータセーバースイッチはすべてのデバイスの映像ビットレートを制限します。</translation></message>
-    <message><source>Picture mode</source><translation>画質モード</translation></message>
-    <message><source>Automatic (recommended)</source><translation>自動（推奨）</translation></message>
-    <message><source>Clear</source><translation>鮮明さ優先</translation></message>
-    <message><source>Smooth</source><translation>滑らかさ優先</translation></message>
-    <message><source>Save data</source><translation>データ節約</translation></message>
-    <message><source>Custom</source><translation>カスタム</translation></message>
-    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation></message>
-    <message><source>Bandwidth</source><translation>帯域幅</translation></message>
-    <message><source>Automatic</source><translation>自動</translation></message>
-    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
-    <message><source>All streaming options</source><translation>すべての配信オプション</translation></message>
-</context>
-<context>
-    <name>SdlInputHandler</name>
-    <message><source>DeskPort — Remote keyboard · Ctrl+Alt+Shift+Z releases</source><translation>DeskPort — リモートキーボード · Ctrl+Alt+Shift+Z で解放</translation></message>
-    <message><source>DeskPort — Remote typing · system shortcuts local</source><translation>DeskPort — リモート入力 · システムショートカットはローカル</translation></message>
-    <message><source>DeskPort — Local keyboard · click inside to focus</source><translation>DeskPort — ローカルキーボード · 画面内をクリックして操作</translation></message>
-</context>
-<context>
-    <name>ClipboardChannel</name>
-    <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>クリップボード共有が停止しました。再接続してお試しください。</translation></message>
-    <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>クリップボード共有を利用できません。再接続してお試しください。デスクトップ操作には影響しません。</translation></message>
-</context>
-<context>
-    <name>NavigableDialog</name>
-    <message><source>Close</source><translation>閉じる</translation></message>
-</context>
-<context>
-    <name>DevicePanel</name>
-    <message><source>Remove device</source><translation>デバイスを削除</translation></message>
-    <message><source>Connected</source><translation>接続済み</translation></message>
-    <message><source>Checking…</source><translation>確認中…</translation></message>
-    <message><source>Online</source><translation>オンライン</translation></message>
-    <message><source>Online · access not set up</source><translation>オンライン · アクセス未設定</translation></message>
-    <message><source>Offline</source><translation>オフライン</translation></message>
-    <message><source>Device settings</source><translation>デバイス設定</translation></message>
-    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>%1 で DeskPort またはホストが動作していて、両方のデバイスが互いに到達できることを確認してください。上部バーの更新で再確認します。</translation></message>
-    <message><source>Original name</source><translation>元の名前</translation></message>
-    <message><source>System</source><translation>システム</translation></message>
-    <message><source>Unknown</source><translation>不明</translation></message>
-    <message><source>Connection</source><translation>接続方法</translation></message>
-    <message><source>DeskPort binding</source><translation>DeskPort 連携</translation></message>
-    <message><source>Legacy pairing</source><translation>従来のペアリング</translation></message>
-    <message><source>Not set up</source><translation>未設定</translation></message>
-    <message><source>Address</source><translation>アドレス</translation></message>
-    <message><source>Technical details</source><translation>技術的な詳細</translation></message>
-    <message><source>Reconnect</source><translation>再接続</translation></message>
-    <message><source>Toggle full screen</source><translation>フルスクリーンの切り替え</translation></message>
-    <message><source>Disconnect</source><translation>切断</translation></message>
-    <message><source>Change address</source><translation>アドレスを変更</translation></message>
-    <message><source>Set alias</source><translation>別名を設定</translation></message>
-    <message><source>Pair with a legacy PIN</source><translation>従来の PIN でペアリング</translation></message>
-    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>Sunshine など、DeskPort 連携に対応していないホスト向けです。</translation></message>
-    <message><source>Move out of group</source><translation>グループから出す</translation></message>
-    <message><source>Remove from list</source><translation>リストから削除</translation></message>
-</context>
-<context>
-    <name>HelpView</name>
-    <message><source>Manual</source><translation>マニュアル</translation></message>
-</context>
-<context><name>MainWindow</name>
-    <message><source>Disconnecting…</source><translation>切断中…</translation></message>
-</context>
+    <context>
+        <name>AppView</name>
+        <message>
+            <location filename="../gui/AppView.qml" line="145" />
+            <location filename="../gui/AppView.qml" line="303" />
+            <source>Resume Game</source>
+            <translation>ゲームを再開</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="173" />
+            <location filename="../gui/AppView.qml" line="308" />
+            <source>Quit Game</source>
+            <translation>ゲームを終了</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="303" />
+            <source>Launch Game</source>
+            <translation>ゲームを起動</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="316" />
+            <source>Direct Launch</source>
+            <translation>ダイレクト起動</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="320" />
+            <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
+            <translation>ホストが選択された際、アプリ選択画面をスキップして直接このアプリを起動する。</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="329" />
+            <source>Hide Game</source>
+            <translation>ゲームを非表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="333" />
+            <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
+            <translation>アプリ画面からこのゲームを非表示にする。非表示のゲームにアクセスするには、ホストを右クリックして%1を選択してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="333" />
+            <source>View All Apps</source>
+            <translation>すべてのアプリを表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="348" />
+            <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
+            <translation>本当に%1を終了しますか？未セーブの進行状況はすべて失われます。</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliPair</name>
+        <message>
+            <location filename="../gui/CliPair.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>PCとの接続を確立しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliPair.qml" line="13" />
+            <source>Pairing... Please enter '%1' on %2.</source>
+            <translation>ペアリング中... '%1' を %2 に入力してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliPair.qml" line="85" />
+            <source>Pairing completed successfully</source>
+            <translation>ペアリング成功</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliQuitStreamSegue</name>
+        <message>
+            <location filename="../gui/CliQuitStreamSegue.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>PCとの接続を確立しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliQuitStreamSegue.qml" line="13" />
+            <source>Quitting app...</source>
+            <translation>アプリを終了しています...</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliStartStreamSegue</name>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>PCとの接続を確立しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="13" />
+            <source>Loading app list...</source>
+            <translation>アプリ一覧をロードしています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="82" />
+            <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
+            <translation>本当に%1を終了しますか？未セーブの進行状況はすべて失われます。</translation>
+        </message>
+    </context>
+    <context>
+        <name>ComputerModel</name>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="50" />
+            <source>Online</source>
+            <translation>オンライン</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="53" />
+            <source>Offline</source>
+            <translation>オフライン</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="56" />
+            <location filename="../gui/computermodel.cpp" line="68" />
+            <location filename="../gui/computermodel.cpp" line="80" />
+            <location filename="../gui/computermodel.cpp" line="82" />
+            <location filename="../gui/computermodel.cpp" line="83" />
+            <source>Unknown</source>
+            <translation>不明</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="62" />
+            <source>Paired</source>
+            <translation>ペアされました</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="65" />
+            <source>Unpaired</source>
+            <translation>ペア解除</translation>
+        </message>
+        <message>
+            <source>Alias: %1</source>
+            <translation>別名: %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="72" />
+            <source>Name: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="73" />
+            <source>Status: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="74" />
+            <source>Active Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="75" />
+            <source>UUID: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="76" />
+            <source>Local Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="77" />
+            <source>Remote Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="78" />
+            <source>IPv6 Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="79" />
+            <source>Manual Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="80" />
+            <source>MAC Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="81" />
+            <source>Pair State: %1</source>
+            <translation>ペアリング状態: %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="82" />
+            <source>Running Game ID: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="83" />
+            <source>HTTPS Port: %1</source>
+            <translation>HTTPSポート: %1</translation>
+        </message>
+        <message>
+            <source>Group</source>
+            <translation>グループ</translation>
+        </message>
+    </context>
+    <context>
+        <name>GamepadMapper</name>
+        <message>
+            <location filename="../gui/GamepadMapper.qml" line="4" />
+            <source>Gamepad Mapping</source>
+            <translation>ゲームパッドのマッピング</translation>
+        </message>
+    </context>
+    <context>
+        <name>NvHTTP</name>
+        <message>
+            <location filename="../backend/nvhttp.cpp" line="359" />
+            <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
+            <translation>オーディオキャプチャーデバイスがありません。GeForce Experienceを再インストールすることでこのエラーが解決されます。</translation>
+        </message>
+        <message>
+            <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+            <translation>このホストはセッションごとの音声取得や閲覧専用モードに対応していません。DeskPort ホストを更新して再接続してください。</translation>
+        </message>
+    </context>
+    <context>
+        <name>PcView</name>
+        <message>
+            <source>Removing device…</source>
+            <translation>デバイスを削除中…</translation>
+        </message>
+        <message>
+            <source>Delete '%1', its saved binding and device settings from this computer?</source>
+            <translation>このコンピュータから「%1」と保存済みのペアリング、デバイス設定を削除しますか？</translation>
+        </message>
+        <message>
+            <source>Change address</source>
+            <translation>アドレスを変更</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="21" />
+            <source>Computers</source>
+            <translation>コンピュータ</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="68" />
+            <source>Unable to connect to the specified PC.</source>
+            <translation>指定したPCに接続できません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="71" />
+            <source>This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>このPCのインターネット接続がMoonlightをブロックしています。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="74" />
+            <source>Click the Help button for possible solutions.</source>
+            <translation>ヘルプボタンをクリックすると、可能な解決方法が表示されます。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="104" />
+            <source>Automatic PC discovery is disabled. Add your PC manually.</source>
+            <translation>PCの自動検出が無効になっています。手動でPCを追加してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="103" />
+            <source>Searching for compatible hosts on your local network...</source>
+            <translation>接続できるホストをローカルネットワーク上探しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="188" />
+            <source>Wake PC</source>
+            <translation>PCを起動</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="194" />
+            <source>Test Network</source>
+            <translation>ネットワークをテスト</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="203" />
+            <source>Rename PC</source>
+            <translation>PCの名前を変更</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="212" />
+            <source>Delete PC</source>
+            <translation>PCを削除</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="221" />
+            <source>View Details</source>
+            <translation>詳細表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="233" />
+            <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+            <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="336" />
+            <source>This may take a few seconds…</source>
+            <translation>これには数秒かかることがあります…</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="347" />
+            <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.</source>
+            <translation>このネットワークはMoonlightをブロックしていないようです。それでも接続に問題がある場合は、PCのファイアウォール設定を確認してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="347" />
+            <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.</source>
+            <translation>インターネット経由でストリーミングを行う場合は、ゲーミングPCにMoonlight Internet Hosting Toolをインストールし、付属のInternet Streaming Testerを実行してゲーミングPCのインターネット接続を確認してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="351" />
+            <source>Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>PCの現在のネットワーク接続がMoonlightをブロックしているようです。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="351" />
+            <source>The following network ports were blocked:</source>
+            <translation>次のネットワークポートがブロックされました:</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="343" />
+            <source>The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
+            <translation>このPCからMoonlightの接続テスト用サーバーにアクセスできなかったため、ネットワークテストを実行できませんでした。インターネット接続を確認するか、後ほど再試行してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>PC Status: %1</source>
+            <translation>PCステータス: %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>Online</source>
+            <translation>オンライン</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>Offline</source>
+            <translation>オフライン</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="178" />
+            <source>View All Apps</source>
+            <translation>すべてのアプリを表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="309" />
+            <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
+            <translation>接続される側のコンピュータに %1 を入力してください。このダイアログはペアリング終了時に閉じます。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="310" />
+            <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
+            <translation>コンピュータで Sunshine がはしっている場合、Sunshine のウエブUIにPINを入力してください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="322" />
+            <source>Are you sure you want to remove '%1'?</source>
+            <translation>本当に '%1' を削除しますか？</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="336" />
+            <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
+            <translation>Moonlight はブロックされているポートがないかを確かめるためネットワーク接続テストを実施しています。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="363" />
+            <source>Enter an alias for this device. Leave empty to use its original name:</source>
+            <translation>このデバイスの別名を入力します。空欄にすると元の名前を使用します：</translation>
+        </message>
+        <message>
+            <source>Devices</source>
+            <translation>デバイス</translation>
+        </message>
+        <message>
+            <source>Connect your first device.</source>
+            <translation>最初のデバイスに接続しましょう。</translation>
+        </message>
+        <message>
+            <source>Add a device by IP address or name. Confirm once on the other computer, then connect in either direction.</source>
+            <translation>IP アドレスか名前で追加し、相手側で一度承認すると双方向に接続できます。</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>デバイスを追加</translation>
+        </message>
+        <message>
+            <source>Nearby devices appear here automatically</source>
+            <translation>近くのデバイスは自動的に表示されます</translation>
+        </message>
+        <message>
+            <source>Nearby discovery is off in Settings</source>
+            <translation>設定で自動検出が無効になっています</translation>
+        </message>
+        <message>
+            <source>Applications</source>
+            <translation>アプリ</translation>
+        </message>
+        <message>
+            <source>Pair with a legacy PIN</source>
+            <translation>従来の PIN でペアリング</translation>
+        </message>
+        <message>
+            <source>Set alias</source>
+            <translation>別名を設定</translation>
+        </message>
+        <message>
+            <source>Remove from list</source>
+            <translation>リストから削除</translation>
+        </message>
+        <message>
+            <source>The host on %1 uses an unsupported protocol version. Update the host and DeskPort before connecting.</source>
+            <translation>%1 のホストのプロトコルに対応していません。ホストと DeskPort を更新してください。</translation>
+        </message>
+        <message>
+            <source>Connected · workspace stays open</source>
+            <translation>接続中 · ワークスペースは開いたまま</translation>
+        </message>
+        <message>
+            <source>Return to desktop</source>
+            <translation>デスクトップに戻る</translation>
+        </message>
+        <message>
+            <source>Your computers</source>
+            <translation>コンピューター</translation>
+        </message>
+        <message>
+            <source>Card view</source>
+            <translation>カード表示</translation>
+        </message>
+        <message>
+            <source>List view</source>
+            <translation>リスト表示</translation>
+        </message>
+        <message>
+            <source>Done</source>
+            <translation>完了</translation>
+        </message>
+        <message>
+            <source>Drag devices to change their order.</source>
+            <translation>デバイスをドラッグして順序を変更します。</translation>
+        </message>
+        <message>
+            <source>Move to front</source>
+            <translation>先頭に移動</translation>
+        </message>
+        <message>
+            <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
+            <translation>%1 とのセッションが開いています。他のコンピューターに接続する前にトレイメニューから切断してください。</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>デバイス設定</translation>
+        </message>
+        <message>
+            <source>Nearby discovery is off</source>
+            <translation>近くのデバイスの検出はオフです</translation>
+        </message>
+        <message>
+            <source>Toggle fullscreen</source>
+            <translation>全画面表示を切り替え</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>切断</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>再接続</translation>
+        </message>
+        <message>
+            <source>Edit</source>
+            <translation>編集</translation>
+        </message>
+        <message>
+            <source>New group</source>
+            <translation>新規グループ</translation>
+        </message>
+        <message>
+            <source>All devices</source>
+            <translation>すべてのデバイス</translation>
+        </message>
+        <message>
+            <source>Group actions</source>
+            <translation>グループの操作</translation>
+        </message>
+        <message>
+            <source>Rename group</source>
+            <translation>グループ名を変更</translation>
+        </message>
+        <message>
+            <source>Delete group</source>
+            <translation>グループを削除</translation>
+        </message>
+        <message>
+            <source>Move out of group</source>
+            <translation>グループから出す</translation>
+        </message>
+        <message>
+            <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+            <translation>このグループは空です。編集モードでデバイスをグループにドラッグすると追加できます。</translation>
+        </message>
+        <message>
+            <source>Drag cards to change their order, or onto another device to make a group.</source>
+            <translation>カードをドラッグして並べ替えます。別のデバイスに重ねるとグループになります。</translation>
+        </message>
+        <message>
+            <source>A session with %1 is open. Disconnect it before connecting to another computer.</source>
+            <translation>%1 とのセッションが開いています。別のコンピューターに接続する前に切断してください。</translation>
+        </message>
+        <message>
+            <source>Finish editing</source>
+            <translation>編集を終了</translation>
+        </message>
+        <message>
+            <source>Drag devices to change their order, or out of this panel to leave the group.</source>
+            <translation>デバイスをドラッグして並べ替えます。パネルの外へドラッグするとグループから外れます。</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>確認中…</translation>
+        </message>
+        <message>
+            <source>Computer</source>
+            <translation>コンピュータ</translation>
+        </message>
+        <message>
+            <source>This group is empty.</source>
+            <translation>このグループは空です。</translation>
+        </message>
+        <message>
+            <source>Remove device?</source>
+            <translation>デバイスを削除しますか？</translation>
+        </message>
+        <message>
+            <source>Remove</source>
+            <translation>削除</translation>
+        </message>
+        <message>
+            <source>Deleting a group keeps its devices; they return to the device list.</source>
+            <translation>グループを削除しても中のデバイスは残り、デバイス一覧に戻ります。</translation>
+        </message>
+        <message>
+            <source>Open group</source>
+            <translation>グループを開く</translation>
+        </message>
+        <message>
+            <source>Shown only on this computer. Leave empty to use the original name.</source>
+            <translation>このコンピューターでのみ表示されます。空欄にすると元の名前を使います。</translation>
+        </message>
+    </context>
+    <context>
+        <name>PendingPairingTask</name>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="586" />
+            <source>The PIN from the PC didn't match. Please try again.</source>
+            <translation>コンピュータのPINが一致しませんでした。再度お試しください。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="590" />
+            <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="593" />
+            <source>Pairing failed. Please try again.</source>
+            <translation>ペアリングが失敗しました。再度お試しください。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="597" />
+            <source>Another pairing attempt is already in progress.</source>
+            <translation>別のペアリング試行がすでに試行中です。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="607" />
+            <source>GeForce Experience returned error: %1</source>
+            <translation>GeForce Experienceがエラーを返しました: %1</translation>
+        </message>
+    </context>
+    <context>
+        <name>PendingQuitTask</name>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="657" />
+            <source>The running game wasn't started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
+            <translation>実行中のゲームはこのPCで開始されたものではありません。ホストPCでゲームを手動で終了するか、最初にゲームを開始したデバイスを使用する必要があります。</translation>
+        </message>
+    </context>
+    <context>
+        <name>QObject</name>
+        <message>
+            <location filename="../cli/pair.cpp" line="80" />
+            <source>%1 is already paired</source>
+            <translation>%1 は既にペアリングされています</translation>
+        </message>
+        <message>
+            <location filename="../cli/pair.cpp" line="109" />
+            <location filename="../cli/quitstream.cpp" line="76" />
+            <location filename="../cli/startstream.cpp" line="133" />
+            <source>Failed to connect to %1</source>
+            <translation>%1への接続に失敗</translation>
+        </message>
+        <message>
+            <location filename="../cli/quitstream.cpp" line="88" />
+            <location filename="../cli/startstream.cpp" line="89" />
+            <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
+            <translation>コンピュータ %1はペアリングされていません。ストリーミングを開始する前にMoonlightを開いてペアリングをしてください。</translation>
+        </message>
+        <message>
+            <location filename="../cli/quitstream.cpp" line="102" />
+            <location filename="../cli/startstream.cpp" line="126" />
+            <source>Quitting app failed, reason: %1</source>
+            <translation>アプリの終了に失敗、理由: %1</translation>
+        </message>
+        <message>
+            <location filename="../cli/startstream.cpp" line="137" />
+            <source>Failed to find application %1</source>
+            <translation>アプリケーション%1の検出に失敗</translation>
+        </message>
+        <message>
+            <location filename="../cli/listapps.cpp" line="99" />
+            <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
+            <translation>コンピュータ %1 はペアされてません。ゲームリストを再取得する前にMoonlightwを開けてください。</translation>
+        </message>
+    </context>
+    <context>
+        <name>QPlatformTheme</name>
+        <message>
+            <location filename="../main.cpp" line="620" />
+            <source>&amp;Yes</source>
+            <translation>はい(&amp;Y)</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="621" />
+            <source>&amp;No</source>
+            <translation>いいえ(&amp;N)</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="622" />
+            <source>OK</source>
+            <translation>OK</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="623" />
+            <source>Help</source>
+            <translation>ヘルプ</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="624" />
+            <source>Cancel</source>
+            <translation>キャンセル</translation>
+        </message>
+    </context>
+    <context>
+        <name>QuitSegue</name>
+        <message>
+            <location filename="../gui/QuitSegue.qml" line="13" />
+            <source>Quitting %1...</source>
+            <translation>%1を終了しています...</translation>
+        </message>
+    </context>
+    <context>
+        <name>Session</name>
+        <message>
+            <source>Adjusting resolution…</source>
+            <translation>解像度を調整中…</translation>
+        </message>
+        <message>
+            <source>Connection interrupted. Reconnecting…</source>
+            <translation>接続が中断されました。再接続中…</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="112" />
+            <source>No video received from host.</source>
+            <translation>ホストから映像を受信していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="113" />
+            <source>Check your firewall and port forwarding rules for port(s): %1</source>
+            <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="118" />
+            <source>Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection.</source>
+            <translation>ネットワーク接続がうまくいっていません。ビデオビットレートの設定を下げるか、より高速な回線を使用してください。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="124" />
+            <source>Something went wrong on your host PC when starting the stream.</source>
+            <translation>ストリーミングを開始する際に、ホストPCで何か問題が発生しました。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="125" />
+            <source>Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
+            <translation>ホストPCでDRM保護コンテンツを開いていないことを確認してください。また、ホストPCの再起動もお試しください。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="130" />
+            <source>The host PC reported a fatal video encoding error.</source>
+            <translation>ホーストのPCが再起不能なビデオエンコードエラーを起こしました。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="131" />
+            <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution.</source>
+            <translation>HDRモードを無効にしたり、ストリーミング解像度を変更したり、ホストPCのディスプレイ解像度を変更したりしてみてください。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="139" />
+            <source>Connection terminated</source>
+            <translation>接続が終了しました</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="140" />
+            <source>Error code: %1</source>
+            <translation>エラーコード: %1</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="931" />
+            <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+            <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="936" />
+            <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
+            <translation>リモートデスクトップマウスモードを有効にすると、ゲームで問題が発生する場合があります。</translation>
+        </message>
+        <message>
+            <source>HDR is not supported with software decoding.</source>
+            <translation type="vanished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="940" />
+            <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
+            <translation>ソフトウェアデコードを強制する設定になっていると、ストリーミングのパフォーマンスが低下する場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="970" />
+            <source>Your host PC doesn't support encoding HEVC.</source>
+            <translation>ホストPCがHEVCエンコーディングをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="987" />
+            <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
+            <translation>GPUをサポートしていないHEVCを強制する設定を選択したため、ソフトウェアデコーディングを使用しています。これによってストリーミングパフォーマンスが低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="946" />
+            <source>Your host software or GPU doesn't support encoding AV1.</source>
+            <translation>ホストソフトウェアまたはGPUがAV1エンコーディングをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="963" />
+            <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
+            <translation>GPUサポートなしでAV1を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1029" />
+            <source>Your host PC doesn't support HDR streaming.</source>
+            <translation>ホストPCがHDRストリーミングをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1021" />
+            <source>HDR is not supported using the H.264 codec.</source>
+            <translation>HDRはH.264コーデックでは対応していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1044" />
+            <source>This PC's GPU doesn't support AV1 Main10 decoding for HDR streaming.</source>
+            <translation>このPCのGPUはHDRストリーミング用のAV1 Main10デコーディングをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1025" />
+            <source>This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
+            <translation>このPCのGPUはHDRストリーミング用の10ビットHEVCまたはAV1デコーディングをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1077" />
+            <source>Your host PC and client PC don't support the same HDR video codecs.</source>
+            <translation>ホストPCとクライアントPCが同じHDRビデオコーデックをサポートしていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1170" />
+            <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
+            <translation>4Kを超えるビデオ解像度はH.264コーデックではサポートされていません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1554" />
+            <source>Host returned error: %1</source>
+            <translation>ホストがエラーを返しました：%1</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1001" />
+            <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
+            <translation>GPUサポートなしでH.264を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1011" />
+            <source>Your host PC and client PC don't support the same video codecs. This may cause poor streaming performance.</source>
+            <translation>ホストPCとクライアントPCが同じビデオコーデックをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1014" />
+            <source>Your client GPU doesn't support H.264 decoding. This may cause poor streaming performance.</source>
+            <translation>クライアントのGPUがH.264デコーディングをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1050" />
+            <location filename="../streaming/session.cpp" line="1068" />
+            <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1062" />
+            <source>This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.</source>
+            <translation>このPCのGPUはHDRストリーミングのHEVC Main10デコーディングに対応していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1084" />
+            <source>Your host PC doesn't support YUV 4:4:4 streaming.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1092" />
+            <source>Your host PC doesn't support YUV 4:4:4 streaming for selected video codec.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1107" />
+            <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1113" />
+            <source>This PC's GPU doesn't support YUV 4:4:4 decoding for selected video codec.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1122" />
+            <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
+            <translation>4KストリーミングにはGeForce Experience 3.0以降が必要です。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1137" />
+            <source>Your selected surround sound setting is not supported by the current audio device.</source>
+            <translation>選択したサラウンド音声設定は現在のオーディオデバイスに対応していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1143" />
+            <source>Failed to open audio device. Audio will be unavailable during this session.</source>
+            <translation>オーディオデバイスのオープンに失敗しました。このセッションでは音声は利用できません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1148" />
+            <source>An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this.</source>
+            <translation>接続されたゲームパッドはマッピングされていないため、使用できません。この問題を解決するには、Moonlightのヘルプをご覧ください。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1166" />
+            <source>Your host PC's GPU doesn't support streaming video resolutions over 4K.</source>
+            <translation>ホストPCのGPUは4Kを超えるビデオ解像度でのストリーミングに対応していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1184" />
+            <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU.</source>
+            <translation>このPCのGPUはハードウェアデコードに対応していないため、ハードウェアデコードを強制するという選択を満たすことができません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1187" />
+            <source>Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec.</source>
+            <translation>選択したコーデックとハードウェアデコードを強制する設定には互換性がありません。このPCのGPUは、選択したコーデックのデコードに対応していません。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="2219" />
+            <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
+            <translation>ビデオデコーダを初期化できませんでした。ストリーミングの設定を確認して再度お試しください。</translation>
+        </message>
+        <message>
+            <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
+            <translation>ホストが新しいサイズでデスクトップを再開できませんでした。再接続して作業を続けてください。</translation>
+        </message>
+        <message>
+            <source>Connecting to desktop…</source>
+            <translation>デスクトップに接続中…</translation>
+        </message>
+        <message>
+            <source>This connection would create a loop. Disconnect one of the existing links first.</source>
+            <translation>この接続はループを作成します。先に既存の接続のいずれかを切断してください。</translation>
+        </message>
+        <message>
+            <source>The connection path could not be verified. Update DeskPort on every desktop in the chain and try again.</source>
+            <translation>接続経路を確認できませんでした。経路上のすべてのコンピューターの DeskPort を更新して、再試行してください。</translation>
+        </message>
+        <message>
+            <source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source>
+            <translation>選択した仮想ディスプレイモードは使用できません。ホストを更新するか、別のモードを選んでください。</translation>
+        </message>
+        <message>
+            <source>Virtual screen control ended. Reconnect to apply the selected mode.</source>
+            <translation>仮想ディスプレイの制御が終了しました。再接続して選択したモードを適用してください。</translation>
+        </message>
+    </context>
+    <context>
+        <name>SettingsView</name>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="13" />
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="116" />
+            <source>Resolution and FPS</source>
+            <translation>解像度とFPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="124" />
+            <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
+            <translation>PCやネットワーク接続に対して大きすぎる値を設定すると、ラグやスタッタリング、エラーの原因となる場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="106" />
+            <source>Basic Settings</source>
+            <translation>基本設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="250" />
+            <source>720p</source>
+            <translation>720p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="256" />
+            <source>1080p</source>
+            <translation>1080p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="262" />
+            <source>1440p</source>
+            <translation>1440p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="268" />
+            <source>4K</source>
+            <translation>4K</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="373" />
+            <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
+            <translation>カスタム解像度はGeForce Experienceで公式にサポートされていないため、ホストディスプレイの解像度は設定されません。ゲーム内で手動で設定する必要があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="374" />
+            <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
+            <translation>クライアントやホストPCが対応していない解像度では、ストリーミングエラーが発生する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="380" />
+            <source>Enter a custom resolution:</source>
+            <translation>カスタム解像度を入力:</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="508" />
+            <location filename="../gui/SettingsView.qml" line="618" />
+            <source>Custom (%1 FPS)</source>
+            <translation>カスタム (%1 FPS)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="523" />
+            <source>Enter a custom frame rate:</source>
+            <translation>カスタムフレームを入力:</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="600" />
+            <source>%1 FPS</source>
+            <translation>%1 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="668" />
+            <source>Video bitrate:</source>
+            <translation>映像ビットレート:</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="676" />
+            <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
+            <translation>低速回線ではビットレートを下げてください。画質を上げるにはビットレートを上げてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="694" />
+            <source>Video bitrate: %1 Mbps</source>
+            <translation>映像ビットレート: %1 Mbps</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="707" />
+            <source>Display mode</source>
+            <translation>表示モード</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="737" />
+            <source>(Recommended)</source>
+            <translation>(推奨)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="718" />
+            <location filename="../gui/SettingsView.qml" line="1181" />
+            <source>Fullscreen</source>
+            <translation>全画面表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="219" />
+            <location filename="../gui/SettingsView.qml" line="228" />
+            <location filename="../gui/SettingsView.qml" line="621" />
+            <source>Custom</source>
+            <translation>カスタム</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="639" />
+            <source>30 FPS</source>
+            <translation>30 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="644" />
+            <source>60 FPS</source>
+            <translation>60 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="787" />
+            <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+            <translation>一般的には全画面表示が最も優れたパフォーマンスを発揮しますが、macOSの操作スペース、Alt+Tab、スクリーンショットツール、オンスクリーンオーバーレイなどの機能を使用する場合は、ボーダレスウィンドウがより効果的です。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="723" />
+            <source>Borderless windowed</source>
+            <translation>ボーダレスウィンドウ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="182" />
+            <source>Native</source>
+            <translation>ネイティブ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="183" />
+            <source>Native (Excluding Notch)</source>
+            <translation>ネイティブ（ノッチ除く）</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="728" />
+            <location filename="../gui/SettingsView.qml" line="1173" />
+            <source>Windowed</source>
+            <translation>ウィンドウ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="794" />
+            <source>V-Sync</source>
+            <translation>垂直同期</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="804" />
+            <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
+            <translation>垂直同期を無効にすると、サブフレームのレンダリング遅延が発生しますが、目に見えるティアリングが表示されることがあります</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="811" />
+            <source>Frame pacing</source>
+            <translation>フレームペーシング</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="821" />
+            <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
+            <translation>フレーム・ペーシングは、早すぎるフレームを遅らせることで、マイクロスタッターを軽減します</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="831" />
+            <source>Audio Settings</source>
+            <translation>音声設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="866" />
+            <source>Stereo</source>
+            <translation>ステレオ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="870" />
+            <source>5.1 surround sound</source>
+            <translation>5.1サラウンドサウンド</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="874" />
+            <source>7.1 surround sound</source>
+            <translation>7.1サラウンドサウンド</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="888" />
+            <source>Mute host PC speakers while streaming</source>
+            <translation>ストリーミング中にホストPCのスピーカーをミュートする</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="898" />
+            <source>You must restart any game currently in progress for this setting to take effect</source>
+            <translation>この設定を有効にするには、現在進行中のゲームを再起動する必要があります</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="904" />
+            <source>Mute audio stream when Moonlight is not the active window</source>
+            <translation>Moonlightがアクティブなウィンドウでないときに音声ストリームをミュートする</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="915" />
+            <source>Mutes Moonlight's audio when you Alt+Tab out of the stream or click on a different window.</source>
+            <translation>ストリーミングからAlt+Tabで抜けたり、別のウィンドウをクリックしたりすると、Moonlightの音声をミュートします。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="964" />
+            <source>UI Settings</source>
+            <translation>UI設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="974" />
+            <source>Language</source>
+            <translation>言語</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1000" />
+            <source>Automatic</source>
+            <translation>自動</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1123" />
+            <source>You must restart Moonlight for this change to take effect</source>
+            <translation>この変更を有効にするには、Moonlightを再起動する必要があります</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1140" />
+            <source>GUI display mode</source>
+            <translation>GUI表示モード</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1177" />
+            <source>Maximized</source>
+            <translation>最大化</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1222" />
+            <source>Keep the display awake while streaming</source>
+            <translation>ストリーミング中にディスプレイをスリープさせない</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1232" />
+            <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
+            <translation>ストリーミング中にスクリーンセーバーの起動やディスプレイのスリープを防止します</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1250" />
+            <source>Input Settings</source>
+            <translation>入力設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1271" />
+            <source>This enables seamless mouse control without capturing the client's mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
+            <translation>これにより、クライアントのマウスカーソルをキャプチャすることなく、シームレスなマウスコントロールが可能になります。リモートデスクトップでの使用に最適ですが、ほとんどのゲームでは動作しません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1273" />
+            <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
+            <translation>注: GeForce Experienceのバグにより、ホストPCにマルチモニターがある場合、このオプションは正しく動作しない可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1292" />
+            <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
+            <translation>注: WindowsのCtrl+Alt+Delのような特定のキーボードショートカットは、Moonlightを含むいかなるアプリケーションでも傍受することができません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1321" />
+            <source>in fullscreen</source>
+            <translation>フルスクリーン時</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1325" />
+            <source>always</source>
+            <translation>常時</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1355" />
+            <source>Use touchscreen as a virtual trackpad</source>
+            <translation>タッチスクリーンを仮想トラックパッドとして使用する</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1372" />
+            <source>Swap left and right mouse buttons</source>
+            <translation>マウスの左右のボタンを入れ替える</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1384" />
+            <source>Reverse mouse scrolling direction</source>
+            <translation>マウスのスクロール方向を逆にする</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1398" />
+            <source>Gamepad Settings</source>
+            <translation>ゲームパッドの設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1408" />
+            <source>Swap A/B and X/Y gamepad buttons</source>
+            <translation>ゲームパッドのA/BとX/Yボタンを入れ替える</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1418" />
+            <source>This switches gamepads into a Nintendo-style button layout</source>
+            <translation>ゲームパッドを任天堂スタイルのボタン配置に変更します</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1424" />
+            <source>Force gamepad #1 always connected</source>
+            <translation>ゲームパッド#1を常時接続するよう強制</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1434" />
+            <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
+            <translation>実際にはゲームパッドがPCに接続されていなくても、1台のゲームパッドが常にホストに接続されているように強制します。</translation>
+        </message>
+        <message>
+            <source>Enabling HDR overrides manual decoder selections.</source>
+            <translation type="vanished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1573" />
+            <source>AV1 (Experimental)</source>
+            <translation>AV1 (実験的)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1588" />
+            <source>Enable HDR (Experimental)</source>
+            <translation>HDRを有効にする（実験的）</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1603" />
+            <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+            <translation>ストリームはHDR対応になりますが、一部のゲームではHDRモードを有効にするためにホストPCにHDRモニターが必要な場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1605" />
+            <source>HDR streaming is not supported on this PC.</source>
+            <translation>このPCではHDRストリーミングはサポートされていません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1690" />
+            <source>Show performance stats while streaming</source>
+            <translation>ストリーミング中にパフォーマンス統計を表示する</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1700" />
+            <source>Display real-time stream performance information while streaming.</source>
+            <translation>ストリーミング中にリアルタイムのストリーム パフォーマンス情報を表示します。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1701" />
+            <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
+            <translation>ストリーミング中はいつでも、Ctrl+Alt+Shift+SまたはSelect+L1+R1+Xを使用して切り替えることができます。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1702" />
+            <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
+            <translation>パフォーマンスオーバーレイはSteam LinkまたはRaspberry Piではサポートされていません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1272" />
+            <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
+            <translation>ストリーミング中でもCtrl+Alt+Shift+Mで切り替えることができます。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1283" />
+            <source>Capture system keyboard shortcuts</source>
+            <translation>システムのキーボードショートカットをキャプチャ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1291" />
+            <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
+            <translation>これにより、通常はストリーミング中にクライアントOSが処理するAlt+Tabなどのシステム全体のキーボードショートカットをキャプチャすることができます。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1442" />
+            <source>Enable mouse control with gamepads by holding the 'Start' button</source>
+            <translation>ゲームパッドで「スタート」ボタンを押しながらマウス操作ができるようにする</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1453" />
+            <source>Process gamepad input when Moonlight is in the background</source>
+            <translation>Moonlightがバックグラウンドで動作しているときにゲームパッドの入力を処理する</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1464" />
+            <source>Allows Moonlight to capture gamepad inputs even if it's not the current window in focus</source>
+            <translation>現在のウィンドウがフォーカスされていない場合でも、Moonlightがゲームパッドの入力をキャプチャできるようにします</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="924" />
+            <source>Host Settings</source>
+            <translation>ホスト設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1473" />
+            <source>Advanced Settings</source>
+            <translation>高度な設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="841" />
+            <source>Audio configuration</source>
+            <translation>オーディオ構成</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1194" />
+            <source>Show connection quality warnings</source>
+            <translation>接続品質に関する警告の表示</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1206" />
+            <source>Discord Rich Presence integration</source>
+            <translation>Discord Rich Presenceの統合</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1216" />
+            <source>Updates your Discord status to display the name of the game you're streaming.</source>
+            <translation>Discordのステータスを更新して、ストリーミングしているゲームの名前を表示します。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1435" />
+            <source>Only enable this option when streaming a game that doesn't support gamepads being connected after startup.</source>
+            <translation>起動後のゲームパッドの接続をサポートしていないゲームをストリーミングする場合のみ、このオプションを有効にしてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1261" />
+            <source>Optimize mouse for remote desktop instead of games</source>
+            <translation>ゲームではなくリモートデスクトップにマウスを最適化</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1365" />
+            <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
+            <translation>チェックすると、タッチスクリーンはトラックパッドのように動作します。チェックを外すと、タッチスクリーンが直接マウスポインターを操作するようになります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="934" />
+            <source>Optimize game settings for streaming</source>
+            <translation>ストリーミング用にゲーム設定を最適化</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="945" />
+            <source>Quit app on host PC after ending stream</source>
+            <translation>ストリーミング終了後にホストPCのアプリを終了させる</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="955" />
+            <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
+            <translation>ストリーミングを終了すると、ストリーミング中のアプリやゲームが終了します。保存されていない進行状況は失われます！</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1483" />
+            <source>Video decoder</source>
+            <translation>映像デコーダ</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1508" />
+            <location filename="../gui/SettingsView.qml" line="1561" />
+            <source>Automatic (Recommended)</source>
+            <translation>自動 (推奨)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1512" />
+            <source>Force software decoding</source>
+            <translation>ソフトウェアデコードを強制</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1516" />
+            <source>Force hardware decoding</source>
+            <translation>ハードウェアデコードを強制</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1531" />
+            <source>Video codec</source>
+            <translation>ビデオコーデック</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1565" />
+            <source>H.264</source>
+            <translation>H.264</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1569" />
+            <source>HEVC (H.265)</source>
+            <translation>HEVC (H.265)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1611" />
+            <source>Enable YUV 4:4:4 (Experimental)</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1631" />
+            <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1633" />
+            <source>YUV 4:4:4 is not supported on this PC.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1639" />
+            <source>Unlock bitrate limit (Experimental)</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1652" />
+            <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1658" />
+            <source>Automatically find PCs on the local network (Recommended)</source>
+            <translation>ローカルネットワーク上のPCを自動的に検出 (推奨)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1679" />
+            <source>Automatically detect blocked connections (Recommended)</source>
+            <translation>ブロックされた接続を自動的に検出 (推奨)</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>詳細設定</translation>
+        </message>
+        <message>
+            <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+            <translation>再接続すると適用されます。このコンピューターの言語や検出設定は変更されません。</translation>
+        </message>
+        <message>
+            <source>Session behavior</source>
+            <translation>セッション動作</translation>
+        </message>
+    </context>
+    <context>
+        <name>StreamSegue</name>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="11" />
+            <source>Resuming %1...</source>
+            <translation>%1を再開しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="12" />
+            <location filename="../gui/StreamSegue.qml" line="19" />
+            <source>Starting %1...</source>
+            <translation>%1を起動しています...</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="25" />
+            <source>Starting %1 failed: Error %2</source>
+            <translation>%1の起動に失敗しました: エラー %2</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="28" />
+            <source>Check your firewall and port forwarding rules for port(s): %1</source>
+            <translation>ファイアウォールと次のポートのポートフォワーディングルールを確認してください: %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="76" />
+            <source>This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>このPCのインターネット接続がMoonlightをブロックしています。このネットワークに接続している間はインターネットでのストリーミングができない場合があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="167" />
+            <source>Tip:</source>
+            <translation>ヒント:</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="167" />
+            <source>Press %1 to disconnect your session</source>
+            <translation>%1を押してセッションを切断します</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="168" />
+            <source>Start+Select+L1+R1</source>
+            <translation>Start+Select+L1+R1</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="168" />
+            <source>Ctrl+Alt+Shift+Q</source>
+            <translation>Ctrl+Alt+Shift+Q</translation>
+        </message>
+        <message>
+            <source>Connection interrupted. Reconnecting…</source>
+            <translation>接続が中断されました。再接続中…</translation>
+        </message>
+        <message>
+            <source>Cancel reconnect</source>
+            <translation>再接続をキャンセル</translation>
+        </message>
+        <message>
+            <source>Press %1 to leave fullscreen; press again to disconnect</source>
+            <translation>%1 で全画面表示を解除、もう一度押すと切断</translation>
+        </message>
+        <message>
+            <source>Waiting for desktop video…</source>
+            <translation>デスクトップ映像を待機中…</translation>
+        </message>
+        <message>
+            <source>Cancel connection</source>
+            <translation>接続をキャンセル</translation>
+        </message>
+    </context>
+    <context>
+        <name>main</name>
+        <message>
+            <source>Data saver</source>
+            <translation>データセーバー</translation>
+        </message>
+        <message>
+            <source>Data saver on: video limited to 3–12 Mbps</source>
+            <translation>データセーバーオン：映像を3–12 Mbpsに制限</translation>
+        </message>
+        <message>
+            <source>Data saver off: automatic bitrate</source>
+            <translation>データセーバーオフ：ビットレート自動</translation>
+        </message>
+        <message>
+            <source>Today %1%</source>
+            <translation>今日 %1%</translation>
+        </message>
+        <message>
+            <source>Daily data budget</source>
+            <translation>1日のデータ予算</translation>
+        </message>
+        <message>
+            <source>Limit per day</source>
+            <translation>1日の上限</translation>
+        </message>
+        <message>
+            <source>Today: %1 of %2 (%3%)</source>
+            <translation>今日：%1 / %2（%3%）</translation>
+        </message>
+        <message>
+            <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+            <translation>このコンピューターのすべての接続を集計し、毎日現地時間の0時にリセットされます。100%に達すると、その日の残りはデータセーバーが自動でオンになります。</translation>
+        </message>
+        <message>
+            <source>Reset</source>
+            <translation>リセット</translation>
+        </message>
+        <message>
+            <source>Could not save device removal. Please retry.</source>
+            <translation>デバイスの削除を保存できませんでした。再試行してください。</translation>
+        </message>
+        <message>
+            <source>Editing</source>
+            <translation>編集中</translation>
+        </message>
+        <message>
+            <source>Memory %1</source>
+            <translation>メモリ %1</translation>
+        </message>
+        <message>
+            <source>Local memory usage</source>
+            <translation>この端末のメモリ使用量</translation>
+        </message>
+        <message>
+            <source>Unavailable</source>
+            <translation>取得できません</translation>
+        </message>
+        <message>
+            <source>Client: %1</source>
+            <translation>クライアント: %1</translation>
+        </message>
+        <message>
+            <source>Sharing host: %1</source>
+            <translation>共有ホスト: %1</translation>
+        </message>
+        <message>
+            <source>Helpers: %1</source>
+            <translation>補助プロセス: %1</translation>
+        </message>
+        <message>
+            <source>Some processes could not be sampled.</source>
+            <translation>一部のプロセスを測定できませんでした。</translation>
+        </message>
+        <message>
+            <source>Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak.</source>
+            <translation>このクライアントと直接の子プロセスの常駐メモリです。ウィンドウの表示中は3秒ごとに更新します。共有ページは重複して計上される場合があります。リモート端末と一部のGPUメモリは含みません。使用量の増加だけではメモリリークとは判断できません。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="415" />
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="262" />
+            <source>Version %1</source>
+            <translation>バージョン %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="278" />
+            <source>Join our community on Discord</source>
+            <translation>Discordコミュニティに参加する</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="297" />
+            <source>Add PC manually</source>
+            <translation>手動でPCを追加</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="337" />
+            <source>Update available for Moonlight: Version %1</source>
+            <translation>Moonlightで利用可能なアップデート: バージョン %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="384" />
+            <source>Gamepad Mapper</source>
+            <translation>ゲームパッドマッパー</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="430" />
+            <source>Hardware acceleration doesn't work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
+            <translation>XWaylandではハードウェアアクセラレーションが動作しません。XWaylandで続行すると、ストリーミングのパフォーマンスが低下する可能性があります。QT_QPA_PLATFORM=waylandで実行するか、X11に切り替えてみてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="439" />
+            <source>This version of Moonlight isn't optimized for your PC. Please download the '%1' version of Moonlight for the best streaming performance.</source>
+            <translation>このバージョンのMoonlightは、お使いのPCに最適化されていません。最高のストリーミングパフォーマンスを実現するには、Moonlightの'%1'バージョンをダウンロードしてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="448" />
+            <source>Moonlight detected gamepads without a mapping:</source>
+            <translation>Moonlightはマッピングのないゲームパッドを検出しました:</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="361" />
+            <source>Help</source>
+            <translation>ヘルプ</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="422" />
+            <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
+            <translation>Moonlightはハードウェアアクセラレーションされたビデオデコーダーを検出できませんでした。この構成ではストリーミングのパフォーマンスが著しく低下する可能性があります。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="424" />
+            <source>Click the Help button for more information on solving this problem.</source>
+            <translation>この問題を解決するための詳細情報については、ヘルプボタンをクリックしてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="432" />
+            <source>Click the Help button for more information.</source>
+            <translation>詳細については、ヘルプボタンをクリックしてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="488" />
+            <source>Enter the IP address of your host PC:</source>
+            <translation>ホストPCのIPアドレスを入力してください:</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="450" />
+            <source>Click the Help button for information on how to map your gamepads.</source>
+            <translation>ゲームパッドをマップする方法については、ヘルプボタンをクリックしてください。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="458" />
+            <source>Are you sure you want to quit?</source>
+            <translation>本当に終了しますか？</translation>
+        </message>
+        <message>
+            <source>Devices</source>
+            <translation>デバイス</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共有</translation>
+        </message>
+        <message>
+            <source>Getting started</source>
+            <translation>初期設定</translation>
+        </message>
+        <message>
+            <source>Sharing on</source>
+            <translation>共有オン</translation>
+        </message>
+        <message>
+            <source>Sharing off</source>
+            <translation>共有オフ</translation>
+        </message>
+        <message>
+            <source>Back</source>
+            <translation>戻る</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>デバイスを追加</translation>
+        </message>
+        <message>
+            <source>Enter the host IP address or hostname:</source>
+            <translation>ホストの IP アドレスまたはホスト名：</translation>
+        </message>
+        <message>
+            <source>DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.</source>
+            <translation>DeskPort の既定値は :48989 です。共有ページのポートが異なる場合は アドレス:ポート を入力してください。標準の Sunshine は :47989 です。</translation>
+        </message>
+        <message>
+            <source>Check permissions</source>
+            <translation>権限を確認</translation>
+        </message>
+        <message>
+            <source>Sharing service on</source>
+            <translation>共有サービス有効</translation>
+        </message>
+        <message>
+            <source>Current connection</source>
+            <translation>現在の接続</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>接続済み</translation>
+        </message>
+        <message>
+            <source>Return</source>
+            <translation>デスクトップへ</translation>
+        </message>
+        <message>
+            <source>Session data</source>
+            <translation>今回の通信量</translation>
+        </message>
+        <message>
+            <source>Details</source>
+            <translation>詳細</translation>
+        </message>
+        <message>
+            <source>Received: %1</source>
+            <translation>受信：%1</translation>
+        </message>
+        <message>
+            <source>Sent: %1</source>
+            <translation>送信：%1</translation>
+        </message>
+        <message>
+            <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+            <translation>一時的な再接続を含む映像・音声、制御、クリップボードの通信量です。IP/VPN、クリップボードのTLS、デバイス検出、本機の共有通信は含みません。通信会社の請求額とは異なります。</translation>
+        </message>
+        <message>
+            <source>Update available</source>
+            <translation>更新があります</translation>
+        </message>
+        <message>
+            <source>DeskPort updates</source>
+            <translation>DeskPort の更新</translation>
+        </message>
+        <message>
+            <source>Checking for updates…</source>
+            <translation>更新を確認中…</translation>
+        </message>
+        <message>
+            <source>New version: %1</source>
+            <translation>新しいバージョン: %1</translation>
+        </message>
+        <message>
+            <source>No newer stable release is available.</source>
+            <translation>新しい安定版はありません。</translation>
+        </message>
+        <message>
+            <source>Could not check for updates. Please try again.</source>
+            <translation>更新を確認できませんでした。もう一度お試しください。</translation>
+        </message>
+        <message>
+            <source>Published: %1</source>
+            <translation>公開日: %1</translation>
+        </message>
+        <message>
+            <source>No release notes provided.</source>
+            <translation>リリースノートはありません。</translation>
+        </message>
+        <message>
+            <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+            <translation>GitHub のリリースページを開きます。通常の方法でインストールしてください。Nix で管理している場合は Nix 経由で更新してください。</translation>
+        </message>
+        <message>
+            <source>Check again</source>
+            <translation>再確認</translation>
+        </message>
+        <message>
+            <source>Open download page</source>
+            <translation>ダウンロードページを開く</translation>
+        </message>
+        <message>
+            <source>Not connected</source>
+            <translation>未接続</translation>
+        </message>
+        <message>
+            <source>Edit</source>
+            <translation>編集</translation>
+        </message>
+        <message>
+            <source>Done</source>
+            <translation>完了</translation>
+        </message>
+        <message>
+            <source>Refresh devices</source>
+            <translation>デバイスを更新</translation>
+        </message>
+        <message>
+            <source>Check saved devices and look for new ones</source>
+            <translation>保存済みデバイスの状態を確認し、新しいデバイスを探します</translation>
+        </message>
+        <message>
+            <source>Ask client to leave full screen</source>
+            <translation>クライアントにフルスクリーンの終了を依頼</translation>
+        </message>
+        <message>
+            <source>Ask the connected client to leave full screen</source>
+            <translation>接続中のクライアントにフルスクリーンの終了を依頼します</translation>
+        </message>
+        <message>
+            <source>Manual</source>
+            <translation>マニュアル</translation>
+        </message>
+        <message>
+            <source>How to use DeskPort</source>
+            <translation>DeskPort の使い方</translation>
+        </message>
+        <message>
+            <source>Add a legacy host</source>
+            <translation>従来のホストを追加</translation>
+        </message>
+        <message>
+            <source>Connecting…</source>
+            <translation>接続中…</translation>
+        </message>
+        <message>
+            <source>Disconnecting…</source>
+            <translation>切断中…</translation>
+        </message>
+        <message>
+            <source>Failed</source>
+            <translation>失敗</translation>
+        </message>
+    </context>
+    <context>
+        <name>SettingsHome</name>
+        <message>
+            <source>Send this computer's audio to connected devices</source>
+            <translation>このコンピューターの音声を接続先のデバイスに送信</translation>
+        </message>
+        <message>
+            <source>Off by default: sound stays on this computer. Changes apply after restarting sharing.</source>
+            <translation>既定ではオフで、音声はこのコンピューターで再生されます。変更は共有の再起動後に適用されます。</translation>
+        </message>
+        <message>
+            <source>Always show a local pointer in desktop mode</source>
+            <translation>デスクトップモードでローカルポインターを常に表示</translation>
+        </message>
+        <message>
+            <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+            <translation>ホストがカーソルを隠してもポインターを表示します。2つ表示される場合はオフにしてください。</translation>
+        </message>
+        <message>
+            <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+            <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
+        </message>
+        <message>
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <source>Make DeskPort your own.</source>
+            <translation>DeskPort を自分好みに。</translation>
+        </message>
+        <message>
+            <source>Language changes apply immediately. Connection preferences apply to your next connection from this computer.</source>
+            <translation>言語はすぐに切り替わります。接続設定は、このコンピューターからの次回の接続に適用されます。</translation>
+        </message>
+        <message>
+            <source>Language</source>
+            <translation>言語</translation>
+        </message>
+        <message>
+            <source>Follow system</source>
+            <translation>システムに合わせる</translation>
+        </message>
+        <message>
+            <source>Restart DeskPort to apply this language.</source>
+            <translation>この言語を適用するには DeskPort を再起動してください。</translation>
+        </message>
+        <message>
+            <source>Saved on this computer. Missing translations appear in English.</source>
+            <translation>このコンピューターに保存されます。未翻訳の項目は英語で表示されます。</translation>
+        </message>
+        <message>
+            <source>Picture</source>
+            <translation>映像</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>入力</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>サウンド</translation>
+        </message>
+        <message>
+            <source>Connections</source>
+            <translation>接続</translation>
+        </message>
+        <message>
+            <source>Advanced</source>
+            <translation>詳細</translation>
+        </message>
+        <message>
+            <source>Resolution</source>
+            <translation>解像度</translation>
+        </message>
+        <message>
+            <source>Connection window</source>
+            <translation>接続ウィンドウ</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>全画面</translation>
+        </message>
+        <message>
+            <source>Borderless full screen</source>
+            <translation>ボーダーレス全画面</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>ウィンドウ</translation>
+        </message>
+        <message>
+            <source>Frame rate</source>
+            <translation>フレームレート</translation>
+        </message>
+        <message>
+            <source>Bandwidth · %1 Mbps</source>
+            <translation>帯域幅 · %1 Mbps</translation>
+        </message>
+        <message>
+            <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+            <translation>値を上げると画質と帯域使用量が増えます。スライダーを動かさない限り、既存の詳細設定値を維持します。</translation>
+        </message>
+        <message>
+            <source>Synchronize frames to this display</source>
+            <translation>このディスプレイにフレームを同期</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; pointer</source>
+            <translation>キーボードとポインター</translation>
+        </message>
+        <message>
+            <source>Use a desktop-style pointer</source>
+            <translation>デスクトップ用ポインターを使う</translation>
+        </message>
+        <message>
+            <source>Reverse scrolling direction</source>
+            <translation>スクロール方向を反転</translation>
+        </message>
+        <message>
+            <source>Send system shortcuts to the remote computer</source>
+            <translation>システムのショートカットをリモートに送信</translation>
+        </message>
+        <message>
+            <source>Never</source>
+            <translation>しない</translation>
+        </message>
+        <message>
+            <source>Only in full screen</source>
+            <translation>全画面のみ</translation>
+        </message>
+        <message>
+            <source>Always</source>
+            <translation>常に</translation>
+        </message>
+        <message>
+            <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+            <translation>Ctrl + Alt + Shift + Z でリモート入力を解除します。</translation>
+        </message>
+        <message>
+            <source>Mute when DeskPort loses focus</source>
+            <translation>DeskPort が非アクティブのとき消音</translation>
+        </message>
+        <message>
+            <source>Also play audio on the host</source>
+            <translation>ホストでも音声を再生</translation>
+        </message>
+        <message>
+            <source>Discover nearby devices</source>
+            <translation>近くのデバイスを検出</translation>
+        </message>
+        <message>
+            <source>Keep this computer awake while connected</source>
+            <translation>接続中はスリープを防止</translation>
+        </message>
+        <message>
+            <source>Manage saved access</source>
+            <translation>保存済みアクセスを管理</translation>
+        </message>
+        <message>
+            <source>Advanced &amp; support</source>
+            <translation>詳細設定とサポート</translation>
+        </message>
+        <message>
+            <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+            <translation>カスタム解像度、コーデック、HDR、サラウンド、コントローラーは詳細設定で変更できます。</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>詳細設定</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>権限ガイド</translation>
+        </message>
+        <message>
+            <source>Report a problem</source>
+            <translation>問題を報告</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>クライアントのウィンドウ解像度に合わせる</translation>
+        </message>
+        <message>
+            <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+            <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>セッション中にテキスト、画像、ファイルを共有</translation>
+        </message>
+        <message>
+            <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+            <translation>ペアリング済みの両端末で有効にして再接続してください。新しくコピーしたテキストのみ、上限 128 MiB。画像とファイルは共有されません。</translation>
+        </message>
+        <message>
+            <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+            <translation>フォーカス中の映像内ではキーボードがポインターに従います。外に出るとキーとボタンを解放します。クリックでフォーカスし、システム予約キーはローカルに残る場合があります。</translation>
+        </message>
+        <message>
+            <source>Saved · connection changes apply next time you connect.</source>
+            <translation>保存済み · 接続設定は次回接続時に適用されます。</translation>
+        </message>
+        <message>
+            <source>Appearance</source>
+            <translation>外観</translation>
+        </message>
+        <message>
+            <source>Light</source>
+            <translation>ライト</translation>
+        </message>
+        <message>
+            <source>Dark</source>
+            <translation>ダーク</translation>
+        </message>
+        <message>
+            <source>Appearance changes apply immediately.</source>
+            <translation>外観の変更はすぐに適用されます。</translation>
+        </message>
+        <message>
+            <source>Connecting to remote computers</source>
+            <translation>リモートコンピューターへの接続</translation>
+        </message>
+        <message>
+            <source>Quality preset</source>
+            <translation>画質プリセット</translation>
+        </message>
+        <message>
+            <source>Choose a preset…</source>
+            <translation>プリセットを選択…</translation>
+        </message>
+        <message>
+            <source>Office · 30 fps / 10 Mbps</source>
+            <translation>オフィス · 30 fps / 10 Mbps</translation>
+        </message>
+        <message>
+            <source>Clear · 60 fps / 40 Mbps</source>
+            <translation>鮮明 · 60 fps / 40 Mbps</translation>
+        </message>
+        <message>
+            <source>Smooth · 60 fps / 15 Mbps</source>
+            <translation>スムーズ · 60 fps / 15 Mbps</translation>
+        </message>
+        <message>
+            <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+            <translation>プリセットはフレームレートと帯域幅のみ変更します。下でネットワークに合わせて調整できます。</translation>
+        </message>
+        <message>
+            <source>Fallback resolution</source>
+            <translation>代替解像度</translation>
+        </message>
+        <message>
+            <source>Sound from the remote computer</source>
+            <translation>リモートコンピューターの音声</translation>
+        </message>
+        <message>
+            <source>Sharing this computer</source>
+            <translation>このコンピューターの共有</translation>
+        </message>
+        <message>
+            <source>Manage incoming access, shared audio and login startup on the Sharing page.</source>
+            <translation>共有ページでアクセス許可、音声共有、ログイン時の起動を管理します。</translation>
+        </message>
+        <message>
+            <source>Open sharing settings</source>
+            <translation>共有設定を開く</translation>
+        </message>
+        <message>
+            <source>Picture adjustments</source>
+            <translation>映像の調整</translation>
+        </message>
+        <message>
+            <source>Smart streaming</source>
+            <translation>スマートストリーミング</translation>
+        </message>
+        <message>
+            <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+            <translation>解像度に応じた帯域上限と滑らかなフレーム表示を使用します。手動設定を使うにはオフにしてください。</translation>
+        </message>
+        <message>
+            <source>Smooth frame pacing</source>
+            <translation>フレーム表示を平滑化</translation>
+        </message>
+        <message>
+            <source>Show streaming statistics</source>
+            <translation>ストリーミング統計を表示</translation>
+        </message>
+        <message>
+            <source>Device connection port</source>
+            <translation>デバイス接続ポート</translation>
+        </message>
+        <message>
+            <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+            <translation>通常は両方のコンピューターで 48991 のままにします。映像と音声のポートは自動管理されます。保存済みデバイスには以前の接続ポートも維持されます。</translation>
+        </message>
+        <message>
+            <source>Apply</source>
+            <translation>適用</translation>
+        </message>
+        <message>
+            <source>Settings for %1</source>
+            <translation>%1 の設定</translation>
+        </message>
+        <message>
+            <source>These settings apply only to this device. Reconnect to apply changes.</source>
+            <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
+        </message>
+        <message>
+            <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+            <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>保存しました。再接続すると適用されます。</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+        </message>
+        <message>
+            <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+            <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
+        </message>
+        <message>
+            <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+            <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>このデバイスの音声を受信</translation>
+        </message>
+        <message>
+            <source>Appearance and preferences for this computer only.</source>
+            <translation>このコンピュータの外観と設定です。</translation>
+        </message>
+        <message>
+            <source>Theme</source>
+            <translation>テーマ</translation>
+        </message>
+        <message>
+            <source>Accent color</source>
+            <translation>アクセントカラー</translation>
+        </message>
+        <message>
+            <source>Blue</source>
+            <translation>ブルー</translation>
+        </message>
+        <message>
+            <source>Green</source>
+            <translation>グリーン</translation>
+        </message>
+        <message>
+            <source>Purple</source>
+            <translation>パープル</translation>
+        </message>
+        <message>
+            <source>Orange</source>
+            <translation>オレンジ</translation>
+        </message>
+        <message>
+            <source>Show data usage in the top bar</source>
+            <translation>上部バーにデータ使用量を表示</translation>
+        </message>
+        <message>
+            <source>Diagnostics and feedback</source>
+            <translation>診断とフィードバック</translation>
+        </message>
+        <message>
+            <source>Enable diagnostic logs</source>
+            <translation>診断ログを有効にする</translation>
+        </message>
+        <message>
+            <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+            <translation>初期設定はオフです。アプリ、内蔵ホスト、画面ヘルパーの接続、操作準備、実行イベント、時刻差、解像度を記録します。変更は即時反映されます。上限は 9 MiB で、実行中に 7 日を超えたログを削除します。</translation>
+        </message>
+        <message>
+            <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+            <translation>IP、ドメイン、デバイス名、自由形式のメッセージは自動的に省略します。入力文字、クリップボード、画面内容は収集しません。起動ごとにランダムな匿名 ID を使用します。詳細が省略されるため、すべての問題を診断できるわけではありません。共有前に確認してください。</translation>
+        </message>
+        <message>
+            <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+            <translation>GitHub の Issue と添付ファイルは公開されます。ZIP を作成し、Issue の下書きを開きます。自動送信はしません。ZIP を確認して Issue にドラッグし、ご自身で送信してください。</translation>
+        </message>
+        <message>
+            <source>Create logs ZIP and open GitHub…</source>
+            <translation>ログ ZIP を作成して GitHub を開く…</translation>
+        </message>
+        <message>
+            <source>Show ZIP in folder</source>
+            <translation>ZIP のフォルダーを開く</translation>
+        </message>
+        <message>
+            <source>Clear saved diagnostics</source>
+            <translation>保存した診断データを削除</translation>
+        </message>
+        <message>
+            <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+            <translation>オフにすると新しい記録を停止します。診断データの削除で既存ログと ZIP を消去します。旧バージョンの生ログは含めません。</translation>
+        </message>
+        <message>
+            <source>System</source>
+            <translation>システム</translation>
+        </message>
+        <message>
+            <source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source>
+            <translation>既定ではオフです。ログは共有しない限りこのコンピューターに残ります。記録内容は「プライバシー」を参照してください。</translation>
+        </message>
+        <message>
+            <source>About</source>
+            <translation>このアプリについて</translation>
+        </message>
+        <message>
+            <source>Version</source>
+            <translation>バージョン</translation>
+        </message>
+        <message>
+            <source>Privacy</source>
+            <translation>プライバシー</translation>
+        </message>
+        <message>
+            <source>Licenses</source>
+            <translation>ライセンス</translation>
+        </message>
+        <message>
+            <source>Create ZIP and open issue</source>
+            <translation>ZIP を作成して Issue を開く</translation>
+        </message>
+        <message>
+            <source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source>
+            <translation>DeskPort にはアカウントも DeskPort のサーバーもありません。デバイス同士が直接接続します。設定、保存したデバイス、許可はこのコンピューターにのみ保存されます。</translation>
+        </message>
+        <message>
+            <source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source>
+            <translation>更新の確認では、DeskPort が GitHub に最新リリースを問い合わせます。Moonlight と同様に、公開されているホスト互換性データとコントローラーのマッピングを moonlight-stream.org からダウンロードします。問題の報告はブラウザーで Issue の下書きを開くだけで、送信内容はご自身で決めます。</translation>
+        </message>
+        <message>
+            <source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source>
+            <translation>DeskPort は GNU General Public License バージョン 3 以降のもとで提供されるフリーソフトウェアです。Moonlight Qt から派生し、改変した Sunshine ホストを含みます。</translation>
+        </message>
+        <message>
+            <source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source>
+            <translation>共有の DeskPort カタログは MIT ライセンスで提供されます。OS アイコンはパブリックドメイン（CC0 1.0）です。</translation>
+        </message>
+        <message>
+            <source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source>
+            <translation>Qt、FFmpeg、SDL などの同梱ライブラリにはそれぞれのライセンスが適用されます。各パッケージにその告知が含まれています。</translation>
+        </message>
+        <message>
+            <source>Source code and modifications: %1</source>
+            <translation>ソースコードと変更内容：%1</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceCard</name>
+        <message>
+            <source>Checking</source>
+            <translation>確認中</translation>
+        </message>
+        <message>
+            <source>Online</source>
+            <translation>オンライン</translation>
+        </message>
+        <message>
+            <source>Offline</source>
+            <translation>オフライン</translation>
+        </message>
+        <message>
+            <source>Device actions</source>
+            <translation>デバイス操作</translation>
+        </message>
+        <message>
+            <source>Looking for an address</source>
+            <translation>アドレスを検索中</translation>
+        </message>
+        <message>
+            <source>Checking connection…</source>
+            <translation>接続を確認中…</translation>
+        </message>
+        <message>
+            <source>Unavailable · check device or network</source>
+            <translation>利用不可 · デバイスやネットワークを確認</translation>
+        </message>
+        <message>
+            <source>Connect to desktop  →</source>
+            <translation>デスクトップに接続  →</translation>
+        </message>
+        <message>
+            <source>Set up access  →</source>
+            <translation>アクセスを設定  →</translation>
+        </message>
+        <message>
+            <source>Return to desktop</source>
+            <translation>デスクトップに戻る</translation>
+        </message>
+        <message>
+            <source>View details</source>
+            <translation>詳細を表示</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>確認中…</translation>
+        </message>
+        <message>
+            <source>Troubleshoot</source>
+            <translation>接続を診断</translation>
+        </message>
+        <message>
+            <source>Connect</source>
+            <translation>接続</translation>
+        </message>
+        <message>
+            <source>Set up access</source>
+            <translation>アクセスを設定</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>接続済み</translation>
+        </message>
+        <message>
+            <source>Checking availability</source>
+            <translation>利用可能か確認中</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>デバイス設定</translation>
+        </message>
+        <message>
+            <source>Computer</source>
+            <translation>コンピュータ</translation>
+        </message>
+        <message>
+            <source>Device details</source>
+            <translation>デバイスの詳細</translation>
+        </message>
+        <message>
+            <source>Open</source>
+            <translation>開く</translation>
+        </message>
+        <message>
+            <source>Group actions</source>
+            <translation>グループの操作</translation>
+        </message>
+        <message>
+            <source>1 device</source>
+            <translation>1 台のデバイス</translation>
+        </message>
+        <message>
+            <source>%1 devices</source>
+            <translation>%1 台のデバイス</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>デバイスを追加</translation>
+        </message>
+        <message>
+            <source>New group</source>
+            <translation>新規グループ</translation>
+        </message>
+    </context>
+    <context>
+        <name>HostView</name>
+        <message>
+            <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
+            <translation>別のデバイスで QR コードを読み取るか URL を開き、ここまたは認証アプリに表示される 6 桁のコードを入力してください。コードは 30 秒ごとに変わります。</translation>
+        </message>
+        <message>
+            <source>Changes in %1 s</source>
+            <translation>%1 秒後に変更</translation>
+        </message>
+        <message>
+            <source>Too many wrong codes. Code sign-in is paused until %1.</source>
+            <translation>誤ったコードが多すぎます。コードでのサインインは %1 まで停止しています。</translation>
+        </message>
+        <message>
+            <source>Hide authenticator QR</source>
+            <translation>認証アプリ用 QR を隠す</translation>
+        </message>
+        <message>
+            <source>Add to authenticator app</source>
+            <translation>認証アプリに追加</translation>
+        </message>
+        <message>
+            <source>Reset code secret</source>
+            <translation>コードの秘密鍵をリセット</translation>
+        </message>
+        <message>
+            <source>Could not save a new code secret. Please try again.</source>
+            <translation>新しいコードの秘密鍵を保存できませんでした。もう一度お試しください。</translation>
+        </message>
+        <message>
+            <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
+            <translation>Ente Auth などの認証アプリで読み取ると、スマートフォンにも同じコードが表示されます。この QR コードを持つ人は誰でもブラウザーからサインインできます。秘密鍵をリセットすると、すべての認証アプリが無効になります。</translation>
+        </message>
+        <message>
+            <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+            <translation>記憶しないブラウザーは、閉じた後に新しいコードが必要です。接続する前に共有を開始してください。接続するデバイスでローカル HTTPS 証明書を信頼する必要があります。</translation>
+        </message>
+        <message>
+            <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
+            <translation>接続時に「このブラウザーを 7 日間記憶」を選ぶと、そのブラウザーではコードの入力を省略できます。</translation>
+        </message>
+        <message>
+            <source>Browser access is not running.</source>
+            <translation>ブラウザーアクセスは実行されていません。</translation>
+        </message>
+        <message>
+            <source>Browser access is on for this network and your Tailscale network.</source>
+            <translation>ブラウザーアクセスは、このネットワークとあなたの Tailscale ネットワークで有効です。</translation>
+        </message>
+        <message>
+            <source>Browser access is on for this network.</source>
+            <translation>ブラウザーアクセスはこのネットワークで有効です。</translation>
+        </message>
+        <message>
+            <source>Devices signed in to the same Tailscale account connect without the code.</source>
+            <translation>同じ Tailscale アカウントにサインインしているデバイスは、コードなしで接続できます。</translation>
+        </message>
+        <message>
+            <source>Show code</source>
+            <translation>コードを表示</translation>
+        </message>
+        <message>
+            <source>Hide code</source>
+            <translation>コードを隠す</translation>
+        </message>
+        <message>
+            <source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source>
+            <translation>切断すると仮想ディスプレイを削除し、物理画面の配置を復元します。再接続すると新しい仮想ディスプレイを作成します。</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共有</translation>
+        </message>
+        <message>
+            <source>Share this computer.</source>
+            <translation>このコンピューターを共有。</translation>
+        </message>
+        <message>
+            <source>Share a dedicated virtual display. DeskPort stays available when its window is hidden.</source>
+            <translation>専用仮想ディスプレイを共有します。ウィンドウを隠しても利用できます。</translation>
+        </message>
+        <message>
+            <source>Share your current desktop. DeskPort stays available when its window is hidden.</source>
+            <translation>現在のデスクトップを共有します。ウィンドウを隠しても利用できます。</translation>
+        </message>
+        <message>
+            <source>Updating sharing…</source>
+            <translation>共有を更新中…</translation>
+        </message>
+        <message>
+            <source>Sharing is on</source>
+            <translation>共有は有効です</translation>
+        </message>
+        <message>
+            <source>Sharing is off</source>
+            <translation>共有は無効です</translation>
+        </message>
+        <message>
+            <source>Stop sharing</source>
+            <translation>共有を停止</translation>
+        </message>
+        <message>
+            <source>Start sharing</source>
+            <translation>共有を開始</translation>
+        </message>
+        <message>
+            <source>Browser access</source>
+            <translation>ブラウザーアクセス</translation>
+        </message>
+        <message>
+            <source>Browser access code</source>
+            <translation>ブラウザーアクセスコード</translation>
+        </message>
+        <message>
+            <source>Browser URL</source>
+            <translation>ブラウザーURL</translation>
+        </message>
+        <message>
+            <source>Paired browsers</source>
+            <translation>ペアリング済みブラウザー</translation>
+        </message>
+        <message>
+            <source>Remove pairing</source>
+            <translation>ペアリングを解除</translation>
+        </message>
+        <message>
+            <source>Could not save the pairing removal. Please try again.</source>
+            <translation>ペアリングの解除を保存できませんでした。もう一度お試しください。</translation>
+        </message>
+        <message>
+            <source>Access &amp; permissions</source>
+            <translation>アクセスと権限</translation>
+        </message>
+        <message>
+            <source>Only devices you approve can connect. A saved binding does not grant system recording or input permissions.</source>
+            <translation>承認したデバイスのみ接続できます。保存済みの連携はシステムの録画・入力権限を付与しません。</translation>
+        </message>
+        <message>
+            <source>Review permissions</source>
+            <translation>権限を確認</translation>
+        </message>
+        <message>
+            <source>Manage devices</source>
+            <translation>デバイスを管理</translation>
+        </message>
+        <message>
+            <source>Sharing preferences</source>
+            <translation>共有設定</translation>
+        </message>
+        <message>
+            <source>Virtual display size</source>
+            <translation>仮想ディスプレイのサイズ</translation>
+        </message>
+        <message>
+            <source>Choose before starting sharing. Changing size during a session is not available yet.</source>
+            <translation>共有開始前に選択してください。接続中のサイズ変更にはまだ対応していません。</translation>
+        </message>
+        <message>
+            <source>Start sharing when I log in</source>
+            <translation>ログイン時に共有を開始</translation>
+        </message>
+        <message>
+            <source>Hide compatibility &amp; diagnostics</source>
+            <translation>互換性と診断を隠す</translation>
+        </message>
+        <message>
+            <source>Compatibility &amp; diagnostics</source>
+            <translation>互換性と診断</translation>
+        </message>
+        <message>
+            <source>Legacy PIN pairing</source>
+            <translation>従来の PIN ペアリング</translation>
+        </message>
+        <message>
+            <source>For Moonlight or other clients without mutual binding. Enter the PIN shown on that client. This grants access in one direction.</source>
+            <translation>相互連携に非対応の Moonlight などで使用します。クライアントの PIN を入力すると片方向のアクセスを許可します。</translation>
+        </message>
+        <message>
+            <source>Device name</source>
+            <translation>デバイス名</translation>
+        </message>
+        <message>
+            <source>PIN</source>
+            <translation>PIN</translation>
+        </message>
+        <message>
+            <source>Allow</source>
+            <translation>許可</translation>
+        </message>
+        <message>
+            <source>Host port: %1  ·  Binding port: %2</source>
+            <translation>ホストポート：%1  ·  連携ポート：%2</translation>
+        </message>
+        <message>
+            <source>Open host logs</source>
+            <translation>ホストログを開く</translation>
+        </message>
+        <message>
+            <source>Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected.</source>
+            <translation>DeskPort に内蔵されているため、BetterDisplay は不要です。これは待機時の解像度です。承認済みクライアントの接続中は自動調整できます。</translation>
+        </message>
+        <message>
+            <source>Built-in virtual display</source>
+            <translation>内蔵仮想ディスプレイ</translation>
+        </message>
+        <message>
+            <source>Active · %1 × %2 pixels</source>
+            <translation>稼働中 · %1 × %2 ピクセル</translation>
+        </message>
+        <message>
+            <source>Created automatically when sharing starts</source>
+            <translation>共有開始時に自動作成</translation>
+        </message>
+        <message>
+            <source>Your remote workspace stays open when the client window is hidden. After disconnecting, its resolution returns to the idle size. Stopping sharing removes this virtual display.</source>
+            <translation>クライアントのウィンドウを隠してもリモートワークスペースは維持されます。切断後は待機時の解像度に戻り、共有を停止すると仮想ディスプレイが削除されます。</translation>
+        </message>
+        <message>
+            <source>Workspace · %1 × %2 · %3× scaling</source>
+            <translation>ワークスペース · %1 × %2 · %3倍表示</translation>
+        </message>
+        <message>
+            <source>Login startup is installed by this computer's system configuration. Change it there, not here.</source>
+            <translation>ログイン時の起動は、このコンピューターのシステム設定で管理されています。変更はそちらで行ってください。</translation>
+        </message>
+        <message>
+            <source>Sharing service is running</source>
+            <translation>共有サービス実行中</translation>
+        </message>
+        <message>
+            <source>Connection readiness</source>
+            <translation>接続の準備状況</translation>
+        </message>
+        <message>
+            <source>Start sharing to accept connections.</source>
+            <translation>共有を開始すると接続を受け付けます。</translation>
+        </message>
+        <message>
+            <source>Sharing needs permission. Review the items below.</source>
+            <translation>共有には権限が必要です。以下を確認してください。</translation>
+        </message>
+        <message>
+            <source>Service available. Verify picture and control from an approved device.</source>
+            <translation>サービスは利用可能です。承認済みの端末で映像と操作を確認してください。</translation>
+        </message>
+        <message>
+            <source>Allowed</source>
+            <translation>許可済み</translation>
+        </message>
+        <message>
+            <source>Verify when sharing</source>
+            <translation>共有時に確認</translation>
+        </message>
+        <message>
+            <source>Optional · audio is off</source>
+            <translation>任意 · 音声共有はオフ</translation>
+        </message>
+        <message>
+            <source>Needs attention</source>
+            <translation>確認が必要</translation>
+        </message>
+        <message>
+            <source>Open system settings</source>
+            <translation>システム設定を開く</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>権限ガイド</translation>
+        </message>
+        <message>
+            <source>Approved DeskPort devices: %1</source>
+            <translation>承認済みの DeskPort 端末：%1</translation>
+        </message>
+        <message>
+            <source>Saved approval and network reachability are separate. Legacy PIN clients are managed separately.</source>
+            <translation>承認の保存とネットワーク到達性は別です。従来の PIN クライアントは個別に管理します。</translation>
+        </message>
+        <message>
+            <source>Share this computer's sound</source>
+            <translation>このコンピューターの音声を共有</translation>
+        </message>
+        <message>
+            <source>Saved · restart sharing to apply audio changes.</source>
+            <translation>保存済み · 音声設定は共有の再起動後に適用されます。</translation>
+        </message>
+        <message>
+            <source>Save bandwidth on static screens</source>
+            <translation>静止画面で帯域を節約</translation>
+        </message>
+        <message>
+            <source>Skips unchanged frames and reduces frame rate during repeated packet loss. Applies when sharing restarts.</source>
+            <translation>変化のないフレームを省略し、パケット損失が続くとフレームレートを下げます。共有の再起動後に適用されます。</translation>
+        </message>
+        <message>
+            <source>Saved · restart sharing to apply changes.</source>
+            <translation>保存済み · 変更を適用するには共有を再起動してください。</translation>
+        </message>
+        <message>
+            <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+            <translation>映像・音声・入力は接続するデバイスで設定します。再接続後に適用されます。</translation>
+        </message>
+        <message>
+            <source>Device connection port</source>
+            <translation>デバイス接続ポート</translation>
+        </message>
+        <message>
+            <source>Apply</source>
+            <translation>適用</translation>
+        </message>
+        <message>
+            <source>Unattended operation</source>
+            <translation>無人運用</translation>
+        </message>
+        <message>
+            <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+            <translation>DeskPort を自動起動し、停止した場合は復旧します。システム設定での初回承認と、デスクトップへのログインが必要です。FileVault のロック解除や自動ログインの設定は行いません。</translation>
+        </message>
+        <message>
+            <source>Open background permissions</source>
+            <translation>バックグラウンド権限を開く</translation>
+        </message>
+        <message>
+            <source>Ask client to leave fullscreen</source>
+            <translation>クライアントの全画面表示を解除</translation>
+        </message>
+        <message>
+            <source>Created when an approved client connects</source>
+            <translation>承認済みクライアントの接続時に作成</translation>
+        </message>
+        <message>
+            <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+            <translation>切断すると物理ディスプレイを復元し、仮想ディスプレイを削除します。短いネットワーク切断では復旧のため作業領域を維持します。</translation>
+        </message>
+        <message>
+            <source>Report a problem…</source>
+            <translation>問題を報告…</translation>
+        </message>
+        <message>
+            <source>Shared Windows display</source>
+            <translation>共有 Windows ディスプレイ</translation>
+        </message>
+        <message>
+            <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
+            <translation>この Windows デスクトップを共有します。切断後、対応する解像度に復元されます</translation>
+        </message>
+        <message>
+            <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
+            <translation>この Windows デスクトップを使用します。切断すると元の解像度に戻ります。未対応のサイズはディスプレイを変更せずに通知されます。</translation>
+        </message>
+        <message>
+            <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+            <translation>クライアントのウィンドウサイズに合わせて仮想デスクトップを作成します。クライアントでミラー、専用、拡張を選択できます。切断すると以前の画面配置に戻ります。</translation>
+        </message>
+    </context>
+    <context>
+        <name>BindView</name>
+        <message>
+            <source>Add a device</source>
+            <translation>デバイスを追加</translation>
+        </message>
+        <message>
+            <source>One confirmation. Both directions.</source>
+            <translation>一度の承認で双方向に接続。</translation>
+        </message>
+        <message>
+            <source>Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.</source>
+            <translation>両方で DeskPort を開き、アドレスを入力して相手側で承認してください。</translation>
+        </message>
+        <message>
+            <source>Where do you want to connect?</source>
+            <translation>接続先を指定</translation>
+        </message>
+        <message>
+            <source>IP address or computer name</source>
+            <translation>IP アドレスまたはコンピューター名</translation>
+        </message>
+        <message>
+            <source>Send request</source>
+            <translation>リクエストを送信</translation>
+        </message>
+        <message>
+            <source>Cancel</source>
+            <translation>キャンセル</translation>
+        </message>
+        <message>
+            <source>Approval lets both computers view and control each other. System permissions are still required on each device.</source>
+            <translation>承認すると互いの画面表示と操作が可能になります。システム権限は各デバイスで必要です。</translation>
+        </message>
+        <message>
+            <source>Saved access</source>
+            <translation>保存済みアクセス</translation>
+        </message>
+        <message>
+            <source>Your approved devices will appear here.</source>
+            <translation>承認済みデバイスがここに表示されます。</translation>
+        </message>
+        <message>
+            <source>Bound both ways</source>
+            <translation>相互連携済み</translation>
+        </message>
+        <message>
+            <source>Incomplete</source>
+            <translation>未完了</translation>
+        </message>
+        <message>
+            <source>Remove access to this computer</source>
+            <translation>このコンピューターへのアクセスを削除</translation>
+        </message>
+        <message>
+            <source>Connecting another way?</source>
+            <translation>別の方法で接続しますか？</translation>
+        </message>
+        <message>
+            <source>For a custom binding port, enter address:port. Moonlight and independent Sunshine hosts use legacy pairing instead.</source>
+            <translation>カスタム連携ポートは アドレス:ポート で指定します。Moonlight と独立した Sunshine は従来のペアリングを使います。</translation>
+        </message>
+        <message>
+            <source>Add a legacy host</source>
+            <translation>従来のホストを追加</translation>
+        </message>
+        <message>
+            <source>Remove device access?</source>
+            <translation>デバイスのアクセスを削除しますか？</translation>
+        </message>
+        <message>
+            <source>%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.</source>
+            <translation>%1 はこのコンピューターを操作できなくなります。双方向で解除するには相手側の連携も削除してください。</translation>
+        </message>
+        <message>
+            <source>Edit device</source>
+            <translation>デバイスを編集</translation>
+        </message>
+        <message>
+            <source>Device name</source>
+            <translation>デバイス名</translation>
+        </message>
+        <message>
+            <source>Domain name or IP address</source>
+            <translation>ドメイン名または IP アドレス</translation>
+        </message>
+        <message>
+            <source>Computer name or IP, without port</source>
+            <translation>コンピューター名または IP（ポートなし）</translation>
+        </message>
+        <message>
+            <source>A domain name is saved as entered and resolved again when connecting.</source>
+            <translation>ドメイン名は入力どおりに保存され、接続時に再解決されます。</translation>
+        </message>
+        <message>
+            <source>Host port</source>
+            <translation>ホストポート</translation>
+        </message>
+        <message>
+            <source>Binding port</source>
+            <translation>バインドポート</translation>
+        </message>
+        <message>
+            <source>Save</source>
+            <translation>保存</translation>
+        </message>
+        <message>
+            <source>Advanced port overrides</source>
+            <translation>ポートの詳細設定</translation>
+        </message>
+        <message>
+            <source>Client access</source>
+            <translation>クライアントアクセス</translation>
+        </message>
+        <message>
+            <source>Discover nearby devices</source>
+            <translation>近くのデバイスを検出</translation>
+        </message>
+        <message>
+            <source>Request access to a computer</source>
+            <translation>コンピューターへのアクセスを要求</translation>
+        </message>
+        <message>
+            <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+            <translation>承認すると、このデバイスから相手のコンピューターを表示・操作できます。このデバイス自身のデスクトップは共有されません。</translation>
+        </message>
+        <message>
+            <source>Host access</source>
+            <translation>ホストアクセス</translation>
+        </message>
+        <message>
+            <source>Forget saved binding</source>
+            <translation>保存済みの連携を削除</translation>
+        </message>
+        <message>
+            <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+            <translation>このデバイスに保存された %1 の連携を削除しますか？デバイス一覧からは別途削除してください。このデバイスのアクセス権を取り消すには、ホスト側でも削除してください。</translation>
+        </message>
+        <message>
+            <source>Remove</source>
+            <translation>削除</translation>
+        </message>
+    </context>
+    <context>
+        <name>SetupView</name>
+        <message>
+            <source>Getting started</source>
+            <translation>初期設定</translation>
+        </message>
+        <message>
+            <source>Set up this computer.</source>
+            <translation>このコンピューターを設定。</translation>
+        </message>
+        <message>
+            <source>Connect to another computer right away. To share this one, review its permissions below.</source>
+            <translation>他のコンピューターにはすぐ接続できます。このコンピューターを共有する場合は以下の権限を確認してください。</translation>
+        </message>
+        <message>
+            <source>Allowed</source>
+            <translation>許可済み</translation>
+        </message>
+        <message>
+            <source>Checked when sharing</source>
+            <translation>共有時に確認</translation>
+        </message>
+        <message>
+            <source>Not requested</source>
+            <translation>未要求</translation>
+        </message>
+        <message>
+            <source>Restricted by system</source>
+            <translation>システムによる制限</translation>
+        </message>
+        <message>
+            <source>Needs attention</source>
+            <translation>確認が必要</translation>
+        </message>
+        <message>
+            <source>Skip for now · only connect to other devices</source>
+            <translation>今はスキップ · 他のデバイスへの接続のみ</translation>
+        </message>
+        <message>
+            <source>1. Review permissions    2. Add a device    3. Confirm and connect</source>
+            <translation>1. 権限を確認    2. デバイスを追加    3. 承認して接続</translation>
+        </message>
+        <message>
+            <source>Open system settings</source>
+            <translation>システム設定を開く</translation>
+        </message>
+        <message>
+            <source>Your Linux configuration must allow your user to access /dev/uinput. Connecting to other computers does not need this permission.</source>
+            <translation>Linux ではユーザーに /dev/uinput へのアクセスが必要です。他のコンピューターへの接続には不要です。</translation>
+        </message>
+        <message>
+            <source>Authorize the installed DeskPort app</source>
+            <translation>インストール済み DeskPort に権限を付与</translation>
+        </message>
+        <message>
+            <source>If a settings pane accepts adding an app, drag the tile below into its list, then turn the switch on. Otherwise use Reveal in Finder. Some panes list DeskPort only after sharing has requested access.</source>
+            <translation>アプリを追加できる設定では、下のタイルをリストにドラッグして有効にします。それ以外は「Finder に表示」を使います。共有が権限を要求した後にのみ DeskPort が表示される場合もあります。</translation>
+        </message>
+        <message>
+            <source>DeskPort.app  ·  Drag to Settings</source>
+            <translation>DeskPort.app  ·  設定にドラッグ</translation>
+        </message>
+        <message>
+            <source>Reveal in Finder</source>
+            <translation>Finder に表示</translation>
+        </message>
+        <message>
+            <source>After changing permissions, restart sharing. If macOS asks you to reopen DeskPort, follow that prompt. Permission checks do not replace a real picture and input test.</source>
+            <translation>権限変更後に共有を再開してください。macOS が DeskPort の再起動を求めたら従ってください。実際の映像と入力も確認する必要があります。</translation>
+        </message>
+        <message>
+            <source>Check again</source>
+            <translation>再確認</translation>
+        </message>
+        <message>
+            <source>Continue to devices</source>
+            <translation>デバイス一覧へ</translation>
+        </message>
+    </context>
+    <context>
+        <name>BindingApproval</name>
+        <message>
+            <source>Bind with this device?</source>
+            <translation>このデバイスと連携しますか？</translation>
+        </message>
+        <message>
+            <source>Not now</source>
+            <translation>後で</translation>
+        </message>
+        <message>
+            <source>Allow &amp; bind</source>
+            <translation>許可して連携</translation>
+        </message>
+        <message>
+            <source>Allow this device and this computer to view and control each other? Binding saves permission without starting a connection or interrupting existing sessions. Choose Connect when you are ready. Accept only a request you are expecting.</source>
+            <translation>このデバイスとコンピューターの相互表示・操作を許可しますか？登録は権限のみを保存し、接続を開始したり既存のセッションを中断したりしません。準備ができたら接続を選択してください。心当たりのある要求のみ承認してください。</translation>
+        </message>
+        <message>
+            <source>Allow this device to view and control this computer? Binding saves permission without starting a connection or interrupting existing sessions. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
+            <translation>このデバイスによるコンピューターの表示と操作を許可しますか？登録は権限のみを保存し、接続を開始したり既存のセッションを中断したりしません。要求元のデバイスへのアクセスは許可されません。心当たりのある要求のみ承認してください。</translation>
+        </message>
+    </context>
+    <context>
+        <name>HostManager</name>
+        <message>
+            <source>Restart</source>
+            <translation>再起動</translation>
+        </message>
+        <message>
+            <source>Quit</source>
+            <translation>終了</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>切断</translation>
+        </message>
+        <message>
+            <source>Restart DeskPort</source>
+            <translation>DeskPort を再起動</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共有</translation>
+        </message>
+        <message>
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>ウィンドウ</translation>
+        </message>
+        <message>
+            <source>Applications</source>
+            <translation>アプリ</translation>
+        </message>
+        <message>
+            <source>Sharing is off</source>
+            <translation>共有は無効です</translation>
+        </message>
+        <message>
+            <source>Stop sharing</source>
+            <translation>共有を停止</translation>
+        </message>
+        <message>
+            <source>PIN</source>
+            <translation>PIN</translation>
+        </message>
+        <message>
+            <source>Screen &amp; system audio</source>
+            <translation>画面とシステム音声</translation>
+        </message>
+        <message>
+            <source>Let a connected device see this desktop and hear its sound.</source>
+            <translation>接続したデバイスに画面と音声を共有します。</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; mouse</source>
+            <translation>キーボードとマウス</translation>
+        </message>
+        <message>
+            <source>Let a device you approve control this computer.</source>
+            <translation>承認済みデバイスによる操作を許可します。</translation>
+        </message>
+        <message>
+            <source>Audio input</source>
+            <translation>音声入力</translation>
+        </message>
+        <message>
+            <source>Needed only when your sharing audio path uses microphone access.</source>
+            <translation>音声共有でマイクへのアクセスを使う場合のみ必要です。</translation>
+        </message>
+        <message>
+            <source>Desktop capture</source>
+            <translation>デスクトップのキャプチャ</translation>
+        </message>
+        <message>
+            <source>KDE uses the current desktop. Other desktops may ask you to choose a screen when sharing starts.</source>
+            <translation>KDE は現在のデスクトップを使用します。他の環境では共有開始時に画面選択を求める場合があります。</translation>
+        </message>
+        <message>
+            <source>Remote control requires access to the system input device.</source>
+            <translation>リモート操作にはシステム入力デバイスへのアクセスが必要です。</translation>
+        </message>
+        <message>
+            <source>Open DeskPort</source>
+            <translation>DeskPort を開く</translation>
+        </message>
+        <message>
+            <source>Quit DeskPort</source>
+            <translation>DeskPort を終了</translation>
+        </message>
+        <message>
+            <source>Disconnect viewer</source>
+            <translation>ビューアーを切断</translation>
+        </message>
+        <message>
+            <source> Retrying automatically in %1 seconds.</source>
+            <translation> %1 秒後に自動で再試行します。</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>再接続</translation>
+        </message>
+        <message>
+            <source>Unattended operation</source>
+            <translation>無人運用</translation>
+        </message>
+        <message>
+            <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+            <translation>自動復旧を一時停止して終了しますか？次回 DeskPort を開くと再開します。</translation>
+        </message>
+        <message>
+            <source>Pause and quit</source>
+            <translation>一時停止して終了</translation>
+        </message>
+        <message>
+            <source>Turn off unattended operation before disabling login startup.</source>
+            <translation>ログイン時の起動を無効にする前に、無人運用をオフにしてください。</translation>
+        </message>
+        <message>
+            <source>Cannot save unattended preferences.</source>
+            <translation>無人運用の設定を保存できません。</translation>
+        </message>
+        <message>
+            <source>Off</source>
+            <translation>オフ</translation>
+        </message>
+        <message>
+            <source>Waiting for approval in System Settings</source>
+            <translation>システム設定での承認待ち</translation>
+        </message>
+        <message>
+            <source>Recovery service needs setup. Turn it off and on to try again.</source>
+            <translation>復旧サービスの設定が必要です。オフにしてからオンにしてください。</translation>
+        </message>
+        <message>
+            <source>Enabled; waiting for the recovery service to check in</source>
+            <translation>有効：復旧サービスの確認待ち</translation>
+        </message>
+        <message>
+            <source>Recovery has not checked in. Review background permissions.</source>
+            <translation>復旧サービスから応答がありません。バックグラウンド権限を確認してください。</translation>
+        </message>
+        <message>
+            <source>Enabled; recovery service is checking this Mac</source>
+            <translation>有効：復旧サービスがこの Mac を確認しています</translation>
+        </message>
+        <message>
+            <source>Waiting for a logged-in desktop session</source>
+            <translation>デスクトップへのログイン待ち</translation>
+        </message>
+        <message>
+            <source>Recovery needs attention. Check login startup and background permissions.</source>
+            <translation>復旧に対応が必要です。ログイン時の起動とバックグラウンド権限を確認してください。</translation>
+        </message>
+        <message>
+            <source>Install DeskPort in Applications before enabling unattended operation.</source>
+            <translation>無人運用を有効にする前に DeskPort を「アプリケーション」にインストールしてください。</translation>
+        </message>
+        <message>
+            <source>Cannot enable login startup.</source>
+            <translation>ログイン時の起動を有効にできません。</translation>
+        </message>
+    </context>
+    <context>
+        <name>DesktopSegue</name>
+        <message>
+            <source>This device has no Desktop entry. Open Applications from the device menu to choose an app.</source>
+            <translation>このデバイスに Desktop がありません。デバイスメニューの Applications からアプリを選択してください。</translation>
+        </message>
+        <message>
+            <source>Another application is running on this device. Open Applications from the device menu to resume it or switch to Desktop.</source>
+            <translation>別のアプリが実行中です。デバイスメニューの Applications から再開するか Desktop に切り替えてください。</translation>
+        </message>
+        <message>
+            <source>Unable to prepare the desktop connection. Try again.</source>
+            <translation>デスクトップ接続を準備できません。再試行してください。</translation>
+        </message>
+        <message>
+            <source>The device disconnected. Return to Devices and try again.</source>
+            <translation>デバイスが切断されました。デバイス一覧に戻って再試行してください。</translation>
+        </message>
+        <message>
+            <source>Loading the desktop timed out. Return to Devices and try again.</source>
+            <translation>デスクトップの読み込みがタイムアウトしました。デバイス一覧から再試行してください。</translation>
+        </message>
+        <message>
+            <source>Connecting to desktop…</source>
+            <translation>デスクトップに接続中…</translation>
+        </message>
+        <message>
+            <source>Back to devices</source>
+            <translation>デバイス一覧に戻る</translation>
+        </message>
+        <message>
+            <source>Close</source>
+            <translation>閉じる</translation>
+        </message>
+        <message>
+            <source>Cancel</source>
+            <translation>キャンセル</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceSettings</name>
+        <message>
+            <source>Device settings</source>
+            <translation>デバイス設定</translation>
+        </message>
+        <message>
+            <source>Saved only for this device. Changes apply on the next connection.</source>
+            <translation>このデバイス専用の設定です。次回の接続時に適用されます。</translation>
+        </message>
+        <message>
+            <source>Picture mode</source>
+            <translation>画質モード</translation>
+        </message>
+        <message>
+            <source>Automatic (recommended)</source>
+            <translation>自動（推奨）</translation>
+        </message>
+        <message>
+            <source>Clear</source>
+            <translation>鮮明さ優先</translation>
+        </message>
+        <message>
+            <source>Smooth</source>
+            <translation>滑らかさ優先</translation>
+        </message>
+        <message>
+            <source>Save data</source>
+            <translation>データ節約</translation>
+        </message>
+        <message>
+            <source>Custom</source>
+            <translation>カスタム</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>クライアントのウィンドウ解像度に合わせる</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>このデバイスの音声を受信</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>セッション中にテキスト、画像、ファイルを共有</translation>
+        </message>
+        <message>
+            <source>Advanced streaming settings</source>
+            <translation>配信の詳細設定</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>保存しました。再接続すると適用されます。</translation>
+        </message>
+        <message>
+            <source>Virtual screen</source>
+            <translation>仮想ディスプレイ</translation>
+        </message>
+        <message>
+            <source>Primary screen and mirror others (default)</source>
+            <translation>メインにして他の画面をミラーリング（既定）</translation>
+        </message>
+        <message>
+            <source>Primary screen and turn off others</source>
+            <translation>メインにして他の画面を無効にする</translation>
+        </message>
+        <message>
+            <source>Use client as an extended screen</source>
+            <translation>クライアントを拡張ディスプレイにする</translation>
+        </message>
+        <message>
+            <source>The previous screen layout is restored automatically when the session ends.</source>
+            <translation>セッション終了時に元の画面配置を自動で復元します。</translation>
+        </message>
+        <message>
+            <source>Desktop adjustment</source>
+            <translation>デスクトップの微調整</translation>
+        </message>
+        <message>
+            <source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+            <translation>1.5 では操作項目を大きく、0.5 ではより多くの内容を表示します。自動計算したデスクトップサイズに適用します。接続中はすぐに反映されます。</translation>
+        </message>
+        <message>
+            <source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source>
+            <translation>macOS の最小デスクトップ（800 × 600）に達したため、このウィンドウではこれ以上拡大できません。全画面表示か、より大きなウィンドウを使用してください。</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>フルスクリーン</translation>
+        </message>
+        <message>
+            <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+            <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
+        </message>
+        <message>
+            <source>Desktop fine tuning</source>
+            <translation>デスクトップの微調整</translation>
+        </message>
+        <message>
+            <source>Main + mirror</source>
+            <translation>メイン + ミラー</translation>
+        </message>
+        <message>
+            <source>Main only</source>
+            <translation>メインのみ</translation>
+        </message>
+        <message>
+            <source>Extended</source>
+            <translation>拡張</translation>
+        </message>
+        <message>
+            <source>Fit to window</source>
+            <translation>ウィンドウに合わせる</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>サウンド</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>入力</translation>
+        </message>
+        <message>
+            <source>Domain name or IP address</source>
+            <translation>ドメイン名または IP アドレス</translation>
+        </message>
+        <message>
+            <source>Your existing binding is kept. Reconnect to use the saved address.</source>
+            <translation>既存のペアリングは保持されます。再接続すると保存したアドレスを使用します。</translation>
+        </message>
+        <message>
+            <source>Computer name or IP, without port</source>
+            <translation>コンピュータ名または IP（ポートなし）</translation>
+        </message>
+        <message>
+            <source>Save</source>
+            <translation>保存</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceAdvanced</name>
+        <message>
+            <source>Advanced streaming settings</source>
+            <translation>配信の詳細設定</translation>
+        </message>
+        <message>
+            <source>Settings for %1</source>
+            <translation>%1 の設定</translation>
+        </message>
+        <message>
+            <source>Make DeskPort your own.</source>
+            <translation>DeskPort を自分好みに。</translation>
+        </message>
+        <message>
+            <source>These settings apply only to this device. Reconnect to apply changes.</source>
+            <translation>このデバイスのみに適用されます。変更後は再接続してください。</translation>
+        </message>
+        <message>
+            <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+            <translation>新しいデバイスの既定設定です。デバイスメニューの「デバイス設定」で個別に変更できます。</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>保存しました。再接続すると適用されます。</translation>
+        </message>
+        <message>
+            <source>Connecting to remote computers</source>
+            <translation>リモートコンピューターへの接続</translation>
+        </message>
+        <message>
+            <source>Picture</source>
+            <translation>映像</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>入力</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>サウンド</translation>
+        </message>
+        <message>
+            <source>Advanced</source>
+            <translation>詳細</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>クライアントのウィンドウ解像度に合わせる</translation>
+        </message>
+        <message>
+            <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+            <translation>バインド済み Mac の内蔵仮想ディスプレイを使用します。サイズ変更時に映像が一時的に再接続されますが、アプリは開いたままです。他のホストには下の解像度が適用されます。</translation>
+        </message>
+        <message>
+            <source>Smart streaming</source>
+            <translation>スマートストリーミング</translation>
+        </message>
+        <message>
+            <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+            <translation>解像度に応じた帯域上限と滑らかなフレーム表示を使用します。手動設定を使うにはオフにしてください。</translation>
+        </message>
+        <message>
+            <source>Quality preset</source>
+            <translation>画質プリセット</translation>
+        </message>
+        <message>
+            <source>Choose a preset…</source>
+            <translation>プリセットを選択…</translation>
+        </message>
+        <message>
+            <source>Office · 30 fps / 10 Mbps</source>
+            <translation>オフィス · 30 fps / 10 Mbps</translation>
+        </message>
+        <message>
+            <source>Clear · 60 fps / 40 Mbps</source>
+            <translation>鮮明 · 60 fps / 40 Mbps</translation>
+        </message>
+        <message>
+            <source>Smooth · 60 fps / 15 Mbps</source>
+            <translation>スムーズ · 60 fps / 15 Mbps</translation>
+        </message>
+        <message>
+            <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+            <translation>プリセットはフレームレートと帯域幅のみ変更します。下でネットワークに合わせて調整できます。</translation>
+        </message>
+        <message>
+            <source>Picture adjustments</source>
+            <translation>映像の調整</translation>
+        </message>
+        <message>
+            <source>Fallback resolution</source>
+            <translation>代替解像度</translation>
+        </message>
+        <message>
+            <source>Resolution</source>
+            <translation>解像度</translation>
+        </message>
+        <message>
+            <source>Connection window</source>
+            <translation>接続ウィンドウ</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>全画面</translation>
+        </message>
+        <message>
+            <source>Borderless full screen</source>
+            <translation>ボーダーレス全画面</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>ウィンドウ</translation>
+        </message>
+        <message>
+            <source>Frame rate</source>
+            <translation>フレームレート</translation>
+        </message>
+        <message>
+            <source>Bandwidth · %1 Mbps</source>
+            <translation>帯域幅 · %1 Mbps</translation>
+        </message>
+        <message>
+            <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+            <translation>値を上げると画質と帯域使用量が増えます。スライダーを動かさない限り、既存の詳細設定値を維持します。</translation>
+        </message>
+        <message>
+            <source>Smooth frame pacing</source>
+            <translation>フレーム表示を平滑化</translation>
+        </message>
+        <message>
+            <source>Show streaming statistics</source>
+            <translation>ストリーミング統計を表示</translation>
+        </message>
+        <message>
+            <source>Synchronize frames to this display</source>
+            <translation>このディスプレイにフレームを同期</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; pointer</source>
+            <translation>キーボードとポインター</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>キーボード・ポインター・コントローラー入力を許可</translation>
+        </message>
+        <message>
+            <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+            <translation>オフにすると閲覧専用になります。ローカルの DeskPort ショートカットは引き続き使えます。</translation>
+        </message>
+        <message>
+            <source>Use a desktop-style pointer</source>
+            <translation>デスクトップ用ポインターを使う</translation>
+        </message>
+        <message>
+            <source>Always show a local pointer in desktop mode</source>
+            <translation>デスクトップモードでローカルポインターを常に表示</translation>
+        </message>
+        <message>
+            <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+            <translation>ホストがカーソルを隠してもポインターを表示します。2つ表示される場合はオフにしてください。</translation>
+        </message>
+        <message>
+            <source>Reverse scrolling direction</source>
+            <translation>スクロール方向を反転</translation>
+        </message>
+        <message>
+            <source>Send system shortcuts to the remote computer</source>
+            <translation>システムのショートカットをリモートに送信</translation>
+        </message>
+        <message>
+            <source>Never</source>
+            <translation>しない</translation>
+        </message>
+        <message>
+            <source>Only in full screen</source>
+            <translation>全画面のみ</translation>
+        </message>
+        <message>
+            <source>Always</source>
+            <translation>常に</translation>
+        </message>
+        <message>
+            <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+            <translation>MacではSuper / WindowsがCommand、AltがOptionに対応します。「常に」を選ぶとウィンドウ内でSuper + Spaceを転送します。変更は次回の接続から有効です。</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>セッション中にテキスト、画像、ファイルを共有</translation>
+        </message>
+        <message>
+            <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+            <translation>再接続後、この連携済みデバイスと新しくコピーした内容を共有します。最大 128 MiB のプレーンテキストのみ。画像やファイルは共有されません。</translation>
+        </message>
+        <message>
+            <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+            <translation>フォーカス中の映像内ではキーボードがポインターに従います。外に出るとキーとボタンを解放します。クリックでフォーカスし、システム予約キーはローカルに残る場合があります。</translation>
+        </message>
+        <message>
+            <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+            <translation>Ctrl + Alt + Shift + Z でリモート入力を解除します。</translation>
+        </message>
+        <message>
+            <source>Sound from the remote computer</source>
+            <translation>リモートコンピューターの音声</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>このデバイスの音声を受信</translation>
+        </message>
+        <message>
+            <source>Mute when DeskPort loses focus</source>
+            <translation>DeskPort が非アクティブのとき消音</translation>
+        </message>
+        <message>
+            <source>Also play audio on the host</source>
+            <translation>ホストでも音声を再生</translation>
+        </message>
+        <message>
+            <source>Advanced &amp; support</source>
+            <translation>詳細設定とサポート</translation>
+        </message>
+        <message>
+            <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+            <translation>カスタム解像度、コーデック、HDR、サラウンド、コントローラーは詳細設定で変更できます。</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>詳細設定</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>権限ガイド</translation>
+        </message>
+        <message>
+            <source>Report a problem</source>
+            <translation>問題を報告</translation>
+        </message>
+        <message>
+            <source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source>
+            <translation>自動は解像度に応じて帯域幅を設定し、ネットワークに合わせて調整します。データ節約は30 fps、映像上限5 Mbpsです。上部バーのデータセーバースイッチはすべてのデバイスの映像ビットレートを制限します。</translation>
+        </message>
+        <message>
+            <source>Picture mode</source>
+            <translation>画質モード</translation>
+        </message>
+        <message>
+            <source>Automatic (recommended)</source>
+            <translation>自動（推奨）</translation>
+        </message>
+        <message>
+            <source>Clear</source>
+            <translation>鮮明さ優先</translation>
+        </message>
+        <message>
+            <source>Smooth</source>
+            <translation>滑らかさ優先</translation>
+        </message>
+        <message>
+            <source>Save data</source>
+            <translation>データ節約</translation>
+        </message>
+        <message>
+            <source>Custom</source>
+            <translation>カスタム</translation>
+        </message>
+        <message>
+            <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+            <translation>接続中は Ctrl+Alt+Shift+X でもフルスクリーンを切り替えられます。</translation>
+        </message>
+        <message>
+            <source>Bandwidth</source>
+            <translation>帯域幅</translation>
+        </message>
+        <message>
+            <source>Automatic</source>
+            <translation>自動</translation>
+        </message>
+        <message>
+            <source>%1 Mbps</source>
+            <translation>%1 Mbps</translation>
+        </message>
+        <message>
+            <source>All streaming options</source>
+            <translation>すべての配信オプション</translation>
+        </message>
+    </context>
+    <context>
+        <name>SdlInputHandler</name>
+        <message>
+            <source>DeskPort — Remote keyboard · Ctrl+Alt+Shift+Z releases</source>
+            <translation>DeskPort — リモートキーボード · Ctrl+Alt+Shift+Z で解放</translation>
+        </message>
+        <message>
+            <source>DeskPort — Remote typing · system shortcuts local</source>
+            <translation>DeskPort — リモート入力 · システムショートカットはローカル</translation>
+        </message>
+        <message>
+            <source>DeskPort — Local keyboard · click inside to focus</source>
+            <translation>DeskPort — ローカルキーボード · 画面内をクリックして操作</translation>
+        </message>
+    </context>
+    <context>
+        <name>ClipboardChannel</name>
+        <message>
+            <source>Clipboard sharing stopped. Reconnect to try again.</source>
+            <translation>クリップボード共有が停止しました。再接続してお試しください。</translation>
+        </message>
+        <message>
+            <source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source>
+            <translation>クリップボード共有を利用できません。再接続してお試しください。デスクトップ操作には影響しません。</translation>
+        </message>
+    </context>
+    <context>
+        <name>NavigableDialog</name>
+        <message>
+            <source>Close</source>
+            <translation>閉じる</translation>
+        </message>
+    </context>
+    <context>
+        <name>DevicePanel</name>
+        <message>
+            <source>Remove device</source>
+            <translation>デバイスを削除</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>接続済み</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>確認中…</translation>
+        </message>
+        <message>
+            <source>Online</source>
+            <translation>オンライン</translation>
+        </message>
+        <message>
+            <source>Online · access not set up</source>
+            <translation>オンライン · アクセス未設定</translation>
+        </message>
+        <message>
+            <source>Offline</source>
+            <translation>オフライン</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>デバイス設定</translation>
+        </message>
+        <message>
+            <source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source>
+            <translation>%1 で DeskPort またはホストが動作していて、両方のデバイスが互いに到達できることを確認してください。上部バーの更新で再確認します。</translation>
+        </message>
+        <message>
+            <source>Original name</source>
+            <translation>元の名前</translation>
+        </message>
+        <message>
+            <source>System</source>
+            <translation>システム</translation>
+        </message>
+        <message>
+            <source>Unknown</source>
+            <translation>不明</translation>
+        </message>
+        <message>
+            <source>Connection</source>
+            <translation>接続方法</translation>
+        </message>
+        <message>
+            <source>DeskPort binding</source>
+            <translation>DeskPort 連携</translation>
+        </message>
+        <message>
+            <source>Legacy pairing</source>
+            <translation>従来のペアリング</translation>
+        </message>
+        <message>
+            <source>Not set up</source>
+            <translation>未設定</translation>
+        </message>
+        <message>
+            <source>Address</source>
+            <translation>アドレス</translation>
+        </message>
+        <message>
+            <source>Technical details</source>
+            <translation>技術的な詳細</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>再接続</translation>
+        </message>
+        <message>
+            <source>Toggle full screen</source>
+            <translation>フルスクリーンの切り替え</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>切断</translation>
+        </message>
+        <message>
+            <source>Change address</source>
+            <translation>アドレスを変更</translation>
+        </message>
+        <message>
+            <source>Set alias</source>
+            <translation>別名を設定</translation>
+        </message>
+        <message>
+            <source>Pair with a legacy PIN</source>
+            <translation>従来の PIN でペアリング</translation>
+        </message>
+        <message>
+            <source>For Sunshine or other hosts without DeskPort binding.</source>
+            <translation>Sunshine など、DeskPort 連携に対応していないホスト向けです。</translation>
+        </message>
+        <message>
+            <source>Move out of group</source>
+            <translation>グループから出す</translation>
+        </message>
+        <message>
+            <source>Remove from list</source>
+            <translation>リストから削除</translation>
+        </message>
+    </context>
+    <context>
+        <name>HelpView</name>
+        <message>
+            <source>Manual</source>
+            <translation>マニュアル</translation>
+        </message>
+    </context>
+    <context>
+        <name>MainWindow</name>
+        <message>
+            <source>Disconnecting…</source>
+            <translation>切断中…</translation>
+        </message>
+    </context>
 </TS>

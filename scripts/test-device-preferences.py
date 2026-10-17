@@ -13,8 +13,14 @@ CONFIG -= app_bundle
 TARGET = device-preferences
 SOURCES += "{root}/tests/device-preferences.cpp" "{root}/app/settings/streamingpreferences.cpp"
 HEADERS += "{root}/app/settings/streamingpreferences.h"
+RESOURCES += test-resources.qrc
 INCLUDEPATH += "{root}/app"
 ''')
+    resources = ['<RCC><qresource prefix="/">',
+        f'<file alias="i18n/languages.json">{root}/shared/deskport-core/i18n/languages.json</file>']
+    resources += [f'<file alias="languages/qml_{language}.qm">{root}/app/languages/qml_{language}.qm</file>'
+                  for language in ('ar','bo','pt','fr','de','ko','es')]
+    (work/'test-resources.qrc').write_text('\n'.join(resources+['</qresource></RCC>']))
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen", XDG_CONFIG_HOME=temporary)
     env.setdefault("DEVELOPER_DIR", "/Applications/Xcode.app/Contents/Developer")
     subprocess.run([os.environ.get("DESKPORT_QMAKE", "qmake"), "test.pro"], cwd=work, env=env, check=True)

@@ -7,6 +7,11 @@
 #include <QMetaProperty>
 #include <QTranslator>
 #include <QCoreApplication>
+#include <QGuiApplication>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QLocale>
 #include <QReadWriteLock>
 #include <QtMath>
@@ -292,6 +297,7 @@ bool StreamingPreferences::retranslate()
 
     QTranslator* newTranslator = new QTranslator();
     QString languageSuffix = getSuffixFromLanguage(language);
+    QGuiApplication::setLayoutDirection(QLocale(languageSuffix).textDirection());
 
     // Remove the old translator, even if we can't load a new one.
     // Otherwise we'll be stuck with the old translated values instead
@@ -337,6 +343,25 @@ QString StreamingPreferences::manualLanguage()
     const QString suffix = getSuffixFromLanguage(language);
     if (suffix.startsWith("zh")) return suffix == "zh_TW" ? "zh-Hant" : "zh-Hans";
     return suffix.section('_', 0, 0);
+}
+
+QVariantList StreamingPreferences::sharedLanguages() const
+{
+    QFile file(":/i18n/languages.json");
+    if (!file.open(QIODevice::ReadOnly)) return {};
+    const QMap<QString, Language> values = {
+        {"en", LANG_EN}, {"zh_CN", LANG_ZH_CN}, {"zh_TW", LANG_ZH_TW},
+        {"ja", LANG_JA}, {"fr", LANG_FR}, {"de", LANG_DE}, {"ar", LANG_AR},
+        {"ko", LANG_KO}, {"pt", LANG_PT}, {"es", LANG_ES}, {"bo", LANG_BO}
+    };
+    QVariantList result;
+    for (const auto &entry : QJsonDocument::fromJson(file.readAll()).array()) {
+        const auto locale = entry.toObject();
+        const auto code = locale.value("qt").toString();
+        if (values.contains(code))
+            result.append(QVariantMap{{"label", locale.value("name").toString()}, {"value", static_cast<int>(values.value(code))}});
+    }
+    return result;
 }
 
 QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Language lang)
@@ -399,6 +424,10 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "lt";
     case LANG_ET:
         return "et";
+    case LANG_AR:
+        return "ar";
+    case LANG_BO:
+        return "bo";
     case LANG_AUTO:
     default:
         // Regional Chinese locales must select a script, not fall back to English.

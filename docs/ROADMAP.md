@@ -1,3 +1,22 @@
+## Unified UI localization — 2026-10-17
+
+Reason: add French, German, Arabic, Korean, Portuguese, Spanish and Tibetan
+consistently across desktop and native clients without translating wire data.
+
+Core `f5d915c` owns 1,019 English-keyed UI rows, platform usage, context variants,
+locale metadata and offline manual text. All existing desktop catalog text is
+retained in that table; `scripts/sync-translations.py` generates every Qt source
+catalog. Primary pages now have complete catalogs for ten non-English locales,
+including Arabic, Portuguese and Tibetan. English remains the source/fallback.
+The desktop language picker reads the shared registry, new persisted language
+IDs are appended, and Arabic switches Qt UI direction without changing the
+stream's display/input policy. Git and Nix pins advance together.
+
+New translations are machine-assisted drafts with common terminology reviewed.
+Native-speaker review, especially Tibetan, and physical font/RTL/truncation
+acceptance remain open. Resource and protocol checks do not imply live stream,
+latency or input acceptance. No release or installed service activation occurs.
+
 ## Desktop 0.7.2 formal release — 2026-10-15
 
 Published the stable desktop matrix as

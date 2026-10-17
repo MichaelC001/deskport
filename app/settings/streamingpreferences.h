@@ -116,6 +116,9 @@ public:
         LANG_CKB,
         LANG_LT,
         LANG_ET,
+        // Append only: saved language IDs must remain stable.
+        LANG_AR,
+        LANG_BO,
     };
     Q_ENUM(Language);
 
@@ -171,6 +174,8 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(QVariantList sharedLanguages READ sharedLanguages CONSTANT)
+    QVariantList sharedLanguages() const;
 
     Q_INVOKABLE bool retranslate();
     // The language code used by the shared manual (en, zh-Hans, ja, de, ...).

@@ -20,6 +20,8 @@ ApplicationWindow {
     property bool clearOnBack: false
 
     id: window
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
     title: "DeskPort"
     // macOS: one top bar. The content extends under the title bar and the window
     // buttons sit at the left of DeskPort's own top bar (see mactitlebar.mm).

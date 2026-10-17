@@ -47,17 +47,9 @@ UiPage {
             title: qsTr("Language")
             note: qsTr("Saved on this computer. Missing translations appear in English.")
             readonly property var languages: [
-                { label: qsTr("Follow system"), value: preferences.LANG_AUTO },
-                { label: "English", value: preferences.LANG_EN },
-                { label: "简体中文", value: preferences.LANG_ZH_CN },
-                { label: "繁體中文", value: preferences.LANG_ZH_TW },
-                { label: "日本語", value: preferences.LANG_JA },
-                { label: "한국어", value: preferences.LANG_KO },
-                { label: "Deutsch", value: preferences.LANG_DE },
-                { label: "Français", value: preferences.LANG_FR },
-                { label: "Español", value: preferences.LANG_ES },
+                { label: qsTr("Follow system"), value: preferences.LANG_AUTO }
+            ].concat(preferences.sharedLanguages).concat([
                 { label: "Italiano", value: preferences.LANG_IT },
-                { label: "Português", value: preferences.LANG_PT },
                 { label: "Русский", value: preferences.LANG_RU },
                 { label: "Nederlands", value: preferences.LANG_NL },
                 { label: "Polski", value: preferences.LANG_PL },
@@ -69,7 +61,7 @@ UiPage {
                 { label: "Ελληνικά", value: preferences.LANG_EL },
                 { label: "Tiếng Việt", value: preferences.LANG_VI },
                 { label: "ภาษาไทย", value: preferences.LANG_TH }
-            ]
+            ])
             options: languages
             currentIndex: {
                 for (var i = 0; i < languages.length; ++i)

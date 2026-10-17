@@ -15,7 +15,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-translations-') as tmp:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     int checked = 0;
-    for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es"}) {
+    for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es","pt","ar","bo"}) {
         const auto base = QString::fromLocal8Bit(argv[1])+"/qml_"+language;
         QTranslator translator;
         if (!translator.load(base+".qm")) return 1;

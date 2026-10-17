@@ -1,3449 +1,3926 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
 <TS version="2.1" language="zh_TW" sourcelanguage="en_GB">
-<context>
-    <name>AppView</name>
-    <message>
-        <location filename="../gui/AppView.qml" line="145"/>
-        <location filename="../gui/AppView.qml" line="303"/>
-        <source>Resume Game</source>
-        <translation>繼續遊戲</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="173"/>
-        <location filename="../gui/AppView.qml" line="308"/>
-        <source>Quit Game</source>
-        <translation>結束遊戲</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="303"/>
-        <source>Launch Game</source>
-        <translation>啟動遊戲</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="316"/>
-        <source>Direct Launch</source>
-        <translation>直接啟動</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="320"/>
-        <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>選取目標主機後直接啟動此應用程式，略過應用程式選取方格。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="329"/>
-        <source>Hide Game</source>
-        <translation>隱藏遊戲</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="333"/>
-        <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請在目標主機上按下滑鼠右鍵並選擇 %1。</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="333"/>
-        <source>View All Apps</source>
-        <translation>檢視所有應用程式</translation>
-    </message>
-    <message>
-        <location filename="../gui/AppView.qml" line="348"/>
-        <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>你確定要結束 %1 嗎? 所有未儲存的進度將會遺失。</translation>
-    </message>
-</context>
-<context>
-    <name>CliPair</name>
-    <message>
-        <location filename="../gui/CliPair.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation>正在與目標電腦建立連線…</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliPair.qml" line="13"/>
-        <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>正在配對…請在 %2 輸入「%1」。</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliPair.qml" line="85"/>
-        <source>Pairing completed successfully</source>
-        <translation>配對成功</translation>
-    </message>
-</context>
-<context>
-    <name>CliQuitStreamSegue</name>
-    <message>
-        <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation>正在與目標電腦建立連線…</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
-        <source>Quitting app...</source>
-        <translation>正在結束應用程式...</translation>
-    </message>
-</context>
-<context>
-    <name>CliStartStreamSegue</name>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
-        <source>Establishing connection to PC...</source>
-        <translation>正在與目標電腦建立連線…</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
-        <source>Loading app list...</source>
-        <translation>正在載入應用程式清單...</translation>
-    </message>
-    <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
-        <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>你確定要結束 %1 嗎？所有未儲存的進度將會遺失。</translation>
-    </message>
-</context>
-<context>
-    <name>ComputerModel</name>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="50"/>
-        <source>Online</source>
-        <translation type="unfinished">線上</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="53"/>
-        <source>Offline</source>
-        <translation type="unfinished">離線</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="56"/>
-        <location filename="../gui/computermodel.cpp" line="68"/>
-        <location filename="../gui/computermodel.cpp" line="80"/>
-        <location filename="../gui/computermodel.cpp" line="82"/>
-        <location filename="../gui/computermodel.cpp" line="83"/>
-        <source>Unknown</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="62"/>
-        <source>Paired</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="65"/>
-        <source>Unpaired</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Alias: %1</source>
-        <translation>別名: %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="72"/>
-        <source>Name: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="73"/>
-        <source>Status: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="74"/>
-        <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="75"/>
-        <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="76"/>
-        <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="77"/>
-        <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="78"/>
-        <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="79"/>
-        <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="80"/>
-        <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="81"/>
-        <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="82"/>
-        <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/computermodel.cpp" line="83"/>
-        <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Group</source>
-        <translation>群組</translation>
-    </message>
-</context>
-<context>
-    <name>GamepadMapper</name>
-    <message>
-        <location filename="../gui/GamepadMapper.qml" line="4"/>
-        <source>Gamepad Mapping</source>
-        <translation>手把對應</translation>
-    </message>
-</context>
-<context>
-    <name>NvHTTP</name>
-    <message>
-        <location filename="../backend/nvhttp.cpp" line="359"/>
-        <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>缺少音訊擷取裝置。重新安裝 GeForce Experience 可以解決此錯誤。</translation>
-    </message>
-    <message>
-        <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
-        <translation>此主機不支援工作階段音訊擷取或僅觀看模式。請更新 DeskPort 主機後重新連線。</translation>
-    </message>
-</context>
-<context>
-    <name>PcView</name>
-    <message><source>Removing device…</source><translation>正在刪除裝置…</translation></message>
-    <message><source>Delete '%1', its saved binding and device settings from this computer?</source><translation>從此電腦徹底刪除「%1」、已儲存的綁定與裝置設定？</translation></message>
-    <message><source>Change address</source><translation>變更位址</translation></message>
-    <message>
-        <location filename="../gui/PcView.qml" line="21"/>
-        <source>Computers</source>
-        <translation>電腦</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="68"/>
-        <source>Unable to connect to the specified PC.</source>
-        <translation>無法連線到指定電腦。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="71"/>
-        <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Moonlight 無法由這台電腦的網路連線進行連接。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="74"/>
-        <source>Click the Help button for possible solutions.</source>
-        <translation>按下說明按鈕以取得可能的解決方法。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="104"/>
-        <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>已停用自動搜尋電腦功能，需要手動新增。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="103"/>
-        <source>Searching for compatible hosts on your local network...</source>
-        <translation>正在您的區域網路中搜尋相容的主機…</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="188"/>
-        <source>Wake PC</source>
-        <translation>喚醒電腦</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="194"/>
-        <source>Test Network</source>
-        <translation>網路測試</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="203"/>
-        <source>Rename PC</source>
-        <translation>重新命名電腦</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="212"/>
-        <source>Delete PC</source>
-        <translation>刪除電腦</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="221"/>
-        <source>View Details</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="233"/>
-        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="336"/>
-        <source>This may take a few seconds…</source>
-        <translation>這可能需要幾秒鐘……</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="347"/>
-        <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>此網路似乎並未封鎖 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="347"/>
-        <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>如果您嘗試透過網際網路進行串流，請在您的遊戲電腦上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的電腦的網際網路連線。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="351"/>
-        <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>您電腦目前的網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="351"/>
-        <source>The following network ports were blocked:</source>
-        <translation>以下網路通訊埠被封鎖：</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="343"/>
-        <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>無法執行網路測試，因為此電腦無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>PC Status: %1</source>
-        <translation>電腦狀態：%1</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>Online</source>
-        <translation>線上</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="172"/>
-        <source>Offline</source>
-        <translation>離線</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="178"/>
-        <source>View All Apps</source>
-        <translation>檢視所有應用程式</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="309"/>
-        <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>請在您的主機電腦上輸入 %1，配對完成後，此對話方塊將會關閉。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="310"/>
-        <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation>若您的主機正在執行 Sunshine，請導覽至 Sunshine 網頁 UI 並輸入 PIN 碼。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="322"/>
-        <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation>您確定要移除「%1」嗎？</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="336"/>
-        <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation>Moonlight 正在測試您的網路連線以判斷是否有需要的連接埠被封鎖。</translation>
-    </message>
-    <message>
-        <location filename="../gui/PcView.qml" line="363"/>
-        <source>Enter an alias for this device. Leave empty to use its original name:</source>
-        <translation>輸入此裝置的別名。留空則使用原始名稱：</translation>
-    </message>
-    <message>
-        <source>Devices</source>
-        <translation>裝置</translation>
-    </message>
-    <message>
-        <source>Connect your first device.</source>
-        <translation>連線至你的第一台裝置。</translation>
-    </message>
-    <message>
-        <source>Add a device by IP address or name. Confirm once on the other computer, then connect in either direction.</source>
-        <translation>透過 IP 位址或名稱新增裝置。在另一台電腦確認一次，即可雙向連線。</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>新增裝置</translation>
-    </message>
-    <message>
-        <source>Nearby devices appear here automatically</source>
-        <translation>附近裝置會自動顯示在這裡</translation>
-    </message>
-    <message>
-        <source>Nearby discovery is off in Settings</source>
-        <translation>設定中已關閉附近裝置探索</translation>
-    </message>
-    <message>
-        <source>Applications</source>
-        <translation>應用程式</translation>
-    </message>
-    <message>
-        <source>Pair with a legacy PIN</source>
-        <translation>使用傳統 PIN 配對</translation>
-    </message>
-    <message>
-        <source>Set alias</source>
-        <translation>設定別名</translation>
-    </message>
-    <message>
-        <source>Remove from list</source>
-        <translation>從清單移除</translation>
-    </message>
-    <message>
-        <source>The host on %1 uses an unsupported protocol version. Update the host and DeskPort before connecting.</source>
-        <translation>%1 上的主機使用不支援的協定版本。請更新主機與 DeskPort 後再連線。</translation>
-    </message>
-    <message>
-        <source>Remote session is still running</source>
-        <translation>遠端工作階段仍在執行</translation>
-    </message>
-    <message>
-        <source>Return to remote desktop</source>
-        <translation>返回遠端桌面</translation>
-    </message>
-    <message>
-        <source>Connected · workspace stays open</source>
-        <translation>已連線 · 工作區保持開啟</translation>
-    </message>
-    <message>
-        <source>Return to desktop</source>
-        <translation>返回桌面</translation>
-    </message>
-    <message>
-        <source>Your computers</source>
-        <translation>我的電腦</translation>
-    </message>
-    <message>
-        <source>Card view</source>
-        <translation>卡片檢視</translation>
-    </message>
-    <message>
-        <source>List view</source>
-        <translation>清單檢視</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>完成</translation>
-    </message>
-    <message>
-        <source>Drag devices to change their order.</source>
-        <translation>拖曳裝置以調整順序。</translation>
-    </message>
-    <message>
-        <source>Move to front</source>
-        <translation>移到最前</translation>
-    </message>
-    <message>
-        <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
-        <translation>與 %1 的工作階段仍在執行。連線其他電腦前，請從系統匣選單中斷目前連線。</translation>
-    </message>
-    <message>
-        <source>Device settings</source>
-        <translation>裝置設定</translation>
-    </message>
-    <message>
-        <source>Nearby discovery is off</source>
-        <translation>附近裝置探索已關閉</translation>
-    </message>
-    <message>
-        <source>Toggle fullscreen</source>
-        <translation>切換全螢幕</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation>中斷連線</translation>
-    </message>
-    <message>
-        <source>Reconnect</source>
-        <translation>重新連線</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>編輯</translation>
-    </message>
-    <message>
-        <source>New group</source>
-        <translation>新增群組</translation>
-    </message>
-    <message>
-        <source>All devices</source>
-        <translation>全部裝置</translation>
-    </message>
-    <message>
-        <source>Group actions</source>
-        <translation>群組操作</translation>
-    </message>
-    <message>
-        <source>Rename group</source>
-        <translation>重新命名群組</translation>
-    </message>
-    <message>
-        <source>Delete group</source>
-        <translation>刪除群組</translation>
-    </message>
-    <message>
-        <source>Move out of group</source>
-        <translation>移出群組</translation>
-    </message>
-    <message>
-        <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
-        <translation>這個群組還沒有裝置。在編輯模式下把裝置拖到群組上即可加入。</translation>
-    </message>
-    <message>
-        <source>Drag cards to change their order, or onto another device to make a group.</source>
-        <translation>拖曳卡片調整順序，拖到另一台裝置上即可組成群組。</translation>
-    </message>
-    <message><source>A session with %1 is open. Disconnect it before connecting to another computer.</source><translation>與 %1 的工作階段仍在進行。請先中斷連線，再連線到其他電腦。</translation></message>
-    <message><source>Finish editing</source><translation>完成編輯</translation></message>
-    <message><source>Drag devices to change their order, or out of this panel to leave the group.</source><translation>拖曳裝置可調整順序，拖出此面板即可移出群組。</translation></message>
-    <message><source>Checking…</source><translation>正在檢查…</translation></message>
-    <message><source>Computer</source><translation>電腦</translation></message>
-    <message><source>This group is empty.</source><translation>此群組為空。</translation></message>
-    <message><source>Remove device?</source><translation>移除裝置？</translation></message>
-    <message><source>Remove</source><translation>移除</translation></message>
-    <message><source>Deleting a group keeps its devices; they return to the device list.</source><translation>刪除群組不會刪除其中的裝置，它們會回到裝置清單。</translation></message>
-    <message><source>Open group</source><translation>開啟群組</translation></message>
-    <message><source>Shown only on this computer. Leave empty to use the original name.</source><translation>僅在這台電腦上顯示。留空則使用原始名稱。</translation></message>
-</context>
-<context>
-    <name>PendingPairingTask</name>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="586"/>
-        <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>來自電腦的 PIN 碼不相符，請重試。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="590"/>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>上一個工作階段仍在主機電腦上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機電腦，然後再次嘗試配對。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="593"/>
-        <source>Pairing failed. Please try again.</source>
-        <translation>配對失敗，請重試。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="597"/>
-        <source>Another pairing attempt is already in progress.</source>
-        <translation>另一個配對嘗試正在進行。</translation>
-    </message>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="607"/>
-        <source>GeForce Experience returned error: %1</source>
-        <translation>GeForce Experience 傳回錯誤：%1</translation>
-    </message>
-</context>
-<context>
-    <name>PendingQuitTask</name>
-    <message>
-        <location filename="../backend/computermanager.cpp" line="657"/>
-        <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機電腦上的遊戲或使用最初啟動遊戲的裝置。</translation>
-    </message>
-</context>
-<context>
-    <name>QObject</name>
-    <message>
-        <location filename="../cli/pair.cpp" line="80"/>
-        <source>%1 is already paired</source>
-        <translation>%1 已配對</translation>
-    </message>
-    <message>
-        <location filename="../cli/pair.cpp" line="109"/>
-        <location filename="../cli/quitstream.cpp" line="76"/>
-        <location filename="../cli/startstream.cpp" line="133"/>
-        <source>Failed to connect to %1</source>
-        <translation>無法連線到 %1</translation>
-    </message>
-    <message>
-        <location filename="../cli/quitstream.cpp" line="88"/>
-        <location filename="../cli/startstream.cpp" line="89"/>
-        <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>電腦 %1 尚未配對。串流前請開啟 Moonlight 進行配對。</translation>
-    </message>
-    <message>
-        <location filename="../cli/quitstream.cpp" line="102"/>
-        <location filename="../cli/startstream.cpp" line="126"/>
-        <source>Quitting app failed, reason: %1</source>
-        <translation>結束應用程式失敗，原因：%1</translation>
-    </message>
-    <message>
-        <location filename="../cli/startstream.cpp" line="137"/>
-        <source>Failed to find application %1</source>
-        <translation>找不到應用程式 %1</translation>
-    </message>
-    <message>
-        <location filename="../cli/listapps.cpp" line="99"/>
-        <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>電腦 %1 未配對，請在擷取遊戲清單前開啟 Moonlight 進行配對。</translation>
-    </message>
-</context>
-<context>
-    <name>QPlatformTheme</name>
-    <message>
-        <location filename="../main.cpp" line="620"/>
-        <source>&amp;Yes</source>
-        <translation>是(&amp;Y)</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="621"/>
-        <source>&amp;No</source>
-        <translation>否(&amp;N)</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="622"/>
-        <source>OK</source>
-        <translation>確定</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="623"/>
-        <source>Help</source>
-        <translation>說明</translation>
-    </message>
-    <message>
-        <location filename="../main.cpp" line="624"/>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-</context>
-<context>
-    <name>QuitSegue</name>
-    <message>
-        <location filename="../gui/QuitSegue.qml" line="13"/>
-        <source>Quitting %1...</source>
-        <translation>正在結束 %1...</translation>
-    </message>
-</context>
-<context>
-    <name>Session</name>
-    <message><source>This connection was taken over by another device.</source><translation>連線已被其他用戶端接管。</translation></message>
-    <message><source>Adjusting resolution…</source><translation>正在調整解析度…</translation></message>
-    <message><source>Connection interrupted. Reconnecting…</source><translation>連線中斷，正在重新連線…</translation></message>
-    <message>
-        <location filename="../streaming/session.cpp" line="112"/>
-        <source>No video received from host.</source>
-        <translation>沒有接收到來自主機的視訊。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="113"/>
-        <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="118"/>
-        <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>您的網路連線不佳。降低視訊位元速率或嘗試更快的連線方式。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="124"/>
-        <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>啟動串流時，您的主機電腦出現問題。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="125"/>
-        <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>確認您的主機電腦上沒有開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="130"/>
-        <source>The host PC reported a fatal video encoding error.</source>
-        <translation>主機電腦回報了一個嚴重的視訊編碼錯誤。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="131"/>
-        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation>嘗試停用 HDR 模式，變更串流解析度，或變更您的主機電腦顯示器解析度。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="139"/>
-        <source>Connection terminated</source>
-        <translation>連線已終止</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="140"/>
-        <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="931"/>
-        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="936"/>
-        <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>您選取啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
-    </message>
-    <message>
-        <source>HDR is not supported with software decoding.</source>
-        <translation type="vanished">軟體解碼不支援 HDR。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="940"/>
-        <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>您選取強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="970"/>
-        <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation>您的主機不支援 HEVC 編碼。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="987"/>
-        <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>由於你選取使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="946"/>
-        <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>您的主機軟體或 GPU 不支援編碼 AV1。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="963"/>
-        <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>使用軟體解碼係依您的選取項目以強制啟用沒有 GPU 支援的 AV1，這可能導致較低的串流效能。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1029"/>
-        <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation>您的主機電腦不支援 HDR 串流。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1021"/>
-        <source>HDR is not supported using the H.264 codec.</source>
-        <translation>使用 H.264 轉碼器不支援 HDR。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
-        <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation>這個電腦的 GPU 不支援 AV1 Main10 HDR 串流解碼。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1025"/>
-        <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation>這個電腦的 GPU 不支援 10-bit HEVC 或 AV1 HDR 串流解碼。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1077"/>
-        <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation>您的主機電腦和用戶端電腦不支援相同的 HDR 視訊轉碼器。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1170"/>
-        <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation>H.264 轉碼器不支援超過 4K 的視訊解析度。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1554"/>
-        <source>Host returned error: %1</source>
-        <translation>主機返回錯誤：%1</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1001"/>
-        <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>由於你選取強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1011"/>
-        <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>您的主機電腦和用戶端電腦不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1014"/>
-        <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1050"/>
-        <location filename="../streaming/session.cpp" line="1068"/>
-        <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1062"/>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>此電腦的 GPU 不支援 HEVC Main10 解碼器來進行 HDR 串流。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1084"/>
-        <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1092"/>
-        <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1107"/>
-        <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1113"/>
-        <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1122"/>
-        <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>4K 串流需要 GeForce Experience 3.0 或更高的版本。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1137"/>
-        <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>您選取的環場音效設定並不支援目前的音訊裝置。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1143"/>
-        <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>無法開啟音訊裝置。音訊在本次工作階段中將無法使用。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1148"/>
-        <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>附加的手把沒有對應，將無法使用。請造訪 Moonlight 協助解決問題。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1166"/>
-        <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>您的主機電腦 GPU 不支援 4K 視訊串流。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1184"/>
-        <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>由於此電腦的 GPU 缺乏硬體解碼支援，故無法強制使用硬體解碼。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="1187"/>
-        <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="2219"/>
-        <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>無法初始化畫面解碼器。請檢查您的串流設定並再試一次。</translation>
-    </message>
-    <message>
-        <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
-        <translation>主機未能以新的尺寸恢復桌面。請重新連線以繼續工作。</translation>
-    </message>
-
-<message><source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source><translation>所選虛擬螢幕模式無法使用，請更新主機或選擇其他模式。</translation></message>
-<message><source>Virtual screen control ended. Reconnect to apply the selected mode.</source><translation>虛擬螢幕控制已中斷，請重新連線以套用所選模式。</translation></message>
-
-    <message><source>Connecting to desktop…</source><translation>正在連線至桌面…</translation></message>
-    <message>
-        <source>This connection would create a loop. Disconnect one of the existing links first.</source>
-        <translation>此連線會形成迴圈。請先中斷其中一條現有連線。</translation>
-    </message>
-    <message>
-        <source>The connection path could not be verified. Update DeskPort on every desktop in the chain and try again.</source>
-        <translation>無法驗證連線路徑。請更新連線鏈中每台電腦上的 DeskPort 後重試。</translation>
-    </message>
-</context>
-<context>
-    <name>SettingsView</name>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="13"/>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="116"/>
-        <source>Resolution and FPS</source>
-        <translation>解析度和 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="124"/>
-        <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>設定對您的電腦或網路連線過高的數值可能會導致延遲、卡頓、或是發生錯誤。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="106"/>
-        <source>Basic Settings</source>
-        <translation>基本設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="250"/>
-        <source>720p</source>
-        <translation>720p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="256"/>
-        <source>1080p</source>
-        <translation>1080p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="262"/>
-        <source>1440p</source>
-        <translation>1440p</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="268"/>
-        <source>4K</source>
-        <translation>4K</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="373"/>
-        <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>自訂解析度不受 GeForce Experience 官方支援，因此不會設定目標主機的顯示解析度。您需要在遊戲內手動設定。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="374"/>
-        <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>不受主機電腦或用戶端支援的解析度可能會造成串流錯誤。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="380"/>
-        <source>Enter a custom resolution:</source>
-        <translation>輸入自訂解析度：</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="600"/>
-        <source>%1 FPS</source>
-        <translation>%1 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="668"/>
-        <source>Video bitrate:</source>
-        <translation>視訊位元速率：</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="676"/>
-        <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>若您的網路速度較慢，請將位元率調低。若要提升畫面品質，請將位元率調高。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="694"/>
-        <source>Video bitrate: %1 Mbps</source>
-        <translation>視訊位元速率：%1 Mbps</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="707"/>
-        <source>Display mode</source>
-        <translation>顯示模式</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="737"/>
-        <source>(Recommended)</source>
-        <translation>(建議)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="718"/>
-        <location filename="../gui/SettingsView.qml" line="1181"/>
-        <source>Fullscreen</source>
-        <translation>全螢幕</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="787"/>
-        <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation>全螢幕通常能夠提供最佳效能，但無邊框視窗較能支援 macOS Spaces、Alt+Tab、截圖工具、遊戲嵌入介面等功能。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="723"/>
-        <source>Borderless windowed</source>
-        <translation>無邊框視窗</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="182"/>
-        <source>Native</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="183"/>
-        <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="728"/>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
-        <source>Windowed</source>
-        <translation>視窗化</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="794"/>
-        <source>V-Sync</source>
-        <translation>垂直同步</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="804"/>
-        <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>停用垂直同步可允許子畫面轉譯延遲，但會造成顯示畫面撕裂</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="811"/>
-        <source>Frame pacing</source>
-        <translation>影格調步</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="821"/>
-        <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>影格調步能夠延後顯示過早傳入的影格來減小延遲</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="831"/>
-        <source>Audio Settings</source>
-        <translation>音效設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="866"/>
-        <source>Stereo</source>
-        <translation>立體聲</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="870"/>
-        <source>5.1 surround sound</source>
-        <translation>5.1 環場音效</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="874"/>
-        <source>7.1 surround sound</source>
-        <translation>7.1 環場音效</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="888"/>
-        <source>Mute host PC speakers while streaming</source>
-        <translation>串流時將主機電腦的喇叭靜音</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="898"/>
-        <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>您必須重新啟動目前正在遊玩的遊戲以套用此更動</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="904"/>
-        <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>在 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="915"/>
-        <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>在你使用 Alt+Tab 切換離開串流視窗或按下其他視窗時，Moonlight 將靜音。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="964"/>
-        <source>UI Settings</source>
-        <translation>介面設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="974"/>
-        <source>Language</source>
-        <translation>語言</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1000"/>
-        <source>Automatic</source>
-        <translation>自動</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1123"/>
-        <source>You must restart Moonlight for this change to take effect</source>
-        <translation>您必須重新啟動 Moonlight 以套用此更動</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1140"/>
-        <source>GUI display mode</source>
-        <translation>圖形使用者介面顯示模式</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1177"/>
-        <source>Maximized</source>
-        <translation>最大化</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1250"/>
-        <source>Input Settings</source>
-        <translation>輸入設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1271"/>
-        <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>這可以實現無縫滑鼠控制，而無須捕捉用戶端的滑鼠指標。這是理想的遠端桌面選擇，但在大多數遊戲中不起作用。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1273"/>
-        <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
-    </message>
-    <message>
-        <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="vanished">啟用 HDR 覆寫手動解碼器選取項目。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1573"/>
-        <source>AV1 (Experimental)</source>
-        <translation>AV (實驗性)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1588"/>
-        <source>Enable HDR (Experimental)</source>
-        <translation>啟用 HDR (實驗性)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1603"/>
-        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>串流將支援 HDR，但一些遊戲可能需要你主機電腦上的 HDR 監視器以啟用 HDR 模式。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1605"/>
-        <source>HDR streaming is not supported on this PC.</source>
-        <translation>此電腦不支援 HDR 串流。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1690"/>
-        <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1700"/>
-        <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1701"/>
-        <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1702"/>
-        <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1292"/>
-        <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation>提醒：某些鍵盤快速鍵，例如 Ctrl+Alt+Del，無法在 Windows 上被任何應用程式攔截，包括 Moonlight。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1355"/>
-        <source>Use touchscreen as a virtual trackpad</source>
-        <translation>將觸控式螢幕用作虛擬觸控板</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1372"/>
-        <source>Swap left and right mouse buttons</source>
-        <translation>交換滑鼠左右按鍵</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1384"/>
-        <source>Reverse mouse scrolling direction</source>
-        <translation>反轉滑鼠滾輪滾動方向</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1398"/>
-        <source>Gamepad Settings</source>
-        <translation>手把設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1408"/>
-        <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>交換手把的 A/B 和 X/Y 按鈕</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1418"/>
-        <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>這將手把切換為任天堂風格的按鈕版面配置</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1424"/>
-        <source>Force gamepad #1 always connected</source>
-        <translation>強制手把 #1 始終連線</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1434"/>
-        <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>強制使單個手把始終與主機保持連線，即使沒有任何手把實際連線到此電腦。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1272"/>
-        <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>您可以在串流時按下 Ctrl+Alt+Shift+M 以切換。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1442"/>
-        <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>透過按下手把的「開始」鍵啟用滑鼠控制</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1453"/>
-        <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>在 Moonlight 於背景工作時處理手把輸入</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1464"/>
-        <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>即使不是焦點視窗，也允許 Moonlight 擷取手把輸入</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="924"/>
-        <source>Host Settings</source>
-        <translation>主機設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1473"/>
-        <source>Advanced Settings</source>
-        <translation>進階設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="841"/>
-        <source>Audio configuration</source>
-        <translation>音訊組態</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1194"/>
-        <source>Show connection quality warnings</source>
-        <translation>顯示連線品質警告</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1206"/>
-        <source>Discord Rich Presence integration</source>
-        <translation>Discord Rich Presence 整合</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1216"/>
-        <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>更新你的 Discord 狀態，以顯示正在執行的遊戲名稱。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1435"/>
-        <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation>僅在遊戲啟動後不支援手把連線時才啟用此選項。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1261"/>
-        <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>為遠端桌面而非遊戲最佳化滑鼠</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="508"/>
-        <location filename="../gui/SettingsView.qml" line="618"/>
-        <source>Custom (%1 FPS)</source>
-        <translation>自訂 (%1 FPS)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="523"/>
-        <source>Enter a custom frame rate:</source>
-        <translation>輸入自訂影格速率：</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="219"/>
-        <location filename="../gui/SettingsView.qml" line="228"/>
-        <location filename="../gui/SettingsView.qml" line="621"/>
-        <source>Custom</source>
-        <translation>自訂</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="639"/>
-        <source>30 FPS</source>
-        <translation>30 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="644"/>
-        <source>60 FPS</source>
-        <translation>60 FPS</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1222"/>
-        <source>Keep the display awake while streaming</source>
-        <translation>串流時保持螢幕始終亮起</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1232"/>
-        <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>防止螢幕保護程式啟動或是螢幕在串流時進入睡眠狀態。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1283"/>
-        <source>Capture system keyboard shortcuts</source>
-        <translation>擷取系統鍵盤快速鍵</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1291"/>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>這可以擷取系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1321"/>
-        <source>in fullscreen</source>
-        <translation>全螢幕時</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1325"/>
-        <source>always</source>
-        <translation>總是</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1365"/>
-        <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation>選中時，觸控式螢幕就像一個觸控板。取消選中時，觸控式螢幕將直接控制滑鼠指標。</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="934"/>
-        <source>Optimize game settings for streaming</source>
-        <translation>最佳化遊戲設定以進行串流</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="945"/>
-        <source>Quit app on host PC after ending stream</source>
-        <translation>串流結束後退出主機電腦上的應用程式</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="955"/>
-        <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>在結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未儲存的遊戲進度！</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1483"/>
-        <source>Video decoder</source>
-        <translation>視訊解碼器</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1508"/>
-        <location filename="../gui/SettingsView.qml" line="1561"/>
-        <source>Automatic (Recommended)</source>
-        <translation>自動 (建議)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1512"/>
-        <source>Force software decoding</source>
-        <translation>強制使用軟體解碼</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1516"/>
-        <source>Force hardware decoding</source>
-        <translation>強制使用硬體解碼</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1531"/>
-        <source>Video codec</source>
-        <translation>視訊編解碼器</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1565"/>
-        <source>H.264</source>
-        <translation>H.264</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1569"/>
-        <source>HEVC (H.265)</source>
-        <translation>HEVC (H.265)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1611"/>
-        <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1631"/>
-        <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1633"/>
-        <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1639"/>
-        <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1652"/>
-        <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1658"/>
-        <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>自動尋找在區域網路中的電腦 (建議)</translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1679"/>
-        <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>自動偵測被封鎖的連線 (建議)</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>進階設定</translation>
-    </message>
-    <message>
-        <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
-        <translation>重新連線後生效。裝置設定不會更改本機語言或裝置探索偏好。</translation>
-    </message>
-    <message>
-        <source>Session behavior</source>
-        <translation>工作階段行為</translation>
-    </message>
-</context>
-<context>
-    <name>StreamSegue</name>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="11"/>
-        <source>Resuming %1...</source>
-        <translation>正在恢復 %1...</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="12"/>
-        <location filename="../gui/StreamSegue.qml" line="19"/>
-        <source>Starting %1...</source>
-        <translation>正在啟動 %1...</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="25"/>
-        <source>Starting %1 failed: Error %2</source>
-        <translation>啟動 %1 失敗：錯誤 %2</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="28"/>
-        <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="76"/>
-        <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
-        <source>Tip:</source>
-        <translation>提示：</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="167"/>
-        <source>Press %1 to disconnect your session</source>
-        <translation>按下 %1 以中斷您的工作階段</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
-        <source>Start+Select+L1+R1</source>
-        <translation>Start+Select+L1+R1</translation>
-    </message>
-    <message>
-        <location filename="../gui/StreamSegue.qml" line="168"/>
-        <source>Ctrl+Alt+Shift+Q</source>
-        <translation>Ctrl+Alt+Shift+Q</translation>
-    </message>
-    <message>
-        <source>Connection interrupted. Reconnecting…</source>
-        <translation>連線中斷，正在重新連線…</translation>
-    </message>
-    <message>
-        <source>Cancel reconnect</source>
-        <translation>取消重新連線</translation>
-    </message>
-    <message>
-        <source>Press %1 to leave fullscreen; press again to disconnect</source>
-        <translation>按 %1 退出全螢幕，再按一次中斷連線</translation>
-    </message>
-
-    <message><source>Waiting for desktop video…</source><translation>正在等待桌面畫面…</translation></message>
-    <message><source>Cancel connection</source><translation>取消連線</translation></message>
-</context>
-<context>
-    <name>main</name>
-    <message>
-        <source>Data saver</source>
-        <translation>省流量</translation>
-    </message>
-    <message>
-        <source>Data saver on: video limited to 3–12 Mbps</source>
-        <translation>省流量已開啟：視訊位元速率限制為 3–12 Mbps</translation>
-    </message>
-    <message>
-        <source>Data saver off: automatic bitrate</source>
-        <translation>省流量已關閉：自動位元速率</translation>
-    </message>
-    <message>
-        <source>Today %1%</source>
-        <translation>今日 %1%</translation>
-    </message>
-    <message>
-        <source>Daily data budget</source>
-        <translation>每日流量預算</translation>
-    </message>
-    <message>
-        <source>Limit per day</source>
-        <translation>每日上限</translation>
-    </message>
-    <message>
-        <source>Today: %1 of %2 (%3%)</source>
-        <translation>今日：已用 %1，上限 %2（%3%）</translation>
-    </message>
-    <message>
-        <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
-        <translation>統計本機所有連線，每天本地時間午夜重新計算。用滿 100% 時，當天剩餘時間自動開啟省流量。</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>重設</translation>
-    </message>
-    <message><source>Connecting…</source><translation>連線中…</translation></message>
-    <message><source>Disconnecting…</source><translation>正在中斷…</translation></message>
-    <message><source>Failed</source><translation>失敗</translation></message>
-    <message><source>Disconnected</source><translation>已中斷</translation></message>
-    <message><source>Disconnect</source><translation>中斷連線</translation></message>
-
-    <message><source>Could not save device removal. Please retry.</source><translation>無法儲存裝置刪除操作，請重試。</translation></message>
-    <message><source>Memory %1</source><translation>記憶體 %1</translation></message>
-    <message><source>Local memory usage</source><translation>本機記憶體用量</translation></message>
-    <message><source>Unavailable</source><translation>無法取得</translation></message>
-    <message><source>Client: %1</source><translation>用戶端：%1</translation></message>
-    <message><source>Sharing host: %1</source><translation>共享服務：%1</translation></message>
-    <message><source>Helpers: %1</source><translation>輔助程序：%1</translation></message>
-    <message><source>Some processes could not be sampled.</source><translation>部分程序無法取樣。</translation></message>
-    <message><source>Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak.</source><translation>本機用戶端及其直接子程序的常駐記憶體，視窗顯示時每 3 秒更新。共享記憶體頁可能重複計算，不包含遠端電腦及部分 GPU 記憶體。用量增加不一定代表洩漏。</translation></message>
-    <message><source>Editing</source><translation>編輯中</translation></message>
-    <message><source>Update available</source><translation>有更新</translation></message>
-    <message><source>DeskPort updates</source><translation>DeskPort 更新</translation></message>
-    <message><source>Checking for updates…</source><translation>正在檢查更新…</translation></message>
-    <message><source>New version: %1</source><translation>發現新版本：%1</translation></message>
-    <message><source>No newer stable release is available.</source><translation>暫無更新的正式版本。</translation></message>
-    <message><source>Could not check for updates. Please try again.</source><translation>無法檢查更新，請稍後重試。</translation></message>
-    <message><source>Published: %1</source><translation>發布日期：%1</translation></message>
-    <message><source>No release notes provided.</source><translation>此版本未提供更新日誌。</translation></message>
-    <message><source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source><translation>將開啟 GitHub 發布頁面，請按原有方式安裝；由 Nix 管理的安裝請透過 Nix 更新。</translation></message>
-    <message><source>Check again</source><translation>重新檢查</translation></message>
-    <message><source>Open download page</source><translation>前往下載頁面</translation></message>
-    <message>
-        <location filename="../gui/main.qml" line="415"/>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="262"/>
-        <source>Version %1</source>
-        <translation>版本 %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="278"/>
-        <source>Join our community on Discord</source>
-        <translation>加入我們的 Discord 社群</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="297"/>
-        <source>Add PC manually</source>
-        <translation>手動新增電腦</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="337"/>
-        <source>Update available for Moonlight: Version %1</source>
-        <translation>Moonlight 有可用更新：版本 %1</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="384"/>
-        <source>Gamepad Mapper</source>
-        <translation>手把對應</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="430"/>
-        <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation>硬體加速無法在 XWayland 運作。若繼續使用 XWayland 可能會造成串流品質降低。請嘗試以 QT_QPA_PLATFORM=wayland 執行或切換至 X11。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="439"/>
-        <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation>此版本的 Moonlight 尚未針對你的電腦最佳化。請下載「%1」版本的 Moonlight，以獲得最佳的串流效能。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="448"/>
-        <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight 偵測到沒有對應的手把：</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="361"/>
-        <source>Help</source>
-        <translation>說明</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="422"/>
-        <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Moonlight 沒有偵測到有效的硬體加速視訊解碼器。在這種組態下，你的串流效能可能會嚴重下降。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="424"/>
-        <source>Click the Help button for more information on solving this problem.</source>
-        <translation>按下說明按鈕以瞭解更多如何解決此問題的資訊。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="432"/>
-        <source>Click the Help button for more information.</source>
-        <translation>按下說明按鈕以瞭解更多資訊。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="450"/>
-        <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>按下說明按鈕以取得有關如何對應手把的資訊。</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="458"/>
-        <source>Are you sure you want to quit?</source>
-        <translation>您確定要結束嗎？</translation>
-    </message>
-    <message>
-        <location filename="../gui/main.qml" line="488"/>
-        <source>Enter the IP address of your host PC:</source>
-        <translation>輸入您的主機電腦 IP 位址：</translation>
-    </message>
-    <message>
-        <source>Devices</source>
-        <translation>裝置</translation>
-    </message>
-    <message>
-        <source>Sharing</source>
-        <translation>共享</translation>
-    </message>
-    <message>
-        <source>Getting started</source>
-        <translation>開始使用</translation>
-    </message>
-    <message>
-        <source>Sharing on</source>
-        <translation>共享已開啟</translation>
-    </message>
-    <message>
-        <source>Sharing off</source>
-        <translation>共享已關閉</translation>
-    </message>
-    <message>
-        <source>Back</source>
-        <translation>返回</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>新增裝置</translation>
-    </message>
-    <message>
-        <source>Enter the host IP address or hostname:</source>
-        <translation>輸入主機 IP 位址或主機名稱：</translation>
-    </message>
-    <message>
-        <source>DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.</source>
-        <translation>DeskPort 預設使用 :48989。若共享頁顯示其他連接埠，請輸入 位址:連接埠。原生 Sunshine 預設使用 :47989。</translation>
-    </message>
-    <message>
-        <source>Check permissions</source>
-        <translation>檢查權限</translation>
-    </message>
-    <message>
-        <source>Sharing service on</source>
-        <translation>共享服務已開啟</translation>
-    </message>
-    <message>
-        <source>Current connection</source>
-        <translation>目前連線</translation>
-    </message>
-    <message>
-        <source>Connected</source>
-        <translation>已連線</translation>
-    </message>
-    <message>
-        <source>Return</source>
-        <translation>返回桌面</translation>
-    </message>
-    <message>
-        <source>Session data</source>
-        <translation>本次流量</translation>
-    </message>
-    <message>
-        <source>Details</source>
-        <translation>詳細資訊</translation>
-    </message>
-    <message>
-        <source>Received: %1</source>
-        <translation>接收：%1</translation>
-    </message>
-    <message>
-        <source>Sent: %1</source>
-        <translation>傳送：%1</translation>
-    </message>
-    <message>
-        <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
-        <translation>統計本次工作階段的影音、控制及剪貼簿傳輸位元組，短暫重連不歸零。不含 IP/VPN 開銷、剪貼簿 TLS 開銷、裝置探索及本機對外共享流量。數值不代表電信帳單。</translation>
-    </message>
-    <message>
-        <source>Not connected</source>
-        <translation>未連線</translation>
-    </message>
-    <message>
-        <source>Edit</source>
-        <translation>編輯</translation>
-    </message>
-    <message>
-        <source>Done</source>
-        <translation>完成</translation>
-    </message>
-    <message>
-        <source>Refresh devices</source>
-        <translation>重新整理裝置</translation>
-    </message>
-    <message>
-        <source>Check saved devices and look for new ones</source>
-        <translation>檢查已儲存裝置是否在線，並尋找新裝置</translation>
-    </message>
-    <message>
-        <source>Ask client to leave full screen</source>
-        <translation>讓用戶端結束全螢幕</translation>
-    </message>
-    <message>
-        <source>Ask the connected client to leave full screen</source>
-        <translation>讓目前連線的用戶端結束全螢幕</translation>
-    </message>
-    <message>
-        <source>Manual</source>
-        <translation>手冊</translation>
-    </message>
-    <message>
-        <source>How to use DeskPort</source>
-        <translation>DeskPort 使用說明</translation>
-    </message>
-    <message><source>Add a legacy host</source><translation>新增傳統主機</translation></message>
-</context>
-<context>
-    <name>SettingsHome</name>
-    <message><source>Send this computer's audio to connected devices</source><translation>將本機聲音傳給連線裝置</translation></message>
-    <message><source>Off by default: sound stays on this computer. Changes apply after restarting sharing.</source><translation>預設關閉：聲音留在本機播放。變更在重新啟動共享後生效。</translation></message>
-
-    <message><source>Always show a local pointer in desktop mode</source><translation>桌面模式一律顯示本機游標</translation></message>
-    <message><source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source><translation>主機隱藏滑鼠時仍顯示游標。若出現兩個游標，可關閉此選項。</translation></message>
-    <message><source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source><translation>連線 Mac 時，Super / Windows 對應 Command，Alt 對應 Option。選擇「一律」可在視窗中轉送 Super + 空白鍵。變更於下次連線時生效。</translation></message>
-    <message>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <source>Make DeskPort your own.</source>
-        <translation>依照你的習慣設定 DeskPort。</translation>
-    </message>
-    <message>
-        <source>Language changes apply immediately. Connection preferences apply to your next connection from this computer.</source>
-        <translation>語言切換立即生效。連線設定會在這台電腦下次發起連線時生效。</translation>
-    </message>
-    <message>
-        <source>Language</source>
-        <translation>語言</translation>
-    </message>
-    <message>
-        <source>Follow system</source>
-        <translation>跟隨系統</translation>
-    </message>
-    <message>
-        <source>Restart DeskPort to apply this language.</source>
-        <translation>重新啟動 DeskPort 以套用此語言。</translation>
-    </message>
-    <message>
-        <source>Saved on this computer. Missing translations appear in English.</source>
-        <translation>僅儲存在這台電腦上。尚未翻譯的內容會顯示英文。</translation>
-    </message>
-    <message>
-        <source>Picture</source>
-        <translation>畫面</translation>
-    </message>
-    <message>
-        <source>Input</source>
-        <translation>輸入</translation>
-    </message>
-    <message>
-        <source>Sound</source>
-        <translation>聲音</translation>
-    </message>
-    <message>
-        <source>Connections</source>
-        <translation>連線</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>進階</translation>
-    </message>
-    <message>
-        <source>Resolution</source>
-        <translation>解析度</translation>
-    </message>
-    <message>
-        <source>Connection window</source>
-        <translation>連線視窗</translation>
-    </message>
-    <message>
-        <source>Full screen</source>
-        <translation>全螢幕</translation>
-    </message>
-    <message>
-        <source>Borderless full screen</source>
-        <translation>無邊框全螢幕</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>視窗</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>影格率</translation>
-    </message>
-    <message>
-        <source>Bandwidth · %1 Mbps</source>
-        <translation>頻寬 · %1 Mbps</translation>
-    </message>
-    <message>
-        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
-        <translation>數值越高，畫面越細緻，頻寬消耗也越大。不移動此滑桿會保留既有進階設定值。</translation>
-    </message>
-    <message>
-        <source>Synchronize frames to this display</source>
-        <translation>與此顯示器同步畫面</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; pointer</source>
-        <translation>鍵盤與指標</translation>
-    </message>
-    <message>
-        <source>Use a desktop-style pointer</source>
-        <translation>使用桌面式指標</translation>
-    </message>
-    <message>
-        <source>Reverse scrolling direction</source>
-        <translation>反轉捲動方向</translation>
-    </message>
-    <message>
-        <source>Send system shortcuts to the remote computer</source>
-        <translation>將系統快捷鍵傳送至遠端電腦</translation>
-    </message>
-    <message>
-        <source>Never</source>
-        <translation>永不</translation>
-    </message>
-    <message>
-        <source>Only in full screen</source>
-        <translation>僅在全螢幕時</translation>
-    </message>
-    <message>
-        <source>Always</source>
-        <translation>一律</translation>
-    </message>
-    <message>
-        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
-        <translation>按 Ctrl + Alt + Shift + Z 釋放遠端輸入。</translation>
-    </message>
-    <message>
-        <source>Mute when DeskPort loses focus</source>
-        <translation>DeskPort 失去焦點時靜音</translation>
-    </message>
-    <message>
-        <source>Also play audio on the host</source>
-        <translation>同時在主機播放聲音</translation>
-    </message>
-    <message>
-        <source>Discover nearby devices</source>
-        <translation>探索附近裝置</translation>
-    </message>
-    <message>
-        <source>Keep this computer awake while connected</source>
-        <translation>連線時保持這台電腦喚醒</translation>
-    </message>
-    <message>
-        <source>Manage saved access</source>
-        <translation>管理已儲存的存取權限</translation>
-    </message>
-    <message>
-        <source>Advanced &amp; support</source>
-        <translation>進階與支援</translation>
-    </message>
-    <message>
-        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
-        <translation>自訂解析度、編解碼器、HDR、環繞音效與控制器選項仍可在進階設定中調整。</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>進階設定</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>權限引導</translation>
-    </message>
-    <message>
-        <source>Report a problem</source>
-        <translation>回報問題</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>跟隨用戶端視窗解析度</translation>
-    </message>
-    <message>
-        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
-        <translation>使用已綁定 Mac 的內建虛擬螢幕。調整視窗後畫面會短暫重新連線，遠端應用程式保持開啟。其他主機使用下方解析度。</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>工作階段期間共享文字、圖片和檔案</translation>
-    </message>
-    <message>
-        <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
-        <translation>在已綁定的兩台裝置上開啟後重新連線。僅同步新複製的內容，上限 128 MiB；不共享圖片和檔案。</translation>
-    </message>
-    <message>
-        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
-        <translation>滑鼠位於已聚焦的遠端畫面內時接管鍵盤，離開即釋放按鍵和滑鼠按鈕。點擊畫面取得焦點；系統保留快捷鍵可能仍在本機處理。</translation>
-    </message>
-    <message>
-        <source>Saved · connection changes apply next time you connect.</source>
-        <translation>已儲存 · 連線設定將於下次連線時生效。</translation>
-    </message>
-    <message>
-        <source>Appearance</source>
-        <translation>外觀</translation>
-    </message>
-    <message>
-        <source>Light</source>
-        <translation>淺色</translation>
-    </message>
-    <message>
-        <source>Dark</source>
-        <translation>深色</translation>
-    </message>
-    <message>
-        <source>Appearance changes apply immediately.</source>
-        <translation>外觀設定立即生效。</translation>
-    </message>
-    <message>
-        <source>Connecting to remote computers</source>
-        <translation>連線遠端電腦</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>畫質預設</translation>
-    </message>
-    <message>
-        <source>Choose a preset…</source>
-        <translation>選擇預設…</translation>
-    </message>
-    <message>
-        <source>Office · 30 fps / 10 Mbps</source>
-        <translation>辦公 · 30 fps / 10 Mbps</translation>
-    </message>
-    <message>
-        <source>Clear · 60 fps / 40 Mbps</source>
-        <translation>清晰 · 60 fps / 40 Mbps</translation>
-    </message>
-    <message>
-        <source>Smooth · 60 fps / 15 Mbps</source>
-        <translation>流暢 · 60 fps / 15 Mbps</translation>
-    </message>
-    <message>
-        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
-        <translation>預設僅調整幀率和頻寬，可在下方依網路情況微調。</translation>
-    </message>
-    <message>
-        <source>Fallback resolution</source>
-        <translation>備用解析度</translation>
-    </message>
-    <message>
-        <source>Sound from the remote computer</source>
-        <translation>遠端電腦的聲音</translation>
-    </message>
-    <message>
-        <source>Sharing this computer</source>
-        <translation>共享本機</translation>
-    </message>
-    <message>
-        <source>Manage incoming access, shared audio and login startup on the Sharing page.</source>
-        <translation>在共享頁管理存取授權、聲音共享和登入啟動。</translation>
-    </message>
-    <message>
-        <source>Open sharing settings</source>
-        <translation>開啟共享設定</translation>
-    </message>
-    <message>
-        <source>Picture adjustments</source>
-        <translation>畫面微調</translation>
-    </message>
-    <message>
-        <source>Smart streaming</source>
-        <translation>智慧串流</translation>
-    </message>
-    <message>
-        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
-        <translation>依解析度控制頻寬上限並平滑顯示影格。關閉後使用手動頻寬與影格平滑設定。</translation>
-    </message>
-    <message>
-        <source>Smooth frame pacing</source>
-        <translation>影格平滑</translation>
-    </message>
-    <message>
-        <source>Show streaming statistics</source>
-        <translation>顯示串流統計</translation>
-    </message>
-    <message>
-        <source>Device connection port</source>
-        <translation>裝置連線連接埠</translation>
-    </message>
-    <message>
-        <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
-        <translation>通常兩台電腦都保持 48991。視訊與音訊連接埠自動管理，舊入口仍保留供已儲存裝置連線。</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>套用</translation>
-    </message>
-    <message>
-        <source>Settings for %1</source>
-        <translation>%1 的設定</translation>
-    </message>
-    <message>
-        <source>These settings apply only to this device. Reconnect to apply changes.</source>
-        <translation>這些設定僅用於此裝置，重新連線後生效。</translation>
-    </message>
-    <message>
-        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
-        <translation>新裝置的預設設定。可在裝置選單中選擇「裝置設定」個別調整連線。</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>已儲存 · 重新連線後生效。</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>允許鍵盤、指標及控制器輸入</translation>
-    </message>
-    <message>
-        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
-        <translation>關閉後僅可觀看。本機 DeskPort 快速鍵仍可使用。</translation>
-    </message>
-    <message>
-        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
-        <translation>重新連線後，與此綁定裝置共享新複製的內容。僅限不超過 128 MiB 的純文字，不共享圖片和檔案。</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>接收此裝置的聲音</translation>
-    </message>
-    <message>
-        <source>Appearance and preferences for this computer only.</source>
-        <translation>僅設定此電腦的外觀與本機偏好。</translation>
-    </message>
-    <message>
-        <source>Theme</source>
-        <translation>主題</translation>
-    </message>
-    <message>
-        <source>Accent color</source>
-        <translation>強調色</translation>
-    </message>
-    <message>
-        <source>Blue</source>
-        <translation>藍色</translation>
-    </message>
-    <message>
-        <source>Green</source>
-        <translation>綠色</translation>
-    </message>
-    <message>
-        <source>Purple</source>
-        <translation>紫色</translation>
-    </message>
-    <message>
-        <source>Orange</source>
-        <translation>橙色</translation>
-    </message>
-    <message>
-        <source>Show data usage in the top bar</source>
-        <translation>在頂欄顯示流量</translation>
-    </message>
-    <message>
-        <source>Diagnostics and feedback</source>
-        <translation>診斷與回饋</translation>
-    </message>
-    <message>
-        <source>Enable diagnostic logs</source>
-        <translation>啟用診斷日誌</translation>
-    </message>
-    <message>
-        <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
-        <translation>預設關閉。收集應用程式、內建主機和顯示輔助程式的連線、互動初始化與執行事件、時序及解析度。立即生效。日誌最多 9 MiB，DeskPort 執行時清理超過 7 天的日誌。</translation>
-    </message>
-    <message>
-        <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
-        <translation>自動省略 IP、網域、裝置名稱與任意訊息原文。不收集按鍵文字、剪貼簿或畫面內容。每次啟動使用隨機匿名識別碼。過濾會減少細節，無法診斷所有問題；分享前請檢查壓縮檔。</translation>
-    </message>
-    <message>
-        <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
-        <translation>GitHub Issue 與附件是公開的。此按鈕產生 ZIP 並開啟問題草稿，不會自動上傳或提交。請檢查 ZIP，拖入 Issue 後自行提交。</translation>
-    </message>
-    <message>
-        <source>Create logs ZIP and open GitHub…</source>
-        <translation>產生日誌 ZIP 並開啟 GitHub…</translation>
-    </message>
-    <message>
-        <source>Show ZIP in folder</source>
-        <translation>在資料夾中顯示 ZIP</translation>
-    </message>
-    <message>
-        <source>Clear saved diagnostics</source>
-        <translation>清除已儲存的診斷資料</translation>
-    </message>
-    <message>
-        <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
-        <translation>關閉日誌會停止新記錄。清除診斷資料會刪除現有日誌與產生的 ZIP。不會包含舊版產生的原始日誌。</translation>
-    </message>
-    <message><source>System</source><translation>系統</translation></message>
-    <message><source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source><translation>預設關閉。記錄只保存在這台電腦上，除非你主動分享。記錄內容請見「隱私」。</translation></message>
-    <message><source>About</source><translation>關於</translation></message>
-    <message><source>Version</source><translation>版本</translation></message>
-    <message><source>Privacy</source><translation>隱私</translation></message>
-    <message><source>Licenses</source><translation>授權條款</translation></message>
-    <message><source>Create ZIP and open issue</source><translation>產生 ZIP 並開啟問題草稿</translation></message>
-    <message><source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source><translation>DeskPort 沒有帳號，也沒有 DeskPort 伺服器。你的裝置之間直接連線。設定、已儲存的裝置和授權都只保存在這台電腦上。</translation></message>
-    <message><source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source><translation>檢查更新時，DeskPort 會向 GitHub 查詢最新版本。與 Moonlight 一樣，它會從 moonlight-stream.org 下載公開的主機相容性資料和控制器對應。回報問題只會在瀏覽器中開啟問題草稿，要提交什麼由你決定。</translation></message>
-    <message><source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source><translation>DeskPort 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。它衍生自 Moonlight Qt，並包含經過修改的 Sunshine 主機。</translation></message>
-    <message><source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source><translation>共享的 DeskPort 目錄採用 MIT 授權條款。作業系統圖示已貢獻至公有領域（CC0 1.0）。</translation></message>
-    <message><source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source><translation>Qt、FFmpeg、SDL 及其他隨附的函式庫保留各自的授權條款，相關聲明隨各安裝套件一同提供。</translation></message>
-    <message><source>Source code and modifications: %1</source><translation>原始碼和修改：%1</translation></message>
-</context>
-<context>
-    <name>DeviceCard</name>
-    <message>
-        <source>Checking</source>
-        <translation>正在檢查</translation>
-    </message>
-    <message>
-        <source>Online</source>
-        <translation>上線</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>離線</translation>
-    </message>
-    <message>
-        <source>Device actions</source>
-        <translation>裝置操作</translation>
-    </message>
-    <message>
-        <source>Looking for an address</source>
-        <translation>正在尋找位址</translation>
-    </message>
-    <message>
-        <source>Checking connection…</source>
-        <translation>正在檢查連線…</translation>
-    </message>
-    <message>
-        <source>Unavailable · check device or network</source>
-        <translation>無法使用 · 請檢查裝置或網路</translation>
-    </message>
-    <message>
-        <source>Connect to desktop  →</source>
-        <translation>連線至桌面  →</translation>
-    </message>
-    <message>
-        <source>Set up access  →</source>
-        <translation>設定存取權限  →</translation>
-    </message>
-    <message>
-        <source>Return to desktop</source>
-        <translation>返回桌面</translation>
-    </message>
-    <message>
-        <source>View details</source>
-        <translation>檢視詳細資料</translation>
-    </message>
-    <message>
-        <source>Checking…</source>
-        <translation>正在檢查…</translation>
-    </message>
-    <message>
-        <source>Troubleshoot</source>
-        <translation>排查連線</translation>
-    </message>
-    <message>
-        <source>Connect</source>
-        <translation>連線</translation>
-    </message>
-    <message>
-        <source>Set up access</source>
-        <translation>設定存取</translation>
-    </message>
-    <message>
-        <source>Connected</source>
-        <translation>已連線</translation>
-    </message>
-    <message>
-        <source>Checking availability</source>
-        <translation>正在檢查可用狀態</translation>
-    </message>
-    <message>
-        <source>Device settings</source>
-        <translation>裝置設定</translation>
-    </message>
-    <message>
-        <source>Computer</source>
-        <translation>電腦</translation>
-    </message>
-    <message>
-        <source>Device details</source>
-        <translation>裝置詳細資訊</translation>
-    </message>
-    <message>
-        <source>Open</source>
-        <translation>開啟</translation>
-    </message>
-    <message>
-        <source>Group actions</source>
-        <translation>群組操作</translation>
-    </message>
-    <message>
-        <source>1 device</source>
-        <translation>1 台裝置</translation>
-    </message>
-    <message>
-        <source>%1 devices</source>
-        <translation>%1 台裝置</translation>
-    </message>
-    <message>
-        <source>Add a device</source>
-        <translation>新增裝置</translation>
-    </message>
-    <message>
-        <source>New group</source>
-        <translation>新增群組</translation>
-    </message>
-</context>
-<context>
-    <name>HostView</name>
-    <message>
-        <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
-        <translation>在另一台裝置上掃碼或開啟網址，然後輸入此處或驗證器 App 上顯示的 6 位數動態碼。動態碼每 30 秒更換一次。</translation>
-    </message>
-    <message>
-        <source>Changes in %1 s</source>
-        <translation>%1 秒後更換</translation>
-    </message>
-    <message>
-        <source>Too many wrong codes. Code sign-in is paused until %1.</source>
-        <translation>動態碼錯誤次數過多，代碼登入已暫停至 %1。</translation>
-    </message>
-    <message>
-        <source>Hide authenticator QR</source>
-        <translation>隱藏驗證器 QR 碼</translation>
-    </message>
-    <message>
-        <source>Add to authenticator app</source>
-        <translation>加入驗證器 App</translation>
-    </message>
-    <message>
-        <source>Reset code secret</source>
-        <translation>重設動態碼金鑰</translation>
-    </message>
-    <message>
-        <source>Could not save a new code secret. Please try again.</source>
-        <translation>無法儲存新的動態碼金鑰，請重試。</translation>
-    </message>
-    <message>
-        <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
-        <translation>用 Ente Auth 或其他驗證器 App 掃碼，即可在手機上看到同樣的動態碼。取得此 QR 碼的人都能從瀏覽器登入。重設動態碼金鑰會讓所有驗證器失效。</translation>
-    </message>
-    <message>
-        <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
-        <translation>未記住的瀏覽器關閉後需要重新輸入動態碼。連線前請先開始共享。連線裝置需要信任本機 HTTPS 憑證。</translation>
-    </message>
-    <message>
-        <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
-        <translation>連線時勾選「記住此瀏覽器 7 天」，該瀏覽器 7 天內無需再輸入動態碼。</translation>
-    </message>
-    <message>
-        <source>Browser access is not running.</source>
-        <translation>瀏覽器存取未執行。</translation>
-    </message>
-    <message>
-        <source>Browser access is on for this network and your Tailscale network.</source>
-        <translation>瀏覽器存取已開啟，可在本地網路與你的 Tailscale 網路中使用。</translation>
-    </message>
-    <message>
-        <source>Browser access is on for this network.</source>
-        <translation>瀏覽器存取已開啟，可在本地網路中使用。</translation>
-    </message>
-    <message>
-        <source>Devices signed in to the same Tailscale account connect without the code.</source>
-        <translation>登入同一 Tailscale 帳戶的裝置無需存取碼即可連線。</translation>
-    </message>
-    <message>
-        <source>Show code</source>
-        <translation>顯示存取碼</translation>
-    </message>
-    <message>
-        <source>Hide code</source>
-        <translation>隱藏存取碼</translation>
-    </message>
-    <message><source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source><translation>中斷連線後會移除虛擬螢幕，並還原實體螢幕配置。重新連線時會建立新的虛擬螢幕。</translation></message>
-    <message>
-        <source>Sharing</source>
-        <translation>共享</translation>
-    </message>
-    <message>
-        <source>Share this computer.</source>
-        <translation>共享這台電腦。</translation>
-    </message>
-    <message>
-        <source>Share a dedicated virtual display. DeskPort stays available when its window is hidden.</source>
-        <translation>共享專用虛擬螢幕。隱藏視窗後 DeskPort 仍保持可用。</translation>
-    </message>
-    <message>
-        <source>Share your current desktop. DeskPort stays available when its window is hidden.</source>
-        <translation>共享目前桌面。隱藏視窗後 DeskPort 仍保持可用。</translation>
-    </message>
-    <message>
-        <source>Updating sharing…</source>
-        <translation>正在更新共享狀態…</translation>
-    </message>
-    <message>
-        <source>Sharing is on</source>
-        <translation>共享已開啟</translation>
-    </message>
-    <message>
-        <source>Sharing is off</source>
-        <translation>共享已關閉</translation>
-    </message>
-    <message>
-        <source>Stop sharing</source>
-        <translation>停止共享</translation>
-    </message>
-    <message>
-        <source>Start sharing</source>
-        <translation>開始共享</translation>
-    </message>
-    <message>
-        <source>Browser access</source>
-        <translation>瀏覽器存取</translation>
-    </message>
-    <message>
-        <source>Browser access code</source>
-        <translation>瀏覽器存取碼</translation>
-    </message>
-    <message>
-        <source>Browser URL</source>
-        <translation>瀏覽器網址</translation>
-    </message>
-    <message>
-        <source>Paired browsers</source>
-        <translation>已配對的瀏覽器</translation>
-    </message>
-    <message>
-        <source>Remove pairing</source>
-        <translation>移除配對</translation>
-    </message>
-    <message>
-        <source>Could not save the pairing removal. Please try again.</source>
-        <translation>無法儲存移除配對的操作，請再試一次。</translation>
-    </message>
-    <message>
-        <source>Access &amp; permissions</source>
-        <translation>存取與權限</translation>
-    </message>
-    <message>
-        <source>Only devices you approve can connect. A saved binding does not grant system recording or input permissions.</source>
-        <translation>只有你核准的裝置才能連線。儲存綁定不會授予系統錄製或輸入權限。</translation>
-    </message>
-    <message>
-        <source>Review permissions</source>
-        <translation>檢查權限</translation>
-    </message>
-    <message>
-        <source>Manage devices</source>
-        <translation>管理裝置</translation>
-    </message>
-    <message>
-        <source>Sharing preferences</source>
-        <translation>共享設定</translation>
-    </message>
-    <message>
-        <source>Virtual display size</source>
-        <translation>虛擬螢幕尺寸</translation>
-    </message>
-    <message>
-        <source>Choose before starting sharing. Changing size during a session is not available yet.</source>
-        <translation>請在開始共享前選擇。目前尚不支援工作階段中調整尺寸。</translation>
-    </message>
-    <message>
-        <source>Start sharing when I log in</source>
-        <translation>登入時開始共享</translation>
-    </message>
-    <message>
-        <source>Hide compatibility &amp; diagnostics</source>
-        <translation>隱藏相容性與診斷</translation>
-    </message>
-    <message>
-        <source>Compatibility &amp; diagnostics</source>
-        <translation>相容性與診斷</translation>
-    </message>
-    <message>
-        <source>Legacy PIN pairing</source>
-        <translation>傳統 PIN 配對</translation>
-    </message>
-    <message>
-        <source>For Moonlight or other clients without mutual binding. Enter the PIN shown on that client. This grants access in one direction.</source>
-        <translation>適用於 Moonlight 等不支援雙向綁定的用戶端。輸入該用戶端顯示的 PIN，僅授予單向存取權限。</translation>
-    </message>
-    <message>
-        <source>Device name</source>
-        <translation>裝置名稱</translation>
-    </message>
-    <message>
-        <source>PIN</source>
-        <translation>PIN 碼</translation>
-    </message>
-    <message>
-        <source>Allow</source>
-        <translation>允許</translation>
-    </message>
-    <message>
-        <source>Host port: %1  ·  Binding port: %2</source>
-        <translation>主機連接埠：%1  ·  綁定連接埠：%2</translation>
-    </message>
-    <message>
-        <source>Open host logs</source>
-        <translation>開啟主機記錄</translation>
-    </message>
-    <message>
-        <source>Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected.</source>
-        <translation>DeskPort 內建，無需 BetterDisplay。這是閒置時的解析度，已授權用戶端連線後可自動調整。</translation>
-    </message>
-    <message>
-        <source>Built-in virtual display</source>
-        <translation>內建虛擬螢幕</translation>
-    </message>
-    <message>
-        <source>Active · %1 × %2 pixels</source>
-        <translation>執行中 · %1 × %2 像素</translation>
-    </message>
-    <message>
-        <source>Created automatically when sharing starts</source>
-        <translation>開始共享時自動建立</translation>
-    </message>
-    <message>
-        <source>Your remote workspace stays open when the client window is hidden. After disconnecting, its resolution returns to the idle size. Stopping sharing removes this virtual display.</source>
-        <translation>隱藏用戶端視窗後，遠端工作區保持開啟。中斷連線後恢復閒置解析度，停止共享會移除此虛擬螢幕。</translation>
-    </message>
-    <message>
-        <source>Workspace · %1 × %2 · %3× scaling</source>
-        <translation>工作區 · %1 × %2 · %3× 縮放</translation>
-    </message>
-    <message>
-        <source>Login startup is installed by this computer's system configuration. Change it there, not here.</source>
-        <translation>登入啟動由這部電腦的系統設定管理，請在該處修改。</translation>
-    </message>
-    <message>
-        <source>Sharing service is running</source>
-        <translation>共享服務執行中</translation>
-    </message>
-    <message>
-        <source>Connection readiness</source>
-        <translation>連線就緒檢查</translation>
-    </message>
-    <message>
-        <source>Start sharing to accept connections.</source>
-        <translation>開啟共享以接受連線。</translation>
-    </message>
-    <message>
-        <source>Sharing needs permission. Review the items below.</source>
-        <translation>共享需要權限，請檢查以下項目。</translation>
-    </message>
-    <message>
-        <source>Service available. Verify picture and control from an approved device.</source>
-        <translation>服務可用，請從已授權裝置驗證畫面與控制。</translation>
-    </message>
-    <message>
-        <source>Allowed</source>
-        <translation>已允許</translation>
-    </message>
-    <message>
-        <source>Verify when sharing</source>
-        <translation>共享時驗證</translation>
-    </message>
-    <message>
-        <source>Optional · audio is off</source>
-        <translation>選用 · 聲音共享已關閉</translation>
-    </message>
-    <message>
-        <source>Needs attention</source>
-        <translation>需要處理</translation>
-    </message>
-    <message>
-        <source>Open system settings</source>
-        <translation>開啟系統設定</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>權限引導</translation>
-    </message>
-    <message>
-        <source>Approved DeskPort devices: %1</source>
-        <translation>已授權 DeskPort 裝置：%1</translation>
-    </message>
-    <message>
-        <source>Saved approval and network reachability are separate. Legacy PIN clients are managed separately.</source>
-        <translation>已儲存授權不代表網路可達。傳統 PIN 用戶端另行管理。</translation>
-    </message>
-    <message>
-        <source>Share this computer's sound</source>
-        <translation>共享本機聲音</translation>
-    </message>
-    <message>
-        <source>Saved · restart sharing to apply audio changes.</source>
-        <translation>已儲存 · 重新啟動共享後聲音設定生效。</translation>
-    </message>
-    <message>
-        <source>Save bandwidth on static screens</source>
-        <translation>靜態畫面節省頻寬</translation>
-    </message>
-    <message>
-        <source>Skips unchanged frames and reduces frame rate during repeated packet loss. Applies when sharing restarts.</source>
-        <translation>略過未變動的畫面，連續遺失封包時降低影格率。重新啟動共享後生效。</translation>
-    </message>
-    <message>
-        <source>Saved · restart sharing to apply changes.</source>
-        <translation>已儲存 · 重新啟動共享以套用變更。</translation>
-    </message>
-    <message>
-        <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
-        <translation>畫面、音訊和輸入由連線端裝置設定，重新連線後生效。</translation>
-    </message>
-    <message>
-        <source>Device connection port</source>
-        <translation>裝置連線連接埠</translation>
-    </message>
-    <message>
-        <source>Apply</source>
-        <translation>套用</translation>
-    </message>
-    <message>
-        <source>Unattended operation</source>
-        <translation>無人值守執行</translation>
-    </message>
-    <message>
-        <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
-        <translation>自動啟動，並在 DeskPort 停止後恢復。需要在系統設定中完成一次授權，並已登入桌面。不會解鎖 FileVault 或開啟系統自動登入。</translation>
-    </message>
-    <message>
-        <source>Open background permissions</source>
-        <translation>開啟背景執行權限</translation>
-    </message>
-    <message>
-        <source>Ask client to leave fullscreen</source>
-        <translation>通知用戶端退出全螢幕</translation>
-    </message>
-    <message>
-        <source>Created when an approved client connects</source>
-        <translation>已授權用戶端連線時建立</translation>
-    </message>
-    <message>
-        <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
-        <translation>中斷連線後還原實體螢幕並移除虛擬螢幕。網路短暫中斷時會保留工作區以便復原。</translation>
-    </message>
-    <message>
-        <source>Report a problem…</source>
-        <translation>回報問題…</translation>
-    </message>
-    <message>
-        <source>Shared Windows display</source>
-        <translation>共享 Windows 顯示器</translation>
-    </message>
-    <message>
-        <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
-        <translation>共享此 Windows 桌面；中斷連線後會恢復支援的解析度</translation>
-    </message>
-    <message>
-        <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
-        <translation>使用此 Windows 桌面。中斷連線後恢復原始解析度。不支援的尺寸只會提示，不會變更顯示設定。</translation>
-    </message>
-    <message>
-        <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
-        <translation>建立跟隨客戶端視窗尺寸的虛擬桌面。在客戶端選擇鏡像、獨佔或延伸；中斷連線後恢復原本的螢幕配置。</translation>
-    </message>
-</context>
-<context>
-    <name>BindView</name>
-    <message>
-        <source>Add a device</source>
-        <translation>新增裝置</translation>
-    </message>
-    <message>
-        <source>One confirmation. Both directions.</source>
-        <translation>確認一次，雙向連線。</translation>
-    </message>
-    <message>
-        <source>Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.</source>
-        <translation>在兩台電腦上保持 DeskPort 開啟。輸入位址後，在另一台裝置核准請求。</translation>
-    </message>
-    <message>
-        <source>Where do you want to connect?</source>
-        <translation>要連線到哪裡？</translation>
-    </message>
-    <message>
-        <source>IP address or computer name</source>
-        <translation>IP 位址或電腦名稱</translation>
-    </message>
-    <message>
-        <source>Send request</source>
-        <translation>傳送請求</translation>
-    </message>
-    <message>
-        <source>Cancel</source>
-        <translation>取消</translation>
-    </message>
-    <message>
-        <source>Approval lets both computers view and control each other. System permissions are still required on each device.</source>
-        <translation>核准後，兩台電腦可互相檢視與控制。每台裝置仍需個別授予系統權限。</translation>
-    </message>
-    <message>
-        <source>Saved access</source>
-        <translation>已儲存的存取權限</translation>
-    </message>
-    <message>
-        <source>Your approved devices will appear here.</source>
-        <translation>已核准的裝置會顯示在這裡。</translation>
-    </message>
-    <message>
-        <source>Bound both ways</source>
-        <translation>已雙向綁定</translation>
-    </message>
-    <message>
-        <source>Incomplete</source>
-        <translation>未完成</translation>
-    </message>
-    <message>
-        <source>Remove access to this computer</source>
-        <translation>撤銷對此電腦的存取</translation>
-    </message>
-    <message>
-        <source>Connecting another way?</source>
-        <translation>其他連線方式？</translation>
-    </message>
-    <message>
-        <source>For a custom binding port, enter address:port. Moonlight and independent Sunshine hosts use legacy pairing instead.</source>
-        <translation>自訂綁定連接埠請使用 位址:連接埠。Moonlight 與獨立 Sunshine 主機使用傳統配對。</translation>
-    </message>
-    <message>
-        <source>Add a legacy host</source>
-        <translation>新增傳統主機</translation>
-    </message>
-    <message>
-        <source>Remove device access?</source>
-        <translation>撤銷裝置存取權限？</translation>
-    </message>
-    <message>
-        <source>%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.</source>
-        <translation>%1 將無法再控制此電腦。若要雙向撤銷，也請在另一台裝置移除綁定。</translation>
-    </message>
-    <message><source>Edit device</source><translation>編輯裝置</translation></message>
-    <message><source>Device name</source><translation>裝置名稱</translation></message>
-    <message><source>Domain name or IP address</source><translation>網域名稱或 IP 位址</translation></message>
-    <message><source>Computer name or IP, without port</source><translation>電腦名稱或 IP，不含連接埠</translation></message>
-    <message><source>A domain name is saved as entered and resolved again when connecting.</source><translation>保留輸入的網域名稱，每次連線時重新解析。</translation></message>
-    <message><source>Host port</source><translation>主機連接埠</translation></message>
-    <message><source>Binding port</source><translation>綁定連接埠</translation></message>
-    <message><source>Save</source><translation>儲存</translation></message>
-    <message>
-        <source>Advanced port overrides</source>
-        <translation>進階連接埠覆寫</translation>
-    </message>
-    <message>
-        <source>Client access</source>
-        <translation>用戶端存取</translation>
-    </message>
-    <message>
-        <source>Discover nearby devices</source>
-        <translation>探索附近裝置</translation>
-    </message>
-    <message>
-        <source>Request access to a computer</source>
-        <translation>請求存取電腦</translation>
-    </message>
-    <message>
-        <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
-        <translation>核准後，此裝置可以檢視並控制另一台電腦，但不會共享此裝置自己的桌面。</translation>
-    </message>
-    <message>
-        <source>Host access</source>
-        <translation>主機存取</translation>
-    </message>
-    <message>
-        <source>Forget saved binding</source>
-        <translation>忘記已儲存的綁定</translation>
-    </message>
-    <message>
-        <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
-        <translation>要忘記此裝置上為 %1 儲存的綁定嗎？請另行從「裝置」中移除它。若要撤銷此裝置的存取權限，也需在主機端將其移除。</translation>
-    </message>
-    <message><source>Remove</source><translation>移除</translation></message>
-</context>
-<context>
-    <name>SetupView</name>
-    <message>
-        <source>Getting started</source>
-        <translation>開始使用</translation>
-    </message>
-    <message>
-        <source>Set up this computer.</source>
-        <translation>設定這台電腦。</translation>
-    </message>
-    <message>
-        <source>Connect to another computer right away. To share this one, review its permissions below.</source>
-        <translation>你可以直接連線至其他電腦。如需共享這台電腦，請檢查下方權限。</translation>
-    </message>
-    <message>
-        <source>Allowed</source>
-        <translation>已允許</translation>
-    </message>
-    <message>
-        <source>Checked when sharing</source>
-        <translation>共享時檢查</translation>
-    </message>
-    <message>
-        <source>Not requested</source>
-        <translation>尚未請求</translation>
-    </message>
-    <message>
-        <source>Restricted by system</source>
-        <translation>受系統限制</translation>
-    </message>
-    <message>
-        <source>Needs attention</source>
-        <translation>需要處理</translation>
-    </message>
-    <message>
-        <source>Skip for now · only connect to other devices</source>
-        <translation>暫時略過 · 僅連線至其他裝置</translation>
-    </message>
-    <message>
-        <source>1. Review permissions    2. Add a device    3. Confirm and connect</source>
-        <translation>1. 檢查權限    2. 新增裝置    3. 確認並連線</translation>
-    </message>
-    <message>
-        <source>Open system settings</source>
-        <translation>開啟系統設定</translation>
-    </message>
-    <message>
-        <source>Your Linux configuration must allow your user to access /dev/uinput. Connecting to other computers does not need this permission.</source>
-        <translation>Linux 設定必須允許目前使用者存取 /dev/uinput。僅連線至其他電腦不需要此權限。</translation>
-    </message>
-    <message>
-        <source>Authorize the installed DeskPort app</source>
-        <translation>授權已安裝的 DeskPort 應用程式</translation>
-    </message>
-    <message>
-        <source>If a settings pane accepts adding an app, drag the tile below into its list, then turn the switch on. Otherwise use Reveal in Finder. Some panes list DeskPort only after sharing has requested access.</source>
-        <translation>若設定頁面支援新增應用程式，將下方圖塊拖入清單並開啟開關；否則使用「在 Finder 中顯示」。部分頁面僅在共享要求權限後才列出 DeskPort。</translation>
-    </message>
-    <message>
-        <source>DeskPort.app  ·  Drag to Settings</source>
-        <translation>DeskPort.app  ·  拖入設定</translation>
-    </message>
-    <message>
-        <source>Reveal in Finder</source>
-        <translation>在 Finder 中顯示</translation>
-    </message>
-    <message>
-        <source>After changing permissions, restart sharing. If macOS asks you to reopen DeskPort, follow that prompt. Permission checks do not replace a real picture and input test.</source>
-        <translation>變更權限後請重新啟動共享。若 macOS 要求重新開啟 DeskPort，請依提示操作。權限檢查不能取代實際畫面與輸入測試。</translation>
-    </message>
-    <message>
-        <source>Check again</source>
-        <translation>重新檢查</translation>
-    </message>
-    <message>
-        <source>Continue to devices</source>
-        <translation>繼續至裝置清單</translation>
-    </message>
-</context>
-<context>
-    <name>BindingApproval</name>
-    <message>
-        <source>Bind with this device?</source>
-        <translation>與此裝置綁定？</translation>
-    </message>
-    <message>
-        <source>Not now</source>
-        <translation>暫不</translation>
-    </message>
-    <message>
-        <source>Allow &amp; bind</source>
-        <translation>允許並綁定</translation>
-    </message>
-    <message>
-        <source>Allow this device and this computer to view and control each other? Binding saves permission without starting a connection or interrupting existing sessions. Choose Connect when you are ready. Accept only a request you are expecting.</source>
-        <translation>允許此裝置與此電腦互相檢視和控制嗎？綁定僅儲存權限，不會發起連線或中斷現有工作階段。準備好後再選擇連線。請僅接受您預期的請求。</translation>
-    </message>
-    <message>
-        <source>Allow this device to view and control this computer? Binding saves permission without starting a connection or interrupting existing sessions. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
-        <translation>允許此裝置檢視和控制此電腦嗎？綁定僅儲存權限，不會發起連線或中斷現有工作階段。這不會授予存取請求裝置的權限。請僅接受您預期的請求。</translation>
-    </message>
-</context>
-<context>
-    <name>HostManager</name>
-    <message><source>Connections</source><translation>連線列表</translation></message>
-    <message><source>Show desktop</source><translation>顯示桌面</translation></message>
-
-    <message>
-        <source>Restart</source>
-        <translation>重新啟動</translation>
-    </message>
-    <message>
-        <source>Quit</source>
-        <translation>結束</translation>
-    </message>
-    <message>
-        <source>Disconnect</source>
-        <translation>中斷連線</translation>
-    </message>
-    <message>
-        <source>Restart DeskPort</source>
-        <translation>重新啟動 DeskPort</translation>
-    </message>
-    <message>
-        <source>Open device list</source>
-        <translation>開啟裝置清單</translation>
-    </message>
-    <message>
-        <source>Return to remote desktop</source>
-        <translation>返回遠端桌面</translation>
-    </message>
-    <message>
-        <source>Sharing</source>
-        <translation>共享</translation>
-    </message>
-    <message>
-        <source>Settings</source>
-        <translation>設定</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>視窗</translation>
-    </message>
-    <message>
-        <source>Applications</source>
-        <translation>應用程式</translation>
-    </message>
-    <message>
-        <source>Sharing is off</source>
-        <translation>共享已關閉</translation>
-    </message>
-    <message>
-        <source>Stop sharing</source>
-        <translation>停止共享</translation>
-    </message>
-    <message>
-        <source>PIN</source>
-        <translation>PIN 碼</translation>
-    </message>
-    <message>
-        <source>Screen &amp; system audio</source>
-        <translation>螢幕與系統音訊</translation>
-    </message>
-    <message>
-        <source>Let a connected device see this desktop and hear its sound.</source>
-        <translation>允許已連線的裝置檢視桌面並聆聽聲音。</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; mouse</source>
-        <translation>鍵盤與滑鼠</translation>
-    </message>
-    <message>
-        <source>Let a device you approve control this computer.</source>
-        <translation>允許已核准的裝置控制這台電腦。</translation>
-    </message>
-    <message>
-        <source>Audio input</source>
-        <translation>音訊輸入</translation>
-    </message>
-    <message>
-        <source>Needed only when your sharing audio path uses microphone access.</source>
-        <translation>僅在共享音訊需要麥克風存取權限時使用。</translation>
-    </message>
-    <message>
-        <source>Desktop capture</source>
-        <translation>桌面擷取</translation>
-    </message>
-    <message>
-        <source>KDE uses the current desktop. Other desktops may ask you to choose a screen when sharing starts.</source>
-        <translation>KDE 使用目前桌面。其他桌面環境可能在共享開始時要求選擇螢幕。</translation>
-    </message>
-    <message>
-        <source>Remote control requires access to the system input device.</source>
-        <translation>遠端控制需要存取系統輸入裝置。</translation>
-    </message>
-    <message>
-        <source>Open DeskPort</source>
-        <translation>開啟 DeskPort</translation>
-    </message>
-    <message>
-        <source>Quit DeskPort</source>
-        <translation>完全結束 DeskPort</translation>
-    </message>
-    <message>
-        <source>Disconnect viewer</source>
-        <translation>中斷檢視端</translation>
-    </message>
-    <message>
-        <source> Retrying automatically in %1 seconds.</source>
-        <translation> 將在 %1 秒後自動重試。</translation>
-    </message>
-    <message>
-        <source>Reconnect</source>
-        <translation>重新連線</translation>
-    </message>
-    <message>
-        <source>Unattended operation</source>
-        <translation>無人值守執行</translation>
-    </message>
-    <message>
-        <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
-        <translation>暫停自動恢復並結束？下次開啟 DeskPort 時恢復執行。</translation>
-    </message>
-    <message>
-        <source>Pause and quit</source>
-        <translation>暫停並結束</translation>
-    </message>
-    <message>
-        <source>Turn off unattended operation before disabling login startup.</source>
-        <translation>請先關閉無人值守執行，再關閉登入啟動。</translation>
-    </message>
-    <message>
-        <source>Cannot save unattended preferences.</source>
-        <translation>無法儲存無人值守偏好設定。</translation>
-    </message>
-    <message>
-        <source>Off</source>
-        <translation>已關閉</translation>
-    </message>
-    <message>
-        <source>Waiting for approval in System Settings</source>
-        <translation>等待在系統設定中授權</translation>
-    </message>
-    <message>
-        <source>Recovery service needs setup. Turn it off and on to try again.</source>
-        <translation>恢復服務需要設定。請關閉後重新開啟。</translation>
-    </message>
-    <message>
-        <source>Enabled; waiting for the recovery service to check in</source>
-        <translation>已啟用；等待恢復服務首次檢查</translation>
-    </message>
-    <message>
-        <source>Recovery has not checked in. Review background permissions.</source>
-        <translation>未收到恢復服務的檢查結果。請檢查背景執行權限。</translation>
-    </message>
-    <message>
-        <source>Enabled; recovery service is checking this Mac</source>
-        <translation>已啟用；恢復服務正在檢查此 Mac</translation>
-    </message>
-    <message>
-        <source>Waiting for a logged-in desktop session</source>
-        <translation>等待登入桌面工作階段</translation>
-    </message>
-    <message>
-        <source>Recovery needs attention. Check login startup and background permissions.</source>
-        <translation>恢復需要處理。請檢查登入啟動和背景執行權限。</translation>
-    </message>
-    <message>
-        <source>Install DeskPort in Applications before enabling unattended operation.</source>
-        <translation>請先將 DeskPort 安裝到「應用程式」，再開啟無人值守執行。</translation>
-    </message>
-    <message>
-        <source>Cannot enable login startup.</source>
-        <translation>無法開啟登入啟動。</translation>
-    </message>
-    <message>
-        <source>More</source>
-        <translation>更多</translation>
-    </message>
-    <message>
-        <source>Connecting…</source>
-        <translation>連線中…</translation>
-    </message>
-    <message>
-        <source>Disconnecting…</source>
-        <translation>正在中斷…</translation>
-    </message>
-    <message>
-        <source>All connections (%1)…</source>
-        <translation>全部連線（%1）…</translation>
-    </message>
-    <message>
-        <source>Disconnect “%1”</source>
-        <translation>中斷「%1」</translation>
-    </message>
-    <message>
-        <source>Reconnect “%1”</source>
-        <translation>重新連線「%1」</translation>
-    </message>
-    <message>
-        <source>DeskPort · %1 connected</source>
-        <translation>DeskPort · 已連線 %1 台</translation>
-    </message>
-    <message>
-        <source>DeskPort · %1 connected · showing %2</source>
-        <translation>DeskPort · 已連線 %1 台 · 正在顯示 %2</translation>
-    </message>
-</context>
-<context>
-<name>DesktopSegue</name>
-<message><source>This device has no Desktop entry. Open Applications from the device menu to choose an app.</source><translation>此裝置沒有桌面項目。請從裝置選單開啟「應用程式」選擇應用程式。</translation></message>
-<message><source>Another application is running on this device. Open Applications from the device menu to resume it or switch to Desktop.</source><translation>此裝置正在執行其他應用程式。請从裝置選單開啟「應用程式」恢復連線或切換到桌面。</translation></message>
-<message><source>Unable to prepare the desktop connection. Try again.</source><translation>無法準備桌面連線，請重試。</translation></message>
-<message><source>The device disconnected. Return to Devices and try again.</source><translation>裝置已中斷連線。請返回裝置列表重試。</translation></message>
-<message><source>Loading the desktop timed out. Return to Devices and try again.</source><translation>載入桌面逾時。請返回裝置列表重試。</translation></message>
-<message><source>Connecting to desktop…</source><translation>正在連線至桌面…</translation></message>
-<message><source>Back to devices</source><translation>返回裝置列表</translation></message>
-    <message><source>Close</source><translation>關閉</translation></message>
-    <message><source>Cancel</source><translation>取消</translation></message>
-</context>
-<context>
-    <name>DeviceSettings</name>
-    <message>
-        <source>Device settings</source>
-        <translation>裝置設定</translation>
-    </message>
-    <message>
-        <source>Saved only for this device. Changes apply on the next connection.</source>
-        <translation>僅為此裝置儲存，下次連線時生效。</translation>
-    </message>
-    <message>
-        <source>Picture mode</source>
-        <translation>畫面模式</translation>
-    </message>
-    <message>
-        <source>Automatic (recommended)</source>
-        <translation>自動（建議）</translation>
-    </message>
-    <message>
-        <source>Clear</source>
-        <translation>清晰優先</translation>
-    </message>
-    <message>
-        <source>Smooth</source>
-        <translation>流暢優先</translation>
-    </message>
-    <message>
-        <source>Save data</source>
-        <translation>節省流量</translation>
-    </message>
-    <message>
-        <source>Custom</source>
-        <translation>自訂</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>跟隨用戶端視窗解析度</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>接收此裝置的聲音</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>允許鍵盤、指標及控制器輸入</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>工作階段期間共享文字、圖片和檔案</translation>
-    </message>
-    <message>
-        <source>Advanced streaming settings</source>
-        <translation>進階串流設定</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>已儲存 · 重新連線後生效。</translation>
-    </message>
-
-    <message><source>Virtual screen</source><translation>虛擬螢幕</translation></message>
-    <message><source>Primary screen and mirror others (default)</source><translation>設為主螢幕，其他螢幕鏡像（預設）</translation></message>
-    <message><source>Primary screen and turn off others</source><translation>設為主螢幕，關閉其他螢幕</translation></message>
-    <message><source>Use client as an extended screen</source><translation>將用戶端用作延伸螢幕</translation></message>
-    <message><source>The previous screen layout is restored automatically when the session ends.</source><translation>連線結束後自動恢復先前的螢幕狀態。</translation></message>
-    <message><source>Domain name or IP address</source><translation>網域名稱或 IP 位址</translation></message>
-    <message><source>Your existing binding is kept. Reconnect to use the saved address.</source><translation>保留既有綁定，重新連線後使用新位址。</translation></message>
-    <message><source>Computer name or IP, without port</source><translation>電腦名稱或 IP，不含連接埠</translation></message>
-    <message><source>Save</source><translation>儲存</translation></message>
-    <message><source>Desktop adjustment</source><translation>桌面微調</translation></message>
-    <message><source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source><translation>1.5 顯示較大的控制項；0.5 顯示更多內容。在自動計算的桌面大小上微調。連線中修改會立即生效。</translation></message>
-    <message><source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source><translation>已達到 macOS 最小桌面（800 × 600），目前視窗無法再放大。可改用全螢幕或更大的視窗。</translation></message>
-    <message>
-        <source>Full screen</source>
-        <translation>全螢幕</translation>
-    </message>
-    <message>
-        <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
-        <translation>連線中也可以按 Ctrl+Alt+Shift+X 切換全螢幕。</translation>
-    </message>
-    <message><source>Desktop fine tuning</source><translation>桌面微調</translation></message>
-    <message><source>Main + mirror</source><translation>主螢幕 + 鏡像</translation></message>
-    <message><source>Main only</source><translation>僅主螢幕</translation></message>
-    <message><source>Extended</source><translation>延伸</translation></message>
-    <message><source>Fit to window</source><translation>適應視窗</translation></message>
-    <message><source>Sound</source><translation>聲音</translation></message>
-    <message><source>Input</source><translation>輸入</translation></message>
-</context>
-<context>
-    <name>DeviceAdvanced</name>
-    <message>
-        <source>Advanced streaming settings</source>
-        <translation>進階串流設定</translation>
-    </message>
-    <message>
-        <source>Settings for %1</source>
-        <translation>%1 的設定</translation>
-    </message>
-    <message>
-        <source>Make DeskPort your own.</source>
-        <translation>依照你的習慣設定 DeskPort。</translation>
-    </message>
-    <message>
-        <source>These settings apply only to this device. Reconnect to apply changes.</source>
-        <translation>這些設定僅用於此裝置，重新連線後生效。</translation>
-    </message>
-    <message>
-        <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
-        <translation>新裝置的預設設定。可在裝置選單中選擇「裝置設定」個別調整連線。</translation>
-    </message>
-    <message>
-        <source>Saved · reconnect to apply changes.</source>
-        <translation>已儲存 · 重新連線後生效。</translation>
-    </message>
-    <message>
-        <source>Connecting to remote computers</source>
-        <translation>連線遠端電腦</translation>
-    </message>
-    <message>
-        <source>Picture</source>
-        <translation>畫面</translation>
-    </message>
-    <message>
-        <source>Input</source>
-        <translation>輸入</translation>
-    </message>
-    <message>
-        <source>Sound</source>
-        <translation>聲音</translation>
-    </message>
-    <message>
-        <source>Advanced</source>
-        <translation>進階</translation>
-    </message>
-    <message>
-        <source>Match the client window resolution</source>
-        <translation>跟隨用戶端視窗解析度</translation>
-    </message>
-    <message>
-        <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
-        <translation>使用已綁定 Mac 的內建虛擬螢幕。調整視窗後畫面會短暫重新連線，遠端應用程式保持開啟。其他主機使用下方解析度。</translation>
-    </message>
-    <message>
-        <source>Smart streaming</source>
-        <translation>智慧串流</translation>
-    </message>
-    <message>
-        <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
-        <translation>依解析度控制頻寬上限並平滑顯示影格。關閉後使用手動頻寬與影格平滑設定。</translation>
-    </message>
-    <message>
-        <source>Quality preset</source>
-        <translation>畫質預設</translation>
-    </message>
-    <message>
-        <source>Choose a preset…</source>
-        <translation>選擇預設…</translation>
-    </message>
-    <message>
-        <source>Office · 30 fps / 10 Mbps</source>
-        <translation>辦公 · 30 fps / 10 Mbps</translation>
-    </message>
-    <message>
-        <source>Clear · 60 fps / 40 Mbps</source>
-        <translation>清晰 · 60 fps / 40 Mbps</translation>
-    </message>
-    <message>
-        <source>Smooth · 60 fps / 15 Mbps</source>
-        <translation>流暢 · 60 fps / 15 Mbps</translation>
-    </message>
-    <message>
-        <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
-        <translation>預設僅調整幀率和頻寬，可在下方依網路情況微調。</translation>
-    </message>
-    <message>
-        <source>Picture adjustments</source>
-        <translation>畫面微調</translation>
-    </message>
-    <message>
-        <source>Fallback resolution</source>
-        <translation>備用解析度</translation>
-    </message>
-    <message>
-        <source>Resolution</source>
-        <translation>解析度</translation>
-    </message>
-    <message>
-        <source>Connection window</source>
-        <translation>連線視窗</translation>
-    </message>
-    <message>
-        <source>Full screen</source>
-        <translation>全螢幕</translation>
-    </message>
-    <message>
-        <source>Borderless full screen</source>
-        <translation>無邊框全螢幕</translation>
-    </message>
-    <message>
-        <source>Window</source>
-        <translation>視窗</translation>
-    </message>
-    <message>
-        <source>Frame rate</source>
-        <translation>影格率</translation>
-    </message>
-    <message>
-        <source>Bandwidth · %1 Mbps</source>
-        <translation>頻寬 · %1 Mbps</translation>
-    </message>
-    <message>
-        <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
-        <translation>數值越高，畫面越細緻，頻寬消耗也越大。不移動此滑桿會保留既有進階設定值。</translation>
-    </message>
-    <message>
-        <source>Smooth frame pacing</source>
-        <translation>影格平滑</translation>
-    </message>
-    <message>
-        <source>Show streaming statistics</source>
-        <translation>顯示串流統計</translation>
-    </message>
-    <message>
-        <source>Synchronize frames to this display</source>
-        <translation>與此顯示器同步畫面</translation>
-    </message>
-    <message>
-        <source>Keyboard &amp; pointer</source>
-        <translation>鍵盤與指標</translation>
-    </message>
-    <message>
-        <source>Allow keyboard, pointer and controller input</source>
-        <translation>允許鍵盤、指標及控制器輸入</translation>
-    </message>
-    <message>
-        <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
-        <translation>關閉後僅可觀看。本機 DeskPort 快速鍵仍可使用。</translation>
-    </message>
-    <message>
-        <source>Use a desktop-style pointer</source>
-        <translation>使用桌面式指標</translation>
-    </message>
-    <message>
-        <source>Always show a local pointer in desktop mode</source>
-        <translation>桌面模式一律顯示本機游標</translation>
-    </message>
-    <message>
-        <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
-        <translation>主機隱藏滑鼠時仍顯示游標。若出現兩個游標，可關閉此選項。</translation>
-    </message>
-    <message>
-        <source>Reverse scrolling direction</source>
-        <translation>反轉捲動方向</translation>
-    </message>
-    <message>
-        <source>Send system shortcuts to the remote computer</source>
-        <translation>將系統快捷鍵傳送至遠端電腦</translation>
-    </message>
-    <message>
-        <source>Never</source>
-        <translation>永不</translation>
-    </message>
-    <message>
-        <source>Only in full screen</source>
-        <translation>僅在全螢幕時</translation>
-    </message>
-    <message>
-        <source>Always</source>
-        <translation>一律</translation>
-    </message>
-    <message>
-        <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
-        <translation>連線 Mac 時，Super / Windows 對應 Command，Alt 對應 Option。選擇「一律」可在視窗中轉送 Super + 空白鍵。變更於下次連線時生效。</translation>
-    </message>
-    <message>
-        <source>Share text, images and files during a session</source>
-        <translation>工作階段期間共享文字、圖片和檔案</translation>
-    </message>
-    <message>
-        <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
-        <translation>重新連線後，與此綁定裝置共享新複製的內容。僅限不超過 128 MiB 的純文字，不共享圖片和檔案。</translation>
-    </message>
-    <message>
-        <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
-        <translation>滑鼠位於已聚焦的遠端畫面內時接管鍵盤，離開即釋放按鍵和滑鼠按鈕。點擊畫面取得焦點；系統保留快捷鍵可能仍在本機處理。</translation>
-    </message>
-    <message>
-        <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
-        <translation>按 Ctrl + Alt + Shift + Z 釋放遠端輸入。</translation>
-    </message>
-    <message>
-        <source>Sound from the remote computer</source>
-        <translation>遠端電腦的聲音</translation>
-    </message>
-    <message>
-        <source>Receive sound from this device</source>
-        <translation>接收此裝置的聲音</translation>
-    </message>
-    <message>
-        <source>Mute when DeskPort loses focus</source>
-        <translation>DeskPort 失去焦點時靜音</translation>
-    </message>
-    <message>
-        <source>Also play audio on the host</source>
-        <translation>同時在主機播放聲音</translation>
-    </message>
-    <message>
-        <source>Advanced &amp; support</source>
-        <translation>進階與支援</translation>
-    </message>
-    <message>
-        <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
-        <translation>自訂解析度、編解碼器、HDR、環繞音效與控制器選項仍可在進階設定中調整。</translation>
-    </message>
-    <message>
-        <source>Advanced settings</source>
-        <translation>進階設定</translation>
-    </message>
-    <message>
-        <source>Permission guide</source>
-        <translation>權限引導</translation>
-    </message>
-    <message>
-        <source>Report a problem</source>
-        <translation>回報問題</translation>
-    </message>
-    <message><source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source><translation>自動模式依解析度設定頻寬，並適應網路狀況。節省流量模式使用 30 fps，視訊上限為 5 Mbps。頂端列的省流量開關會限制所有裝置的視訊位元速率。</translation></message>
-    <message><source>Picture mode</source><translation>畫面模式</translation></message>
-    <message><source>Automatic (recommended)</source><translation>自動（建議）</translation></message>
-    <message><source>Clear</source><translation>清晰優先</translation></message>
-    <message><source>Smooth</source><translation>流暢優先</translation></message>
-    <message><source>Save data</source><translation>節省流量</translation></message>
-    <message><source>Custom</source><translation>自訂</translation></message>
-    <message><source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source><translation>連線中也可以按 Ctrl+Alt+Shift+X 切換全螢幕。</translation></message>
-    <message><source>Bandwidth</source><translation>頻寬</translation></message>
-    <message><source>Automatic</source><translation>自動</translation></message>
-    <message><source>%1 Mbps</source><translation>%1 Mbps</translation></message>
-    <message><source>All streaming options</source><translation>所有串流選項</translation></message>
-</context>
-<context>
-    <name>Diagnostics</name>
-    <message>
-        <source>Cannot use the diagnostics directory.</source>
-        <translation>無法使用診斷目錄。</translation>
-    </message>
-    <message>
-        <source>Cannot create the diagnostics directory.</source>
-        <translation>無法建立診斷目錄。</translation>
-    </message>
-    <message>
-        <source>Cannot replace the diagnostics archive.</source>
-        <translation>無法取代診斷壓縮檔。</translation>
-    </message>
-    <message>
-        <source>Cannot write the diagnostics archive.</source>
-        <translation>無法寫入診斷壓縮檔。</translation>
-    </message>
-    <message>
-        <source>Cannot save the diagnostics archive.</source>
-        <translation>無法儲存診斷壓縮檔。</translation>
-    </message>
-    <message>
-        <source>Archive contains version information only. Enable logs and reproduce the problem to collect events.</source>
-        <translation>壓縮檔僅含版本資訊。請啟用日誌並重現問題以收集診斷事件。</translation>
-    </message>
-    <message>
-        <source>Archive ready. Review it, then drag the ZIP into your public GitHub issue. Nothing is uploaded automatically.</source>
-        <translation>壓縮檔已產生。請檢查內容，再將 ZIP 拖入公開的 GitHub Issue。不會自動上傳。</translation>
-    </message>
-    <message>
-        <source> Could not open the browser. Open github.com/keithxc/deskport/issues/new manually.</source>
-        <translation> 無法開啟瀏覽器，請手動開啟 github.com/keithxc/deskport/issues/new。</translation>
-    </message>
-    <message>
-        <source>Saved diagnostics cleared.</source>
-        <translation>已清除儲存的診斷資料。</translation>
-    </message>
-</context>
-<context>
-    <name>SdlInputHandler</name>
-    <message><source>DeskPort — Remote keyboard · Ctrl+Alt+Shift+Z releases</source><translation>DeskPort — 遠端鍵盤 · Ctrl+Alt+Shift+Z 釋放</translation></message>
-    <message><source>DeskPort — Remote typing · system shortcuts local</source><translation>DeskPort — 遠端輸入 · 系統快捷鍵保留在本機</translation></message>
-    <message><source>DeskPort — Local keyboard · click inside to focus</source><translation>DeskPort — 本機鍵盤 · 點選畫面以控制遠端</translation></message>
-</context>
-<context>
-    <name>ClipboardChannel</name>
-    <message><source>Clipboard sharing stopped. Reconnect to try again.</source><translation>剪貼簿共享已停止，請重新連線後重試。</translation></message>
-    <message><source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source><translation>剪貼簿共享無法使用，請重新連線後重試；桌面控制不受影響。</translation></message>
-</context>
-<context>
-    <name>NavigableDialog</name>
-    <message><source>Close</source><translation>關閉</translation></message>
-</context>
-<context>
-    <name>DevicePanel</name>
-    <message><source>Remove device</source><translation>刪除裝置</translation></message>
-    <message><source>Connected</source><translation>已連線</translation></message>
-    <message><source>Checking…</source><translation>正在檢查…</translation></message>
-    <message><source>Online</source><translation>線上</translation></message>
-    <message><source>Online · access not set up</source><translation>線上 · 未設定存取</translation></message>
-    <message><source>Offline</source><translation>離線</translation></message>
-    <message><source>Device settings</source><translation>裝置設定</translation></message>
-    <message><source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source><translation>請確認 %1 上的 DeskPort 或主機正在執行，且兩台裝置能互相連線。頂列中的重新整理會再次檢查。</translation></message>
-    <message><source>Original name</source><translation>原始名稱</translation></message>
-    <message><source>System</source><translation>系統</translation></message>
-    <message><source>Unknown</source><translation>未知</translation></message>
-    <message><source>Connection</source><translation>連線方式</translation></message>
-    <message><source>DeskPort binding</source><translation>DeskPort 綁定</translation></message>
-    <message><source>Legacy pairing</source><translation>傳統配對</translation></message>
-    <message><source>Not set up</source><translation>未設定</translation></message>
-    <message><source>Address</source><translation>位址</translation></message>
-    <message><source>Technical details</source><translation>技術詳細資料</translation></message>
-    <message><source>Reconnect</source><translation>重新連線</translation></message>
-    <message><source>Toggle full screen</source><translation>切換全螢幕</translation></message>
-    <message><source>Disconnect</source><translation>中斷連線</translation></message>
-    <message><source>Change address</source><translation>變更位址</translation></message>
-    <message><source>Set alias</source><translation>設定別名</translation></message>
-    <message><source>Pair with a legacy PIN</source><translation>使用傳統 PIN 配對</translation></message>
-    <message><source>For Sunshine or other hosts without DeskPort binding.</source><translation>適用於 Sunshine 或其他不支援 DeskPort 綁定的主機。</translation></message>
-    <message><source>Move out of group</source><translation>移出群組</translation></message>
-    <message><source>Remove from list</source><translation>從清單移除</translation></message>
-</context>
-<context>
-    <name>HelpView</name>
-    <message><source>Manual</source><translation>手冊</translation></message>
-</context>
-<context><name>MainWindow</name>
-    <message><source>Disconnecting…</source><translation>正在中斷連線…</translation></message>
-</context>
-<context>
-    <name>MultiSessions</name>
-    <message><source>The device binding is unavailable. Refresh the device and try again.</source><translation>裝置綁定無法使用，請重新整理裝置後再試。</translation></message>
-    <message><source>This connection would create a loop.</source><translation>此連線會造成迴圈。</translation></message>
-    <message><source>The desktop worker could not start.</source><translation>無法啟動桌面連線程序。</translation></message>
-    <message><source>The desktop worker stopped unexpectedly.</source><translation>桌面連線程序意外停止。</translation></message>
-    <message><source>The desktop worker did not respond.</source><translation>桌面連線程序沒有回應。</translation></message>
-</context>
-<context>
-    <name>SessionWorker</name>
-    <message><source>Another application is running on that server.</source><translation>該伺服器上正在執行其他應用程式。</translation></message>
-    <message><source>Connection failed at %1 (%2).</source><translation>連線在 %1 階段失敗（%2）。</translation></message>
-    <message><source>The device binding is unavailable.</source><translation>裝置綁定無法使用。</translation></message>
-</context>
+    <context>
+        <name>AppView</name>
+        <message>
+            <location filename="../gui/AppView.qml" line="145" />
+            <location filename="../gui/AppView.qml" line="303" />
+            <source>Resume Game</source>
+            <translation>繼續遊戲</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="173" />
+            <location filename="../gui/AppView.qml" line="308" />
+            <source>Quit Game</source>
+            <translation>結束遊戲</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="303" />
+            <source>Launch Game</source>
+            <translation>啟動遊戲</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="316" />
+            <source>Direct Launch</source>
+            <translation>直接啟動</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="320" />
+            <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
+            <translation>選取目標主機後直接啟動此應用程式，略過應用程式選取方格。</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="329" />
+            <source>Hide Game</source>
+            <translation>隱藏遊戲</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="333" />
+            <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
+            <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請在目標主機上按下滑鼠右鍵並選擇 %1。</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="333" />
+            <source>View All Apps</source>
+            <translation>檢視所有應用程式</translation>
+        </message>
+        <message>
+            <location filename="../gui/AppView.qml" line="348" />
+            <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
+            <translation>你確定要結束 %1 嗎? 所有未儲存的進度將會遺失。</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliPair</name>
+        <message>
+            <location filename="../gui/CliPair.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>正在與目標電腦建立連線…</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliPair.qml" line="13" />
+            <source>Pairing... Please enter '%1' on %2.</source>
+            <translation>正在配對…請在 %2 輸入「%1」。</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliPair.qml" line="85" />
+            <source>Pairing completed successfully</source>
+            <translation>配對成功</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliQuitStreamSegue</name>
+        <message>
+            <location filename="../gui/CliQuitStreamSegue.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>正在與目標電腦建立連線…</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliQuitStreamSegue.qml" line="13" />
+            <source>Quitting app...</source>
+            <translation>正在結束應用程式...</translation>
+        </message>
+    </context>
+    <context>
+        <name>CliStartStreamSegue</name>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="9" />
+            <source>Establishing connection to PC...</source>
+            <translation>正在與目標電腦建立連線…</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="13" />
+            <source>Loading app list...</source>
+            <translation>正在載入應用程式清單...</translation>
+        </message>
+        <message>
+            <location filename="../gui/CliStartStreamSegue.qml" line="82" />
+            <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
+            <translation>你確定要結束 %1 嗎？所有未儲存的進度將會遺失。</translation>
+        </message>
+    </context>
+    <context>
+        <name>ComputerModel</name>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="50" />
+            <source>Online</source>
+            <translation>線上</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="53" />
+            <source>Offline</source>
+            <translation>離線</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="56" />
+            <location filename="../gui/computermodel.cpp" line="68" />
+            <location filename="../gui/computermodel.cpp" line="80" />
+            <location filename="../gui/computermodel.cpp" line="82" />
+            <location filename="../gui/computermodel.cpp" line="83" />
+            <source>Unknown</source>
+            <translation>未知</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="62" />
+            <source>Paired</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="65" />
+            <source>Unpaired</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Alias: %1</source>
+            <translation>別名: %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="72" />
+            <source>Name: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="73" />
+            <source>Status: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="74" />
+            <source>Active Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="75" />
+            <source>UUID: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="76" />
+            <source>Local Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="77" />
+            <source>Remote Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="78" />
+            <source>IPv6 Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="79" />
+            <source>Manual Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="80" />
+            <source>MAC Address: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="81" />
+            <source>Pair State: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="82" />
+            <source>Running Game ID: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/computermodel.cpp" line="83" />
+            <source>HTTPS Port: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Group</source>
+            <translation>群組</translation>
+        </message>
+    </context>
+    <context>
+        <name>GamepadMapper</name>
+        <message>
+            <location filename="../gui/GamepadMapper.qml" line="4" />
+            <source>Gamepad Mapping</source>
+            <translation>手把對應</translation>
+        </message>
+    </context>
+    <context>
+        <name>NvHTTP</name>
+        <message>
+            <location filename="../backend/nvhttp.cpp" line="359" />
+            <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
+            <translation>缺少音訊擷取裝置。重新安裝 GeForce Experience 可以解決此錯誤。</translation>
+        </message>
+        <message>
+            <source>This host does not support per-session audio capture or view-only control. Update the DeskPort host, then reconnect.</source>
+            <translation>此主機不支援工作階段音訊擷取或僅觀看模式。請更新 DeskPort 主機後重新連線。</translation>
+        </message>
+    </context>
+    <context>
+        <name>PcView</name>
+        <message>
+            <source>Removing device…</source>
+            <translation>正在刪除裝置…</translation>
+        </message>
+        <message>
+            <source>Delete '%1', its saved binding and device settings from this computer?</source>
+            <translation>從此電腦徹底刪除「%1」、已儲存的綁定與裝置設定？</translation>
+        </message>
+        <message>
+            <source>Change address</source>
+            <translation>變更位址</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="21" />
+            <source>Computers</source>
+            <translation>電腦</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="68" />
+            <source>Unable to connect to the specified PC.</source>
+            <translation>無法連線到指定電腦。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="71" />
+            <source>This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>Moonlight 無法由這台電腦的網路連線進行連接。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="74" />
+            <source>Click the Help button for possible solutions.</source>
+            <translation>按下說明按鈕以取得可能的解決方法。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="104" />
+            <source>Automatic PC discovery is disabled. Add your PC manually.</source>
+            <translation>已停用自動搜尋電腦功能，需要手動新增。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="103" />
+            <source>Searching for compatible hosts on your local network...</source>
+            <translation>正在您的區域網路中搜尋相容的主機…</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="188" />
+            <source>Wake PC</source>
+            <translation>喚醒電腦</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="194" />
+            <source>Test Network</source>
+            <translation>網路測試</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="203" />
+            <source>Rename PC</source>
+            <translation>重新命名電腦</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="212" />
+            <source>Delete PC</source>
+            <translation>刪除電腦</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="221" />
+            <source>View Details</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="233" />
+            <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+            <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="336" />
+            <source>This may take a few seconds…</source>
+            <translation>這可能需要幾秒鐘……</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="347" />
+            <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.</source>
+            <translation>此網路似乎並未封鎖 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="347" />
+            <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.</source>
+            <translation>如果您嘗試透過網際網路進行串流，請在您的遊戲電腦上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的電腦的網際網路連線。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="351" />
+            <source>Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>您電腦目前的網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="351" />
+            <source>The following network ports were blocked:</source>
+            <translation>以下網路通訊埠被封鎖：</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="343" />
+            <source>The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
+            <translation>無法執行網路測試，因為此電腦無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>PC Status: %1</source>
+            <translation>電腦狀態：%1</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>Online</source>
+            <translation>線上</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="172" />
+            <source>Offline</source>
+            <translation>離線</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="178" />
+            <source>View All Apps</source>
+            <translation>檢視所有應用程式</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="309" />
+            <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
+            <translation>請在您的主機電腦上輸入 %1，配對完成後，此對話方塊將會關閉。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="310" />
+            <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
+            <translation>若您的主機正在執行 Sunshine，請導覽至 Sunshine 網頁 UI 並輸入 PIN 碼。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="322" />
+            <source>Are you sure you want to remove '%1'?</source>
+            <translation>您確定要移除「%1」嗎？</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="336" />
+            <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
+            <translation>Moonlight 正在測試您的網路連線以判斷是否有需要的連接埠被封鎖。</translation>
+        </message>
+        <message>
+            <location filename="../gui/PcView.qml" line="363" />
+            <source>Enter an alias for this device. Leave empty to use its original name:</source>
+            <translation>輸入此裝置的別名。留空則使用原始名稱：</translation>
+        </message>
+        <message>
+            <source>Devices</source>
+            <translation>裝置</translation>
+        </message>
+        <message>
+            <source>Connect your first device.</source>
+            <translation>連線至你的第一台裝置。</translation>
+        </message>
+        <message>
+            <source>Add a device by IP address or name. Confirm once on the other computer, then connect in either direction.</source>
+            <translation>透過 IP 位址或名稱新增裝置。在另一台電腦確認一次，即可雙向連線。</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>新增裝置</translation>
+        </message>
+        <message>
+            <source>Nearby devices appear here automatically</source>
+            <translation>附近裝置會自動顯示在這裡</translation>
+        </message>
+        <message>
+            <source>Nearby discovery is off in Settings</source>
+            <translation>設定中已關閉附近裝置探索</translation>
+        </message>
+        <message>
+            <source>Applications</source>
+            <translation>應用程式</translation>
+        </message>
+        <message>
+            <source>Pair with a legacy PIN</source>
+            <translation>使用傳統 PIN 配對</translation>
+        </message>
+        <message>
+            <source>Set alias</source>
+            <translation>設定別名</translation>
+        </message>
+        <message>
+            <source>Remove from list</source>
+            <translation>從清單移除</translation>
+        </message>
+        <message>
+            <source>The host on %1 uses an unsupported protocol version. Update the host and DeskPort before connecting.</source>
+            <translation>%1 上的主機使用不支援的協定版本。請更新主機與 DeskPort 後再連線。</translation>
+        </message>
+        <message>
+            <source>Connected · workspace stays open</source>
+            <translation>已連線 · 工作區保持開啟</translation>
+        </message>
+        <message>
+            <source>Return to desktop</source>
+            <translation>返回桌面</translation>
+        </message>
+        <message>
+            <source>Your computers</source>
+            <translation>我的電腦</translation>
+        </message>
+        <message>
+            <source>Card view</source>
+            <translation>卡片檢視</translation>
+        </message>
+        <message>
+            <source>List view</source>
+            <translation>清單檢視</translation>
+        </message>
+        <message>
+            <source>Done</source>
+            <translation>完成</translation>
+        </message>
+        <message>
+            <source>Drag devices to change their order.</source>
+            <translation>拖曳裝置以調整順序。</translation>
+        </message>
+        <message>
+            <source>Move to front</source>
+            <translation>移到最前</translation>
+        </message>
+        <message>
+            <source>A session with %1 is open. Disconnect it from the tray menu before connecting to another computer.</source>
+            <translation>與 %1 的工作階段仍在執行。連線其他電腦前，請從系統匣選單中斷目前連線。</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>裝置設定</translation>
+        </message>
+        <message>
+            <source>Nearby discovery is off</source>
+            <translation>附近裝置探索已關閉</translation>
+        </message>
+        <message>
+            <source>Toggle fullscreen</source>
+            <translation>切換全螢幕</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>中斷連線</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>重新連線</translation>
+        </message>
+        <message>
+            <source>Edit</source>
+            <translation>編輯</translation>
+        </message>
+        <message>
+            <source>New group</source>
+            <translation>新增群組</translation>
+        </message>
+        <message>
+            <source>All devices</source>
+            <translation>全部裝置</translation>
+        </message>
+        <message>
+            <source>Group actions</source>
+            <translation>群組操作</translation>
+        </message>
+        <message>
+            <source>Rename group</source>
+            <translation>重新命名群組</translation>
+        </message>
+        <message>
+            <source>Delete group</source>
+            <translation>刪除群組</translation>
+        </message>
+        <message>
+            <source>Move out of group</source>
+            <translation>移出群組</translation>
+        </message>
+        <message>
+            <source>This group is empty. In edit mode, drag devices onto the group to add them.</source>
+            <translation>這個群組還沒有裝置。在編輯模式下把裝置拖到群組上即可加入。</translation>
+        </message>
+        <message>
+            <source>Drag cards to change their order, or onto another device to make a group.</source>
+            <translation>拖曳卡片調整順序，拖到另一台裝置上即可組成群組。</translation>
+        </message>
+        <message>
+            <source>A session with %1 is open. Disconnect it before connecting to another computer.</source>
+            <translation>與 %1 的工作階段仍在進行。請先中斷連線，再連線到其他電腦。</translation>
+        </message>
+        <message>
+            <source>Finish editing</source>
+            <translation>完成編輯</translation>
+        </message>
+        <message>
+            <source>Drag devices to change their order, or out of this panel to leave the group.</source>
+            <translation>拖曳裝置可調整順序，拖出此面板即可移出群組。</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>正在檢查…</translation>
+        </message>
+        <message>
+            <source>Computer</source>
+            <translation>電腦</translation>
+        </message>
+        <message>
+            <source>This group is empty.</source>
+            <translation>此群組為空。</translation>
+        </message>
+        <message>
+            <source>Remove device?</source>
+            <translation>移除裝置？</translation>
+        </message>
+        <message>
+            <source>Remove</source>
+            <translation>移除</translation>
+        </message>
+        <message>
+            <source>Deleting a group keeps its devices; they return to the device list.</source>
+            <translation>刪除群組不會刪除其中的裝置，它們會回到裝置清單。</translation>
+        </message>
+        <message>
+            <source>Open group</source>
+            <translation>開啟群組</translation>
+        </message>
+        <message>
+            <source>Shown only on this computer. Leave empty to use the original name.</source>
+            <translation>僅在這台電腦上顯示。留空則使用原始名稱。</translation>
+        </message>
+        <message>
+            <source>Remote session is still running</source>
+            <translation>遠端工作階段仍在執行</translation>
+        </message>
+        <message>
+            <source>Return to remote desktop</source>
+            <translation>返回遠端桌面</translation>
+        </message>
+    </context>
+    <context>
+        <name>PendingPairingTask</name>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="586" />
+            <source>The PIN from the PC didn't match. Please try again.</source>
+            <translation>來自電腦的 PIN 碼不相符，請重試。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="590" />
+            <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
+            <translation>上一個工作階段仍在主機電腦上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機電腦，然後再次嘗試配對。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="593" />
+            <source>Pairing failed. Please try again.</source>
+            <translation>配對失敗，請重試。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="597" />
+            <source>Another pairing attempt is already in progress.</source>
+            <translation>另一個配對嘗試正在進行。</translation>
+        </message>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="607" />
+            <source>GeForce Experience returned error: %1</source>
+            <translation>GeForce Experience 傳回錯誤：%1</translation>
+        </message>
+    </context>
+    <context>
+        <name>PendingQuitTask</name>
+        <message>
+            <location filename="../backend/computermanager.cpp" line="657" />
+            <source>The running game wasn't started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
+            <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機電腦上的遊戲或使用最初啟動遊戲的裝置。</translation>
+        </message>
+    </context>
+    <context>
+        <name>QObject</name>
+        <message>
+            <location filename="../cli/pair.cpp" line="80" />
+            <source>%1 is already paired</source>
+            <translation>%1 已配對</translation>
+        </message>
+        <message>
+            <location filename="../cli/pair.cpp" line="109" />
+            <location filename="../cli/quitstream.cpp" line="76" />
+            <location filename="../cli/startstream.cpp" line="133" />
+            <source>Failed to connect to %1</source>
+            <translation>無法連線到 %1</translation>
+        </message>
+        <message>
+            <location filename="../cli/quitstream.cpp" line="88" />
+            <location filename="../cli/startstream.cpp" line="89" />
+            <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
+            <translation>電腦 %1 尚未配對。串流前請開啟 Moonlight 進行配對。</translation>
+        </message>
+        <message>
+            <location filename="../cli/quitstream.cpp" line="102" />
+            <location filename="../cli/startstream.cpp" line="126" />
+            <source>Quitting app failed, reason: %1</source>
+            <translation>結束應用程式失敗，原因：%1</translation>
+        </message>
+        <message>
+            <location filename="../cli/startstream.cpp" line="137" />
+            <source>Failed to find application %1</source>
+            <translation>找不到應用程式 %1</translation>
+        </message>
+        <message>
+            <location filename="../cli/listapps.cpp" line="99" />
+            <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
+            <translation>電腦 %1 未配對，請在擷取遊戲清單前開啟 Moonlight 進行配對。</translation>
+        </message>
+    </context>
+    <context>
+        <name>QPlatformTheme</name>
+        <message>
+            <location filename="../main.cpp" line="620" />
+            <source>&amp;Yes</source>
+            <translation>是(&amp;Y)</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="621" />
+            <source>&amp;No</source>
+            <translation>否(&amp;N)</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="622" />
+            <source>OK</source>
+            <translation>確定</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="623" />
+            <source>Help</source>
+            <translation>說明</translation>
+        </message>
+        <message>
+            <location filename="../main.cpp" line="624" />
+            <source>Cancel</source>
+            <translation>取消</translation>
+        </message>
+    </context>
+    <context>
+        <name>QuitSegue</name>
+        <message>
+            <location filename="../gui/QuitSegue.qml" line="13" />
+            <source>Quitting %1...</source>
+            <translation>正在結束 %1...</translation>
+        </message>
+    </context>
+    <context>
+        <name>Session</name>
+        <message>
+            <source>Adjusting resolution…</source>
+            <translation>正在調整解析度…</translation>
+        </message>
+        <message>
+            <source>Connection interrupted. Reconnecting…</source>
+            <translation>連線中斷，正在重新連線…</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="112" />
+            <source>No video received from host.</source>
+            <translation>沒有接收到來自主機的視訊。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="113" />
+            <source>Check your firewall and port forwarding rules for port(s): %1</source>
+            <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="118" />
+            <source>Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection.</source>
+            <translation>您的網路連線不佳。降低視訊位元速率或嘗試更快的連線方式。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="124" />
+            <source>Something went wrong on your host PC when starting the stream.</source>
+            <translation>啟動串流時，您的主機電腦出現問題。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="125" />
+            <source>Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
+            <translation>確認您的主機電腦上沒有開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="130" />
+            <source>The host PC reported a fatal video encoding error.</source>
+            <translation>主機電腦回報了一個嚴重的視訊編碼錯誤。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="131" />
+            <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution.</source>
+            <translation>嘗試停用 HDR 模式，變更串流解析度，或變更您的主機電腦顯示器解析度。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="139" />
+            <source>Connection terminated</source>
+            <translation>連線已終止</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="140" />
+            <source>Error code: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="931" />
+            <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+            <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="936" />
+            <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
+            <translation>您選取啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
+        </message>
+        <message>
+            <source>HDR is not supported with software decoding.</source>
+            <translation type="vanished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="940" />
+            <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
+            <translation>您選取強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="970" />
+            <source>Your host PC doesn't support encoding HEVC.</source>
+            <translation>您的主機不支援 HEVC 編碼。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="987" />
+            <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
+            <translation>由於你選取使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="946" />
+            <source>Your host software or GPU doesn't support encoding AV1.</source>
+            <translation>您的主機軟體或 GPU 不支援編碼 AV1。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="963" />
+            <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
+            <translation>使用軟體解碼係依您的選取項目以強制啟用沒有 GPU 支援的 AV1，這可能導致較低的串流效能。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1029" />
+            <source>Your host PC doesn't support HDR streaming.</source>
+            <translation>您的主機電腦不支援 HDR 串流。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1021" />
+            <source>HDR is not supported using the H.264 codec.</source>
+            <translation>使用 H.264 轉碼器不支援 HDR。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1044" />
+            <source>This PC's GPU doesn't support AV1 Main10 decoding for HDR streaming.</source>
+            <translation>這個電腦的 GPU 不支援 AV1 Main10 HDR 串流解碼。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1025" />
+            <source>This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
+            <translation>這個電腦的 GPU 不支援 10-bit HEVC 或 AV1 HDR 串流解碼。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1077" />
+            <source>Your host PC and client PC don't support the same HDR video codecs.</source>
+            <translation>您的主機電腦和用戶端電腦不支援相同的 HDR 視訊轉碼器。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1170" />
+            <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
+            <translation>H.264 轉碼器不支援超過 4K 的視訊解析度。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1554" />
+            <source>Host returned error: %1</source>
+            <translation>主機返回錯誤：%1</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1001" />
+            <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
+            <translation>由於你選取強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1011" />
+            <source>Your host PC and client PC don't support the same video codecs. This may cause poor streaming performance.</source>
+            <translation>您的主機電腦和用戶端電腦不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1014" />
+            <source>Your client GPU doesn't support H.264 decoding. This may cause poor streaming performance.</source>
+            <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1050" />
+            <location filename="../streaming/session.cpp" line="1068" />
+            <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1062" />
+            <source>This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.</source>
+            <translation>此電腦的 GPU 不支援 HEVC Main10 解碼器來進行 HDR 串流。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1084" />
+            <source>Your host PC doesn't support YUV 4:4:4 streaming.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1092" />
+            <source>Your host PC doesn't support YUV 4:4:4 streaming for selected video codec.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1107" />
+            <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1113" />
+            <source>This PC's GPU doesn't support YUV 4:4:4 decoding for selected video codec.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1122" />
+            <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
+            <translation>4K 串流需要 GeForce Experience 3.0 或更高的版本。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1137" />
+            <source>Your selected surround sound setting is not supported by the current audio device.</source>
+            <translation>您選取的環場音效設定並不支援目前的音訊裝置。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1143" />
+            <source>Failed to open audio device. Audio will be unavailable during this session.</source>
+            <translation>無法開啟音訊裝置。音訊在本次工作階段中將無法使用。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1148" />
+            <source>An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this.</source>
+            <translation>附加的手把沒有對應，將無法使用。請造訪 Moonlight 協助解決問題。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1166" />
+            <source>Your host PC's GPU doesn't support streaming video resolutions over 4K.</source>
+            <translation>您的主機電腦 GPU 不支援 4K 視訊串流。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1184" />
+            <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU.</source>
+            <translation>由於此電腦的 GPU 缺乏硬體解碼支援，故無法強制使用硬體解碼。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="1187" />
+            <source>Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec.</source>
+            <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
+        </message>
+        <message>
+            <location filename="../streaming/session.cpp" line="2219" />
+            <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
+            <translation>無法初始化畫面解碼器。請檢查您的串流設定並再試一次。</translation>
+        </message>
+        <message>
+            <source>The host did not resume the desktop at the new size. Connect again to continue where you left off.</source>
+            <translation>主機未能以新的尺寸恢復桌面。請重新連線以繼續工作。</translation>
+        </message>
+        <message>
+            <source>Connecting to desktop…</source>
+            <translation>正在連線至桌面…</translation>
+        </message>
+        <message>
+            <source>This connection would create a loop. Disconnect one of the existing links first.</source>
+            <translation>此連線會形成迴圈。請先中斷其中一條現有連線。</translation>
+        </message>
+        <message>
+            <source>The connection path could not be verified. Update DeskPort on every desktop in the chain and try again.</source>
+            <translation>無法驗證連線路徑。請更新連線鏈中每台電腦上的 DeskPort 後重試。</translation>
+        </message>
+        <message>
+            <source>This connection was taken over by another device.</source>
+            <translation>連線已被其他用戶端接管。</translation>
+        </message>
+        <message>
+            <source>The selected virtual screen mode is unavailable. Update the host or choose another mode.</source>
+            <translation>所選虛擬螢幕模式無法使用，請更新主機或選擇其他模式。</translation>
+        </message>
+        <message>
+            <source>Virtual screen control ended. Reconnect to apply the selected mode.</source>
+            <translation>虛擬螢幕控制已中斷，請重新連線以套用所選模式。</translation>
+        </message>
+    </context>
+    <context>
+        <name>SettingsView</name>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="13" />
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="116" />
+            <source>Resolution and FPS</source>
+            <translation>解析度和 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="124" />
+            <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
+            <translation>設定對您的電腦或網路連線過高的數值可能會導致延遲、卡頓、或是發生錯誤。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="106" />
+            <source>Basic Settings</source>
+            <translation>基本設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="250" />
+            <source>720p</source>
+            <translation>720p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="256" />
+            <source>1080p</source>
+            <translation>1080p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="262" />
+            <source>1440p</source>
+            <translation>1440p</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="268" />
+            <source>4K</source>
+            <translation>4K</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="373" />
+            <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
+            <translation>自訂解析度不受 GeForce Experience 官方支援，因此不會設定目標主機的顯示解析度。您需要在遊戲內手動設定。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="374" />
+            <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
+            <translation>不受主機電腦或用戶端支援的解析度可能會造成串流錯誤。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="380" />
+            <source>Enter a custom resolution:</source>
+            <translation>輸入自訂解析度：</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="508" />
+            <location filename="../gui/SettingsView.qml" line="618" />
+            <source>Custom (%1 FPS)</source>
+            <translation>自訂 (%1 FPS)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="523" />
+            <source>Enter a custom frame rate:</source>
+            <translation>輸入自訂影格速率：</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="600" />
+            <source>%1 FPS</source>
+            <translation>%1 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="668" />
+            <source>Video bitrate:</source>
+            <translation>視訊位元速率：</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="676" />
+            <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
+            <translation>若您的網路速度較慢，請將位元率調低。若要提升畫面品質，請將位元率調高。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="694" />
+            <source>Video bitrate: %1 Mbps</source>
+            <translation>視訊位元速率：%1 Mbps</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="707" />
+            <source>Display mode</source>
+            <translation>顯示模式</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="737" />
+            <source>(Recommended)</source>
+            <translation>(建議)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="718" />
+            <location filename="../gui/SettingsView.qml" line="1181" />
+            <source>Fullscreen</source>
+            <translation>全螢幕</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="219" />
+            <location filename="../gui/SettingsView.qml" line="228" />
+            <location filename="../gui/SettingsView.qml" line="621" />
+            <source>Custom</source>
+            <translation>自訂</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="639" />
+            <source>30 FPS</source>
+            <translation>30 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="644" />
+            <source>60 FPS</source>
+            <translation>60 FPS</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="787" />
+            <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
+            <translation>全螢幕通常能夠提供最佳效能，但無邊框視窗較能支援 macOS Spaces、Alt+Tab、截圖工具、遊戲嵌入介面等功能。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="723" />
+            <source>Borderless windowed</source>
+            <translation>無邊框視窗</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="182" />
+            <source>Native</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="183" />
+            <source>Native (Excluding Notch)</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="728" />
+            <location filename="../gui/SettingsView.qml" line="1173" />
+            <source>Windowed</source>
+            <translation>視窗化</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="794" />
+            <source>V-Sync</source>
+            <translation>垂直同步</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="804" />
+            <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
+            <translation>停用垂直同步可允許子畫面轉譯延遲，但會造成顯示畫面撕裂</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="811" />
+            <source>Frame pacing</source>
+            <translation>影格調步</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="821" />
+            <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
+            <translation>影格調步能夠延後顯示過早傳入的影格來減小延遲</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="831" />
+            <source>Audio Settings</source>
+            <translation>音效設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="866" />
+            <source>Stereo</source>
+            <translation>立體聲</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="870" />
+            <source>5.1 surround sound</source>
+            <translation>5.1 環場音效</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="874" />
+            <source>7.1 surround sound</source>
+            <translation>7.1 環場音效</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="888" />
+            <source>Mute host PC speakers while streaming</source>
+            <translation>串流時將主機電腦的喇叭靜音</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="898" />
+            <source>You must restart any game currently in progress for this setting to take effect</source>
+            <translation>您必須重新啟動目前正在遊玩的遊戲以套用此更動</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="904" />
+            <source>Mute audio stream when Moonlight is not the active window</source>
+            <translation>在 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="915" />
+            <source>Mutes Moonlight's audio when you Alt+Tab out of the stream or click on a different window.</source>
+            <translation>在你使用 Alt+Tab 切換離開串流視窗或按下其他視窗時，Moonlight 將靜音。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="964" />
+            <source>UI Settings</source>
+            <translation>介面設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="974" />
+            <source>Language</source>
+            <translation>語言</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1000" />
+            <source>Automatic</source>
+            <translation>自動</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1123" />
+            <source>You must restart Moonlight for this change to take effect</source>
+            <translation>您必須重新啟動 Moonlight 以套用此更動</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1140" />
+            <source>GUI display mode</source>
+            <translation>圖形使用者介面顯示模式</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1177" />
+            <source>Maximized</source>
+            <translation>最大化</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1222" />
+            <source>Keep the display awake while streaming</source>
+            <translation>串流時保持螢幕始終亮起</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1232" />
+            <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
+            <translation>防止螢幕保護程式啟動或是螢幕在串流時進入睡眠狀態。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1250" />
+            <source>Input Settings</source>
+            <translation>輸入設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1271" />
+            <source>This enables seamless mouse control without capturing the client's mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
+            <translation>這可以實現無縫滑鼠控制，而無須捕捉用戶端的滑鼠指標。這是理想的遠端桌面選擇，但在大多數遊戲中不起作用。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1273" />
+            <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
+            <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1292" />
+            <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
+            <translation>提醒：某些鍵盤快速鍵，例如 Ctrl+Alt+Del，無法在 Windows 上被任何應用程式攔截，包括 Moonlight。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1321" />
+            <source>in fullscreen</source>
+            <translation>全螢幕時</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1325" />
+            <source>always</source>
+            <translation>總是</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1355" />
+            <source>Use touchscreen as a virtual trackpad</source>
+            <translation>將觸控式螢幕用作虛擬觸控板</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1372" />
+            <source>Swap left and right mouse buttons</source>
+            <translation>交換滑鼠左右按鍵</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1384" />
+            <source>Reverse mouse scrolling direction</source>
+            <translation>反轉滑鼠滾輪滾動方向</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1398" />
+            <source>Gamepad Settings</source>
+            <translation>手把設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1408" />
+            <source>Swap A/B and X/Y gamepad buttons</source>
+            <translation>交換手把的 A/B 和 X/Y 按鈕</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1418" />
+            <source>This switches gamepads into a Nintendo-style button layout</source>
+            <translation>這將手把切換為任天堂風格的按鈕版面配置</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1424" />
+            <source>Force gamepad #1 always connected</source>
+            <translation>強制手把 #1 始終連線</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1434" />
+            <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
+            <translation>強制使單個手把始終與主機保持連線，即使沒有任何手把實際連線到此電腦。</translation>
+        </message>
+        <message>
+            <source>Enabling HDR overrides manual decoder selections.</source>
+            <translation type="vanished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1573" />
+            <source>AV1 (Experimental)</source>
+            <translation>AV (實驗性)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1588" />
+            <source>Enable HDR (Experimental)</source>
+            <translation>啟用 HDR (實驗性)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1603" />
+            <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+            <translation>串流將支援 HDR，但一些遊戲可能需要你主機電腦上的 HDR 監視器以啟用 HDR 模式。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1605" />
+            <source>HDR streaming is not supported on this PC.</source>
+            <translation>此電腦不支援 HDR 串流。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1690" />
+            <source>Show performance stats while streaming</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1700" />
+            <source>Display real-time stream performance information while streaming.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1701" />
+            <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1702" />
+            <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1272" />
+            <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
+            <translation>您可以在串流時按下 Ctrl+Alt+Shift+M 以切換。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1283" />
+            <source>Capture system keyboard shortcuts</source>
+            <translation>擷取系統鍵盤快速鍵</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1291" />
+            <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
+            <translation>這可以擷取系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1442" />
+            <source>Enable mouse control with gamepads by holding the 'Start' button</source>
+            <translation>透過按下手把的「開始」鍵啟用滑鼠控制</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1453" />
+            <source>Process gamepad input when Moonlight is in the background</source>
+            <translation>在 Moonlight 於背景工作時處理手把輸入</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1464" />
+            <source>Allows Moonlight to capture gamepad inputs even if it's not the current window in focus</source>
+            <translation>即使不是焦點視窗，也允許 Moonlight 擷取手把輸入</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="924" />
+            <source>Host Settings</source>
+            <translation>主機設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1473" />
+            <source>Advanced Settings</source>
+            <translation>進階設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="841" />
+            <source>Audio configuration</source>
+            <translation>音訊組態</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1194" />
+            <source>Show connection quality warnings</source>
+            <translation>顯示連線品質警告</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1206" />
+            <source>Discord Rich Presence integration</source>
+            <translation>Discord Rich Presence 整合</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1216" />
+            <source>Updates your Discord status to display the name of the game you're streaming.</source>
+            <translation>更新你的 Discord 狀態，以顯示正在執行的遊戲名稱。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1435" />
+            <source>Only enable this option when streaming a game that doesn't support gamepads being connected after startup.</source>
+            <translation>僅在遊戲啟動後不支援手把連線時才啟用此選項。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1261" />
+            <source>Optimize mouse for remote desktop instead of games</source>
+            <translation>為遠端桌面而非遊戲最佳化滑鼠</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1365" />
+            <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
+            <translation>選中時，觸控式螢幕就像一個觸控板。取消選中時，觸控式螢幕將直接控制滑鼠指標。</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="934" />
+            <source>Optimize game settings for streaming</source>
+            <translation>最佳化遊戲設定以進行串流</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="945" />
+            <source>Quit app on host PC after ending stream</source>
+            <translation>串流結束後退出主機電腦上的應用程式</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="955" />
+            <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
+            <translation>在結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未儲存的遊戲進度！</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1483" />
+            <source>Video decoder</source>
+            <translation>視訊解碼器</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1508" />
+            <location filename="../gui/SettingsView.qml" line="1561" />
+            <source>Automatic (Recommended)</source>
+            <translation>自動 (建議)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1512" />
+            <source>Force software decoding</source>
+            <translation>強制使用軟體解碼</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1516" />
+            <source>Force hardware decoding</source>
+            <translation>強制使用硬體解碼</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1531" />
+            <source>Video codec</source>
+            <translation>視訊編解碼器</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1565" />
+            <source>H.264</source>
+            <translation>H.264</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1569" />
+            <source>HEVC (H.265)</source>
+            <translation>HEVC (H.265)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1611" />
+            <source>Enable YUV 4:4:4 (Experimental)</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1631" />
+            <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1633" />
+            <source>YUV 4:4:4 is not supported on this PC.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1639" />
+            <source>Unlock bitrate limit (Experimental)</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1652" />
+            <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1658" />
+            <source>Automatically find PCs on the local network (Recommended)</source>
+            <translation>自動尋找在區域網路中的電腦 (建議)</translation>
+        </message>
+        <message>
+            <location filename="../gui/SettingsView.qml" line="1679" />
+            <source>Automatically detect blocked connections (Recommended)</source>
+            <translation>自動偵測被封鎖的連線 (建議)</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>進階設定</translation>
+        </message>
+        <message>
+            <source>Reconnect to apply changes. Device settings do not change this computer's language or discovery preferences.</source>
+            <translation>重新連線後生效。裝置設定不會更改本機語言或裝置探索偏好。</translation>
+        </message>
+        <message>
+            <source>Session behavior</source>
+            <translation>工作階段行為</translation>
+        </message>
+    </context>
+    <context>
+        <name>StreamSegue</name>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="11" />
+            <source>Resuming %1...</source>
+            <translation>正在恢復 %1...</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="12" />
+            <location filename="../gui/StreamSegue.qml" line="19" />
+            <source>Starting %1...</source>
+            <translation>正在啟動 %1...</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="25" />
+            <source>Starting %1 failed: Error %2</source>
+            <translation>啟動 %1 失敗：錯誤 %2</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="28" />
+            <source>Check your firewall and port forwarding rules for port(s): %1</source>
+            <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="76" />
+            <source>This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
+            <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="167" />
+            <source>Tip:</source>
+            <translation>提示：</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="167" />
+            <source>Press %1 to disconnect your session</source>
+            <translation>按下 %1 以中斷您的工作階段</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="168" />
+            <source>Start+Select+L1+R1</source>
+            <translation>Start+Select+L1+R1</translation>
+        </message>
+        <message>
+            <location filename="../gui/StreamSegue.qml" line="168" />
+            <source>Ctrl+Alt+Shift+Q</source>
+            <translation>Ctrl+Alt+Shift+Q</translation>
+        </message>
+        <message>
+            <source>Connection interrupted. Reconnecting…</source>
+            <translation>連線中斷，正在重新連線…</translation>
+        </message>
+        <message>
+            <source>Cancel reconnect</source>
+            <translation>取消重新連線</translation>
+        </message>
+        <message>
+            <source>Press %1 to leave fullscreen; press again to disconnect</source>
+            <translation>按 %1 退出全螢幕，再按一次中斷連線</translation>
+        </message>
+        <message>
+            <source>Waiting for desktop video…</source>
+            <translation>正在等待桌面畫面…</translation>
+        </message>
+        <message>
+            <source>Cancel connection</source>
+            <translation>取消連線</translation>
+        </message>
+    </context>
+    <context>
+        <name>main</name>
+        <message>
+            <source>Data saver</source>
+            <translation>省流量</translation>
+        </message>
+        <message>
+            <source>Data saver on: video limited to 3–12 Mbps</source>
+            <translation>省流量已開啟：視訊位元速率限制為 3–12 Mbps</translation>
+        </message>
+        <message>
+            <source>Data saver off: automatic bitrate</source>
+            <translation>省流量已關閉：自動位元速率</translation>
+        </message>
+        <message>
+            <source>Today %1%</source>
+            <translation>今日 %1%</translation>
+        </message>
+        <message>
+            <source>Daily data budget</source>
+            <translation>每日流量預算</translation>
+        </message>
+        <message>
+            <source>Limit per day</source>
+            <translation>每日上限</translation>
+        </message>
+        <message>
+            <source>Today: %1 of %2 (%3%)</source>
+            <translation>今日：已用 %1，上限 %2（%3%）</translation>
+        </message>
+        <message>
+            <source>Counts every session on this computer and starts again at local midnight. At 100% data saver turns on once for the rest of the day.</source>
+            <translation>統計本機所有連線，每天本地時間午夜重新計算。用滿 100% 時，當天剩餘時間自動開啟省流量。</translation>
+        </message>
+        <message>
+            <source>Reset</source>
+            <translation>重設</translation>
+        </message>
+        <message>
+            <source>Could not save device removal. Please retry.</source>
+            <translation>無法儲存裝置刪除操作，請重試。</translation>
+        </message>
+        <message>
+            <source>Editing</source>
+            <translation>編輯中</translation>
+        </message>
+        <message>
+            <source>Memory %1</source>
+            <translation>記憶體 %1</translation>
+        </message>
+        <message>
+            <source>Local memory usage</source>
+            <translation>本機記憶體用量</translation>
+        </message>
+        <message>
+            <source>Unavailable</source>
+            <translation>無法取得</translation>
+        </message>
+        <message>
+            <source>Client: %1</source>
+            <translation>用戶端：%1</translation>
+        </message>
+        <message>
+            <source>Sharing host: %1</source>
+            <translation>共享服務：%1</translation>
+        </message>
+        <message>
+            <source>Helpers: %1</source>
+            <translation>輔助程序：%1</translation>
+        </message>
+        <message>
+            <source>Some processes could not be sampled.</source>
+            <translation>部分程序無法取樣。</translation>
+        </message>
+        <message>
+            <source>Resident memory of this client and its immediate child processes, refreshed every 3 seconds while visible. Shared pages may be counted more than once. Excludes remote machines and some GPU memory. An increase alone does not indicate a leak.</source>
+            <translation>本機用戶端及其直接子程序的常駐記憶體，視窗顯示時每 3 秒更新。共享記憶體頁可能重複計算，不包含遠端電腦及部分 GPU 記憶體。用量增加不一定代表洩漏。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="415" />
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="262" />
+            <source>Version %1</source>
+            <translation>版本 %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="278" />
+            <source>Join our community on Discord</source>
+            <translation>加入我們的 Discord 社群</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="297" />
+            <source>Add PC manually</source>
+            <translation>手動新增電腦</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="337" />
+            <source>Update available for Moonlight: Version %1</source>
+            <translation>Moonlight 有可用更新：版本 %1</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="384" />
+            <source>Gamepad Mapper</source>
+            <translation>手把對應</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="430" />
+            <source>Hardware acceleration doesn't work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
+            <translation>硬體加速無法在 XWayland 運作。若繼續使用 XWayland 可能會造成串流品質降低。請嘗試以 QT_QPA_PLATFORM=wayland 執行或切換至 X11。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="439" />
+            <source>This version of Moonlight isn't optimized for your PC. Please download the '%1' version of Moonlight for the best streaming performance.</source>
+            <translation>此版本的 Moonlight 尚未針對你的電腦最佳化。請下載「%1」版本的 Moonlight，以獲得最佳的串流效能。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="448" />
+            <source>Moonlight detected gamepads without a mapping:</source>
+            <translation>Moonlight 偵測到沒有對應的手把：</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="361" />
+            <source>Help</source>
+            <translation>說明</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="422" />
+            <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
+            <translation>Moonlight 沒有偵測到有效的硬體加速視訊解碼器。在這種組態下，你的串流效能可能會嚴重下降。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="424" />
+            <source>Click the Help button for more information on solving this problem.</source>
+            <translation>按下說明按鈕以瞭解更多如何解決此問題的資訊。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="432" />
+            <source>Click the Help button for more information.</source>
+            <translation>按下說明按鈕以瞭解更多資訊。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="488" />
+            <source>Enter the IP address of your host PC:</source>
+            <translation>輸入您的主機電腦 IP 位址：</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="450" />
+            <source>Click the Help button for information on how to map your gamepads.</source>
+            <translation>按下說明按鈕以取得有關如何對應手把的資訊。</translation>
+        </message>
+        <message>
+            <location filename="../gui/main.qml" line="458" />
+            <source>Are you sure you want to quit?</source>
+            <translation>您確定要結束嗎？</translation>
+        </message>
+        <message>
+            <source>Devices</source>
+            <translation>裝置</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共享</translation>
+        </message>
+        <message>
+            <source>Getting started</source>
+            <translation>開始使用</translation>
+        </message>
+        <message>
+            <source>Sharing on</source>
+            <translation>共享已開啟</translation>
+        </message>
+        <message>
+            <source>Sharing off</source>
+            <translation>共享已關閉</translation>
+        </message>
+        <message>
+            <source>Back</source>
+            <translation>返回</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>新增裝置</translation>
+        </message>
+        <message>
+            <source>Enter the host IP address or hostname:</source>
+            <translation>輸入主機 IP 位址或主機名稱：</translation>
+        </message>
+        <message>
+            <source>DeskPort defaults to :48989. If the sharing page shows another port, enter address:port. For a default Sunshine host, use :47989.</source>
+            <translation>DeskPort 預設使用 :48989。若共享頁顯示其他連接埠，請輸入 位址:連接埠。原生 Sunshine 預設使用 :47989。</translation>
+        </message>
+        <message>
+            <source>Check permissions</source>
+            <translation>檢查權限</translation>
+        </message>
+        <message>
+            <source>Sharing service on</source>
+            <translation>共享服務已開啟</translation>
+        </message>
+        <message>
+            <source>Current connection</source>
+            <translation>目前連線</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>已連線</translation>
+        </message>
+        <message>
+            <source>Return</source>
+            <translation>返回桌面</translation>
+        </message>
+        <message>
+            <source>Session data</source>
+            <translation>本次流量</translation>
+        </message>
+        <message>
+            <source>Details</source>
+            <translation>詳細資訊</translation>
+        </message>
+        <message>
+            <source>Received: %1</source>
+            <translation>接收：%1</translation>
+        </message>
+        <message>
+            <source>Sent: %1</source>
+            <translation>傳送：%1</translation>
+        </message>
+        <message>
+            <source>Counts media, control and clipboard transfer bytes for this session, including temporary reconnects. Excludes IP/VPN overhead, TLS overhead for clipboard, discovery and host-side sharing traffic. This is not your carrier's bill.</source>
+            <translation>統計本次工作階段的影音、控制及剪貼簿傳輸位元組，短暫重連不歸零。不含 IP/VPN 開銷、剪貼簿 TLS 開銷、裝置探索及本機對外共享流量。數值不代表電信帳單。</translation>
+        </message>
+        <message>
+            <source>Update available</source>
+            <translation>有更新</translation>
+        </message>
+        <message>
+            <source>DeskPort updates</source>
+            <translation>DeskPort 更新</translation>
+        </message>
+        <message>
+            <source>Checking for updates…</source>
+            <translation>正在檢查更新…</translation>
+        </message>
+        <message>
+            <source>New version: %1</source>
+            <translation>發現新版本：%1</translation>
+        </message>
+        <message>
+            <source>No newer stable release is available.</source>
+            <translation>暫無更新的正式版本。</translation>
+        </message>
+        <message>
+            <source>Could not check for updates. Please try again.</source>
+            <translation>無法檢查更新，請稍後重試。</translation>
+        </message>
+        <message>
+            <source>Published: %1</source>
+            <translation>發布日期：%1</translation>
+        </message>
+        <message>
+            <source>No release notes provided.</source>
+            <translation>此版本未提供更新日誌。</translation>
+        </message>
+        <message>
+            <source>Opens the GitHub release page. Install using your usual method; Nix-managed installations should be updated through Nix.</source>
+            <translation>將開啟 GitHub 發布頁面，請按原有方式安裝；由 Nix 管理的安裝請透過 Nix 更新。</translation>
+        </message>
+        <message>
+            <source>Check again</source>
+            <translation>重新檢查</translation>
+        </message>
+        <message>
+            <source>Open download page</source>
+            <translation>前往下載頁面</translation>
+        </message>
+        <message>
+            <source>Not connected</source>
+            <translation>未連線</translation>
+        </message>
+        <message>
+            <source>Edit</source>
+            <translation>編輯</translation>
+        </message>
+        <message>
+            <source>Done</source>
+            <translation>完成</translation>
+        </message>
+        <message>
+            <source>Refresh devices</source>
+            <translation>重新整理裝置</translation>
+        </message>
+        <message>
+            <source>Check saved devices and look for new ones</source>
+            <translation>檢查已儲存裝置是否在線，並尋找新裝置</translation>
+        </message>
+        <message>
+            <source>Ask client to leave full screen</source>
+            <translation>讓用戶端結束全螢幕</translation>
+        </message>
+        <message>
+            <source>Ask the connected client to leave full screen</source>
+            <translation>讓目前連線的用戶端結束全螢幕</translation>
+        </message>
+        <message>
+            <source>Manual</source>
+            <translation>手冊</translation>
+        </message>
+        <message>
+            <source>How to use DeskPort</source>
+            <translation>DeskPort 使用說明</translation>
+        </message>
+        <message>
+            <source>Add a legacy host</source>
+            <translation>新增傳統主機</translation>
+        </message>
+        <message>
+            <source>Connecting…</source>
+            <translation>連線中…</translation>
+        </message>
+        <message>
+            <source>Disconnecting…</source>
+            <translation>正在中斷…</translation>
+        </message>
+        <message>
+            <source>Failed</source>
+            <translation>失敗</translation>
+        </message>
+        <message>
+            <source>Disconnected</source>
+            <translation>已中斷</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>中斷連線</translation>
+        </message>
+    </context>
+    <context>
+        <name>SettingsHome</name>
+        <message>
+            <source>Send this computer's audio to connected devices</source>
+            <translation>將本機聲音傳給連線裝置</translation>
+        </message>
+        <message>
+            <source>Off by default: sound stays on this computer. Changes apply after restarting sharing.</source>
+            <translation>預設關閉：聲音留在本機播放。變更在重新啟動共享後生效。</translation>
+        </message>
+        <message>
+            <source>Always show a local pointer in desktop mode</source>
+            <translation>桌面模式一律顯示本機游標</translation>
+        </message>
+        <message>
+            <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+            <translation>主機隱藏滑鼠時仍顯示游標。若出現兩個游標，可關閉此選項。</translation>
+        </message>
+        <message>
+            <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+            <translation>連線 Mac 時，Super / Windows 對應 Command，Alt 對應 Option。選擇「一律」可在視窗中轉送 Super + 空白鍵。變更於下次連線時生效。</translation>
+        </message>
+        <message>
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <source>Make DeskPort your own.</source>
+            <translation>依照你的習慣設定 DeskPort。</translation>
+        </message>
+        <message>
+            <source>Language changes apply immediately. Connection preferences apply to your next connection from this computer.</source>
+            <translation>語言切換立即生效。連線設定會在這台電腦下次發起連線時生效。</translation>
+        </message>
+        <message>
+            <source>Language</source>
+            <translation>語言</translation>
+        </message>
+        <message>
+            <source>Follow system</source>
+            <translation>跟隨系統</translation>
+        </message>
+        <message>
+            <source>Restart DeskPort to apply this language.</source>
+            <translation>重新啟動 DeskPort 以套用此語言。</translation>
+        </message>
+        <message>
+            <source>Saved on this computer. Missing translations appear in English.</source>
+            <translation>僅儲存在這台電腦上。尚未翻譯的內容會顯示英文。</translation>
+        </message>
+        <message>
+            <source>Picture</source>
+            <translation>畫面</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>輸入</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>聲音</translation>
+        </message>
+        <message>
+            <source>Connections</source>
+            <translation>連線</translation>
+        </message>
+        <message>
+            <source>Advanced</source>
+            <translation>進階</translation>
+        </message>
+        <message>
+            <source>Resolution</source>
+            <translation>解析度</translation>
+        </message>
+        <message>
+            <source>Connection window</source>
+            <translation>連線視窗</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>全螢幕</translation>
+        </message>
+        <message>
+            <source>Borderless full screen</source>
+            <translation>無邊框全螢幕</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>視窗</translation>
+        </message>
+        <message>
+            <source>Frame rate</source>
+            <translation>影格率</translation>
+        </message>
+        <message>
+            <source>Bandwidth · %1 Mbps</source>
+            <translation>頻寬 · %1 Mbps</translation>
+        </message>
+        <message>
+            <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+            <translation>數值越高，畫面越細緻，頻寬消耗也越大。不移動此滑桿會保留既有進階設定值。</translation>
+        </message>
+        <message>
+            <source>Synchronize frames to this display</source>
+            <translation>與此顯示器同步畫面</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; pointer</source>
+            <translation>鍵盤與指標</translation>
+        </message>
+        <message>
+            <source>Use a desktop-style pointer</source>
+            <translation>使用桌面式指標</translation>
+        </message>
+        <message>
+            <source>Reverse scrolling direction</source>
+            <translation>反轉捲動方向</translation>
+        </message>
+        <message>
+            <source>Send system shortcuts to the remote computer</source>
+            <translation>將系統快捷鍵傳送至遠端電腦</translation>
+        </message>
+        <message>
+            <source>Never</source>
+            <translation>永不</translation>
+        </message>
+        <message>
+            <source>Only in full screen</source>
+            <translation>僅在全螢幕時</translation>
+        </message>
+        <message>
+            <source>Always</source>
+            <translation>一律</translation>
+        </message>
+        <message>
+            <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+            <translation>按 Ctrl + Alt + Shift + Z 釋放遠端輸入。</translation>
+        </message>
+        <message>
+            <source>Mute when DeskPort loses focus</source>
+            <translation>DeskPort 失去焦點時靜音</translation>
+        </message>
+        <message>
+            <source>Also play audio on the host</source>
+            <translation>同時在主機播放聲音</translation>
+        </message>
+        <message>
+            <source>Discover nearby devices</source>
+            <translation>探索附近裝置</translation>
+        </message>
+        <message>
+            <source>Keep this computer awake while connected</source>
+            <translation>連線時保持這台電腦喚醒</translation>
+        </message>
+        <message>
+            <source>Manage saved access</source>
+            <translation>管理已儲存的存取權限</translation>
+        </message>
+        <message>
+            <source>Advanced &amp; support</source>
+            <translation>進階與支援</translation>
+        </message>
+        <message>
+            <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+            <translation>自訂解析度、編解碼器、HDR、環繞音效與控制器選項仍可在進階設定中調整。</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>進階設定</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>權限引導</translation>
+        </message>
+        <message>
+            <source>Report a problem</source>
+            <translation>回報問題</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>跟隨用戶端視窗解析度</translation>
+        </message>
+        <message>
+            <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+            <translation>使用已綁定 Mac 的內建虛擬螢幕。調整視窗後畫面會短暫重新連線，遠端應用程式保持開啟。其他主機使用下方解析度。</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>工作階段期間共享文字、圖片和檔案</translation>
+        </message>
+        <message>
+            <source>Enable on both paired devices, then reconnect. New copies only; up to 128 MiB. Images and files are not shared.</source>
+            <translation>在已綁定的兩台裝置上開啟後重新連線。僅同步新複製的內容，上限 128 MiB；不共享圖片和檔案。</translation>
+        </message>
+        <message>
+            <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+            <translation>滑鼠位於已聚焦的遠端畫面內時接管鍵盤，離開即釋放按鍵和滑鼠按鈕。點擊畫面取得焦點；系統保留快捷鍵可能仍在本機處理。</translation>
+        </message>
+        <message>
+            <source>Saved · connection changes apply next time you connect.</source>
+            <translation>已儲存 · 連線設定將於下次連線時生效。</translation>
+        </message>
+        <message>
+            <source>Appearance</source>
+            <translation>外觀</translation>
+        </message>
+        <message>
+            <source>Light</source>
+            <translation>淺色</translation>
+        </message>
+        <message>
+            <source>Dark</source>
+            <translation>深色</translation>
+        </message>
+        <message>
+            <source>Appearance changes apply immediately.</source>
+            <translation>外觀設定立即生效。</translation>
+        </message>
+        <message>
+            <source>Connecting to remote computers</source>
+            <translation>連線遠端電腦</translation>
+        </message>
+        <message>
+            <source>Quality preset</source>
+            <translation>畫質預設</translation>
+        </message>
+        <message>
+            <source>Choose a preset…</source>
+            <translation>選擇預設…</translation>
+        </message>
+        <message>
+            <source>Office · 30 fps / 10 Mbps</source>
+            <translation>辦公 · 30 fps / 10 Mbps</translation>
+        </message>
+        <message>
+            <source>Clear · 60 fps / 40 Mbps</source>
+            <translation>清晰 · 60 fps / 40 Mbps</translation>
+        </message>
+        <message>
+            <source>Smooth · 60 fps / 15 Mbps</source>
+            <translation>流暢 · 60 fps / 15 Mbps</translation>
+        </message>
+        <message>
+            <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+            <translation>預設僅調整幀率和頻寬，可在下方依網路情況微調。</translation>
+        </message>
+        <message>
+            <source>Fallback resolution</source>
+            <translation>備用解析度</translation>
+        </message>
+        <message>
+            <source>Sound from the remote computer</source>
+            <translation>遠端電腦的聲音</translation>
+        </message>
+        <message>
+            <source>Sharing this computer</source>
+            <translation>共享本機</translation>
+        </message>
+        <message>
+            <source>Manage incoming access, shared audio and login startup on the Sharing page.</source>
+            <translation>在共享頁管理存取授權、聲音共享和登入啟動。</translation>
+        </message>
+        <message>
+            <source>Open sharing settings</source>
+            <translation>開啟共享設定</translation>
+        </message>
+        <message>
+            <source>Picture adjustments</source>
+            <translation>畫面微調</translation>
+        </message>
+        <message>
+            <source>Smart streaming</source>
+            <translation>智慧串流</translation>
+        </message>
+        <message>
+            <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+            <translation>依解析度控制頻寬上限並平滑顯示影格。關閉後使用手動頻寬與影格平滑設定。</translation>
+        </message>
+        <message>
+            <source>Smooth frame pacing</source>
+            <translation>影格平滑</translation>
+        </message>
+        <message>
+            <source>Show streaming statistics</source>
+            <translation>顯示串流統計</translation>
+        </message>
+        <message>
+            <source>Device connection port</source>
+            <translation>裝置連線連接埠</translation>
+        </message>
+        <message>
+            <source>Usually leave this at 48991 on both computers. Video and audio ports are managed automatically. Previous entry ports stay available for saved devices.</source>
+            <translation>通常兩台電腦都保持 48991。視訊與音訊連接埠自動管理，舊入口仍保留供已儲存裝置連線。</translation>
+        </message>
+        <message>
+            <source>Apply</source>
+            <translation>套用</translation>
+        </message>
+        <message>
+            <source>Settings for %1</source>
+            <translation>%1 的設定</translation>
+        </message>
+        <message>
+            <source>These settings apply only to this device. Reconnect to apply changes.</source>
+            <translation>這些設定僅用於此裝置，重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+            <translation>新裝置的預設設定。可在裝置選單中選擇「裝置設定」個別調整連線。</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>已儲存 · 重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>允許鍵盤、指標及控制器輸入</translation>
+        </message>
+        <message>
+            <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+            <translation>關閉後僅可觀看。本機 DeskPort 快速鍵仍可使用。</translation>
+        </message>
+        <message>
+            <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+            <translation>重新連線後，與此綁定裝置共享新複製的內容。僅限不超過 128 MiB 的純文字，不共享圖片和檔案。</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>接收此裝置的聲音</translation>
+        </message>
+        <message>
+            <source>Appearance and preferences for this computer only.</source>
+            <translation>僅設定此電腦的外觀與本機偏好。</translation>
+        </message>
+        <message>
+            <source>Theme</source>
+            <translation>主題</translation>
+        </message>
+        <message>
+            <source>Accent color</source>
+            <translation>強調色</translation>
+        </message>
+        <message>
+            <source>Blue</source>
+            <translation>藍色</translation>
+        </message>
+        <message>
+            <source>Green</source>
+            <translation>綠色</translation>
+        </message>
+        <message>
+            <source>Purple</source>
+            <translation>紫色</translation>
+        </message>
+        <message>
+            <source>Orange</source>
+            <translation>橙色</translation>
+        </message>
+        <message>
+            <source>Show data usage in the top bar</source>
+            <translation>在頂欄顯示流量</translation>
+        </message>
+        <message>
+            <source>Diagnostics and feedback</source>
+            <translation>診斷與回饋</translation>
+        </message>
+        <message>
+            <source>Enable diagnostic logs</source>
+            <translation>啟用診斷日誌</translation>
+        </message>
+        <message>
+            <source>Off by default. Collects connection, interaction setup and runtime event types, timing and resize dimensions from this app, its host and display helper. Changes apply immediately. Logs are limited to 9 MiB and kept for up to 7 days while DeskPort runs.</source>
+            <translation>預設關閉。收集應用程式、內建主機和顯示輔助程式的連線、互動初始化與執行事件、時序及解析度。立即生效。日誌最多 9 MiB，DeskPort 執行時清理超過 7 天的日誌。</translation>
+        </message>
+        <message>
+            <source>IP addresses, domains, device names and arbitrary message text are omitted automatically. No key text, clipboard or screen content is collected. Each app run has a random anonymous ID. Filtering reduces detail and cannot diagnose every problem; review the archive before sharing.</source>
+            <translation>自動省略 IP、網域、裝置名稱與任意訊息原文。不收集按鍵文字、剪貼簿或畫面內容。每次啟動使用隨機匿名識別碼。過濾會減少細節，無法診斷所有問題；分享前請檢查壓縮檔。</translation>
+        </message>
+        <message>
+            <source>GitHub issues and attachments are public. This button creates a ZIP and opens a draft issue. Nothing is uploaded or submitted automatically. Review the ZIP, drag it into the issue, then submit it yourself.</source>
+            <translation>GitHub Issue 與附件是公開的。此按鈕產生 ZIP 並開啟問題草稿，不會自動上傳或提交。請檢查 ZIP，拖入 Issue 後自行提交。</translation>
+        </message>
+        <message>
+            <source>Create logs ZIP and open GitHub…</source>
+            <translation>產生日誌 ZIP 並開啟 GitHub…</translation>
+        </message>
+        <message>
+            <source>Show ZIP in folder</source>
+            <translation>在資料夾中顯示 ZIP</translation>
+        </message>
+        <message>
+            <source>Clear saved diagnostics</source>
+            <translation>清除已儲存的診斷資料</translation>
+        </message>
+        <message>
+            <source>Turning logs off stops new recording. Clear saved diagnostics to delete existing logs and the generated ZIP. Older versions' raw logs are never included.</source>
+            <translation>關閉日誌會停止新記錄。清除診斷資料會刪除現有日誌與產生的 ZIP。不會包含舊版產生的原始日誌。</translation>
+        </message>
+        <message>
+            <source>System</source>
+            <translation>系統</translation>
+        </message>
+        <message>
+            <source>Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.</source>
+            <translation>預設關閉。記錄只保存在這台電腦上，除非你主動分享。記錄內容請見「隱私」。</translation>
+        </message>
+        <message>
+            <source>About</source>
+            <translation>關於</translation>
+        </message>
+        <message>
+            <source>Version</source>
+            <translation>版本</translation>
+        </message>
+        <message>
+            <source>Privacy</source>
+            <translation>隱私</translation>
+        </message>
+        <message>
+            <source>Licenses</source>
+            <translation>授權條款</translation>
+        </message>
+        <message>
+            <source>Create ZIP and open issue</source>
+            <translation>產生 ZIP 並開啟問題草稿</translation>
+        </message>
+        <message>
+            <source>DeskPort has no account and no DeskPort server. Your devices connect to each other directly. Settings, saved devices and approvals stay on this computer.</source>
+            <translation>DeskPort 沒有帳號，也沒有 DeskPort 伺服器。你的裝置之間直接連線。設定、已儲存的裝置和授權都只保存在這台電腦上。</translation>
+        </message>
+        <message>
+            <source>To check for updates, DeskPort asks GitHub for the latest release. Like Moonlight, it downloads public host compatibility data and controller mappings from moonlight-stream.org. Reporting a problem only opens a draft issue in your browser; you decide what to submit.</source>
+            <translation>檢查更新時，DeskPort 會向 GitHub 查詢最新版本。與 Moonlight 一樣，它會從 moonlight-stream.org 下載公開的主機相容性資料和控制器對應。回報問題只會在瀏覽器中開啟問題草稿，要提交什麼由你決定。</translation>
+        </message>
+        <message>
+            <source>DeskPort is free software under the GNU General Public License, version 3 or later. It is derived from Moonlight Qt and includes a modified Sunshine host.</source>
+            <translation>DeskPort 是自由軟體，採用 GNU 通用公共授權條款第 3 版或更新版本。它衍生自 Moonlight Qt，並包含經過修改的 Sunshine 主機。</translation>
+        </message>
+        <message>
+            <source>The shared DeskPort catalog is available under the MIT License. Operating system icons are dedicated to the public domain (CC0 1.0).</source>
+            <translation>共享的 DeskPort 目錄採用 MIT 授權條款。作業系統圖示已貢獻至公有領域（CC0 1.0）。</translation>
+        </message>
+        <message>
+            <source>Qt, FFmpeg, SDL and the other bundled libraries keep their own licenses. Their notices ship with each package.</source>
+            <translation>Qt、FFmpeg、SDL 及其他隨附的函式庫保留各自的授權條款，相關聲明隨各安裝套件一同提供。</translation>
+        </message>
+        <message>
+            <source>Source code and modifications: %1</source>
+            <translation>原始碼和修改：%1</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceCard</name>
+        <message>
+            <source>Checking</source>
+            <translation>正在檢查</translation>
+        </message>
+        <message>
+            <source>Online</source>
+            <translation>上線</translation>
+        </message>
+        <message>
+            <source>Offline</source>
+            <translation>離線</translation>
+        </message>
+        <message>
+            <source>Device actions</source>
+            <translation>裝置操作</translation>
+        </message>
+        <message>
+            <source>Looking for an address</source>
+            <translation>正在尋找位址</translation>
+        </message>
+        <message>
+            <source>Checking connection…</source>
+            <translation>正在檢查連線…</translation>
+        </message>
+        <message>
+            <source>Unavailable · check device or network</source>
+            <translation>無法使用 · 請檢查裝置或網路</translation>
+        </message>
+        <message>
+            <source>Connect to desktop  →</source>
+            <translation>連線至桌面  →</translation>
+        </message>
+        <message>
+            <source>Set up access  →</source>
+            <translation>設定存取權限  →</translation>
+        </message>
+        <message>
+            <source>Return to desktop</source>
+            <translation>返回桌面</translation>
+        </message>
+        <message>
+            <source>View details</source>
+            <translation>檢視詳細資料</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>正在檢查…</translation>
+        </message>
+        <message>
+            <source>Troubleshoot</source>
+            <translation>排查連線</translation>
+        </message>
+        <message>
+            <source>Connect</source>
+            <translation>連線</translation>
+        </message>
+        <message>
+            <source>Set up access</source>
+            <translation>設定存取</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>已連線</translation>
+        </message>
+        <message>
+            <source>Checking availability</source>
+            <translation>正在檢查可用狀態</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>裝置設定</translation>
+        </message>
+        <message>
+            <source>Computer</source>
+            <translation>電腦</translation>
+        </message>
+        <message>
+            <source>Device details</source>
+            <translation>裝置詳細資訊</translation>
+        </message>
+        <message>
+            <source>Open</source>
+            <translation>開啟</translation>
+        </message>
+        <message>
+            <source>Group actions</source>
+            <translation>群組操作</translation>
+        </message>
+        <message>
+            <source>1 device</source>
+            <translation>1 台裝置</translation>
+        </message>
+        <message>
+            <source>%1 devices</source>
+            <translation>%1 台裝置</translation>
+        </message>
+        <message>
+            <source>Add a device</source>
+            <translation>新增裝置</translation>
+        </message>
+        <message>
+            <source>New group</source>
+            <translation>新增群組</translation>
+        </message>
+    </context>
+    <context>
+        <name>HostView</name>
+        <message>
+            <source>Scan or open the URL on your other device, then enter the 6-digit code shown here or in your authenticator app. It changes every 30 seconds.</source>
+            <translation>在另一台裝置上掃碼或開啟網址，然後輸入此處或驗證器 App 上顯示的 6 位數動態碼。動態碼每 30 秒更換一次。</translation>
+        </message>
+        <message>
+            <source>Changes in %1 s</source>
+            <translation>%1 秒後更換</translation>
+        </message>
+        <message>
+            <source>Too many wrong codes. Code sign-in is paused until %1.</source>
+            <translation>動態碼錯誤次數過多，代碼登入已暫停至 %1。</translation>
+        </message>
+        <message>
+            <source>Hide authenticator QR</source>
+            <translation>隱藏驗證器 QR 碼</translation>
+        </message>
+        <message>
+            <source>Add to authenticator app</source>
+            <translation>加入驗證器 App</translation>
+        </message>
+        <message>
+            <source>Reset code secret</source>
+            <translation>重設動態碼金鑰</translation>
+        </message>
+        <message>
+            <source>Could not save a new code secret. Please try again.</source>
+            <translation>無法儲存新的動態碼金鑰，請重試。</translation>
+        </message>
+        <message>
+            <source>Scan with Ente Auth or another authenticator app to get the same code on your phone. Anyone with this QR code can sign in from a browser. Reset code secret disconnects every authenticator.</source>
+            <translation>用 Ente Auth 或其他驗證器 App 掃碼，即可在手機上看到同樣的動態碼。取得此 QR 碼的人都能從瀏覽器登入。重設動態碼金鑰會讓所有驗證器失效。</translation>
+        </message>
+        <message>
+            <source>A browser that is not remembered needs a new code after it is closed. Start sharing before connecting. A local HTTPS certificate needs to be trusted on the connecting device.</source>
+            <translation>未記住的瀏覽器關閉後需要重新輸入動態碼。連線前請先開始共享。連線裝置需要信任本機 HTTPS 憑證。</translation>
+        </message>
+        <message>
+            <source>Choose Remember this browser for 7 days when connecting to skip the code on that browser.</source>
+            <translation>連線時勾選「記住此瀏覽器 7 天」，該瀏覽器 7 天內無需再輸入動態碼。</translation>
+        </message>
+        <message>
+            <source>Browser access is not running.</source>
+            <translation>瀏覽器存取未執行。</translation>
+        </message>
+        <message>
+            <source>Browser access is on for this network and your Tailscale network.</source>
+            <translation>瀏覽器存取已開啟，可在本地網路與你的 Tailscale 網路中使用。</translation>
+        </message>
+        <message>
+            <source>Browser access is on for this network.</source>
+            <translation>瀏覽器存取已開啟，可在本地網路中使用。</translation>
+        </message>
+        <message>
+            <source>Devices signed in to the same Tailscale account connect without the code.</source>
+            <translation>登入同一 Tailscale 帳戶的裝置無需存取碼即可連線。</translation>
+        </message>
+        <message>
+            <source>Show code</source>
+            <translation>顯示存取碼</translation>
+        </message>
+        <message>
+            <source>Hide code</source>
+            <translation>隱藏存取碼</translation>
+        </message>
+        <message>
+            <source>Disconnecting removes the virtual display and restores your physical screen layout. Reconnecting creates a new virtual display.</source>
+            <translation>中斷連線後會移除虛擬螢幕，並還原實體螢幕配置。重新連線時會建立新的虛擬螢幕。</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共享</translation>
+        </message>
+        <message>
+            <source>Share this computer.</source>
+            <translation>共享這台電腦。</translation>
+        </message>
+        <message>
+            <source>Share a dedicated virtual display. DeskPort stays available when its window is hidden.</source>
+            <translation>共享專用虛擬螢幕。隱藏視窗後 DeskPort 仍保持可用。</translation>
+        </message>
+        <message>
+            <source>Share your current desktop. DeskPort stays available when its window is hidden.</source>
+            <translation>共享目前桌面。隱藏視窗後 DeskPort 仍保持可用。</translation>
+        </message>
+        <message>
+            <source>Updating sharing…</source>
+            <translation>正在更新共享狀態…</translation>
+        </message>
+        <message>
+            <source>Sharing is on</source>
+            <translation>共享已開啟</translation>
+        </message>
+        <message>
+            <source>Sharing is off</source>
+            <translation>共享已關閉</translation>
+        </message>
+        <message>
+            <source>Stop sharing</source>
+            <translation>停止共享</translation>
+        </message>
+        <message>
+            <source>Start sharing</source>
+            <translation>開始共享</translation>
+        </message>
+        <message>
+            <source>Browser access</source>
+            <translation>瀏覽器存取</translation>
+        </message>
+        <message>
+            <source>Browser access code</source>
+            <translation>瀏覽器存取碼</translation>
+        </message>
+        <message>
+            <source>Browser URL</source>
+            <translation>瀏覽器網址</translation>
+        </message>
+        <message>
+            <source>Paired browsers</source>
+            <translation>已配對的瀏覽器</translation>
+        </message>
+        <message>
+            <source>Remove pairing</source>
+            <translation>移除配對</translation>
+        </message>
+        <message>
+            <source>Could not save the pairing removal. Please try again.</source>
+            <translation>無法儲存移除配對的操作，請再試一次。</translation>
+        </message>
+        <message>
+            <source>Access &amp; permissions</source>
+            <translation>存取與權限</translation>
+        </message>
+        <message>
+            <source>Only devices you approve can connect. A saved binding does not grant system recording or input permissions.</source>
+            <translation>只有你核准的裝置才能連線。儲存綁定不會授予系統錄製或輸入權限。</translation>
+        </message>
+        <message>
+            <source>Review permissions</source>
+            <translation>檢查權限</translation>
+        </message>
+        <message>
+            <source>Manage devices</source>
+            <translation>管理裝置</translation>
+        </message>
+        <message>
+            <source>Sharing preferences</source>
+            <translation>共享設定</translation>
+        </message>
+        <message>
+            <source>Virtual display size</source>
+            <translation>虛擬螢幕尺寸</translation>
+        </message>
+        <message>
+            <source>Choose before starting sharing. Changing size during a session is not available yet.</source>
+            <translation>請在開始共享前選擇。目前尚不支援工作階段中調整尺寸。</translation>
+        </message>
+        <message>
+            <source>Start sharing when I log in</source>
+            <translation>登入時開始共享</translation>
+        </message>
+        <message>
+            <source>Hide compatibility &amp; diagnostics</source>
+            <translation>隱藏相容性與診斷</translation>
+        </message>
+        <message>
+            <source>Compatibility &amp; diagnostics</source>
+            <translation>相容性與診斷</translation>
+        </message>
+        <message>
+            <source>Legacy PIN pairing</source>
+            <translation>傳統 PIN 配對</translation>
+        </message>
+        <message>
+            <source>For Moonlight or other clients without mutual binding. Enter the PIN shown on that client. This grants access in one direction.</source>
+            <translation>適用於 Moonlight 等不支援雙向綁定的用戶端。輸入該用戶端顯示的 PIN，僅授予單向存取權限。</translation>
+        </message>
+        <message>
+            <source>Device name</source>
+            <translation>裝置名稱</translation>
+        </message>
+        <message>
+            <source>PIN</source>
+            <translation>PIN 碼</translation>
+        </message>
+        <message>
+            <source>Allow</source>
+            <translation>允許</translation>
+        </message>
+        <message>
+            <source>Host port: %1  ·  Binding port: %2</source>
+            <translation>主機連接埠：%1  ·  綁定連接埠：%2</translation>
+        </message>
+        <message>
+            <source>Open host logs</source>
+            <translation>開啟主機記錄</translation>
+        </message>
+        <message>
+            <source>Built into DeskPort; BetterDisplay is not required. This is the idle size. An approved client can adjust it automatically while connected.</source>
+            <translation>DeskPort 內建，無需 BetterDisplay。這是閒置時的解析度，已授權用戶端連線後可自動調整。</translation>
+        </message>
+        <message>
+            <source>Built-in virtual display</source>
+            <translation>內建虛擬螢幕</translation>
+        </message>
+        <message>
+            <source>Active · %1 × %2 pixels</source>
+            <translation>執行中 · %1 × %2 像素</translation>
+        </message>
+        <message>
+            <source>Created automatically when sharing starts</source>
+            <translation>開始共享時自動建立</translation>
+        </message>
+        <message>
+            <source>Your remote workspace stays open when the client window is hidden. After disconnecting, its resolution returns to the idle size. Stopping sharing removes this virtual display.</source>
+            <translation>隱藏用戶端視窗後，遠端工作區保持開啟。中斷連線後恢復閒置解析度，停止共享會移除此虛擬螢幕。</translation>
+        </message>
+        <message>
+            <source>Workspace · %1 × %2 · %3× scaling</source>
+            <translation>工作區 · %1 × %2 · %3× 縮放</translation>
+        </message>
+        <message>
+            <source>Login startup is installed by this computer's system configuration. Change it there, not here.</source>
+            <translation>登入啟動由這部電腦的系統設定管理，請在該處修改。</translation>
+        </message>
+        <message>
+            <source>Sharing service is running</source>
+            <translation>共享服務執行中</translation>
+        </message>
+        <message>
+            <source>Connection readiness</source>
+            <translation>連線就緒檢查</translation>
+        </message>
+        <message>
+            <source>Start sharing to accept connections.</source>
+            <translation>開啟共享以接受連線。</translation>
+        </message>
+        <message>
+            <source>Sharing needs permission. Review the items below.</source>
+            <translation>共享需要權限，請檢查以下項目。</translation>
+        </message>
+        <message>
+            <source>Service available. Verify picture and control from an approved device.</source>
+            <translation>服務可用，請從已授權裝置驗證畫面與控制。</translation>
+        </message>
+        <message>
+            <source>Allowed</source>
+            <translation>已允許</translation>
+        </message>
+        <message>
+            <source>Verify when sharing</source>
+            <translation>共享時驗證</translation>
+        </message>
+        <message>
+            <source>Optional · audio is off</source>
+            <translation>選用 · 聲音共享已關閉</translation>
+        </message>
+        <message>
+            <source>Needs attention</source>
+            <translation>需要處理</translation>
+        </message>
+        <message>
+            <source>Open system settings</source>
+            <translation>開啟系統設定</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>權限引導</translation>
+        </message>
+        <message>
+            <source>Approved DeskPort devices: %1</source>
+            <translation>已授權 DeskPort 裝置：%1</translation>
+        </message>
+        <message>
+            <source>Saved approval and network reachability are separate. Legacy PIN clients are managed separately.</source>
+            <translation>已儲存授權不代表網路可達。傳統 PIN 用戶端另行管理。</translation>
+        </message>
+        <message>
+            <source>Share this computer's sound</source>
+            <translation>共享本機聲音</translation>
+        </message>
+        <message>
+            <source>Saved · restart sharing to apply audio changes.</source>
+            <translation>已儲存 · 重新啟動共享後聲音設定生效。</translation>
+        </message>
+        <message>
+            <source>Save bandwidth on static screens</source>
+            <translation>靜態畫面節省頻寬</translation>
+        </message>
+        <message>
+            <source>Skips unchanged frames and reduces frame rate during repeated packet loss. Applies when sharing restarts.</source>
+            <translation>略過未變動的畫面，連續遺失封包時降低影格率。重新啟動共享後生效。</translation>
+        </message>
+        <message>
+            <source>Saved · restart sharing to apply changes.</source>
+            <translation>已儲存 · 重新啟動共享以套用變更。</translation>
+        </message>
+        <message>
+            <source>Picture, audio and input are chosen on the connecting device. Changes apply after reconnecting.</source>
+            <translation>畫面、音訊和輸入由連線端裝置設定，重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Device connection port</source>
+            <translation>裝置連線連接埠</translation>
+        </message>
+        <message>
+            <source>Apply</source>
+            <translation>套用</translation>
+        </message>
+        <message>
+            <source>Unattended operation</source>
+            <translation>無人值守執行</translation>
+        </message>
+        <message>
+            <source>Start automatically and recover if DeskPort stops. Requires one-time approval in System Settings and a logged-in desktop. Does not unlock FileVault or enable automatic login.</source>
+            <translation>自動啟動，並在 DeskPort 停止後恢復。需要在系統設定中完成一次授權，並已登入桌面。不會解鎖 FileVault 或開啟系統自動登入。</translation>
+        </message>
+        <message>
+            <source>Open background permissions</source>
+            <translation>開啟背景執行權限</translation>
+        </message>
+        <message>
+            <source>Ask client to leave fullscreen</source>
+            <translation>通知用戶端退出全螢幕</translation>
+        </message>
+        <message>
+            <source>Created when an approved client connects</source>
+            <translation>已授權用戶端連線時建立</translation>
+        </message>
+        <message>
+            <source>Disconnecting restores your physical screens and removes the virtual display. A brief network interruption keeps the workspace available for recovery.</source>
+            <translation>中斷連線後還原實體螢幕並移除虛擬螢幕。網路短暫中斷時會保留工作區以便復原。</translation>
+        </message>
+        <message>
+            <source>Report a problem…</source>
+            <translation>回報問題…</translation>
+        </message>
+        <message>
+            <source>Shared Windows display</source>
+            <translation>共享 Windows 顯示器</translation>
+        </message>
+        <message>
+            <source>Shares this Windows desktop; supported resolutions are restored after disconnect</source>
+            <translation>共享此 Windows 桌面；中斷連線後會恢復支援的解析度</translation>
+        </message>
+        <message>
+            <source>Uses this Windows desktop. Disconnecting restores the original resolution. Unsupported sizes are reported without changing the display.</source>
+            <translation>使用此 Windows 桌面。中斷連線後恢復原始解析度。不支援的尺寸只會提示，不會變更顯示設定。</translation>
+        </message>
+        <message>
+            <source>Creates a virtual desktop that follows the client window. Choose mirror, exclusive, or extend on the client. Disconnecting restores the previous display layout.</source>
+            <translation>建立跟隨客戶端視窗尺寸的虛擬桌面。在客戶端選擇鏡像、獨佔或延伸；中斷連線後恢復原本的螢幕配置。</translation>
+        </message>
+    </context>
+    <context>
+        <name>BindView</name>
+        <message>
+            <source>Add a device</source>
+            <translation>新增裝置</translation>
+        </message>
+        <message>
+            <source>One confirmation. Both directions.</source>
+            <translation>確認一次，雙向連線。</translation>
+        </message>
+        <message>
+            <source>Keep DeskPort open on both computers. Enter an address, then approve the request on the other device.</source>
+            <translation>在兩台電腦上保持 DeskPort 開啟。輸入位址後，在另一台裝置核准請求。</translation>
+        </message>
+        <message>
+            <source>Where do you want to connect?</source>
+            <translation>要連線到哪裡？</translation>
+        </message>
+        <message>
+            <source>IP address or computer name</source>
+            <translation>IP 位址或電腦名稱</translation>
+        </message>
+        <message>
+            <source>Send request</source>
+            <translation>傳送請求</translation>
+        </message>
+        <message>
+            <source>Cancel</source>
+            <translation>取消</translation>
+        </message>
+        <message>
+            <source>Approval lets both computers view and control each other. System permissions are still required on each device.</source>
+            <translation>核准後，兩台電腦可互相檢視與控制。每台裝置仍需個別授予系統權限。</translation>
+        </message>
+        <message>
+            <source>Saved access</source>
+            <translation>已儲存的存取權限</translation>
+        </message>
+        <message>
+            <source>Your approved devices will appear here.</source>
+            <translation>已核准的裝置會顯示在這裡。</translation>
+        </message>
+        <message>
+            <source>Bound both ways</source>
+            <translation>已雙向綁定</translation>
+        </message>
+        <message>
+            <source>Incomplete</source>
+            <translation>未完成</translation>
+        </message>
+        <message>
+            <source>Remove access to this computer</source>
+            <translation>撤銷對此電腦的存取</translation>
+        </message>
+        <message>
+            <source>Connecting another way?</source>
+            <translation>其他連線方式？</translation>
+        </message>
+        <message>
+            <source>For a custom binding port, enter address:port. Moonlight and independent Sunshine hosts use legacy pairing instead.</source>
+            <translation>自訂綁定連接埠請使用 位址:連接埠。Moonlight 與獨立 Sunshine 主機使用傳統配對。</translation>
+        </message>
+        <message>
+            <source>Add a legacy host</source>
+            <translation>新增傳統主機</translation>
+        </message>
+        <message>
+            <source>Remove device access?</source>
+            <translation>撤銷裝置存取權限？</translation>
+        </message>
+        <message>
+            <source>%1 will no longer be able to control this computer. Remove the binding on the other device too to revoke both directions.</source>
+            <translation>%1 將無法再控制此電腦。若要雙向撤銷，也請在另一台裝置移除綁定。</translation>
+        </message>
+        <message>
+            <source>Edit device</source>
+            <translation>編輯裝置</translation>
+        </message>
+        <message>
+            <source>Device name</source>
+            <translation>裝置名稱</translation>
+        </message>
+        <message>
+            <source>Domain name or IP address</source>
+            <translation>網域名稱或 IP 位址</translation>
+        </message>
+        <message>
+            <source>Computer name or IP, without port</source>
+            <translation>電腦名稱或 IP，不含連接埠</translation>
+        </message>
+        <message>
+            <source>A domain name is saved as entered and resolved again when connecting.</source>
+            <translation>保留輸入的網域名稱，每次連線時重新解析。</translation>
+        </message>
+        <message>
+            <source>Host port</source>
+            <translation>主機連接埠</translation>
+        </message>
+        <message>
+            <source>Binding port</source>
+            <translation>綁定連接埠</translation>
+        </message>
+        <message>
+            <source>Save</source>
+            <translation>儲存</translation>
+        </message>
+        <message>
+            <source>Advanced port overrides</source>
+            <translation>進階連接埠覆寫</translation>
+        </message>
+        <message>
+            <source>Client access</source>
+            <translation>用戶端存取</translation>
+        </message>
+        <message>
+            <source>Discover nearby devices</source>
+            <translation>探索附近裝置</translation>
+        </message>
+        <message>
+            <source>Request access to a computer</source>
+            <translation>請求存取電腦</translation>
+        </message>
+        <message>
+            <source>Approval lets this device view and control the other computer. This device does not share its own desktop.</source>
+            <translation>核准後，此裝置可以檢視並控制另一台電腦，但不會共享此裝置自己的桌面。</translation>
+        </message>
+        <message>
+            <source>Host access</source>
+            <translation>主機存取</translation>
+        </message>
+        <message>
+            <source>Forget saved binding</source>
+            <translation>忘記已儲存的綁定</translation>
+        </message>
+        <message>
+            <source>Forget the saved binding for %1 on this device? Remove it from Devices separately. To revoke this device’s access, remove it on the host too.</source>
+            <translation>要忘記此裝置上為 %1 儲存的綁定嗎？請另行從「裝置」中移除它。若要撤銷此裝置的存取權限，也需在主機端將其移除。</translation>
+        </message>
+        <message>
+            <source>Remove</source>
+            <translation>移除</translation>
+        </message>
+    </context>
+    <context>
+        <name>SetupView</name>
+        <message>
+            <source>Getting started</source>
+            <translation>開始使用</translation>
+        </message>
+        <message>
+            <source>Set up this computer.</source>
+            <translation>設定這台電腦。</translation>
+        </message>
+        <message>
+            <source>Connect to another computer right away. To share this one, review its permissions below.</source>
+            <translation>你可以直接連線至其他電腦。如需共享這台電腦，請檢查下方權限。</translation>
+        </message>
+        <message>
+            <source>Allowed</source>
+            <translation>已允許</translation>
+        </message>
+        <message>
+            <source>Checked when sharing</source>
+            <translation>共享時檢查</translation>
+        </message>
+        <message>
+            <source>Not requested</source>
+            <translation>尚未請求</translation>
+        </message>
+        <message>
+            <source>Restricted by system</source>
+            <translation>受系統限制</translation>
+        </message>
+        <message>
+            <source>Needs attention</source>
+            <translation>需要處理</translation>
+        </message>
+        <message>
+            <source>Skip for now · only connect to other devices</source>
+            <translation>暫時略過 · 僅連線至其他裝置</translation>
+        </message>
+        <message>
+            <source>1. Review permissions    2. Add a device    3. Confirm and connect</source>
+            <translation>1. 檢查權限    2. 新增裝置    3. 確認並連線</translation>
+        </message>
+        <message>
+            <source>Open system settings</source>
+            <translation>開啟系統設定</translation>
+        </message>
+        <message>
+            <source>Your Linux configuration must allow your user to access /dev/uinput. Connecting to other computers does not need this permission.</source>
+            <translation>Linux 設定必須允許目前使用者存取 /dev/uinput。僅連線至其他電腦不需要此權限。</translation>
+        </message>
+        <message>
+            <source>Authorize the installed DeskPort app</source>
+            <translation>授權已安裝的 DeskPort 應用程式</translation>
+        </message>
+        <message>
+            <source>If a settings pane accepts adding an app, drag the tile below into its list, then turn the switch on. Otherwise use Reveal in Finder. Some panes list DeskPort only after sharing has requested access.</source>
+            <translation>若設定頁面支援新增應用程式，將下方圖塊拖入清單並開啟開關；否則使用「在 Finder 中顯示」。部分頁面僅在共享要求權限後才列出 DeskPort。</translation>
+        </message>
+        <message>
+            <source>DeskPort.app  ·  Drag to Settings</source>
+            <translation>DeskPort.app  ·  拖入設定</translation>
+        </message>
+        <message>
+            <source>Reveal in Finder</source>
+            <translation>在 Finder 中顯示</translation>
+        </message>
+        <message>
+            <source>After changing permissions, restart sharing. If macOS asks you to reopen DeskPort, follow that prompt. Permission checks do not replace a real picture and input test.</source>
+            <translation>變更權限後請重新啟動共享。若 macOS 要求重新開啟 DeskPort，請依提示操作。權限檢查不能取代實際畫面與輸入測試。</translation>
+        </message>
+        <message>
+            <source>Check again</source>
+            <translation>重新檢查</translation>
+        </message>
+        <message>
+            <source>Continue to devices</source>
+            <translation>繼續至裝置清單</translation>
+        </message>
+    </context>
+    <context>
+        <name>BindingApproval</name>
+        <message>
+            <source>Bind with this device?</source>
+            <translation>與此裝置綁定？</translation>
+        </message>
+        <message>
+            <source>Not now</source>
+            <translation>暫不</translation>
+        </message>
+        <message>
+            <source>Allow &amp; bind</source>
+            <translation>允許並綁定</translation>
+        </message>
+        <message>
+            <source>Allow this device and this computer to view and control each other? Binding saves permission without starting a connection or interrupting existing sessions. Choose Connect when you are ready. Accept only a request you are expecting.</source>
+            <translation>允許此裝置與此電腦互相檢視和控制嗎？綁定僅儲存權限，不會發起連線或中斷現有工作階段。準備好後再選擇連線。請僅接受您預期的請求。</translation>
+        </message>
+        <message>
+            <source>Allow this device to view and control this computer? Binding saves permission without starting a connection or interrupting existing sessions. This does not grant access to the requesting device. Accept only a request you are expecting.</source>
+            <translation>允許此裝置檢視和控制此電腦嗎？綁定僅儲存權限，不會發起連線或中斷現有工作階段。這不會授予存取請求裝置的權限。請僅接受您預期的請求。</translation>
+        </message>
+    </context>
+    <context>
+        <name>HostManager</name>
+        <message>
+            <source>Restart</source>
+            <translation>重新啟動</translation>
+        </message>
+        <message>
+            <source>Quit</source>
+            <translation>結束</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>中斷連線</translation>
+        </message>
+        <message>
+            <source>Restart DeskPort</source>
+            <translation>重新啟動 DeskPort</translation>
+        </message>
+        <message>
+            <source>Sharing</source>
+            <translation>共享</translation>
+        </message>
+        <message>
+            <source>Settings</source>
+            <translation>設定</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>視窗</translation>
+        </message>
+        <message>
+            <source>Applications</source>
+            <translation>應用程式</translation>
+        </message>
+        <message>
+            <source>Sharing is off</source>
+            <translation>共享已關閉</translation>
+        </message>
+        <message>
+            <source>Stop sharing</source>
+            <translation>停止共享</translation>
+        </message>
+        <message>
+            <source>PIN</source>
+            <translation>PIN 碼</translation>
+        </message>
+        <message>
+            <source>Screen &amp; system audio</source>
+            <translation>螢幕與系統音訊</translation>
+        </message>
+        <message>
+            <source>Let a connected device see this desktop and hear its sound.</source>
+            <translation>允許已連線的裝置檢視桌面並聆聽聲音。</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; mouse</source>
+            <translation>鍵盤與滑鼠</translation>
+        </message>
+        <message>
+            <source>Let a device you approve control this computer.</source>
+            <translation>允許已核准的裝置控制這台電腦。</translation>
+        </message>
+        <message>
+            <source>Audio input</source>
+            <translation>音訊輸入</translation>
+        </message>
+        <message>
+            <source>Needed only when your sharing audio path uses microphone access.</source>
+            <translation>僅在共享音訊需要麥克風存取權限時使用。</translation>
+        </message>
+        <message>
+            <source>Desktop capture</source>
+            <translation>桌面擷取</translation>
+        </message>
+        <message>
+            <source>KDE uses the current desktop. Other desktops may ask you to choose a screen when sharing starts.</source>
+            <translation>KDE 使用目前桌面。其他桌面環境可能在共享開始時要求選擇螢幕。</translation>
+        </message>
+        <message>
+            <source>Remote control requires access to the system input device.</source>
+            <translation>遠端控制需要存取系統輸入裝置。</translation>
+        </message>
+        <message>
+            <source>Open DeskPort</source>
+            <translation>開啟 DeskPort</translation>
+        </message>
+        <message>
+            <source>Quit DeskPort</source>
+            <translation>完全結束 DeskPort</translation>
+        </message>
+        <message>
+            <source>Disconnect viewer</source>
+            <translation>中斷檢視端</translation>
+        </message>
+        <message>
+            <source> Retrying automatically in %1 seconds.</source>
+            <translation> 將在 %1 秒後自動重試。</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>重新連線</translation>
+        </message>
+        <message>
+            <source>Unattended operation</source>
+            <translation>無人值守執行</translation>
+        </message>
+        <message>
+            <source>Pause automatic recovery and quit? Recovery resumes the next time DeskPort opens.</source>
+            <translation>暫停自動恢復並結束？下次開啟 DeskPort 時恢復執行。</translation>
+        </message>
+        <message>
+            <source>Pause and quit</source>
+            <translation>暫停並結束</translation>
+        </message>
+        <message>
+            <source>Turn off unattended operation before disabling login startup.</source>
+            <translation>請先關閉無人值守執行，再關閉登入啟動。</translation>
+        </message>
+        <message>
+            <source>Cannot save unattended preferences.</source>
+            <translation>無法儲存無人值守偏好設定。</translation>
+        </message>
+        <message>
+            <source>Off</source>
+            <translation>已關閉</translation>
+        </message>
+        <message>
+            <source>Waiting for approval in System Settings</source>
+            <translation>等待在系統設定中授權</translation>
+        </message>
+        <message>
+            <source>Recovery service needs setup. Turn it off and on to try again.</source>
+            <translation>恢復服務需要設定。請關閉後重新開啟。</translation>
+        </message>
+        <message>
+            <source>Enabled; waiting for the recovery service to check in</source>
+            <translation>已啟用；等待恢復服務首次檢查</translation>
+        </message>
+        <message>
+            <source>Recovery has not checked in. Review background permissions.</source>
+            <translation>未收到恢復服務的檢查結果。請檢查背景執行權限。</translation>
+        </message>
+        <message>
+            <source>Enabled; recovery service is checking this Mac</source>
+            <translation>已啟用；恢復服務正在檢查此 Mac</translation>
+        </message>
+        <message>
+            <source>Waiting for a logged-in desktop session</source>
+            <translation>等待登入桌面工作階段</translation>
+        </message>
+        <message>
+            <source>Recovery needs attention. Check login startup and background permissions.</source>
+            <translation>恢復需要處理。請檢查登入啟動和背景執行權限。</translation>
+        </message>
+        <message>
+            <source>Install DeskPort in Applications before enabling unattended operation.</source>
+            <translation>請先將 DeskPort 安裝到「應用程式」，再開啟無人值守執行。</translation>
+        </message>
+        <message>
+            <source>Cannot enable login startup.</source>
+            <translation>無法開啟登入啟動。</translation>
+        </message>
+        <message>
+            <source>Connections</source>
+            <translation>連線列表</translation>
+        </message>
+        <message>
+            <source>Show desktop</source>
+            <translation>顯示桌面</translation>
+        </message>
+        <message>
+            <source>Open device list</source>
+            <translation>開啟裝置清單</translation>
+        </message>
+        <message>
+            <source>Return to remote desktop</source>
+            <translation>返回遠端桌面</translation>
+        </message>
+        <message>
+            <source>More</source>
+            <translation>更多</translation>
+        </message>
+        <message>
+            <source>Connecting…</source>
+            <translation>連線中…</translation>
+        </message>
+        <message>
+            <source>Disconnecting…</source>
+            <translation>正在中斷…</translation>
+        </message>
+        <message>
+            <source>All connections (%1)…</source>
+            <translation>全部連線（%1）…</translation>
+        </message>
+        <message>
+            <source>Disconnect “%1”</source>
+            <translation>中斷「%1」</translation>
+        </message>
+        <message>
+            <source>Reconnect “%1”</source>
+            <translation>重新連線「%1」</translation>
+        </message>
+        <message>
+            <source>DeskPort · %1 connected</source>
+            <translation>DeskPort · 已連線 %1 台</translation>
+        </message>
+        <message>
+            <source>DeskPort · %1 connected · showing %2</source>
+            <translation>DeskPort · 已連線 %1 台 · 正在顯示 %2</translation>
+        </message>
+    </context>
+    <context>
+        <name>DesktopSegue</name>
+        <message>
+            <source>This device has no Desktop entry. Open Applications from the device menu to choose an app.</source>
+            <translation>此裝置沒有桌面項目。請從裝置選單開啟「應用程式」選擇應用程式。</translation>
+        </message>
+        <message>
+            <source>Another application is running on this device. Open Applications from the device menu to resume it or switch to Desktop.</source>
+            <translation>此裝置正在執行其他應用程式。請从裝置選單開啟「應用程式」恢復連線或切換到桌面。</translation>
+        </message>
+        <message>
+            <source>Unable to prepare the desktop connection. Try again.</source>
+            <translation>無法準備桌面連線，請重試。</translation>
+        </message>
+        <message>
+            <source>The device disconnected. Return to Devices and try again.</source>
+            <translation>裝置已中斷連線。請返回裝置列表重試。</translation>
+        </message>
+        <message>
+            <source>Loading the desktop timed out. Return to Devices and try again.</source>
+            <translation>載入桌面逾時。請返回裝置列表重試。</translation>
+        </message>
+        <message>
+            <source>Connecting to desktop…</source>
+            <translation>正在連線至桌面…</translation>
+        </message>
+        <message>
+            <source>Back to devices</source>
+            <translation>返回裝置列表</translation>
+        </message>
+        <message>
+            <source>Close</source>
+            <translation>關閉</translation>
+        </message>
+        <message>
+            <source>Cancel</source>
+            <translation>取消</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceSettings</name>
+        <message>
+            <source>Device settings</source>
+            <translation>裝置設定</translation>
+        </message>
+        <message>
+            <source>Saved only for this device. Changes apply on the next connection.</source>
+            <translation>僅為此裝置儲存，下次連線時生效。</translation>
+        </message>
+        <message>
+            <source>Picture mode</source>
+            <translation>畫面模式</translation>
+        </message>
+        <message>
+            <source>Automatic (recommended)</source>
+            <translation>自動（建議）</translation>
+        </message>
+        <message>
+            <source>Clear</source>
+            <translation>清晰優先</translation>
+        </message>
+        <message>
+            <source>Smooth</source>
+            <translation>流暢優先</translation>
+        </message>
+        <message>
+            <source>Save data</source>
+            <translation>節省流量</translation>
+        </message>
+        <message>
+            <source>Custom</source>
+            <translation>自訂</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>跟隨用戶端視窗解析度</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>接收此裝置的聲音</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>允許鍵盤、指標及控制器輸入</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>工作階段期間共享文字、圖片和檔案</translation>
+        </message>
+        <message>
+            <source>Advanced streaming settings</source>
+            <translation>進階串流設定</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>已儲存 · 重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Virtual screen</source>
+            <translation>虛擬螢幕</translation>
+        </message>
+        <message>
+            <source>Primary screen and mirror others (default)</source>
+            <translation>設為主螢幕，其他螢幕鏡像（預設）</translation>
+        </message>
+        <message>
+            <source>Primary screen and turn off others</source>
+            <translation>設為主螢幕，關閉其他螢幕</translation>
+        </message>
+        <message>
+            <source>Use client as an extended screen</source>
+            <translation>將用戶端用作延伸螢幕</translation>
+        </message>
+        <message>
+            <source>The previous screen layout is restored automatically when the session ends.</source>
+            <translation>連線結束後自動恢復先前的螢幕狀態。</translation>
+        </message>
+        <message>
+            <source>Desktop adjustment</source>
+            <translation>桌面微調</translation>
+        </message>
+        <message>
+            <source>1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.</source>
+            <translation>1.5 顯示較大的控制項；0.5 顯示更多內容。在自動計算的桌面大小上微調。連線中修改會立即生效。</translation>
+        </message>
+        <message>
+            <source>Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.</source>
+            <translation>已達到 macOS 最小桌面（800 × 600），目前視窗無法再放大。可改用全螢幕或更大的視窗。</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>全螢幕</translation>
+        </message>
+        <message>
+            <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+            <translation>連線中也可以按 Ctrl+Alt+Shift+X 切換全螢幕。</translation>
+        </message>
+        <message>
+            <source>Desktop fine tuning</source>
+            <translation>桌面微調</translation>
+        </message>
+        <message>
+            <source>Main + mirror</source>
+            <translation>主螢幕 + 鏡像</translation>
+        </message>
+        <message>
+            <source>Main only</source>
+            <translation>僅主螢幕</translation>
+        </message>
+        <message>
+            <source>Extended</source>
+            <translation>延伸</translation>
+        </message>
+        <message>
+            <source>Fit to window</source>
+            <translation>適應視窗</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>聲音</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>輸入</translation>
+        </message>
+        <message>
+            <source>Domain name or IP address</source>
+            <translation>網域名稱或 IP 位址</translation>
+        </message>
+        <message>
+            <source>Your existing binding is kept. Reconnect to use the saved address.</source>
+            <translation>保留既有綁定，重新連線後使用新位址。</translation>
+        </message>
+        <message>
+            <source>Computer name or IP, without port</source>
+            <translation>電腦名稱或 IP，不含連接埠</translation>
+        </message>
+        <message>
+            <source>Save</source>
+            <translation>儲存</translation>
+        </message>
+    </context>
+    <context>
+        <name>DeviceAdvanced</name>
+        <message>
+            <source>Advanced streaming settings</source>
+            <translation>進階串流設定</translation>
+        </message>
+        <message>
+            <source>Settings for %1</source>
+            <translation>%1 的設定</translation>
+        </message>
+        <message>
+            <source>Make DeskPort your own.</source>
+            <translation>依照你的習慣設定 DeskPort。</translation>
+        </message>
+        <message>
+            <source>These settings apply only to this device. Reconnect to apply changes.</source>
+            <translation>這些設定僅用於此裝置，重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Default settings for new devices. Choose Device settings in a device menu to customize a connection.</source>
+            <translation>新裝置的預設設定。可在裝置選單中選擇「裝置設定」個別調整連線。</translation>
+        </message>
+        <message>
+            <source>Saved · reconnect to apply changes.</source>
+            <translation>已儲存 · 重新連線後生效。</translation>
+        </message>
+        <message>
+            <source>Connecting to remote computers</source>
+            <translation>連線遠端電腦</translation>
+        </message>
+        <message>
+            <source>Picture</source>
+            <translation>畫面</translation>
+        </message>
+        <message>
+            <source>Input</source>
+            <translation>輸入</translation>
+        </message>
+        <message>
+            <source>Sound</source>
+            <translation>聲音</translation>
+        </message>
+        <message>
+            <source>Advanced</source>
+            <translation>進階</translation>
+        </message>
+        <message>
+            <source>Match the client window resolution</source>
+            <translation>跟隨用戶端視窗解析度</translation>
+        </message>
+        <message>
+            <source>Uses the built-in virtual display on a bound Mac. Resizing briefly reconnects the picture and keeps your apps open. Other hosts use the resolution below.</source>
+            <translation>使用已綁定 Mac 的內建虛擬螢幕。調整視窗後畫面會短暫重新連線，遠端應用程式保持開啟。其他主機使用下方解析度。</translation>
+        </message>
+        <message>
+            <source>Smart streaming</source>
+            <translation>智慧串流</translation>
+        </message>
+        <message>
+            <source>Uses a resolution-aware bandwidth ceiling and smooth frame pacing. Turn off to use manual bandwidth and pacing.</source>
+            <translation>依解析度控制頻寬上限並平滑顯示影格。關閉後使用手動頻寬與影格平滑設定。</translation>
+        </message>
+        <message>
+            <source>Quality preset</source>
+            <translation>畫質預設</translation>
+        </message>
+        <message>
+            <source>Choose a preset…</source>
+            <translation>選擇預設…</translation>
+        </message>
+        <message>
+            <source>Office · 30 fps / 10 Mbps</source>
+            <translation>辦公 · 30 fps / 10 Mbps</translation>
+        </message>
+        <message>
+            <source>Clear · 60 fps / 40 Mbps</source>
+            <translation>清晰 · 60 fps / 40 Mbps</translation>
+        </message>
+        <message>
+            <source>Smooth · 60 fps / 15 Mbps</source>
+            <translation>流暢 · 60 fps / 15 Mbps</translation>
+        </message>
+        <message>
+            <source>Presets change frame rate and bandwidth only. Tune them for your network below.</source>
+            <translation>預設僅調整幀率和頻寬，可在下方依網路情況微調。</translation>
+        </message>
+        <message>
+            <source>Picture adjustments</source>
+            <translation>畫面微調</translation>
+        </message>
+        <message>
+            <source>Fallback resolution</source>
+            <translation>備用解析度</translation>
+        </message>
+        <message>
+            <source>Resolution</source>
+            <translation>解析度</translation>
+        </message>
+        <message>
+            <source>Connection window</source>
+            <translation>連線視窗</translation>
+        </message>
+        <message>
+            <source>Full screen</source>
+            <translation>全螢幕</translation>
+        </message>
+        <message>
+            <source>Borderless full screen</source>
+            <translation>無邊框全螢幕</translation>
+        </message>
+        <message>
+            <source>Window</source>
+            <translation>視窗</translation>
+        </message>
+        <message>
+            <source>Frame rate</source>
+            <translation>影格率</translation>
+        </message>
+        <message>
+            <source>Bandwidth · %1 Mbps</source>
+            <translation>頻寬 · %1 Mbps</translation>
+        </message>
+        <message>
+            <source>Higher values improve detail and use more network capacity. Keep your existing advanced values unless you move this slider.</source>
+            <translation>數值越高，畫面越細緻，頻寬消耗也越大。不移動此滑桿會保留既有進階設定值。</translation>
+        </message>
+        <message>
+            <source>Smooth frame pacing</source>
+            <translation>影格平滑</translation>
+        </message>
+        <message>
+            <source>Show streaming statistics</source>
+            <translation>顯示串流統計</translation>
+        </message>
+        <message>
+            <source>Synchronize frames to this display</source>
+            <translation>與此顯示器同步畫面</translation>
+        </message>
+        <message>
+            <source>Keyboard &amp; pointer</source>
+            <translation>鍵盤與指標</translation>
+        </message>
+        <message>
+            <source>Allow keyboard, pointer and controller input</source>
+            <translation>允許鍵盤、指標及控制器輸入</translation>
+        </message>
+        <message>
+            <source>Turn off for a view-only connection. Local DeskPort shortcuts remain available.</source>
+            <translation>關閉後僅可觀看。本機 DeskPort 快速鍵仍可使用。</translation>
+        </message>
+        <message>
+            <source>Use a desktop-style pointer</source>
+            <translation>使用桌面式指標</translation>
+        </message>
+        <message>
+            <source>Always show a local pointer in desktop mode</source>
+            <translation>桌面模式一律顯示本機游標</translation>
+        </message>
+        <message>
+            <source>Keeps the pointer visible if the host hides its cursor. Turn this off if you see two pointers.</source>
+            <translation>主機隱藏滑鼠時仍顯示游標。若出現兩個游標，可關閉此選項。</translation>
+        </message>
+        <message>
+            <source>Reverse scrolling direction</source>
+            <translation>反轉捲動方向</translation>
+        </message>
+        <message>
+            <source>Send system shortcuts to the remote computer</source>
+            <translation>將系統快捷鍵傳送至遠端電腦</translation>
+        </message>
+        <message>
+            <source>Never</source>
+            <translation>永不</translation>
+        </message>
+        <message>
+            <source>Only in full screen</source>
+            <translation>僅在全螢幕時</translation>
+        </message>
+        <message>
+            <source>Always</source>
+            <translation>一律</translation>
+        </message>
+        <message>
+            <source>On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.</source>
+            <translation>連線 Mac 時，Super / Windows 對應 Command，Alt 對應 Option。選擇「一律」可在視窗中轉送 Super + 空白鍵。變更於下次連線時生效。</translation>
+        </message>
+        <message>
+            <source>Share text, images and files during a session</source>
+            <translation>工作階段期間共享文字、圖片和檔案</translation>
+        </message>
+        <message>
+            <source>Reconnect to share new copies with this bound device. Up to 128 MiB of plain text; images and files are not shared.</source>
+            <translation>重新連線後，與此綁定裝置共享新複製的內容。僅限不超過 128 MiB 的純文字，不共享圖片和檔案。</translation>
+        </message>
+        <message>
+            <source>Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.</source>
+            <translation>滑鼠位於已聚焦的遠端畫面內時接管鍵盤，離開即釋放按鍵和滑鼠按鈕。點擊畫面取得焦點；系統保留快捷鍵可能仍在本機處理。</translation>
+        </message>
+        <message>
+            <source>Release remote input with Ctrl + Alt + Shift + Z.</source>
+            <translation>按 Ctrl + Alt + Shift + Z 釋放遠端輸入。</translation>
+        </message>
+        <message>
+            <source>Sound from the remote computer</source>
+            <translation>遠端電腦的聲音</translation>
+        </message>
+        <message>
+            <source>Receive sound from this device</source>
+            <translation>接收此裝置的聲音</translation>
+        </message>
+        <message>
+            <source>Mute when DeskPort loses focus</source>
+            <translation>DeskPort 失去焦點時靜音</translation>
+        </message>
+        <message>
+            <source>Also play audio on the host</source>
+            <translation>同時在主機播放聲音</translation>
+        </message>
+        <message>
+            <source>Advanced &amp; support</source>
+            <translation>進階與支援</translation>
+        </message>
+        <message>
+            <source>Custom resolutions, codecs, HDR, surround sound and controller options remain available in advanced settings.</source>
+            <translation>自訂解析度、編解碼器、HDR、環繞音效與控制器選項仍可在進階設定中調整。</translation>
+        </message>
+        <message>
+            <source>Advanced settings</source>
+            <translation>進階設定</translation>
+        </message>
+        <message>
+            <source>Permission guide</source>
+            <translation>權限引導</translation>
+        </message>
+        <message>
+            <source>Report a problem</source>
+            <translation>回報問題</translation>
+        </message>
+        <message>
+            <source>Automatic sets the bandwidth from the resolution and adapts to the network. Save data uses 30 fps with a 5 Mbps video limit. The data saver switch in the top bar limits every device.</source>
+            <translation>自動模式依解析度設定頻寬，並適應網路狀況。節省流量模式使用 30 fps，視訊上限為 5 Mbps。頂端列的省流量開關會限制所有裝置的視訊位元速率。</translation>
+        </message>
+        <message>
+            <source>Picture mode</source>
+            <translation>畫面模式</translation>
+        </message>
+        <message>
+            <source>Automatic (recommended)</source>
+            <translation>自動（建議）</translation>
+        </message>
+        <message>
+            <source>Clear</source>
+            <translation>清晰優先</translation>
+        </message>
+        <message>
+            <source>Smooth</source>
+            <translation>流暢優先</translation>
+        </message>
+        <message>
+            <source>Save data</source>
+            <translation>節省流量</translation>
+        </message>
+        <message>
+            <source>Custom</source>
+            <translation>自訂</translation>
+        </message>
+        <message>
+            <source>Ctrl+Alt+Shift+X also toggles full screen during a connection.</source>
+            <translation>連線中也可以按 Ctrl+Alt+Shift+X 切換全螢幕。</translation>
+        </message>
+        <message>
+            <source>Bandwidth</source>
+            <translation>頻寬</translation>
+        </message>
+        <message>
+            <source>Automatic</source>
+            <translation>自動</translation>
+        </message>
+        <message>
+            <source>%1 Mbps</source>
+            <translation>%1 Mbps</translation>
+        </message>
+        <message>
+            <source>All streaming options</source>
+            <translation>所有串流選項</translation>
+        </message>
+    </context>
+    <context>
+        <name>SdlInputHandler</name>
+        <message>
+            <source>DeskPort — Remote keyboard · Ctrl+Alt+Shift+Z releases</source>
+            <translation>DeskPort — 遠端鍵盤 · Ctrl+Alt+Shift+Z 釋放</translation>
+        </message>
+        <message>
+            <source>DeskPort — Remote typing · system shortcuts local</source>
+            <translation>DeskPort — 遠端輸入 · 系統快捷鍵保留在本機</translation>
+        </message>
+        <message>
+            <source>DeskPort — Local keyboard · click inside to focus</source>
+            <translation>DeskPort — 本機鍵盤 · 點選畫面以控制遠端</translation>
+        </message>
+    </context>
+    <context>
+        <name>ClipboardChannel</name>
+        <message>
+            <source>Clipboard sharing stopped. Reconnect to try again.</source>
+            <translation>剪貼簿共享已停止，請重新連線後重試。</translation>
+        </message>
+        <message>
+            <source>Clipboard sharing is unavailable. Reconnect to try again; desktop control is unaffected.</source>
+            <translation>剪貼簿共享無法使用，請重新連線後重試；桌面控制不受影響。</translation>
+        </message>
+    </context>
+    <context>
+        <name>NavigableDialog</name>
+        <message>
+            <source>Close</source>
+            <translation>關閉</translation>
+        </message>
+    </context>
+    <context>
+        <name>DevicePanel</name>
+        <message>
+            <source>Remove device</source>
+            <translation>刪除裝置</translation>
+        </message>
+        <message>
+            <source>Connected</source>
+            <translation>已連線</translation>
+        </message>
+        <message>
+            <source>Checking…</source>
+            <translation>正在檢查…</translation>
+        </message>
+        <message>
+            <source>Online</source>
+            <translation>線上</translation>
+        </message>
+        <message>
+            <source>Online · access not set up</source>
+            <translation>線上 · 未設定存取</translation>
+        </message>
+        <message>
+            <source>Offline</source>
+            <translation>離線</translation>
+        </message>
+        <message>
+            <source>Device settings</source>
+            <translation>裝置設定</translation>
+        </message>
+        <message>
+            <source>Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.</source>
+            <translation>請確認 %1 上的 DeskPort 或主機正在執行，且兩台裝置能互相連線。頂列中的重新整理會再次檢查。</translation>
+        </message>
+        <message>
+            <source>Original name</source>
+            <translation>原始名稱</translation>
+        </message>
+        <message>
+            <source>System</source>
+            <translation>系統</translation>
+        </message>
+        <message>
+            <source>Unknown</source>
+            <translation>未知</translation>
+        </message>
+        <message>
+            <source>Connection</source>
+            <translation>連線方式</translation>
+        </message>
+        <message>
+            <source>DeskPort binding</source>
+            <translation>DeskPort 綁定</translation>
+        </message>
+        <message>
+            <source>Legacy pairing</source>
+            <translation>傳統配對</translation>
+        </message>
+        <message>
+            <source>Not set up</source>
+            <translation>未設定</translation>
+        </message>
+        <message>
+            <source>Address</source>
+            <translation>位址</translation>
+        </message>
+        <message>
+            <source>Technical details</source>
+            <translation>技術詳細資料</translation>
+        </message>
+        <message>
+            <source>Reconnect</source>
+            <translation>重新連線</translation>
+        </message>
+        <message>
+            <source>Toggle full screen</source>
+            <translation>切換全螢幕</translation>
+        </message>
+        <message>
+            <source>Disconnect</source>
+            <translation>中斷連線</translation>
+        </message>
+        <message>
+            <source>Change address</source>
+            <translation>變更位址</translation>
+        </message>
+        <message>
+            <source>Set alias</source>
+            <translation>設定別名</translation>
+        </message>
+        <message>
+            <source>Pair with a legacy PIN</source>
+            <translation>使用傳統 PIN 配對</translation>
+        </message>
+        <message>
+            <source>For Sunshine or other hosts without DeskPort binding.</source>
+            <translation>適用於 Sunshine 或其他不支援 DeskPort 綁定的主機。</translation>
+        </message>
+        <message>
+            <source>Move out of group</source>
+            <translation>移出群組</translation>
+        </message>
+        <message>
+            <source>Remove from list</source>
+            <translation>從清單移除</translation>
+        </message>
+    </context>
+    <context>
+        <name>HelpView</name>
+        <message>
+            <source>Manual</source>
+            <translation>手冊</translation>
+        </message>
+    </context>
+    <context>
+        <name>MainWindow</name>
+        <message>
+            <source>Disconnecting…</source>
+            <translation>正在中斷連線…</translation>
+        </message>
+    </context>
+    <context>
+        <name>Diagnostics</name>
+        <message>
+            <source>Cannot use the diagnostics directory.</source>
+            <translation>無法使用診斷目錄。</translation>
+        </message>
+        <message>
+            <source>Cannot create the diagnostics directory.</source>
+            <translation>無法建立診斷目錄。</translation>
+        </message>
+        <message>
+            <source>Cannot replace the diagnostics archive.</source>
+            <translation>無法取代診斷壓縮檔。</translation>
+        </message>
+        <message>
+            <source>Cannot write the diagnostics archive.</source>
+            <translation>無法寫入診斷壓縮檔。</translation>
+        </message>
+        <message>
+            <source>Cannot save the diagnostics archive.</source>
+            <translation>無法儲存診斷壓縮檔。</translation>
+        </message>
+        <message>
+            <source>Archive contains version information only. Enable logs and reproduce the problem to collect events.</source>
+            <translation>壓縮檔僅含版本資訊。請啟用日誌並重現問題以收集診斷事件。</translation>
+        </message>
+        <message>
+            <source>Archive ready. Review it, then drag the ZIP into your public GitHub issue. Nothing is uploaded automatically.</source>
+            <translation>壓縮檔已產生。請檢查內容，再將 ZIP 拖入公開的 GitHub Issue。不會自動上傳。</translation>
+        </message>
+        <message>
+            <source> Could not open the browser. Open github.com/keithxc/deskport/issues/new manually.</source>
+            <translation> 無法開啟瀏覽器，請手動開啟 github.com/keithxc/deskport/issues/new。</translation>
+        </message>
+        <message>
+            <source>Saved diagnostics cleared.</source>
+            <translation>已清除儲存的診斷資料。</translation>
+        </message>
+    </context>
+    <context>
+        <name>MultiSessions</name>
+        <message>
+            <source>The device binding is unavailable. Refresh the device and try again.</source>
+            <translation>裝置綁定無法使用，請重新整理裝置後再試。</translation>
+        </message>
+        <message>
+            <source>This connection would create a loop.</source>
+            <translation>此連線會造成迴圈。</translation>
+        </message>
+        <message>
+            <source>The desktop worker could not start.</source>
+            <translation>無法啟動桌面連線程序。</translation>
+        </message>
+        <message>
+            <source>The desktop worker stopped unexpectedly.</source>
+            <translation>桌面連線程序意外停止。</translation>
+        </message>
+        <message>
+            <source>The desktop worker did not respond.</source>
+            <translation>桌面連線程序沒有回應。</translation>
+        </message>
+    </context>
+    <context>
+        <name>SessionWorker</name>
+        <message>
+            <source>Another application is running on that server.</source>
+            <translation>該伺服器上正在執行其他應用程式。</translation>
+        </message>
+        <message>
+            <source>Connection failed at %1 (%2).</source>
+            <translation>連線在 %1 階段失敗（%2）。</translation>
+        </message>
+        <message>
+            <source>The device binding is unavailable.</source>
+            <translation>裝置綁定無法使用。</translation>
+        </message>
+    </context>
 </TS>

@@ -2,10 +2,13 @@
 """Check desktop catalog coverage and placeholder safety without personal state."""
 from pathlib import Path
 import re
+import subprocess
+import sys
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[1]
-languages = ("zh_CN", "zh_TW", "ja", "ko", "de", "fr", "es")
+subprocess.run([sys.executable, str(root/'scripts/sync-translations.py'), '--check'], check=True)
+languages = ("zh_CN", "zh_TW", "ja", "ko", "de", "fr", "es", "pt", "ar", "bo")
 pages = ("main", "PcView", "DeviceCard", "DevicePanel", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "HelpView", "NavigableDialog", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue", "StreamSegue")
 for language in languages:
     tree = ET.parse(root / "app/languages" / f"qml_{language}.ts")
@@ -36,4 +39,4 @@ for language in languages:
         assert translation.get("type") not in ("unfinished", "vanished", "obsolete"), (language, context, text)
         assert translation.text, (language, context, text)
         assert sorted(re.findall(r"%\d+", text)) == sorted(re.findall(r"%\d+", translation.text)), (language, context, text)
-print("PASS: seven translated desktop catalogs cover all primary pages with intact placeholders; English is the source language")
+print(f"PASS: {len(languages)} translated desktop catalogs cover all primary pages with intact placeholders; English is the source language")
