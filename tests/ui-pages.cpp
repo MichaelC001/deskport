@@ -357,7 +357,7 @@ TestPreferences {
  property int width: 2048; property int height: 1152; property int fps: 75; property int bitrateKbps: 125000
  property int windowMode: 2; property int recommendedFullScreenMode: 1; property int captureSysKeysMode: 1; property int saves: 0
  property bool smartStreaming: true; property bool framePacing: false; property bool showPerformanceOverlay: false
- property bool sharedClipboard: false; property bool showLocalCursor: true; property bool adaptiveResolution: true; property bool enableVsync: true; property bool absoluteMouseMode: true; property bool reverseScrollDirection: false
+ property bool localTextInput: false; property bool sharedClipboard: false; property bool showLocalCursor: true; property bool adaptiveResolution: true; property bool enableVsync: true; property bool absoluteMouseMode: true; property bool reverseScrollDirection: false
  property bool muteOnFocusLoss: true; property bool playAudioOnHost: false; property bool enableMdns: true; property bool keepAwake: true
  function forDevice(id) { deviceId = id; return this }
  function save() { saves++ }
@@ -916,6 +916,15 @@ QtObject {
         QVERIFY(!section->property("visible").toBool());
         QVERIFY(QMetaObject::invokeMethod(advanced,"clicked"));
         QVERIFY(page->property("advancedOpen").toBool());
+        auto ime = page->findChild<QObject*>("localTextInputSwitch"); QVERIFY(ime);
+        auto systemKeys = page->findChild<QObject*>("systemKeysChoice"); QVERIFY(systemKeys);
+        const int savedKeysMode = prefs->property("captureSysKeysMode").toInt();
+        QVERIFY(QMetaObject::invokeMethod(ime, "switched", Q_ARG(bool, true)));
+        QVERIFY(prefs->property("localTextInput").toBool());
+        QVERIFY(!systemKeys->property("enabled").toBool());
+        QCOMPARE(prefs->property("captureSysKeysMode").toInt(), savedKeysMode);
+        QVERIFY(QMetaObject::invokeMethod(ime, "switched", Q_ARG(bool, false)));
+        QVERIFY(systemKeys->property("enabled").toBool());
     }
     void managedSessionNavigation() {
         TestComputers::resetLayout();

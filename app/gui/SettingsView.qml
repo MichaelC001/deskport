@@ -1082,7 +1082,7 @@ Flickable {
                         hoverEnabled: true
                         text: qsTr("Capture system keyboard shortcuts")
                         font.pointSize: 12
-                        enabled: SystemProperties.hasDesktopEnvironment
+                        enabled: SystemProperties.hasDesktopEnvironment && !preferences.localTextInput
                         checked: preferences.captureSysKeysMode !== StreamingPreferences.CSK_OFF || !SystemProperties.hasDesktopEnvironment
 
                         ToolTip.delay: 1000

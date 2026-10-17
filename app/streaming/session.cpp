@@ -2783,6 +2783,14 @@ void Session::execInternal()
             continue;
         }
 #endif
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+        // EXT owns heap text, even when a hidden viewer discards the event.
+        if (event.type == SDL_TEXTEDITING_EXT) {
+            if (m_ViewerRequested) m_InputHandler->handleTextEvent(event);
+            SDL_free(event.editExt.text);
+            continue;
+        }
+#endif
         // Background viewers keep media/transport alive but cannot forward
         // physical input, including globally delivered controller events.
         if (!m_ViewerRequested && ((event.type >= SDL_KEYDOWN && event.type <= SDL_MOUSEWHEEL) ||
@@ -2792,14 +2800,6 @@ void Session::execInternal()
             || (event.type >= SDL_CONTROLLERTOUCHPADDOWN && event.type <= SDL_CONTROLLERSENSORUPDATE)
 #endif
             )) continue;
-#if SDL_VERSION_ATLEAST(2, 0, 22)
-        // EXT owns heap text, even when a hidden viewer discards the event.
-        if (event.type == SDL_TEXTEDITING_EXT) {
-            if (m_ViewerRequested) m_InputHandler->handleTextEvent(event);
-            SDL_free(event.editExt.text);
-            continue;
-        }
-#endif
         switch (event.type) {
         case SDL_TEXTINPUT:
         case SDL_TEXTEDITING:

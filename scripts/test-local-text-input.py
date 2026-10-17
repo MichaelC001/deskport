@@ -19,6 +19,8 @@ TARGET = local-text-input
 SOURCES = "{root}/tests/local-text-input.cpp" "{root}/app/streaming/video/overlaymanager.cpp"
 INCLUDEPATH += "{root}/app"
 macx {{
+ OBJECTIVE_SOURCES += "{root}/tests/local-text-input-macos.mm"
+ QMAKE_OBJECTIVE_CFLAGS += -F"{root}/libs/mac/Frameworks"
  QMAKE_CXXFLAGS += -F"{root}/libs/mac/Frameworks"
  LIBS += -F"{root}/libs/mac/Frameworks" -framework SDL2 -framework SDL2_ttf
  INCLUDEPATH += "{root}/libs/mac/Frameworks/SDL2.framework/Headers" "{root}/libs/mac/Frameworks/SDL2_ttf.framework/Headers"

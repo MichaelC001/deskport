@@ -24,6 +24,9 @@ public:
         active = active && m_Enabled;
         if (active == m_Active) return;
         if (active) {
+            // SDL2 may start enabled before a focused window exists. Force the
+            // native backend to attach its input context to this viewer now.
+            SDL_StopTextInput();
             discardQueuedText();
             SDL_SetHint("SDL_IME_INTERNAL_EDITING", "0");
             SDL_SetHint("SDL_IME_SHOW_UI", "1");
@@ -96,6 +99,7 @@ public:
             if (printable && !command) m_Armed = true;
         }
         if (consume) m_Consumed.insert(scan);
+        else m_Consumed.remove(scan);
         return consume;
     }
 private:

@@ -10,6 +10,10 @@
 // OverlayManager's diagnostic font is irrelevant to native text font fallback.
 QByteArray Path::readDataFile(QString) { return {}; }
 
+#ifdef Q_OS_MACOS
+void activateNativeTextTest(SDL_Window* window);
+#endif
+
 static SDL_KeyboardEvent key(SDL_Scancode scan, SDL_Keymod mod=KMOD_NONE, bool down=true) {
     SDL_KeyboardEvent event {};
     event.type = down ? SDL_KEYDOWN : SDL_KEYUP;
@@ -24,6 +28,9 @@ int main(int argc, char** argv) {
     auto window = SDL_CreateWindow("DeskPort isolated local IME test — synthetic text only", 100, 100, 960, 480,
                                    native ? SDL_WINDOW_SHOWN : SDL_WINDOW_HIDDEN);
     assert(window);
+#ifdef Q_OS_MACOS
+    if (native) { activateNativeTextTest(window); SDL_PumpEvents(); }
+#endif
     const Uint32 id = SDL_GetWindowID(window);
     std::vector<QByteArray> commits;
     QString preedit;
@@ -57,6 +64,8 @@ int main(int argc, char** argv) {
             assert(!input.consumeKey(key(scan)));
         assert(input.consumeKey(key(SDL_SCANCODE_LSHIFT)));
         assert(!input.consumeKey(key(SDL_SCANCODE_C, KMOD_CTRL)));
+        assert(!input.consumeKey(key(SDL_SCANCODE_A, KMOD_CTRL)));
+        assert(!input.consumeKey(key(SDL_SCANCODE_A, KMOD_CTRL, false)));
         const auto count = commits.size(); commit("c"); assert(commits.size() == count);
         assert(input.consumeKey(key(SDL_SCANCODE_SPACE, KMOD_CTRL)));
         assert(input.consumeKey(key(SDL_SCANCODE_SPACE, KMOD_GUI)));
@@ -83,14 +92,28 @@ int main(int argc, char** argv) {
         auto renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
         assert(renderer);
         bool running = true;
+        SDL_Texture* preeditTexture = nullptr;
         const Uint32 started = SDL_GetTicks();
         while (running && SDL_GetTicks()-started < 120000) {
+            QFile command(qEnvironmentVariable("DESKPORT_IME_TEST_COMMAND"));
+            if (!command.fileName().isEmpty() && command.open(QIODevice::ReadWrite)) {
+                const auto action = command.readAll().trimmed();
+                command.resize(0); command.close();
+                if (action == "quit") { running = false; continue; }
+                if (action == "recall") {
+                    SDL_ShowWindow(window); SDL_RaiseWindow(window);
+#ifdef Q_OS_MACOS
+                    activateNativeTextTest(window);
+#endif
+                }
+            }
             SDL_Event e;
             if (!SDL_WaitEventTimeout(&e, 50)) continue;
+            log << "event " << e.type << " active " << SDL_IsTextInputActive() << " window " << SDL_GetWindowFlags(window) << "\n";
             if (e.type == SDL_QUIT) running = false;
             else if (e.type == SDL_WINDOWEVENT) {
                 if (e.window.event == SDL_WINDOWEVENT_FOCUS_LOST || e.window.event == SDL_WINDOWEVENT_HIDDEN) input.setActive(false);
-                if (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) input.setActive(true);
+                if (e.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) { input.setActive(false); input.setActive(true); }
             } else if (e.type == SDL_TEXTEDITING) input.editing(e.edit.windowID,e.edit.timestamp,e.edit.text,e.edit.start,e.edit.length,id);
 #if SDL_VERSION_ATLEAST(2, 0, 22)
             else if (e.type == SDL_TEXTEDITING_EXT) { input.editing(e.editExt.windowID,e.editExt.timestamp,e.editExt.text,e.editExt.start,e.editExt.length,id); SDL_free(e.editExt.text); }
@@ -106,12 +129,17 @@ int main(int argc, char** argv) {
             SDL_SetRenderDrawColor(renderer, 24,26,30,255); SDL_RenderClear(renderer);
             auto surface = overlay.getUpdatedOverlaySurface(Overlay::OverlayTextInput);
             if (surface) {
-                auto texture = SDL_CreateTextureFromSurface(renderer,surface); SDL_Rect rect{0,0,surface->w,surface->h};
-                SDL_RenderCopy(renderer,texture,nullptr,&rect); SDL_DestroyTexture(texture); SDL_FreeSurface(surface);
+                if (preeditTexture) SDL_DestroyTexture(preeditTexture);
+                preeditTexture = SDL_CreateTextureFromSurface(renderer, surface);
+                SDL_FreeSurface(surface);
             }
+            if (preedit.isEmpty() && preeditTexture) { SDL_DestroyTexture(preeditTexture); preeditTexture = nullptr; }
+            if (preeditTexture) { SDL_Rect rect{0,0,960,44}; SDL_RenderCopy(renderer,preeditTexture,nullptr,&rect); }
             SDL_RenderPresent(renderer);
         }
-        input.setActive(false); SDL_DestroyRenderer(renderer);
+        input.setActive(false);
+        if (preeditTexture) SDL_DestroyTexture(preeditTexture);
+        SDL_DestroyRenderer(renderer);
     }
     input.setActive(false); SDL_DestroyWindow(window); SDL_Quit();
 }

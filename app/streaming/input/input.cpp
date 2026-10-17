@@ -273,6 +273,7 @@ SdlInputHandler::~SdlInputHandler()
 
 void SdlInputHandler::setWindow(SDL_Window *window)
 {
+    m_LocalTextInput.setActive(false);
     m_Window = window;
 }
 
@@ -352,6 +353,8 @@ void SdlInputHandler::notifyFocusLost()
 
 void SdlInputHandler::notifyFocusGained()
 {
+    // Reattach Cocoa's field editor after SDL establishes keyboard focus.
+    m_LocalTextInput.setActive(false);
     // Desktop mode only routes input while the pointer is over the picture,
     // so a viewer that comes back into focus (recalled from the tray, a new
     // connection, Alt+Tab) takes input again without a click that would be
