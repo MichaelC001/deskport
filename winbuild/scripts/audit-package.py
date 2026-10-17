@@ -64,7 +64,7 @@ for p in [exe, uninstaller]+sorted(extracted.rglob('*')):
             if end>=0: (audit/'application-manifest.xml').write_bytes(data[start:end+len(b'</assembly>')])
 (audit/'pe-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
 if '-full' in suffix:
-    expected={'DeskPort.exe','deskport-maintenance.exe','deskport-driver-setup.exe','host/deskport-host.exe','host/deskport-display.exe','host/deskport-display-recovery.exe','driver/MttVDD.dll'}
+    expected={'DeskPort.exe','deskport-maintenance.exe','deskport-driver-setup.exe','host/deskport-host.exe','host/deskport-display.exe','host/deskport-display-recovery.exe','host/deskport-display-service.exe','driver/MttVDD.dll'}
     actual={str(p.relative_to(extracted)) for p in extracted.rglob('*') if p.is_file() and p.read_bytes()[:2]==b'MZ' and '$PLUGINSDIR' not in p.parts}
     assert actual==expected,(actual,expected)
     for entry in summary:

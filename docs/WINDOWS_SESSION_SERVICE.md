@@ -1,5 +1,9 @@
 # Windows session-service boundary probe
 
+The installed display-only broker is described separately in
+[WINDOWS_DISPLAY_SERVICE.md](WINDOWS_DISPLAY_SERVICE.md). This original probe
+remains development-only; its historical tests are not native broker acceptance.
+
 This is development infrastructure, not a secure-desktop hosting feature. It is
 deliberately excluded from the installer and does not start Sunshine, parse host
 configuration, inject input, or accept executable paths or command lines.

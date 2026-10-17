@@ -25,6 +25,12 @@ try {
     & (Join-Path $PSScriptRoot 'windows-cli.ps1') -Executable $exe -Version $Version
     $registered = Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\DeskPort'
     if ($registered.DisplayVersion -ne $Version) { throw 'Installed version mismatch' }
+    $service = Get-CimInstance Win32_Service -Filter "Name='DeskPortDisplayService'"
+    if (!$service -or $service.StartMode -ne 'Auto' -or $service.State -ne 'Running' -or
+        $service.StartName -ne 'LocalSystem' -or
+        $service.PathName -ne "`"$install\host\deskport-display-service.exe`" --service") {
+        throw 'Installed display service identity/startup mismatch'
+    }
     foreach ($round in 1..3) {
         if ($round -eq 1) { Start-Process $exe -ArgumentList '--share' }
         else { Start-Process $exe }
@@ -53,7 +59,7 @@ try {
         if (Get-MpThreatDetection | Where-Object { $_.InitialDetectionTime -ge $started }) {
             throw 'New Defender detection; stopping without restoring or excluding anything'
         }
-        foreach ($name in 'DeskPort','deskport-host','deskport-display','deskport-display-recovery') {
+        foreach ($name in 'DeskPort','deskport-host','deskport-display','deskport-display-recovery','deskport-display-service') {
             if (!(Get-Process $name -ErrorAction SilentlyContinue)) { throw "Missing process: $name" }
         }
         $response = Invoke-WebRequest "http://127.0.0.1:$port/serverinfo" -UseBasicParsing -TimeoutSec 3

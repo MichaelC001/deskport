@@ -37,15 +37,20 @@ without forced deletion protects packages used by other installed devices.
 distinguishes virtual clone support from same-adapter hardware clone. Topology
 support must be tested against the actual adapters, not inferred from an OS name.
 
-The owned VDD is disabled at rest. Sharing requests normal UAC consent for an
-independent recovery lease. It snapshots the active CCD topology to an
+The owned VDD is disabled at rest. The installed `DeskPortDisplayService` starts
+automatically at boot and authorizes a signed-in console user's installed display
+helper over a local-only pipe. Sharing does not invoke `runas` or fall back to UAC
+when the service is absent. The service launches an independent SYSTEM recovery
+lease in that console session. It snapshots the active CCD topology to an
 administrator-owned recovery directory, then enables only the registered owned
 device. EOF, helper termination and Windows session-end notifications restore
-the baseline; a separately owned startup task disables a stale owned device after
+the baseline. Broker stop/death and console-session changes also end the lease;
+a separately owned startup task disables a stale owned device after
 a reboot. The installer removes that exact task on uninstall. Native helper
 normal/failure/forced-exit tests and task create/update/run/remove tests passed in
-the VM; actual shutdown/reboot acceptance remains untested. No automatic retry
-occurs after display authorization failure.
+the VM for the earlier elevated implementation. The new broker still requires
+native acceptance; see [the display service](../../docs/WINDOWS_DISPLAY_SERVICE.md).
+No automatic retry occurs after display authorization failure.
 
 Windows host processes run from their bundled asset directory. Configuration,
 identity, credentials and logs remain explicit absolute paths in private state.
@@ -70,7 +75,7 @@ administrator-owned XML configuration. The guardian accepts only bounded numeric
 dimensions over a per-lease event/mapping channel, retains at most one generated
 mode, and restarts only the registered owned adapter through short-lived workers.
 No vendor-global command pipe, certificate import or signing-policy change is used.
-The ordinary UAC lease also covers subsequent resizes in that sharing session.
+The installed service lease also covers subsequent resizes in that sharing session.
 
 The helper advertises continuous dimensions for its owned VDD, verifies the exact
 applied dimensions, and publishes the current capture output atomically. The host

@@ -23,6 +23,7 @@
 #include <vector>
 #include <algorithm>
 #include "display-request.h"
+#include "display-service-ipc.h"
 #include "text-caret.h"
 
 namespace {
@@ -68,26 +69,29 @@ struct DisplayLease {
     HANDLE request=nullptr, completed=nullptr, mapping=nullptr;
     DisplayModeRequest* modeRequest=nullptr;
     bool start() {
-        std::cerr << "Display lease: requesting Windows authorization" << std::endl;
+        std::cerr << "Display lease: requesting installed display service" << std::endl;
         const auto nonce=QUuid::createUuid().toString(QUuid::WithoutBraces);
         const auto prefix=QStringLiteral("Local\\DeskPort.Display.")+nonce;
-        ready=CreateEventW(nullptr,TRUE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".ready").utf16()));
-        release=CreateEventW(nullptr,TRUE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".release").utf16()));
-        request=CreateEventW(nullptr,FALSE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".request").utf16()));
-        completed=CreateEventW(nullptr,FALSE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".completed").utf16()));
-        mapping=CreateFileMappingW(INVALID_HANDLE_VALUE,nullptr,PAGE_READWRITE,0,sizeof(DisplayModeRequest),reinterpret_cast<LPCWSTR>((prefix+".mode").utf16()));
+        deskport::display_service::Handle token;
+        if(!OpenProcessToken(GetCurrentProcess(),TOKEN_QUERY,&token.h)){error="Cannot identify the console logon";return false;}
+        const auto sid=deskport::display_service::logonSid(token);
+        PSECURITY_DESCRIPTOR descriptor=nullptr;
+        const auto sddl=L"D:P(A;;GA;;;SY)(A;;GA;;;"+sid+L")S:(ML;;NW;;;ME)";
+        if(sid.empty()||!ConvertStringSecurityDescriptorToSecurityDescriptorW(sddl.c_str(),SDDL_REVISION_1,&descriptor,nullptr)){
+            error="Cannot protect display lease objects";return false;
+        }
+        SECURITY_ATTRIBUTES security{sizeof(security),descriptor,FALSE};
+        ready=CreateEventW(&security,TRUE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".ready").utf16()));
+        release=CreateEventW(&security,TRUE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".release").utf16()));
+        request=CreateEventW(&security,FALSE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".request").utf16()));
+        completed=CreateEventW(&security,FALSE,FALSE,reinterpret_cast<LPCWSTR>((prefix+".completed").utf16()));
+        mapping=CreateFileMappingW(INVALID_HANDLE_VALUE,&security,PAGE_READWRITE,0,sizeof(DisplayModeRequest),reinterpret_cast<LPCWSTR>((prefix+".mode").utf16()));
+        LocalFree(descriptor);
         if(mapping)modeRequest=static_cast<DisplayModeRequest*>(MapViewOfFile(mapping,FILE_MAP_ALL_ACCESS,0,0,sizeof(DisplayModeRequest)));
         if(!ready||!release||!request||!completed||!modeRequest){error="Cannot create display recovery events";return false;}
-        const auto executable=QDir::toNativeSeparators(QCoreApplication::applicationDirPath()+"/deskport-display-recovery.exe");
-        const auto arguments=QStringLiteral("lease %1 %2").arg(GetCurrentProcessId()).arg(nonce);
-        const auto com=CoInitializeEx(nullptr,COINIT_APARTMENTTHREADED|COINIT_DISABLE_OLE1DDE);
-        struct ComScope { HRESULT result; ~ComScope(){if(SUCCEEDED(result))CoUninitialize();} } comScope{com};
-        SHELLEXECUTEINFOW info{};info.cbSize=sizeof(info);info.fMask=SEE_MASK_NOCLOSEPROCESS|SEE_MASK_NOASYNC;
-        info.lpVerb=L"runas";info.lpFile=reinterpret_cast<LPCWSTR>(executable.utf16());
-        info.lpParameters=reinterpret_cast<LPCWSTR>(arguments.utf16());info.nShow=SW_HIDE;
-        if(!ShellExecuteExW(&info)||!info.hProcess){const auto code=GetLastError();error=QString("Windows display authorization was canceled or unavailable (error %1)").arg(code);return false;}
-        process=info.hProcess;
-        std::cerr << "Display lease: authorization returned; waiting for guard" << std::endl;
+        const auto code=deskport::display_service::acquire(nonce.toStdWString(),process);
+        if(code){error=QString("The installed DeskPort display service is unavailable or denied this session (error %1). Repair the installation; sharing was not started.").arg(code);return false;}
+        std::cerr << "Display lease: service authorized; waiting for guard" << std::endl;
         HANDLE waiting[]{ready,process};
         if(WaitForMultipleObjects(2,waiting,FALSE,15000)!=WAIT_OBJECT_0){error="Independent display recovery guard could not prepare the owned device";return false;}
         std::cerr << "Display lease: guard ready" << std::endl;

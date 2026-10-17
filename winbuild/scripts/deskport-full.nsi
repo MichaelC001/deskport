@@ -77,6 +77,7 @@ Function VerifyPayload
   IfFileExists "$INSTDIR\host\deskport-host.exe" +1 payloadMissing
   IfFileExists "$INSTDIR\host\deskport-display.exe" +1 payloadMissing
   IfFileExists "$INSTDIR\host\deskport-display-recovery.exe" +1 payloadMissing
+  IfFileExists "$INSTDIR\host\deskport-display-service.exe" +1 payloadMissing
   IfFileExists "$INSTDIR\driver\MttVDD.inf" +1 payloadMissing
   IfFileExists "$INSTDIR\driver\MttVDD.dll" +1 payloadMissing
   Push 0
@@ -91,7 +92,7 @@ Section "DeskPort" SecMain
   InitPluginsDir
   SetOutPath "$PLUGINSDIR"
   File "${PAYLOAD}\deskport-maintenance.exe"
-  ExecWait '$\"$PLUGINSDIR\deskport-maintenance.exe$\" stop $\"$INSTDIR$\"' $0
+  ExecWait '$\"$PLUGINSDIR\deskport-maintenance.exe$\" stop-installation $\"$INSTDIR$\"' $0
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "DeskPort could not close this installation safely. Close its windows and tray process, then retry." /SD IDOK
     SetErrorLevel 1
@@ -143,6 +144,13 @@ Section "DeskPort" SecMain
     SetRebootFlag true
   ${ElseIf} $0 != 0
     MessageBox MB_ICONSTOP "Windows could not install the signed DeskPort virtual display (error $0). No signing policy was changed. The installation is incomplete; the installed uninstaller can remove its files." /SD IDOK
+    SetErrorLevel 1
+    Abort
+  ${EndIf}
+
+  ExecWait '$\"$INSTDIR\deskport-maintenance.exe$\" register-display-service $\"$INSTDIR$\"' $0
+  ${If} $0 != 0
+    MessageBox MB_ICONSTOP "DeskPort could not register or start its display service (error $0). An unrelated service was not replaced. Repair or uninstall this installation." /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}
@@ -216,9 +224,15 @@ Section "Desktop shortcut" SecDesktop
 SectionEnd
 
 Section "Uninstall"
-  ExecWait '$\"$INSTDIR\deskport-maintenance.exe$\" stop $\"$INSTDIR$\"' $0
+  ExecWait '$\"$INSTDIR\deskport-maintenance.exe$\" stop-installation $\"$INSTDIR$\"' $0
   ${If} $0 != 0
     MessageBox MB_ICONSTOP "Close this DeskPort installation before uninstalling." /SD IDOK
+    SetErrorLevel 1
+    Abort
+  ${EndIf}
+  ExecWait '$\"$INSTDIR\deskport-maintenance.exe$\" remove-display-service $\"$INSTDIR$\"' $0
+  ${If} $0 != 0
+    MessageBox MB_ICONSTOP "DeskPort could not safely remove its display service (error $0). Its files were retained." /SD IDOK
     SetErrorLevel 1
     Abort
   ${EndIf}

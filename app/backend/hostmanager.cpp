@@ -272,8 +272,8 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 }
 #endif
 #ifdef Q_OS_WIN
-                // Display setup requires interactive authorization. Retrying a
-                // denied or failed lease would repeatedly raise UAC dialogs.
+                // A missing/denied installed display broker needs repair or an
+                // explicit retry. Do not repeatedly request a failed lease.
                 m_DesiredSharing = false;
                 m_RecoveryTimer.stop();
                 if (!m_Isolated) QSettings().setValue("host/shareOnLaunch", false);
@@ -739,7 +739,7 @@ void HostManager::start(int width, int height) {
 #endif
         }
     }
-    // Windows may show normal UAC consent for the owned display lease.
+    // Leave time for the installed Windows broker and owned device preparation.
 #ifdef Q_OS_WIN
     constexpr int displayStartupTimeout = 60000;
 #else
@@ -748,8 +748,8 @@ void HostManager::start(int width, int height) {
     QTimer::singleShot(displayStartupTimeout, this, [this, generation] {
         if (m_Starting && m_Generation == generation) {
 #ifdef Q_OS_WIN
-            // A timeout may be unanswered UAC, not a transient media error.
-            // Retrying would repeatedly summon an administrative prompt.
+            // A broker/device timeout is not a transient media error. Stop
+            // here instead of repeatedly requesting privileged display work.
             m_DesiredSharing = false;
             m_RecoveryTimer.stop();
             if (!m_Isolated) QSettings().setValue("host/shareOnLaunch", false);

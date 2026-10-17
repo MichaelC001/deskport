@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <restartmanager.h>
 #include "recovery-task.h"
+#include "display-service-install.h"
 #include <string>
 #include <iostream>
 #include <vector>
@@ -19,6 +20,8 @@ static std::wstring quote(const std::wstring& value) {
     result.append(slashes*2,L'\\'); return result+L"\"";
 }
 int wmain(int argc, wchar_t** argv) {
+    if(argc==3&&std::wstring(argv[1])==L"register-display-service")return int(deskport::display_service::installService(argv[2],L"register"));
+    if(argc==3&&std::wstring(argv[1])==L"remove-display-service")return int(deskport::display_service::installService(argv[2],L"remove"));
     if(argc==3&&(std::wstring(argv[1])==L"register-recovery"||std::wstring(argv[1])==L"remove-recovery"))return int(recoveryTask(argv[2],std::wstring(argv[1])==L"remove-recovery"));
     if (argc >= 4 && std::wstring(argv[1]) == L"relaunch") {
         const DWORD pid=wcstoul(argv[2],nullptr,10);
@@ -36,7 +39,8 @@ int wmain(int argc, wchar_t** argv) {
         if (!CreateProcessW(argv[3],command.data(),nullptr,nullptr,FALSE,0,nullptr,nullptr,&startup,&child)) return int(GetLastError());
         CloseHandle(child.hThread); CloseHandle(child.hProcess); return 0;
     }
-    if (argc != 3 || std::wstring(argv[1]) != L"stop") return 2;
+    const bool installation=argc==3&&std::wstring(argv[1])==L"stop-installation";
+    if (argc != 3 || (!installation&&std::wstring(argv[1]) != L"stop")) return 2;
     std::wstring root = argv[2];
     if (root.empty() || root.find(L'"') != std::wstring::npos) return 2;
     DWORD session{}; WCHAR key[CCH_RM_SESSION_KEY + 1]{};
@@ -53,13 +57,18 @@ int wmain(int argc, wchar_t** argv) {
     if (status == ERROR_SUCCESS) status = RmShutdown(session, 0, nullptr);
     std::cout << "Restart Manager shutdown result: " << status << std::endl;
     if (status == ERROR_SUCCESS || status == ERROR_FAIL_SHUTDOWN) {
+        if(installation) {
+            const DWORD stopped=deskport::display_service::installService(root,L"stop");
+            if(stopped){RmEndSession(session);return int(stopped);}
+        }
         // Resource registration after shutdown is not permitted in the same
         // RM session. Use a separate read-only session for final verification.
         RmEndSession(session);
         status = RmStartSession(&session, 0, key);
         if (status != ERROR_SUCCESS) return int(status);
-        LPCWSTR children[]{app.c_str(), host.c_str(), display.c_str(), recovery.c_str()};
-        status = RmRegisterResources(session, 4, children, 0, nullptr, 0, nullptr);
+        const auto service=root+L"\\host\\deskport-display-service.exe";
+        LPCWSTR children[]{app.c_str(), host.c_str(), display.c_str(), recovery.c_str(),service.c_str()};
+        status = RmRegisterResources(session, installation?5:4, children, 0, nullptr, 0, nullptr);
         if (status == ERROR_SUCCESS) {
             const ULONGLONG deadline = GetTickCount64() + 15000;
             do {

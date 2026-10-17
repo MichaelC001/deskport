@@ -1,3 +1,18 @@
+## Windows installed display broker candidate — 2026-10-17
+
+Replace per-sharing display UAC with an administrator-installed automatic SCM
+service. Its local broker authenticates the installed helper and console user/
+logon/session, then launches only the independent recovery guardian there. GUI,
+host, identity and pairing stay unprivileged. Missing/denied service requests fail
+without elevation fallback. Upgrade/uninstall stop and remove only the owned
+service. No wire/display-policy change or main merge is included.
+
+This is a signed-in display-lease candidate. Boot service startup does not provide
+a pre-login network host; lock-screen, credential/secure-desktop video and input,
+physical reboot and final installer acceptance remain deferred. See
+[WINDOWS_DISPLAY_SERVICE.md](WINDOWS_DISPLAY_SERVICE.md) for isolated checks and
+the native acceptance matrix. Building this branch activates no deployed service.
+
 ## Additional shared languages — 2026-10-17
 
 Add Italian, Russian, Indonesian, Turkish, Vietnamese, Thai, Dutch, Polish,

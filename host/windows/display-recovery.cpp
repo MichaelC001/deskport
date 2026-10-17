@@ -21,6 +21,11 @@
 #include <algorithm>
 #include "protected-path.h"
 #include "display-request.h"
+#include "display-service-ipc.h"
+
+// The broker must remain observable without owning (and killing) this guard.
+// Recovery still runs after the broker exits unexpectedly.
+static HANDLE brokerProcess=nullptr, brokerStop=nullptr;
 
 struct Screen { wchar_t name[32]; DEVMODEW mode; DWORD primary; };
 struct Snapshot {
@@ -248,17 +253,19 @@ static DWORD configureMode(DWORD width,DWORD height) {
     if(result)DeleteFileW(temporary.c_str());
     return result;
 }
-static int productionLease(DWORD pid,const std::wstring& nonce) {
+static int productionLease(DWORD pid,const std::wstring& nonce,std::uint64_t expectedCreated=0) {
     if(nonce.size()!=36||nonce.find_first_not_of(L"0123456789abcdefABCDEF-")!=std::wstring::npos)return ERROR_INVALID_PARAMETER;
     auto parent=OpenProcess(SYNCHRONIZE|PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
     if(!parent)return int(GetLastError());
+    if(expectedCreated&&deskport::display_service::creationTime(parent)!=expectedCreated){CloseHandle(parent);return ERROR_ACCESS_DENIED;}
     wchar_t own[32768]{},peer[32768]{};DWORD length=32768,os{},ps{};
     GetModuleFileNameW(nullptr,own,32768);
     if(!QueryFullProcessImageNameW(parent,0,peer,&length)||!ProcessIdToSessionId(pid,&ps)||!ProcessIdToSessionId(GetCurrentProcessId(),&os)||ps!=os){CloseHandle(parent);return ERROR_ACCESS_DENIED;}
+    if(brokerProcess&&os!=WTSGetActiveConsoleSessionId()){CloseHandle(parent);return ERROR_ACCESS_DENIED;}
     const auto expected=(std::filesystem::path(own).parent_path()/L"deskport-display.exe").wstring();
     if(_wcsicmp(expected.c_str(),peer)){CloseHandle(parent);return ERROR_ACCESS_DENIED;}
     const auto eventPrefix=L"Local\\DeskPort.Display."+nonce;
-    auto release=OpenEventW(SYNCHRONIZE,FALSE,(eventPrefix+L".release").c_str());
+    auto release=OpenEventW(SYNCHRONIZE|EVENT_MODIFY_STATE,FALSE,(eventPrefix+L".release").c_str());
     auto ready=OpenEventW(EVENT_MODIFY_STATE,FALSE,(eventPrefix+L".ready").c_str());
     if(!release||!ready){if(release)CloseHandle(release);if(ready)CloseHandle(ready);CloseHandle(parent);return ERROR_ACCESS_DENIED;}
     auto request=OpenEventW(SYNCHRONIZE,FALSE,(eventPrefix+L".request").c_str());
@@ -266,6 +273,11 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     auto mapping=OpenFileMappingW(FILE_MAP_ALL_ACCESS,FALSE,(eventPrefix+L".mode").c_str());
     auto mode=mapping?static_cast<DisplayModeRequest*>(MapViewOfFile(mapping,FILE_MAP_ALL_ACCESS,0,0,sizeof(DisplayModeRequest))):nullptr;
     if(!request||!completed||!mode){if(mode)UnmapViewOfFile(mode);if(mapping)CloseHandle(mapping);if(request)CloseHandle(request);if(completed)CloseHandle(completed);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);return ERROR_ACCESS_DENIED;}
+    const auto alive=[&]{
+        return WaitForSingleObject(parent,0)==WAIT_TIMEOUT&&WaitForSingleObject(release,0)==WAIT_TIMEOUT&&
+            (!brokerStop||WaitForSingleObject(brokerStop,0)==WAIT_TIMEOUT)&&
+            (!brokerProcess||WaitForSingleObject(brokerProcess,0)==WAIT_TIMEOUT);
+    };
     auto mutex=CreateMutexW(nullptr,TRUE,L"Global\\DeskPort.Display.RecoveryLease");
     if(!mutex||GetLastError()==ERROR_ALREADY_EXISTS){if(mutex)CloseHandle(mutex);CloseHandle(release);CloseHandle(ready);CloseHandle(parent);return ERROR_BUSY;}
     const auto directory=recoveryDirectory();
@@ -297,8 +309,7 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
     if(directory.empty()||deviceState()!=CM_PROB_DISABLED||!capture(original)||!save(snapshot,original))result=ERROR_INVALID_STATE;
     else {
         captured=true;
-        // Parent death during UAC approval must never activate the device.
-        if(WaitForSingleObject(parent,0)!=WAIT_TIMEOUT)result=ERROR_CANCELLED;
+        if(!alive())result=ERROR_CANCELLED;
         else {
             // Keep driver/class-installer handles out of the long-lived guard.
             result=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
@@ -309,19 +320,23 @@ static int productionLease(DWORD pid,const std::wstring& nonce) {
                 const auto window=CreateWindowExW(0,cls.lpszClassName,L"DeskPort display recovery",0,0,0,0,0,nullptr,nullptr,cls.hInstance,nullptr);
                 if(!window)result=int(GetLastError());
                 else {
-                    SetEvent(ready);HANDLE watched[]{parent,release,request};
+                    SetEvent(ready);HANDLE watched[]{parent,release,request,brokerStop,brokerProcess};
+                    const DWORD count=brokerStop&&brokerProcess?5:3;
                     for(;;){
-                        const auto wait=MsgWaitForMultipleObjects(3,watched,FALSE,INFINITE,QS_ALLINPUT);
+                        const auto wait=MsgWaitForMultipleObjects(count,watched,FALSE,INFINITE,QS_ALLINPUT);
+                        // Cancellation wins even if a resize event with a lower
+                        // wait index is signaled at the same time.
+                        if(!alive())break;
                         if(wait==WAIT_OBJECT_0+2) {
                             MemoryBarrier();const DWORD width=mode->width,height=mode->height;
                             auto resized=runWorker(L"resize-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce+L" "+std::to_wstring(width)+L" "+std::to_wstring(height));
-                            if(!resized&&WaitForSingleObject(parent,0)==WAIT_TIMEOUT)resized=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
+                            if(!resized&&alive())resized=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
                             else if(!resized)resized=ERROR_CANCELLED;
                             mode->result=DWORD(resized);MemoryBarrier();SetEvent(completed);
                             if(resized){result=resized;break;}
                             continue;
                         }
-                        if(wait!=WAIT_OBJECT_0+3)break;
+                        if(wait!=WAIT_OBJECT_0+count)break;
                         MSG msg{};while(PeekMessageW(&msg,nullptr,0,0,PM_REMOVE)){TranslateMessage(&msg);DispatchMessageW(&msg);}
                     }
                     DestroyWindow(window);
@@ -342,6 +357,26 @@ int wmain(int argc,wchar_t** argv) {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     if(argc<2)return 2;
     const std::wstring action=argv[1];
+    if(action==L"service-lease"&&argc==7) {
+        using namespace deskport::display_service;
+        wchar_t *parentEnd=nullptr,*brokerEnd=nullptr,*parentTimeEnd=nullptr,*brokerTimeEnd=nullptr;
+        const DWORD parent=wcstoul(argv[2],&parentEnd,10),broker=wcstoul(argv[4],&brokerEnd,10);
+        const auto parentCreated=wcstoull(argv[5],&parentTimeEnd,10),brokerCreated=wcstoull(argv[6],&brokerTimeEnd,10);
+        const std::wstring nonce=argv[3];
+        Request request;
+        if(nonce.size()!=36)return ERROR_INVALID_PARAMETER;
+        for(unsigned i=0;i<36;++i)request.nonce[i]=char16_t(nonce[i]);
+        if(!parent||*parentEnd||!broker||*brokerEnd||!parentCreated||*parentTimeEnd||!brokerCreated||*brokerTimeEnd||
+           !validRequest(request)||!isSystem())return ERROR_ACCESS_DENIED;
+        Handle process(OpenProcess(SYNCHRONIZE|PROCESS_QUERY_LIMITED_INFORMATION,FALSE,broker));
+        Handle stop(OpenEventW(SYNCHRONIZE,FALSE,stopName(nonce).c_str()));
+        if(!process.valid()||!stop.valid()||creationTime(process)!=brokerCreated||
+           !trustedServer(broker,sibling(L"deskport-display-service.exe")))return ERROR_ACCESS_DENIED;
+        brokerProcess=process;brokerStop=stop;
+        const int result=productionLease(parent,nonce,parentCreated);
+        brokerProcess=brokerStop=nullptr;
+        return result;
+    }
     if((action==L"enable-lease"&&argc==4)||(action==L"resize-lease"&&argc==6)) {
         const std::wstring nonce=argv[3];wchar_t* end=nullptr;const DWORD pid=wcstoul(argv[2],&end,10);
         if(!pid||*end||nonce.size()!=36||nonce.find_first_not_of(L"0123456789abcdefABCDEF-")!=std::wstring::npos)return ERROR_INVALID_PARAMETER;
