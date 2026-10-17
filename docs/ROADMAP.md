@@ -12,6 +12,12 @@ The desktop language picker reads the shared registry, new persisted language
 IDs are appended, and Arabic switches Qt UI direction without changing the
 stream's display/input policy. Git and Nix pins advance together.
 
+Validation: native Linux `nix build --no-link`, 27 Qt UI checks, production
+language-switch/preferences tests and 8,479 compiled translation comparisons
+passed. Native consumers passed 340 × 11 resource round trips, 351 generated
+Desktop selection checks, iOS compilation and Android resource/Java compilation.
+Core/adapter contracts and vendor integrity checks also passed.
+
 New translations are machine-assisted drafts with common terminology reviewed.
 Native-speaker review, especially Tibetan, and physical font/RTL/truncation
 acceptance remain open. Resource and protocol checks do not imply live stream,
