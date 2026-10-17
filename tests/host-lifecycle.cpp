@@ -69,7 +69,7 @@ static QAction* trayAction(const QString& title) {
 class HostLifecycle : public QObject {
     Q_OBJECT
 private slots:
-    void init() { qputenv("DESKPORT_TEST_MODE", "normal"); }
+    void init() { qputenv("DESKPORT_TEST_MODE", "normal"); qunsetenv("DESKPORT_TEST_HYPR_POLICY"); }
     void parentCrashReleasesOwnedSunshineChildren_data() {
         QTest::addColumn<QByteArray>("mode");
         QTest::addColumn<QString>("pidFile");
@@ -258,6 +258,37 @@ private slots:
         QVERIFY(!result.first().last().toString().isEmpty());
         QVERIFY(host.running()); QVERIFY(!host.changing());
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
+    void hyprlandCapabilityAndHostDeath() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux Hyprland capability adapter");
+#else
+        for (const auto& policyMode : {QByteArray("legacy"), QByteArray("0"), QByteArray("1")}) {
+            const bool policies = policyMode == "1";
+            qputenv("DESKPORT_TEST_HYPR_POLICY", policyMode);
+            QTemporaryDir state; FixtureSubreaper children(state.path());
+            HostManager host(nullptr, state.path(), false);
+            host.start(2560, 1440);
+            QTRY_VERIFY_WITH_TIMEOUT(host.running() && QFile::exists(state.filePath("host-started")), 5000);
+            QVERIFY(host.adaptiveDisplayAvailable());
+            QCOMPARE(host.displayPoliciesAvailable(), policies);
+            QSignalSpy results(&host, &HostManager::displayResized);
+            QVERIFY(host.resizeDisplay(1668, 2388, 2, 7, 0));
+            QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 5000);
+            QVERIFY2(results.at(0).at(3).toString().isEmpty(), qPrintable(QString::fromLatin1(policyMode) + ": " + results.at(0).at(3).toString()));
+            QCOMPARE(host.displayWarning().isEmpty(), policies);
+            QCOMPARE(PeerStore::read(state.filePath("last-display-request.json"))["displayPolicy"].toInt(), policyMode == "0" ? 2 : 0);
+            QCOMPARE(PeerStore::read(state.filePath("virtual-display.json"))["output"].toString(), QString("DeskPort-Hyprland"));
+            QFile config(state.filePath("sunshine.conf")); QVERIFY(config.open(QIODevice::ReadOnly));
+            QVERIFY(config.readAll().contains("capture = wlr\n"));
+            const auto pid = fixtureChildPid(state.filePath("host-pid")); QVERIFY(pid > 1);
+            QCOMPARE(::kill(pid_t(pid), SIGKILL), 0);
+            QTRY_VERIFY_WITH_TIMEOUT(QFile::exists(state.filePath("display-closed")), 5000);
+            host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+            QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(state.filePath("virtual-display.json")), 5000);
+        }
+        qunsetenv("DESKPORT_TEST_HYPR_POLICY");
+#endif
     }
     void ownedLinuxCaptureTracksModeAndCleansUp() {
 #ifndef Q_OS_LINUX

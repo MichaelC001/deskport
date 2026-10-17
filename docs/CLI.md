@@ -229,8 +229,9 @@ the user session bus and rerun installation or `systemctl --user daemon-reload`.
 
 Omarchy uses Hyprland. DeskPort integrates with the active compositor through
 `hyprctl`, creates a dedicated headless output for the remote workspace, and
-uses the host's WLR capture backend. This is an extended remote workspace;
-mirroring or disabling physical outputs is not offered by this integration.
+uses the host's WLR capture backend. The adapter supports mirror, turn-off-others and extended workspace leases
+when the compositor exposes the required snapshot information. See
+[Hyprland display leases](HYPRLAND_DISPLAY.md) for restoration and platform limits.
 The compositor and its capture protocol must be available even if the machine
 has no physical monitor. PipeWire and the session audio stack are also needed
 for audio. The CLI never edits Omarchy's compositor configuration automatically.

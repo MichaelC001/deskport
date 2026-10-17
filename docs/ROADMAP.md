@@ -3359,3 +3359,27 @@ separate development branch. Final desktop packages require their own exact
 artifact verification; earlier candidate checks do not establish final package
 or physical streaming acceptance. Publication and managed activation remain
 separate from source and package preparation.
+
+
+## Hyprland session display policies — 2026-10-17
+
+Reason: bring the existing isolated headless workspace into alignment with the
+shared mirror, turn-off-others and extension contract without persistent
+compositor edits or additional input permissions.
+
+- Use the existing shared policy IDs and native `hyprctl` Lua/text runtime APIs.
+  A detached, locked guardian journals the original topology before mutation,
+  excludes later hotplug outputs, verifies restoration and recovers after owner
+  or guardian failure. Resize and same-origin reuse retain the original snapshot.
+- Advertise policy support from verified snapshot/identity capability, retain the
+  legacy extension path with a visible warning on limited compositors, and refuse
+  unverified capture targets. Physical rules use unique serial-bearing EDID
+  selectors so replacement devices do not inherit temporary connector rules.
+  Advanced color/VRR and ambiguous physical identity retain extension.
+- Verified: 68 isolated IPC checks, pinned-core checks, selected HostManager
+  lifecycle checks and the complete Linux Nix build. The final package passed
+  Lua/text topology recovery and WLR/software H.264 probing inside private
+  Hyprland/virtual KWin sessions; owned processes and resource locks were released.
+  Physical display/client frame delivery, input, audio and latency remain untested.
+- See [Hyprland display leases](HYPRLAND_DISPLAY.md) for reproducible fixture and
+  isolated native checks, verification results and hardware/focus limitations.
