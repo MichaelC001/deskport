@@ -186,6 +186,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxGnome = object["gnome"].toBool();
+                m_LinuxGnomePolicies = m_LinuxGnome && object["displayPolicy"].toInt() == 1;
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
                 m_LinuxHyprlandPolicies = m_LinuxHyprland && object.value("displayPolicy").toBool();
                 m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
@@ -195,6 +196,14 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 }
 #endif
                 startServer(0);
+                continue;
+            }
+#endif
+#ifdef Q_OS_LINUX
+            if (object.contains("layoutWarning") && !object.contains("seq")) {
+                m_DisplayWarning = object["layoutWarning"].toString().isEmpty() ? QString() :
+                    tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.");
+                emit changed();
                 continue;
             }
 #endif
@@ -714,7 +723,7 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     // stderr is consumed by the shared diagnostics sink; stdout is the control protocol.
 #ifdef Q_OS_LINUX
-    m_LinuxOutputName.clear(); m_LinuxX11Lease.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxHyprland = false;
+    m_LinuxOutputName.clear(); m_LinuxX11Lease.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxGnomePolicies = false; m_LinuxHyprland = false;
     m_LinuxX11 = !qEnvironmentVariableIsEmpty("DESKPORT_X11_OUTPUT") ||
         (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") && qgetenv("XDG_SESSION_TYPE").toLower() != "wayland" &&
          !qEnvironmentVariableIsEmpty("DISPLAY"));
@@ -1375,7 +1384,7 @@ bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
     return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
-    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxX11 && (!m_LinuxHyprland || m_LinuxHyprlandPolicies);
+    return adaptiveDisplayAvailable() && (!m_LinuxGnome || m_LinuxGnomePolicies) && !m_LinuxX11 && (!m_LinuxHyprland || m_LinuxHyprlandPolicies);
 #else
     return adaptiveDisplayAvailable();
 #endif

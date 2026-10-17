@@ -14,7 +14,7 @@ import time
 
 helper = str(Path(sys.argv[1]).resolve())
 gnome = '--gnome' in sys.argv
-policy = int(os.environ.get('DESKPORT_TEST_POLICY', '0'))
+policy = int(os.environ.get('DESKPORT_TEST_POLICY', '2' if gnome else '0'))
 auto_permission = '--auto-permission' in sys.argv
 post_delay = '--restore-eof-post-delay' in sys.argv or '--restore-eof-post-delay-short-grace' in sys.argv
 if '--inside' not in sys.argv:

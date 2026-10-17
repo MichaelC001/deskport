@@ -30,7 +30,7 @@ if os.environ.get("DESKPORT_TEST_MODE") == "x11-unavailable":
 initial = {"displayId": 123, "outputName": "DeskPort-test", "width": int(sys.argv[1]), "height": int(sys.argv[2]), "scale": 1}
 if os.environ.get("DESKPORT_TEST_MODE") == "gnome-display": initial.update(outputName="Meta-1", pipewireNode=42, pipewireSerial="142")
 if os.environ.get("DESKPORT_TEST_MODE") == "x11-idle": initial = dict(ready=True, active=False, backend="x11", outputName="DUMMY1")
-if os.environ.get("DESKPORT_TEST_MODE") == "gnome-idle": initial = dict(ready=True, active=False, gnome=True, outputName="DeskPort-pending")
+if os.environ.get("DESKPORT_TEST_MODE") in ("gnome-idle", "gnome-policies"): initial = dict(ready=True, active=False, gnome=True, displayPolicy=int(os.environ.get("DESKPORT_TEST_MODE") == "gnome-policies"), outputName="DeskPort-pending")
 if "DESKPORT_TEST_HYPR_POLICY" in os.environ:
     initial = dict(ready=True, active=False, backend="hyprland", displayPolicy=os.environ["DESKPORT_TEST_HYPR_POLICY"] == "1", outputName="DeskPort-Hyprland")
     if os.environ["DESKPORT_TEST_HYPR_POLICY"] == "legacy": initial.pop("displayPolicy")
@@ -56,10 +56,12 @@ for line in sys.stdin:
         assert "displayPolicy" not in request
         request.update(active=request.get("session", True), outputName="DUMMY1", leaseToken="DeskPort-00000000-0000-0000-0000-000000000000")
     request["displayId"] = 123
-    if os.environ.get("DESKPORT_TEST_MODE") in ("gnome-display", "gnome-idle"):
+    if os.environ.get("DESKPORT_TEST_MODE") in ("gnome-display", "gnome-idle", "gnome-policies"):
         request["active"] = request.get("session", True)
         if request["active"]: request.update(outputName="Meta-2", pipewireNode=43, pipewireSerial="143")
     print(json.dumps(request), flush=True)
+    if os.environ.get("DESKPORT_TEST_MODE") == "gnome-policies":
+        print(json.dumps(dict(layoutWarning="Synthetic late physical layout failure" if request["width"] == 1668 else "")), flush=True)
 if os.environ.get("DESKPORT_TEST_MODE") == "stubborn-slow-display": time.sleep(1.5)
 pathlib.Path(os.environ["DESKPORT_DISPLAY_STATE_DIR"]).joinpath("display-closed").touch()
 ''')

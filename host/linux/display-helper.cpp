@@ -617,6 +617,7 @@ private:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     const auto args = app.arguments();
+    if (args.size() == 3 && args[1] == "--restore-mutter") return restoreGnomeDisplay(args[2]);
     if (args.size() == 2 && args[1] == "--guard-x11") return guardX11Display();
     if (args.size() == 3 && args[1] == "--restore-hyprland") return restoreHyprlandDisplay(args[2]);
     if (args.value(1)=="--text-caret") return runTextCaretProbe(args);
