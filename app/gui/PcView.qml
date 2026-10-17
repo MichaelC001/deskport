@@ -194,7 +194,7 @@ GridView {
                 anchors.fill: parent; anchors.margins: 16; anchors.topMargin: folderDialog.editing ? 40 : 4
                 clip: true
                 model: folderModel
-                cellWidth: width / Math.max(1, Math.floor(width / 130)); cellHeight: 146
+                cellWidth: width / Math.max(1, Math.floor(width / 130)); cellHeight: cellWidth
                 move: Transition { NumberAnimation { properties: "x,y"; duration: 150; easing.type: Easing.OutQuad } }
                 displaced: Transition { NumberAnimation { properties: "x,y"; duration: 150; easing.type: Easing.OutQuad } }
                 delegate: ItemDelegate {
@@ -329,7 +329,7 @@ GridView {
     // Integer cells avoid rounding a full row into one fewer column.
     readonly property int columns: Math.max(1, Math.floor(width / 235))
     cellWidth: Math.max(1, Math.floor(width / columns))
-    cellHeight: 268
+    cellHeight: cellWidth
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
@@ -442,7 +442,8 @@ GridView {
         opacity: model.isAdd && pcGrid.arranging ? 0 : 1
         enabled: !(model.isAdd && pcGrid.arranging)
         width: pcGrid.cellWidth - 12; height: pcGrid.cellHeight - 12;
-        padding: 0
+        // Material supplies vertical padding independently of the general padding.
+        padding: 0; topPadding: 0; bottomPadding: 0; leftPadding: 0; rightPadding: 0
         background: Item {}
         grid: pcGrid
         Accessible.name: model.isAdd ? qsTr("Add a device") : model.name

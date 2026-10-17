@@ -1300,7 +1300,11 @@ QtObject {
             for(int i=0; i<columns+1; ++i) {
                 auto item=findVisual(gridItem,"device-"+resizeModel->devices[i]); QVERIFY(item);
                 QVERIFY2(std::abs(item->x()-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
-                QVERIFY2(std::abs(item->y()-(i/columns)*268)<1.0,"card must occupy its expected row during resize");
+                QVERIFY2(std::abs(item->y()-(i/columns)*cell)<1.0,"card must occupy its expected row during resize");
+                QCOMPARE(item->width(), item->height());
+                auto surface=qobject_cast<QQuickItem*>(item->property("contentItem").value<QObject*>()); QVERIFY(surface);
+                QCOMPARE(surface->width(), surface->height());
+                QCOMPARE(surface->width(), item->width());
                 QVERIFY(item->isVisible());
             }
         }
