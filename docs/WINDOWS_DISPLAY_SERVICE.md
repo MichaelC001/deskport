@@ -56,6 +56,11 @@ profile and PATH values are never inherited. Native testing caught an initial
 minimal-environment failure before any device mutation; the environment regression
 covers relocated Windows and common-data directories.
 
+Repeated native adapter recreation also exposed a successful GDI query returning
+a detached 0x0 mode. The helper now uses the same enumerated-mode fallback on
+recreation as at initial startup, preferring the negotiated dimensions before
+positioning the owned output. It still verifies and restores the physical layout.
+
 Existing bounded dimensions, exact owned-device identity, protected journals and
 topology verification remain authoritative. Helper death/EOF, broker stop/death,
 console-session change and session end release the lease and attempt restoration.

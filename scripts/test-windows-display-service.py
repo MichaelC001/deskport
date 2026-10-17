@@ -54,6 +54,42 @@ subprocess.run([str(binary)], check=True)
 assert recovery.index('if(!alive())break;') < recovery.index('if(wait==WAIT_OBJECT_0+2)')
 print('PASS production guardian cancellation priority and no re-enable after parent/release/broker stop/death')
 
+# Windows can return a successful but detached 0x0 registry mode after adapter
+# recreation. Exercise the production enumeration fallback with that fixture.
+helper = (root / 'host/windows/display-helper.cpp').read_text()
+listed = helper[helper.index('bool listedMode('):helper.index('bool writeState(')]
+unit = out / 'listed-mode.cpp'
+unit.write_text(r'''
+#include <cassert>
+#include <cstdint>
+#include <vector>
+using DWORD=std::uint32_t;using LPCWSTR=const wchar_t*;
+struct DEVMODEW { DWORD dmSize=0,dmPelsWidth=0,dmPelsHeight=0,dmBitsPerPel=0; };
+std::vector<DEVMODEW> modes;
+bool EnumDisplaySettingsExW(LPCWSTR,DWORD index,DEVMODEW* mode,DWORD){
+ if(index>=modes.size())return false;
+ assert(mode->dmSize==sizeof(*mode));*mode=modes[index];return true;
+}
+''' + listed + r'''
+int main(){
+ DEVMODEW selected{};
+ assert(!listedMode(L"fixture",selected,1308,756));
+ modes={{0,0,0,32},{0,800,600,32},{0,1308,756,32},{0,1920,1080,32}};
+ assert(listedMode(L"fixture",selected,1308,756));
+ assert(selected.dmPelsWidth==1308&&selected.dmPelsHeight==756);
+ selected={};assert(listedMode(L"fixture",selected,1920,1080));
+ assert(selected.dmPelsWidth==1920&&selected.dmPelsHeight==1080);
+ modes={{0,0,0,32},{0,640,0,32},{0,640,480,0}};selected={};
+ assert(!listedMode(L"fixture",selected,1308,756));
+}
+''')
+binary = out / 'listed-mode'
+subprocess.run([os.environ.get('CXX', 'c++'), '-std=c++17', '-Wall', '-Wextra', '-Werror',
+                str(unit), '-o', str(binary)], check=True)
+subprocess.run([str(binary)], check=True)
+assert 'listedMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))' in helper
+print('PASS detached 0x0 mode fallback for initial and recreated owned displays')
+
 # These are packaging contract gates, not an emulation of SCM or native capture.
 installer = (root / 'winbuild/scripts/deskport-full.nsi').read_text()
 assert installer.count('register-display-service ') == 1
@@ -64,7 +100,6 @@ assert installer.index('remove-display-service ') < installer.index('RMDir /r "$
 assert 'host\\deskport-display-service.exe' in installer
 for name in ['package-full.sh', 'audit-package.py', 'build-maintenance.sh', 'export-full-materials.py']:
     assert 'deskport-display-service.exe' in (root / 'winbuild/scripts' / name).read_text(), name
-helper = (root / 'host/windows/display-helper.cpp').read_text()
 assert 'display_service::acquire(' in helper
 assert 'ShellExecuteEx' not in helper and 'L"runas"' not in helper
 assert 'FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION' in (root / 'host/windows/display-service-ipc.h').read_text()

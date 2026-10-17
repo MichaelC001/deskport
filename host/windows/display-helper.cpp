@@ -129,6 +129,20 @@ bool current(DEVMODEW& mode) {
     mode = {}; mode.dmSize = sizeof(mode);
     return EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), ENUM_CURRENT_SETTINGS, &mode, 0);
 }
+// A recreated indirect display can report a successful 0x0 current/registry
+// query while it is detached. Only position it with a real enumerated mode.
+bool listedMode(LPCWSTR name, DEVMODEW& listed, DWORD width, DWORD height) {
+    bool found = false;
+    for (DWORD index = 0; index < 4096; ++index) {
+        DEVMODEW mode{}; mode.dmSize = sizeof(mode);
+        if (!EnumDisplaySettingsExW(name, index, &mode, 0)) break;
+        if (!mode.dmPelsWidth || !mode.dmPelsHeight || !mode.dmBitsPerPel) continue;
+        if (!found || (mode.dmPelsWidth == width && mode.dmPelsHeight == height && mode.dmBitsPerPel >= listed.dmBitsPerPel)) {
+            listed = mode; found = true;
+        }
+    }
+    return found;
+}
 bool writeState(bool pending) {
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) return false;
@@ -584,15 +598,7 @@ int main(int argc, char** argv) {
     // the session sets its own size afterwards.
     if (privateVirtual && (!original.dmPelsWidth || !original.dmPelsHeight)) {
         DEVMODEW listed{}; listed.dmSize = sizeof(listed);
-        bool found = false;
-        for (DWORD index = 0; index < 4096; ++index) {
-            DEVMODEW mode{}; mode.dmSize = sizeof(mode);
-            if (!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), index, &mode, 0)) break;
-            if (!found || (mode.dmPelsWidth == 1920 && mode.dmPelsHeight == 1080 && mode.dmBitsPerPel >= listed.dmBitsPerPel)) {
-                listed = mode; found = true;
-            }
-        }
-        if (!found) { send({{"error", "The virtual display lists no display modes"}}); return 1; }
+        if (!listedMode(reinterpret_cast<LPCWSTR>(output.utf16()), listed, 1920, 1080)) { send({{"error", "The virtual display lists no display modes"}}); return 1; }
         std::cerr << "Display lease: owned output had no saved mode; starting at "
                   << listed.dmPelsWidth << "x" << listed.dmPelsHeight << std::endl;
         original = listed;
@@ -736,6 +742,10 @@ int main(int argc, char** argv) {
                 }
                 DEVMODEW baseline{};baseline.dmSize=sizeof(baseline);
                 if(output.isEmpty()||(!current(baseline)&&!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),ENUM_REGISTRY_SETTINGS,&baseline,0))) {send({{"seq",seq},{"error","The recreated virtual display is unavailable"}});break;}
+                if((!baseline.dmPelsWidth||!baseline.dmPelsHeight)&&
+                   !listedMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))) {
+                    send({{"seq",seq},{"error","The recreated virtual display lists no display modes"}});break;
+                }
                 baseline.dmPosition=original.dmPosition;
                 baseline.dmFields|=DM_POSITION;
                 bool positioned=false;
