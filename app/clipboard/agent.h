@@ -38,6 +38,7 @@ private:
     Sender m_Send;
     QTimer m_Timer;
     qint64 m_Seen = -1, m_LocalRevision = -1;
+    QString m_NativeNotice;
     QString m_LocalId, m_RemoteId, m_Kind, m_ImageMime;
     QByteArray m_Image;
     QJsonArray m_Files;
@@ -47,7 +48,7 @@ private:
     QHash<QString, QByteArray> m_Cache;
     QHash<QString, QJsonObject> m_Replies;
     std::unique_ptr<QTemporaryDir> m_Temporary;
-    bool m_Stopped = false, m_Busy = false, m_Serving = false;
+    bool m_Stopped = false, m_Busy = false, m_Serving = false, m_Observing = false;
     QEventLoop* m_WaitLoop = nullptr;
     int m_Request = 0;
     bool m_Authoritative = false, m_OfferInFlight = false, m_QueuedOffer = false;

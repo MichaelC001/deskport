@@ -24,6 +24,38 @@ The packaged host encoded software H.264 at 1280×720, 1668×2388 and recreated
 GUI or VM was used. Hardware, full client transport, input/seat alignment,
 audio and clipboard remain unverified.
 
+## Wayland clipboard fallback candidate — 2026-10-17
+
+Add wlr-data-control v1/v2 behind the preferred ext-data-control provider, then
+an asynchronous Clipboard portal fallback with explicit clipboard-only consent.
+The helper never requests input/screen access, installs GNOME extensions or reads
+the initial selection. Partial MIME remains partial, file/image data remains lazy,
+and GNOME file-manager copy MIME adapts to the existing URI/file contract.
+Selection replacement, queued callbacks, pipe I/O, permission/session revocation
+and helper EOF cancel stale work; obsolete offers cannot clear a newer owner.
+Unfocused operation remains supported. Explicit hide/control-center transitions
+retain the existing clipboard-channel closure; recall starts a fresh baseline
+and may require portal consent again. Windows/macOS native providers and shared
+v2 wire/core pins are unchanged.
+See [clipboard behavior and isolated checks](CLIPBOARD.md).
+
+Validation: 19 private-bus portal checks, 8 offscreen demand checks, core/pin
+regressions, the native Nix package and packaged-helper smoke pass. Actual
+compiler processes use CPUs 0–3, nice 15 and four jobs through an acceptance-only
+builder hook. Ubuntu 26.04 / GNOME 50.1 (no ext/wlr) passes the automatic portal
+path with granted `devices=0`; its Share-disabled UI requires the documented
+interaction-switch workaround. Omarchy 4.0.4 / Hyprland 0.56.2 passes automatic
+ext v1 and forced wlr v2. Each native mode tests two connections, 100 Unicode
+copies, lazy image/URI reads, production v2 PNG/directories/empty/chunked files,
+changed-source failure and ownership preservation. Both native VMs verify
+baseline integrity and owned process/port/socket teardown.
+
+CI keeps private-bus/offscreen regressions separate from native sessions. Older
+GNOME without Clipboard portal, a wlr-v1-only compositor, portal-only file-transfer
+tokens, Nautilus/Dolphin UI paste and physical streaming/input/audio remain
+unaccepted. No deployed application, service, personal clipboard or mynix state
+is changed by this work.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:
