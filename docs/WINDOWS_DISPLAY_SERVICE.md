@@ -105,7 +105,38 @@ and placeholder client/host data, is never executed and must never be installed 
 distributed. A normal `nix build --no-link` checks the Linux consumer. These checks
 do not emulate SCM, kernel token enforcement or native display/capture/input.
 
-## Deferred native acceptance
+## Native checkpoint — 2026-10-17
+
+The full Windows 11 x64 installation built from `d659dac9` passed the following
+checks in an active physical console. The GUI, host and display helper ran at
+medium integrity; only the installed broker and recovery guardian ran as SYSTEM.
+
+- Twenty sharing start/stop cycles restored the original physical layout each
+  time. Seven rounds of resize/release, forced helper exit and restart after
+  crash passed all 21 scenarios, including portrait/dynamic resizing and all
+  display reuse policies. No `consent.exe` start was observed during these tests.
+- Forced broker death restored the layout while the helper input remained open;
+  SCM restarted the automatic service independently.
+- Foreign executables, unsupported operations, malformed nonces, partial and
+  oversized requests, and medium-integrity service stop were rejected without
+  device mutation. This is a subset of the complete denial matrix below.
+- An existing macOS client displayed the synthetic animated Windows fixture and
+  delivered pointer clicks. A second, direct macOS client delivered a synthetic
+  keyboard string; focus loss released a held remote key before local key-up and
+  stopped repetition. Keyboard acceptance through the nested control route was
+  inconclusive. Audio, clipboard and latency acceptance were not performed.
+- Installed executable hashes matched the full portable package. Existing peer
+  records, certificate and private-key hashes survived upgrade unchanged.
+  Defender custom scans passed with real-time protection enabled and no path or
+  process exclusions. Native CLI help/version checks, payload/PE audits, targeted
+  policy regressions and the native Linux Nix build passed.
+
+These results cover the signed-in display broker. They do not establish cold-boot,
+locked-session, secure-desktop or pre-login hosting. Private evidence retains
+package identities and synthetic test results; personal machine details and raw
+screenshots are excluded from public documentation.
+
+## Remaining native acceptance
 
 Reserve a Windows 11 x64 target exclusively, with a local recovery operator and
 dedicated test account. Record exact source/package hashes, original SCM/task/

@@ -5,11 +5,18 @@ service. Its local broker authenticates the installed helper and console user/
 logon/session, then launches only the independent recovery guardian there. GUI,
 host, identity and pairing stay unprivileged. Missing/denied service requests fail
 without elevation fallback. Upgrade/uninstall stop and remove only the owned
-service. No wire/display-policy change or main merge is included.
+service. Shared wire/display policy is unchanged. The implementation and native
+display-recreation fixes are integrated into main at `d659dac9`.
 
 This is a signed-in display-lease candidate. Boot service startup does not provide
 a pre-login network host; lock-screen, credential/secure-desktop video and input,
-physical reboot and final installer acceptance remain deferred. See
+physical reboot and the remaining lifecycle/security matrix remain deferred.
+The installed Windows 11 candidate passed 20 ordinary-user sharing start/stop
+cycles, 21 resize/crash/restart scenarios, six native request/control denials and
+independent recovery after broker death, with no repeated UAC. Existing macOS
+clients received real animated video and pointer input; a direct client also
+verified keyboard input and key release on focus loss. The nested remote-control
+route did not establish keyboard acceptance for every client. See
 [WINDOWS_DISPLAY_SERVICE.md](WINDOWS_DISPLAY_SERVICE.md) for isolated checks and
 the native acceptance matrix. Building this branch activates no deployed service.
 
