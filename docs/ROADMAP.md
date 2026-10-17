@@ -58,8 +58,18 @@ test reproduces the failure before the change and verifies recovery afterwards.
 A read-only native probe also changed from a placeholder lookup and an unready
 topology to a null lookup and a ready topology against the same saved layout.
 ASan/UBSan topology tests, native helper compilation and three isolated native
-create/remove cycles pass. No deployed host
-has been replaced or restarted; activated-build takeover acceptance is pending.
+create/remove cycles pass.
+
+After user activation of the signed private build, installed viewer, display
+helper and host hashes matched the verified package, and the running main process
+used the installed executable. A physical iPad connected by hostname, confirmed
+takeover of an active Linux viewer, and received actual HEVC desktop video. The
+old viewer and clipboard workers exited. A separate literal Tailscale-address
+connection and a final hostname reconnect also delivered live video; host binding
+sockets used Tailscale addresses. All three sessions disconnected normally, and
+the original hostname configuration was restored. GUI leases were coordinated
+and released without restarting deployed services. Keyboard input, audible audio,
+long-duration recovery and physical monitor topology remain outside this check.
 
 ## Windows installed display broker candidate — 2026-10-17
 
