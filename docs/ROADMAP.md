@@ -24,6 +24,21 @@ its deliberately bounded two SCM retries; an authorized administrator coordinato
 restarted it only after independent recovery was observed. Nested UI disconnect,
 audio/clipboard/latency, locked-session and pre-login hosting are not accepted.
 
+## macOS takeover recovery with disconnected connectors — 2026-10-17
+
+A saved empty mirror-source UUID means no mirror. WindowServer can enumerate
+disconnected connectors without UUIDs; looking up the empty source previously
+selected one of those placeholders. Recovery then attempted an invalid mirror
+transaction and session takeover returned unavailable after ending the old stream.
+
+Reject empty UUID lookups before enumerating displays. The production topology
+test reproduces the failure before the change and verifies recovery afterwards.
+A read-only native probe also changed from a placeholder lookup and an unready
+topology to a null lookup and a ready topology against the same saved layout.
+ASan/UBSan topology tests, native helper compilation and three isolated native
+create/remove cycles pass. No deployed host
+has been replaced or restarted; activated-build takeover acceptance is pending.
+
 ## Windows installed display broker candidate — 2026-10-17
 
 Replace per-sharing display UAC with an administrator-installed automatic SCM
