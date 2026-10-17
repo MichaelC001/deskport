@@ -168,6 +168,31 @@ Enforcing and native OS input disabled. See the retained run and counters in the
 acceptance matrix; this does not establish sustained Wayland media or hardware
 quality.
 
+## PC support and evidence reconciliation — 2026-10-17
+
+[PC implementation and acceptance](PC_SUPPORT_MATRIX.md) is the current scope
+index at desktop `a8174c96` / core `e1850b07`; the update from `b0c28182`
+adds only the recorded iPad takeover evidence, with no application code change. Dated entries below remain historical
+checkpoints. Correct the superseded Windows client-only/Linux existing-screen
+claims, include Hyprland, and separate implemented behavior from unrun acceptance.
+Windows owned-VDD DPI and automatic signed-in display broker/no repeated UAC are
+already implemented with partial native evidence; pre-login/lock/secure-desktop
+acceptance remains in the Windows lifecycle work. No new service rewrite.
+
+The evidence register records source/package/installed identity (including explicit
+unknowns), date, environment, feature, result and limits. The lightweight checker
+checks provenance, topic links and actual CI job/runner scope: Ubuntu Linux build,
+macOS contracts and Ubuntu Windows source checks. It adds no physical GPU claim.
+Web, host IME/local preedit, audio, clipboard, HDR and service lifetime boundaries
+are recorded separately. Seamless is deferred and excluded from current alignment.
+This item does not complete the other sixteen PC tasks; their merged source,
+exact-package and native results must update the matrix before new completion
+claims. Documentation checks and Nix builds do not activate installed services.
+The [audit checkpoint](PC_VERIFICATION_2026-10-17.md) passed constrained native
+Nix compilation, package identity and short-TMPDIR isolated CLI checks. A long
+Unix-socket-path setup failure is retained separately; no physical streaming,
+input, audio, clipboard, HDR or Seamless acceptance is inferred.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:
@@ -1924,7 +1949,9 @@ acceptance limits are listed below. See [release notes](RELEASE_0.1.0.md).
 Keep a remote desktop ready in the background. Recall it on the current local
 workspace with one action, work normally, then tuck it away without reconnecting.
 The first target is a KDE Wayland / AMD Linux client and a macOS Sunshine host.
-Windows and macOS clients are intended follow-ups; they are not yet validated.
+Full Windows and macOS clients are now implemented and packaged. Current
+combination-specific acceptance is tracked in [the PC matrix](PC_SUPPORT_MATRIX.md);
+the initial bootstrap milestones below are historical.
 
 Product direction (2026-09-09): a single application with both viewer and optional
 host roles, one explicit mutual-pairing flow and a shared device list. See
@@ -2333,7 +2360,11 @@ Reference: [SDL keyboard capture](https://wiki.libsdl.org/SDL2/SDL_SetWindowKeyb
 - Ten disconnect/reconnect trials; 100 bilingual/multiline clipboard samples;
   three two-hour development sessions before asking 3–5 developers to try it.
 
-## Deferred
+## Original deferred scope (2026-09-10; historical)
+
+Later work shipped mobile clients, packaging and signing. Current exclusions and
+acceptance are in [the PC matrix](PC_SUPPORT_MATRIX.md); Seamless and native
+local IME preedit forwarding remain deferred. The original list was:
 
 Individual remote application windows, multi-display roaming, file drag/drop,
 USB redirection, local IME preedit forwarding, cloud accounts, mobile clients,

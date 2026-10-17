@@ -1,4 +1,9 @@
-# Mutual binding preview
+# Mutual desktop binding
+
+Current scope reviewed 2026-10-17: full macOS, Linux and Windows host packages
+support mutual binding. Client-only packages/modes retain one-way binding. See
+[PC implementation and acceptance](PC_SUPPORT_MATRIX.md) for versioned evidence;
+the dated outbound-only Windows section below describes the earlier evaluation.
 
 For shared binding-role and display wire contracts, see the pinned
 [core specification](../shared/deskport-core/protocol/SPEC.md). This document
@@ -57,8 +62,9 @@ preview does not claim offline remote revocation or distributed atomic commits.
 
 The Nix package references its own pinned Sunshine runtime under `libexec`.
 It uses independent state and the same collision-tested DeskPort port family.
-KDE sessions use KWin capture; other desktops use portal capture. The existing
-Linux desktop is shared; a private Linux virtual display is not implemented.
+KWin, Mutter and Hyprland have owned virtual-display/capture backends; see
+[Linux adaptive workspace](LINUX_ADAPTIVE_DISPLAY.md). Other sessions use
+existing-screen portal capture without advertising adaptive-display support.
 The GUI session must provide capture permission, an encoder and `/dev/uinput`
 access for remote input. No root service or broad device permission is installed.
 
@@ -112,9 +118,12 @@ reached. Port conflicts never stop the currently working listener. Custom ports
 and retained entry ports must be reachable through the host firewall. The default
 Nix firewall already covers the default entry and all supported stream groups.
 
-## Windows outbound-only binding (2026-09-20)
+## Historical Windows outbound-only evaluation (2026-09-20)
 
-Windows uses the existing `role: "client"` contract without a local host identity,
+This evaluation was superseded by the full host package. Its explicit client-only
+contract remains useful for viewer-only modes and isolated tests.
+
+The evaluation uses the existing `role: "client"` contract without a local host identity,
 Sunshine state, or binding listener. Its TLS identity is still the viewer's
 persisted certificate/key, and a damaged identity or peer store fails closed.
 An unavailable host on macOS/Linux does not silently select this mode: the
@@ -140,7 +149,7 @@ Remembered hosts are restored after restart without provisioning a local host.
 The UI describes one-way host access. Forgetting a saved binding removes that
 local record only; remove the separate device entry under Devices if desired,
 and revoke the client on the host to deny its certificate. This is not remote
-revocation. Local host sharing remains unsupported on Windows.
+revocation. That client-only evaluation does not provide local hosting.
 
 The binding suite additionally exercises the production outbound client against
 both the production host adapter and a scripted TLS peer, with no host available
@@ -150,10 +159,13 @@ errors, pending/final save failures, incomplete restart recovery, endpoint pins,
 and a post-binding session/display request to fake host children. Native Windows
 binding and real streaming still require VM acceptance.
 
-## Full Windows integration (in progress)
+## Current full Windows integration
 
 The full package restores `PlatformDefault` to mutual binding, using the same
 private host identity and authorization protocol as Linux/macOS. Explicit
 `Mode::ClientOnly` remains available for client-only tests. Existing outbound-only
 records do not silently grant reverse access; mutual access requires a new,
-explicitly approved exchange. Native full-package acceptance is pending.
+explicitly approved exchange. The full installed package provides hosting and
+uses the installed [display broker](WINDOWS_DISPLAY_SERVICE.md) for its VDD lease.
+Signed-in video/input, DPI and recovery have partial hardware evidence; they do
+not complete all exact-package or pre-login/secure-desktop acceptance cases.

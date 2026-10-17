@@ -1,7 +1,12 @@
 # Windows development checkpoint
 
 The main branch contains the Windows x64 host and client integration.
-The 0.7.1 release uses the current shared desktop baseline.
+The public 0.7.2 release and later private broker/DPI candidates are distinct
+packages. Use [PC implementation and acceptance](PC_SUPPORT_MATRIX.md) for the
+reviewed source snapshot, package provenance and remaining gates.
+[Installed display service](WINDOWS_DISPLAY_SERVICE.md) records the current
+signed-in automatic broker, sharing without repeated UAC, owned-VDD 100%/200%
+DPI and partial hardware acceptance. Those are implemented, not new rewrite work.
 Dated checkpoints below describe their original samples, not blanket approval
 or current blockers for later binaries.
 
@@ -91,11 +96,13 @@ and documented retesting with protection enabled before retrying the affected
 build. A successful installation or a single clean scan does not resolve this
 runtime detection. These results remain sample-specific.
 
-## Outstanding acceptance
+## Exact-package acceptance gates
 
 Final exact-package upgrade/uninstall/reinstall and state retention, abnormal
 disconnect/reconnect, revocation/rebinding, complete current-UI streaming and
-display stability, and cross-platform regression remain to be completed.
+display stability, and cross-platform regression must be recorded against each exact package.
+Some subsets passed in the later broker/DPI checkpoints; do not reset those
+results to missing implementation or infer the remaining cases passed.
 The historical detected sample received the sample-specific Microsoft result
 recorded above. Testing with protection disabled or an exclusion does not
 qualify a new release. Scan the exact final installer and extracted payload
@@ -173,10 +180,9 @@ separate prepared trees. `export-full-materials.py` records those actual trees
 under the normal extraction paths and excludes obsolete `full/sunshine` and
 `full/host-build` outputs.
 
-The current Windows work also includes an SSH native CLI patch; its `--version`
-check has passed. Native streaming, input, display, installer and upgrade
-acceptance remain pending, so a successful cross-build or CLI check is not
-native Windows acceptance.
+The Windows CLI has a noninteractive SSH route. Run it against the exact final
+executable; cross-build and CLI success remain separate from the dated partial
+hardware streaming/input and display-service evidence linked above.
 
 ## 2026-09-21 delivery requirements
 
@@ -198,7 +204,7 @@ main window title bar follows the application's theme, including system appearan
 notifications and window recall. Neither check substitutes for streaming/input
 acceptance or proves virtual-display lifecycle parity.
 
-### Current checks
+### Historical candidate checks (2026-09-21)
 
 The current candidate passed 98 mutual/client binding regressions, shared core
 workspace fixtures, translations, ENet failure handling and smart-stream policy
@@ -263,9 +269,11 @@ CLI help/version checks passed. The Windows viewer also rendered the macOS
 desktop. These checks still do not establish reverse-stream input or audio.
 
 An elevated interactive user can open the ordinary desktop but receives access
-denied opening the Winlogon desktop on this target. A controlled service boundary
-is still needed for full secure-desktop support; changing authentication or UAC
-policy is not a substitute for implementing that boundary.
+denied opening the Winlogon desktop on this target. This historical limitation did not establish a full secure-desktop host. The
+current installed broker implements a controlled **display-lease** boundary,
+not a pre-login network host. Lock/credential/UAC-desktop transitions and input
+remain separate current acceptance work; changing authentication or UAC policy
+is not a substitute.
 The development-only [session-service probe](WINDOWS_SESSION_SERVICE.md) passed
 thirteen native authentication, desktop-access, timeout and cleanup checks. It is
 not packaged and is not yet connected to the streaming host or input path.

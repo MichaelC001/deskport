@@ -1,5 +1,11 @@
 # Input and resident-service acceptance
 
+This is the **historical 2026-09-11 checklist**, not the current feature inventory.
+Use [PC implementation and acceptance](PC_SUPPORT_MATRIX.md) for current scope.
+The current desktop clipboard includes text, images and files; Windows has an
+installed display broker with signed-in hardware checkpoints. Old unrun cases
+remain unrun for their original packages and are not evidence of missing code.
+
 Updated 2026-09-11. Implementation and isolated tests do not establish unattended
 availability on a real KDE Wayland/macOS pair.
 
@@ -65,9 +71,10 @@ fake host children. These automated tests did not replace or restart installed s
    while someone can recover the machine locally. macOS FileVault/pre-login,
    Linux login/session permissions and network loss can prevent availability.
 
-## Limits
+## Historical limits (2026-09-11)
 
-This release shares Unicode text, not PNG images or files. Clipboard permission
+That checkpoint shared Unicode text only. Current image/file behavior and limits
+are in [Shared clipboard](CLIPBOARD.md). Clipboard permission
 is independent from desktop input permission. The host grants the explicit
 clipboard session to an approved device; it does not infer a session merely from
 binding, and the channel is not a Sunshine protocol extension. Hidden connected

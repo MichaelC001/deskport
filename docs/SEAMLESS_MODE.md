@@ -1,5 +1,9 @@
 # Experimental Seamless Mode
 
+Current decision (2026-10-17): deferred and excluded from the PC alignment
+commitment. The design/checkpoints below are historical experimental material;
+this decision schedules no development, experiment or native acceptance.
+
 Status: experimental server-side M1/M2 skeleton; native Linux verification and
 the remote client/media path remain incomplete, 2026-10-05.
 

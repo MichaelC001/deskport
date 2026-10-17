@@ -1,5 +1,10 @@
 # Browser access
 
+For the current PC host/client boundaries and dated results, see
+[PC implementation and acceptance](PC_SUPPORT_MATRIX.md). Browser feature
+availability and Chrome fixtures do not establish every native host, Safari,
+physical audio, IME or clipboard combination.
+
 The desktop host starts a local HTTPS browser entry by default. An iPad or
 another device can open its URL without installing DeskPort. Sign-in uses a
 six-digit code that changes every 30 seconds, shown on the computer and, if you
