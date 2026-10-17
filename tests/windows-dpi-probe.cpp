@@ -1,15 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Read-only native acceptance probe. Never changes display configuration/DPI.
+// Native acceptance probe, read-only by default. The explicit test-baseline
+// switch changes only the exact installer-owned VDD source, never a physical one.
 #ifndef UNICODE
 #define UNICODE
 #define _UNICODE
 #endif
 #include "../host/windows/display-dpi.h"
 #include <iostream>
-int wmain() {
+int wmain(int argc,wchar_t** argv) {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     wchar_t instance[1024]{};DWORD bytes=sizeof(instance);
     if(RegGetValueW(HKEY_LOCAL_MACHINE,L"Software\\DeskPort",L"VirtualDisplayDevice",RRF_RT_REG_SZ,nullptr,instance,&bytes))return 2;
+    if(argc!=1) {
+        if(argc!=3||std::wstring(argv[1])!=L"--test-set-owned")return 10;
+        wchar_t* end=nullptr;const auto percentage=wcstol(argv[2],&end,10);if(*end)return 10;
+        deskport::display_dpi::Source source{};deskport::display_dpi::Range range{};int relative=0;
+        auto code=deskport::display_dpi::ownedSource(instance,source);if(!code)code=deskport::display_dpi::query(source,range);
+        if(code||!deskport::display_dpi::relative(range,int(percentage),relative))return 11;
+        if(deskport::display_dpi::set(source,relative))return 12;
+    }
     UINT32 np=0,nm=0;
     if(GetDisplayConfigBufferSizes(QDC_ONLY_ACTIVE_PATHS|QDC_VIRTUAL_MODE_AWARE,&np,&nm)||np>64||nm>512)return 3;
     std::vector<DISPLAYCONFIG_PATH_INFO> paths(np);std::vector<DISPLAYCONFIG_MODE_INFO> modes(nm);
