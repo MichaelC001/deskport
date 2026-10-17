@@ -9,7 +9,8 @@ Reject empty UUID lookups before enumerating displays. The production topology
 test reproduces the failure before the change and verifies recovery afterwards.
 A read-only native probe also changed from a placeholder lookup and an unready
 topology to a null lookup and a ready topology against the same saved layout.
-ASan/UBSan topology tests and native helper compilation pass. No deployed host
+ASan/UBSan topology tests, native helper compilation and three isolated native
+create/remove cycles pass. No deployed host
 has been replaced or restarted; activated-build takeover acceptance is pending.
 
 ## Windows installed display broker candidate — 2026-10-17
