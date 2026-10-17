@@ -143,6 +143,13 @@ bool listedMode(LPCWSTR name, DEVMODEW& listed, DWORD width, DWORD height) {
     }
     return found;
 }
+bool usableMode(LPCWSTR name, DEVMODEW& mode, DWORD width, DWORD height) {
+    mode = {}; mode.dmSize = sizeof(mode);
+    if (EnumDisplaySettingsExW(name, ENUM_CURRENT_SETTINGS, &mode, 0) && mode.dmPelsWidth && mode.dmPelsHeight) return true;
+    mode = {}; mode.dmSize = sizeof(mode);
+    if (EnumDisplaySettingsExW(name, ENUM_REGISTRY_SETTINGS, &mode, 0) && mode.dmPelsWidth && mode.dmPelsHeight) return true;
+    return listedMode(name, mode, width, height);
+}
 bool writeState(bool pending) {
     QSaveFile file(path);
     if (!file.open(QIODevice::WriteOnly)) return false;
@@ -726,7 +733,9 @@ int main(int argc, char** argv) {
                     send({{"seq",seq},{"error","Cannot prepare the requested virtual display mode"}});break;
                 }
                 output.clear();
+                DEVMODEW baseline{};
                 for(int attempt=0;attempt<50;++attempt) {
+                    output.clear();
                     DISPLAY_DEVICEW device{};device.cb=sizeof(device);
                     QCoreApplication::processEvents();
                     for(DWORD i=0;EnumDisplayDevicesW(nullptr,i,&device,0);++i) {
@@ -736,16 +745,13 @@ int main(int argc, char** argv) {
                         }
                         device={};device.cb=sizeof(device);
                     }
-                    DEVMODEW available{};
-                    if(!output.isEmpty()&&(current(available)||EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),ENUM_REGISTRY_SETTINGS,&available,0)))break;
+                    if(!output.isEmpty()&&usableMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height)))break;
+                    std::cerr<<"Waiting for recreated display mode: attempt="<<attempt
+                             <<" width="<<baseline.dmPelsWidth<<" height="<<baseline.dmPelsHeight
+                             <<" bpp="<<baseline.dmBitsPerPel<<std::endl;
                     Sleep(100);
                 }
-                DEVMODEW baseline{};baseline.dmSize=sizeof(baseline);
-                if(output.isEmpty()||(!current(baseline)&&!EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()),ENUM_REGISTRY_SETTINGS,&baseline,0))) {send({{"seq",seq},{"error","The recreated virtual display is unavailable"}});break;}
-                if((!baseline.dmPelsWidth||!baseline.dmPelsHeight)&&
-                   !listedMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))) {
-                    send({{"seq",seq},{"error","The recreated virtual display lists no display modes"}});break;
-                }
+                if(output.isEmpty()||!baseline.dmPelsWidth||!baseline.dmPelsHeight) {send({{"seq",seq},{"error","The recreated virtual display has no available mode"}});break;}
                 baseline.dmPosition=original.dmPosition;
                 baseline.dmFields|=DM_POSITION;
                 bool positioned=false;

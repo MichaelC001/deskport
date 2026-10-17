@@ -10,13 +10,41 @@ param(
 )
 
 # Explicit native acceptance: temporarily enables only DeskPort's owned VDD.
-# Run elevated in the interactive console session, not directly in SSH/session 0.
+# Run in the interactive console session, not directly in SSH/session 0.
+# The installed display service permits a medium-integrity test runner.
 $ErrorActionPreference = 'Stop'
 $Executable = (Resolve-Path $Executable).Path
 $OutputDirectory = (New-Item -ItemType Directory -Force $OutputDirectory).FullName
 $recovery = Join-Path (Split-Path $Executable) 'deskport-display-recovery.exe'
 if ((Get-Process -Id $PID).SessionId -eq 0) { throw 'Interactive session required.' }
 if (Get-Process deskport-display -ErrorAction SilentlyContinue) { throw 'Stop existing sharing before this test.' }
+if (-not ('DeskPortNativeGuardian' -as [type])) {
+Add-Type @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class DeskPortNativeGuardian {
+    [DllImport("kernel32.dll",SetLastError=true)] static extern IntPtr OpenProcess(uint access,bool inherit,int pid);
+    [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern bool QueryFullProcessImageName(IntPtr process,uint flags,StringBuilder name,ref int size);
+    [DllImport("kernel32.dll")] public static extern bool CloseHandle(IntPtr process);
+    [DllImport("kernel32.dll")] static extern uint WaitForSingleObject(IntPtr process,uint timeout);
+    [DllImport("kernel32.dll",SetLastError=true)] static extern bool GetExitCodeProcess(IntPtr process,out uint code);
+    public static IntPtr Open(int pid,string expected) {
+        // Match the broker's exact logon grant: query/synchronize, never ALL_ACCESS.
+        var handle=OpenProcess(0x00101000,false,pid);
+        if(handle==IntPtr.Zero)throw new Win32Exception();
+        var path=new StringBuilder(32768);int size=path.Capacity;
+        if(!QueryFullProcessImageName(handle,0,path,ref size)||!String.Equals(path.ToString(),expected,StringComparison.OrdinalIgnoreCase)) {
+            CloseHandle(handle);throw new InvalidOperationException("Unexpected guardian executable");
+        }
+        return handle;
+    }
+    public static bool Wait(IntPtr handle,uint timeout){return WaitForSingleObject(handle,timeout)==0;}
+    public static uint ExitCode(IntPtr handle){uint code;if(!GetExitCodeProcess(handle,out code))throw new Win32Exception();return code;}
+}
+'@
+}
 
 function Snapshot {
     $lines = & $recovery inspect
@@ -98,14 +126,18 @@ foreach ($scenario in @('resize-release', 'forced-exit', 'restart-after-crash'))
             }
         }
         if ($scenario -eq 'forced-exit') {
-            $guardInfo = Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'deskport-display-recovery.exe' -and $_.CommandLine -match ('lease ' + $process.Id + ' ') } | Select-Object -First 1
-            if (-not $guardInfo) { throw 'Recovery guardian missing before crash test.' }
-            $guard = Get-Process -Id $guardInfo.ProcessId
-            $null = $guard.Handle
-            $process.Kill()
-            $guardExited = $guard.WaitForExit(20000)
-            @{exited=$guardExited; exitCode=$(if ($guardExited) {$guard.ExitCode} else {$null})} | ConvertTo-Json | Set-Content (Join-Path $state 'guardian.json')
-            $guard.Dispose()
+            # WMI hides a SYSTEM command line from a medium user. The exclusive
+            # test must have one guardian; authenticate its image with limited
+            # query access and retain that handle across the helper's death.
+            $guards = @(Get-Process deskport-display-recovery -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq $process.SessionId })
+            if ($guards.Count -ne 1) { throw 'Expected one recovery guardian before crash test.' }
+            $guard = [DeskPortNativeGuardian]::Open($guards[0].Id, $recovery)
+            try {
+                $process.Kill()
+                $guardExited = [DeskPortNativeGuardian]::Wait($guard, 20000)
+                @{exited=$guardExited; exitCode=$(if ($guardExited) {[DeskPortNativeGuardian]::ExitCode($guard)} else {$null})} | ConvertTo-Json | Set-Content (Join-Path $state 'guardian.json')
+                if (-not $guardExited) { throw 'Guardian did not restore after helper death.' }
+            } finally { [void][DeskPortNativeGuardian]::CloseHandle($guard) }
         } else {
             $sequence++
             $process.StandardInput.WriteLine((@{seq=$sequence;session=$false;displayPolicy=$Policy;width=$mode.width;height=$mode.height;scale=1} | ConvertTo-Json -Compress))

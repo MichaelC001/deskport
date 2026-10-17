@@ -65,8 +65,10 @@ unit.write_text(r'''
 #include <vector>
 using DWORD=std::uint32_t;using LPCWSTR=const wchar_t*;
 struct DEVMODEW { DWORD dmSize=0,dmPelsWidth=0,dmPelsHeight=0,dmBitsPerPel=0; };
+constexpr DWORD ENUM_CURRENT_SETTINGS=DWORD(-1), ENUM_REGISTRY_SETTINGS=DWORD(-2);
 std::vector<DEVMODEW> modes;
 bool EnumDisplaySettingsExW(LPCWSTR,DWORD index,DEVMODEW* mode,DWORD){
+ if(index==ENUM_CURRENT_SETTINGS||index==ENUM_REGISTRY_SETTINGS){assert(mode->dmSize==sizeof(*mode));*mode={0,0,0,32};return true;}
  if(index>=modes.size())return false;
  assert(mode->dmSize==sizeof(*mode));*mode=modes[index];return true;
 }
@@ -74,8 +76,11 @@ bool EnumDisplaySettingsExW(LPCWSTR,DWORD index,DEVMODEW* mode,DWORD){
 int main(){
  DEVMODEW selected{};
  assert(!listedMode(L"fixture",selected,1308,756));
+ assert(!usableMode(L"fixture",selected,1308,756));
  modes={{0,0,0,32},{0,800,600,32},{0,1308,756,32},{0,1920,1080,32}};
  assert(listedMode(L"fixture",selected,1308,756));
+ assert(selected.dmPelsWidth==1308&&selected.dmPelsHeight==756);
+ assert(usableMode(L"fixture",selected,1308,756));
  assert(selected.dmPelsWidth==1308&&selected.dmPelsHeight==756);
  selected={};assert(listedMode(L"fixture",selected,1920,1080));
  assert(selected.dmPelsWidth==1920&&selected.dmPelsHeight==1080);
@@ -87,7 +92,7 @@ binary = out / 'listed-mode'
 subprocess.run([os.environ.get('CXX', 'c++'), '-std=c++17', '-Wall', '-Wextra', '-Werror',
                 str(unit), '-o', str(binary)], check=True)
 subprocess.run([str(binary)], check=True)
-assert 'listedMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))' in helper
+assert 'usableMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))' in helper
 print('PASS detached 0x0 mode fallback for initial and recreated owned displays')
 
 # These are packaging contract gates, not an emulation of SCM or native capture.
