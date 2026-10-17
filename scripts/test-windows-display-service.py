@@ -54,6 +54,50 @@ subprocess.run([str(binary)], check=True)
 assert recovery.index('if(!alive())break;') < recovery.index('if(wait==WAIT_OBJECT_0+2)')
 print('PASS production guardian cancellation priority and no re-enable after parent/release/broker stop/death')
 
+# Execute the actual restore method with a mode-dependent recommendation.
+# Restoring 125% at a 125%-recommended mode writes step 0, which would become
+# 100% after returning to a 100%-recommended baseline. Retirement needs step 1.
+start = recovery.index('    DWORD restore(bool retire=true,bool retiringSource=false) {')
+method = recovery[start:recovery.index('\n};', start)]
+unit = out / 'dpi-retirement.cpp'
+unit.write_text(r"""
+#include <cassert>
+#include <string>
+#include "host/windows/display-dpi-policy.h"
+using DWORD=unsigned;
+constexpr DWORD ERROR_FILE_NOT_FOUND=2,ERROR_NOT_SUPPORTED=50;
+unsigned now=0;int deleted=0,lastPercentage=0;bool fail=false;
+unsigned GetTickCount64(){return now;}
+void Sleep(unsigned ms){now+=ms;}
+bool DeleteFileW(const wchar_t*){++deleted;return true;}
+DWORD GetLastError(){return 5;}
+struct Lease {
+ std::wstring journal=L"fixture";
+ DWORD load(int& percentage,int* step){percentage=125;*step=1;return 0;}
+ DWORD apply(int value,bool relative){
+  if(fail)return ERROR_NOT_SUPPORTED;
+  deskport::display_dpi::Range range{-1,0,5};int step=value;
+  if(!relative)assert(deskport::display_dpi::relative(range,value,step));
+  range.current=step;lastPercentage=deskport::display_dpi::percent(range);return 0;
+ }
+""" + method + r"""
+};
+int main(){
+ Lease lease;
+ assert(!lease.restore(false,true));assert(lastPercentage==150&&deleted==0);
+ // The persisted step is reinterpreted by Windows at the original mode.
+ assert(deskport::display_dpi::percent({0,1,3})==125);
+ assert(!lease.restore(true,false));assert(lastPercentage==125&&deleted==1);
+ assert(!lease.restore(true,true));assert(lastPercentage==150&&deleted==2);
+ fail=true;assert(lease.restore(true,true)==ERROR_NOT_SUPPORTED);assert(deleted==2&&now>=3000);
+}
+""")
+binary = out / 'dpi-retirement'
+subprocess.run([os.environ.get('CXX', 'c++'), '-std=c++17', '-Wall', '-Wextra', '-Werror',
+                '-I' + str(root), str(unit), '-o', str(binary)], check=True)
+subprocess.run([str(binary)], check=True)
+print('PASS production DPI restore preserves relative offsets across recommendation changes and retains failed journals')
+
 # Windows can return a successful but detached 0x0 registry mode after adapter
 # recreation. Exercise the production enumeration fallback with that fixture.
 helper = (root / 'host/windows/display-helper.cpp').read_text()
