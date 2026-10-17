@@ -105,7 +105,7 @@ ColumnLayout {
     }
     UiGroup {
         title: qsTr("Keyboard & pointer")
-        footnote: qsTr("Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.") + " " + qsTr("Release remote input with Ctrl + Alt + Shift + Z.")
+        footnote: (preferences.localTextInput ? "" : qsTr("Keyboard follows the pointer inside the focused video. Leaving releases held keys and buttons. Click to focus; system-reserved shortcuts may stay local.") + " ") + qsTr("Release remote input with Ctrl + Alt + Shift + Z.")
         UiRow {
             iconSource: "qrc:/res/ui/pointer.svg"
             title: qsTr("Use a desktop-style pointer")
@@ -126,8 +126,17 @@ ColumnLayout {
             switchable: true; on: preferences.reverseScrollDirection
             onSwitched: function(value) { preferences.reverseScrollDirection=value; save() }
         }
+        UiRow {
+            objectName: "localTextInputSwitch"
+            iconSource: "qrc:/res/ui/shortcuts.svg"
+            title: qsTr("Use the local input method")
+            detail: qsTr("Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.")
+            switchable: true; on: preferences.localTextInput; enabled: preferences.remoteInput
+            onSwitched: function(value) { preferences.localTextInput=value; save() }
+        }
         UiChoiceRow {
             objectName: "systemKeysChoice"
+            enabled: !preferences.localTextInput
             iconSource: "qrc:/res/ui/shortcuts.svg"
             title: qsTr("Send system shortcuts to the remote computer")
             note: qsTr("On a Mac host, Super / Windows sends Command and Alt sends Option. Choose Always to forward Super + Space in a window. Changes apply on the next connection.")

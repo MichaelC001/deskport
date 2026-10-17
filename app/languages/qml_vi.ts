@@ -3612,6 +3612,14 @@
             <source>All streaming options</source>
             <translation>Tất cả các tùy chọn phát trực tuyến</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>Dùng bộ gõ cục bộ</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>Xác nhận văn bản bằng bộ gõ của máy tính này. Danh sách gợi ý ở góc trên bên trái; không có vị trí con trỏ văn bản từ xa. Tắt khi dùng bộ gõ từ xa hoặc chơi trò chơi. Kết nối lại để áp dụng.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

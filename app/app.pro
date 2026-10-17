@@ -301,6 +301,7 @@ HEADERS += \
     cli/startstream.h \
     settings/streamingpreferences.h \
     streaming/input/input.h \
+    streaming/input/localtextinput.h \
     streaming/session.h \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \

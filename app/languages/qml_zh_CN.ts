@@ -3719,6 +3719,14 @@
             <source>All streaming options</source>
             <translation>全部串流选项</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>使用本地输入法</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>使用此电脑的输入法提交文字。候选窗口固定在左上角，无法获取远端文字光标。远端输入法或游戏请关闭此项。重连后生效。</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

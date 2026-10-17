@@ -236,7 +236,7 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
-            else if (type == Overlay::OverlayDebug) {
+            else if (type == Overlay::OverlayDebug || type == Overlay::OverlayTextInput) {
                 // Top left
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = 0;

@@ -3631,6 +3631,14 @@
             <source>All streaming options</source>
             <translation>すべての配信オプション</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>ローカルの入力メソッドを使用</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>このコンピューターのIMEで文字を確定します。候補は左上に表示され、リモートのキャレット位置は使用できません。リモートIMEやゲームではオフにしてください。再接続後に適用されます。</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

@@ -2656,10 +2656,8 @@ void Session::execInternal()
     // only after decoder creation, and only if the user still wants this window.
     bool needsPostDecoderCreationCapture = true;
 
-    // Stop text input. SDL enables it by default
-    // when we initialize the video subsystem, but this
-    // causes an IME popup when certain keys are held down
-    // on macOS.
+    // Native text input is enabled only by the input handler while routing
+    // to a visible, focused viewer with the opt-in local text mode.
     SDL_StopTextInput();
 
     // Disable the screen saver if requested
@@ -2785,6 +2783,14 @@ void Session::execInternal()
             continue;
         }
 #endif
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+        // EXT owns heap text, even when a hidden viewer discards the event.
+        if (event.type == SDL_TEXTEDITING_EXT) {
+            if (m_ViewerRequested) m_InputHandler->handleTextEvent(event);
+            SDL_free(event.editExt.text);
+            continue;
+        }
+#endif
         // Background viewers keep media/transport alive but cannot forward
         // physical input, including globally delivered controller events.
         if (!m_ViewerRequested && ((event.type >= SDL_KEYDOWN && event.type <= SDL_MOUSEWHEEL) ||
@@ -2795,6 +2801,10 @@ void Session::execInternal()
 #endif
             )) continue;
         switch (event.type) {
+        case SDL_TEXTINPUT:
+        case SDL_TEXTEDITING:
+            m_InputHandler->handleTextEvent(event);
+            break;
         case SDL_QUIT:
             showControlCenter();
             break;
@@ -2907,6 +2917,14 @@ void Session::execInternal()
                     m_AudioMuted = true;
                 }
                 m_InputHandler->notifyFocusLost();
+                break;
+            case SDL_WINDOWEVENT_SHOWN:
+            case SDL_WINDOWEVENT_RESTORED:
+                // Win32 can preserve focus across hide/show without another
+                // FOCUS_GAINED event. Reattach the native IME when visible.
+                if (m_Preferences->localTextInput && m_ViewerRequested &&
+                    (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS))
+                    m_InputHandler->notifyFocusGained();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
                 reportViewerFocus(true);

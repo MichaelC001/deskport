@@ -3612,6 +3612,14 @@
             <source>All streaming options</source>
             <translation>सभी स्ट्रीमिंग विकल्प</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>स्थानीय इनपुट विधि का उपयोग करें</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>इस कंप्यूटर की इनपुट विधि से पाठ की पुष्टि करें। विकल्प ऊपर बाईं ओर रहेंगे; दूरस्थ पाठ कर्सर उपलब्ध नहीं है। दूरस्थ इनपुट या गेम के लिए बंद करें। लागू करने के लिए फिर से कनेक्ट करें।</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

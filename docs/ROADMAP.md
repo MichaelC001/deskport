@@ -56,6 +56,26 @@ tokens, Nautilus/Dolphin UI paste and physical streaming/input/audio remain
 unaccepted. No deployed application, service, personal clipboard or mynix state
 is changed by this work.
 
+## Optional native desktop input methods — 2026-10-17
+
+Add a default-off per-device local text mode for Windows, macOS and Linux SDL
+viewers. Local composition, native candidates and a CJK preedit preview feed
+only committed UTF-8 through the existing text channel. Focus loss, hiding,
+release and teardown cancel composition and release held remote keys. Physical
+remote-IME mode remains available. Local text follows viewer focus, including
+candidate-popup pointer movement, and leaves system shortcuts to the local OS.
+The candidate anchor is fixed at the top left: desktop does not subscribe to
+remote caret data. No wire extension or mobile implementation changes.
+See [local input method behavior and validation](LOCAL_TEXT_INPUT.md).
+
+Validation: native Cocoa and Win32 Pinyin composition, cancellation and hide/
+recall tests passed without clipboard or host access. Isolated Linux X11/IBus
+committed Chinese, Japanese and Korean text. The full Linux Nix package,
+platform translation-unit builds, shared core, 27 UI checks and six preference
+checks passed. Native Wayland, packaged fullscreen/HiDPI candidates and actual
+remote application insertion remain separate acceptance checks. No deployment
+or mobile repository change is part of this candidate.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

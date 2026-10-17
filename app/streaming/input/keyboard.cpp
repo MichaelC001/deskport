@@ -15,6 +15,7 @@
 
 void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 {
+    m_LocalTextInput.cancel();
     switch (combo) {
     case KeyComboQuit:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -198,6 +199,26 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     }
 
     if (!keyboardRoutingActive()) return;
+    if (m_LocalTextInput.consumeKey(*event)) {
+        // Local modifiers must not contaminate UTF-8 commits. Release any
+        // synthesized command modifiers when the physical modifier is released.
+        if (event->type == SDL_KEYUP && event->keysym.scancode >= SDL_SCANCODE_LCTRL &&
+            event->keysym.scancode <= SDL_SCANCODE_RGUI) raiseAllKeys();
+        return;
+    }
+    if (m_LocalTextInput.active() && event->type == SDL_KEYDOWN) {
+        // Hosts cannot all synthesize Meta from a packet flag. Explicit command
+        // modifiers also preserve held chords until release/focus loss.
+        const struct { int mask; short key; } commandMods[] = {
+            {KMOD_CTRL, 0xA2}, {KMOD_SHIFT, 0xA0}, {KMOD_ALT, 0xA4}, {KMOD_GUI, 0x5B}
+        };
+        for (const auto& modifier : commandMods) {
+            if ((event->keysym.mod & modifier.mask) && !m_KeysDown.contains(modifier.key)) {
+                LiSendKeyboardEvent(0x8000 | modifier.key, KEY_ACTION_DOWN, 0);
+                m_KeysDown.insert(modifier.key);
+            }
+        }
+    }
 
     // Set modifier flags
     modifiers = 0;
@@ -447,4 +468,20 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers);
+}
+
+void SdlInputHandler::handleTextEvent(const SDL_Event& event)
+{
+    if (!keyboardRoutingActive()) return;
+    const auto window = SDL_GetWindowID(m_Window);
+    if (event.type == SDL_TEXTINPUT)
+        m_LocalTextInput.text(event.text.windowID, event.text.timestamp, event.text.text, window);
+    else if (event.type == SDL_TEXTEDITING)
+        m_LocalTextInput.editing(event.edit.windowID, event.edit.timestamp, event.edit.text,
+                                event.edit.start, event.edit.length, window);
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+    else if (event.type == SDL_TEXTEDITING_EXT)
+        m_LocalTextInput.editing(event.editExt.windowID, event.editExt.timestamp, event.editExt.text,
+                                event.editExt.start, event.editExt.length, window);
+#endif
 }

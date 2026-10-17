@@ -49,6 +49,16 @@ private slots:
         raw.setValue(prefix+"desktopAdjustment",1.1); raw.sync();
         a->reload(); QCOMPARE(a->desktopAdjustment,1.0);
     }
+    void localTextModeDefaultsToPhysicalAndStaysDeviceScoped() {
+        auto global = StreamingPreferences::get();
+        QObject owner;
+        auto a = global->snapshot("ime-a", &owner);
+        auto b = global->snapshot("ime-b", &owner);
+        QVERIFY(!a->localTextInput); QVERIFY(!b->localTextInput);
+        a->localTextInput = true; a->save();
+        a->reload(); b->reload(); global->reload();
+        QVERIFY(a->localTextInput); QVERIFY(!b->localTextInput); QVERIFY(!global->localTextInput);
+    }
     void uiLanguageChangesPreserveDevicePolicyAndSavedIds() {
         auto preferences = StreamingPreferences::get();
         const auto previousLanguage = preferences->language;

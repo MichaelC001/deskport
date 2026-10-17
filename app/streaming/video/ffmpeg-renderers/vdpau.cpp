@@ -430,7 +430,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             overlayRect.x0 = 0;
             overlayRect.y0 = m_DisplayHeight - newSurface->h;
         }
-        else if (type == Overlay::OverlayDebug) {
+        else if (type == Overlay::OverlayDebug || type == Overlay::OverlayTextInput) {
             // Top left
             overlayRect.x0 = 0;
             overlayRect.y0 = 0;

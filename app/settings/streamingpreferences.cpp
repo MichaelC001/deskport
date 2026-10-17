@@ -234,6 +234,7 @@ void StreamingPreferences::reload()
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, false).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
+    localTextInput = settings.value("localTextInput", false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_ALWAYS)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -499,6 +500,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
+    settings.setValue("localTextInput", localTextInput);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
 
