@@ -95,6 +95,45 @@ subprocess.run([str(binary)], check=True)
 assert 'usableMode(reinterpret_cast<LPCWSTR>(output.utf16()),baseline,DWORD(width),DWORD(height))' in helper
 print('PASS detached 0x0 mode fallback for initial and recreated owned displays')
 
+# Execute the actual setter with API doubles. Windows can acknowledge a 200%
+# packet while clamping real windows to 175%; packet equality alone is unsafe.
+dpi = (root / 'host/windows/display-dpi.h').read_text()
+setter = dpi[dpi.index('inline DWORD set(Source source,int value) {'):dpi.rindex('\n}')]
+unit = out / 'effective-dpi.cpp'
+unit.write_text(r'''
+#include <cassert>
+#include "host/windows/display-dpi-policy.h"
+using namespace deskport::display_dpi;
+using DWORD=unsigned;using UINT=unsigned;using DISPLAYCONFIG_DEVICE_INFO_TYPE=int;
+constexpr DWORD ERROR_NOT_SUPPORTED=50,ERROR_INVALID_STATE=5023;
+struct Source {int adapter;unsigned id;};
+struct Header {int type;unsigned size;int adapterId;unsigned id;};
+struct SetPacket {Header header;int relative;};
+Range state{0,0,5};unsigned effective=96,writes=0,sleeps=0,readError=0,writeError=0,windowError=0;
+DWORD query(Source,Range& r){r=state;return readError?readError:valid(r)?0:50;}
+DWORD effectiveDpi(Source,UINT& dpi){dpi=effective;return windowError;}
+DWORD DisplayConfigSetDeviceInfo(Header* h){++writes;assert(h->type==-4&&h->adapterId==7&&h->id==3);
+ if(!writeError)state.current=reinterpret_cast<SetPacket*>(h)->relative;return writeError;}
+void Sleep(unsigned ms){assert(ms==50);++sleeps;}
+''' + setter + r'''
+int main(){
+ const Source source{7,3};
+ effective=168;assert(set(source,4)==ERROR_INVALID_STATE);assert(writes==1&&sleeps==30);
+ effective=192;writes=sleeps=0;assert(set(source,4)==0);assert(!writes&&!sleeps);
+ state={0,0,3};writes=0;assert(set(source,4)==ERROR_NOT_SUPPORTED);assert(!writes);
+ state={0,0,5};writeError=5;assert(set(source,4)==5);assert(writes==1);
+ writeError=0;readError=5;writes=0;assert(set(source,4)==5);assert(!writes);
+ readError=0;state={0,4,5};windowError=5;sleeps=0;assert(set(source,4)==ERROR_INVALID_STATE);assert(sleeps==30);
+ windowError=0;state={0,0,5};effective=120;assert(set(source,1)==0);
+ effective=96;assert(set(source,0)==0);
+}
+''')
+binary = out / 'effective-dpi'
+subprocess.run([os.environ.get('CXX', 'c++'), '-std=c++17', '-Wall', '-Wextra', '-Werror',
+                '-I' + str(root), str(unit), '-o', str(binary)], check=True)
+subprocess.run([str(binary)], check=True)
+print('PASS actual DPI setter rejects CCD-success/window-DPI mismatch and verifies restore/error paths')
+
 # These are packaging contract gates, not an emulation of SCM or native capture.
 installer = (root / 'winbuild/scripts/deskport-full.nsi').read_text()
 assert installer.count('register-display-service ') == 1
