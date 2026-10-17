@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check the pinned core and the production Qt workspace adapter."""
+import argparse
 import json
 import io
 import tarfile
@@ -8,6 +9,9 @@ from pathlib import Path
 import subprocess
 import sys
 
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--skip-deferred-seamless', action='store_true', help='Skip deferred Seamless fixtures when the task explicitly excludes them')
+args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
 core = root / 'shared/deskport-core'
 if not (core / 'include/deskport/workspace.h').exists():
@@ -31,7 +35,8 @@ if (core / '.git').exists():
         raise SystemExit('Core submodule and flake.lock differ; update both pins before building')
 subprocess.run([sys.executable, str(core / 'tests/test_session_graph.py')], check=True)
 subprocess.run([sys.executable, str(core / 'tests/test_i18n.py')], check=True)
-subprocess.run([sys.executable, str(core / 'tests/test_seamless_protocol.py')], check=True)
+if not args.skip_deferred_seamless:
+    subprocess.run([sys.executable, str(core / 'tests/test_seamless_protocol.py')], check=True)
 subprocess.run([sys.executable, str((core) / 'portable/test_catalog.py')], check=True)
 subprocess.run([sys.executable, str(core / 'tests/test_workspace.py'),
                 '--qt-header', str(root / 'app/backend/workspaceresolution.h')], check=True)

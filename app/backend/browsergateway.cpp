@@ -862,6 +862,8 @@ void BrowserGateway::dispatch(Connection* connection) {
         QByteArray contentType;
         if (connection->path == "/" || connection->path == "/index.html") { resource = ":/browser/index.html"; contentType = "text/html; charset=utf-8"; }
         else if (connection->path == "/app.js") { resource = ":/browser/app.js"; contentType = "application/javascript; charset=utf-8"; }
+        else if (connection->path == "/i18n.js") { resource = ":/browser/i18n.js"; contentType = "application/javascript; charset=utf-8"; }
+        else if (connection->path == "/i18n-data.js") { resource = ":/browser/i18n-data.js"; contentType = "application/javascript; charset=utf-8"; }
         else if (connection->path == "/style.css") { resource = ":/browser/style.css"; contentType = "text/css; charset=utf-8"; }
         else if (connection->path == "/icon.svg") { resource = ":/browser/icon.svg"; contentType = "image/svg+xml"; }
         else { error(connection, 404, "not-found", "Resource not found."); return; }

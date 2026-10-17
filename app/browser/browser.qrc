@@ -2,6 +2,8 @@
     <qresource prefix="/browser">
         <file>index.html</file>
         <file>app.js</file>
+        <file>i18n.js</file>
+        <file>i18n-data.js</file>
         <file>style.css</file>
         <file alias="icon.svg">../res/deskport.svg</file>
     </qresource>

@@ -44,13 +44,13 @@ await mkdir(output, { recursive: true });
 const cert = path.join(output, 'fixture-cert.pem');
 const key = path.join(output, 'fixture-key.pem');
 execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', key, '-out', cert, '-days', '1', '-subj', '/CN=localhost'], { stdio: 'ignore' });
-const resources = new Map(await Promise.all(['index.html', 'app.js', 'style.css'].map(async name => [name, await readFile(path.join(repo, 'app/browser', name))])));
+const resources = new Map(await Promise.all(['index.html', 'app.js', 'i18n.js', 'i18n-data.js', 'style.css'].map(async name => [name, await readFile(path.join(repo, 'app/browser', name))])));
 resources.set('index.html', Buffer.from(resources.get('index.html').toString().replace('@DESKPORT_VERSION@', '0.7.0-test')));
 resources.set('icon.svg', await readFile(path.join(repo, 'app/res/deskport.svg')));
 const server = https.createServer({ key: await readFile(key), cert: await readFile(cert) }, (request, response) => {
   const name = request.url === '/' ? 'index.html' : request.url.slice(1);
   if (!resources.has(name)) { response.writeHead(404); response.end(); return; }
-  response.setHeader('Content-Type', { 'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8', 'style.css': 'text/css', 'icon.svg': 'image/svg+xml' }[name]);
+  response.setHeader('Content-Type', { 'index.html': 'text/html; charset=utf-8', 'app.js': 'text/javascript; charset=utf-8', 'i18n.js': 'text/javascript; charset=utf-8', 'i18n-data.js': 'text/javascript; charset=utf-8', 'style.css': 'text/css', 'icon.svg': 'image/svg+xml' }[name]);
   response.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; img-src 'self' data:; object-src 'none'; frame-ancestors 'none'");
   response.end(resources.get(name));
 });
@@ -58,7 +58,7 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const origin = `https://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ headless: true, ...(process.env.DESKPORT_TEST_CHROME ? { executablePath: process.env.DESKPORT_TEST_CHROME } : {}) });
 // Trust override is confined to this disposable test context. Production has no bypass.
-const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1180, height: 820 }, hasTouch: true });
+const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1180, height: 820 }, hasTouch: true, locale: 'zh-CN' });
 await context.grantPermissions(['local-network-access'], { origin });
 const page = await context.newPage();
 await context.addInitScript(() => {
@@ -215,6 +215,12 @@ try {
   await page.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'streaming', null, { timeout: 25000 });
   await page.waitForFunction(() => window.fixtureChannel.readyState === 'open');
   check('actual native WebRTC H.264 video renders', await page.evaluate(size => document.getElementById('desktop-video').videoWidth === size.width && document.getElementById('desktop-video').videoHeight === size.height, { width: fixtureProbe.width, height: fixtureProbe.height }));
+  const authBeforeLanguage = requests.filter(request => ['/api/login', '/api/resume', '/api/logout', '/api/forget', '/api/session/start', '/api/session/stop'].includes(request.endpoint)).length;
+  await page.selectOption('#language', 'ar');
+  await page.selectOption('#language', 'zh-Hans');
+  check('language changes keep the native stream and authentication intact', await page.locator('#connection-status').getAttribute('data-state') === 'streaming' &&
+    requests.filter(request => ['/api/login', '/api/resume', '/api/logout', '/api/forget', '/api/session/start', '/api/session/stop'].includes(request.endpoint)).length === authBeforeLanguage &&
+    await page.locator('#desktop-video').evaluate(video => video.videoWidth > 0 && !video.paused));
   const codecStats = await page.evaluate(async () => {
     const stats = await window.fixturePeers[0].getStats();
     const result = [];
@@ -229,7 +235,7 @@ try {
   check('start reports the drawable viewport for shared workspace policy',
     start.viewport?.width > 0 && start.viewport?.height > 0 && start.viewport?.ratio > 0 && start.zoom === 1 && start.displayPolicy === 0);
   check('code does not enter URL', !page.url().includes('123456'));
-  check('credentials not persisted in web storage', await page.evaluate(() => localStorage.length === 0 && sessionStorage.length === 0));
+  check('credentials not persisted in web storage', await page.evaluate(() => localStorage.length === 1 && localStorage.getItem('deskport.language') === 'zh-Hans' && sessionStorage.length === 0));
   const otherTab = await context.newPage();
   await otherTab.goto(origin);
   await otherTab.waitForFunction(() => document.getElementById('connection-status').dataset.state === 'idle' && !document.getElementById('paired-ready').hidden);
@@ -299,9 +305,9 @@ try {
     element.getBoundingClientRect().height === 56 && element.querySelector('.app-version').textContent === 'v0.7.0-test'));
   await page.setViewportSize({ width: 320, height: 568 });
   await page.locator('#host-name').evaluate(element => { element.textContent = 'An isolated test computer with a very long name'; });
-  check('smallest phone keeps long host name and disconnect inside header', await page.locator('.app-header').evaluate(element => {
+  check('smallest phone keeps language, long host name and disconnect inside header', await page.locator('.app-header').evaluate(element => {
     const host = element.querySelector('#host-name'), button = element.querySelector('#disconnect');
-    return element.getBoundingClientRect().height === 52 && host.scrollWidth > host.clientWidth &&
+    return element.getBoundingClientRect().height >= 52 && element.getBoundingClientRect().height <= 120 && host.scrollWidth > host.clientWidth &&
       button.getBoundingClientRect().right <= innerWidth && document.documentElement.scrollWidth <= innerWidth;
   }));
   await page.screenshot({ path: path.join(output, 'session-phone-320.png') });
@@ -374,7 +380,7 @@ try {
   mode = 'forget-failed';
   const resumesBeforeForget = requests.filter(request => request.endpoint === '/api/resume').length;
   await page.locator('#forget-pairing').click();
-  await page.waitForFunction(() => document.getElementById('notice').textContent.includes('未能确认取消'));
+  await page.waitForFunction(() => document.getElementById('notice').textContent === DeskPortI18n.message({ source: 'Could not confirm pairing removal. %1', args: ['The computer could not save pairing changes. Try again later.'] }));
   check('forget after disconnect resumes a fresh short session first', requests.filter(request => request.endpoint === '/api/resume').length === resumesBeforeForget + 1);
   check('failed forget retains pairing and reports failure', await page.locator('#paired-ready').isVisible() && Boolean(serverPairing));
   mode = 'success';
