@@ -162,6 +162,10 @@ during startup capability probing on newer Mutter desktops. Both private trees
 retain the unmodified source identity, MIT notice and runtime file checksums
 under `share/doc/deskport/libva-runtime`. The source archive is unchanged from
 the already pinned AppImage input. Native formats still use the system glibc.
+The native host launcher clears inherited private library paths before resolving
+its root and runs system `dirname`/`mkdir` before exporting the host's private
+library tree. This keeps newer system utilities from loading the bundle's older
+libsystemd; the Sunshine executable still receives its private runtime.
 
 Modern Mesa can require a newer libc ABI as well as a newer VA-API initializer.
 On hosts with glibc 2.39 or newer, the launchers inspect installed VA/EGL/GLX
