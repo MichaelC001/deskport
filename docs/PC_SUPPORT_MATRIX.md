@@ -1,9 +1,11 @@
 # PC implementation and acceptance matrix
 
 Reviewed 2026-10-17 against desktop source
-`b0c28182b8048497e32eadbae3561147d2c1969f` and pinned core
+`a8174c968eff7de7b962396279720141063da193` and pinned core
 `e1850b07c072f283669a64ec8f312ffc73ba1219`. This is a source snapshot,
-not the version installed on every computer. The public 0.7.2 release predates
+not the version installed on every computer. Main advanced from `b0c28182` to
+`a8174c96` with a documentation-only takeover checkpoint; application code and
+the core pin are unchanged across that update. The public 0.7.2 release predates
 the latest Windows display broker/DPI changes. A version label alone cannot
 identify those private changes.
 
@@ -42,6 +44,11 @@ promotes a historical partial pass into current end-to-end acceptance.
 | HDR / 10-bit | Managed virtual capture supports 8-bit H.264/HEVC; managed HDR unavailable | Inherited codec/HDR paths depend on capture, encoder, decoder and output | Inherited codec/HDR paths depend on capture, encoder, decoder and output | A setting, encoder flag or build is not HDR acceptance. No complete current PC HDR/color pipeline matrix is accepted. Browser is H.264 SDR. See [encoding audit](ENCODING_AUDIT.md). |
 | Packaging and trust | Developer ID/notarization/stapling/extracted-ZIP Gatekeeper required | Nix/native/portable/AppImage; distro/session runtime requirements; Flatpak viewer only | Full offline Setup and portable viewer; exact-sample normal-protection checks required | Published package verification and a later source/private package are separate. New Windows samples still need protection-enabled checks; old detection clearance is sample-specific. No activation is implied. |
 | Seamless | Deferred | Deferred | Deferred | Excluded from current PC alignment and acceptance commitments; no Seamless development, experiment or live test in this work. |
+
+The later [installed iPad takeover checkpoint](#evidence-ipad-takeover) records
+Linux/Windows video, synthetic text and ordinary reconnect. Its incomplete
+installed-version provenance and the unexercised slow-restoration budget mismatch
+remain explicit; it does not complete new-main or all-PC acceptance.
 
 ## Browser access is a separate client
 
@@ -232,6 +239,18 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Feature / actual result | Evidence validation, full package build, package identity and isolated local CLI. Observed pass: constrained Nix build, version/help/desktop identity/icon, short-TMPDIR CLI enrollment/config/ownership/revocation/SIGTERM; initial 131-byte socket-path setup was rejected before product assertions |
 | Limits / pending | No GPU, physical streaming/input/audio/clipboard/IME/HDR or native Windows/macOS acceptance; Seamless not run. Same binary passed after using a short isolated TMPDIR inside the build root; long TMPDIR support remains unaccepted. |
 | References | [source 1](../docs/PC_VERIFICATION_2026-10-17.md#observed-results) · [source 2](../scripts/test-host-cli.py) |
+
+### Evidence ipad-takeover
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; Unknown: Documentation commit a8174c968eff7de7b962396279720141063da193 records the observation but does not identify all installed host/client source revisions. |
+| Package / installed identity | Existing installed Linux KDE Wayland and Windows 11 builds; exact package/version IDs absent from this public checkpoint. Existing host installations and native iPad/macOS clients; no deployed binary or service replaced/restarted |
+| Package SHA-256 | Unknown: The exact installed package hashes are not recorded in this public checkpoint. |
+| Environment | physical-hardware: Native iPad takes over active macOS viewers on installed Linux KDE Wayland over Tailscale and Windows 11 over Wi-Fi LAN |
+| Feature / actual result | Normal takeover, HEVC video, synthetic text, disconnect/reconnect and Linux virtual-output cleanup/physical-layout preservation. Recorded partial pass: old viewer processes exited, HEVC reached iPad, synthetic text reached the remote app, reconnect restored video; observed Linux physical positions/scales/enablement preserved |
+| Limits / pending | Not new-main acceptance, Windows overlay networking, cold boot, secure desktop, audio, clipboard or long recovery. Package provenance is incomplete. The 10.5-second admission barrier versus 20/25-second helper/settling budgets remains an unexercised slow-path risk, not fixed by the fast successful takeover. |
+| References | [source 1](../docs/ROADMAP.md#native-ipad-takeover-of-linux-and-windows--2026-10-17) |
 <!-- pc-support-evidence:end -->
 
 ## Updating after other PC work merges

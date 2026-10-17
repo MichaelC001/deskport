@@ -1,7 +1,8 @@
 ## PC support and evidence reconciliation — 2026-10-17
 
 [PC implementation and acceptance](PC_SUPPORT_MATRIX.md) is the current scope
-index at desktop `b0c28182` / core `e1850b07`. Dated entries below remain historical
+index at desktop `a8174c96` / core `e1850b07`; the update from `b0c28182`
+adds only the recorded iPad takeover evidence, with no application code change. Dated entries below remain historical
 checkpoints. Correct the superseded Windows client-only/Linux existing-screen
 claims, include Hyprland, and separate implemented behavior from unrun acceptance.
 Windows owned-VDD DPI and automatic signed-in display broker/no repeated UAC are

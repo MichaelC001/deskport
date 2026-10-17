@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "review_date": "2026-10-17",
-  "baseline_source_sha": "b0c28182b8048497e32eadbae3561147d2c1969f",
+  "baseline_source_sha": "a8174c968eff7de7b962396279720141063da193",
   "baseline_core_sha": "e1850b07c072f283669a64ec8f312ffc73ba1219",
   "evidence": [
     {
@@ -225,6 +225,24 @@
       ],
       "package_sha256": "4acdb72971703c2f05e5f752681c968714653fba72d92148a2c1c7a9f8b2814d",
       "package_hash_unknown_reason": ""
+    },
+    {
+      "id": "ipad-takeover",
+      "date": "2026-10-17",
+      "source_sha": null,
+      "source_unknown_reason": "Documentation commit a8174c968eff7de7b962396279720141063da193 records the observation but does not identify all installed host/client source revisions.",
+      "package": "Existing installed Linux KDE Wayland and Windows 11 builds; exact package/version IDs absent from this public checkpoint",
+      "installed": "Existing host installations and native iPad/macOS clients; no deployed binary or service replaced/restarted",
+      "environment_kind": "physical-hardware",
+      "environment": "Native iPad takes over active macOS viewers on installed Linux KDE Wayland over Tailscale and Windows 11 over Wi-Fi LAN",
+      "features": "Normal takeover, HEVC video, synthetic text, disconnect/reconnect and Linux virtual-output cleanup/physical-layout preservation",
+      "result": "Recorded partial pass: old viewer processes exited, HEVC reached iPad, synthetic text reached the remote app, reconnect restored video; observed Linux physical positions/scales/enablement preserved",
+      "limits": "Not new-main acceptance, Windows overlay networking, cold boot, secure desktop, audio, clipboard or long recovery. Package provenance is incomplete. The 10.5-second admission barrier versus 20/25-second helper/settling budgets remains an unexercised slow-path risk, not fixed by the fast successful takeover.",
+      "references": [
+        "docs/ROADMAP.md#native-ipad-takeover-of-linux-and-windows--2026-10-17"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "The exact installed package hashes are not recorded in this public checkpoint."
     }
   ],
   "ci": [
