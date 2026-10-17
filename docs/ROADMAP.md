@@ -1,3 +1,15 @@
+## Optional native desktop input methods — 2026-10-17
+
+Add a default-off per-device local text mode for Windows, macOS and Linux SDL
+viewers. Local composition, native candidates and a CJK preedit preview feed
+only committed UTF-8 through the existing text channel. Focus loss, hiding,
+release and teardown cancel composition and release held remote keys. Physical
+remote-IME mode remains available. Local text follows viewer focus, including
+candidate-popup pointer movement, and leaves system shortcuts to the local OS.
+The candidate anchor is fixed at the top left: desktop does not subscribe to
+remote caret data. No wire extension or mobile implementation changes.
+See [local input method behavior and validation](LOCAL_TEXT_INPUT.md).
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

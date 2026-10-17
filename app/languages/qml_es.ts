@@ -3607,6 +3607,14 @@
             <source>All streaming options</source>
             <translation>Todas las opciones de transmisión</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>Usar el método de entrada local</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>Confirma texto con el método de entrada de este equipo. Los candidatos aparecen arriba a la izquierda; el cursor de texto remoto no está disponible. Desactívalo para la entrada remota o los juegos. Vuelve a conectar para aplicar.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

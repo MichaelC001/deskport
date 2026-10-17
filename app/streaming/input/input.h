@@ -4,6 +4,7 @@
 #include "backend/computermanager.h"
 
 #include <SDL.h>
+#include "localtextinput.h"
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -60,6 +61,7 @@ public:
     void setWindow(SDL_Window* window);
 
     void handleKeyEvent(SDL_KeyboardEvent* event);
+    void handleTextEvent(const SDL_Event& event);
 
     void handleMouseButtonEvent(SDL_MouseButtonEvent* event);
 
@@ -104,7 +106,7 @@ public:
     void notifyMouseLeave();
     void notifyPointerPosition();
     bool keyboardRoutingActive();
-    void releaseRemoteInput();
+    void releaseRemoteInput(bool cancelText = true);
 
     void notifyFocusLost();
 
@@ -172,7 +174,8 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
-    SDL_Window* m_Window;
+    SDL_Window* m_Window = nullptr;
+    LocalTextInput m_LocalTextInput;
     bool m_RemoteInputEnabled;
     bool m_MultiController;
     bool m_GamepadMouse;

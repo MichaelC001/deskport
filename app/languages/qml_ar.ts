@@ -3607,6 +3607,14 @@
             <source>All streaming options</source>
             <translation>جميع خيارات البث</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>استخدام أسلوب الإدخال المحلي</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>أكّد النص بأسلوب الإدخال على هذا الكمبيوتر. تبقى الاقتراحات أعلى اليسار؛ موضع مؤشر النص البعيد غير متاح. عطّل هذا الخيار للإدخال البعيد أو الألعاب. أعد الاتصال لتطبيق التغيير.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

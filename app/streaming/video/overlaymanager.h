@@ -10,6 +10,7 @@ namespace Overlay {
 enum OverlayType {
     OverlayDebug,
     OverlayStatusUpdate,
+    OverlayTextInput,
     OverlayMax
 };
 
@@ -38,6 +39,7 @@ public:
     SDL_Surface* getUpdatedOverlaySurface(OverlayType type);
 
     void setOverlayRenderer(IOverlayRenderer* renderer);
+    void updateTextInput(const QString& text, int start, int length);
 
 private:
     void notifyOverlayUpdated(OverlayType type);

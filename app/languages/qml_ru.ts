@@ -3612,6 +3612,14 @@
             <source>All streaming options</source>
             <translation>Все варианты потоковой передачи</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>Использовать локальный метод ввода</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>Текст подтверждается методом ввода этого компьютера. Кандидаты отображаются слева вверху; позиция удалённого текстового курсора недоступна. Отключите для удалённого ввода или игр. Для применения подключитесь заново.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

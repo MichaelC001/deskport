@@ -3607,6 +3607,14 @@
             <source>All streaming options</source>
             <translation>모든 스트리밍 옵션</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>로컬 입력기 사용</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>이 컴퓨터의 입력기로 텍스트를 확정합니다. 후보 창은 왼쪽 위에 표시되며 원격 커서 위치는 사용할 수 없습니다. 원격 입력기나 게임에서는 끄세요. 다시 연결하면 적용됩니다.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

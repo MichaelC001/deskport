@@ -3612,6 +3612,14 @@
             <source>All streaming options</source>
             <translation>ตัวเลือกการสตรีมทั้งหมด</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>ใช้วิธีป้อนข้อมูลของเครื่องนี้</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>ยืนยันข้อความด้วยวิธีป้อนข้อมูลของคอมพิวเตอร์นี้ รายการคำอยู่ที่มุมซ้ายบน ไม่สามารถระบุตำแหน่งเคอร์เซอร์ข้อความระยะไกลได้ ปิดเมื่อใช้วิธีป้อนข้อมูลระยะไกลหรือเล่นเกม เชื่อมต่อใหม่เพื่อใช้การตั้งค่า</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

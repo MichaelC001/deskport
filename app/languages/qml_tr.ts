@@ -3612,6 +3612,14 @@
             <source>All streaming options</source>
             <translation>Tüm akış seçenekleri</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>Yerel giriş yöntemini kullan</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>Metni bu bilgisayarın giriş yöntemiyle onaylayın. Adaylar sol üstte kalır; uzak metin imleci kullanılamaz. Uzak giriş veya oyunlar için kapatın. Uygulamak için yeniden bağlanın.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

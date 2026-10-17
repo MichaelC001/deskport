@@ -2656,10 +2656,8 @@ void Session::execInternal()
     // only after decoder creation, and only if the user still wants this window.
     bool needsPostDecoderCreationCapture = true;
 
-    // Stop text input. SDL enables it by default
-    // when we initialize the video subsystem, but this
-    // causes an IME popup when certain keys are held down
-    // on macOS.
+    // Native text input is enabled only by the input handler while routing
+    // to a visible, focused viewer with the opt-in local text mode.
     SDL_StopTextInput();
 
     // Disable the screen saver if requested
@@ -2794,7 +2792,19 @@ void Session::execInternal()
             || (event.type >= SDL_CONTROLLERTOUCHPADDOWN && event.type <= SDL_CONTROLLERSENSORUPDATE)
 #endif
             )) continue;
+#if SDL_VERSION_ATLEAST(2, 0, 22)
+        // EXT owns heap text, even when a hidden viewer discards the event.
+        if (event.type == SDL_TEXTEDITING_EXT) {
+            if (m_ViewerRequested) m_InputHandler->handleTextEvent(event);
+            SDL_free(event.editExt.text);
+            continue;
+        }
+#endif
         switch (event.type) {
+        case SDL_TEXTINPUT:
+        case SDL_TEXTEDITING:
+            m_InputHandler->handleTextEvent(event);
+            break;
         case SDL_QUIT:
             showControlCenter();
             break;

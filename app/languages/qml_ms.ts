@@ -3607,6 +3607,14 @@
             <source>All streaming options</source>
             <translation>Semua pilihan penstriman</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>Gunakan kaedah input setempat</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>Sahkan teks dengan kaedah input komputer ini. Calon kekal di kiri atas; kursor teks jauh tidak tersedia. Matikan untuk input jauh atau permainan. Sambung semula untuk menggunakan tetapan.</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

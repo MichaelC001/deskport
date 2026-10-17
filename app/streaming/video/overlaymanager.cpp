@@ -1,5 +1,9 @@
 #include "overlaymanager.h"
 #include "path.h"
+#include <QImage>
+#include <QPainter>
+#include <QTextLayout>
+#include <QTextCharFormat>
 
 using namespace Overlay;
 
@@ -164,4 +168,50 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 
     // Notify the renderer
     m_Renderer->notifyOverlayUpdated(type);
+}
+
+void OverlayManager::updateTextInput(const QString& text, int start, int length)
+{
+    auto& overlay = m_Overlays[OverlayTextInput];
+    overlay.enabled = !text.isEmpty();
+    SDL_Surface* surface = nullptr;
+    if (overlay.enabled) {
+        // Qt's platform font fallback supplies CJK glyphs; the diagnostic TTF
+        // only contains Latin glyphs. Never put preedit into diagnostic logs.
+        QImage image(960, 44, QImage::Format_ARGB32);
+        image.fill(QColor(24, 26, 30, 240));
+        QPainter painter(&image);
+        QFont font; font.setPixelSize(22);
+        painter.setFont(font);
+        painter.setPen(Qt::white);
+        const auto codepoints = text.toUcs4();
+        start = qBound(0, start, int(codepoints.size()));
+        length = qBound(0, length, int(codepoints.size()) - start);
+        int prefix = 0, selected = 0;
+        for (int i = 0; i < start; ++i) prefix += codepoints[i] > 0xffff ? 2 : 1;
+        for (int i = start; i < start + length; ++i) selected += codepoints[i] > 0xffff ? 2 : 1;
+        QTextLayout layout(text, font);
+        QTextCharFormat underline; underline.setFontUnderline(true);
+        QTextCharFormat selection = underline;
+        selection.setBackground(QColor(60, 90, 145));
+        layout.setFormats({{0, int(text.size()), underline}, {int(prefix), int(selected), selection}});
+        layout.beginLayout();
+        auto line = layout.createLine();
+        line.setLineWidth(944);
+        layout.endLayout();
+        layout.draw(&painter, QPointF(8, 6));
+        const auto cursor = qMin(qreal(950), line.cursorToX(prefix) + 8);
+        painter.drawLine(QPointF(cursor, 6), QPointF(cursor, 34));
+        painter.end();
+        surface = SDL_CreateRGBSurfaceWithFormat(0, image.width(), image.height(), 32, SDL_PIXELFORMAT_ARGB8888);
+        if (surface) {
+            SDL_LockSurface(surface);
+            for (int y = 0; y < image.height(); ++y)
+                memcpy(static_cast<char*>(surface->pixels) + y * surface->pitch, image.constScanLine(y), image.bytesPerLine());
+            SDL_UnlockSurface(surface);
+        }
+    }
+    auto old = static_cast<SDL_Surface*>(SDL_AtomicSetPtr(reinterpret_cast<void**>(&overlay.surface), surface));
+    if (old) SDL_FreeSurface(old);
+    if (m_Renderer) m_Renderer->notifyOverlayUpdated(OverlayTextInput);
 }

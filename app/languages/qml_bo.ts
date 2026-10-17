@@ -3607,6 +3607,14 @@
             <source>All streaming options</source>
             <translation>རྒྱུན་གཏོང་གདམ་ག་ཡོད་ཚད།</translation>
         </message>
+        <message>
+            <source>Use the local input method</source>
+            <translation>ས་གནས་ཀྱི་ནང་འཇུག་ཐབས་ལམ་སྤྱོད།</translation>
+        </message>
+        <message>
+            <source>Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.</source>
+            <translation>རྩིས་འཁོར་འདིའི་ནང་འཇུག་ཐབས་ལམ་གྱིས་ཡི་གེ་གཏན་འཁེལ་བྱེད། འདེམས་ཚིག་གཡོན་སྟེང་དུ་ཡོད། ཐག་རིང་གི་ཡི་གེའི་འོད་རྟགས་གནས་ས་མེད། ཐག་རིང་ནང་འཇུག་གམ་རྩེད་མོར་ཁ་རྒྱག སླར་མཐུད་ནས་སྤྱོད།</translation>
+        </message>
     </context>
     <context>
         <name>SdlInputHandler</name>

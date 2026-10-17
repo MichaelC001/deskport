@@ -1047,6 +1047,14 @@ Flickable {
                 spacing: 5
 
                 CheckBox {
+                    text: qsTranslate("DeviceAdvanced", "Use the local input method")
+                    checked: preferences.localTextInput
+                    onToggled: preferences.localTextInput = checked
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTranslate("DeviceAdvanced", "Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.")
+                }
+
+                CheckBox {
                     id: absoluteMouseCheck
                     hoverEnabled: true
                     width: parent.width

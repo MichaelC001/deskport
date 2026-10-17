@@ -10,7 +10,16 @@
 #include <QGuiApplication>
 
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, int streamHeight)
-    : m_RemoteInputEnabled(prefs.remoteInput),
+    : m_LocalTextInput(prefs.localTextInput,
+          [this](const QByteArray& text) {
+              raiseAllKeys();
+              if (LiSendUtf8TextEvent(text.constData(), static_cast<unsigned int>(text.size())) != 0)
+                  SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Local text commit could not be queued");
+          },
+          [](const QString& text, int start, int length) {
+              Session::get()->getOverlayManager().updateTextInput(text, start, length);
+          }),
+      m_RemoteInputEnabled(prefs.remoteInput),
       m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
@@ -216,6 +225,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
 
 SdlInputHandler::~SdlInputHandler()
 {
+    m_LocalTextInput.setActive(false);
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
             Session::get()->notifyMouseEmulationMode(false);
@@ -283,8 +293,9 @@ void SdlInputHandler::raiseAllKeys()
     m_KeysDown.clear();
 }
 
-void SdlInputHandler::releaseRemoteInput()
+void SdlInputHandler::releaseRemoteInput(bool cancelText)
 {
+    if (cancelText) m_LocalTextInput.setActive(false);
     raiseAllKeys();
     for (int button : m_ButtonsDown) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, button);
     m_ButtonsDown.clear();
@@ -297,7 +308,7 @@ bool SdlInputHandler::keyboardRoutingActive()
     const auto flags = SDL_GetWindowFlags(m_Window);
     return isCaptureActive() && (flags & SDL_WINDOW_INPUT_FOCUS) &&
         !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)) &&
-        (!m_AbsoluteMouseMode || m_PointerInside);
+        (!m_AbsoluteMouseMode || m_PointerInside || m_LocalTextInput.enabled());
 }
 
 void SdlInputHandler::notifyPointerPosition()
@@ -305,7 +316,7 @@ void SdlInputHandler::notifyPointerPosition()
     int x, y;
     SDL_GetMouseState(&x, &y);
     const bool inside = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MOUSE_FOCUS) && isMouseInVideoRegion(x, y);
-    if (m_PointerInside && !inside && m_AbsoluteMouseMode) releaseRemoteInput();
+    if (m_PointerInside && !inside && m_AbsoluteMouseMode) releaseRemoteInput(!m_LocalTextInput.enabled());
     m_PointerInside = inside;
     updateKeyboardGrabState();
 }
@@ -313,7 +324,7 @@ void SdlInputHandler::notifyPointerPosition()
 void SdlInputHandler::notifyMouseLeave()
 {
     m_PointerInside = false;
-    if (m_AbsoluteMouseMode) releaseRemoteInput();
+    if (m_AbsoluteMouseMode) releaseRemoteInput(!m_LocalTextInput.enabled());
     updateKeyboardGrabState();
     SDL_ShowCursor(SDL_ENABLE);
 }
@@ -366,8 +377,9 @@ bool SdlInputHandler::isCaptureActive()
 
 void SdlInputHandler::updateKeyboardGrabState()
 {
+    m_LocalTextInput.setActive(keyboardRoutingActive());
     Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
-    bool shouldGrab = keyboardRoutingActive() && m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF;
+    bool shouldGrab = !m_LocalTextInput.enabled() && keyboardRoutingActive() && m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF;
     if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
             !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
         // Ungrab if it's fullscreen only and we left fullscreen

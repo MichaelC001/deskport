@@ -598,7 +598,7 @@ public:
                     renderRect.x = 0;
                     renderRect.y = 0;
                 }
-                else if (i == Overlay::OverlayDebug) {
+                else if (i == Overlay::OverlayDebug || i == Overlay::OverlayTextInput) {
                     // Top left
                     renderRect.x = 0;
                     renderRect.y = m_LastDrawableHeight - overlayTexture.height;

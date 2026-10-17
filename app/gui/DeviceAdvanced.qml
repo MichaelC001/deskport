@@ -126,6 +126,14 @@ ColumnLayout {
             switchable: true; on: preferences.reverseScrollDirection
             onSwitched: function(value) { preferences.reverseScrollDirection=value; save() }
         }
+        UiRow {
+            objectName: "localTextInputSwitch"
+            iconSource: "qrc:/res/ui/shortcuts.svg"
+            title: qsTr("Use the local input method")
+            note: qsTr("Commit text with this computer's IME. Candidates stay at the top left; the remote caret is unavailable. Turn off for remote IME or games. Reconnect to apply.")
+            switchable: true; on: preferences.localTextInput; enabled: preferences.remoteInput
+            onSwitched: function(value) { preferences.localTextInput=value; save() }
+        }
         UiChoiceRow {
             objectName: "systemKeysChoice"
             iconSource: "qrc:/res/ui/shortcuts.svg"
