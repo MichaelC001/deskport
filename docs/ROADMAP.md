@@ -17,6 +17,10 @@ are recorded separately. Seamless is deferred and excluded from current alignmen
 This item does not complete the other sixteen PC tasks; their merged source,
 exact-package and native results must update the matrix before new completion
 claims. Documentation checks and Nix builds do not activate installed services.
+The [audit checkpoint](PC_VERIFICATION_2026-10-17.md) passed constrained native
+Nix compilation, package identity and short-TMPDIR isolated CLI checks. A long
+Unix-socket-path setup failure is retained separately; no physical streaming,
+input, audio, clipboard, HDR or Seamless acceptance is inferred.
 
 ## Windows virtual-output system scaling — 2026-10-17
 

@@ -73,6 +73,10 @@ workflow/job/runner inventory and this generated evidence section. It runs in
 Linux CI before the build and needs only Python's standard library. It never
 launches a compositor, VM, installed application or remote connection.
 
+The local [audit verification](PC_VERIFICATION_2026-10-17.md) records this task's
+Linux build/CLI result and an isolated long-temporary-path setup failure. It does
+not extend the historical GitHub runs or establish physical streaming acceptance.
+
 ## Evidence register
 
 The machine-readable source is [pc-support-evidence.json](pc-support-evidence.json).
@@ -216,6 +220,18 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Feature / actual result | Build-script syntax, source/network/smart-stream/translation checks. Observed completed/success through GitHub run and job API |
 | Limits / pending | Linux runner; no Windows compilation, installation, SCM, native Windows UI or GPU acceptance. |
 | References | [source 1](../.github/workflows/windows-branch.yml) · [source 2](https://github.com/keithxc/deskport/actions/runs/39028059456) |
+
+### Evidence native-audit
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `be315a1a788b21defb782104e3009be7094b43b1` |
+| Package / installed identity | Nix output /nix/store/cclirqg1svs2qqaz4r75cavm0z4g98n0-deskport-0.7.2; hash is the uncompressed output NAR, not a release installer or full closure. Not installed or activated; isolated CLI processes only |
+| Package SHA-256 | `4acdb72971703c2f05e5f752681c968714653fba72d92148a2c1c7a9f8b2814d` |
+| Environment | isolated-fixture: Native NixOS x86_64; builder CPU 0-3 / nice 15 / four cores; private HOME/XDG and loopback TLS; no sharing or input |
+| Feature / actual result | Evidence validation, full package build, package identity and isolated local CLI. Observed pass: constrained Nix build, version/help/desktop identity/icon, short-TMPDIR CLI enrollment/config/ownership/revocation/SIGTERM; initial 131-byte socket-path setup was rejected before product assertions |
+| Limits / pending | No GPU, physical streaming/input/audio/clipboard/IME/HDR or native Windows/macOS acceptance; Seamless not run. Same binary passed after using a short isolated TMPDIR inside the build root; long TMPDIR support remains unaccepted. |
+| References | [source 1](../docs/PC_VERIFICATION_2026-10-17.md#observed-results) · [source 2](../scripts/test-host-cli.py) |
 <!-- pc-support-evidence:end -->
 
 ## Updating after other PC work merges

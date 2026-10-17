@@ -167,19 +167,22 @@ def check(root, write=False):
 
 def self_test(data, root):
     """Ensure actual provenance/scope omissions are rejected, not just formatting."""
+    def record(value, ident):
+        return next(row for row in value["evidence"] if row["id"] == ident)
+
     mutations = [
-        lambda value: value["evidence"][0].update(source_sha="b0c28182"),
-        lambda value: value["evidence"][2].update(source_unknown_reason=""),
-        lambda value: value["evidence"][0].update(installed=""),
-        lambda value: value["evidence"][0].update(limits=""),
-        lambda value: value["evidence"][0].update(package_sha256="abc"),
-        lambda value: value["evidence"][1].update(package_hash_unknown_reason=""),
-        lambda value: value["evidence"][0].update(environment_kind="native-ci"),
-        lambda value: value["evidence"][0].update(references=["docs/CLIPBOARD.md#missing"]),
+        lambda value: record(value, "windows-dpi").update(source_sha="b0c28182"),
+        lambda value: record(value, "windows-old-lock-video").update(source_unknown_reason=""),
+        lambda value: record(value, "windows-dpi").update(installed=""),
+        lambda value: record(value, "windows-dpi").update(limits=""),
+        lambda value: record(value, "windows-dpi").update(package_sha256="abc"),
+        lambda value: record(value, "windows-broker").update(package_hash_unknown_reason=""),
+        lambda value: record(value, "windows-dpi").update(environment_kind="native-ci"),
+        lambda value: record(value, "windows-dpi").update(references=["docs/CLIPBOARD.md#missing"]),
         lambda value: value["evidence"].append(value["evidence"][0]),
         lambda value: value["ci"][0].update(runner="windows-latest"),
         lambda value: value.update(baseline_core_sha="0" * 40),
-        lambda value: value["evidence"][-1].update(source_sha=None, source_unknown_reason="Not recorded"),
+        lambda value: record(value, "ci-windows").update(source_sha=None, source_unknown_reason="Not recorded"),
     ]
     for index, mutation in enumerate(mutations):
         invalid = copy.deepcopy(data)
@@ -191,7 +194,7 @@ def self_test(data, root):
         raise ValueError(f"Invalid provenance mutation {index} was accepted")
     print(f"Rejected {len(mutations)} invalid provenance/scope fixtures")
     advanced = copy.deepcopy(data)
-    advanced["baseline_source_sha"] = data["evidence"][0]["source_sha"]
+    advanced["baseline_source_sha"] = record(data, "windows-dpi")["source_sha"]
     validate(advanced, root)
     print("Retained historical CI SHAs when the implementation snapshot changes")
 
