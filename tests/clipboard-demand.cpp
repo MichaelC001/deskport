@@ -6,6 +6,9 @@
 #include <QProcess>
 #include <QGuiApplication>
 #include <QUuid>
+#ifdef Q_OS_LINUX
+#include "clipboard/linuxmime.h"
+#endif
 
 class MemoryClipboard : public ClipboardNative {
 public:
@@ -93,6 +96,74 @@ private slots:
         QSKIP("Wayland only");
 #endif
     }
+    void nativeProtocolUnavailable() {
+#ifdef Q_OS_LINUX
+        const auto previous = qgetenv("WAYLAND_DISPLAY");
+        qputenv("WAYLAND_DISPLAY", "deskport-test-nonexistent-clipboard");
+        for (const auto& protocol : {"ext-data-control-v1", "wlr-data-control"}) {
+            auto native = makeWaylandClipboardNative(protocol);
+            QVERIFY(!native->valid()); QVERIFY(!native->stateMessage().isEmpty());
+            QVERIFY(native->formats().isEmpty()); QVERIFY(native->read("image/png").isNull());
+            int reads = 0;
+            native->publish({"image/png"}, [&](const QString&) { ++reads; return QByteArray("unused"); });
+            QCOMPARE(reads, 0); QVERIFY(!native->valid());
+        }
+        if (previous.isNull()) qunsetenv("WAYLAND_DISPLAY"); else qputenv("WAYLAND_DISPLAY", previous);
+#else
+        QSKIP("Wayland only");
+#endif
+    }
+    void linuxFileManagerMime() {
+#ifdef Q_OS_LINUX
+        auto raw = new MemoryClipboard;
+        LinuxClipboardMime native{std::unique_ptr<ClipboardNative>(raw)};
+        raw->copy("x-special/gnome-copied-files", "copy\nfile:///synthetic/one\nfile:///synthetic/folder");
+        QVERIFY(native.formats().contains("text/uri-list")); QCOMPARE(raw->reads, 0);
+        QCOMPARE(native.read("text/uri-list"), QByteArray("file:///synthetic/one\nfile:///synthetic/folder"));
+        raw->copy("x-special/gnome-copied-files", "cut\nfile:///synthetic/one");
+        QCOMPARE(native.read("text/uri-list"), QByteArray("file:///synthetic/one"));
+        raw->copy("x-special/gnome-copied-files", "invalid\nfile:///synthetic/one");
+        QVERIFY(native.read("text/uri-list").isNull());
+        int reads = 0;
+        native.publish({"text/uri-list"}, [&](const QString&) { ++reads; return QByteArray("file:///synthetic/one\r\nfile:///synthetic/folder\r\n"); });
+        QVERIFY(raw->formats().contains("x-special/gnome-copied-files")); QCOMPARE(reads, 0);
+        QCOMPARE(raw->read("x-special/gnome-copied-files"), QByteArray("copy\nfile:///synthetic/one\nfile:///synthetic/folder"));
+        native.publish({"text/uri-list"}, [](const QString&) { return QByteArray(); });
+        QVERIFY(raw->read("x-special/gnome-copied-files").isNull());
+#else
+        QSKIP("Linux MIME adapter only");
+#endif
+    }
+    void unsupportedMimeIsNotSuccessfulText() {
+        auto native = new MemoryClipboard;
+        QList<QJsonObject> messages;
+        ClipboardAgent agent{std::unique_ptr<ClipboardNative>(native), [&](const QJsonObject& message) { messages.append(message); }};
+        native->copy("application/synthetic-only", "must not be read"); agent.observe();
+        QCOMPARE(native->reads, 0);
+        QVERIFY(messages.size() >= 2);
+        QCOMPARE(messages.first()["type"].toString(), QString("clipboard-v2-status"));
+        QVERIFY(!messages.first()["message"].toString().isEmpty());
+        QCOMPARE(messages.last()["kind"].toString(), QString());
+        QVERIFY(!messages.last().contains("text"));
+        messages.clear(); native->copy("text/plain", "supported"); agent.observe();
+        // Simulate the authoritative acknowledgement before the queued copy is resent.
+        agent.receive({{"type", "clipboard-v2-offer"}, {"kind", "ack"}, {"id", "synthetic-ack"}, {"rev", 1}});
+        QVERIFY(!messages.isEmpty()); QCOMPARE(messages.first()["message"].toString(), QString());
+    }
+    void selectionChangesDuringObservation() {
+        auto native = new MemoryClipboard; QList<QJsonObject> messages;
+        ClipboardAgent agent{std::unique_ptr<ClipboardNative>(native), [&](const QJsonObject& m) { messages.append(m); }};
+        native->copy("text/plain", "obsolete");
+        native->reader = [&](const QString&) {
+            QTimer::singleShot(0, &agent, [&] { native->bytes["text/plain"] = "latest"; ++native->generation; agent.observe(); });
+            QTest::qWait(30); return QByteArray("obsolete");
+        };
+        agent.observe();
+        for (const auto& message : messages) QVERIFY(message["type"] != "clipboard-v2-offer");
+        native->reader = {}; messages.clear(); agent.observe();
+        QVERIFY(!messages.isEmpty()); QCOMPARE(messages.last()["kind"].toString(), QString("text"));
+        QCOMPARE(QByteArray::fromBase64(messages.last()["text"].toString().toLatin1()), QByteArray("latest"));
+    }
     void manifestValidation() {
         auto file = [](QString p, qint64 size = 1, bool dir = false) { return QJsonObject{{"path", p}, {"size", QString::number(size)}, {"directory", dir}}; };
         QVERIFY(ClipboardV2::validManifest({file("folder", 0, true), file("folder/a.txt")}));
@@ -122,6 +193,9 @@ private slots:
             QTRY_VERIFY(destination->types.contains("application/x-deskport-clipboard"));
             QCOMPARE(destination->read("text/plain"), text);
         }
+        left->copy("text/plain", QByteArray("")); a->observe();
+        QTRY_VERIFY(right->types.contains("application/x-deskport-clipboard"));
+        QTRY_VERIFY(right->read("text/plain").isEmpty()); QVERIFY(!right->read("text/plain").isNull());
         // Rapid client copies before the first acknowledgement preserve the latest.
         right->copy("text/plain", "first"); b->observe();
         right->copy("text/plain", "latest"); b->observe();

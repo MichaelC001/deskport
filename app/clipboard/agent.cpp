@@ -72,8 +72,9 @@ void ClipboardAgent::stop() {
     // A native provider callback can be waiting inside request(). Do not replace
     // its pasteboard item from that nested event loop; let it unwind before the
     // native backend is destroyed on helper exit.
-    if (!m_Busy && !m_Serving && !m_RemoteId.isEmpty() && m_Native->formats().contains(Marker))
+    if (!m_Busy && !m_Serving && !m_Observing && !m_RemoteId.isEmpty() && m_Native->formats().contains(Marker))
         m_Native->publish({}, [](const QString&) { return QByteArray(); });
+    m_Native->cancel();
     m_RemoteId.clear();
 }
 void ClipboardAgent::status(const QString& text) { m_Send({{"type", "clipboard-v2-status"}, {"message", text}}); }
@@ -129,7 +130,12 @@ bool ClipboardAgent::snapshotFiles(const QByteArray& data) {
     return ClipboardV2::validManifest(m_Files);
 }
 void ClipboardAgent::observe() {
-    if (m_Stopped || m_Busy || m_Serving) return;
+    if (m_Stopped) return;
+    const auto notice = m_Native->stateMessage();
+    if (notice != m_NativeNotice) { m_NativeNotice = notice; status(notice); }
+    if (!m_Native->valid()) { stop(); return; }
+    if (m_Busy || m_Serving || m_Observing) return;
+    QScopedValueRollback<bool> observing(m_Observing, true);
     if (!m_PendingOffer.isEmpty()) { auto pending = m_PendingOffer; m_PendingOffer = {}; applyOffer(pending); }
     const auto revision = m_Native->revision(); if (revision == m_Seen) return;
     m_Seen = revision;
@@ -152,10 +158,15 @@ void ClipboardAgent::observe() {
         if (formats.contains(mime)) {
             const auto bytes = m_Native->read(mime); QString encoded;
             const auto text = QString::fromUtf8(bytes);
-            if (text.toUtf8() == bytes && DeskPortClipboard::encode(text, encoded)) { m_Kind = "text"; offer["text"] = encoded; }
+            if (m_Native->failedRead(bytes) || m_Native->revision() != revision) status("Clipboard content changed or could not be read.");
+            else if (text.toUtf8() == bytes && DeskPortClipboard::encode(text, encoded)) { m_Kind = "text"; offer["text"] = encoded; }
             else status("Text copy exceeds the 128 MiB limit or is not valid UTF-8.");
-        }
+        } else if (!formats.isEmpty()) status("Clipboard format is not supported.");
     }
+    // Native reads dispatch events. A changed selection, disconnect or a newer
+    // remote offer must not publish this obsolete snapshot as a successful copy.
+    if (m_Stopped || !m_Native->valid() || m_Native->revision() != revision) return;
+    if (!m_Kind.isEmpty() && m_Native->stateMessage().isEmpty()) status({});
     // Revoke the previous remote offer even when the new local copy is unsupported.
     offer["kind"] = m_Kind;
     if (m_Authoritative) offer["rev"] = ++m_Revision;
@@ -288,7 +299,10 @@ void ClipboardAgent::applyOffer(const QJsonObject& message) {
     m_Native->publish(formats, [this, id](const QString& mime) {
         if (mime == Marker) return id.toUtf8();
         if (m_Stopped || id != m_RemoteId) return QByteArray();
-        if (m_Cache.contains(mime)) return m_Cache[mime];
+        if (m_Cache.contains(mime)) {
+            const auto bytes = m_Cache[mime];
+            return bytes.isNull() ? QByteArray("") : bytes; // Valid empty text is not a failed native read.
+        }
         return materialize(id, mime);
     }, kind == "files" ? qBound(1, message["items"].toInt(1), ClipboardV2::MaxEntries) : 1);
     m_Seen = m_Native->revision();
@@ -364,10 +378,17 @@ int runClipboardHelper(int argc, char** argv) {
     signal(SIGPIPE, SIG_IGN);
     QGuiApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
+#ifdef Q_OS_LINUX
+    app.setApplicationName(QStringLiteral("DeskPort"));
+    app.setDesktopFileName(QStringLiteral("io.github.keithxc.DeskPort"));
+#endif
     QFile output; if (!output.open(STDOUT_FILENO, QIODevice::WriteOnly)) return 5;
     auto send = [&](const QJsonObject& message) { output.write(QJsonDocument(message).toJson(QJsonDocument::Compact) + '\n'); output.flush(); };
     ClipboardAgent agent(makeClipboardNative(), send, app.arguments().contains("--clipboard-helper-host"));
-    if (!agent.valid()) return 2;
+    if (!agent.valid()) { agent.observe(); return 2; }
+    QTimer nativeHealth;
+    QObject::connect(&nativeHealth, &QTimer::timeout, &app, [&] { if (!agent.valid()) { agent.observe(); app.exit(2); } });
+    nativeHealth.start(250);
     QByteArray buffer;
     fcntl(STDIN_FILENO, F_SETFL, fcntl(STDIN_FILENO, F_GETFL) | O_NONBLOCK);
     QSocketNotifier input(STDIN_FILENO, QSocketNotifier::Read);

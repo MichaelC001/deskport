@@ -15,7 +15,7 @@ HEADERS += backend/smalltcp.h backend/smalltcptunnel.h
 linux {
     CONFIG += link_pkgconfig
     PKGCONFIG += wayland-client
-    SOURCES += clipboard/waylandnative.cpp clipboard/ext-data-control.c
+    SOURCES += clipboard/waylandnative.cpp clipboard/portalnative.cpp clipboard/ext-data-control.c clipboard/wlr-data-control.c
     SOURCES += streaming/xdg-activation-v1.c
 }
 SOURCES += clipboard/agent.cpp clipboard/native.cpp

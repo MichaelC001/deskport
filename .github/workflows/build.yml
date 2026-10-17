@@ -19,6 +19,15 @@ jobs:
         run: git submodule update --init shared/deskport-core
       - name: Shared core adapter contract
         run: nix develop -c python3 scripts/test-core.py
+      - name: Isolated Wayland clipboard regressions
+        env:
+          QT_QPA_PLATFORM: offscreen
+          DESKPORT_TEST_WAYLAND: "0"
+          DESKPORT_TEST_SYNTHETIC_SESSION: "0"
+          JOBS: "4"
+        run: |
+          nix develop -c python3 scripts/test-wayland-clipboard.py
+          nix develop -c python3 scripts/test-clipboard-demand.py
       - name: Build
         run: nix build -L
       - name: Portable runtime regression checks

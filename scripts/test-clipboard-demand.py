@@ -7,11 +7,13 @@ import sys
 import tempfile
 
 root = Path(__file__).resolve().parents[1]
-with tempfile.TemporaryDirectory(prefix="deskport-demand-test-") as tmp:
+build_root = Path(subprocess.check_output(["bash", str(root / "scripts/build-paths.sh"), "checkout"], text=True).strip())
+(build_root / "tests").mkdir(parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix="deskport-demand-test-", dir=build_root / "tests") as tmp:
     work = Path(tmp)
     project = work / "demand.pro"
     sources = ["tests/clipboard-demand.cpp", "app/clipboard/agent.cpp", "app/clipboard/native.cpp"]
-    extra = f'OBJECTIVE_SOURCES += "{root}/app/clipboard/macnative.mm"\nLIBS += -framework AppKit\n' if sys.platform == "darwin" else f'SOURCES += "{root}/app/clipboard/waylandnative.cpp" "{root}/app/clipboard/ext-data-control.c"\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n'
+    extra = f'OBJECTIVE_SOURCES += "{root}/app/clipboard/macnative.mm"\nLIBS += -framework AppKit\n' if sys.platform == "darwin" else f'SOURCES += "{root}/app/clipboard/waylandnative.cpp" "{root}/app/clipboard/ext-data-control.c" "{root}/app/clipboard/wlr-data-control.c" "{root}/app/clipboard/portalnative.cpp"\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\nQT += dbus\n'
     project.write_text('QT += core gui testlib\nCONFIG += console c++17 testcase\nCONFIG -= app_bundle\nTARGET = demand\n' + f'INCLUDEPATH += "{root}/app"\n' + 'SOURCES += ' + ' '.join(f'"{root / p}"' for p in sources) + '\n' + extra)
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen")
     subprocess.run(["qmake", str(project)], cwd=work, env=env, check=True)

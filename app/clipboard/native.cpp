@@ -3,6 +3,9 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QVariant>
+#ifdef Q_OS_LINUX
+#include "linuxmime.h"
+#endif
 #ifdef Q_OS_WIN
 #include <QBuffer>
 #include <QImage>
@@ -108,7 +111,7 @@ std::unique_ptr<ClipboardNative> makeClipboardNative() {
 #endif
 #ifdef Q_OS_LINUX
     if (!qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") && QGuiApplication::platformName() != "offscreen")
-        return makeWaylandClipboardNative();
+        return std::unique_ptr<ClipboardNative>(new LinuxClipboardMime(makeWaylandClipboardNative()));
 #endif
     return std::unique_ptr<ClipboardNative>(new QtClipboard);
 }
