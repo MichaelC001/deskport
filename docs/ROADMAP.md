@@ -24,6 +24,28 @@ its deliberately bounded two SCM retries; an authorized administrator coordinato
 restarted it only after independent recovery was observed. Nested UI disconnect,
 audio/clipboard/latency, locked-session and pre-login hosting are not accepted.
 
+## Native iPad takeover of Linux and Windows — 2026-10-17
+
+Exclusive GUI leases were coordinated with the other active test tasks. On the
+installed Linux KDE Wayland and Windows 11 hosts, a native iPad client confirmed
+takeover of an active macOS viewer. Both old viewer processes exited, actual HEVC
+video reached the iPad, synthetic text reached the remote application, and normal
+disconnect/reconnect returned working video. Linux also removed its virtual output
+and preserved the observed physical output positions, scales and enabled states.
+The synthetic browser profile and Notepad tab were closed after testing.
+
+Linux control traffic used Tailscale. Windows used Wi-Fi LAN; that host has no
+Tailscale interface/client, so Windows overlay-network acceptance remains open.
+These are installed-build observations, not acceptance of a new main build, cold
+boot, secure desktop, audio playback, clipboard or long-duration recovery. No
+deployed host binary or service was replaced or restarted.
+
+Follow-up: the session handoff barrier currently allows 10.5 seconds, while the
+Windows display helper allows 20 seconds and display settling allows 25 seconds.
+Slow restoration can therefore outlive the outer admission wait. This static
+budget mismatch was handed to the Windows recovery task; the successful live
+takeover restored within about one second and did not exercise the slow path.
+
 ## macOS takeover recovery with disconnected connectors — 2026-10-17
 
 A saved empty mirror-source UUID means no mirror. WindowServer can enumerate
