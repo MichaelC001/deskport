@@ -154,6 +154,12 @@ int main(void) { @autoreleasepool {
     reset(); screens[@5]=entry(NO,NO,0); screens[@5][@"noUuid"]=@YES;
     assert(snapshotTopology(9)); assert(savedTopology.count==3);
     assert(![screen(3)[@"enabled"] boolValue]); // Identifiable disabled panels stay in the snapshot.
+    // A disconnected connector has no UUID. An empty mirror UUID means no
+    // source and must never resolve to that connector during local restoration.
+    assert(findDisplay(nil)==0 && findDisplay(@"")==0);
+    assert(restorationSource(savedTopology[0])==0);
+    assert(restoredTopologyReady());
+    assert(recover() && !savedTopology);
     reset(); screens[@1][@"noUuid"]=@YES;
     assert(!snapshotTopology(9)); assert(!savedTopology);
     reset(); screens[@3][@"noUuid"]=@YES; screens[@3][@"online"]=@YES;

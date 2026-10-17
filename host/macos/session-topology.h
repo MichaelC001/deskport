@@ -50,6 +50,8 @@ static NSArray<NSNumber *> *onlineDisplays(void) {
     return result;
 }
 static CGDirectDisplayID findDisplay(NSString *uuid) {
+    // Empty mirror sources mean no display, never an anonymous connector.
+    if (!uuid.length) return kCGNullDirectDisplay;
     for (NSNumber *n in onlineDisplays()) if ([displayUUID(n.unsignedIntValue) isEqual:uuid]) return n.unsignedIntValue;
     return 0;
 }
