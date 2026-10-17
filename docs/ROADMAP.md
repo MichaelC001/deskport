@@ -1,3 +1,15 @@
+## Tested PC task integration — 2026-10-18
+
+Integrate seven tested slices: guarded Hyprland policies, preconfigured X11
+dummy-output workspaces, Wayland clipboard fallbacks, opt-in local IME, shared
+Web localization, Linux packaging fixes and support evidence. Resolve overlapping
+HostManager contracts without dropping either backend. Merge the two shared-core
+catalog branches and keep Git/Nix pins aligned. See the
+[17-task integration ledger](PC_TASK_INTEGRATION.md) for exact scope and gates.
+Ten tasks remain on their branches; known GNOME capture/recovery failures and
+unrun build/native checks are not promoted to completion. No deployed service,
+installed package, release asset or mynix activation changes. Seamless stays deferred.
+
 ## X11 independent software workspace candidate — 2026-10-17
 
 Add an explicit, driver-gated XRandR lease for an existing inactive

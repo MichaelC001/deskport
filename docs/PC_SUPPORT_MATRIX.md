@@ -1,13 +1,10 @@
 # PC implementation and acceptance matrix
 
-Reviewed 2026-10-17 against desktop source
-`a8174c968eff7de7b962396279720141063da193` and pinned core
-`e1850b07c072f283669a64ec8f312ffc73ba1219`. This is a source snapshot,
-not the version installed on every computer. Main advanced from `b0c28182` to
-`a8174c96` with a documentation-only takeover checkpoint; application code and
-the core pin are unchanged across that update. The public 0.7.2 release predates
-the latest Windows display broker/DPI changes. A version label alone cannot
-identify those private changes.
+Reviewed 2026-10-18 against integration source `2aa1f1a4cca45df0df804b8bdd4199d28e1edbc5` and pinned core
+`f34fc7b1524ce436185c4b085a903e6af4314790`. This is a source snapshot, not an installed version.
+Seven tested task branches are integrated with their scoped acceptance records;
+the remaining ten tasks retain explicit gates in [the integration ledger](PC_TASK_INTEGRATION.md).
+Historical package and hardware results retain their exact source identities.
 
 This page is the current PC scope index. Dated release notes and roadmap entries
 retain their original environment and result. A later implementation supersedes
@@ -33,14 +30,14 @@ promotes a historical partial pass into current end-to-end acceptance.
 | Feature | macOS arm64 | Linux x86_64 | Windows x64 | Remaining acceptance / explicit boundary |
 | --- | --- | --- | --- | --- |
 | Viewer, host and mutual binding | Implemented in full package | Implemented in native/Nix/AppImage host packages; Flatpak viewer only | Implemented in full installation; portable viewer does not install the sharing broker | Test exact installed endpoints in both directions; binding success is not video/input success. Client-only binding remains an explicit mode. See [binding](PEER_BINDING.md). |
-| Adaptive workspace and physical layout | Owned virtual display; exclusive/mirror/extended policy adapters | KWin virtual-primary/policies; Mutter and Hyprland extended owned output | Owned VDD; exclusive/mirror/extended policies | Real hardware, compositor/version, hotplug, multi-monitor restoration and client resize/input mapping remain combination-specific. See [display policies](SESSION_DISPLAY.md) and [Linux backends](LINUX_ADAPTIVE_DISPLAY.md). |
+| Adaptive workspace and physical layout | Owned virtual display; exclusive/mirror/extended policy adapters | KWin policies; Mutter extended output; guarded Hyprland policies; preconfigured X11 dummy extension at 1x | Owned VDD; exclusive/mirror/extended policies | Real hardware, compositor/version, hotplug, multi-monitor restoration and client resize/input mapping remain combination-specific. See [display policies](SESSION_DISPLAY.md) and [Linux backends](LINUX_ADAPTIVE_DISPLAY.md). |
 | Workspace scale / DPI | Native 1x/2x backing | Native 1x/2x when compositor accepts | **Implemented and partially accepted:** owned VDD 100%/200%, observed window DPI and recovery; mirror preserves physical DPI | [windows-dpi](#evidence-windows-dpi) covers a private package, including old-client 1x fallback. Do not reopen DPI as missing code or apply it to physical outputs. |
 | Background transport, hide/recall and input release | Implemented | Implemented; Wayland shortcut interception depends on compositor | Implemented | Hidden viewers release input; presented/background audio and clipboard ownership depend on session policy. Route-change recovery, sleep/wake, long sessions and real key/button release need exact-package checks. See [desktop UX](DESKTOP_UX.md) and [lifecycle](SESSION_LIFECYCLE.md). |
 | Login startup and service lifetime | Opt-in per-user supervisor at graphical login | User service/autostart or foreground CLI in a suitable graphical session | HKCU login startup; full installer owns automatic SYSTEM **display broker**; GUI/host stay ordinary user | [windows-broker](#evidence-windows-broker) and [windows-dpi](#evidence-windows-dpi) record signed-in sharing without repeated UAC. Cold boot, logout/session change and full upgrade/rollback/uninstall matrix remain pending for current packages. Service auto-start is implemented; reboot acceptance is separate. |
 | Pre-login, lock screen, credential/UAC desktop | No FileVault unlock or pre-login promise | No universal greeter/login-screen service; session capture permissions remain necessary | Old lock-screen video is a partial historical result; current signed-in broker does not supply a pre-login network host | [windows-old-lock-video](#evidence-windows-old-lock-video) is not current secure-desktop/input acceptance. Current locked-session transitions, credential input and pre-login hosting remain with the Windows lifecycle work; no service rewrite is authorized by this matrix. |
-| Keyboard, IME and caret | Physical key routing and host IME; native caret adapter | Physical key routing and host IME; AT-SPI caret adapter | Physical key routing and host IME; UIA/Win32 caret adapter | Native viewer stops SDL text input; local IME preedit forwarding is deferred. Caret geometry, composed text, shortcuts and mixed DPI require native editors/terminals/browser/IME tests; synthetic key delivery alone is insufficient. |
+| Keyboard, IME and caret | Physical key routing and host IME; native caret adapter | Physical key routing and host IME; AT-SPI caret adapter | Physical key routing and host IME; UIA/Win32 caret adapter | Opt-in local IME is implemented on desktop and defaults off; candidates use a fixed top-left anchor. Native Wayland and end-to-end remote insertion remain pending. See [local text input](LOCAL_TEXT_INPUT.md). Caret geometry, composed text, shortcuts and mixed DPI require native editors/terminals/browser/IME tests; synthetic key delivery alone is insufficient. |
 | Audio | Capture/session receive and host-playback controls implemented; OS permissions apply | Capture/session controls implemented; session audio stack required | Capture/session controls implemented; device/driver routing required | Host configuration enables audio capability; per-device session choice controls receiving sound. Do not reuse the old globally-disabled default. Actual output device, mute/focus behavior, playback quality, reconnect and A/V sync remain hardware acceptance. |
-| Desktop clipboard | Native lazy pasteboard text/PNG/files | Wayland data-control/Qt providers; compositor capability required | Native OLE delayed provider and pipe transport | [clipboard](#evidence-clipboard) contains isolated and historical VM checks. Current three-platform clipboard matrix needs synthetic bilingual text/images/file bytes, inactive app, cancellation/reconnect and large-paste timing. No initial clipboard push; no permission bypass. See [limits](CLIPBOARD.md). |
+| Desktop clipboard | Native lazy pasteboard text/PNG/files | Wayland ext/wlr data-control, GNOME portal fallback and X11 Qt providers; compositor permission/capability required | Native OLE delayed provider and pipe transport | [clipboard](#evidence-clipboard) contains isolated and historical VM checks. Current three-platform clipboard matrix needs synthetic bilingual text/images/file bytes, inactive app, cancellation/reconnect and large-paste timing. No initial clipboard push; no permission bypass. See [limits](CLIPBOARD.md). |
 | HDR / 10-bit | Managed virtual capture supports 8-bit H.264/HEVC; managed HDR unavailable | Inherited codec/HDR paths depend on capture, encoder, decoder and output | Inherited codec/HDR paths depend on capture, encoder, decoder and output | A setting, encoder flag or build is not HDR acceptance. No complete current PC HDR/color pipeline matrix is accepted. Browser is H.264 SDR. See [encoding audit](ENCODING_AUDIT.md). |
 | Packaging and trust | Developer ID/notarization/stapling/extracted-ZIP Gatekeeper required | Nix/native/portable/AppImage; distro/session runtime requirements; Flatpak viewer only | Full offline Setup and portable viewer; exact-sample normal-protection checks required | Published package verification and a later source/private package are separate. New Windows samples still need protection-enabled checks; old detection clearance is sample-specific. No activation is implied. |
 | Seamless | Deferred | Deferred | Deferred | Excluded from current PC alignment and acceptance commitments; no Seamless development, experiment or live test in this work. |
@@ -57,8 +54,9 @@ Flatpak does not host. The browser implements authenticated HTTPS pairing,
 H.264 SDR/Opus, adaptive size, one controller, physical keys and explicit composed
 text/paste. This is not automatic bidirectional native clipboard sync or native
 local-IME preedit forwarding. File transfer, HDR, HEVC/AV1 and gamepads remain
-unsupported in the browser client. GNOME/Hyprland supply an extended display;
-they do not gain physical mirroring from a browser option.
+unsupported in the browser client. Display policy availability follows the host
+backend; a browser option cannot add a capability the host did not advertise.
+Browser UI now uses the shared 22-language catalog, with native-speaker review pending.
 
 [browser](#evidence-browser) records Chrome fixture capture/audio and persistence;
 [mac-browser](#evidence-mac-browser) records a partial macOS host checkpoint.
@@ -251,6 +249,78 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Feature / actual result | Normal takeover, HEVC video, synthetic text, disconnect/reconnect and Linux virtual-output cleanup/physical-layout preservation. Recorded partial pass: old viewer processes exited, HEVC reached iPad, synthetic text reached the remote app, reconnect restored video; observed Linux physical positions/scales/enablement preserved |
 | Limits / pending | Not new-main acceptance, Windows overlay networking, cold boot, secure desktop, audio, clipboard or long recovery. Package provenance is incomplete. The 10.5-second admission barrier versus 20/25-second helper/settling budgets remains an unexercised slow-path risk, not fixed by the fast successful takeover. |
 | References | [source 1](../docs/ROADMAP.md#native-ipad-takeover-of-linux-and-windows--2026-10-17) |
+
+### Evidence hyprland-policies
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `559c5dcb13134834745b20911e5127ee6d3d6699` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | isolated-compositor: Hyprland Lua and legacy test sessions |
+| Feature / actual result | Three display policies and guardian recovery. 68 IPC checks, HostManager/core, Nix and native WLR/H.264 probes passed |
+| Limits / pending | Physical panels, client frame delivery, audio/input and latency remain unaccepted. |
+| References | [source 1](../docs/HYPRLAND_DISPLAY.md) |
+
+### Evidence x11-workspace
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `72eb11a4b6dcce766b2b6b51f5566d325d5c618e` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | isolated-fixture: Preconfigured dummy Xorg server and packaged host |
+| Feature / actual result | Owned software output leases, capture and recovery. 44 lifecycle and 172 binding checks, Nix, Xorg H.264 capture and crash restoration passed |
+| Limits / pending | DUMMY1-15 only; extension at 1x. No 2x, physical topology policies or ordinary GPU qualification. |
+| References | [source 1](../docs/X11_ADAPTIVE_DISPLAY.md) |
+
+### Evidence wayland-clipboard-fallback
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `4a8f83e3b8854e7e9dc8e2a603b5e37b9e04fc38` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | isolated-compositor: GNOME portal and Hyprland data-control fixtures |
+| Feature / actual result | Clipboard fallbacks and capability negotiation. 19 portal and 8 demand checks, native isolated paths and Nix passed |
+| Limits / pending | Physical machine and file-manager paste, wlr-v1-only environment remain unaccepted. |
+| References | [source 1](../docs/CLIPBOARD.md) |
+
+### Evidence desktop-local-ime
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `abbe167ed609030f429989a9039fe07e3f88d309` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | isolated-fixture: Native macOS/Windows IME and Linux X11 test windows |
+| Feature / actual result | Opt-in local composition, commit, cancellation and focus lifecycle. Native macOS/Windows Pinyin, X11 CJK composition and platform builds passed |
+| Limits / pending | Default off; fixed top-left candidates. Native Wayland, packaged HiDPI/fullscreen and real remote insertion remain unaccepted. |
+| References | [source 1](../docs/LOCAL_TEXT_INPUT.md) |
+
+### Evidence web-localization
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `8e01e23425b3f1b1f50e623d8b99e29bcc6f3518` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | isolated-fixture: Offscreen Chromium, HTTPS and RTC fixtures |
+| Feature / actual result | Shared browser UI localization and RTL. 126 originals across 22 locales, 71 browser checks, 67 RTC and 165 HTTPS checks, Nix passed |
+| Limits / pending | Native-speaker review, other browsers, physical font/rendering and real streaming remain separate. |
+| References | [source 1](../docs/BROWSER_ACCESS.md) |
+
+### Evidence linux-package-lifecycle
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-17; `f60841210caef5ea8a21261b37104a4919387757` |
+| Package / installed identity | Task-specific build and fixtures recorded in the referenced report. No deployed application activated by integration |
+| Package SHA-256 | Unknown: This row summarizes separately identified fixture/build outputs, not one distribution archive. |
+| Environment | virtual-machine: Retained distro desktop VM overlays and synthetic media fixture |
+| Feature / actual result | Pinned VA runtime, launcher isolation and package lifecycle. Ubuntu candidate GUI/API control, final Nix, 26 synthetic AV assertions and 28 VM teardowns passed |
+| Limits / pending | Old published DEB rollback and GNOME AppImage capture failures remain; KWin 6.3 unsupported. Physical GPUs and OS input/clipboard not qualified. |
+| References | [source 1](../docs/LINUX_DESKTOP_ACCEPTANCE.md) |
 <!-- pc-support-evidence:end -->
 
 ## Updating after other PC work merges

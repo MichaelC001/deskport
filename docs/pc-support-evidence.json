@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "review_date": "2026-10-17",
-  "baseline_source_sha": "a8174c968eff7de7b962396279720141063da193",
-  "baseline_core_sha": "e1850b07c072f283669a64ec8f312ffc73ba1219",
+  "review_date": "2026-10-18",
+  "baseline_source_sha": "2aa1f1a4cca45df0df804b8bdd4199d28e1edbc5",
+  "baseline_core_sha": "f34fc7b1524ce436185c4b085a903e6af4314790",
   "evidence": [
     {
       "id": "windows-dpi",
@@ -243,6 +243,114 @@
       ],
       "package_sha256": null,
       "package_hash_unknown_reason": "The exact installed package hashes are not recorded in this public checkpoint."
+    },
+    {
+      "id": "hyprland-policies",
+      "date": "2026-10-17",
+      "source_sha": "559c5dcb13134834745b20911e5127ee6d3d6699",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "isolated-compositor",
+      "environment": "Hyprland Lua and legacy test sessions",
+      "features": "Three display policies and guardian recovery",
+      "result": "68 IPC checks, HostManager/core, Nix and native WLR/H.264 probes passed",
+      "limits": "Physical panels, client frame delivery, audio/input and latency remain unaccepted.",
+      "references": [
+        "docs/HYPRLAND_DISPLAY.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "x11-workspace",
+      "date": "2026-10-17",
+      "source_sha": "72eb11a4b6dcce766b2b6b51f5566d325d5c618e",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "isolated-fixture",
+      "environment": "Preconfigured dummy Xorg server and packaged host",
+      "features": "Owned software output leases, capture and recovery",
+      "result": "44 lifecycle and 172 binding checks, Nix, Xorg H.264 capture and crash restoration passed",
+      "limits": "DUMMY1-15 only; extension at 1x. No 2x, physical topology policies or ordinary GPU qualification.",
+      "references": [
+        "docs/X11_ADAPTIVE_DISPLAY.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "wayland-clipboard-fallback",
+      "date": "2026-10-17",
+      "source_sha": "4a8f83e3b8854e7e9dc8e2a603b5e37b9e04fc38",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "isolated-compositor",
+      "environment": "GNOME portal and Hyprland data-control fixtures",
+      "features": "Clipboard fallbacks and capability negotiation",
+      "result": "19 portal and 8 demand checks, native isolated paths and Nix passed",
+      "limits": "Physical machine and file-manager paste, wlr-v1-only environment remain unaccepted.",
+      "references": [
+        "docs/CLIPBOARD.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "desktop-local-ime",
+      "date": "2026-10-17",
+      "source_sha": "abbe167ed609030f429989a9039fe07e3f88d309",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "isolated-fixture",
+      "environment": "Native macOS/Windows IME and Linux X11 test windows",
+      "features": "Opt-in local composition, commit, cancellation and focus lifecycle",
+      "result": "Native macOS/Windows Pinyin, X11 CJK composition and platform builds passed",
+      "limits": "Default off; fixed top-left candidates. Native Wayland, packaged HiDPI/fullscreen and real remote insertion remain unaccepted.",
+      "references": [
+        "docs/LOCAL_TEXT_INPUT.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "web-localization",
+      "date": "2026-10-17",
+      "source_sha": "8e01e23425b3f1b1f50e623d8b99e29bcc6f3518",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "isolated-fixture",
+      "environment": "Offscreen Chromium, HTTPS and RTC fixtures",
+      "features": "Shared browser UI localization and RTL",
+      "result": "126 originals across 22 locales, 71 browser checks, 67 RTC and 165 HTTPS checks, Nix passed",
+      "limits": "Native-speaker review, other browsers, physical font/rendering and real streaming remain separate.",
+      "references": [
+        "docs/BROWSER_ACCESS.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
+    },
+    {
+      "id": "linux-package-lifecycle",
+      "date": "2026-10-17",
+      "source_sha": "f60841210caef5ea8a21261b37104a4919387757",
+      "source_unknown_reason": "",
+      "package": "Task-specific build and fixtures recorded in the referenced report",
+      "installed": "No deployed application activated by integration",
+      "environment_kind": "virtual-machine",
+      "environment": "Retained distro desktop VM overlays and synthetic media fixture",
+      "features": "Pinned VA runtime, launcher isolation and package lifecycle",
+      "result": "Ubuntu candidate GUI/API control, final Nix, 26 synthetic AV assertions and 28 VM teardowns passed",
+      "limits": "Old published DEB rollback and GNOME AppImage capture failures remain; KWin 6.3 unsupported. Physical GPUs and OS input/clipboard not qualified.",
+      "references": [
+        "docs/LINUX_DESKTOP_ACCEPTANCE.md"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "This row summarizes separately identified fixture/build outputs, not one distribution archive."
     }
   ],
   "ci": [

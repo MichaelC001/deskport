@@ -1,3 +1,12 @@
+## Combined local IME and Web catalog — 2026-10-18
+
+Core `f34fc7b1524ce436185c4b085a903e6af4314790` merges the reviewed local-IME
+catalog/contract (`2d98ec8`) and browser UI catalog (`b6400fd`). Desktop Git and
+Nix pins reference the same public tree. The table has 1,133 UI-only entries and
+22 locales; the explicit browser view contains 126 originals. Existing Qt
+catalogs include the opt-in IME labels, and Web resources remain generated from
+the same table. Mobile pins and wire behavior are unchanged.
+
 ## Windows system-DPI workspace floor — 2026-10-17
 
 Core `e1850b0` adds the Windows 800x600 effective desktop floor, applied after
