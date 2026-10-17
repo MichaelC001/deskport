@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Không thể kích hoạt khởi động đăng nhập.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Kích thước màn hình nền tối thiểu của máy chủ giới hạn tỷ lệ. Hãy dùng toàn màn hình hoặc cửa sổ lớn hơn.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>đầu vào</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Kích thước màn hình nền tối thiểu của máy chủ giới hạn tỷ lệ. Hãy dùng toàn màn hình hoặc cửa sổ lớn hơn.</translation>
         </message>
     </context>
     <context>

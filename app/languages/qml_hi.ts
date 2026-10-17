@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>लॉगिन स्टार्टअप सक्षम नहीं कर सकता.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>होस्ट के न्यूनतम डेस्कटॉप आकार के कारण स्केलिंग सीमित है। पूर्ण स्क्रीन या बड़ी विंडो का उपयोग करें।</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>इनपुट</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>होस्ट के न्यूनतम डेस्कटॉप आकार के कारण स्केलिंग सीमित है। पूर्ण स्क्रीन या बड़ी विंडो का उपयोग करें।</translation>
         </message>
     </context>
     <context>

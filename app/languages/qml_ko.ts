@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>로그인 시 시작을 켤 수 없습니다.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>호스트의 최소 데스크톱 크기로 인해 배율이 제한됩니다. 전체 화면이나 더 큰 창을 사용하세요.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>입력</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>호스트의 최소 데스크톱 크기로 인해 배율이 제한됩니다. 전체 화면이나 더 큰 창을 사용하세요.</translation>
         </message>
     </context>
     <context>

@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Tidak dapat mengaktifkan startup login.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Ukuran desktop minimum host membatasi skala. Gunakan layar penuh atau jendela yang lebih besar.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>Masukan</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Ukuran desktop minimum host membatasi skala. Gunakan layar penuh atau jendela yang lebih besar.</translation>
         </message>
     </context>
     <context>

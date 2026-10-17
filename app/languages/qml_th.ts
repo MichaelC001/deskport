@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>ไม่สามารถเปิดใช้งานการเริ่มต้นเข้าสู่ระบบได้</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ขนาดเดสก์ท็อปขั้นต่ำของโฮสต์จำกัดการปรับขนาด ใช้แบบเต็มหน้าจอหรือหน้าต่างที่ใหญ่ขึ้น</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>ป้อนข้อมูล</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ขนาดเดสก์ท็อปขั้นต่ำของโฮสต์จำกัดการปรับขนาด ใช้แบบเต็มหน้าจอหรือหน้าต่างที่ใหญ่ขึ้น</translation>
         </message>
     </context>
     <context>

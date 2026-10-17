@@ -1,3 +1,15 @@
+## Windows system-DPI workspace floor — 2026-10-17
+
+Core `e1850b0` adds the Windows 800x600 effective desktop floor, applied after
+tuning while retaining aspect ratio and backing scale. Windows does not swap
+the floor axes for portrait modes. The existing macOS floor retains its prior
+results. Desktop advances the Git and Nix pins together; mobile pins are not
+changed. The native Windows adapter still checks actual OS DPI availability and
+supports older clients by reporting verified 1x with the existing warning field
+when their workspace cannot support 2x. No new wire message or scale value.
+A shared UI-only host-limit warning replaces the macOS-only note and covers the
+Windows native downgrade, with 22 locale drafts and unchanged wire identifiers.
+
 ## Twenty-two shared UI locales — 2026-10-17
 
 Core `b4b0ed1` expands the English-keyed UI table and offline manual to

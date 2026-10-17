@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>ནང་འཇུག་འགོ་འཛུགས་བྱེད་མི་ཐུབ།</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ཧོསཊི་གི་ཌེཀ་སི་ཊོབ་ཆུང་ཤོས་ཀྱི་ཚད་ཀྱིས་ཆེ་ཆུང་སྒྱུར་བ་ལ་ཚད་འཛིན་བྱེད། གསལ་གཞི་ཆ་ཚང་ཡང་ན་སྒེའུ་ཁུང་ཆེ་བ་བེད་སྤྱོད་བྱེད་དགོས།</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>ནང་འཇུག།</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ཧོསཊི་གི་ཌེཀ་སི་ཊོབ་ཆུང་ཤོས་ཀྱི་ཚད་ཀྱིས་ཆེ་ཆུང་སྒྱུར་བ་ལ་ཚད་འཛིན་བྱེད། གསལ་གཞི་ཆ་ཚང་ཡང་ན་སྒེའུ་ཁུང་ཆེ་བ་བེད་སྤྱོད་བྱེད་དགོས།</translation>
         </message>
     </context>
     <context>

@@ -25,7 +25,7 @@ int main() {
     assert(dpi::relative({-2,0,2},200,relative)&&relative==2);
     for(unsigned operation=0;operation<32;++operation)for(unsigned scale=0;scale<4;++scale) {
         const bool expected=operation==dpi::SetDpi?(scale==1||scale==2):
-            scale==0&&(operation==dpi::CaptureDpi||operation==dpi::RestoreDpi||operation==dpi::InspectDpi);
+            scale==0&&(operation==dpi::CaptureDpi||operation==dpi::RestoreDpi||operation==dpi::InspectDpi||operation==dpi::ResetDpi);
         assert(dpi::validRequest(operation,0,0,scale)==expected);
         if(operation!=dpi::ResizeMode)assert(!dpi::validRequest(operation,640,360,scale));
     }

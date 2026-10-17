@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Impossibile abilitare l'avvio dell'accesso.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>La dimensione minima del desktop host limita la scala. Usa lo schermo intero o una finestra più grande.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Ingresso</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>La dimensione minima del desktop host limita la scala. Usa lo schermo intero o una finestra più grande.</translation>
         </message>
     </context>
     <context>

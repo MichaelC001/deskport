@@ -1328,4 +1328,18 @@
             <translation>Atšaukti</translation>
         </message>
     </context>
+    <context>
+        <name>DeviceSettings</name>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation type="unfinished" />
+        </message>
+    </context>
+    <context>
+        <name>HostManager</name>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation type="unfinished" />
+        </message>
+    </context>
 </TS>

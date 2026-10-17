@@ -7,8 +7,12 @@ The guardian journals the original value before mutation, resolves the exact
 installer-owned adapter/source afresh, and performs DPI calls in the authenticated
 interactive user's context. It never sets global DPI or a physical output's DPI.
 Mirror keeps the physical desktop's existing scaling and the previous 1x
-downgrade. Private Windows DPI packets are isolated and unsupported ranges fail
-closed. No shared wire/policy or core pin changes. Native acceptance pending.
+downgrade. The pinned shared core adds Windows' 800x600 effective desktop floor
+after client tuning, preserving aspect ratio and backing scale. Old clients that
+request a smaller workspace receive verified 1x with a localized host-limit
+warning. Private Windows DPI packets are isolated; a per-monitor-aware native
+window must confirm their reported DPI. The shared wire format is unchanged.
+Native acceptance pending.
 
 ## Windows installed display broker candidate — 2026-10-17
 

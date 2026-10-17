@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Tidak boleh mendayakan permulaan log masuk.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Saiz desktop minimum hos mengehadkan penskalaan. Gunakan skrin penuh atau tetingkap yang lebih besar.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>Input</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Saiz desktop minimum hos mengehadkan penskalaan. Gunakan skrin penuh atau tetingkap yang lebih besar.</translation>
         </message>
     </context>
     <context>

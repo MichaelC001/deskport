@@ -103,7 +103,8 @@ public:
     }
     DWORD restore(bool retire=true) {
         int percentage=0;auto rc=load(percentage);if(rc==ERROR_FILE_NOT_FOUND)return 0;if(rc)return rc;
-        for(int attempt=0;attempt<20;++attempt){rc=apply(percentage);if(!rc)break;Sleep(100);}
+        const auto deadline=GetTickCount64()+3000;
+        do{rc=apply(percentage);if(!rc)break;Sleep(100);}while(GetTickCount64()<deadline);
         if(!rc&&retire&&!DeleteFileW(journal.c_str()))rc=GetLastError();
         return rc;
     }
@@ -423,7 +424,8 @@ static int productionLease(DWORD pid,const std::wstring& nonce,std::uint64_t exp
                                 DWORD percentage=0;
                                 auto code=operation==deskport::display_dpi::CaptureDpi?dpi.capture():
                                     operation==deskport::display_dpi::SetDpi?dpi.change(scale,percentage):
-                                    operation==deskport::display_dpi::RestoreDpi?dpi.restore():dpi.inspect(percentage);
+                                    operation==deskport::display_dpi::RestoreDpi?dpi.restore():
+                                    operation==deskport::display_dpi::ResetDpi?dpi.restore(false):dpi.inspect(percentage);
                                 mode->dpiPercent=percentage;mode->result=code;MemoryBarrier();SetEvent(completed);continue;
                             }
                             // Restore the saved virtual DPI before retiring its

@@ -104,9 +104,18 @@ restoring the physical topology. Failed recovery retains its journal.
 Windows' per-source DPI packets use private CCD request types -3/-4, outside the
 documented SDK enum. Their layouts/ranges are checked and unsupported requests
 fail with an error; there is no global/custom-DPI or registry-writing fallback.
-The shared scale contract remains unchanged. A read-only native probe separately
-checks CCD percentages and the DPI of a per-monitor-aware synthetic window.
+The shared scale contract remains unchanged. New desktop clients use the shared
+Windows 800x600 effective desktop floor after tuning (without swapping its axes
+in portrait). Older clients can request a workspace too small for 200% Windows
+UI DPI. The native adapter then applies and acknowledges 100% with the existing
+optional warning field, rather than breaking the session or claiming 200%.
+Windows can report the requested CCD step while clamping effective UI DPI; every
+successful setter also checks a newly created per-monitor-aware window. A
+read-only native probe independently checks both values.
 Cross-compilation and arithmetic tests do not establish native DPI acceptance.
+
+References: [Windows effective desktop minimum](https://learn.microsoft.com/en-us/windows/win32/uxguide/vis-layout),
+[GetDpiForWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getdpiforwindow).
 
 ## Isolated validation
 

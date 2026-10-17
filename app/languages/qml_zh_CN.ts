@@ -3195,6 +3195,10 @@
             <translation>无法开启登录启动。</translation>
         </message>
         <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>主机的最小桌面尺寸限制了缩放。请使用全屏或更大的窗口。</translation>
+        </message>
+        <message>
             <source>Connections</source>
             <translation>连接列表</translation>
         </message>
@@ -3407,6 +3411,10 @@
         <message>
             <source>Input</source>
             <translation>输入</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>主机的最小桌面尺寸限制了缩放。请使用全屏或更大的窗口。</translation>
         </message>
         <message>
             <source>Domain name or IP address</source>

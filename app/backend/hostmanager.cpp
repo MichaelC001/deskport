@@ -199,6 +199,9 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 if (object["seq"].toInt() == m_DisplayWireSequence && m_DisplaySequence != 0) {
                     const int sequence = m_DisplaySequence; m_DisplaySequence = 0;
                     m_DisplayWarning = object.contains("layoutWarning") ? tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.") : QString();
+#ifdef Q_OS_WIN
+                    if(object["dpiLimited"].toBool())m_DisplayWarning=tr("The host's minimum desktop size limits scaling. Use full screen or a larger window.");
+#endif
                     if (!object.contains("error")) {
                         m_DisplayWidth = object["width"].toInt(); m_DisplayHeight = object["height"].toInt();
                         m_DisplayScale = object["scale"].toInt(1);

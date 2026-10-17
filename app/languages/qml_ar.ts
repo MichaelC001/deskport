@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>لا يمكن تمكين بدء تسجيل الدخول.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>يحد الحد الأدنى لحجم سطح مكتب المضيف من التحجيم. استخدم ملء الشاشة أو نافذة أكبر.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>مدخل</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>يحد الحد الأدنى لحجم سطح مكتب المضيف من التحجيم. استخدم ملء الشاشة أو نافذة أكبر.</translation>
         </message>
     </context>
     <context>

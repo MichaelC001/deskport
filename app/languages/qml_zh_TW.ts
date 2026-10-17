@@ -3175,6 +3175,10 @@
             <translation>無法開啟登入啟動。</translation>
         </message>
         <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>主機的最小桌面尺寸限制了縮放。請使用全螢幕或更大的視窗。</translation>
+        </message>
+        <message>
             <source>Connections</source>
             <translation>連線列表</translation>
         </message>
@@ -3387,6 +3391,10 @@
         <message>
             <source>Input</source>
             <translation>輸入</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>主機的最小桌面尺寸限制了縮放。請使用全螢幕或更大的視窗。</translation>
         </message>
         <message>
             <source>Domain name or IP address</source>

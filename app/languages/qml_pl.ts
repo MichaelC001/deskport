@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Nie można włączyć uruchamiania logowania.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Minimalny rozmiar pulpitu hosta ogranicza skalowanie. Użyj pełnego ekranu lub większego okna.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Wejście</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Minimalny rozmiar pulpitu hosta ogranicza skalowanie. Użyj pełnego ekranu lub większego okna.</translation>
         </message>
     </context>
     <context>

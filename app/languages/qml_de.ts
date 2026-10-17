@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Anmeldestart konnte nicht aktiviert werden.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Die minimale Desktopgröße des Hosts begrenzt die Skalierung. Verwende den Vollbildmodus oder ein größeres Fenster.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>Eingabe</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Die minimale Desktopgröße des Hosts begrenzt die Skalierung. Verwende den Vollbildmodus oder ein größeres Fenster.</translation>
         </message>
     </context>
     <context>

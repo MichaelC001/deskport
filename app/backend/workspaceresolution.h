@@ -37,6 +37,7 @@ inline Workspace adjusted(Workspace workspace, double factor, const QString& ope
     const auto tuned = result;
     const auto os = operatingSystem.toLower();
     if (os.contains("mac") || os.contains("darwin") || os.contains("osx")) result = dp_workspace_for_macos(result);
+    else if (os.contains("windows")) result = dp_workspace_for_windows(result);
     const bool limited = factor > 1.0 && result.width > tuned.width;
     return {QSize(result.width, result.height), result.scale, limited};
 }

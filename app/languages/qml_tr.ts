@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Oturum açma başlangıcı etkinleştirilemiyor.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Ana bilgisayarın minimum masaüstü boyutu ölçeklendirmeyi sınırlar. Tam ekran veya daha büyük bir pencere kullanın.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Giriş</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Ana bilgisayarın minimum masaüstü boyutu ölçeklendirmeyi sınırlar. Tam ekran veya daha büyük bir pencere kullanın.</translation>
         </message>
     </context>
     <context>

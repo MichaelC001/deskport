@@ -28,7 +28,7 @@ UiPage {
             title: qsTr("Desktop fine tuning")
             // Session IDs are lower case; device IDs keep the host's spelling.
             readonly property bool limited: typeof sessionManager !== "undefined" && sessionManager.tuningLimited.indexOf(page.deviceId.toLowerCase()) >= 0
-            note: limited ? qsTr("Reached the macOS minimum desktop (800 × 600): this window cannot be enlarged further. Use full screen or a larger window.")
+            note: limited ? qsTr("The host's minimum desktop size limits scaling. Use full screen or a larger window.")
                           : qsTr("1.5 makes controls larger; 0.5 fits more content. Applies after the automatic desktop calculation and takes effect immediately during a connection.")
             readonly property var factors: preferences.desktopAdjustmentChoices
             options: preferences.desktopAdjustmentLabels

@@ -3154,6 +3154,10 @@
             <source>Cannot enable login startup.</source>
             <translation>ログイン時の起動を有効にできません。</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ホストの最小デスクトップサイズにより拡大率が制限されています。全画面表示か、より大きなウィンドウを使用してください。</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3319,6 +3323,10 @@
         <message>
             <source>Input</source>
             <translation>入力</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>ホストの最小デスクトップサイズにより拡大率が制限されています。全画面表示か、より大きなウィンドウを使用してください。</translation>
         </message>
         <message>
             <source>Domain name or IP address</source>

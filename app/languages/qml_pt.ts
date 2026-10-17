@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Não é possível ativar a inicialização do login.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>O tamanho mínimo da área de trabalho do anfitrião limita a escala. Use tela inteira ou uma janela maior.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Entrada</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>O tamanho mínimo da área de trabalho do anfitrião limita a escala. Use tela inteira ou uma janela maior.</translation>
         </message>
     </context>
     <context>

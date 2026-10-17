@@ -483,8 +483,14 @@ bool applyPolicy(DEVMODEW target, int policy) {
     return writeState(true);
 }
 bool restore(bool releaseDpi=true) {
+    // Restore while the old source/mode still exposes its valid DPI range.
+    // Changing the mode first can make the old 2x preference exceed the new
+    // mode's UI limit, preventing a verified restore.
+    if(dpiSession) {
+        if(activeLease->command(releaseDpi?deskport::display_dpi::RestoreDpi:deskport::display_dpi::ResetDpi))return false;
+        if(releaseDpi)dpiSession=false;
+    }
     if (!changed) {
-        if(releaseDpi&&dpiSession) {if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;dpiSession=false;}
         return true;
     }
     // Apply only the display that this helper changed, without modifying saved defaults.
@@ -495,7 +501,6 @@ bool restore(bool releaseDpi=true) {
         if(rc||!verified.read()||!preservesPhysicalSources(baseline,verified))return false;
         policyChanged=false;
     } else if (!applyMode(original)) return false;
-    if(releaseDpi&&dpiSession) {if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;dpiSession=false;}
     changed = false;
     captureOutput.clear();
     return writeState(false);
@@ -809,9 +814,16 @@ int main(int argc, char** argv) {
                     fatalTopologyError=true;
                 }
                 else if(privateVirtual&&policy!=0) {
-                    DWORD percentage=0;const auto code=recovery.command(deskport::display_dpi::SetDpi,0,0,DWORD(scale),&percentage);
+                    DWORD percentage=0;int appliedScale=scale;auto code=recovery.command(deskport::display_dpi::SetDpi,0,0,DWORD(scale),&percentage);
+                    if(code==ERROR_NOT_SUPPORTED&&scale==2) {
+                        // A small native Windows desktop may expose only 100%
+                        // through 175%. Preserve a usable session, acknowledge
+                        // the verified 1x result and surface the limitation.
+                        appliedScale=1;code=recovery.command(deskport::display_dpi::SetDpi,0,0,1,&percentage);
+                        if(!code)response["dpiLimited"]=true;
+                    }
                     if(code) {error=QString("Cannot apply and verify owned virtual display DPI (error %1); ending the display lease").arg(code);fatalTopologyError=true;}
-                    else {response["scale"]=scale;response["dpiPercent"]=int(percentage);}
+                    else {response["scale"]=appliedScale;response["dpiPercent"]=int(percentage);}
                 }
             }
         }

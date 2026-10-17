@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Kan het opstarten van inloggen niet inschakelen.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>De minimale bureaubladgrootte van de host beperkt de schaal. Gebruik volledig scherm of een groter venster.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Invoer</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>De minimale bureaubladgrootte van de host beperkt de schaal. Gebruik volledig scherm of een groter venster.</translation>
         </message>
     </context>
     <context>

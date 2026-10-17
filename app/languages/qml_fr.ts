@@ -3146,6 +3146,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Impossible d’activer le démarrage à la connexion.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>La taille minimale du bureau hôte limite la mise à l’échelle. Utilisez le plein écran ou une fenêtre plus grande.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3311,6 +3315,10 @@
         <message>
             <source>Input</source>
             <translation>Saisie</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>La taille minimale du bureau hôte limite la mise à l’échelle. Utilisez le plein écran ou une fenêtre plus grande.</translation>
         </message>
     </context>
     <context>

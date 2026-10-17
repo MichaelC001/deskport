@@ -3151,6 +3151,10 @@
             <source>Cannot enable login startup.</source>
             <translation>Невозможно включить запуск входа в систему.</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Минимальный размер рабочего стола хоста ограничивает масштаб. Используйте полноэкранный режим или окно большего размера.</translation>
+        </message>
     </context>
     <context>
         <name>DesktopSegue</name>
@@ -3316,6 +3320,10 @@
         <message>
             <source>Input</source>
             <translation>Вход</translation>
+        </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation>Минимальный размер рабочего стола хоста ограничивает масштаб. Используйте полноэкранный режим или окно большего размера.</translation>
         </message>
     </context>
     <context>

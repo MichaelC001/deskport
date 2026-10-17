@@ -1353,5 +1353,16 @@
             <source>Settings</source>
             <translation>Inställningar</translation>
         </message>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation type="unfinished" />
+        </message>
+    </context>
+    <context>
+        <name>DeviceSettings</name>
+        <message>
+            <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation type="unfinished" />
+        </message>
     </context>
 </TS>

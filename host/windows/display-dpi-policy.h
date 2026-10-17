@@ -18,11 +18,11 @@ inline bool relative(Range r,int percentage,int& result) {
         if(percentages[i]==percentage) {result=i+r.minimum;return result>=r.minimum&&result<=r.maximum;}
     return false;
 }
-enum Operation : std::uint32_t { ResizeMode=1, CaptureDpi=2, SetDpi=3, RestoreDpi=4, InspectDpi=5 };
+enum Operation : std::uint32_t { ResizeMode=1, CaptureDpi=2, SetDpi=3, RestoreDpi=4, InspectDpi=5, ResetDpi=6 };
 inline bool validRequest(std::uint32_t operation,std::uint32_t width,std::uint32_t height,std::uint32_t scale) {
     if(operation==ResizeMode)return width>=640&&width<=7680&&height>=360&&height<=4320&&!(width%4)&&!(height%4)&&scale==0;
     if(width||height)return false;
     if(operation==SetDpi)return scale==1||scale==2;
-    return !scale&&(operation==CaptureDpi||operation==RestoreDpi||operation==InspectDpi);
+    return !scale&&(operation==CaptureDpi||operation==RestoreDpi||operation==InspectDpi||operation==ResetDpi);
 }
 }

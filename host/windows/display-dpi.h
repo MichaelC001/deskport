@@ -64,6 +64,17 @@ inline DWORD query(Source source,Range& range) {
     const auto rc=DisplayConfigGetDeviceInfo(&packet.header);if(rc)return DWORD(rc);
     range={packet.minimum,packet.current,packet.maximum};return valid(range)?ERROR_SUCCESS:ERROR_NOT_SUPPORTED;
 }
+inline DWORD effectiveDpi(Source source,UINT& dpi) {
+    DISPLAYCONFIG_SOURCE_DEVICE_NAME name{};name.header.type=DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
+    name.header.size=sizeof(name);name.header.adapterId=source.adapter;name.header.id=source.id;
+    auto rc=DisplayConfigGetDeviceInfo(&name.header);if(rc)return DWORD(rc);
+    DEVMODEW mode{};mode.dmSize=sizeof(mode);
+    if(!EnumDisplaySettingsExW(name.viewGdiDeviceName,ENUM_CURRENT_SETTINGS,&mode,0)||!mode.dmPelsWidth||!mode.dmPelsHeight)return ERROR_NOT_READY;
+    auto window=CreateWindowExW(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE,L"STATIC",L"DeskPort DPI observation",WS_POPUP,
+        mode.dmPosition.x+10,mode.dmPosition.y+10,20,20,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
+    if(!window)return GetLastError();dpi=GetDpiForWindow(window);DestroyWindow(window);
+    return dpi?ERROR_SUCCESS:ERROR_INVALID_STATE;
+}
 inline DWORD set(Source source,int value) {
     Range before{};auto rc=query(source,before);if(rc)return rc;
     if(value<before.minimum||value>before.maximum)return ERROR_NOT_SUPPORTED;
@@ -72,7 +83,10 @@ inline DWORD set(Source source,int value) {
         packet.header.size=sizeof(packet);packet.header.adapterId=source.adapter;packet.header.id=source.id;packet.relative=value;
         rc=DWORD(DisplayConfigSetDeviceInfo(&packet.header));if(rc)return rc;
     }
-    for(int i=0;i<30;++i) {Range actual{};rc=query(source,actual);if(!rc&&actual.current==value)return 0;Sleep(50);}
+    // CCD can report the requested step even when Windows clamps the effective
+    // UI DPI to a lower value. A real per-monitor-aware window must agree too.
+    for(int i=0;i<30;++i) {Range actual{};UINT dpi=0;rc=query(source,actual);
+        if(!rc&&actual.current==value&&!effectiveDpi(source,dpi)&&dpi==UINT(percent(actual)*96/100))return 0;Sleep(50);}
     return rc?rc:ERROR_INVALID_STATE;
 }
 }
