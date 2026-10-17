@@ -1,3 +1,29 @@
+## X11 independent software workspace candidate — 2026-10-17
+
+Add an explicit, driver-gated XRandR lease for an existing inactive
+xf86-video-dummy connector. The guardian adds uniquely owned exact modes,
+extends beside the unchanged existing workspace, journals before mutation,
+cleans up on helper death and recovers a killed guardian's journal before the
+next admission. Named/token-checked X11 capture refuses whole-root or physical
+fallback, including after the connector disappears. No driver installation,
+system Xorg edits, display-manager restart or deployed-host activation.
+
+This is a bounded software-Xorg backend, not general X11 parity. It requires
+an administrator/user-provided dummy session and explicit connector selection;
+ordinary AMDGPU, NVIDIA, modesetting, Intel VIRTUAL, mixed-driver, Xvfb and
+XWayland sessions are unsupported. Only observed 1x is acknowledged. Per-output
+2x UI scale and mirror/exclusive policies are explicitly unavailable; global
+DPI/XSETTINGS and physical-output modes are not changed. See
+[X11 adaptive display](X11_ADAPTIVE_DISPLAY.md) for contracts and reproduction.
+The native Linux Nix build, shared-core checks, 44 host-lifecycle cases and 172
+binding cases passed. An isolated Xorg 21.1.24 / dummy 0.4.1 server passed five
+resizes, portrait modes, release/recreation, helper/guardian crash recovery,
+concurrent layout and global-DPI preservation, and unsafe-capture refusal.
+The packaged host encoded software H.264 at 1280×720, 1668×2388 and recreated
+1920×1080, all at 1×. All owned processes and X sockets stopped; no physical
+GUI or VM was used. Hardware, full client transport, input/seat alignment,
+audio and clipboard remain unverified.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

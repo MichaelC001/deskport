@@ -2,6 +2,7 @@
 // A connection-owned KWin primary output with temporary physical-screen mirroring.
 #include "gnome-display.h"
 #include "hyprland-display.h"
+#include "x11-display.h"
 #include "text-caret.h"
 #include "kwin-permission.h"
 #include <QCoreApplication>
@@ -616,6 +617,7 @@ private:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     const auto args = app.arguments();
+    if (args.size() == 2 && args[1] == "--guard-x11") return guardX11Display();
     if (args.size() == 3 && args[1] == "--restore-hyprland") return restoreHyprlandDisplay(args[2]);
     if (args.value(1)=="--text-caret") return runTextCaretProbe(args);
     if (args.size() == 3 && args[1] == "--restore-kwin") {
@@ -649,6 +651,7 @@ int main(int argc, char** argv) {
     if (args.size() != 3 || !Display::valid(args[1].toInt(), args[2].toInt(), 1)) {
         reply({{"error", "Expected width and height (640x360 through 7680x4320, aligned to four)"}}); return 2;
     }
+    if (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") || !qEnvironmentVariableIsEmpty("DESKPORT_X11_OUTPUT")) return runX11Display(args[1].toInt(), args[2].toInt());
     if (qgetenv("XDG_CURRENT_DESKTOP").split(':').contains("GNOME")) return runGnomeDisplay(args[1].toInt(), args[2].toInt());
     if (qgetenv("XDG_CURRENT_DESKTOP").toLower().split(':').contains("hyprland") || !qEnvironmentVariableIsEmpty("HYPRLAND_INSTANCE_SIGNATURE"))
         return runHyprlandDisplay(args[1].toInt(), args[2].toInt());
