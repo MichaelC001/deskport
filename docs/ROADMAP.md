@@ -1,3 +1,15 @@
+## Windows virtual-output system scaling — 2026-10-17
+
+Implement the existing shared 1x/2x workspace scale in the Windows native adapter:
+independent owned VDD sessions apply 100%/200% system DPI, acknowledge the observed
+result, and restore the original percentage on disconnect or guardian recovery.
+The guardian journals the original value before mutation, resolves the exact
+installer-owned adapter/source afresh, and performs DPI calls in the authenticated
+interactive user's context. It never sets global DPI or a physical output's DPI.
+Mirror keeps the physical desktop's existing scaling and the previous 1x
+downgrade. Private Windows DPI packets are isolated and unsupported ranges fail
+closed. No shared wire/policy or core pin changes. Native acceptance pending.
+
 ## Windows installed display broker candidate — 2026-10-17
 
 Replace per-sharing display UAC with an administrator-installed automatic SCM

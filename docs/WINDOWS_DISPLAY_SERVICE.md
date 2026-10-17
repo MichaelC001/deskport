@@ -81,6 +81,33 @@ for repair. Uninstall removes only the exact owned service before existing drive
 cleanup. Ordinary maintenance `stop` remains app-only; `stop-installation` is the
 installer barrier. User identity/peers are not moved or promoted to SYSTEM.
 
+## Owned virtual-output DPI
+
+Independent virtual sessions (exclusive and extended desktop) apply the existing
+shared scale of 1 or 2 as Windows system DPI of 100% or 200%. The helper does not
+pretend a process DPI-awareness declaration changes system scaling. The guardian
+resolves the installer-recorded PnP instance through the CCD adapter interface,
+checks its hardware identity, and rejects foreign or shared physical sources.
+Every write re-resolves the current source because adapter recreation retires
+source IDs. A mirror retains physical scaling and its existing 1x downgrade.
+
+A protected, flushed journal records the original virtual percentage and user
+identity before the first change. Only bounded DPI operations and 1x/2x values
+cross the lease mapping; no source ID, registry path or arbitrary percentage is
+accepted from the helper. DPI calls impersonate the authenticated helper's user,
+whose token remains open for recovery after helper/broker death. Protected file
+I/O runs as the guardian. Normal disconnect restores the original percentage;
+recreation restores before retiring a source and retains the baseline for its
+replacement. Final cleanup attempts DPI restoration before disabling the VDD and
+restoring the physical topology. Failed recovery retains its journal.
+
+Windows' per-source DPI packets use private CCD request types -3/-4, outside the
+documented SDK enum. Their layouts/ranges are checked and unsupported requests
+fail with an error; there is no global/custom-DPI or registry-writing fallback.
+The shared scale contract remains unchanged. A read-only native probe separately
+checks CCD percentages and the DPI of a per-monitor-aware synthetic window.
+Cross-compilation and arithmetic tests do not establish native DPI acceptance.
+
 ## Isolated validation
 
 Pass new output directories under the checkout build root:

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "host/windows/display-service-policy.h"
 #include "host/windows/display-service-environment.h"
+#include "host/windows/display-dpi-policy.h"
 #include <cassert>
 #include <cstring>
 #include <cwchar>
@@ -8,6 +9,30 @@
 
 using namespace deskport::display_service;
 int main() {
+    // Exhaust every documented percentage and recommended-scale position.
+    // A range the OS does not expose must never silently clamp to another DPI.
+    namespace dpi=deskport::display_dpi;
+    for(int recommended=0;recommended<12;++recommended)for(int index=0;index<12;++index) {
+        dpi::Range range{-recommended,index-recommended,11-recommended};
+        assert(dpi::valid(range));assert(dpi::percent(range)==dpi::percentages[index]);
+        int relative=123;assert(dpi::relative(range,dpi::percentages[index],relative));assert(relative==range.current);
+    }
+    for(const auto range:{dpi::Range{1,1,2},dpi::Range{-12,0,0},dpi::Range{-1,2,1},dpi::Range{-1,-2,1},dpi::Range{-2,0,10}}) {
+        assert(!dpi::valid(range));assert(!dpi::percent(range));int ignored=0;assert(!dpi::relative(range,200,ignored));
+    }
+    int relative=0;assert(!dpi::relative({0,0,2},200,relative));assert(!dpi::relative({-2,0,2},110,relative));
+    assert(dpi::relative({-2,0,2},100,relative)&&relative==-2);
+    assert(dpi::relative({-2,0,2},200,relative)&&relative==2);
+    for(unsigned operation=0;operation<32;++operation)for(unsigned scale=0;scale<4;++scale) {
+        const bool expected=operation==dpi::SetDpi?(scale==1||scale==2):
+            scale==0&&(operation==dpi::CaptureDpi||operation==dpi::RestoreDpi||operation==dpi::InspectDpi);
+        assert(dpi::validRequest(operation,0,0,scale)==expected);
+        if(operation!=dpi::ResizeMode)assert(!dpi::validRequest(operation,640,360,scale));
+    }
+    assert(dpi::validRequest(dpi::ResizeMode,1920,1080,0));
+    assert(!dpi::validRequest(dpi::ResizeMode,1920,1080,1));
+    assert(!dpi::validRequest(dpi::ResizeMode,640,361,0));
+    std::cout<<"PASS per-source DPI range conversion, unsupported-scale rejection and bounded lease operations\n";
     Request request;
     const char16_t nonce[] = u"01234567-89ab-cdef-0123-456789abcdef";
     std::memcpy(request.nonce, nonce, sizeof(nonce));

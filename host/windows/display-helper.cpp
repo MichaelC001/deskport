@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "display-request.h"
 #include "display-service-ipc.h"
+#include "display-dpi.h"
 #include "text-caret.h"
 
 namespace {
@@ -97,16 +98,19 @@ struct DisplayLease {
         std::cerr << "Display lease: guard ready" << std::endl;
         return true;
     }
-    bool resize(unsigned width, unsigned height) {
+    DWORD command(DWORD operation,DWORD width=0,DWORD height=0,DWORD scale=0,DWORD* percentage=nullptr) {
         ResetEvent(completed);
-        modeRequest->width=width;modeRequest->height=height;modeRequest->result=ERROR_IO_PENDING;
+        modeRequest->operation=operation;modeRequest->width=width;modeRequest->height=height;modeRequest->scale=scale;
+        modeRequest->dpiPercent=0;modeRequest->result=ERROR_IO_PENDING;
         MemoryBarrier();SetEvent(request);
         HANDLE waiting[]{completed,process};
-        if(WaitForMultipleObjects(2,waiting,FALSE,20000)!=WAIT_OBJECT_0)return false;
+        if(WaitForMultipleObjects(2,waiting,FALSE,20000)!=WAIT_OBJECT_0)return ERROR_TIMEOUT;
         MemoryBarrier();
-        if(modeRequest->result)std::cerr<<"Dynamic display preparation failed: "<<modeRequest->result<<std::endl;
-        return modeRequest->result==ERROR_SUCCESS;
+        if(percentage)*percentage=modeRequest->dpiPercent;
+        if(modeRequest->result)std::cerr<<"Display operation "<<operation<<" failed: "<<modeRequest->result<<std::endl;
+        return modeRequest->result;
     }
+    bool resize(unsigned width,unsigned height){return command(deskport::display_dpi::ResizeMode,width,height)==ERROR_SUCCESS;}
     bool finish() {
         if(!process)return true;
         SetEvent(release);
@@ -125,6 +129,8 @@ DEVMODEW original{};
 bool changed = false;
 bool privateVirtual = false;
 bool headlessVirtual = false;
+DisplayLease* activeLease = nullptr;
+bool dpiSession = false;
 bool current(DEVMODEW& mode) {
     mode = {}; mode.dmSize = sizeof(mode);
     return EnumDisplaySettingsExW(reinterpret_cast<LPCWSTR>(output.utf16()), ENUM_CURRENT_SETTINGS, &mode, 0);
@@ -476,8 +482,11 @@ bool applyPolicy(DEVMODEW target, int policy) {
     }
     return writeState(true);
 }
-bool restore() {
-    if (!changed) return true;
+bool restore(bool releaseDpi=true) {
+    if (!changed) {
+        if(releaseDpi&&dpiSession) {if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;dpiSession=false;}
+        return true;
+    }
     // Apply only the display that this helper changed, without modifying saved defaults.
     if (privateVirtual && policyChanged) {
         auto baseline=idleTopology;
@@ -486,6 +495,7 @@ bool restore() {
         if(rc||!verified.read()||!preservesPhysicalSources(baseline,verified))return false;
         policyChanged=false;
     } else if (!applyMode(original)) return false;
+    if(releaseDpi&&dpiSession) {if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;dpiSession=false;}
     changed = false;
     captureOutput.clear();
     return writeState(false);
@@ -496,6 +506,7 @@ int main(int argc, char** argv) {
     SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
     if (app.arguments().value(1)=="--text-caret") return runTextCaretProbe(app.arguments());
     DisplayLease recovery;
+    activeLease=&recovery;
     const auto directory = qEnvironmentVariable("DESKPORT_DISPLAY_STATE_DIR");
     if (directory.isEmpty() || !QDir().mkpath(directory)) {
         send({{"error", "Missing private display state directory"}}); return 1;
@@ -706,14 +717,24 @@ int main(int argc, char** argv) {
         QString error;
         bool fatalTopologyError=false;
         const int width = request["width"].toInt(), height = request["height"].toInt();
+        const int scale = request["scale"].toInt(1),policy=request["displayPolicy"].toInt();
         if (!seq) error = "Missing request sequence";
         else if (!request["session"].toBool()) {
             if (!restore()) error = "Windows rejected restoration; recovery record retained";
         } else if (request["displayPolicy"].toInt() < 0 || request["displayPolicy"].toInt() > 2 || (!privateVirtual && request["displayPolicy"].toInt() != 0)) {
             error = "The selected display policy requires the owned virtual display";
-        } else if (width < 640 || width > 7680 || height < 360 || height > 4320 || width % 4 || height % 4) {
+        } else if (width < 640 || width > 7680 || height < 360 || height > 4320 || width % 4 || height % 4 || (scale!=1&&scale!=2)) {
             error = "Invalid display size";
         } else {
+            // Mirror shares the physical workspace. Leave its DPI untouched and
+            // retain the existing 1x downgrade; only independent VDD sessions
+            // (exclusive/extend) own system scaling.
+            if(privateVirtual&&policy==0&&dpiSession&&!restore()) {send({{"seq",seq},{"error","Cannot restore virtual display scaling before mirroring"}});break;}
+            if(privateVirtual&&policy!=0&&!dpiSession) {
+                const auto code=recovery.command(deskport::display_dpi::CaptureDpi);
+                if(code) {send({{"seq",seq},{"error",QString("Cannot snapshot the owned virtual display DPI (error %1); no system scaling was changed").arg(code)}});break;}
+                dpiSession=true;
+            }
             DEVMODEW target{}; bool found = false;
             for (DWORD index = 0; ; ++index) {
                 target = {}; target.dmSize = sizeof(target);
@@ -727,7 +748,7 @@ int main(int argc, char** argv) {
                 // starts. The independent guardian validates and performs that
                 // transition; it remains responsible for physical recovery.
                 if(ownedAdapterHardware(ownedInstance).compare(owned,Qt::CaseInsensitive)!=0) {send({{"seq",seq},{"error","The owned virtual adapter became ambiguous"}});break;}
-                if(!restore()) {send({{"seq",seq},{"error","Cannot restore before display recreation"}});break;}
+                if(!restore(false)) {send({{"seq",seq},{"error","Cannot restore before display recreation"}});break;}
                 QFile::remove(QFileInfo(path).absolutePath()+"/windows-capture-output");
                 if(!recovery.resize(unsigned(width),unsigned(height))) {
                     send({{"seq",seq},{"error","Cannot prepare the requested virtual display mode"}});break;
@@ -786,6 +807,11 @@ int main(int argc, char** argv) {
                 if (!applyPolicy(target,request["displayPolicy"].toInt())) {
                     error = "Display mode application failed; ending the display lease to restore the desktop";
                     fatalTopologyError=true;
+                }
+                else if(privateVirtual&&policy!=0) {
+                    DWORD percentage=0;const auto code=recovery.command(deskport::display_dpi::SetDpi,0,0,DWORD(scale),&percentage);
+                    if(code) {error=QString("Cannot apply and verify owned virtual display DPI (error %1); ending the display lease").arg(code);fatalTopologyError=true;}
+                    else {response["scale"]=scale;response["dpiPercent"]=int(percentage);}
                 }
             }
         }

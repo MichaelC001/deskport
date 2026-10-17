@@ -3,7 +3,10 @@
 #include <windows.h>
 // One bounded request at a time; no paths, commands or device IDs cross UAC.
 struct DisplayModeRequest {
+    DWORD operation;
     DWORD width;
     DWORD height;
+    DWORD scale;
     DWORD result;
+    DWORD dpiPercent;
 };
