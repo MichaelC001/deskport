@@ -37,10 +37,13 @@ def main():
     parser.add_argument('--dependency', type=Path, action='append', default=[], help='Explicit offline native dependency package')
     parser.add_argument('--debugger-runtime', type=Path, help='Explicit cached GDB closure archive with source.json pin')
     parser.add_argument('--package-api', action='store_true', help='Check the current native package loopback API and runtime metadata')
+    parser.add_argument('--verify-va-runtime-fix', action='store_true', help='Ubuntu regression comparison: require legacy VA crashes and a healthy current candidate')
     parser.add_argument('--flatpak', action='store_true', help='Use preinstalled runtime; no network pulls')
     parser.add_argument('--flatpak-runtime', type=Path, action='append', default=[], help='Offline Platform/GL runtime bundle with adjacent .json commit pin; repeat for GL')
     parser.add_argument('--wait-seconds', type=int, default=0, help='Bounded wait for the shared VM lock; never steal it')
     args = parser.parse_args()
+    if args.verify_va_runtime_fix:
+        assert args.native == 'deb' and args.no_appimage and args.debugger_runtime and args.package_api
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     guest = Path(__file__).with_name('test-linux-desktop-lifecycle.py')
     compile(guest.read_text(), str(guest), 'exec')
@@ -79,7 +82,9 @@ def main():
             time=datetime.datetime.now(datetime.timezone.utc).isoformat(), output=str(output))))
         subprocess.run([sys.executable, str(lab), 'inventory'], check=True)
         assert not args.no_appimage or args.native or args.flatpak
-        manifest = dict(schema=1, session=args.session, package_api=args.package_api, packages=[], routes=([] if args.no_appimage else ['appimage']) + ([args.native] if args.native else [])
+        manifest = dict(schema=1, session=args.session, package_api=args.package_api,
+                        verify_va_runtime_fix=args.verify_va_runtime_fix, packages=[],
+                        routes=([] if args.no_appimage else ['appimage']) + ([args.native] if args.native else [])
                         + (['flatpak'] if args.flatpak else []))
         patterns = dict(appimage='DeskPort-{v}-x86_64.AppImage', deb='deskport_{v}-1_amd64.deb',
                         rpm='deskport-{v}-1.x86_64.rpm', arch='deskport-{v}-1-x86_64.pkg.tar.zst',

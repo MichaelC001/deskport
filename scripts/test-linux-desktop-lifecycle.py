@@ -214,6 +214,7 @@ def main():
     settings.write_text('[LifecycleFixture]\ntoken=synthetic-retained-value\n')
     report = dict(schema=1, manifest=manifest, desktop=os.environ.get('XDG_CURRENT_DESKTOP'),
                   session=os.environ.get('XDG_SESSION_TYPE'), scenarios=[], passed=False,
+                  test_kind='va-runtime-regression' if manifest.get('verify_va_runtime_fix') else 'lifecycle',
                   limits=['Software virtual GPU only', 'No personal peers or clipboard',
                           'Wayland activation transport checked; X11 also checks viewability; focus unverified',
                           'No live media/input acceptance from package lifecycle'])
@@ -358,7 +359,19 @@ def main():
                 time.sleep(2)
                 if child.poll() is not None:
                     diagnose()
-                assert child.poll() is None, 'Activation replaced owner'
+                assert child.poll() is None, f'Activation owner exited ({child.poll()})'
+                if manifest.get('verify_va_runtime_fix') and label == 'deb-upgrade':
+                    (state / 'progress.json').write_text(json.dumps(dict(stage='candidate-warmup', pid=child.pid)))
+                    observed = time.monotonic()
+                    announced = False
+                    while time.monotonic() - observed < 30:
+                        assert child.poll() is None, f'Candidate exited during observation ({child.poll()})'
+                        if not announced and time.monotonic() - observed >= 10:
+                            (state / 'progress.json').write_text(json.dumps(dict(stage='candidate-observation', pid=child.pid)))
+                            announced = True
+                        time.sleep(.25)
+                    report['candidate_observation_seconds'] = round(time.monotonic() - observed, 2)
+                    (state / 'progress.json').write_text(json.dumps(dict(stage='candidate-observation-complete')))
                 if args.session == 'x11':
                     matching = x11_windows()
                     assert matching, 'Recall did not map a DeskPort X11 window'
@@ -459,9 +472,19 @@ def main():
                 try:
                     smoke(command, package['version'], route + '-' + label)
                 except Exception as error:
-                    report['scenarios'].append(dict(name=route + '-' + label, passed=False,
+                    failed = dict(name=route + '-' + label, passed=False,
                         failure=repr(error), stdout=getattr(error, 'stdout', None),
-                        stderr=getattr(error, 'stderr', None)))
+                        stderr=getattr(error, 'stderr', None))
+                    if manifest.get('verify_va_runtime_fix') and package['role'] == 'old':
+                        traces = [t['output'] for t in report.get('debugger_traces', []) if t['stage'] == failed['name']]
+                        failed['expected_failure'] = any(all(marker in trace for marker in
+                            ('received signal SIGSEGV', 'libva-wayland.so.2', 'vaInitialize')) for trace in traces)
+                    report['scenarios'].append(failed)
+                else:
+                    if manifest.get('verify_va_runtime_fix') and package['role'] == 'new':
+                        assert 'VA-API version 1.23' in report['scenarios'][-1].get('log', ''), 'Candidate did not load the pinned VA interface'
+                    if manifest.get('verify_va_runtime_fix') and package['role'] == 'old':
+                        report['scenarios'][-1].update(passed=False, failure='Legacy VA crash negative control did not reproduce')
             if route == 'appimage':
                 installed.unlink()
                 assert not installed.exists()
@@ -481,7 +504,7 @@ def main():
         if 'selinux_before' in report:
             report['selinux_after'] = run(['getenforce'])
             assert report['selinux_before'] == report['selinux_after']
-        report['passed'] = all(item['passed'] for item in report['scenarios'])
+        report['passed'] = all(item['passed'] or item.get('expected_failure') for item in report['scenarios'])
         assert report['passed'], 'One or more lifecycle scenarios failed; see per-stage evidence'
     except BaseException as error:
         report['failure'] = repr(error)

@@ -43,6 +43,34 @@ manifest. The Ubuntu baseline required `libopengl0` 1.7.0-3, matching its instal
 `libglvnd0`. Do not use `--force-depends`, widen guest networking or drop a declared
 dependency to make installation pass.
 
+Use `--no-appimage` to repeat only a selected native or Flatpak route after its
+independent AppImage checks have completed. `--package-api` additionally runs the
+existing private loopback host API, resources, version and QML package checks
+against the current native package. These checks disable input and audio and do
+not establish a media connection.
+
+For a startup crash, `--debugger-runtime` accepts an explicit cached GDB closure
+archive. Its adjacent `source.json` records `path` and `archive_sha256`; only
+checksum-locked `/nix/store/` files are extracted into the disposable guest.
+GDB runs the failed native GUI with network symbol fetching disabled. It does
+not attach to the builder's or a personal desktop's processes.
+
+The optional `--verify-va-runtime-fix` comparison requires native DEB,
+`--no-appimage`, the GDB input and `--package-api`. Legacy install/rollback must
+reproduce the actual SIGSEGV stack through `libva-wayland` and `vaInitialize`;
+the current candidate must survive GUI startup and pass the package checks.
+Legacy stages retain `passed: false` with an explicit `expected_failure` marker.
+The report identifies this as a regression comparison, and the matrix continues
+to list legacy native rollback as failed.
+
+For a local runtime candidate, copy the retained AppDir into a new owned work
+directory, then run `scripts/install-linux-libva.py APPDIR PINNED_LIBVA_STAGE`.
+`scripts/package-linux-native.py APPDIR WORK VERSION --format deb` limits the
+candidate to DEB; its default still produces the existing three native formats.
+Use the canonical heavy-build reservation and retain both source-stage and final
+package hashes. The four VA libraries in both private trees must be replaced
+together; the viewer and Sunshine executable hashes remain unchanged.
+
 `--session x11` selects an already installed Plasma X11 session in an owned SDDM
 guest, then restores the original Wayland session before the runner's final
 health check. It requires actual Xorg and `kwin_x11` processes. X11 rounds check

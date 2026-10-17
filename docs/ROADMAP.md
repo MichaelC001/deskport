@@ -10,7 +10,8 @@ two display-helper create/release cycles. Flatpak remains viewer-only and needs
 an already available runtime. See [the matrix and boundaries](LINUX_DESKTOP_ACCEPTANCE.md).
 
 These package scenarios do not establish sustained media, remote clipboard/input,
-window focus/visibility, an installed X11 desktop or physical GPU acceptance.
+window focus or physical GPU acceptance. Debian's separate installed Plasma X11
+round verifies actual Xorg window mapping; Wayland visibility remains unverified.
 Denied uinput access is retained as a prerequisite failure; no security policy
 is changed to turn it into a pass. Seamless remains deferred.
 
