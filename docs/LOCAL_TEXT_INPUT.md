@@ -65,11 +65,29 @@ change focus, hide/restore and enter another string; inspect native candidate
 placement separately from the committed sink. The harness does not prove full
 remote application insertion or streaming acceptance.
 
-## Validation status
+## Validation status — 2026-10-17
 
-Implementation and acceptance evidence are recorded per run. Synthetic event
-checks are separate from native candidate UI and end-to-end host acceptance.
-The initial macOS adapter/overlay regression passed. Linux Nix, additional
-platform compilation and native IME sessions are recorded below as they finish.
-No deployed application, personal host, clipboard, mobile repository, system
-permission or persistent input-source configuration is changed by this work.
+| Check | Result | Boundary |
+| --- | --- | --- |
+| macOS production input/session, overlay, Metal and SDL renderer translation units | Passed in the locked devShell | Compilation; no packaged stream acceptance |
+| Windows production input/session, D3D9/D3D11 and SDL renderer translation units | MinGW cross compilation passed | No installed application replacement |
+| Linux full Nix package | Passed for functional source `bda33d89` | Same package with builder-only CPU 0–3 / nice 15 pre-configure hooks; four build cores |
+| Synthetic SDL adapter checks on macOS and Linux | Passed | Chinese/Japanese/Korean, combining marks, emoji, long preedit, stale/window guards, cancellation, commands and AltGr |
+| Native Cocoa / Apple Pinyin adapter | Passed | Two `你好` commits; Escape, hide during composition, recall, and input-source restoration read back |
+| Native Windows / existing Microsoft Pinyin adapter | Passed | Two `你` commits; candidate confirmation, Escape, hide during composition and recall; source list and original foreground thread layout unchanged |
+| Native Linux X11 / IBus adapter | Passed | Real libpinyin `你好`, Anthy `日本語`, Hangul `한` + `글` commits; Escape and hide/recall passed in an isolated namespace. CJK glyphs and the 1x Pinyin popup were inspected; owned processes exited |
+| Per-device settings | 6 checks passed | Default-off, isolated persistence and existing display/language settings |
+| Qt UI | 27 checks passed | Includes the switch and disabled system-shortcut capture; offscreen |
+| Shipped translations | 17,867 finished entries compared at runtime | Resource consistency, not native-speaker review |
+| Shared core and adapters | Passed | Matching Git/Nix pins, shared catalog and workspace fixtures |
+
+The native tests use the production local adapter and a local commit sink. They
+never connect to a host or read/write the clipboard. The Windows task requests
+the interactive user and a limited run level and is removed afterwards. Deployed
+DeskPort processes, services and pairing data are not replaced or restarted.
+
+Native Japanese/Korean input methods on Windows/macOS were not enabled or
+installed. Full remote application insertion, a native Wayland input-method
+session, packaged fullscreen candidate placement, candidate mouse selection and
+HiDPI visual acceptance remain separate checks. Native candidate confirmation
+in the isolated harness does not establish end-to-end streaming/input acceptance.
