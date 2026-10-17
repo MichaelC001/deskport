@@ -36,3 +36,12 @@ The IME and Web branches had independent shared-core descendants. Core
 Git, Nix revision and NAR pins advance together. Qt/Web resources must still
 match the combined catalog. Individual-branch tests are historical evidence;
 integration build and regression results are recorded separately after execution.
+
+## Additional requested UI change
+
+Integrate desktop `codex/square-device-cards` at `1c146302`: device, group and
+add cards track the grid cell width, including folder cards, with Material
+padding explicitly cleared. The branch passed its macOS build and 27 UI checks;
+the combined Linux UI suite and build are checked separately for this batch.
+The private mobile repository and its same-named branch are outside this desktop
+integration.

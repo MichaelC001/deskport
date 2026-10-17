@@ -1,6 +1,6 @@
 # PC implementation and acceptance matrix
 
-Reviewed 2026-10-18 against integration source `2aa1f1a4cca45df0df804b8bdd4199d28e1edbc5` and pinned core
+Reviewed 2026-10-18 against integration source `4d2e2abdf86681076b7e7d5f4d15047cbe5367b4` and pinned core
 `f34fc7b1524ce436185c4b085a903e6af4314790`. This is a source snapshot, not an installed version.
 Seven tested task branches are integrated with their scoped acceptance records;
 the remaining ten tasks retain explicit gates in [the integration ledger](PC_TASK_INTEGRATION.md).
