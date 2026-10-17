@@ -97,6 +97,7 @@ try {
    $results+=@{round=$round;policy=$policy;width=$case[0];height=$case[1];requestedScale=$case[2];actualPercent=$observed.percent;windowDpi=$observed.windowDpi;physicalDpiUntouched=$true}
    $results|ConvertTo-Json -Depth 5|Set-Content (Join-Path $OutputDirectory 'results.json')
   }
+  $null=Assert-Dpi (Request $h (++$script:sequence) 2560 1440 2 $policy) 200 -PhysicalPresent:($policy -eq 2)
   $h.p.StandardInput.WriteLine((@{seq=++$script:sequence;session=$false}|ConvertTo-Json -Compress));$null=Reply $h.p
   $restored=@(Observe|Where-Object{$_.owned})[0];if($restored.percent -ne 125 -or $restored.windowDpi -ne 120){throw 'Disconnect failed to restore the original 125% DPI'}
   $null=Observe $original;Finish-Helper $h;$h=$null
@@ -107,8 +108,13 @@ try {
  $mirror=Request $h (++$script:sequence) 1920 1080 2 0
  if($mirror.scale -ne 1){throw 'Mirror must retain the existing 1x downgrade'}
  $rows=Observe;$mirrorAfter=@($rows|Where-Object{$_.owned})[0]
- if($mirrorAfter.percent -ne $mirrorBefore.percent -or (Physical $rows) -ne $script:physical){throw 'Mirror changed saved virtual or physical DPI'}
+ # A clone has no independent GDI desktop and Windows can reject its DPI query.
+ # Verify the physical desktop while cloned, then the saved virtual DPI after detach.
+ if(($mirrorAfter.queryError -eq 0 -and $mirrorAfter.percent -ne $mirrorBefore.percent) -or (Physical $rows) -ne $script:physical){throw 'Mirror changed saved virtual or physical DPI'}
+ @{before=$mirrorBefore;during=$mirrorAfter}|ConvertTo-Json -Depth 5|Set-Content (Join-Path $OutputDirectory 'mirror-observation.json')
  $h.p.StandardInput.WriteLine((@{seq=++$script:sequence;session=$false}|ConvertTo-Json -Compress));$null=Reply $h.p
+ $mirrorRestored=@(Observe|Where-Object{$_.owned})[0]
+ if($mirrorRestored.percent -ne $mirrorBefore.percent -or $mirrorRestored.windowDpi -ne $mirrorBefore.windowDpi){throw 'Mirror changed saved virtual DPI after detach'}
  Finish-Helper $h;$h=$null
  @{passed=$true;systemDpiWritesRequired=$false;physicalDpiUntouched=$true}|ConvertTo-Json|Set-Content (Join-Path $OutputDirectory 'mirror.json')
  foreach($failure in @('helper','broker')) {

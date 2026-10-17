@@ -487,10 +487,13 @@ bool restore(bool releaseDpi=true) {
     // Changing the mode first can make the old 2x preference exceed the new
     // mode's UI limit, preventing a verified restore.
     if(dpiSession) {
-        if(activeLease->command(releaseDpi?deskport::display_dpi::RestoreDpi:deskport::display_dpi::ResetDpi))return false;
-        if(releaseDpi)dpiSession=false;
+        if(activeLease->command(deskport::display_dpi::ResetDpi))return false;
     }
     if (!changed) {
+        if(dpiSession&&releaseDpi) {
+            if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;
+            dpiSession=false;
+        }
         return true;
     }
     // Apply only the display that this helper changed, without modifying saved defaults.
@@ -501,6 +504,12 @@ bool restore(bool releaseDpi=true) {
         if(rc||!verified.read()||!preservesPhysicalSources(baseline,verified))return false;
         policyChanged=false;
     } else if (!applyMode(original)) return false;
+    // Reapply the original absolute percentage only after restoring the idle
+    // mode: Windows recommendations (and therefore relative steps) vary by mode.
+    if(dpiSession&&releaseDpi) {
+        if(activeLease->command(deskport::display_dpi::RestoreDpi))return false;
+        dpiSession=false;
+    }
     changed = false;
     captureOutput.clear();
     return writeState(false);

@@ -30,9 +30,18 @@ int wmain(int argc,wchar_t** argv) {
         DISPLAYCONFIG_SOURCE_DEVICE_NAME name{};name.header.type=DISPLAYCONFIG_DEVICE_INFO_GET_SOURCE_NAME;
         name.header.size=sizeof(name);name.header.adapterId=path.sourceInfo.adapterId;name.header.id=path.sourceInfo.id;
         if(DisplayConfigGetDeviceInfo(&name.header))return 5;
-        DEVMODEW mode{};mode.dmSize=sizeof(mode);if(!EnumDisplaySettingsExW(name.viewGdiDeviceName,ENUM_CURRENT_SETTINGS,&mode,0))return 6;
-        auto window=CreateWindowExW(WS_EX_TOOLWINDOW,L"STATIC",L"DeskPort synthetic DPI probe",WS_POPUP,
-            mode.dmPosition.x+10,mode.dmPosition.y+10,20,20,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);
+        DEVMODEW mode{};mode.dmSize=sizeof(mode);
+        const bool gdi=EnumDisplaySettingsExW(name.viewGdiDeviceName,ENUM_CURRENT_SETTINGS,&mode,0);
+        // A virtual clone can retain a CCD path without a separate GDI desktop.
+        // Report its CCD mode/step, but do not invent an independently observed
+        // window DPI at the overlapping physical source's coordinates.
+        if(!gdi) {
+            const auto index=(path.flags&DISPLAYCONFIG_PATH_SUPPORT_VIRTUAL_MODE)?path.sourceInfo.sourceModeInfoIdx:path.sourceInfo.modeInfoIdx;
+            if(index>=nm||modes[index].infoType!=DISPLAYCONFIG_MODE_INFO_TYPE_SOURCE)return 6;
+            mode.dmPosition=modes[index].sourceMode.position;mode.dmPelsWidth=modes[index].sourceMode.width;mode.dmPelsHeight=modes[index].sourceMode.height;
+        }
+        auto window=gdi?CreateWindowExW(WS_EX_TOOLWINDOW,L"STATIC",L"DeskPort synthetic DPI probe",WS_POPUP,
+            mode.dmPosition.x+10,mode.dmPosition.y+10,20,20,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr):nullptr;
         const auto dpi=window?GetDpiForWindow(window):0;if(window)DestroyWindow(window);
         if(i)std::cout<<",";
         std::cout<<"{\"adapterLow\":"<<path.targetInfo.adapterId.LowPart<<",\"adapterHigh\":"<<path.targetInfo.adapterId.HighPart
@@ -40,7 +49,7 @@ int wmain(int argc,wchar_t** argv) {
             <<",\"owned\":"<<(deskport::display_dpi::ownedAdapter(path.targetInfo.adapterId,instance)?"true":"false")
             <<",\"percent\":"<<(code?0:deskport::display_dpi::percent(range))<<",\"relative\":"<<range.current
             <<",\"minimum\":"<<range.minimum<<",\"maximum\":"<<range.maximum<<",\"queryError\":"<<code
-            <<",\"windowDpi\":"<<dpi<<",\"width\":"<<mode.dmPelsWidth<<",\"height\":"<<mode.dmPelsHeight<<"}";
+            <<",\"windowDpi\":"<<dpi<<",\"gdiCurrent\":"<<(gdi?"true":"false")<<",\"width\":"<<mode.dmPelsWidth<<",\"height\":"<<mode.dmPelsHeight<<"}";
     }
     std::cout<<"]\n";return 0;
 }

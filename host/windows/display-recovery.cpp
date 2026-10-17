@@ -35,7 +35,7 @@ static HANDLE brokerProcess=nullptr, brokerStop=nullptr;
 class DpiLease {
     HANDLE user=nullptr;
     std::wstring journal,instance,sid;
-    struct Record { DWORD magic=0x44504449,version=1;int percentage=0;DWORD sidLength=0,instanceLength=0; };
+    struct Record { DWORD magic=0x44504449,version=2;int percentage=0,relative=0,minimum=0;DWORD sidLength=0,instanceLength=0; };
     DWORD observe(deskport::display_dpi::Source& source,deskport::display_dpi::Range& range) {
         auto rc=deskport::display_dpi::ownedSource(instance,source);if(rc)return rc;
         if(!user||!ImpersonateLoggedOnUser(user))return ERROR_ACCESS_DENIED;
@@ -43,10 +43,11 @@ class DpiLease {
         if(!RevertToSelf())ExitProcess(ERROR_ACCESS_DENIED);
         return rc;
     }
-    DWORD apply(int percentage) {
+    DWORD apply(int percentage,bool relativeStep=false) {
         deskport::display_dpi::Source source{};deskport::display_dpi::Range range{};
         auto rc=observe(source,range);if(rc)return rc;int relative=0;
-        if(!deskport::display_dpi::relative(range,percentage,relative))return ERROR_NOT_SUPPORTED;
+        if(relativeStep) {relative=percentage;if(relative<range.minimum||relative>range.maximum)return ERROR_NOT_SUPPORTED;}
+        else if(!deskport::display_dpi::relative(range,percentage,relative))return ERROR_NOT_SUPPORTED;
         // Re-resolve immediately before writing; source IDs are retired when
         // the VDD is recreated. A stale source must not target another output.
         deskport::display_dpi::Source current{};
@@ -57,11 +58,11 @@ class DpiLease {
         if(!RevertToSelf())ExitProcess(ERROR_ACCESS_DENIED);
         return rc;
     }
-    DWORD load(int& percentage) {
+    DWORD load(int& percentage,int* step=nullptr) {
         auto file=CreateFileW(journal.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_FLAG_OPEN_REPARSE_POINT,nullptr);
         if(file==INVALID_HANDLE_VALUE)return GetLastError();
         auto read=[file](void* p,DWORD n){DWORD got=0;return ReadFile(file,p,n,&got,nullptr)&&got==n;};
-        Record record{};bool ok=read(&record,sizeof(record))&&record.magic==0x44504449&&record.version==1&&
+        Record record{};bool ok=read(&record,sizeof(record))&&record.magic==0x44504449&&record.version==2&&
             record.sidLength>0&&record.sidLength<=256&&record.instanceLength>0&&record.instanceLength<=1024;
         std::wstring savedSid,savedInstance;
         if(ok){savedSid.resize(record.sidLength);savedInstance.resize(record.instanceLength);
@@ -70,7 +71,9 @@ class DpiLease {
         CloseHandle(file);
         if(!ok||savedSid!=sid||_wcsicmp(savedInstance.c_str(),instance.c_str()))return ERROR_ACCESS_DENIED;
         bool known=false;for(const auto value:deskport::display_dpi::percentages)if(record.percentage==value)known=true;
-        if(!known)return ERROR_INVALID_DATA;percentage=record.percentage;return 0;
+        const deskport::display_dpi::Range savedRange{record.minimum,record.relative,record.relative>0?record.relative:0};
+        if(!known||!deskport::display_dpi::valid(savedRange)||deskport::display_dpi::percent(savedRange)!=record.percentage)return ERROR_INVALID_DATA;
+        percentage=record.percentage;if(step)*step=record.relative;return 0;
     }
 public:
     DpiLease(HANDLE parent,std::wstring path,std::wstring device):journal(std::move(path)),instance(std::move(device)) {
@@ -86,9 +89,10 @@ public:
     }
     DWORD capture() {
         int old=0;const auto exists=load(old);if(!exists)return 0;if(exists!=ERROR_FILE_NOT_FOUND)return exists;
-        DWORD percentage=0;auto rc=inspect(percentage);if(rc)return rc;
+        deskport::display_dpi::Source source{};deskport::display_dpi::Range range{};auto rc=observe(source,range);if(rc)return rc;
+        const auto percentage=deskport::display_dpi::percent(range);
         if(sid.empty()||sid.size()>256||instance.empty()||instance.size()>1024)return ERROR_ACCESS_DENIED;
-        Record record;record.percentage=int(percentage);record.sidLength=DWORD(sid.size());record.instanceLength=DWORD(instance.size());
+        Record record;record.percentage=int(percentage);record.relative=range.current;record.minimum=range.minimum;record.sidLength=DWORD(sid.size());record.instanceLength=DWORD(instance.size());
         auto file=CreateFileW(journal.c_str(),GENERIC_WRITE,0,nullptr,CREATE_NEW,FILE_ATTRIBUTE_NORMAL,nullptr);
         if(file==INVALID_HANDLE_VALUE)return GetLastError();
         auto write=[file](const void* p,DWORD n){DWORD wrote=0;return WriteFile(file,p,n,&wrote,nullptr)&&wrote==n;};
@@ -101,10 +105,13 @@ public:
         rc=apply(int(scale)*100);if(!rc)rc=inspect(percentage);
         return !rc&&percentage!=scale*100?ERROR_INVALID_STATE:rc;
     }
-    DWORD restore(bool retire=true) {
-        int percentage=0;auto rc=load(percentage);if(rc==ERROR_FILE_NOT_FOUND)return 0;if(rc)return rc;
+    DWORD restore(bool retire=true,bool retiringSource=false) {
+        // Windows persists a step relative to the mode-dependent recommendation.
+        // Retiring a source must restore that saved step; restoring its absolute
+        // percentage at another resolution would change the next baseline DPI.
+        int percentage=0,step=0;auto rc=load(percentage,&step);if(rc==ERROR_FILE_NOT_FOUND)return 0;if(rc)return rc;
         const auto deadline=GetTickCount64()+3000;
-        do{rc=apply(percentage);if(!rc)break;Sleep(100);}while(GetTickCount64()<deadline);
+        do{rc=apply(retiringSource?step:percentage,retiringSource);if(!rc)break;Sleep(100);}while(GetTickCount64()<deadline);
         if(!rc&&retire&&!DeleteFileW(journal.c_str()))rc=GetLastError();
         return rc;
     }
@@ -282,7 +289,7 @@ static HANDLE shutdownRelease=nullptr;
 static DpiLease* shutdownDpi=nullptr;
 static LRESULT CALLBACK recoveryWindow(HWND window,UINT message,WPARAM wp,LPARAM lp) {
     if(message==WM_QUERYENDSESSION || (message==WM_ENDSESSION&&wp)) {
-        if(shutdownDpi)shutdownDpi->restore();
+        if(shutdownDpi)shutdownDpi->restore(true,true);
         if(shutdownSnapshot)restoreSnapshot(*shutdownSnapshot);
         if(shutdownRelease)SetEvent(shutdownRelease);
         return TRUE;
@@ -388,7 +395,7 @@ static int productionLease(DWORD pid,const std::wstring& nonce,std::uint64_t exp
         }
         if(!newest.empty()) {
             DpiLease orphan(parent,newest.wstring()+L".dpi",owner());
-            const auto dpiRecovered=orphan.restore();
+            const auto dpiRecovered=orphan.restore(true,true);
             const int recovered=runWorker(L"recover \""+newest.wstring()+L"\"");
             std::cout<<"orphaned_snapshot_recovery="<<recovered<<std::endl;
             if(!recovered&&!dpiRecovered)DeleteFileW(newest.c_str());
@@ -425,12 +432,12 @@ static int productionLease(DWORD pid,const std::wstring& nonce,std::uint64_t exp
                                 auto code=operation==deskport::display_dpi::CaptureDpi?dpi.capture():
                                     operation==deskport::display_dpi::SetDpi?dpi.change(scale,percentage):
                                     operation==deskport::display_dpi::RestoreDpi?dpi.restore():
-                                    operation==deskport::display_dpi::ResetDpi?dpi.restore(false):dpi.inspect(percentage);
+                                    operation==deskport::display_dpi::ResetDpi?dpi.restore(false,true):dpi.inspect(percentage);
                                 mode->dpiPercent=percentage;mode->result=code;MemoryBarrier();SetEvent(completed);continue;
                             }
                             // Restore the saved virtual DPI before retiring its
                             // current source. Keep the journal across recreation.
-                            auto resized=dpi.restore(false);
+                            auto resized=dpi.restore(false,true);
                             if(!resized)resized=runWorker(L"resize-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce+L" "+std::to_wstring(width)+L" "+std::to_wstring(height));
                             if(!resized&&alive())resized=runWorker(L"enable-lease "+std::to_wstring(GetCurrentProcessId())+L" "+nonce);
                             else if(!resized)resized=ERROR_CANCELLED;
@@ -447,7 +454,7 @@ static int productionLease(DWORD pid,const std::wstring& nonce,std::uint64_t exp
             }
         }
     }
-    if(captured){const auto dpiRecovered=dpi.restore();if(dpiRecovered)result=int(dpiRecovered);
+    if(captured){const auto dpiRecovered=dpi.restore(true,true);if(dpiRecovered)result=int(dpiRecovered);
         const int recovered=runWorker(L"recover \""+snapshot+L"\"");std::cout<<"recovery_worker_result="<<recovered<<" dpi_recovery_result="<<dpiRecovered<<std::endl;if(recovered)result=recovered;else if(!dpiRecovered)DeleteFileW(snapshot.c_str());}
     if(previousOutput){std::cout.flush();std::cout.rdbuf(previousOutput);leaseLog.close();}
     if(!result)DeleteFileW((snapshot+L".log").c_str());
