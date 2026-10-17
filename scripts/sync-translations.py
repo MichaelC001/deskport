@@ -12,15 +12,15 @@ spec.loader.exec_module(core)
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--check', action='store_true')
 args = parser.parse_args()
-import difflib
-import json
+import copy
 
 records = core.records()
 metadata = core.qt_catalogs()
-# New locales use the current complete French UI context inventory. Existing
-# optional catalogs retain their own historical source/translation status.
-for language in ('ar', 'bo'):
-    metadata[language] = {**metadata['fr'], 'attributes': {'version':'2.1', 'language':language}}
+# New locales reuse context/source metadata, never another language's text.
+for language in core.languages():
+    qt = language['qt']
+    if qt != 'en' and qt not in metadata:
+        metadata[qt] = {**metadata['fr'], 'attributes': {'version':'2.1', 'language':qt}}
 # All primary locales use the current UI context inventory. Retain historical
 # platform contexts too, so existing optional screens keep their translations.
 for language in core.languages():
@@ -29,7 +29,6 @@ for language in core.languages():
         continue
     current = metadata[qt]
     contexts = {context['name']: context for context in current['contexts']}
-    import copy
     merged = copy.deepcopy(metadata['fr']['contexts'])
     for context in merged:
         previous = contexts.pop(context['name'], None)

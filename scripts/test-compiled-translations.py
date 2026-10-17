@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check shipped binary catalogs against finished source translations at runtime."""
 from pathlib import Path
-import os, subprocess, tempfile
+import json, os, subprocess, tempfile
 root = Path(__file__).resolve().parents[1]
 with tempfile.TemporaryDirectory(prefix='deskport-translations-') as tmp:
     work = Path(tmp)
@@ -15,7 +15,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-translations-') as tmp:
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
     int checked = 0;
-    for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es","pt","ar","bo"}) {
+    for (int argument = 2; argument < argc; ++argument) {
+        const auto language = QString::fromUtf8(argv[argument]);
         const auto base = QString::fromLocal8Bit(argv[1])+"/qml_"+language;
         QTranslator translator;
         if (!translator.load(base+".qm")) return 1;
@@ -50,4 +51,4 @@ int main(int argc, char** argv) {
     (work/'test.pro').write_text('QT = core\nCONFIG += console c++17\nCONFIG -= app_bundle\nTARGET = translation-test\nSOURCES = test.cpp\n')
     subprocess.run([os.environ.get('DESKPORT_QMAKE','qmake'),'test.pro'],cwd=work,check=True,stdout=subprocess.DEVNULL)
     subprocess.run(['make','-j4'],cwd=work,check=True,stdout=subprocess.DEVNULL)
-    subprocess.run([str(work/'translation-test'),str(root/'app/languages')],check=True)
+    subprocess.run([str(work/'translation-test'),str(root/'app/languages'), *[locale['qt'] for locale in json.loads((root/'shared/deskport-core/i18n/languages.json').read_text()) if locale['qt'] != 'en']],check=True)

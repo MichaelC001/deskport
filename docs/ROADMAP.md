@@ -1,3 +1,15 @@
+## Additional shared languages — 2026-10-17
+
+Add Italian, Russian, Indonesian, Turkish, Vietnamese, Thai, Dutch, Polish,
+Ukrainian, Hindi and Malay, giving desktop and native consumers the same 22
+primary languages. The English-keyed core table still owns all UI translations;
+platform resources and language choices are generated, with no duplicate picker
+entries or changes to saved language IDs. Tests now derive their catalog list
+from core rather than retaining the previous ten-language list.
+
+New translations remain machine-assisted drafts pending native-speaker and
+physical font/layout review. UI localization does not rewrite wire identifiers.
+
 ## Unified UI localization — 2026-10-17
 
 Reason: add French, German, Arabic, Korean, Portuguese, Spanish and Tibetan

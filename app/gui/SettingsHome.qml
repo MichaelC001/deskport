@@ -49,18 +49,11 @@ UiPage {
             readonly property var languages: [
                 { label: qsTr("Follow system"), value: preferences.LANG_AUTO }
             ].concat(preferences.sharedLanguages).concat([
-                { label: "Italiano", value: preferences.LANG_IT },
-                { label: "Русский", value: preferences.LANG_RU },
-                { label: "Nederlands", value: preferences.LANG_NL },
-                { label: "Polski", value: preferences.LANG_PL },
                 { label: "Čeština", value: preferences.LANG_CS },
                 { label: "Svenska", value: preferences.LANG_SV },
                 { label: "Norsk bokmål", value: preferences.LANG_NB_NO },
-                { label: "Türkçe", value: preferences.LANG_TR },
                 { label: "Magyar", value: preferences.LANG_HU },
-                { label: "Ελληνικά", value: preferences.LANG_EL },
-                { label: "Tiếng Việt", value: preferences.LANG_VI },
-                { label: "ภาษาไทย", value: preferences.LANG_TH }
+                { label: "Ελληνικά", value: preferences.LANG_EL }
             ])
             options: languages
             currentIndex: {

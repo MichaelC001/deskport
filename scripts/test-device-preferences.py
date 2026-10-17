@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Test production per-device persistence without reading user settings."""
+import json
 import os
 from pathlib import Path
 import subprocess
@@ -19,7 +20,7 @@ INCLUDEPATH += "{root}/app"
     resources = ['<RCC><qresource prefix="/">',
         f'<file alias="i18n/languages.json">{root}/shared/deskport-core/i18n/languages.json</file>']
     resources += [f'<file alias="languages/qml_{language}.qm">{root}/app/languages/qml_{language}.qm</file>'
-                  for language in ('ar','bo','pt','fr','de','ko','es')]
+                  for language in [locale['qt'] for locale in json.loads((root/'shared/deskport-core/i18n/languages.json').read_text()) if locale['qt'] != 'en']]
     (work/'test-resources.qrc').write_text('\n'.join(resources+['</qresource></RCC>']))
     env = dict(os.environ, QT_QPA_PLATFORM="offscreen", XDG_CONFIG_HOME=temporary)
     env.setdefault("DEVELOPER_DIR", "/Applications/Xcode.app/Contents/Developer")

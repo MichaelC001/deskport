@@ -527,6 +527,8 @@ RESOURCES += \
 TRANSLATIONS += \
     languages/qml_ar.ts \
     languages/qml_bo.ts \
+    languages/qml_id.ts \
+    languages/qml_ms.ts \
     languages/qml_zh_CN.ts \
     languages/qml_de.ts \
     languages/qml_fr.ts \

@@ -58,7 +58,7 @@ private slots:
         const auto input = preferences->remoteInput;
         QCOMPARE(int(StreamingPreferences::LANG_KO), 11);
         QCOMPARE(int(StreamingPreferences::LANG_PT), 18);
-        QCOMPARE(preferences->sharedLanguages().size(), 11);
+        QCOMPARE(preferences->sharedLanguages().size(), 22);
         preferences->language = StreamingPreferences::LANG_AR;
         QVERIFY(preferences->retranslate());
         QCOMPARE(QCoreApplication::translate("SettingsHome", "Language"), QString::fromUtf8("اللغة"));

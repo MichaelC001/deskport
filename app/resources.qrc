@@ -115,6 +115,10 @@
         <file>languages/qml_ar.qm</file>
         <file>languages/qml_bo.ts</file>
         <file>languages/qml_bo.qm</file>
+        <file>languages/qml_id.ts</file>
+        <file>languages/qml_id.qm</file>
+        <file>languages/qml_ms.ts</file>
+        <file>languages/qml_ms.qm</file>
         <file>languages/qml_de.ts</file>
         <file>languages/qml_de.qm</file>
         <file>languages/qml_fr.ts</file>

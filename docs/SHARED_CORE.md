@@ -1,3 +1,11 @@
+## Twenty-two shared UI locales — 2026-10-17
+
+Core `b4b0ed1` expands the English-keyed UI table and offline manual to
+22 primary languages. Both consumers advance their core pin; desktop advances
+the matching Nix lock too. No wire contract, transport or input code changes.
+Native generation handles Indonesian's legacy `in` picker/resources and modern
+`id` locale setting. Translation drafts still need native-speaker review.
+
 # Shared core development
 
 See [extraction verification](SHARED_CORE_VERIFICATION.md) for completed checks and limits.

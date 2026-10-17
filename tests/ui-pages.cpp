@@ -219,7 +219,7 @@ public:
     QVariantList sharedLanguages() const {
         QFile file(qEnvironmentVariable("TEST_GUI_DIR")+"/../../shared/deskport-core/i18n/languages.json");
         if (!file.open(QIODevice::ReadOnly)) return {};
-        const QList<int> values = {LANG_EN, LANG_ZH_CN, LANG_ZH_TW, LANG_JA, LANG_FR, LANG_DE, LANG_AR, LANG_KO, LANG_PT, LANG_ES, LANG_BO};
+        const QList<int> values = {LANG_EN, LANG_ZH_CN, LANG_ZH_TW, LANG_JA, LANG_FR, LANG_DE, LANG_AR, LANG_KO, LANG_PT, LANG_ES, LANG_BO, LANG_IT, LANG_RU, LANG_ID, LANG_TR, LANG_VI, LANG_TH, LANG_NL, LANG_PL, LANG_UK, LANG_HI, LANG_MS};
         QVariantList result;
         int index = 0;
         for (const auto &entry : QJsonDocument::fromJson(file.readAll()).array())
@@ -236,7 +236,7 @@ public:
         for (const char *label : dp_catalog_tuning_labels) labels.append(QString::fromLatin1(label));
         return labels;
     }
-    enum Language { LANG_AUTO, LANG_EN, LANG_FR, LANG_ZH_CN, LANG_DE, LANG_NB_NO, LANG_RU, LANG_ES, LANG_JA, LANG_VI, LANG_TH, LANG_KO, LANG_HU, LANG_NL, LANG_SV, LANG_TR, LANG_UK, LANG_ZH_TW, LANG_PT, LANG_PT_BR, LANG_EL, LANG_IT, LANG_HI, LANG_PL, LANG_CS, LANG_HE, LANG_CKB, LANG_LT, LANG_ET, LANG_AR, LANG_BO };
+    enum Language { LANG_AUTO, LANG_EN, LANG_FR, LANG_ZH_CN, LANG_DE, LANG_NB_NO, LANG_RU, LANG_ES, LANG_JA, LANG_VI, LANG_TH, LANG_KO, LANG_HU, LANG_NL, LANG_SV, LANG_TR, LANG_UK, LANG_ZH_TW, LANG_PT, LANG_PT_BR, LANG_EL, LANG_IT, LANG_HI, LANG_PL, LANG_CS, LANG_HE, LANG_CKB, LANG_LT, LANG_ET, LANG_AR, LANG_BO, LANG_ID, LANG_MS };
     Q_ENUM(Language)
 };
 class PreviewHost : public HostManager {
@@ -1613,7 +1613,7 @@ QtObject {
         QCOMPARE(english,QString("Make DeskPort your own."));
         auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
         QVERIFY(!page->findChild<QObject*>("windowModeChoice"));
-        for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es","pt","ar","bo"}) {
+        for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es","pt","ar","bo","it","ru","id","tr","vi","th","nl","pl","uk","hi","ms"}) {
             QTranslator translator;
             QVERIFY(translator.load(gui+"/../languages/qml_"+language+".qm"));
             QVERIFY(QCoreApplication::installTranslator(&translator));

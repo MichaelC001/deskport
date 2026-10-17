@@ -352,7 +352,10 @@ QVariantList StreamingPreferences::sharedLanguages() const
     const QMap<QString, Language> values = {
         {"en", LANG_EN}, {"zh_CN", LANG_ZH_CN}, {"zh_TW", LANG_ZH_TW},
         {"ja", LANG_JA}, {"fr", LANG_FR}, {"de", LANG_DE}, {"ar", LANG_AR},
-        {"ko", LANG_KO}, {"pt", LANG_PT}, {"es", LANG_ES}, {"bo", LANG_BO}
+        {"ko", LANG_KO}, {"pt", LANG_PT}, {"es", LANG_ES}, {"bo", LANG_BO},
+        {"it", LANG_IT}, {"ru", LANG_RU}, {"id", LANG_ID}, {"tr", LANG_TR},
+        {"vi", LANG_VI}, {"th", LANG_TH}, {"nl", LANG_NL}, {"pl", LANG_PL},
+        {"uk", LANG_UK}, {"hi", LANG_HI}, {"ms", LANG_MS}
     };
     QVariantList result;
     for (const auto &entry : QJsonDocument::fromJson(file.readAll()).array()) {
@@ -428,6 +431,10 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "ar";
     case LANG_BO:
         return "bo";
+    case LANG_ID:
+        return "id";
+    case LANG_MS:
+        return "ms";
     case LANG_AUTO:
     default:
         // Regional Chinese locales must select a script, not fall back to English.

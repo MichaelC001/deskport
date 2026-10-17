@@ -119,6 +119,8 @@ public:
         // Append only: saved language IDs must remain stable.
         LANG_AR,
         LANG_BO,
+        LANG_ID,
+        LANG_MS,
     };
     Q_ENUM(Language);
 
