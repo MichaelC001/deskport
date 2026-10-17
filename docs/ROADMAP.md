@@ -12,7 +12,17 @@ after client tuning, preserving aspect ratio and backing scale. Old clients that
 request a smaller workspace receive verified 1x with a localized host-limit
 warning. Private Windows DPI packets are isolated; a per-monitor-aware native
 window must confirm their reported DPI. The shared wire format is unchanged.
-Native acceptance pending.
+The clean full Windows package from `6a33b4ee` passed 24 native scale cases,
+four large-2x disconnect restorations to a non-default 125%, mirror preservation,
+and helper/broker-death recovery. Same-pixel 1x/2x changes retained the source.
+An existing macOS client displayed the synthetic 200% desktop, delivered a pointer
+click and keyboard string, reconnected, and restored 100% after viewer exit.
+Physical-output DPI remained unchanged. Four medium-integrity sharing cycles,
+zero observed UAC starts, Defender scans, package audits, shared-core/adapter
+regressions and a native Linux Nix build passed. The broker test series exhausted
+its deliberately bounded two SCM retries; an authorized administrator coordinator
+restarted it only after independent recovery was observed. Nested UI disconnect,
+audio/clipboard/latency, locked-session and pre-login hosting are not accepted.
 
 ## Windows installed display broker candidate — 2026-10-17
 

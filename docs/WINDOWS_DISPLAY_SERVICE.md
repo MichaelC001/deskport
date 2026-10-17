@@ -91,15 +91,19 @@ checks its hardware identity, and rejects foreign or shared physical sources.
 Every write re-resolves the current source because adapter recreation retires
 source IDs. A mirror retains physical scaling and its existing 1x downgrade.
 
-A protected, flushed journal records the original virtual percentage and user
-identity before the first change. Only bounded DPI operations and 1x/2x values
+A protected, flushed journal records the original virtual percentage, relative
+DPI step, recommendation and user identity before the first change. Only bounded DPI operations and 1x/2x values
 cross the lease mapping; no source ID, registry path or arbitrary percentage is
 accepted from the helper. DPI calls impersonate the authenticated helper's user,
 whose token remains open for recovery after helper/broker death. Protected file
-I/O runs as the guardian. Normal disconnect restores the original percentage;
-recreation restores before retiring a source and retains the baseline for its
-replacement. Final cleanup attempts DPI restoration before disabling the VDD and
-restoring the physical topology. Failed recovery retains its journal.
+I/O runs as the guardian. Normal disconnect restores the original percentage
+after restoring the idle display mode. Windows persists a relative step and its
+recommended percentage changes with resolution: restoring an absolute 125% at a
+125%-recommended mode would otherwise become 100% at a 100%-recommended baseline.
+Before retiring/recreating a source, recovery restores the original relative
+step and retains the baseline for its replacement. Final cleanup restores that
+step before disabling the VDD and restoring the physical topology. Failed
+recovery retains its journal.
 
 Windows' per-source DPI packets use private CCD request types -3/-4, outside the
 documented SDK enum. Their layouts/ranges are checked and unsupported requests
@@ -171,6 +175,39 @@ These results cover the signed-in display broker. They do not establish cold-boo
 locked-session, secure-desktop or pre-login hosting. Private evidence retains
 package identities and synthetic test results; personal machine details and raw
 screenshots are excluded from public documentation.
+
+## Native DPI checkpoint — 2026-10-17
+
+The clean full package from `6a33b4ee` passed 24 scale cases over two rounds of
+exclusive/extended desktops: same-pixel 100%/200% changes, 2136x1200 and portrait
+1600x2848 at 200%, and the verified 100% fallback for a small legacy-client
+request. Independent CCD and real-window DPI agreed. Four direct disconnects
+from a large 200% workspace restored the deliberately non-default 125% baseline.
+Mirroring preserved physical DPI and the virtual preference after detach.
+
+Helper death and broker death restored that 125% preference across adapter
+re-enablement and restored the physical layout. SCM preserved its failure count
+across upgrades: only two automatic restart actions are configured. After the
+fault-injection series exhausted them, an authorized admin coordinator restarted
+the stopped broker after the guardian had independently recovered the desktop.
+This is not evidence of unlimited automatic restart.
+
+An existing macOS client showed animated synthetic video at 2044x1200 with actual
+192 DPI (200%), delivered a pointer click and a synthetic keyboard string, and
+reconnected. Viewer termination restored the original 100% after the existing
+session cleanup grace. A smaller window from that older client used the verified
+100% fallback. Physical windows remained at 96 DPI. Nested UI disconnect was not
+accepted through that focus-control route; normal helper disconnects were tested
+separately. This is not an IME, rapid typing, audio, clipboard or latency matrix.
+
+Four additional ordinary-user sharing cycles, all seven installed executable
+hashes, retained peer/identity hashes, four CLI help/version switches and Defender
+custom scans passed. GUI/host/helper remained at medium integrity, with zero UAC
+process starts observed. The source tree was clean after full packaging; PE and
+Setup/ZIP-equivalence audits, production offset/window-DPI regressions, shared
+core/translation checks and native Linux Nix compilation passed. Test viewers,
+fixtures and temporary tasks were removed and temporary client preferences were
+restored. The installed automatic broker and ordinary-user resident remain.
 
 ## Remaining native acceptance
 
