@@ -178,33 +178,36 @@ for frame in range(10000):
     ready = json.loads(line(gateway))
     if not ready.get('code') or not ready.get('port'): raise RuntimeError('Real HTTPS gateway failed to start')
     control_path = runtime/'control.sock'
-    if args.pairing_control:
-        def control(body):
-            global gateway
-            if body.get('action') == 'restart':
-                gateway.stdin.write(b'quit\n'); gateway.stdin.flush(); gateway.wait(timeout=20)
-                gateway = spawn('gateway-restarted', [args.gateway,'--fixture',private,'--state',output/'gateway-state',
-                    '--bind','127.0.0.1','--port',str(ready['port'])], stdout=subprocess.PIPE,stdin=subprocess.PIPE)
-                restarted = json.loads(line(gateway))
-                if restarted.get('port') != ready['port'] or restarted.get('authenticator') != ready['authenticator']:
-                    raise RuntimeError('Restart did not preserve the gateway identity and port')
-                return {'ok':True,'port':restarted['port']}
-            gateway.stdin.write(json.dumps(body).encode()+b'\n'); gateway.stdin.flush()
-            return json.loads(line(gateway))
-        class ControlHandler(socketserver.StreamRequestHandler):
-            def handle(self):
-                try:
-                    body = json.loads(self.rfile.readline(8192))
-                    result = control(body)
-                except Exception as error: result = {'ok':False,'error':str(error)}
-                self.wfile.write(json.dumps(result).encode()+b'\n')
-        control_server = socketserver.UnixStreamServer(str(control_path), ControlHandler)
-        control_thread = threading.Thread(target=control_server.serve_forever, daemon=True)
-        control_thread.start()
+    def control(body):
+        global gateway
+        # Ordinary media reconnects need a new one-time code. Restart/revocation
+        # controls remain opt-in for the separate durable-pairing scenario.
+        if not args.pairing_control and body.get('action') not in ('next-code', 'status'):
+            return {'ok':False,'error':'Pairing control was not enabled'}
+        if body.get('action') == 'restart':
+            gateway.stdin.write(b'quit\n'); gateway.stdin.flush(); gateway.wait(timeout=20)
+            gateway = spawn('gateway-restarted', [args.gateway,'--fixture',private,'--state',output/'gateway-state',
+                '--bind','127.0.0.1','--port',str(ready['port'])], stdout=subprocess.PIPE,stdin=subprocess.PIPE)
+            restarted = json.loads(line(gateway))
+            if restarted.get('port') != ready['port'] or restarted.get('authenticator') != ready['authenticator']:
+                raise RuntimeError('Restart did not preserve the gateway identity and port')
+            return {'ok':True,'port':restarted['port']}
+        gateway.stdin.write(json.dumps(body).encode()+b'\n'); gateway.stdin.flush()
+        return json.loads(line(gateway))
+    class ControlHandler(socketserver.StreamRequestHandler):
+        def handle(self):
+            try:
+                body = json.loads(self.rfile.readline(8192))
+                result = control(body)
+            except Exception as error: result = {'ok':False,'error':str(error)}
+            self.wfile.write(json.dumps(result).encode()+b'\n')
+    control_server = socketserver.UnixStreamServer(str(control_path), ControlHandler)
+    control_thread = threading.Thread(target=control_server.serve_forever, daemon=True)
+    control_thread.start()
     browser_fixture = output/'browser.json'
     browser_fixture.write_text(json.dumps({'url':f'https://127.0.0.1:{ready["port"]}/',
         'code':ready['code'],'chromium':str(args.chromium),'outputDir':str(output),
-        **({'controlSocket':str(control_path)} if args.pairing_control else {})}))
+        'controlSocket':str(control_path)}))
     driver_env = dict(environment,DESKPORT_PLAYWRIGHT_MODULE=str(args.playwright_module))
     driver = spawn('browser-driver',[args.node,args.driver or repo/'scripts/test-browser-native.mjs','--fixture',browser_fixture],env=driver_env)
     if driver.wait(timeout=300 if args.pairing_control else 100) != 0: raise RuntimeError('Browser driver failed; see browser-driver.log and its result JSON')

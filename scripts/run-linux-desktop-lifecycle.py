@@ -37,6 +37,8 @@ def main():
     parser.add_argument('--dependency', type=Path, action='append', default=[], help='Explicit offline native dependency package')
     parser.add_argument('--debugger-runtime', type=Path, help='Explicit cached GDB closure archive with source.json pin')
     parser.add_argument('--package-api', action='store_true', help='Check the current native package loopback API and runtime metadata')
+    parser.add_argument('--capture-probe', action='store_true', help='Probe owned virtual-output capture and software H.264 initialization; no media connection')
+    parser.add_argument('--media-runtime', type=Path, help='Prepared cached tools for the isolated synthetic browser AV fixture')
     parser.add_argument('--verify-va-runtime-fix', action='store_true', help='Ubuntu regression comparison: require legacy VA crashes and a healthy current candidate')
     parser.add_argument('--flatpak', action='store_true', help='Use preinstalled runtime; no network pulls')
     parser.add_argument('--flatpak-runtime', type=Path, action='append', default=[], help='Offline Platform/GL runtime bundle with adjacent .json commit pin; repeat for GL')
@@ -44,6 +46,8 @@ def main():
     args = parser.parse_args()
     if args.verify_va_runtime_fix:
         assert args.native == 'deb' and args.no_appimage and args.debugger_runtime and args.package_api
+    assert not args.capture_probe or (not args.no_appimage and args.session == 'wayland')
+    assert not args.media_runtime or (not args.no_appimage and args.session == 'wayland')
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
     guest = Path(__file__).with_name('test-linux-desktop-lifecycle.py')
     compile(guest.read_text(), str(guest), 'exec')
@@ -83,6 +87,7 @@ def main():
         subprocess.run([sys.executable, str(lab), 'inventory'], check=True)
         assert not args.no_appimage or args.native or args.flatpak
         manifest = dict(schema=1, session=args.session, package_api=args.package_api,
+                        capture_probe=args.capture_probe,
                         verify_va_runtime_fix=args.verify_va_runtime_fix, packages=[],
                         routes=([] if args.no_appimage else ['appimage']) + ([args.native] if args.native else [])
                         + (['flatpak'] if args.flatpak else []))
@@ -113,6 +118,16 @@ def main():
                 manifest['runtimes'].append(dict(name=path.name, sha256=digest(path), pin=pin))
                 archive.add(path, arcname=path.name)
             manifest['dependencies'] = []
+            if args.media_runtime:
+                stage = args.media_runtime.resolve()
+                manifest['media'] = json.loads((stage / 'source.json').read_text())
+                assert digest(stage / 'tool-runtime.tar.gz') == manifest['media']['runtime_sha256']
+                for name, checksum in manifest['media']['files'].items():
+                    path = Path(name)
+                    assert not path.is_absolute() and '..' not in path.parts
+                    assert digest(stage / 'inputs' / path) == checksum
+                archive.add(stage / 'tool-runtime.tar.gz', arcname='media-runtime.tar.gz')
+                archive.add(stage / 'inputs', arcname='media')
             for path in args.dependency:
                 assert args.native == 'deb' and path.suffix == '.deb' and path.is_file()
                 assert path.name not in [p['name'] for p in manifest['packages']]

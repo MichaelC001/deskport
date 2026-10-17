@@ -24,6 +24,34 @@ assets remain immutable; candidate and legacy rollback results stay separate.
 The released AppImage's second Mutter output creation failure is still recorded
 as an independent acceptance gap.
 
+Packaged capture/software H.264 probes also pass two owned-output cycles on
+Fedora/Bazzite KWin and Omarchy WLR, with original topology restored. The GNOME
+portal probe negotiates and encodes one frame but does not complete initialization
+within its deadline. Keep that failure distinct from native GUI startup and from
+the separately staged synthetic Xvfb/Pulse/WebRTC/browser AV fixture. Native OS
+input and physical GPU quality remain outside these VM results.
+
+The native loopback API regression additionally exposed private `LD_LIBRARY_PATH`
+leaking into newer system `dirname`/`mkdir` calls (`LIBSYSTEMD_254` mismatch).
+The portable native host launcher now runs those utilities before exporting its
+private runtime, and clears inherited private paths before resolving its root.
+The updated DEB candidate now passes the Ubuntu GUI/API comparison, including
+30 seconds alive and actual mappings/checksums for all four VA libraries.
+Legacy install/rollback crashes remain expected negative controls and actual
+product failures. The final Nix source build and its offline cache-identity check
+passed; all 28 completed VM rounds preserved their baselines and verified teardown.
+These results remain separate from the immutable released package results.
+
+The separate Fedora full-VM Xvfb/private-Pulse/WebRTC/browser fixture now passes
+two real synthetic media connections: continuing H.264 frames, changing visible
+pixels, Opus packets and decoded audio energy, stop/reconnect/admission cleanup,
+and consumed-code rejection. Correct the stale media driver's permanent-code
+assumption by obtaining a fresh one-time code through the existing fixture clock;
+production authentication is unchanged. All 26 assertions passed with SELinux
+Enforcing and native OS input disabled. See the retained run and counters in the
+acceptance matrix; this does not establish sustained Wayland media or hardware
+quality.
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

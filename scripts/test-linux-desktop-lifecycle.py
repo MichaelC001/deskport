@@ -26,6 +26,26 @@ def sha(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def capture_selection_verified(backend, text, identity, baseline):
+    """A config echo/output inventory alone cannot prove the selected capture."""
+    name = identity['outputName']
+    size = f"{identity['width']}x{identity['height']}"
+    if backend == 'kwin':
+        return bool(re.search(r'\[kwingrab\] Screencasting output name ' + re.escape(name)
+                              + r' position [^\n]* resolution ' + re.escape(size), text))
+    if backend == 'portal':
+        return f'DeskPort owned virtual capture: {name} {size}' in text
+    if backend == 'wlr':
+        # WLR logs its actual buffer size after enumerating every output. Keep
+        # the fixture size distinct from original outputs to disambiguate it.
+        distinct = baseline is not None and all(
+            (o.get('width'), o.get('height')) != (identity['width'], identity['height']) for o in baseline)
+        sizes = re.findall(r'\[wlgrab\] Resolution: ([0-9]+x[0-9]+)', text)
+        return bool(distinct and sizes and set(sizes) == {size}
+                    and re.search(r'\[wlgrab\] Monitor [0-9]+ is ' + re.escape(name) + ':', text))
+    return False
+
+
 def run(argv, **kwargs):
     return subprocess.run(argv, text=True, capture_output=True, timeout=180,
                           check=True, **kwargs).stdout.strip()
@@ -193,6 +213,17 @@ def main():
     for item in manifest['packages'] + manifest.get('dependencies', []):
         assert Path(item['name']).name == item['name']
         assert sha(inputs / item['name']) == item['sha256'], item
+    if manifest.get('media'):
+        media = manifest['media']
+        runtime = inputs / 'media-runtime.tar.gz'
+        assert sha(runtime) == media['runtime_sha256']
+        for name, checksum in media['files'].items():
+            path = Path(name)
+            assert not path.is_absolute() and '..' not in path.parts
+            assert sha(inputs / 'media' / path) == checksum
+        with tarfile.open(runtime) as archive:
+            assert all(m.name.startswith('nix/store/') and '..' not in Path(m.name).parts for m in archive.getmembers())
+        run(['sudo', '-n', 'tar', '-xzf', str(runtime), '-C', '/'])
     if manifest.get('debugger'):
         debugger = manifest['debugger']
         archive_path = inputs / debugger['name']
@@ -214,10 +245,14 @@ def main():
     settings.write_text('[LifecycleFixture]\ntoken=synthetic-retained-value\n')
     report = dict(schema=1, manifest=manifest, desktop=os.environ.get('XDG_CURRENT_DESKTOP'),
                   session=os.environ.get('XDG_SESSION_TYPE'), scenarios=[], passed=False,
-                  test_kind='va-runtime-regression' if manifest.get('verify_va_runtime_fix') else 'lifecycle',
+                  test_kind=('va-runtime-regression' if manifest.get('verify_va_runtime_fix') else
+                             'synthetic-media' if manifest.get('media') else
+                             'lifecycle-capture-probe' if manifest.get('capture_probe') else 'lifecycle'),
                   limits=['Software virtual GPU only', 'No personal peers or clipboard',
                           'Wayland activation transport checked; X11 also checks viewability; focus unverified',
-                          'No live media/input acceptance from package lifecycle'])
+                          'No native OS input or physical hardware acceptance',
+                          ('Synthetic media uses a separate Xvfb/private Pulse fixture, not Wayland video transport'
+                           if manifest.get('media') else 'No sustained media connection')])
     if shutil.which('getenforce'):
         report['selinux_before'] = run(['getenforce'])
     portal_probe = (['gdbus', 'introspect', '--session', '--dest', 'org.freedesktop.portal.Desktop',
@@ -233,6 +268,17 @@ def main():
         'pipewire': subprocess.run(['systemctl', '--user', 'is-active', 'pipewire'],
             capture_output=True, timeout=20).returncode == 0,
     }
+    clipboard = dict(content_read=False, advertised_only=True, protocols=[], probe='unavailable')
+    if args.session == 'wayland' and shutil.which('wayland-info'):
+        try:
+            probe = subprocess.run(['wayland-info'], text=True, capture_output=True, timeout=15)
+            clipboard.update(probe='wayland-info', exit_code=probe.returncode,
+                protocols=[name for name in ('wl_data_device_manager', 'zwlr_data_control_manager_v1',
+                    'ext_data_control_manager_v1', 'zwp_primary_selection_device_manager_v1')
+                    if re.search(r"interface: ['\"]?" + re.escape(name) + r"['\"]?[,\s]", probe.stdout)])
+        except subprocess.TimeoutExpired:
+            clipboard.update(probe='wayland-info', failure='timeout')
+    report['prerequisites']['clipboard'] = clipboard
 
     def display_lease(gui):
         # AppImage descendants carry the runtime selected by the real launcher.
@@ -277,6 +323,64 @@ def main():
             return None
 
         baseline = topology()
+        def capture_probe(identity):
+            # Same production capture/encoder gate as test-linux-display.py,
+            # using only this disposable guest's owned virtual output.
+            probes = report.setdefault('capture_probes', [])
+            case = state / ('capture-' + str(len(probes)))
+            case.mkdir()
+            descriptor = case / 'virtual-display.json'
+            descriptor.write_text(json.dumps(dict(node=identity.get('pipewireNode'),
+                serial=identity.get('pipewireSerial'), output=identity['outputName'],
+                width=identity['width'], height=identity['height'], scale=identity['scale'])))
+            desktop = os.environ.get('XDG_CURRENT_DESKTOP', '').upper()
+            backend = 'portal' if 'GNOME' in desktop else ('wlr' if shutil.which('hyprctl') else 'kwin')
+            config = case / 'sunshine.conf'
+            config.write_text('\n'.join([
+                'capture = ' + backend, 'output_name = ' + identity['outputName'],
+                'encoder = software', 'keyboard = disabled', 'mouse = disabled',
+                'controller = disabled', 'stream_audio = disabled', 'upnp = disabled',
+                'system_tray = disabled', 'bind_address = 127.0.0.1', 'address_family = ipv4',
+                'port = ' + str(56989 + 100 * len(probes)), 'min_log_level = 1',
+                *[key + ' = ' + str(case / filename) for key, filename in (
+                    ('file_state', 'state.json'), ('credentials_file', 'control.json'),
+                    ('pkey', 'key.pem'), ('cert', 'cert.pem'), ('file_apps', 'apps.json'),
+                    ('log_path', 'sunshine.log'))], '']))
+            (case / 'apps.json').write_text('{"apps": []}')
+            hostenv = dict(selected, DESKPORT_VIRTUAL_DISPLAY=str(descriptor),
+                DBUS_SYSTEM_BUS_ADDRESS='unix:path=' + str(case / 'no-system-bus'))
+            for key in ('DESKPORT_ON_DEMAND_DISPLAY', 'DESKPORT_DISPLAY_ON_DEMAND'):
+                hostenv.pop(key, None)
+            host = Path(selected['APPDIR']) / 'usr/libexec/deskport-host'
+            with (case / 'probe.log').open('w+') as log:
+                process = subprocess.Popen([str(host), str(config)], env=hostenv,
+                    cwd=case, stdout=log, stderr=log, start_new_session=True)
+                text = ''
+                try:
+                    deadline = time.monotonic() + 25
+                    while time.monotonic() < deadline:
+                        log.seek(0)
+                        text = log.read()
+                        if 'Found H.264 encoder:' in text or process.poll() is not None:
+                            break
+                        time.sleep(.1)
+                finally:
+                    if process.poll() is None:
+                        os.killpg(process.pid, signal.SIGTERM)
+                        try:
+                            process.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            os.killpg(process.pid, signal.SIGKILL)
+                            process.wait(timeout=5)
+                    log.seek(0)
+                    text = log.read()
+            selection = capture_selection_verified(backend, text, identity, baseline)
+            passed = 'Found H.264 encoder:' in text and selection
+            probes.append(dict(passed=passed, backend=backend, identity=identity,
+                selected_output_verified=selection, encoder='software', log=text,
+                media_connection=False, input_enabled=False))
+            assert passed, 'Owned virtual capture/software encoder probe failed; see capture_probes'
+
         with (state / 'display-helper.log').open('w') as log:
             child = subprocess.Popen([str(helper), '1280', '720'], env=selected,
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=log, text=True, start_new_session=True)
@@ -300,6 +404,8 @@ def main():
                     child.stdin.flush()
                     reply = receive()
                     assert reply.get('active') == active, reply
+                    if active and manifest.get('capture_probe'):
+                        capture_probe(reply)
                     if not active:
                         assert topology() == baseline, 'Desktop topology was not restored'
                 child.stdin.close()
@@ -307,6 +413,32 @@ def main():
                 report['display_lease'] = dict(passed=True, replies=replies, baseline=baseline,
                     topology_observed=baseline is not None, cycles=2, policy=policy,
                     backend=ready.get('backend'))
+                if manifest.get('media'):
+                    tools = manifest['media']['tools']
+                    media_root = inputs / 'media'
+                    media_env = dict(os.environ, DESKPORT_APPIMAGE_RUNTIME='private')
+                    for key in ('QT_PLUGIN_PATH', 'QT_QPA_PLATFORM_PLUGIN_PATH', 'QML_IMPORT_PATH',
+                                'QML2_IMPORT_PATH', 'LD_LIBRARY_PATH'):
+                        media_env.pop(key, None)
+                    media_env['PATH'] = ':'.join(str(Path(v).parent) for v in tools.values()) + ':' + media_env['PATH']
+                    command = [os.sys.executable, str(media_root / 'scripts/test-browser-native.py'),
+                        '--host', str(Path(selected['APPDIR']) / 'usr/libexec/deskport-host'),
+                        '--gateway', str(media_root / 'browser-live-gateway'),
+                        '--chromium', tools['chromium'], '--pulse-prefix', str(Path(tools['pulseaudio']).parent.parent),
+                        '--node', tools['node'], '--playwright-module', str(media_root / 'playwright-core'),
+                        '--openssl', tools['openssl'], '--output', str(state / 'media-result'),
+                        '--runtime-root', str(state / 't')]
+                    with (state / 'media-fixture.log').open('w') as log:
+                        result = subprocess.run(command, env=media_env, stdout=log, stderr=subprocess.STDOUT, timeout=360)
+                    report['synthetic_media'] = json.loads((state / 'media-result/native-fixture-result.json').read_text())
+                    path = state / 'media-result/browser-result.json'
+                    if path.exists():
+                        report['synthetic_media']['browser_result'] = json.loads(path.read_text())
+                    if result.returncode:
+                        report['synthetic_media']['fixture_log'] = (state / 'media-fixture.log').read_text()[-8000:]
+                    assert result.returncode == 0 and report['synthetic_media']['ownedProcessesStopped'], 'Synthetic AV fixture failed'
+                    (state / 'progress.json').write_text(json.dumps(dict(stage='synthetic-media-complete')))
+                    time.sleep(12)  # Let the owned host observer retain synthetic screenshots.
             finally:
                 if child.poll() is None:
                     os.killpg(child.pid, signal.SIGTERM)
@@ -371,6 +503,22 @@ def main():
                             announced = True
                         time.sleep(.25)
                     report['candidate_observation_seconds'] = round(time.monotonic() - observed, 2)
+                    metadata = json.loads(Path('/opt/deskport/usr/share/doc/deskport/libva-runtime/source.json').read_text())
+                    assert metadata['source_version'] == '2.23.0'
+                    mapped = set()
+                    for line in Path(f'/proc/{child.pid}/maps').read_text().splitlines():
+                        fields = line.split(None, 5)
+                        if len(fields) == 6 and fields[5].startswith('/'):
+                            mapped.add(str(Path(fields[5]).resolve()))
+                    verified = {}
+                    for item in metadata['runtime_files']:
+                        path = Path('/opt/deskport') / item['path']
+                        assert str(path.resolve()) in mapped, f'Candidate did not map {path}'
+                        checksum = sha(path)
+                        assert 'SHA256:' + checksum == item['checksum'], path
+                        verified[item['path']] = checksum
+                    assert len(verified) == 4
+                    report['candidate_va_runtime'] = dict(source_version=metadata['source_version'], mapped_files=verified)
                     (state / 'progress.json').write_text(json.dumps(dict(stage='candidate-observation-complete')))
                 if args.session == 'x11':
                     matching = x11_windows()
@@ -482,7 +630,7 @@ def main():
                     report['scenarios'].append(failed)
                 else:
                     if manifest.get('verify_va_runtime_fix') and package['role'] == 'new':
-                        assert 'VA-API version 1.23' in report['scenarios'][-1].get('log', ''), 'Candidate did not load the pinned VA interface'
+                        assert report['candidate_va_runtime']['source_version'] == '2.23.0'
                     if manifest.get('verify_va_runtime_fix') and package['role'] == 'old':
                         report['scenarios'][-1].update(passed=False, failure='Legacy VA crash negative control did not reproduce')
             if route == 'appimage':

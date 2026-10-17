@@ -59,6 +59,9 @@ The optional `--verify-va-runtime-fix` comparison requires native DEB,
 `--no-appimage`, the GDB input and `--package-api`. Legacy install/rollback must
 reproduce the actual SIGSEGV stack through `libva-wayland` and `vaInitialize`;
 the current candidate must survive GUI startup and pass the package checks.
+The observation verifies `/proc` mappings and SHA-256 for all four private VA
+libraries against the 2.23.0 source metadata; optional libva log verbosity is
+not treated as runtime identity.
 Legacy stages retain `passed: false` with an explicit `expected_failure` marker.
 The report identifies this as a regression comparison, and the matrix continues
 to list legacy native rollback as failed.
@@ -126,6 +129,38 @@ verify remote clipboard, sustained synthetic video/audio or injected input.
 Flatpak must remain viewer-only: the scenario checks that no Sunshine/libexec
 host is present and that filesystem access was not added to its permissions.
 
+`--capture-probe` additionally starts the packaged Sunshine against each owned
+virtual output, with software encoding, loopback binding and input/audio/UPnP
+disabled. It requires the software H.264 initialization probe to finish and
+identify that output. Its logs are retained in `capture_probes`; an encoded
+probe frame alone is not a sustained media connection.
+Selection checks use the actual screencast marker, not an echoed configuration
+or output inventory. The WLR fixture also requires a capture-buffer size distinct
+from original outputs; an ambiguous fixture fails rather than implying ownership.
+
+For a separate complete synthetic AV check, prepare existing cached tools with
+`scripts/prepare-linux-desktop-media.py` inside the caller's canonical heavy
+reservation and locked devShell. It verifies the owning ancestor PID/start time,
+CPU affinity and nice level. Pass explicit `--chromium`, `--pulseaudio`, `--xvfb`,
+`--xterm`, `--ffmpeg`, `--node`, `--openssl` store paths, `--playwright` package,
+`--thread` and a new `--output` directory. Nothing is downloaded. Use
+`--gateway-source` and `--gateway-revision` to build the existing production
+gateway fixture from the source matching the retained host package. The stage
+records source hashes, tool/store closure, fixture/module hashes and archive hash.
+These are private test inputs, not product or release assets.
+
+Pass that stage using `--media-runtime STAGE --capture-probe`. Only the owned VM
+extracts its checksum-locked tools. The existing `test-browser-native.py` fixture
+uses an independent Xvfb, private PulseAudio null sink, changing synthetic image
+and 440 Hz tone. Its two connections must show increasing decoded H.264 frames,
+changing multicolor pixels, continuing Opus packets and increasing decoded audio
+energy, then release media/admission on disconnect. The real gateway/host and
+loopback WebRTC transport are used. Native OS input stays disabled; the existing
+driver's contract must not be weakened. The fixture stops its own process groups;
+the VM still undergoes baseline and teardown verification. This separate Xvfb
+media result does not establish sustained Wayland capture/transport or hardware
+quality. Synthetic screenshots are retained by the owned host observer.
+
 The reusable baselines cover KDE Wayland, GNOME Wayland and Hyprland. An Xwayland
 application inside one of those sessions is not an installed X11 desktop test.
 Hardware AMD/Intel/NVIDIA behavior, latency, physical input and real streaming
@@ -133,6 +168,9 @@ retain separate acceptance requirements. Keep SELinux and other
 security controls unchanged and record denied prerequisites as such. No personal
 host, Moonlight identity, pairing, clipboard or installed desktop service is an
 input to this scenario. Seamless is outside this work.
+Where `wayland-info` is already installed, later rounds record advertised
+clipboard/data-control protocols without reading content. Advertisement alone
+does not verify clipboard transfer, focus behavior or portal authorization.
 
 ## 2026-10-17 checkpoint
 
@@ -147,7 +185,40 @@ verified guest round. An unlisted or pending scenario has not passed.
 | Debian 13 KDE Wayland | PASS | DEB PASS | Unsupported on installed KWin 6.3; requires 6.6+ | Retained round `p2-linux-20261017-debian-kde-02` |
 | Bazzite 44 KDE Wayland | PASS | Viewer-only Flatpak PASS with Platform + GL 25.08 | Two create/release cycles, topology restored | `20261017T115945Z-35588c0a`; retained Flatpak round `p2-linux-20261017-bazzite-kde-02` |
 | Debian 13 Plasma X11 / Xorg | PASS | DEB PASS | Wayland virtual-output helper not invoked | `20261017T122149Z-20429a23` |
-| Ubuntu 26.04 GNOME Wayland | PASS | Stable 0.7.1/0.7.2 DEB GUI FAIL; runtime candidate pending | Second virtual-output creation FAIL | Retained rounds `p2-linux-20261017-ubuntu-gnome-01` and `p2-linux-20261017-ubuntu-gnome-04` |
+| Ubuntu 26.04 GNOME Wayland | PASS | Stable 0.7.1/0.7.2 DEB GUI FAIL; fixed candidate result below | Second virtual-output creation FAIL | Retained rounds `p2-linux-20261017-ubuntu-gnome-01` and `p2-linux-20261017-ubuntu-gnome-04` |
+
+Additional packaged capture/software-encoder probes use the same 0.7.2 AppImage:
+
+| Guest | Capture probe result | Retained lab run |
+| --- | --- | --- |
+| Bazzite 44 KDE Wayland | Two owned-output KWin/software H.264 probes PASS; topology restored | `20261017T134215Z-dbdd9007` |
+| Omarchy 4.0.4 Hyprland | Two owned-output WLR/software H.264 probes PASS; topology restored | `20261017T134614Z-48efa5eb` |
+| Fedora 44 KDE Wayland | Two owned-output KWin/software H.264 probes PASS; topology restored | `20261017T135014Z-068e1326` |
+| Ubuntu 26.04 GNOME Wayland | FAIL: the portal stream negotiated 1280x720 and encoded one frame, but initialization did not finish within 25 seconds | `20261017T134816Z-6ce9c82d` |
+
+Arch's capture probe remains untested. Debian KDE's helper prerequisite remains
+unsupported; the Xorg package round did not run this Wayland-output probe.
+The complete synthetic AV fixture passed in Fedora KDE, retained run
+`20261017T142416Z-4f0897e1`, with 26 assertions and Chrome 155.0.8059.39.
+Both connections showed changing rendered pixels and increasing decoded audio
+energy. The consumed one-time code was rejected before requesting a fresh code
+from the fixture's existing private clock control. Native OS input remained
+disabled, SELinux remained Enforcing, all fixture process groups stopped, and
+media/admission were released after both disconnects. VM teardown and baseline
+verification passed. The gateway was built from the matching 0.7.2 source;
+the host was the retained 0.7.2 AppImage.
+
+| Synthetic media session | Decoded H.264 frames | Received Opus packets | Decoded audio energy |
+| --- | --- | --- | --- |
+| First connection | 124 → 338 | 72 → 778 | 0.00225 → 0.03183 |
+| Second connection | 122 → 333 | 448 → 1153 | 0.01775 → 0.04637 |
+
+The earlier AV round `20261017T141454Z-e58413af` passed its first media connection
+but failed reconnect because its driver reused a consumed dynamic code. That
+fixture error remains retained as FAIL. The driver now obtains fresh one-time
+codes and checks replay rejection; production authentication was not changed.
+The ordinary fixture exposes only private code-clock/status controls, while
+restart/revocation controls still require `--pairing-control`.
 
 The Fedora round passed all nine scenarios. Portal and PipeWire were available,
 ordinary-user uinput was not writable, and SELinux remained Enforcing. Its VM,
@@ -168,8 +239,52 @@ the startup hardware-decoder capability probe. Correct Xauthority did not remove
 it. Native DEB 0.7.1 and 0.7.2 both reproduce it; the same packages passed the
 Debian Xorg lifecycle. The source packaging now shares the already pinned,
 unmodified libva 2.23.0 across viewer and host trees before any portable format
-is produced. A local candidate preserves the released viewer/host executable
+is produced. A first local candidate preserves the released viewer/host executable
 hashes and replaces only these VA runtime files plus their notices/metadata.
 Published assets retain their original hashes; candidate acceptance is recorded
 separately from the failing released binaries. Legacy native rollback on this
 newer Mutter remains a recorded failure rather than an implied PASS.
+
+The first native runtime comparison also exposed an independent host-launcher
+failure: the launcher exported private libraries before running system utilities.
+Ubuntu's newer coreutils required `LIBSYSTEMD_254`, while the private host copy
+provided an older interface. `dirname`/`mkdir` failed and the host tried to create
+`/runtime/sunshine`, preventing the loopback API from starting. The native launcher
+now clears inherited private library paths first, resolves its root and creates
+its isolated runtime directory with the system environment, then exports the
+private host libraries immediately before execution. A second immutable candidate
+adds this launcher change; both released executable hashes remain unchanged.
+The first comparison remains a retained failed round, not a native GUI PASS.
+
+The final native regression comparison passed in
+`20261017T144430Z-3e40e885`. It reused the second immutable local DEB candidate,
+SHA-256 `fb7cbdd334580acce96eab417a9c61c34c8663aba2710db289ce188e913eccfe`.
+The viewer and host executable hashes match the released 0.7.2 payload; only
+the pinned VA runtime/notices/metadata and native host launcher differ.
+
+| Native comparison stage | Observed result |
+| --- | --- |
+| Legacy 0.7.1 installation | GUI SIGSEGV through `libva-wayland`/`vaInitialize`; expected negative control, product FAIL |
+| Fixed 0.7.2 candidate upgrade | GUI and authenticated host API PASS; 30.02-second GUI observation; all four mapped private VA libraries match pinned SHA-256 |
+| Rollback to legacy 0.7.1 | Same actual GUI crash; expected negative control, product FAIL |
+| Uninstall after legacy rollback | Package removed; actual synthetic DeskPort configuration retained |
+
+The procedure's PASS includes the two explicitly expected legacy failures. It
+does not make legacy native rollback functional on this desktop. The preceding
+comparison `20261017T143859Z-6c9cba31` passed the candidate API/GUI observation but
+stopped at an incorrect fixture assumption that libva must print a version line.
+That failed round remains intact; the final oracle verifies actual mapped files
+and checksums instead. The first host-launcher failure also remains retained.
+The candidate GUI screenshot was inspected in its isolated GNOME desktop; no
+personal devices were present or connected. Focus and real input remain untested.
+
+Final source validation passed `nix build --no-link --max-jobs 1 --cores 4` under
+the canonical heavy reservation, CPU 0–3 and nice 15. A later offline check with
+compilation disabled resolved the identical output for the final source tree:
+`/nix/store/amm3xgis0kdy6xafp6zh5z0r5wkqrmrp-deskport-0.7.2`. VM-driver and
+portable-entry-point changes are excluded from the Nix client source fingerprint
+because those files are exercised by their dedicated checks, not built into that
+binary. The retained records also include the two VA-file contract tests, local
+guest-command refusal, and stricter capture-selection checks against the actual
+logs. All 28 completed VM rounds passed baseline verification and owned teardown;
+failed product/fixture scenarios remain separately marked.
