@@ -2,6 +2,9 @@
 (() => {
   'use strict';
 
+  const { t, message: renderMessage } = window.DeskPortI18n;
+  const uiError = source => Object.assign(new Error(renderMessage(source)), { uiMessage: source });
+  const errorMessage = error => error.uiMessage || { literal: error.message };
   const $ = id => document.getElementById(id);
   const ui = Object.fromEntries([
     'login-panel', 'login-form', 'access-code', 'connect', 'quality', 'request-audio',
@@ -53,27 +56,32 @@
   const pressedKeys = new Set();
   const pressedButtons = new Set();
   const errorMessages = {
-    unauthorized: '动态码不正确或已过期，请输入当前显示的 6 位动态码。',
-    'code-locked': '动态码错误次数过多，代码登录已暂停 15 分钟。可稍后再试，或在电脑上查看。',
-    unpaired: '此浏览器未配对，或配对已满 7 天、已被电脑取消。请输入动态码。',
-    'storage-unavailable': '电脑暂时无法保存配对变更，请稍后重试。',
-    'rate-limited': '尝试次数过多，请稍后再试。',
-    'sharing-disabled': '电脑尚未开启屏幕共享，请在电脑端开启后重试。',
-    busy: '电脑正被其他连接使用，请结束原连接后再试。',
-    'taken-over': '电脑已被 DeskPort 客户端接管，网页连接已结束。',
-    unsupported: '这台电脑暂时无法提供浏览器串流，请检查电脑端状态。',
-    'unsupported-codec': '当前浏览器不支持所需的视频格式（H.264 Baseline 3.1），请更新或更换浏览器。',
-    'media-unavailable': '电脑当前无法采集或编码画面，请检查电脑端共享权限与编码器状态。',
-    'invalid-request': '连接请求未被电脑接受，请刷新页面后重试。',
-    timeout: '连接超时，请检查电脑是否在线以及网络是否畅通。',
-    network: '无法连接电脑，请检查网络和电脑端的 HTTPS 证书。',
-    'tailnet-denied': '这台 Tailscale 设备不属于这台电脑的用户，请输入动态码。',
-    'tailnet-unavailable': '当前网络需要输入电脑端显示的动态码。'
+    unauthorized: "Incorrect or expired code. Enter the current 6-digit code.",
+    'code-locked': "Too many incorrect codes. Code sign-in is paused for 15 minutes. Try later or check the computer.",
+    unpaired: "This browser is unpaired, its 7-day pairing expired, or the computer removed it. Enter an access code.",
+    'storage-unavailable': "The computer could not save pairing changes. Try again later.",
+    'rate-limited': "Too many attempts. Try again later.",
+    'sharing-disabled': "Start sharing on the computer, then try again.",
+    busy: "The computer is in use by another connection. End that connection and try again.",
+    'taken-over': "A DeskPort client took over the computer. The browser connection has ended.",
+    unsupported: "Browser streaming is unavailable. Check the computer.",
+    'unsupported-codec': "This browser does not support H.264 Baseline 3.1. Update it or use another browser.",
+    'media-unavailable': "The computer cannot capture or encode video. Check sharing permissions and the encoder.",
+    'invalid-request': "The computer rejected the request. Reload the page and try again.",
+    timeout: "Connection timed out. Check the computer and network.",
+    network: "Cannot connect. Check the network and the computer’s HTTPS certificate.",
+    'tailnet-denied': "This Tailscale device does not belong to the computer’s user. Enter an access code.",
+    'tailnet-unavailable': "Enter the code shown on the computer to connect from this network."
   };
+
+  let currentNotice = '';
+  let reportedHostName = '';
+  let streamFps = 0;
 
   function notice(message, error = false, persistent = false) {
     clearTimeout(noticeTimer);
-    ui.notice.textContent = message;
+    currentNotice = message;
+    ui.notice.textContent = renderMessage(message);
     ui.notice.dataset.error = String(error);
     ui.notice.hidden = !message;
     if (message && !persistent) noticeTimer = setTimeout(() => { ui.notice.hidden = true; }, 7000);
@@ -81,12 +89,11 @@
 
   function setPhase(next) {
     phase = next;
-    ui['connection-status'].textContent = {
-      idle: pairing ? '已配对' : tailnet ? '已通过 Tailscale 确认' : '未连接', restoring: '正在检查配对', forgetting: '正在取消配对',
-      authenticating: '正在验证', connecting: '正在连接', streaming: '已连接', stopping: '正在断开'
-    }[next];
     ui['connection-status'].dataset.state = next;
     const sessionVisible = next === 'connecting' || next === 'streaming';
+    // Login feedback must not cover a translated form's actions.
+    if (sessionVisible) ui['session-panel'].after(ui.notice);
+    else ui['login-form'].before(ui.notice);
     ui['login-panel'].hidden = sessionVisible;
     ui['session-panel'].hidden = !sessionVisible;
     ui.disconnect.hidden = !sessionVisible;
@@ -96,18 +103,15 @@
     ui['access-code'].required = !pairing && !tailnet && !restoreFailed;
     ui['credential-fields'].hidden = Boolean(pairing) || tailnet || restoreFailed;
     ui['paired-ready'].hidden = !pairing;
-    ui['paired-name'].textContent = pairing?.name || '此浏览器';
     ui['forget-pairing'].disabled = next !== 'idle';
     ui['retry-pairing'].hidden = !restoreFailed;
     ui['retry-pairing'].disabled = next !== 'idle';
     ui['remember-browser'].disabled = next !== 'idle';
     ui['device-name'].disabled = next !== 'idle' || !ui['remember-browser'].checked;
     document.body.dataset.paired = String(Boolean(pairing));
-    ui['login-intro'].textContent = restoreFailed ? '暂时无法确认配对状态。网络恢复后，请重新检查。'
-      : pairing ? '此浏览器已与电脑配对。点击连接即可使用。'
-        : tailnet ? '已通过 Tailscale 确认这是你的设备，无需动态码。点击连接即可使用。' : '输入电脑共享页面或验证器 App 上的 6 位动态码。';
     ui.disconnect.disabled = next === 'stopping';
     ui['video-placeholder'].hidden = next === 'streaming';
+    renderDynamicText();
   }
 
   function serializeAuth(operation) {
@@ -117,9 +121,9 @@
   }
 
   function acceptAuthentication(result) {
-    if (typeof result.csrfToken !== 'string' || !result.csrfToken) throw new Error('电脑未返回有效的连接凭据，请刷新后重试。');
+    if (typeof result.csrfToken !== 'string' || !result.csrfToken) throw uiError("The computer returned invalid credentials. Reload and try again.");
     token = result.csrfToken;
-    pairing = result.paired ? { id: result.pairing?.id || '', name: result.pairing?.name || '此浏览器' } : null;
+    pairing = result.paired ? { id: result.pairing?.id || '', name: result.pairing?.name || '' } : null;
     restoreFailed = false;
   }
 
@@ -132,7 +136,7 @@
         const result = await api('/api/resume', {}, { token: '' });
         if (currentGeneration === generation) acceptAuthentication(result);
       });
-      if (currentGeneration === generation && announce) notice(pairing ? '配对已恢复，点击连接即可使用。' : '请输入电脑端动态码。');
+      if (currentGeneration === generation && announce) notice(pairing ? "Pairing restored. Select Connect to begin." : "Enter the access code shown on the computer.");
     } catch (error) {
       if (currentGeneration !== generation) return;
       token = '';
@@ -144,7 +148,7 @@
         if ((wasPaired || announce) && !tailnet) notice(errorMessages.unpaired, true);
       } else {
         restoreFailed = true;
-        notice(error.message, true, true);
+        notice(errorMessage(error), true, true);
       }
     } finally { if (currentGeneration === generation) setPhase('idle'); }
   }
@@ -166,7 +170,7 @@
       : /iPhone/.test(agent) ? 'iPhone' : /Android/.test(agent) ? 'Android' : /Windows/.test(agent) ? 'Windows'
         : /Mac/.test(agent) ? 'Mac' : /Linux/.test(agent) ? 'Linux' : '';
     const browser = /Edg/.test(agent) ? 'Edge' : /Firefox|FxiOS/.test(agent) ? 'Firefox'
-      : /Chrome|CriOS/.test(agent) ? 'Chrome' : /Safari/.test(agent) ? 'Safari' : '浏览器';
+      : /Chrome|CriOS/.test(agent) ? 'Chrome' : /Safari/.test(agent) ? 'Safari' : t('Browser');
     return [device, browser].filter(Boolean).join(' ');
   }
 
@@ -187,14 +191,15 @@
       try { data = await response.json(); } catch (_) { data = {}; }
       if (!response.ok || data.ok === false || data.status === false) {
         const code = data.code || (response.status === 401 ? 'unauthorized' : response.status === 429 ? 'rate-limited' : 'invalid-request');
-        const error = new Error(errorMessages[code] || data.message || '电脑未能完成此操作。');
+        const error = uiError((Object.prototype.hasOwnProperty.call(errorMessages, code) ? errorMessages[code] : null) || (data.message ? { literal: data.message } : "The computer could not complete this action."));
         error.code = code;
         throw error;
       }
       return data;
     } catch (error) {
-      if (error.code) throw error;
-      const wrapped = new Error(errorMessages[error.name === 'AbortError' ? 'timeout' : 'network']);
+      // DOMException.code is numeric; only our UI error has already been classified.
+      if (error.uiMessage !== undefined) throw error;
+      const wrapped = uiError(errorMessages[error.name === 'AbortError' ? 'timeout' : 'network']);
       wrapped.code = error.name === 'AbortError' ? 'timeout' : 'network';
       throw wrapped;
     } finally { clearTimeout(timer); }
@@ -251,7 +256,7 @@
     } catch (error) {
       if (currentGeneration !== generation) return;
       sentSize = '';
-      notice(error.code === 'display-unavailable' ? '电脑暂时无法调整桌面尺寸，已保持当前画面。' : error.message, true);
+      notice(error.code === 'display-unavailable' ? "The computer could not resize the desktop. The current picture is kept." : errorMessage(error), true);
     } finally { resizing = null; }
   }
 
@@ -268,7 +273,7 @@
     const codecs = window.RTCRtpReceiver?.getCapabilities?.('video')?.codecs;
     const videoCapabilities = codecs?.filter(codec => codec.mimeType.toLowerCase() === 'video/h264')
       .map(({ mimeType, clockRate, sdpFmtpLine }) => ({ mimeType, clockRate, sdpFmtpLine }));
-    if (codecs && !videoCapabilities.length) throw new Error('此浏览器没有可用的 H.264 解码器，请使用较新的 Safari、Chrome 或 Edge。');
+    if (codecs && !videoCapabilities.length) throw uiError("No H.264 decoder is available. Use a recent Safari, Chrome or Edge.");
     return {
       width: Math.floor(width / 4) * 4, height: Math.floor(height / 4) * 4,
       fps: 60, bitrateKbps: quality === 'smooth' ? 4500 : quality === 'sharp' ? 12000 : 8000,
@@ -286,10 +291,10 @@
         if (error) reject(error); else resolve();
       };
       const changed = () => {
-        if (currentGeneration !== generation || peer.signalingState === 'closed') finish(new Error('连接已取消。'));
+        if (currentGeneration !== generation || peer.signalingState === 'closed') finish(uiError("Connection cancelled."));
         else if (peer.iceGatheringState === 'complete') finish();
       };
-      const timer = setTimeout(() => finish(new Error('浏览器未能完成网络协商，请检查网络后重试。')), 12000);
+      const timer = setTimeout(() => finish(uiError("The browser could not negotiate the connection. Check the network and try again.")), 12000);
       peer.addEventListener('icegatheringstatechange', changed);
       changed();
     });
@@ -299,15 +304,15 @@
     event.preventDefault();
     if (phase !== 'idle') return;
     if (!window.isSecureContext || location.protocol !== 'https:') {
-      notice('请通过受信任的 HTTPS 地址打开此页面。当前浏览器安全环境无法建立连接。', true, true);
+      notice("Open this page at a trusted HTTPS address. A secure browser context is required.", true, true);
       return;
     }
     if (!window.RTCPeerConnection) {
-      notice('此浏览器不支持 WebRTC，请使用较新的 Safari、Chrome 或 Edge。', true, true);
+      notice("This browser does not support WebRTC. Use a recent Safari, Chrome or Edge.", true, true);
       return;
     }
     const code = ui['access-code'].value.trim();
-    if (!pairing && !tailnet && !/^[0-9]{3} ?[0-9]{3}$/.test(code)) { notice('请输入电脑或验证器 App 上的 6 位数字动态码。', true); return; }
+    if (!pairing && !tailnet && !/^[0-9]{3} ?[0-9]{3}$/.test(code)) { notice("Enter the 6-digit code from the computer or your authenticator app.", true); return; }
     const currentGeneration = ++generation;
     wantAudio = ui['request-audio'].checked;
     // Prime playback inside the user gesture; a visible fallback handles Safari rejecting it.
@@ -330,15 +335,16 @@
       if (currentGeneration !== generation) return;
       const status = await api('/api/status');
       if (currentGeneration !== generation) return;
-      ui['host-name'].textContent = status.hostName || '远程电脑';
-      if (status.sharing === false) throw new Error(errorMessages['sharing-disabled']);
-      if (status.mediaAvailable === false) throw new Error(errorMessages.unsupported);
-      if (status.busy) throw new Error(errorMessages.busy);
+      reportedHostName = status.hostName || '';
+      ui['host-name'].textContent = reportedHostName || t('Remote computer');
+      if (status.sharing === false) throw uiError(errorMessages['sharing-disabled']);
+      if (status.mediaAvailable === false) throw uiError(errorMessages.unsupported);
+      if (status.busy) throw uiError(errorMessages.busy);
       capabilities = status.capabilities || {};
       fillZoom(capabilities.zoomChoices);
       if (ui['display-mode'].value !== '0' && !capabilities.extendDisplay) {
         ui['display-mode'].value = '0';
-        notice('这台电脑暂不支持扩展显示器，将调整电脑桌面以适合此窗口。');
+        notice("This computer does not support an extended screen. Its desktop will fit this window.");
       }
       setPhase('connecting');
       const peer = new RTCPeerConnection({ iceServers: [], bundlePolicy: 'max-bundle' });
@@ -350,7 +356,7 @@
         stream.addTrack(track);
         void playRemote();
         track.addEventListener('ended', () => {
-          if (track.kind === 'video' && currentGeneration === generation) failSession('电脑已停止发送画面，请重新连接。');
+          if (track.kind === 'video' && currentGeneration === generation) failSession("The computer stopped sending video. Reconnect to try again.");
         });
       };
       peer.ondatachannel = ({ channel: incoming }) => {
@@ -363,11 +369,11 @@
       peer.onconnectionstatechange = () => {
         if (currentGeneration !== generation) return;
         clearTimeout(lostTimer);
-        if (peer.connectionState === 'failed' || peer.connectionState === 'closed') failSession('串流连接已断开，请重新连接。');
+        if (peer.connectionState === 'failed' || peer.connectionState === 'closed') failSession("The stream disconnected. Reconnect to try again.");
         else if (peer.connectionState === 'disconnected') {
           releaseInput();
-          notice('网络暂时中断，正在等待连接恢复…');
-          lostTimer = setTimeout(() => { if (currentGeneration === generation) failSession('网络连接未能恢复，请重新连接。'); }, 8000);
+          notice("Network interrupted. Waiting for the connection to recover…");
+          lostTimer = setTimeout(() => { if (currentGeneration === generation) failSession("The network did not recover. Reconnect to try again."); }, 8000);
         } else if (peer.connectionState === 'connected') notice('');
       };
       const reservation = { token, succeeded: false, promise: null };
@@ -382,7 +388,7 @@
       if (pendingStart === reservation) pendingStart = null;
       if (currentGeneration !== generation) return;
       ownsMedia = true;
-      if (offer.type !== 'offer' || typeof offer.sdp !== 'string') throw new Error('电脑返回的媒体协商信息无效。');
+      if (offer.type !== 'offer' || typeof offer.sdp !== 'string') throw uiError("The computer returned invalid media negotiation data.");
       await peer.setRemoteDescription({ type: 'offer', sdp: offer.sdp });
       // Receive desktop audio/video only; no camera or microphone permissions are requested.
       for (const transceiver of peer.getTransceivers()) {
@@ -397,7 +403,7 @@
       heartbeatTimer = setInterval(heartbeat, 5000);
       statsTimer = setInterval(updateStats, 2500);
       connectionTimer = setTimeout(() => {
-        if (currentGeneration === generation && phase !== 'streaming') failSession('媒体连接未建立，请检查电脑防火墙与局域网连接后重试。');
+        if (currentGeneration === generation && phase !== 'streaming') failSession("Media did not connect. Check the computer’s firewall and local network, then try again.");
       }, 20000);
     } catch (error) {
       ui['access-code'].value = '';
@@ -405,7 +411,7 @@
         if (error.code === 'unpaired') { token = ''; pairing = null; restoreFailed = false; }
         // Ownership can change (device retagged or removed); fall back to the code.
         if (error.code === 'tailnet-denied' || error.code === 'tailnet-unavailable') tailnet = false;
-        await endSession(error.message, true);
+        await endSession(errorMessage(error), true);
       }
     }
   }
@@ -420,7 +426,7 @@
     } catch (error) {
       if (currentGeneration === generation && (error.code === 'unauthorized' || error.code === 'unpaired' ||
           error.code === 'taken-over' || ++heartbeatFailures >= 2)) {
-        await endSession(error.message, true);
+        await endSession(errorMessage(error), true);
         if (pairing && (error.code === 'unauthorized' || error.code === 'unpaired')) await restorePairing(true);
       }
     } finally { heartbeatBusy = false; }
@@ -446,6 +452,7 @@
     video.pause();
     video.srcObject = null;
     ui['resume-audio'].hidden = true;
+    streamFps = 0;
     ui['stream-info'].textContent = '';
     ui['remote-text'].value = '';
     ui['text-panel'].hidden = ui['shortcuts-panel'].hidden = true;
@@ -453,7 +460,7 @@
     ui['shortcuts-toggle'].setAttribute('aria-expanded', 'false');
   }
 
-  async function endSession(message = '已断开连接。需要时可再次连接。', error = false, unloading = false) {
+  async function endSession(message = "Disconnected. Connect again when needed.", error = false, unloading = false) {
     if (ending) return ending;
     const oldToken = token;
     const ownedMedia = ownsMedia;
@@ -518,13 +525,13 @@
         clearLocalSession();
         ui['access-code'].value = '';
       });
-      if (currentGeneration === generation) notice('已取消此浏览器配对。下次连接需要重新输入动态码。');
+      if (currentGeneration === generation) notice("Pairing removed. Enter a new access code next time.");
     } catch (error) {
       if (currentGeneration !== generation) return;
       if (error.code === 'unpaired') {
         token = ''; pairing = null; restoreFailed = false;
-        notice('电脑已取消此浏览器配对，请重新输入动态码。', true);
-      } else notice('未能确认取消配对。' + error.message, true, true);
+        notice("The computer removed this pairing. Enter a new access code.", true);
+      } else notice({ source: 'Could not confirm pairing removal. %1', args: [errorMessage(error)] }, true, true);
     } finally { if (currentGeneration === generation) setPhase('idle'); }
   }
 
@@ -541,7 +548,7 @@
     if (channel?.readyState === 'open' && !inputDraining && !inputQueue.length) {
       if (channel.bufferedAmount >= 65536) {
         // Switching transports here could deliver a key-up before its queued key-down.
-        if (event.type !== 'release') failSession('输入连接拥堵，已断开以释放远程按键，请重新连接。');
+        if (event.type !== 'release') failSession("Input congested. Disconnected to release remote keys. Reconnect to try again.");
         return false;
       }
       try { channel.send(JSON.stringify(event)); return true; } catch (_) { /* Use the authenticated HTTP fallback. */ }
@@ -554,7 +561,7 @@
       previous.dx = Math.max(-32767, Math.min(32767, previous.dx + event.dx));
       previous.dy = Math.max(-32767, Math.min(32767, previous.dy + event.dy));
     } else if (inputQueue.length < 64) inputQueue.push(event);
-    else { inputQueue = [{ type: 'release' }]; notice('输入网络拥堵，已释放按键，请稍后再操作。', true); }
+    else { inputQueue = [{ type: 'release' }]; notice("Input congested. Keys released. Try again later.", true); }
     void drainInput();
     return true;
   }
@@ -569,7 +576,7 @@
       }
     } catch (error) {
       inputQueue = [];
-      if (currentGeneration === generation) failSession('远程输入连接已中断。' + error.message);
+      if (currentGeneration === generation) failSession({ source: 'Remote input disconnected. %1', args: [errorMessage(error)] });
     } finally {
       inputDraining = false;
       if (inputQueue.length && token) void drainInput();
@@ -740,15 +747,15 @@
     if (composing) return;
     const text = ui['remote-text'].value;
     if (!text) return;
-    if (new TextEncoder().encode(text).length > 4096) { notice('一次最多发送 4096 字节，请将文字分段发送。', true); return; }
-    if (sendInput({ type: 'text', text })) { ui['remote-text'].value = ''; notice('文字已发送到电脑。'); }
+    if (new TextEncoder().encode(text).length > 4096) { notice("Send up to 4096 bytes at a time. Split the text into smaller parts.", true); return; }
+    if (sendInput({ type: 'text', text })) { ui['remote-text'].value = ''; notice("Text sent to the computer."); }
   });
   ui['paste-text'].addEventListener('click', async () => {
     try {
       const text = await navigator.clipboard.readText();
       ui['remote-text'].value = text;
       ui['remote-text'].focus();
-    } catch (_) { notice('请在文字框中长按并选择“粘贴”，或使用系统粘贴快捷键。'); ui['remote-text'].focus(); }
+    } catch (_) { notice("Hold the text box and choose Paste, or use the system paste shortcut."); ui['remote-text'].focus(); }
   });
   ui['shortcuts-panel'].addEventListener('click', event => {
     const buttonElement = event.target.closest('[data-keys]');
@@ -761,8 +768,11 @@
     ui.viewport.focus({ preventScroll: true });
   });
 
+  function updateSoundLabel() {
+    ui['sound-toggle'].textContent = t(video.muted ? 'Sound off' : 'Sound on');
+  }
   function updateSound() {
-    ui['sound-toggle'].textContent = video.muted ? '声音关' : '声音开';
+    updateSoundLabel();
     ui['sound-toggle'].setAttribute('aria-pressed', String(!video.muted));
     if (!video.paused && (!video.muted || !wantAudio)) ui['resume-audio'].hidden = true;
   }
@@ -781,10 +791,10 @@
     updateSound();
   }
   async function enableAudio() {
-    if (!wantAudio) { notice('本次连接未启用电脑声音。请断开后在连接选项中开启。'); return; }
+    if (!wantAudio) { notice("Audio is off for this session. Disconnect and enable it in Connection options."); return; }
     video.muted = false;
     try { await video.play(); ui['resume-audio'].hidden = true; }
-    catch (_) { ui['resume-audio'].hidden = false; notice('浏览器未允许播放声音，请再点按“开启声音”。'); }
+    catch (_) { ui['resume-audio'].hidden = false; notice("The browser blocked audio. Tap Enable audio again."); }
     updateSound();
   }
   ui['resume-audio'].addEventListener('click', enableAudio);
@@ -801,7 +811,7 @@
     ui.viewport.focus({ preventScroll: true });
   });
   video.addEventListener('resize', () => {
-    if (video.videoWidth) ui['stream-info'].textContent = `${video.videoWidth} × ${video.videoHeight}`;
+    if (video.videoWidth) updateStreamInfo();
   });
   async function updateStats() {
     const peer = pc;
@@ -811,8 +821,8 @@
       if (peer !== pc) return;
       stats.forEach(report => {
         if (report.type === 'inbound-rtp' && (report.kind === 'video' || report.mediaType === 'video')) {
-          const fps = report.framesPerSecond ? ` · ${Math.round(report.framesPerSecond)} 帧` : '';
-          ui['stream-info'].textContent = `${video.videoWidth} × ${video.videoHeight}${fps}`;
+          streamFps = Math.round(report.framesPerSecond || 0);
+          updateStreamInfo();
         }
       });
     } catch (_) { /* Stats are optional and must not interrupt playback. */ }
@@ -823,8 +833,8 @@
       releaseInput();
       if (document.fullscreenElement) await document.exitFullscreen();
       else if (ui['session-panel'].requestFullscreen) await ui['session-panel'].requestFullscreen();
-      else notice('此浏览器不支持网页全屏。横向使用 iPad 可获得更大的画面。');
-    } catch (_) { notice('浏览器未允许全屏，请保持页面前台后重试。'); }
+      else notice("Fullscreen is unavailable in this browser. Rotate the iPad for a larger picture.");
+    } catch (_) { notice("The browser blocked fullscreen. Keep the page in front and try again."); }
   });
   // Fullscreen shows only the desktop; the toolbar returns on pointer movement
   // near the top edge or from the handle, and hides again after a pause.
@@ -842,7 +852,7 @@
   }
   document.addEventListener('fullscreenchange', () => {
     releaseInput();
-    ui['fullscreen-toggle'].textContent = document.fullscreenElement ? '退出全屏' : '全屏';
+    updateFullscreenLabel();
     if (document.fullscreenElement) showControls(); else { clearTimeout(controlsTimer); delete ui['session-panel'].dataset.controls; ui['show-controls'].hidden = true; }
     scheduleResize(300);
   });
@@ -873,12 +883,16 @@
   }
   ui['touch-mode'].addEventListener('change', () => {
     releaseInput();
-    ui['input-hint'].textContent = ui['touch-mode'].value === 'direct'
-      ? '点按选择 · 单指拖动 · 双指滚动'
-      : '单指移动 · 点按左键 · 双指滚动 · 长按拖动';
+    updateInputHint();
   });
   ui['left-click'].addEventListener('click', () => click(1));
   ui['right-click'].addEventListener('click', () => click(3));
+  ui['access-code'].addEventListener('invalid', event => {
+    // Native constraint popovers follow the browser UI language, not this page's preference.
+    event.preventDefault();
+    notice("Enter the 6-digit code from the computer or your authenticator app.", true);
+    ui['access-code'].focus({ preventScroll: true });
+  });
   ui['login-form'].addEventListener('submit', connect);
   ui['remember-browser'].addEventListener('change', () => {
     ui['device-name'].disabled = !ui['remember-browser'].checked;
@@ -896,12 +910,40 @@
     // A restored page is a new browser visit, even if the browser kept its JS heap in bfcache.
     if (event.persisted) { pageLeaving = false; ++generation; token = ''; ownsMedia = false; clearLocalSession(); ui['access-code'].value = ''; void restorePairing(); }
   });
-  window.addEventListener('offline', () => { if (token) failSession('网络已断开。网络恢复后，请重新连接。'); });
+  window.addEventListener('offline', () => { if (token) failSession("Network offline. Reconnect after the network recovers."); });
+  function updateInputHint() {
+    ui['input-hint'].textContent = t(ui['touch-mode'].value === 'direct'
+      ? 'Tap to select · one finger to drag · two fingers to scroll'
+      : 'One finger to move · tap to click · two fingers to scroll · hold to drag');
+  }
+  function updateFullscreenLabel() {
+    ui['fullscreen-toggle'].textContent = t(document.fullscreenElement ? 'Exit full screen' : 'Full screen');
+  }
+  function updateStreamInfo() {
+    if (!video.videoWidth) return;
+    ui['stream-info'].textContent = `${video.videoWidth} × ${video.videoHeight}${streamFps ? ` · ${t('%1 fps', streamFps)}` : ''}`;
+  }
+  function renderDynamicText() {
+    ui['connection-status'].textContent = t({
+      idle: pairing ? 'Paired' : tailnet ? 'Verified by Tailscale' : 'Not connected',
+      restoring: 'Checking pairing…', forgetting: 'Removing pairing…', authenticating: 'Authenticating…',
+      connecting: 'Connecting…', streaming: 'Connected', stopping: 'Disconnecting…'
+    }[phase]);
+    ui['login-intro'].textContent = t(restoreFailed ? 'Cannot confirm pairing. Check again when the network recovers.'
+      : pairing ? 'This browser is paired with the computer. Select Connect to begin.'
+        : tailnet ? 'Tailscale verified your device. Select Connect; no access code is needed.'
+          : 'Enter the 6-digit code from Sharing on your computer or your authenticator app.');
+    ui['paired-name'].textContent = pairing?.name || t('This browser');
+    ui['host-name'].textContent = reportedHostName || t('Browser connection');
+    ui.notice.textContent = renderMessage(currentNotice);
+    updateSoundLabel(); updateFullscreenLabel(); updateInputHint(); updateStreamInfo();
+  }
+  window.addEventListener('deskportlanguagechange', renderDynamicText);
   ui['device-name'].value = defaultDeviceName();
   fillZoom([1]);
   ui['display-mode'].value = localStorageGet('deskport.displayMode') === '2' ? '2' : '0';
   ui['display-mode'].addEventListener('change', () => localStorageSet('deskport.displayMode', ui['display-mode'].value));
   setPhase('idle');
-  if (!window.isSecureContext || location.protocol !== 'https:') notice('请使用电脑端提供的 HTTPS 地址，并确认浏览器信任其证书。', true, true);
+  if (!window.isSecureContext || location.protocol !== 'https:') notice("Use the HTTPS address shown on the computer and trust its certificate in your browser.", true, true);
   else void restorePairing();
 })();

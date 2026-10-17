@@ -90,3 +90,40 @@ textarea { resize: vertical; min-height: 64px; max-height: 150px; flex: 1; min-w
 @media (max-width: 600px) { .app-header { min-height: 52px; gap: 6px; } .brand { gap: 6px; } .brand strong { font-size: 17px; } .app-version { display: none; } body[data-session="true"] .app-header { min-height: 52px; } .toolbar { gap: 6px; } .toolbar button { padding: 9px 10px; min-width: 48px; font-size: 13px; } .toolbar-spacer { display: none; } .toolbar select { max-width: 116px; } .text-panel { flex-direction: column; } .text-actions { justify-content: flex-end; } .session-footer { flex-direction: column; gap: 1px; } }
 @media (max-height: 550px) and (orientation: landscape) { body[data-session="true"] .app-header { min-height: 50px; } .session-footer { display: none; } .toolbar { padding-block: 6px; } .toolbar button, .toolbar select { min-height: 40px; padding-block: 7px; } }
 @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+/* Language and bidi presentation are local UI preferences only. Keep the video,
+   key labels and remote coordinate system in their original direction. */
+.language-control { flex: none; max-width: 180px; }
+#language { width: 100%; max-width: 180px; font-size: 12px; padding-inline: 7px; }
+.brand, .app-version, #stream-info, [data-keys], .viewport video { direction: ltr; unicode-bidi: isolate; }
+.app-version, .connection-host { margin-left: 0; margin-inline-start: 4px; }
+.status::before { margin-right: 0; margin-inline-end: 6px; }
+summary::before { margin-right: 0; margin-inline-end: 9px; }
+.login-card { min-width: 0; }
+.login-card, button, .video-placeholder, .session-footer { overflow-wrap: anywhere; }
+button, .toolbar > *, .option-grid > * { min-width: 0; }
+.option-grid select { max-width: 100%; }
+.status { min-width: 0; flex-shrink: 1; white-space: normal; overflow-wrap: anywhere; }
+.app-header #disconnect { flex-shrink: 1; }
+:lang(bo) { font-family: "Noto Sans Tibetan", "Kailasa", "Microsoft Himalaya", sans-serif; line-height: 1.9; letter-spacing: normal; }
+:lang(ar) { font-family: "Noto Sans Arabic", "Geeza Pro", "Segoe UI", sans-serif; letter-spacing: normal; }
+@media (max-width: 600px) {
+  .app-header { flex-wrap: wrap; padding-block: 4px; }
+  .language-control { max-width: 110px; margin-inline-start: auto; }
+  #language { max-width: 110px; }
+  .connection-host { flex-basis: 35%; }
+  .status { flex: 1; }
+  .toolbar select { max-width: min(160px, 100%); }
+}
+/* Long translations keep every control reachable in short/narrow windows. */
+body[data-session="true"] .session-panel { overflow: auto; }
+.toolbar { max-height: 30vh; max-height: 30dvh; overflow: auto; }
+.session-footer { flex-shrink: 0; max-height: 3.2em; overflow: auto; }
+
+/* Form errors participate in document flow, including tall Tibetan copy. */
+.login-card .notice { position: static; transform: none; width: 100%; margin: 0 0 24px; }
+.spinner { flex-shrink: 0; }
+/* A connecting placeholder can need more height than the video. The session
+   scrolls until video replaces it; streaming keeps the original fitted area. */
+.viewport:has(.video-placeholder:not([hidden])) { flex: 1 0 auto; }
+.viewport:has(.video-placeholder:not([hidden])) video { position: absolute; inset: 0; }
+.viewport:has(.video-placeholder:not([hidden])) .video-placeholder { position: relative; inset: auto; min-height: 160px; align-self: stretch; justify-self: stretch; }

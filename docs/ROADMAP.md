@@ -76,6 +76,44 @@ checks passed. Native Wayland, packaged fullscreen/HiDPI candidates and actual
 remote application insertion remain separate acceptance checks. No deployment
 or mobile repository change is part of this candidate.
 
+## Shared browser UI localization — 2026-10-17
+
+Reason: the browser client independently hardcoded Simplified Chinese labels,
+status and errors despite the shared English-keyed UI catalog.
+
+- The pinned core owns 126 Web originals and all 22 primary language cells;
+  generated browser resources use an explicit `Browser` context. Existing
+  native catalog cells and protocol/persistence IDs remain unchanged.
+- Initial selection uses the browser preference, supported browser languages,
+  then English. Users can switch immediately or return to System default;
+  blocked storage still permits switching for this visit. Same-origin tabs
+  follow language preference updates.
+- Labels, accessible names, placeholders, status, known errors and retained
+  notices switch together. Login errors stay above the form rather than covering its actions; connecting placeholders retain long copy and a full-size spinner. The document updates `lang`/`dir`, RTL uses logical
+  spacing, and long controls remain reachable in narrow sessions. User names,
+  server details, typed text, code values and video coordinates remain literal.
+- Translation drafts require native-speaker review, especially Tibetan and
+  authentication instructions. Browser/system font fallback is recorded, with
+  no bundled fonts or translation service at build/runtime.
+
+Validation: resource integrity and all 22 locale cells/placeholder sets pass;
+71 real Chromium localization cases and 15 synthetic visual captures pass,
+including Arabic RTL, Tibetan, CJK, Indic/Thai and triple-length text. The 67-case
+encoded H.264/Opus browser regression passes, including language changes during
+streaming, pairing persistence, input/IME and cleanup. Chromium 155 on macOS
+reports Geeza Pro, Kailasa, PingFang, Hiragino and other system fallbacks in the
+fixture. This does not establish every glyph, native-speaker quality, physical
+Safari/Firefox/device behavior or desktop Qt font acceptance.
+
+The native Linux x86_64 Nix package, core/Qt workspace adapter (24 vectors),
+compiled Qt translation consistency, device preferences (5 cases), and 165
+isolated production HTTPS/authentication checks pass. An acceptance-only build
+hook constrained the actual four compiler processes to CPU 0–3 and nice 15;
+package source and behavior were unchanged by that hook. Owned runners and the
+shared build lock were released. Deferred Seamless fixtures are explicitly skipped for this task;
+no Seamless experiment, deployment, host connection, release or mynix change.
+See [browser access](BROWSER_ACCESS.md#shared-web-localization--2026-10-17).
+
 ## Windows virtual-output system scaling — 2026-10-17
 
 Implement the existing shared 1x/2x workspace scale in the Windows native adapter:

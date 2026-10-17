@@ -39,4 +39,6 @@ jobs:
           python3 scripts/test-host-network.py
 
       - name: Translation consistency
-        run: python3 scripts/test-translations.py
+        run: |
+          python3 scripts/test-translations.py
+          python3 scripts/test-browser-translations.py

@@ -3,7 +3,7 @@
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/93108a538f079596c9a16c72cf03e9322782b6dd";
 
-  inputs.deskport-core = { url = "github:keithxc/deskport-core/2d98ec8fd037218b8decf0462fa61a64783dcbeb"; flake = false; };
+  inputs.deskport-core = { url = "github:keithxc/deskport-core/f34fc7b1524ce436185c4b085a903e6af4314790"; flake = false; };
 
   outputs = { self, nixpkgs, deskport-core }:
     let
@@ -87,6 +87,7 @@
           nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.qt6.qttools ];
           preBuild = (old.preBuild or "") + ''
             python3 scripts/sync-translations.py --check
+            python3 scripts/test-browser-translations.py
             python3 scripts/test-translations.py
             python3 shared/deskport-core/tests/test_workspace.py --qt-header app/backend/workspaceresolution.h
           '';

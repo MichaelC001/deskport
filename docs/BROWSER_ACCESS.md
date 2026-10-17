@@ -277,3 +277,76 @@ native input is disabled. The production `BrowserHost` lifecycle has separate
 tests. These results do not establish physical iPad Safari certificate, audio,
 touch or latency acceptance, nor actual compositor display restoration. See the
 dated checkpoint in [ROADMAP.md](ROADMAP.md).
+
+## Shared Web localization — 2026-10-17
+
+The language menu follows the pinned core's 22-language registry. It initially
+uses the saved `deskport.language` preference, then the first supported browser
+language, then English. System default removes the preference. Chinese script
+and region fallbacks, regional Portuguese, and Indonesian `in`/`id` are handled
+by the UI adapter. Switching also works for the current visit when browser
+storage is unavailable; same-origin tabs follow preference changes.
+
+Every authored label, accessible name, placeholder, state and known error uses
+an English key scoped to core's `Browser` context. Run
+`scripts/sync-browser-translations.py` to project that view into the embedded
+`app/browser/i18n-data.js`; never edit this generated dictionary. Static checks
+and Nix pre-build reject stale resources or placeholder mismatches. Build and
+runtime do not contact a translation service. The 126 keys have nonempty cells
+for all 22 languages; absent cells and unsupported languages still fall back to
+English. New translations are machine-assisted drafts and need native-speaker
+review, particularly Tibetan and code/pairing instructions.
+
+A language change redraws UI text without restarting authentication, pairing or
+media. Connection starts disabled until scripts initialize; the native form
+fallback uses POST so a script failure cannot put a code in a GET URL. Normal
+JSON authentication is unchanged. Language is a separate browser UI preference: existing IDs, cookies,
+TOTP, authorization and session requests are unchanged. Names, unknown server
+messages and transmitted text remain literal text; they are never interpreted
+as HTML or translation templates. Numbered substitutions happen once, with
+bidirectional isolation. The document updates `lang` and `dir`; access codes,
+keycaps, video coordinates and stream dimensions keep their original direction.
+Login constraint and timeout errors use the selected UI language. Login errors
+participate in document flow so long translations cannot cover the Connect
+action. RTL layout uses logical spacing. Long controls wrap or scroll inside the session
+area so a narrow window can still reach all actions. Quality labels reflect the
+existing 60 fps request without changing media options.
+
+Font fallback uses the browser/system's Arabic, Tibetan, Indic and CJK fonts;
+no font or remote font service is bundled. A passing layout or platform-font
+inventory does not establish every glyph, font installation, native-speaker
+quality, physical Safari/Firefox behavior or desktop Qt font acceptance.
+
+The real-browser language fixture uses production HTML/JS/CSS with synthetic
+loopback HTTPS/API data. It covers initial selection, all registered locales,
+storage denial, persistence, cross-tab updates, active connection state, literal
+names/errors, placeholder safety, Arabic RTL, Tibetan, CJK and triple-length
+text. It records screenshots and Chromium's actual font inventory. The separate
+WebRTC regression uses real encoded test media and a production transport test
+binary; neither fixture connects to a personal host or injects OS input.
+
+```sh
+python3 scripts/test-browser-translations.py
+# Headless fixtures use an isolated profile and no physical GUI session.
+# Reserve local-ui.lock for headed/physical GUI follow-ups; use the task ID.
+DESKPORT_PLAYWRIGHT_MODULE=/path/to/playwright-core \
+DESKPORT_TEST_CHROME=/path/to/chromium \
+DESKPORT_FRONTEND_TEST_OUTPUT=/resolved/deskport/build/run/evidence \
+node scripts/test-browser-i18n.mjs
+```
+
+Core/adapter checks for this task use
+`scripts/test-core.py --skip-deferred-seamless` to respect the explicit exclusion
+of deferred Seamless validation. No Seamless experiment or implementation is
+part of this change.
+
+Validation checkpoint: 71 offscreen Chromium language/layout/failure cases,
+15 synthetic screenshots and 67 encoded H.264/Opus WebRTC cases pass. The native
+Linux x86_64 Nix package, 165 isolated HTTPS/authentication cases, core/Qt
+workspace vectors, compiled translation consistency and device-preference
+checks pass. An acceptance-only builder hook enforced CPU 0–3, nice 15 and
+at most four jobs; the actual compiler processes were sampled. The transport
+fixture binary was reused only after confirming its five production/test C++
+source files are unchanged from its recorded build. These are synthetic
+transport and Web UI results, not a newly built full macOS application or
+physical streaming/input acceptance. No installed application or mynix changed.

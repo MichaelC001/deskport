@@ -43,6 +43,7 @@ jobs:
         run: |
           nix develop -c python3 scripts/test-smart-stream.py
           python3 scripts/test-translations.py
+          python3 scripts/test-browser-translations.py
           nix develop -c python3 scripts/test-compiled-translations.py
           nix develop -c python3 scripts/test-host-pipewire-memory.py
           nix develop -c python3 scripts/test-host-display-ownership.py

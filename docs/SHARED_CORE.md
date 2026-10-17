@@ -177,3 +177,21 @@ Run `scripts/test-translations.py`, `scripts/test-compiled-translations.py`,
 `scripts/test-core.py` and `scripts/test-device-preferences.py` after advancing
 the matching Git/Nix pins. Native resource generation consumes the same table.
 UI locale changes do not change any wire messages or persisted policy IDs.
+
+## Shared browser UI view — 2026-10-17
+
+Core `b6400fd` adds the explicit `Browser` usage view: 126 English originals
+with nonempty cells in all 22 primary locales. `_web` and optional
+`_webTranslations.Browser` scope the view without changing the native platform
+schema or any existing native cell. The matching Git/Nix pins move together.
+`scripts/sync-browser-translations.py` projects static Web resources; Nix and
+CI reject stale output and changed placeholders. The Web client consumes the
+same locale registry, direction and native names. No mobile implementation,
+wire value, credential, policy ID or translation service is part of this view.
+
+New Web translations are machine-assisted drafts requiring native-speaker
+review, especially Tibetan and authentication copy. Resource coverage and
+browser font/layout evidence are distinct from linguistic or physical-device
+acceptance. Run the browser integrity/fixture checks plus core, compiled
+translation and device-preference checks when advancing this pin. See
+[BROWSER_ACCESS.md](BROWSER_ACCESS.md#shared-web-localization--2026-10-17).
