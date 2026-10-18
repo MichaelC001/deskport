@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.3"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.3_preparation-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -70,16 +70,18 @@ for the full-size image; these previews do not imply store or release availabili
 See the [PC implementation and acceptance matrix](docs/PC_SUPPORT_MATRIX.md)
 for current source versus installed-package scope, compositor capabilities,
 historical evidence and remaining native checks. Release availability below
-does not certify every feature on every GPU or OS session.
+does not certify every feature on every GPU or OS session. The 0.7.3 links below
+are prepared for the formal release; publication and final package checks are pending.
+[0.7.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2) remains the verified stable release until then.
 
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.2 stable**, Developer ID signed and Apple-notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.2 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [installation guide](docs/LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Viewer only | **0.7.2 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.3 preparation**; signing and notarization checks pending | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.3 preparation**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.7.3 preparation**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
-| Windows x64 | Viewer + host + virtual display | **0.7.2 stable**; installer and portable ZIP; see verification scope below | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
+| Windows x64 | Viewer + host + virtual display | **0.7.3 preparation**; installer and portable ZIP; see verification scope below | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 > **Windows antivirus notice:** Antivirus software may flag DeskPort's Windows helper components as a false positive.
@@ -89,23 +91,23 @@ does not certify every feature on every GPU or OS session.
 Native Linux packages require glibc 2.39+: Ubuntu 24.04+/Debian 13+, Fedora 44,
 current Arch. The AppImage bundles a private runtime for older glibc desktops;
 hardware drivers and compositor support still determine hosting capabilities. KDE virtual-display hosting needs
-compositor permission entries. Native/Nix packages supply fixed entries; 0.7.2
-AppImage and portable builds register the current display-helper path automatically
+compositor permission entries. Native/Nix packages supply fixed entries; AppImage
+and portable builds register the current display-helper path automatically
 when sharing starts. Host input still requires device permissions. Mobile apps do
 not host desktops.
 A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**macOS:** Open the [notarized DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg),
+**macOS:** Open the [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
 
-**Linux:** Choose the [0.7.2 package](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
+**Linux:** Choose the [0.7.3 package](https://github.com/keithxc/deskport/releases/tag/v0.7.3)
 for your system and follow the [distribution-specific steps below](#linux-installation-by-distribution),
 including the [host input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
-With Nix: `nix run github:keithxc/deskport/v0.7.2`.
-Flatpak provides viewing only. Release assets include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt).
+With Nix: `nix run github:keithxc/deskport/v0.7.3`.
+Flatpak provides viewing only. The release will include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 The mobile app is a paid, one-time purchase; see your storefront for current local
@@ -117,7 +119,15 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
-**0.7.2 stable:** The [desktop release](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
+**0.7.3 release preparation:** This desktop update brings shared 22-language UI
+catalogs, browser language switching, Windows signed-in sharing without repeated
+UAC, virtual-display system scaling, Linux runtime repairs, guarded Hyprland/X11
+workspaces, Wayland clipboard fallbacks, optional local IME and square device cards.
+See the [0.7.3 release notes](docs/RELEASE_0.7.3.md) for exact scope and remaining
+checks. Final package verification and publication are pending; earlier native,
+VM and integration results retain their original source and package identities.
+
+**0.7.2 stable (historical verification):** The [desktop release](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 combines resize, remote-streaming, data-saver and Linux runtime improvements.
 Its 21 assets include packages, corresponding sources, relinking materials and
 verification records. See the [0.7.2 release notes](docs/RELEASE_0.7.2.md).
@@ -148,19 +158,20 @@ runtime; native packages retain their glibc 2.39 requirement.
 
 ### Linux installation by distribution
 
-These instructions target **x86_64** desktop systems. The stable native packages
-are **0.7.2** and require glibc 2.39 or newer. They are upstream downloads rather
-than packages from a DeskPort distribution repository; install future releases by
+These instructions target **x86_64** desktop systems and the prepared **0.7.3**
+release downloads. Native packages require glibc 2.39 or newer. Publication and
+exact-package verification are pending. These are upstream downloads rather than
+packages from a DeskPort distribution repository; install future releases by
 downloading and verifying the new package again.
 
-For the Bazzite/KDE Wayland problems in [issue #5](https://github.com/keithxc/deskport/issues/5),
-use the **0.7.2 AppImage** below. It includes portable-runtime,
-display-restoration, process-teardown, permission and login-startup fixes, plus a
-small Qt Wayland 6.4.2 backport. The backport applies to the AppImage; native
-packages and Flatpak retain their baseline Qt runtime. The final AppImage passed
-normal FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM
-with SELinux Enforcing and software graphics. The reporter's installed-system
-retest remains separate; see the [final verification scope](docs/RELEASE_0.7.2.md#validation-boundary).
+The 0.7.3 AppImage retains the portable-runtime, display-restoration,
+process-teardown, permission and login-startup fixes for Bazzite/KDE Wayland
+[issue #5](https://github.com/keithxc/deskport/issues/5), including the small Qt
+Wayland 6.4.2 backport. That backport is AppImage-specific; native packages and
+Flatpak retain their baseline Qt runtime. The **0.7.2** AppImage passed normal
+FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM with
+SELinux Enforcing and software graphics. That historical result does not verify
+0.7.3 or a physical GPU; see the [0.7.2 verification scope](docs/RELEASE_0.7.2.md#validation-boundary).
 
 Full-VM installation, upgrade, rollback, removal and configuration-retention
 results are tracked in the [desktop lifecycle matrix](docs/LINUX_DESKTOP_ACCEPTANCE.md).
@@ -170,21 +181,27 @@ video decoding, remote input, visual quality or latency.
 
 The retained Ubuntu 26.04 GNOME VM reproduces a startup crash in the published
 0.7.2 DEB's older private VA-API Wayland library. The 0.7.2 AppImage passes GUI
-startup there. The source packaging fix and its separate native candidate results
-are recorded in the lifecycle matrix; existing release assets keep their original
-hashes. Debian 13's KWin 6.3 also remains below the host display-helper's 6.6 minimum.
+startup there. The 0.7.3 source reuses pinned libva 2.23.0 in both private
+runtime trees and isolates system utilities from host library overrides. A separate
+fixed DEB candidate passed GUI/API checks; those results remain in the lifecycle
+matrix and do not certify the final 0.7.3 package. Existing release assets keep
+their original hashes. GNOME capture startup and repeated virtual-output creation
+remain separate acceptance gaps. Debian 13's KWin 6.3 also remains below the host
+display-helper's 6.6 minimum.
 
 | Distribution / desktop | Download route |
 | --- | --- |
-| Ubuntu 26.04 GNOME | AppImage; published DEB startup failure is recorded above |
-| Debian 13 KDE | Stable DEB, installed with APT |
-| Fedora 44 KDE | Stable RPM, installed with DNF |
-| Arch Linux KDE | Stable local Arch package, installed with `pacman -U` |
-| Bazzite KDE | Stable 0.7.2 AppImage; issue #5 fixes and VM validation |
-| Omarchy / Hyprland | Stable local Arch package, installed with `pacman -U` |
+| Ubuntu 26.04 GNOME | 0.7.3 DEB or AppImage; final package and GNOME hosting checks pending |
+| Debian 13 KDE | DEB, installed with APT |
+| Fedora 44 KDE | RPM, installed with DNF |
+| Arch Linux KDE | Local Arch package, installed with `pacman -U` |
+| Bazzite KDE | 0.7.3 AppImage; historical issue #5 checks above |
+| Omarchy / Hyprland | Local Arch package, installed with `pacman -U` |
 
 Open a terminal in your normal desktop session. Each command sequence verifies
-the download before installing it; the checksum must report its filename as `OK`.
+the exact downloaded filename against that release's `SHA256SUMS.txt` before
+installing it; the checksum must report that filename as `OK`. An absent checksum
+entry or a mismatch stops the sequence.
 Launch DeskPort as your ordinary user after installation.
 Before an upgrade, stop sharing and fully quit the old DeskPort instance using
 its **Quit** action, such as the tray menu. Closing the window may only hide it.
@@ -193,13 +210,14 @@ Launch the newly installed version afterwards so it runs the new binary.
 <details>
 <summary><strong>Ubuntu 26.04 GNOME</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.2-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.2/deskport_0.7.2-1_amd64.deb),
+Download [deskport_0.7.3-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.3/deskport_0.7.3-1_amd64.deb),
 then open a terminal in the directory containing that file:
 
 ```sh
-printf '%s  %s\n' a298ab752c59377d54096b97ae3525c36b1b5bb92e2ee9b9823bfcd2a27d1eb0 deskport_0.7.2-1_amd64.deb | sha256sum --check - &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "deskport_0.7.3-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install ./deskport_0.7.2-1_amd64.deb &&
+sudo apt install ./deskport_0.7.3-1_amd64.deb &&
 deskport
 ```
 
@@ -219,13 +237,14 @@ GNOME hosting depends on the installed Mutter/capture capabilities; see the
 <details>
 <summary><strong>Debian 13 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.2-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.2/deskport_0.7.2-1_amd64.deb),
+Download [deskport_0.7.3-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.3/deskport_0.7.3-1_amd64.deb),
 then open a terminal in its download directory:
 
 ```sh
-printf '%s  %s\n' a298ab752c59377d54096b97ae3525c36b1b5bb92e2ee9b9823bfcd2a27d1eb0 deskport_0.7.2-1_amd64.deb | sha256sum --check - &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "deskport_0.7.3-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install ./deskport_0.7.2-1_amd64.deb &&
+sudo apt install ./deskport_0.7.3-1_amd64.deb &&
 deskport
 ```
 
@@ -243,12 +262,13 @@ before starting sharing.
 <details>
 <summary><strong>Fedora 44 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport-0.7.2-1.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.2/deskport-0.7.2-1.x86_64.rpm),
+Download [deskport-0.7.3-1.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.3/deskport-0.7.3-1.x86_64.rpm),
 then open a terminal in its download directory:
 
 ```sh
-printf '%s  %s\n' 67cb1d845c182ceb5b39a7a28494412b2a380ce0f02b05c9e02a069e929e97d6 deskport-0.7.2-1.x86_64.rpm | sha256sum --check - &&
-sudo dnf install ./deskport-0.7.2-1.x86_64.rpm &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "deskport-0.7.3-1.x86_64.rpm" { print }' SHA256SUMS.txt | sha256sum --check - &&
+sudo dnf install ./deskport-0.7.3-1.x86_64.rpm &&
 deskport
 ```
 
@@ -265,12 +285,13 @@ For KDE hosting, also check the [compositor and input requirements](docs/LINUX_P
 <summary><strong>Arch Linux KDE</strong> — download, install, update and remove</summary>
 
 Complete your usual full Arch system update, then download
-[deskport-0.7.2-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.2/deskport-0.7.2-1-x86_64.pkg.tar.zst).
+[deskport-0.7.3-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.3/deskport-0.7.3-1-x86_64.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
-printf '%s  %s\n' bd69da2b33b4135dae86b6420a83ececfc99ef3a01f4038b09bc54a2d9555c0b deskport-0.7.2-1-x86_64.pkg.tar.zst | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.2-1-x86_64.pkg.tar.zst &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "deskport-0.7.3-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.3-1-x86_64.pkg.tar.zst &&
 deskport
 ```
 
@@ -284,10 +305,10 @@ For KDE hosting, also check the [compositor and input requirements](docs/LINUX_P
 </details>
 
 <details>
-<summary><strong>Bazzite KDE</strong> — stable AppImage, startup and removal</summary>
+<summary><strong>Bazzite KDE</strong> — AppImage, startup and removal</summary>
 
-Download the stable
-[DeskPort-0.7.2-x86_64.AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-x86_64.AppImage).
+Download
+[DeskPort-0.7.3-x86_64.AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-x86_64.AppImage).
 Stop sharing and use **Quit** to fully exit any older DeskPort instance; closing
 its window may leave it running. Save the new AppImage in a permanent location
 before enabling login startup:
@@ -295,10 +316,11 @@ before enabling login startup:
 ```sh
 mkdir -p "$HOME/Applications/DeskPort" &&
 cd "$HOME/Applications/DeskPort" &&
-curl --fail --location --output DeskPort-0.7.2-x86_64.AppImage https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-x86_64.AppImage &&
-printf '%s  %s\n' 0cbb521bfa36964740190afdc4a995eb4a55d54803d8b138aef89e889d5644e7 DeskPort-0.7.2-x86_64.AppImage | sha256sum --check - &&
-chmod +x DeskPort-0.7.2-x86_64.AppImage &&
-./DeskPort-0.7.2-x86_64.AppImage
+curl --fail --location --output DeskPort-0.7.3-x86_64.AppImage https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-x86_64.AppImage &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "DeskPort-0.7.3-x86_64.AppImage" { print }' SHA256SUMS.txt | sha256sum --check - &&
+chmod +x DeskPort-0.7.3-x86_64.AppImage &&
+./DeskPort-0.7.3-x86_64.AppImage
 ```
 
 Launch normally; no bundled libraries need to be removed or relocated. If login
@@ -321,12 +343,13 @@ host-desktop integration. The Flatpak below provides viewing only.
 <summary><strong>Omarchy / Hyprland</strong> — local Arch package and hosting requirements</summary>
 
 Complete Omarchy's normal system update, then download
-[deskport-0.7.2-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.2/deskport-0.7.2-1-x86_64.pkg.tar.zst).
+[deskport-0.7.3-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.3/deskport-0.7.3-1-x86_64.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
-printf '%s  %s\n' bd69da2b33b4135dae86b6420a83ececfc99ef3a01f4038b09bc54a2d9555c0b deskport-0.7.2-1-x86_64.pkg.tar.zst | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.2-1-x86_64.pkg.tar.zst &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "deskport-0.7.3-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.3-1-x86_64.pkg.tar.zst &&
 deskport
 ```
 
@@ -336,7 +359,7 @@ the next local Arch package, then installing it with
 Omarchy's repository/AUR package menu does not make this GitHub download a
 repository package.
 
-Hyprland hosting uses a dedicated headless output. Development sources support
+Hyprland hosting uses a dedicated headless output. The 0.7.3 source supports
 mirror, turn-off-others and extension policies when monitor identity and runtime
 state can be restored safely; see [Hyprland display leases](docs/HYPRLAND_DISPLAY.md).
 Follow the [Omarchy/Hyprland host guide](docs/CLI.md#omarchy-and-hyprland)
@@ -350,12 +373,13 @@ a working stream.
 <details>
 <summary><strong>Flatpak alternative</strong> — viewing only, on systems with Flatpak configured</summary>
 
-Download [DeskPort-0.7.2-client-x86_64.flatpak](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-client-x86_64.flatpak),
+Download [DeskPort-0.7.3-client-x86_64.flatpak](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-client-x86_64.flatpak),
 then open a terminal in its download directory:
 
 ```sh
-printf '%s  %s\n' 07e1d20f338b21a11301d9d7cb43742390bec18bfc50badf3b161bce635080c1 DeskPort-0.7.2-client-x86_64.flatpak | sha256sum --check - &&
-flatpak install --user ./DeskPort-0.7.2-client-x86_64.flatpak &&
+curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt &&
+awk '$2 == "DeskPort-0.7.3-client-x86_64.flatpak" { print }' SHA256SUMS.txt | sha256sum --check - &&
+flatpak install --user ./DeskPort-0.7.3-client-x86_64.flatpak &&
 flatpak run io.github.keithxc.DeskPort
 ```
 
@@ -380,8 +404,8 @@ in your home directory.
 
 | Channel | Status | Installation |
 | --- | --- | --- |
-| GitHub release packages | Available, 0.7.2 | Download the package for your distribution above |
-| Upstream Nix flake | Available, 0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
+| GitHub release packages | 0.7.3 preparation | Download the package for your distribution above |
+| Upstream Nix flake | 0.7.3 tag pending | `nix run github:keithxc/deskport/v0.7.3` |
 | AUR `deskport-bin` | Recipe tested; publication blocked by new-account registration pause | [Build the recipe locally](docs/LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) submitted for review; not merged | Use the upstream flake until inclusion |
 | Arch official repositories / Flathub | Not listed | Use the release downloads; Flatpak is viewer-only |
@@ -417,7 +441,7 @@ Sources: [Moonlight](https://moonlight-stream.org/),
 DeskPort's current platform limits are listed above; this table does not imply
 feature parity across every OS or a measured performance advantage.
 
-See the [0.7.2 release notes](docs/RELEASE_0.7.2.md),
+See the [0.7.3 release notes](docs/RELEASE_0.7.3.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux
