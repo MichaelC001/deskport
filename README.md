@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.3"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.3_preparation-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.3"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.3_stable-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -70,18 +70,17 @@ for the full-size image; these previews do not imply store or release availabili
 See the [PC implementation and acceptance matrix](docs/PC_SUPPORT_MATRIX.md)
 for current source versus installed-package scope, compositor capabilities,
 historical evidence and remaining native checks. Release availability below
-does not certify every feature on every GPU or OS session. The 0.7.3 links below
-are prepared for the formal release; publication and final package checks are pending.
-[0.7.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2) remains the verified stable release until then.
+does not certify every feature on every GPU or OS session. The 0.7.3 release
+records exact package identities and validation limits in its verification report.
 
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.3 preparation**; signing and notarization checks pending | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.3 preparation**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [installation guide](docs/LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Viewer only | **0.7.3 preparation**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.3 stable**; Developer ID signed and Apple notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
+| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.3 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.7.3 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
-| Windows x64 | Viewer + host + virtual display | **0.7.3 preparation**; installer and portable ZIP; see verification scope below | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-windows-x64-setup-full.exe) |
+| Windows x64 | Viewer + host + virtual display | **0.7.3 stable**; full installer hosts, portable ZIP views; application and installer unsigned | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 > **Windows antivirus notice:** Antivirus software may flag DeskPort's Windows helper components as a false positive.
@@ -107,7 +106,7 @@ Accessibility permissions to use host features. Nix and Homebrew are not require
 for your system and follow the [distribution-specific steps below](#linux-installation-by-distribution),
 including the [host input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
 With Nix: `nix run github:keithxc/deskport/v0.7.3`.
-Flatpak provides viewing only. The release will include [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt).
+Flatpak provides viewing only. The release includes [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 The mobile app is a paid, one-time purchase; see your storefront for current local
@@ -119,13 +118,15 @@ host. Both devices need a working network path: use a LAN or your own VPN such a
 Tailscale. DeskPort does not provide an account service, hosted desktops, a relay
 or a network tunnel. Legacy Sunshine PIN pairing remains available.
 
-**0.7.3 release preparation:** This desktop update brings shared 22-language UI
-catalogs, browser language switching, Windows signed-in sharing without repeated
+**0.7.3 stable:** This desktop update brings a shared 22-locale UI
+catalog alongside additional desktop legacy translations, browser language
+switching, Windows signed-in sharing without repeated
 UAC, virtual-display system scaling, Linux runtime repairs, guarded Hyprland/X11
 workspaces, Wayland clipboard fallbacks, optional local IME and square device cards.
 See the [0.7.3 release notes](docs/RELEASE_0.7.3.md) for exact scope and remaining
-checks. Final package verification and publication are pending; earlier native,
-VM and integration results retain their original source and package identities.
+checks. Exact-package checks cover macOS distribution trust, Windows payloads,
+native CLI and protected antivirus scanning, and Linux runtime/package scenarios.
+Earlier native and integration results retain their original source identities.
 
 **0.7.2 stable (historical verification):** The [desktop release](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 combines resize, remote-streaming, data-saver and Linux runtime improvements.
@@ -158,9 +159,8 @@ runtime; native packages retain their glibc 2.39 requirement.
 
 ### Linux installation by distribution
 
-These instructions target **x86_64** desktop systems and the prepared **0.7.3**
-release downloads. Native packages require glibc 2.39 or newer. Publication and
-exact-package verification are pending. These are upstream downloads rather than
+These instructions target **x86_64** desktop systems and the **0.7.3**
+release downloads. Native packages require glibc 2.39 or newer. These are upstream downloads rather than
 packages from a DeskPort distribution repository; install future releases by
 downloading and verifying the new package again.
 
@@ -168,10 +168,10 @@ The 0.7.3 AppImage retains the portable-runtime, display-restoration,
 process-teardown, permission and login-startup fixes for Bazzite/KDE Wayland
 [issue #5](https://github.com/keithxc/deskport/issues/5), including the small Qt
 Wayland 6.4.2 backport. That backport is AppImage-specific; native packages and
-Flatpak retain their baseline Qt runtime. The **0.7.2** AppImage passed normal
+Flatpak retain their baseline Qt runtime. The final **0.7.3** AppImage passed normal
 FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM with
-SELinux Enforcing and software graphics. That historical result does not verify
-0.7.3 or a physical GPU; see the [0.7.2 verification scope](docs/RELEASE_0.7.2.md#validation-boundary).
+SELinux Enforcing and software graphics. This does not verify a physical GPU or
+real streaming; see the [0.7.3 verification scope](docs/RELEASE_0.7.3.md#validation-boundary).
 
 Full-VM installation, upgrade, rollback, removal and configuration-retention
 results are tracked in the [desktop lifecycle matrix](docs/LINUX_DESKTOP_ACCEPTANCE.md).
@@ -180,22 +180,22 @@ Package installation and GUI launch alone do not verify live capture, hardware
 video decoding, remote input, visual quality or latency.
 
 The retained Ubuntu 26.04 GNOME VM reproduces a startup crash in the published
-0.7.2 DEB's older private VA-API Wayland library. The 0.7.2 AppImage passes GUI
-startup there. The 0.7.3 source reuses pinned libva 2.23.0 in both private
-runtime trees and isolates system utilities from host library overrides. A separate
-fixed DEB candidate passed GUI/API checks; those results remain in the lifecycle
-matrix and do not certify the final 0.7.3 package. Existing release assets keep
+0.7.2 DEB's older private VA-API Wayland library. The final 0.7.3 DEB reuses pinned
+libva 2.23.0 in both private runtime trees and isolates system utilities from host
+library overrides. It passed GUI/API, upgrade, rollback and configuration-retention
+checks in a fresh overlay of that VM. The old-version crash was reproduced before
+upgrade and after rollback. Existing release assets keep
 their original hashes. GNOME capture startup and repeated virtual-output creation
 remain separate acceptance gaps. Debian 13's KWin 6.3 also remains below the host
 display-helper's 6.6 minimum.
 
 | Distribution / desktop | Download route |
 | --- | --- |
-| Ubuntu 26.04 GNOME | 0.7.3 DEB or AppImage; final package and GNOME hosting checks pending |
+| Ubuntu 26.04 GNOME | 0.7.3 DEB or AppImage; DEB startup regression passed, GNOME capture/recovery gaps remain |
 | Debian 13 KDE | DEB, installed with APT |
 | Fedora 44 KDE | RPM, installed with DNF |
 | Arch Linux KDE | Local Arch package, installed with `pacman -U` |
-| Bazzite KDE | 0.7.3 AppImage; historical issue #5 checks above |
+| Bazzite KDE | 0.7.3 AppImage; exact-package VM checks above |
 | Omarchy / Hyprland | Local Arch package, installed with `pacman -U` |
 
 Open a terminal in your normal desktop session. Each command sequence verifies
@@ -404,8 +404,8 @@ in your home directory.
 
 | Channel | Status | Installation |
 | --- | --- | --- |
-| GitHub release packages | 0.7.3 preparation | Download the package for your distribution above |
-| Upstream Nix flake | 0.7.3 tag pending | `nix run github:keithxc/deskport/v0.7.3` |
+| GitHub release packages | 0.7.3 stable | Download the package for your distribution above |
+| Upstream Nix flake | 0.7.3 stable | `nix run github:keithxc/deskport/v0.7.3` |
 | AUR `deskport-bin` | Recipe tested; publication blocked by new-account registration pause | [Build the recipe locally](docs/LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) submitted for review; not merged | Use the upstream flake until inclusion |
 | Arch official repositories / Flathub | Not listed | Use the release downloads; Flatpak is viewer-only |

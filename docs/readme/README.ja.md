@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.3"><img alt="デスクトップ版" src="https://img.shields.io/badge/desktop-0.7.3-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="ライセンス" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -64,14 +64,16 @@
 
 ## 対応プラットフォーム
 
+以下は正式版 0.7.3 のリンクです。パッケージ検証と実行時の検証は対象範囲が異なります。結果と未検証項目は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。
+
 | プラットフォーム | 役割 | リリース状況 | ダウンロード |
 | --- | --- | --- | --- |
-| macOS Apple Silicon、macOS 26+ | ビューア＋ホスト＋ネイティブ仮想ディスプレイ | **0.7.2 stable**、Developer ID 署名済み・Apple 公証済み | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
-| Linux x86_64 | ビューア＋ホスト。条件を満たす KDE ホストではアダプティブな仮想ワークスペース | **0.7.2 stable**：DEB、RPM、Arch、AppImage、ポータブルアーカイブ、Nix | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [インストールガイド](../LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | ビューアのみ | **0.7.2 stable**、Freedesktop Platform 25.08 | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
+| macOS Apple Silicon、macOS 26+ | ビューア＋ホスト＋ネイティブ仮想ディスプレイ | **0.7.3 正式版**。Developer ID 署名、Apple 公証、ZIP 展開後の Gatekeeper 検証に合格 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
+| Linux x86_64 | ビューア＋ホスト。条件を満たす KDE ホストではアダプティブな仮想ワークスペース | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、ポータブルアーカイブ、Nix | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [インストールガイド](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | ビューアのみ | **0.7.3 正式版**、Freedesktop Platform 25.08 | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad、iOS/iPadOS 15+ | クライアントのみ | App Store で公開中。新しいビルドは TestFlight で別途テスト | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | クライアントのみ | 開発中。実機での確認中で、ストアでの一般公開はまだ | 未提供 |
-| Windows x64 | ビューア＋ホスト＋仮想ディスプレイ | **0.7.2 stable**。インストーラーとポータブル ZIP。検証範囲は下記参照 | [インストーラー](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
+| Windows x64 | ビューア＋ホスト＋仮想ディスプレイ | **0.7.3 正式版**。インストーラーはホストを含み、ポータブル ZIP はビューア専用。未インストール状態のパッケージと CLI を検証済み。アプリとインストーラーは未署名 | [インストーラー](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | 未検証 | 検証済みのリリースパッケージなし | — |
 
 > **Windows のウイルス対策に関する注意：** ウイルス対策ソフトが DeskPort の Windows ヘルパーコンポーネントを誤検知する可能性があります。
@@ -82,19 +84,19 @@
 最新の Arch。AppImage は古い glibc のデスクトップ向けにプライベートなランタイムを同梱していますが、
 ホスト機能は引き続きハードウェアドライバーとコンポジタの対応に左右されます。KDE の仮想ディスプレイホストには
 コンポジタの許可エントリが必要です。ネイティブ／Nix パッケージは固定のエントリを提供し、
-0.7.2 の AppImage とポータブル版は共有開始時に現在のディスプレイヘルパーのパスを自動登録します。
+AppImage とポータブル版は共有開始時に現在のディスプレイヘルパーのパスを自動登録します。
 ホスト入力には引き続きデバイス権限が必要です。モバイルアプリはデスクトップをホストしません。
 ソース定義があることやビルドに成功したことだけでは、対応プラットフォームとはみなしません。
 
 ## インストール
 
-**macOS：** [公証済み DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) を開き、
+**macOS：** [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) を開き、
 DeskPort を「アプリケーション」にドラッグして起動します。ホスト機能を使うには「画面収録」と
 「アクセシビリティ」の権限を許可してください。Nix や Homebrew は不要です。
 
-**Linux：** お使いのシステムに合った [0.7.2 パッケージ](https://github.com/keithxc/deskport/releases/tag/v0.7.2)を選び、
-ホスト入力の権限設定を含めて[インストールガイド](../LINUX_PACKAGES.md)に従ってください。Nix の場合：`nix run github:keithxc/deskport/v0.7.2`。
-Flatpak は閲覧のみです。リリースには [SHA-256 チェックサム](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt)と[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt)が含まれます。
+**Linux：** お使いのシステムに合った [0.7.3 パッケージ](https://github.com/keithxc/deskport/releases/tag/v0.7.3)を選び、
+ホスト入力の権限設定を含めて[インストールガイド](../LINUX_PACKAGES.md)に従ってください。Nix の場合：`nix run github:keithxc/deskport/v0.7.3`。
+Flatpak は閲覧のみです。リリースには [SHA-256 チェックサム](https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt)と[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)が含まれます。
 
 **iPhone / iPad：** [App Store から DeskPort をインストール](https://apps.apple.com/us/app/deskport/id6812389978)してください。
 モバイルアプリは買い切りの有料アプリです。現地価格はお使いのストアでご確認ください。
@@ -106,7 +108,11 @@ Flatpak は閲覧のみです。リリースには [SHA-256 チェックサム](
 DeskPort はアカウントサービス、ホスティング型デスクトップ、リレー、ネットワークトンネルを提供しません。
 従来の Sunshine PIN ペアリングも引き続き使えます。
 
-**0.7.2 安定版：** [デスクトップ版](https://github.com/keithxc/deskport/releases/tag/v0.7.2)は、リサイズ、リモートストリーミング、データセーバー、Linux ランタイムの改善をまとめ、Bazzite/KDE Wayland での AppImage の問題を修正しています。詳しくは [0.7.2 リリースノート](../RELEASE_0.7.2.md)を、Linux ディストリビューション別のインストール手順は[英語版 README](../../README.md#linux-installation-by-distribution)をご覧ください。
+**0.7.3 正式版：** 多言語 UI、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../RELEASE_0.7.3.md)をご覧ください。
+
+**0.7.3 の検証範囲：** Windows では最終パッケージ内容の一致、PE、ネイティブ CLI、Defender の検出ゼロを確認しました。インストール、GUI 接続、ストリーミングは未検証です。最終 AppImage は通常の FUSE とソフトウェア GPU を使う Bazzite VM の検証に合格しました。Ubuntu 26.04 VM では 0.7.2 の DEB で VA クラッシュを再現し、最終 0.7.3 DEB で修正を確認しました。設定を保持したアップグレードとロールバックも合格しました。GNOME のキャプチャと復旧は未受け入れです。コンテナー・Flatpak の結果とその他の制限は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。これらは物理ハードウェア全体の動作確認を意味しません。
+
+**過去のリリース：0.7.2 安定版：** [デスクトップ版](https://github.com/keithxc/deskport/releases/tag/v0.7.2)は、リサイズ、リモートストリーミング、データセーバー、Linux ランタイムの改善をまとめ、Bazzite/KDE Wayland での AppImage の問題を修正しています。詳しくは [0.7.2 リリースノート](../RELEASE_0.7.2.md)を、Linux ディストリビューション別のインストール手順は[英語版 README](../../README.md#linux-installation-by-distribution)をご覧ください。
 
 **ブラウザアクセス：** デスクトップホストは HTTPS のリモートデスクトップを提供し、
 30 秒のログインコード、オプションの 7 日間ブラウザペアリング、アダプティブなサイズ調整、
@@ -118,8 +124,8 @@ DeskPort はアカウントサービス、ホスティング型デスクトッ�
 
 | チャネル | 状況 | インストール |
 | --- | --- | --- |
-| GitHub リリースパッケージ | 提供中、0.7.2 | 上記からお使いのディストリビューション用パッケージをダウンロード |
-| アップストリーム Nix flake | 提供中、0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
+| GitHub リリースパッケージ | 0.7.3 正式版 | 上記からお使いのディストリビューション用パッケージをダウンロード |
+| アップストリーム Nix flake | 0.7.3 正式版 | `nix run github:keithxc/deskport/v0.7.3` |
 | AUR `deskport-bin` | レシピはテスト済み。新規アカウント登録の一時停止により公開できていません | [レシピをローカルでビルド](../LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) をレビュー待ちで提出済み。未マージ | 取り込まれるまではアップストリームの flake を使用 |
 | Arch 公式リポジトリ / Flathub | 未登録 | リリースからダウンロード。Flatpak はビューアのみ |
@@ -153,7 +159,7 @@ Nixpkgs に `pkgs.deskport` が加わるわけでもありません。ホスト�
 DeskPort の現在のプラットフォーム制限は上記のとおりです。この表はすべての OS での機能の同等性や、
 計測された性能面の優位性を意味するものではありません。
 
-[0.7.2 リリースノート](../RELEASE_0.7.2.md)、
+[0.7.3 リリースノート](../RELEASE_0.7.3.md)、
 [アーキテクチャ](../ARCHITECTURE.md)、[ロードマップ](../ROADMAP.md)も参照してください。
 
 ## Linux でのビルドと実行

@@ -1,16 +1,20 @@
-## Desktop 0.7.3 formal release preparation — 2026-10-18
+## Desktop 0.7.3 formal release — 2026-10-18
 
-Prepare the full desktop release from integrated source `50431b29` and shared
+Package the full desktop release from integrated source `50431b29`, binary
+source `3257bec4`, and shared
 core `f34fc7b1524ce436185c4b085a903e6af4314790`: macOS arm64 DMG/ZIP,
 Windows x64 Setup/portable ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable
 archive, viewer-only Flatpak and the Nix flake. Include corresponding public
 sources, relinking materials, package inventories and verification metadata.
 See [0.7.3 release notes](RELEASE_0.7.3.md) for changes and explicit limits.
 
-This entry records preparation. Exact release builds, signing/notarization,
-platform package checks, checksums, publication, anonymous downloads and mynix
-configuration builds are pending. Existing integration, private-package and VM
-results remain attached to their original identities. The ten deferred PC task
+Exact-package evidence includes macOS Developer ID/notarization/stapling and
+Gatekeeper, Windows payload/native CLI/protected Defender checks, the Bazzite
+AppImage FUSE/runtime gate and the Ubuntu DEB VA-runtime upgrade/rollback gate.
+The final tag adds release documentation only; metadata records both source
+identities, CI, remaining package gates and checksums. Public-download and mynix
+delivery records follow publication. Existing integration, private-package and
+historical VM results retain their original identities. The ten deferred PC task
 branches and isolated Seamless work are not included. Mobile distribution stays
 separate; mynix activation remains a manual user action after delivery.
 

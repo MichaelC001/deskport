@@ -1,17 +1,19 @@
 # DeskPort 0.7.3
 
-Formal desktop release preparation for macOS Apple Silicon, Linux x86_64 and
-Windows x64. The integrated application baseline is
+Formal desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
+The integrated application baseline is
 `50431b296a5b21c9d41551709d62c6fcafbf98f7`; the shared core is
 `f34fc7b1524ce436185c4b085a903e6af4314790`, with matching Git and Nix pins.
-The release version commit and exact artifact identities will be recorded in
-the release verification metadata. Packaging, final verification and publication
-are pending; earlier source or private-package results do not certify 0.7.3.
+The binaries were built from `3257bec4b7ef38d3cbc428e1774c4c71f3c9b36a`.
+The final tag adds release documentation only. `PROVENANCE.json` records both
+revisions, the audited documentation diff and exact artifact identities; earlier
+source or private-package results do not certify these packages.
 
 ## Changes since 0.7.2
 
 - **Shared UI localization:** primary desktop pages and the browser client use
-  the same 22-language catalog. Browser language changes update labels, status,
+  a shared 22-locale catalog. Desktop also retains additional legacy translations
+  with varying coverage. Browser language changes update labels, status,
   errors, accessible names and text direction immediately, with system-language
   selection and same-origin tab synchronization. Translation drafts still need
   native-speaker review, especially Tibetan; font and layout coverage varies by
@@ -58,7 +60,7 @@ are pending; earlier source or private-package results do not certify 0.7.3.
 
 ## Downloads and scope
 
-The planned formats are macOS arm64 (macOS 26+) DMG and ZIP; Windows x64 full
+The formats are macOS arm64 (macOS 26+) DMG and ZIP; Windows x64 full
 Setup and portable viewer ZIP; Linux x86_64 DEB, RPM, Arch package, AppImage,
 portable archive, viewer-only Flatpak and Nix. Native Linux packages require
 glibc 2.39 or newer. The AppImage includes a private runtime; host graphics,
@@ -66,12 +68,13 @@ capture and input prerequisites still apply. Flatpak uses Freedesktop Platform
 25.08 and does not host desktops.
 
 The [0.7.3 release](https://github.com/keithxc/deskport/releases/tag/v0.7.3)
-will carry corresponding public application/dependency sources, third-party
+carries corresponding public application/dependency sources, third-party
 notices, relinking materials and package inventories alongside the binaries.
-`SHA256SUMS.txt` will cover every other asset; `PROVENANCE.json` and
-`VERIFICATION.txt` will identify exact application/core revisions, package hashes,
-CI runs and platform results. Asset count, public download verification and final
-trust checks remain pending until publication.
+`SHA256SUMS.txt` covers every other asset; `PROVENANCE.json` and
+`VERIFICATION.txt` identify exact application/core revisions, package hashes,
+CI runs and platform results. The 21 assets comprise two macOS files, five
+Windows files, eleven Linux/source/material files and three verification files.
+Nix builds from the pinned public source rather than a separate binary attachment.
 
 Mobile clients are distributed separately through their store workflow. No
 mobile source or development package is part of this desktop release. Seamless
@@ -115,12 +118,36 @@ The following remain explicit limits:
   the complete HDR pipeline remain separate checks. Build and CI success cannot
   establish those results.
 
-Before publication, the exact macOS packages must pass Developer ID signing,
-notarization, app/DMG ticket stapling and extracted-ZIP Gatekeeper verification;
-Windows packages must pass payload/PE, non-installed native CLI and normal-
-protection scan checks; Linux packages must pass their package/runtime gates.
-The exact release source also needs the required Nix and CI checks. None of
-these final 0.7.3 checks is claimed complete by this preparation document.
+Exact 0.7.3 package evidence includes:
+
+- macOS: 156 Mach-O files and 35 bundles passed Developer ID signing checks with
+  secure timestamps and hardened runtime. Apple accepted both submissions;
+  app/DMG stapling, extracted-ZIP Gatekeeper and bundled-host loader checks passed.
+- Windows: installer/portable payload equivalence, PE imports and version
+  `0.7.3.0` passed. Four non-installed native CLI modes exited successfully.
+  Defender completed the protected custom scan with zero exclusions and zero
+  detections; package hashes remained unchanged and the extraction was removed.
+  The driver catalog signature is valid; the application and installer remain
+  unsigned. This release did not run an installation or GUI acceptance test.
+- Linux Bazzite: the final AppImage passed normal FUSE launch, GUI and matching
+  viewer/helper/recovery runtime checks in a fresh KDE Wayland VM overlay with
+  SELinux Enforcing. Virtual-output creation/release, layout restoration and
+  teardown passed. The VM uses software graphics, without a physical GPU.
+- Linux Ubuntu 26.04: the final DEB passed the GNOME Wayland VA-runtime regression,
+  background-owner/activation, upgrade and configuration-retention checks. The
+  old 0.7.2 startup crash was reproduced before upgrade and after rollback.
+  Baseline integrity and teardown passed. GNOME capture/recovery was not tested
+  by this package gate and retains the gaps above.
+- Isolated regressions: shared-core/adapters, smart-stream, translation
+  placeholders, browser localization and local text input passed, alongside
+  172 binding cases and 27 UI cases. The local Linux Nix package and CLI/desktop
+  identity smoke passed with verified builder CPU/nice limits. Canonical Nix
+  builds, the final tag's CI runs, container/Flatpak gates, material audits and
+  source NAR identity are recorded in the release verification files.
+
+The pre-publication verification files describe the sealed artifacts. Anonymous
+download checks and delivery records are added to the published-artifacts record
+after publication; they are separate from real streaming and input acceptance.
 
 Publishing the desktop release and updating mynix do not activate installed
 services. The user performs the later configuration switch and live validation.

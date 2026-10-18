@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.2"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.7.2-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.3"><img alt="桌面版本" src="https://img.shields.io/badge/desktop-0.7.3-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="../../LICENSE"><img alt="许可证" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -61,14 +61,16 @@
 
 ## 支持的平台
 
+下方为 0.7.3 正式版链接。安装包检查与运行时验证各有范围，结果及未验证项目见[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)。
+
 | 平台 | 角色 | 发布状态 | 下载 |
 | --- | --- | --- | --- |
-| macOS Apple Silicon，macOS 26+ | 查看端 + 主机端 + 原生虚拟显示器 | **0.7.2 稳定版**，已用 Developer ID 签名并经 Apple 公证 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg) |
-| Linux x86_64 | 查看端 + 主机端；符合条件的 KDE 主机支持自适应虚拟工作区 | **0.7.2 稳定版**：DEB、RPM、Arch、AppImage、便携包与 Nix | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.2) · [安装指南](../LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | 仅查看端 | **0.7.2 稳定版**，Freedesktop Platform 25.08 | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.2) |
+| macOS Apple Silicon，macOS 26+ | 查看端 + 主机端 + 原生虚拟显示器 | **0.7.3 正式版**；Developer ID 签名、Apple 公证与 ZIP 解压后的 Gatekeeper 检查通过 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
+| Linux x86_64 | 查看端 + 主机端；符合条件的 KDE 主机支持自适应虚拟工作区 | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、便携包与 Nix | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [安装指南](../LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | 仅查看端 | **0.7.3 正式版**，Freedesktop Platform 25.08 | [发布页](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad，iOS/iPadOS 15+ | 仅客户端 | 已上架 App Store；较新的版本另在 TestFlight 测试 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | 仅客户端 | 开发中；正在实机检查，尚未在商店公开发布 | 暂不可用 |
-| Windows x64 | 查看端 + 主机端 + 虚拟显示器 | **0.7.2 稳定版**；安装包与便携 ZIP；验证范围见下方 | [安装包](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-windows-x64-setup-full.exe) |
+| Windows x64 | 查看端 + 主机端 + 虚拟显示器 | **0.7.3 正式版**；完整安装包提供主机功能，便携 ZIP 仅为查看端；未安装状态下的包检查与 CLI 验证通过；应用与安装器未签名 | [安装包](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-windows-x64-setup-full.exe) |
 | Linux ARM64 / Intel Mac | 未验证 | 没有经过验证的发布包 | — |
 
 > **Windows 杀毒软件提示：** 杀毒软件有可能将 DeskPort 的 Windows 辅助组件误报为威胁。
@@ -78,19 +80,19 @@
 原生 Linux 包需要 glibc 2.39+：Ubuntu 24.04+/Debian 13+、Fedora 44、
 最新的 Arch。AppImage 自带私有运行时，可用于 glibc 较旧的桌面；主机能力仍取决于硬件驱动
 与合成器支持。KDE 虚拟显示器主机需要合成器授权条目。原生包与 Nix 包提供固定的条目；
-0.7.2 的 AppImage 与便携版会在开始共享时自动注册当前显示助手的路径。主机输入仍需要设备权限。
+AppImage 与便携版会在开始共享时自动注册当前显示助手的路径。主机输入仍需要设备权限。
 移动应用不能作为桌面主机。
 仅有包定义或能编译成功，并不代表该平台受支持。
 
 ## 安装
 
-**macOS：** 打开[经公证的 DMG](https://github.com/keithxc/deskport/releases/download/v0.7.2/DeskPort-0.7.2-macos-arm64.dmg)，
+**macOS：** 打开[DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg)，
 把 DeskPort 拖入「应用程序」后打开。如需使用主机端功能，请授予「屏幕录制」和
 「辅助功能」权限。无需 Nix 或 Homebrew。
 
-**Linux：** 选择适合你系统的 [0.7.2 安装包](https://github.com/keithxc/deskport/releases/tag/v0.7.2)，
-并按照[安装指南](../LINUX_PACKAGES.md)操作，包括主机输入权限的设置。使用 Nix：`nix run github:keithxc/deskport/v0.7.2`。
-Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.7.2/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.2/VERIFICATION.txt)。
+**Linux：** 选择适合你系统的 [0.7.3 安装包](https://github.com/keithxc/deskport/releases/tag/v0.7.3)，
+并按照[安装指南](../LINUX_PACKAGES.md)操作，包括主机输入权限的设置。使用 Nix：`nix run github:keithxc/deskport/v0.7.3`。
+Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://github.com/keithxc/deskport/releases/download/v0.7.3/SHA256SUMS.txt)与[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)。
 
 **iPhone / iPad：** 从 [App Store 安装 DeskPort](https://apps.apple.com/us/app/deskport/id6812389978)。
 移动应用为一次性付费购买，当地价格以你所在地区的商店为准。
@@ -100,7 +102,11 @@ Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://g
 使用局域网或你自己的 VPN（如 Tailscale）。DeskPort 不提供账号服务、托管桌面、中继
 或网络隧道。旧版 Sunshine PIN 配对仍然可用。
 
-**0.7.2 稳定版：** [桌面版本](https://github.com/keithxc/deskport/releases/tag/v0.7.2)整合了调整尺寸、远程串流、省流量和 Linux 运行时方面的改进，并修复了 Bazzite/KDE Wayland 上的 AppImage 问题。详见 [0.7.2 发行说明](../RELEASE_0.7.2.md)；各 Linux 发行版的安装步骤见[英文 README](../../README.md#linux-installation-by-distribution)。
+**0.7.3 正式版：** 本次整合了多语言界面、Windows 已登录会话中的共享与虚拟显示器 DPI、Linux 运行时与 Wayland 剪贴板、可选的本地输入法，以及方形设备卡片的改进。 变更与验证范围见 [0.7.3 发行说明](../RELEASE_0.7.3.md)。
+
+**0.7.3 验证范围：** Windows 最终包内容一致性、PE、原生 CLI 检查通过，Defender 扫描零检出；未进行安装、GUI 连接或串流验收。最终 AppImage 通过 Bazzite 虚拟机中的正常 FUSE 与软件 GPU 检查。Ubuntu 26.04 虚拟机复现了 0.7.2 DEB 的 VA 崩溃，并确认最终 0.7.3 DEB 已修复，升级与回滚均保留配置。GNOME 采集与恢复仍未通过验收。容器、Flatpak 结果及其他限制见[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)；这些结果不代表完整的物理硬件验收。
+
+**历史版本：0.7.2 稳定版：** [桌面版本](https://github.com/keithxc/deskport/releases/tag/v0.7.2)整合了调整尺寸、远程串流、省流量和 Linux 运行时方面的改进，并修复了 Bazzite/KDE Wayland 上的 AppImage 问题。详见 [0.7.2 发行说明](../RELEASE_0.7.2.md)；各 Linux 发行版的安装步骤见[英文 README](../../README.md#linux-installation-by-distribution)。
 
 **浏览器访问：** 桌面主机提供 HTTPS 远程桌面，支持 30 秒登录码、可选的七天浏览器配对、
 自适应尺寸和全屏。见 [0.7.1 发行说明](../RELEASE_0.7.1.md)与
@@ -111,8 +117,8 @@ Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://g
 
 | 渠道 | 状态 | 安装方式 |
 | --- | --- | --- |
-| GitHub 发布包 | 可用，0.7.2 | 在上方下载适合你发行版的安装包 |
-| 上游 Nix flake | 可用，0.7.2 | `nix run github:keithxc/deskport/v0.7.2` |
+| GitHub 发布包 | 0.7.3 正式版 | 在上方下载适合你发行版的安装包 |
+| 上游 Nix flake | 0.7.3 正式版 | `nix run github:keithxc/deskport/v0.7.3` |
 | AUR `deskport-bin` | 配方已测试；因 AUR 暂停新账号注册而无法发布 | [在本地构建配方](../LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | 已提交 [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) 等待审核；尚未合并 | 合并前请使用上游 flake |
 | Arch 官方仓库 / Flathub | 未收录 | 使用发布页下载；Flatpak 仅为查看端 |
@@ -146,7 +152,7 @@ Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://g
 DeskPort 当前的平台限制见上文；本表并不意味着各操作系统功能完全一致，
 也不代表经过测量的性能优势。
 
-参见 [0.7.2 发行说明](../RELEASE_0.7.2.md)、
+参见 [0.7.3 发行说明](../RELEASE_0.7.3.md)、
 [架构说明](../ARCHITECTURE.md)与[路线图](../ROADMAP.md)。
 
 ## 在 Linux 上构建与运行
