@@ -182,9 +182,9 @@ video decoding, remote input, visual quality or latency.
 The retained Ubuntu 26.04 GNOME VM reproduces a startup crash in the published
 0.7.2 DEB's older private VA-API Wayland library. The final 0.7.3 DEB reuses pinned
 libva 2.23.0 in both private runtime trees and isolates system utilities from host
-library overrides. It passed GUI/API, upgrade, rollback and configuration-retention
-checks in a fresh overlay of that VM. The old-version crash was reproduced before
-upgrade and after rollback. Existing release assets keep
+library overrides. It passed GUI/API and upgrade checks in a fresh overlay of
+that VM. Synthetic configuration remained intact through rollback and uninstall;
+the old-version crash was reproduced before upgrade and after rollback. Existing release assets keep
 their original hashes. GNOME capture startup and repeated virtual-output creation
 remain separate acceptance gaps. Debian 13's KWin 6.3 also remains below the host
 display-helper's 6.6 minimum.
