@@ -151,3 +151,25 @@ after publication; they are separate from real streaming and input acceptance.
 
 Publishing the desktop release and updating mynix do not activate installed
 services. The user performs the later configuration switch and live validation.
+
+## Published artifacts
+
+The [stable 0.7.3 release](https://github.com/keithxc/deskport/releases/tag/v0.7.3)
+is public and marked Latest with 21 assets. The tag resolves to
+`e05cf9529efbee13d0054a41631d2fa02a1c1f84`; binary source remains
+`3257bec4b7ef38d3cbc428e1774c4c71f3c9b36a`. The final source archive NAR is
+`sha256-+8YNPEX+gfIHoVPK2/l54P5s5dwjoAj6l25uyGm+u/E=`, independently matched
+on macOS and Linux. This publication record is a later documentation update;
+it does not move the tag or replace any release asset.
+
+All 21 assets were downloaded anonymously and matched the sealed local byte
+counts, SHA-256 hashes and GitHub asset digests. `SHA256SUMS.txt` contains exactly
+20 entries, covering every other asset. Existing release assets remain intact.
+The exact final-source CI runs passed: [Linux build](https://github.com/keithxc/deskport/actions/runs/39134399964),
+[display contracts](https://github.com/keithxc/deskport/actions/runs/39134399976)
+and [Windows source checks](https://github.com/keithxc/deskport/actions/runs/39134399977).
+
+The attached verification metadata records artifact and isolated/VM checks.
+Publishing and consumer configuration builds do not establish installed-system,
+physical GPU, live streaming or remote-input acceptance, and do not activate
+managed installations.

@@ -12,8 +12,9 @@ Exact-package evidence includes macOS Developer ID/notarization/stapling and
 Gatekeeper, Windows payload/native CLI/protected Defender checks, the Bazzite
 AppImage FUSE/runtime gate and the Ubuntu DEB VA-runtime upgrade/rollback gate.
 The final tag adds release documentation only; metadata records both source
-identities, CI, remaining package gates and checksums. Public-download and mynix
-delivery records follow publication. Existing integration, private-package and
+identities, CI, package gates and checksums. All 21 public release assets passed
+anonymous full-byte/hash verification. Five consumer system configurations built
+successfully; activation remains manual. Existing integration, private-package and
 historical VM results retain their original identities. The ten deferred PC task
 branches and isolated Seamless work are not included. Mobile distribution stays
 separate; mynix activation remains a manual user action after delivery.
