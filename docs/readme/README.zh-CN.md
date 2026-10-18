@@ -104,7 +104,7 @@ Flatpak 仅提供查看功能。发布文件附有 [SHA-256 校验和](https://g
 
 **0.7.3 正式版：** 本次整合了多语言界面、Windows 已登录会话中的共享与虚拟显示器 DPI、Linux 运行时与 Wayland 剪贴板、可选的本地输入法，以及方形设备卡片的改进。 变更与验证范围见 [0.7.3 发行说明](../RELEASE_0.7.3.md)。
 
-**0.7.3 验证范围：** Windows 最终包内容一致性、PE、原生 CLI 检查通过，Defender 扫描零检出；未进行安装、GUI 连接或串流验收。最终 AppImage 通过 Bazzite 虚拟机中的正常 FUSE 与软件 GPU 检查。Ubuntu 26.04 虚拟机复现了 0.7.2 DEB 的 VA 崩溃，并确认最终 0.7.3 DEB 已修复，升级与回滚均保留配置。GNOME 采集与恢复仍未通过验收。容器、Flatpak 结果及其他限制见[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)；这些结果不代表完整的物理硬件验收。
+**0.7.3 验证范围：** Windows 最终包内容一致性、PE、原生 CLI 检查通过，Defender 扫描零检出；未进行安装、GUI 连接或串流验收。最终 AppImage 通过 Bazzite 虚拟机中的正常 FUSE 与软件 GPU 检查。Ubuntu 26.04 虚拟机复现了 0.7.2 DEB 的 VA 崩溃，并确认最终 0.7.3 DEB 已修复且升级通过。回滚重现了旧版崩溃，随后卸载仍保留了合成测试配置。GNOME 采集与恢复仍未通过验收。容器、Flatpak 结果及其他限制见[验证报告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)；这些结果不代表完整的物理硬件验收。
 
 **历史版本：0.7.2 稳定版：** [桌面版本](https://github.com/keithxc/deskport/releases/tag/v0.7.2)整合了调整尺寸、远程串流、省流量和 Linux 运行时方面的改进，并修复了 Bazzite/KDE Wayland 上的 AppImage 问题。详见 [0.7.2 发行说明](../RELEASE_0.7.2.md)；各 Linux 发行版的安装步骤见[英文 README](../../README.md#linux-installation-by-distribution)。
 

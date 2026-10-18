@@ -114,7 +114,7 @@ Flatpak은 보기 기능만 제공합니다. 릴리스 자산에는 [SHA-256 체
 
 **0.7.3 정식 버전:** 다국어 UI, 로그인된 Windows 세션의 공유와 가상 디스플레이 DPI, Linux 런타임과 Wayland 클립보드, 선택적으로 사용하는 로컬 IME, 정사각형 기기 카드가 개선되었습니다. 변경 사항과 검증 범위는 [0.7.3 릴리스 노트](../RELEASE_0.7.3.md)를 참고하세요.
 
-**0.7.3 검증 범위:** Windows에서는 최종 패키지 내용 일치, PE, 네이티브 CLI 검사를 통과했고 Defender 탐지 결과는 0건이었습니다. 설치, GUI 연결, 스트리밍은 검증하지 않았습니다. 최종 AppImage는 일반 FUSE와 소프트웨어 GPU를 사용하는 Bazzite VM에서 검증을 통과했습니다. Ubuntu 26.04 VM에서는 0.7.2 DEB의 VA 충돌을 재현했고, 최종 0.7.3 DEB에서 수정과 설정을 보존하는 업그레이드·롤백을 확인했습니다. GNOME 캡처와 복구는 아직 검증을 통과하지 않았습니다. 컨테이너·Flatpak 결과와 나머지 제한은 [검증 보고서](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)를 참고하세요. 이는 물리 하드웨어 전반의 검증을 의미하지 않습니다.
+**0.7.3 검증 범위:** Windows에서는 최종 패키지 내용 일치, PE, 네이티브 CLI 검사를 통과했고 Defender 탐지 결과는 0건이었습니다. 설치, GUI 연결, 스트리밍은 검증하지 않았습니다. 최종 AppImage는 일반 FUSE와 소프트웨어 GPU를 사용하는 Bazzite VM에서 검증을 통과했습니다. Ubuntu 26.04 VM에서는 0.7.2 DEB의 VA 충돌을 재현했고, 최종 0.7.3 DEB에서 수정과 업그레이드 성공을 확인했습니다. 롤백에서는 이전 버전의 충돌이 재현되었으며, 이후 제거 과정에서도 합성 테스트 설정이 보존되었습니다. GNOME 캡처와 복구는 아직 검증을 통과하지 않았습니다. 컨테이너·Flatpak 결과와 나머지 제한은 [검증 보고서](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)를 참고하세요. 이는 물리 하드웨어 전반의 검증을 의미하지 않습니다.
 
 **이전 릴리스: 0.7.2 안정 버전:** [데스크톱 릴리스](https://github.com/keithxc/deskport/releases/tag/v0.7.2)는 크기 조정, 원격 스트리밍, 데이터 절약, Linux 런타임 개선을 담고 있으며 Bazzite/KDE Wayland의 AppImage 문제를 수정했습니다. 자세한 내용은 [0.7.2 릴리스 노트](../RELEASE_0.7.2.md)를, 배포판별 Linux 설치 방법은 [영문 README](../../README.md#linux-installation-by-distribution)를 참고하세요.
 

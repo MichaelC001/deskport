@@ -110,7 +110,7 @@ DeskPort はアカウントサービス、ホスティング型デスクトッ�
 
 **0.7.3 正式版：** 多言語 UI、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../RELEASE_0.7.3.md)をご覧ください。
 
-**0.7.3 の検証範囲：** Windows では最終パッケージ内容の一致、PE、ネイティブ CLI、Defender の検出ゼロを確認しました。インストール、GUI 接続、ストリーミングは未検証です。最終 AppImage は通常の FUSE とソフトウェア GPU を使う Bazzite VM の検証に合格しました。Ubuntu 26.04 VM では 0.7.2 の DEB で VA クラッシュを再現し、最終 0.7.3 DEB で修正を確認しました。設定を保持したアップグレードとロールバックも合格しました。GNOME のキャプチャと復旧は未受け入れです。コンテナー・Flatpak の結果とその他の制限は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。これらは物理ハードウェア全体の動作確認を意味しません。
+**0.7.3 の検証範囲：** Windows では最終パッケージ内容の一致、PE、ネイティブ CLI、Defender の検出ゼロを確認しました。インストール、GUI 接続、ストリーミングは未検証です。最終 AppImage は通常の FUSE とソフトウェア GPU を使う Bazzite VM の検証に合格しました。Ubuntu 26.04 VM では 0.7.2 の DEB で VA クラッシュを再現し、最終 0.7.3 DEB で修正を確認しました。アップグレードは合格しました。ロールバックでは旧版のクラッシュが再現され、その後のアンインストールでも合成テスト設定が保持されました。GNOME のキャプチャと復旧は未受け入れです。コンテナー・Flatpak の結果とその他の制限は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。これらは物理ハードウェア全体の動作確認を意味しません。
 
 **過去のリリース：0.7.2 安定版：** [デスクトップ版](https://github.com/keithxc/deskport/releases/tag/v0.7.2)は、リサイズ、リモートストリーミング、データセーバー、Linux ランタイムの改善をまとめ、Bazzite/KDE Wayland での AppImage の問題を修正しています。詳しくは [0.7.2 リリースノート](../RELEASE_0.7.2.md)を、Linux ディストリビューション別のインストール手順は[英語版 README](../../README.md#linux-installation-by-distribution)をご覧ください。
 
