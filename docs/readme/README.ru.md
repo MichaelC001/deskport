@@ -12,9 +12,21 @@
   <a href="README.ko.md">한국어</a> ·
   <a href="README.de.md">Deutsch</a> ·
   <a href="README.es.md">Español</a> ·
-  <a href="README.fr.md">Français</a> ·
+  <a href="README.fr.md">Français</a><br>
   <a href="README.pt-BR.md">Português (Brasil)</a> ·
-  <b>Русский</b>
+  <b>Русский</b> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
+  <a href="README.uk.md">Українська</a><br>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a> ·
+  <a href="README.ms.md">Bahasa Melayu</a> ·
+  <a href="README.th.md">ไทย</a> ·
+  <a href="README.vi.md">Tiếng Việt</a> ·
+  <a href="README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">
@@ -72,7 +84,7 @@
 | Платформа | Роль | Статус выпуска | Загрузка |
 | --- | --- | --- | --- |
 | macOS Apple Silicon, macOS 26+ | Просмотр + хост + нативный виртуальный дисплей | **0.7.3 стабильная**; подписи Developer ID, нотаризация Apple и Gatekeeper после распаковки ZIP проверены | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | Просмотр + хост; адаптивное виртуальное рабочее пространство на подходящих хостах KDE | **0.7.3 стабильная**: DEB, RPM, Arch, AppImage, переносной архив и Nix | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [руководство по установке](../LINUX_PACKAGES.md) |
+| Linux x86_64 | Просмотр + хост; адаптивное виртуальное рабочее пространство на подходящих хостах KWin, Mutter и Hyprland | **0.7.3 стабильная**: DEB, RPM, Arch, AppImage, переносной архив и Nix | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [руководство по установке](../LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | Только просмотр | **0.7.3 стабильная**, Freedesktop Platform 25.08 | [Выпуск](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad, iOS/iPadOS 15+ | Только клиент | App Store; новые сборки отдельно тестируются в TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Только клиент | В разработке; проверки на физических устройствах, публичного выпуска в магазине пока нет | Пока недоступно |
@@ -113,7 +125,7 @@ Flatpak обеспечивает только просмотр. Файлы вы�
 Tailscale. DeskPort не предоставляет сервис учётных записей, размещённые рабочие столы, ретранслятор
 или сетевой туннель. Классическое сопряжение Sunshine по PIN-коду по-прежнему доступно.
 
-**0.7.3 стабильная:** Обновление улучшает многоязычный интерфейс, общий доступ в сеансах Windows после входа пользователя и DPI виртуальных дисплеев, среду выполнения Linux и буфер обмена Wayland, необязательный локальный IME и квадратные карточки устройств. Изменения и границы проверок описаны в [примечаниях к выпуску 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 стабильная:** Обновление добавляет общий каталог интерфейса на 22 языках с переключением языка в браузере и улучшает общий доступ в сеансах Windows после входа пользователя и DPI виртуальных дисплеев, среду выполнения Linux и буфер обмена Wayland, защищённые рабочие пространства Hyprland/X11, необязательный локальный IME и квадратные карточки устройств. Изменения и границы проверок описаны в [примечаниях к выпуску 0.7.3](../RELEASE_0.7.3.md).
 
 **Объём проверок 0.7.3:** В Windows прошли точное сравнение содержимого пакетов, проверки PE и нативного CLI, а Defender не обнаружил угроз; установка, подключение через GUI и трансляция не проверялись. Итоговый AppImage прошёл проверку в виртуальной машине Bazzite с обычным FUSE и программным GPU. В виртуальной машине Ubuntu 26.04 DEB версии 0.7.2 воспроизвёл сбой VA; итоговый DEB версии 0.7.3 устранил его и прошёл обновление. Откат воспроизвёл сбой старой версии; последующее удаление сохранило синтетические тестовые настройки. Захват и восстановление GNOME ещё не приняты. Результаты контейнеров/Flatpak и остальные ограничения приведены в [отчёте о проверке](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt); это не полная проверка на физическом оборудовании.
 

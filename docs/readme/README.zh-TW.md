@@ -12,9 +12,21 @@
   <a href="README.ko.md">한국어</a> ·
   <a href="README.de.md">Deutsch</a> ·
   <a href="README.es.md">Español</a> ·
-  <a href="README.fr.md">Français</a> ·
+  <a href="README.fr.md">Français</a><br>
   <a href="README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="README.ru.md">Русский</a>
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
+  <a href="README.uk.md">Українська</a><br>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a> ·
+  <a href="README.ms.md">Bahasa Melayu</a> ·
+  <a href="README.th.md">ไทย</a> ·
+  <a href="README.vi.md">Tiếng Việt</a> ·
+  <a href="README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">
@@ -66,7 +78,7 @@
 | 平台 | 角色 | 發布狀態 | 下載 |
 | --- | --- | --- | --- |
 | macOS Apple Silicon，macOS 26+ | 檢視端 + 主機端 + 原生虛擬顯示器 | **0.7.3 正式版**；Developer ID 簽署、Apple 公證與 ZIP 解壓後的 Gatekeeper 檢查通過 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | 檢視端 + 主機端；符合條件的 KDE 主機支援自動調整的虛擬工作區 | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、可攜式封存檔與 Nix | [發布頁面](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [安裝指南](../LINUX_PACKAGES.md) |
+| Linux x86_64 | 檢視端 + 主機端；符合條件的 KWin、Mutter 與 Hyprland 主機支援自動調整的虛擬工作區 | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、可攜式封存檔與 Nix | [發布頁面](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [安裝指南](../LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | 僅檢視端 | **0.7.3 正式版**，Freedesktop Platform 25.08 | [發布頁面](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad，iOS/iPadOS 15+ | 僅用戶端 | 已在 App Store 上架；較新的版本另於 TestFlight 測試 | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | 僅用戶端 | 開發中；正在實機檢查，尚未在商店公開發布 | 尚未提供 |
@@ -102,7 +114,7 @@ Flatpak 僅提供檢視功能。發布檔案附有 [SHA-256 檢查碼](https://g
 使用區域網路或你自己的 VPN（例如 Tailscale）。DeskPort 不提供帳號服務、代管桌面、中繼
 或網路通道。傳統的 Sunshine PIN 配對仍然可用。
 
-**0.7.3 正式版：** 本次整合了多語言介面、Windows 已登入工作階段的分享與虛擬顯示器 DPI、Linux 執行環境與 Wayland 剪貼簿、可選的本機輸入法，以及正方形裝置卡片的改進。 變更與驗證範圍請見 [0.7.3 版本說明](../RELEASE_0.7.3.md)。
+**0.7.3 正式版：** 本次整合了 22 種語言的共用介面目錄與瀏覽器語言切換、Windows 已登入工作階段的分享與虛擬顯示器 DPI、Linux 執行環境與 Wayland 剪貼簿、受保護的 Hyprland/X11 工作區、可選的本機輸入法，以及正方形裝置卡片的改進。 變更與驗證範圍請見 [0.7.3 版本說明](../RELEASE_0.7.3.md)。
 
 **0.7.3 驗證範圍：** Windows 最終套件內容一致性、PE、原生 CLI 檢查通過，Defender 掃描零檢出；未進行安裝、GUI 連線或串流驗收。最終 AppImage 通過 Bazzite 虛擬機中的正常 FUSE 與軟體 GPU 檢查。Ubuntu 26.04 虛擬機重現了 0.7.2 DEB 的 VA 當機，並確認最終 0.7.3 DEB 已修正且升級通過。回復舊版重現了原有當機，隨後解除安裝仍保留了合成測試設定。GNOME 擷取與恢復仍未通過驗收。容器、Flatpak 結果及其他限制請見[驗證報告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)；這些結果不代表完整的實體硬體驗收。
 

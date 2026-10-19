@@ -12,9 +12,21 @@
   <a href="README.ko.md">한국어</a> ·
   <a href="README.de.md">Deutsch</a> ·
   <a href="README.es.md">Español</a> ·
-  <a href="README.fr.md">Français</a> ·
+  <a href="README.fr.md">Français</a><br>
   <a href="README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="README.ru.md">Русский</a>
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
+  <a href="README.uk.md">Українська</a><br>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a> ·
+  <a href="README.ms.md">Bahasa Melayu</a> ·
+  <a href="README.th.md">ไทย</a> ·
+  <a href="README.vi.md">Tiếng Việt</a> ·
+  <a href="README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">
@@ -69,7 +81,7 @@
 | プラットフォーム | 役割 | リリース状況 | ダウンロード |
 | --- | --- | --- | --- |
 | macOS Apple Silicon、macOS 26+ | ビューア＋ホスト＋ネイティブ仮想ディスプレイ | **0.7.3 正式版**。Developer ID 署名、Apple 公証、ZIP 展開後の Gatekeeper 検証に合格 | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | ビューア＋ホスト。条件を満たす KDE ホストではアダプティブな仮想ワークスペース | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、ポータブルアーカイブ、Nix | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [インストールガイド](../LINUX_PACKAGES.md) |
+| Linux x86_64 | ビューア＋ホスト。条件を満たす KWin・Mutter・Hyprland ホストではアダプティブな仮想ワークスペース | **0.7.3 正式版**：DEB、RPM、Arch、AppImage、ポータブルアーカイブ、Nix | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [インストールガイド](../LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | ビューアのみ | **0.7.3 正式版**、Freedesktop Platform 25.08 | [リリース](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad、iOS/iPadOS 15+ | クライアントのみ | App Store で公開中。新しいビルドは TestFlight で別途テスト | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | クライアントのみ | 開発中。実機での確認中で、ストアでの一般公開はまだ | 未提供 |
@@ -108,7 +120,7 @@ Flatpak は閲覧のみです。リリースには [SHA-256 チェックサム](
 DeskPort はアカウントサービス、ホスティング型デスクトップ、リレー、ネットワークトンネルを提供しません。
 従来の Sunshine PIN ペアリングも引き続き使えます。
 
-**0.7.3 正式版：** 多言語 UI、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../RELEASE_0.7.3.md)をご覧ください。
+**0.7.3 正式版：** 22 言語の共有 UI カタログとブラウザーでの言語切り替え、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、保護付きの Hyprland/X11 ワークスペース、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../RELEASE_0.7.3.md)をご覧ください。
 
 **0.7.3 の検証範囲：** Windows では最終パッケージ内容の一致、PE、ネイティブ CLI、Defender の検出ゼロを確認しました。インストール、GUI 接続、ストリーミングは未検証です。最終 AppImage は通常の FUSE とソフトウェア GPU を使う Bazzite VM の検証に合格しました。Ubuntu 26.04 VM では 0.7.2 の DEB で VA クラッシュを再現し、最終 0.7.3 DEB で修正を確認しました。アップグレードは合格しました。ロールバックでは旧版のクラッシュが再現され、その後のアンインストールでも合成テスト設定が保持されました。GNOME のキャプチャと復旧は未受け入れです。コンテナー・Flatpak の結果とその他の制限は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。これらは物理ハードウェア全体の動作確認を意味しません。
 

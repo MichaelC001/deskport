@@ -12,9 +12,21 @@
   <a href="docs/readme/README.ko.md">한국어</a> ·
   <a href="docs/readme/README.de.md">Deutsch</a> ·
   <a href="docs/readme/README.es.md">Español</a> ·
-  <a href="docs/readme/README.fr.md">Français</a> ·
+  <a href="docs/readme/README.fr.md">Français</a><br>
   <a href="docs/readme/README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="docs/readme/README.ru.md">Русский</a>
+  <a href="docs/readme/README.ru.md">Русский</a> ·
+  <a href="docs/readme/README.it.md">Italiano</a> ·
+  <a href="docs/readme/README.nl.md">Nederlands</a> ·
+  <a href="docs/readme/README.pl.md">Polski</a> ·
+  <a href="docs/readme/README.tr.md">Türkçe</a> ·
+  <a href="docs/readme/README.uk.md">Українська</a><br>
+  <a href="docs/readme/README.ar.md">العربية</a> ·
+  <a href="docs/readme/README.hi.md">हिन्दी</a> ·
+  <a href="docs/readme/README.id.md">Bahasa Indonesia</a> ·
+  <a href="docs/readme/README.ms.md">Bahasa Melayu</a> ·
+  <a href="docs/readme/README.th.md">ไทย</a> ·
+  <a href="docs/readme/README.vi.md">Tiếng Việt</a> ·
+  <a href="docs/readme/README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">

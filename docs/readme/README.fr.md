@@ -12,9 +12,21 @@
   <a href="README.ko.md">한국어</a> ·
   <a href="README.de.md">Deutsch</a> ·
   <a href="README.es.md">Español</a> ·
-  <b>Français</b> ·
+  <b>Français</b><br>
   <a href="README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="README.ru.md">Русский</a>
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
+  <a href="README.uk.md">Українська</a><br>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a> ·
+  <a href="README.ms.md">Bahasa Melayu</a> ·
+  <a href="README.th.md">ไทย</a> ·
+  <a href="README.vi.md">Tiếng Việt</a> ·
+  <a href="README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">
@@ -72,7 +84,7 @@ Les liens ci-dessous correspondent à la version officielle 0.7.3. Les vérifica
 | Plateforme | Rôle | État de la version | Téléchargement |
 | --- | --- | --- | --- |
 | macOS Apple Silicon, macOS 26+ | Visualiseur + hôte + écran virtuel natif | **0.7.3 stable** ; signatures Developer ID, notarisation Apple et contrôle Gatekeeper après extraction du ZIP validés | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | Visualiseur + hôte ; espace de travail virtuel adaptatif sur les hôtes KDE compatibles | **0.7.3 stable** : DEB, RPM, Arch, AppImage, archive portable et Nix | [Version](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [guide d'installation](../LINUX_PACKAGES.md) |
+| Linux x86_64 | Visualiseur + hôte ; espace de travail virtuel adaptatif sur les hôtes KWin, Mutter et Hyprland compatibles | **0.7.3 stable** : DEB, RPM, Arch, AppImage, archive portable et Nix | [Version](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [guide d'installation](../LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | Visualiseur uniquement | **0.7.3 stable**, Freedesktop Platform 25.08 | [Version](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client uniquement | App Store ; les builds plus récents sont testés séparément dans TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client uniquement | En développement ; vérifications sur appareils physiques, pas encore de publication en boutique | Pas encore disponible |
@@ -113,7 +125,7 @@ l'hôte. Les deux appareils ont besoin d'un chemin réseau fonctionnel : utilise
 Tailscale. DeskPort ne fournit ni service de compte, ni bureaux hébergés, ni relais,
 ni tunnel réseau. L'appairage historique par code PIN Sunshine reste disponible.
 
-**0.7.3 stable :** Cette version améliore l’interface multilingue, le partage dans les sessions Windows ouvertes et le DPI des écrans virtuels, le runtime Linux et le presse-papiers Wayland, l’IME local optionnel et les cartes carrées des appareils. Les changements et limites de vérification figurent dans les [notes de version 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 stable :** Cette version apporte un catalogue d’interface partagé en 22 langues avec changement de langue dans le navigateur et améliore le partage dans les sessions Windows ouvertes et le DPI des écrans virtuels, le runtime Linux et le presse-papiers Wayland, les espaces de travail Hyprland/X11 sécurisés, l’IME local optionnel et les cartes carrées des appareils. Les changements et limites de vérification figurent dans les [notes de version 0.7.3](../RELEASE_0.7.3.md).
 
 **Périmètre de vérification de 0.7.3 :** Sous Windows, la comparaison exacte du contenu, les contrôles PE et CLI native ainsi que l’analyse Defender sans détection ont réussi ; l’installation, la connexion graphique et le streaming n’ont pas été testés. L’AppImage final a passé les contrôles dans une VM Bazzite avec FUSE normal et GPU logiciel. Dans la VM Ubuntu 26.04, le DEB de 0.7.2 reproduisait le plantage VA ; le DEB final de 0.7.3 le corrige et a passé la mise à niveau. Le retour à la version précédente a reproduit son plantage ; la désinstallation qui a suivi a conservé la configuration synthétique de test. La capture et la récupération GNOME restent non validées. Les résultats des conteneurs/Flatpak et les autres limites figurent dans le [rapport de vérification](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt) ; cela ne constitue pas une validation complète sur matériel physique.
 

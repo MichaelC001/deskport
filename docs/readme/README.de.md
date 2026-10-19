@@ -12,9 +12,21 @@
   <a href="README.ko.md">한국어</a> ·
   <b>Deutsch</b> ·
   <a href="README.es.md">Español</a> ·
-  <a href="README.fr.md">Français</a> ·
+  <a href="README.fr.md">Français</a><br>
   <a href="README.pt-BR.md">Português (Brasil)</a> ·
-  <a href="README.ru.md">Русский</a>
+  <a href="README.ru.md">Русский</a> ·
+  <a href="README.it.md">Italiano</a> ·
+  <a href="README.nl.md">Nederlands</a> ·
+  <a href="README.pl.md">Polski</a> ·
+  <a href="README.tr.md">Türkçe</a> ·
+  <a href="README.uk.md">Українська</a><br>
+  <a href="README.ar.md">العربية</a> ·
+  <a href="README.hi.md">हिन्दी</a> ·
+  <a href="README.id.md">Bahasa Indonesia</a> ·
+  <a href="README.ms.md">Bahasa Melayu</a> ·
+  <a href="README.th.md">ไทย</a> ·
+  <a href="README.vi.md">Tiếng Việt</a> ·
+  <a href="README.bo.md">བོད་ཡིག</a>
 </p>
 
 <p align="center">
@@ -72,7 +84,7 @@ Die folgenden Links führen zum offiziellen Release 0.7.3. Paketprüfungen und L
 | Plattform | Rolle | Release-Status | Download |
 | --- | --- | --- | --- |
 | macOS Apple Silicon, macOS 26+ | Viewer + Host + native virtuelle Anzeige | **0.7.3 stabil**; Developer-ID-Signaturen, Apple-Notarisierung und Gatekeeper-Prüfung nach ZIP-Entpacken bestanden | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + Host; adaptiver virtueller Arbeitsbereich auf geeigneten KDE-Hosts | **0.7.3 stabil**: DEB, RPM, Arch, AppImage, portables Archiv und Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [Installationsanleitung](../LINUX_PACKAGES.md) |
+| Linux x86_64 | Viewer + Host; adaptiver virtueller Arbeitsbereich auf geeigneten KWin-, Mutter- und Hyprland-Hosts | **0.7.3 stabil**: DEB, RPM, Arch, AppImage, portables Archiv und Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) · [Installationsanleitung](../LINUX_PACKAGES.md) |
 | Linux x86_64 Flatpak | Nur Viewer | **0.7.3 stabil**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.3) |
 | iPhone / iPad, iOS/iPadOS 15+ | Nur Client | App Store; neuere Builds werden separat in TestFlight getestet | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Nur Client | In Entwicklung; Prüfungen auf physischen Geräten, noch keine öffentliche Store-Veröffentlichung | Noch nicht verfügbar |
@@ -113,7 +125,7 @@ Host. Beide Geräte benötigen eine funktionierende Netzwerkverbindung: Verwende
 Tailscale. DeskPort bietet keinen Kontodienst, keine gehosteten Desktops, kein Relay
 und keinen Netzwerktunnel. Das klassische Sunshine-PIN-Pairing bleibt verfügbar.
 
-**0.7.3 stabil:** Diese Version verbessert die mehrsprachige Oberfläche, die Freigabe in angemeldeten Windows-Sitzungen und die DPI-Einstellungen virtueller Anzeigen, die Linux-Laufzeit und Wayland-Zwischenablage, die optionale lokale IME sowie quadratische Gerätekarten. Änderungen und Prüfgrenzen stehen in den [Release Notes zu 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 stabil:** Diese Version bringt einen gemeinsamen UI-Katalog mit 22 Sprachen und Sprachwechsel im Browser und verbessert die Freigabe in angemeldeten Windows-Sitzungen und die DPI-Einstellungen virtueller Anzeigen, die Linux-Laufzeit und Wayland-Zwischenablage, abgesicherte Hyprland/X11-Arbeitsbereiche, die optionale lokale IME sowie quadratische Gerätekarten. Änderungen und Prüfgrenzen stehen in den [Release Notes zu 0.7.3](../RELEASE_0.7.3.md).
 
 **Prüfumfang von 0.7.3:** Unter Windows bestanden der exakte Payload-Abgleich, PE- und native CLI-Prüfungen sowie der Defender-Scan ohne Funde; Installation, GUI-Verbindung und Streaming wurden nicht geprüft. Das endgültige AppImage bestand die Bazzite-VM-Prüfung mit regulärem FUSE und Software-GPU. In der Ubuntu-26.04-VM reproduzierte das DEB von 0.7.2 den VA-Absturz; das endgültige DEB von 0.7.3 behob ihn und bestand das Upgrade. Der Rollback reproduzierte den Absturz der alten Version; die anschließende Deinstallation erhielt die synthetische Testkonfiguration. GNOME-Aufnahme und -Wiederherstellung sind weiterhin nicht abgenommen. Container-/Flatpak-Ergebnisse und weitere Grenzen stehen im [Prüfbericht](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt); dies ist keine vollständige Prüfung auf physischer Hardware.
 
