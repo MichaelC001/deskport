@@ -326,10 +326,12 @@ GridView {
     boundsBehavior: Flickable.OvershootBounds
     topMargin: 16
     bottomMargin: 5
-    // Integer cells avoid rounding a full row into one fewer column.
-    readonly property int columns: Math.max(1, Math.floor(width / 235))
+    // Match the mobile library's compact square cards. A whole-cell width
+    // keeps GridView stable while each capped card stays centered in its cell.
+    readonly property int columns: Math.min(8, Math.max(1, Math.floor((Math.max(1, width - 32) + 12) / 176)))
     cellWidth: Math.max(1, Math.floor(width / columns))
-    cellHeight: cellWidth
+    readonly property int cardSide: Math.max(1, Math.min(192, cellWidth - 12))
+    cellHeight: cardSide + 12
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
@@ -441,9 +443,11 @@ GridView {
         // The add card hides while editing; it never moves.
         opacity: model.isAdd && pcGrid.arranging ? 0 : 1
         enabled: !(model.isAdd && pcGrid.arranging)
-        width: pcGrid.cellWidth - 12; height: pcGrid.cellHeight - 12;
+        width: pcGrid.cellWidth; height: pcGrid.cardSide
         // Material supplies vertical padding independently of the general padding.
-        padding: 0; topPadding: 0; bottomPadding: 0; leftPadding: 0; rightPadding: 0
+        padding: 0; topPadding: 0; bottomPadding: 0
+        leftPadding: Math.max(0, Math.floor((width - pcGrid.cardSide) / 2))
+        rightPadding: width - pcGrid.cardSide - leftPadding
         background: Item {}
         grid: pcGrid
         Accessible.name: model.isAdd ? qsTr("Add a device") : model.name

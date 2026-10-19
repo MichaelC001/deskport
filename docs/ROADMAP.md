@@ -237,6 +237,9 @@ input, audio, clipboard, HDR or Seamless acceptance is inferred.
 
 Device, group and add cards now keep a 1:1 aspect ratio as the window changes
 column count. Devices inside group folders use the same square geometry.
+The desktop library follows the mobile compact grid: cards range up to 192 px,
+use a 164 px target minimum for column selection, and give system artwork more
+of the available space. Window and real-device visual acceptance remain separate.
 
 ## Windows virtual-output system scaling — 2026-10-17
 

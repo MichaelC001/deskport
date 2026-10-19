@@ -109,14 +109,13 @@ Rectangle {
         UiButton { objectName: "addGroup"; text: qsTr("New group"); tinted: true; Layout.fillWidth: true; onClicked: card.addGroupRequested() }
     }
 
-    ColumnLayout {
+    Item {
         visible: !card.addCard
-        anchors.fill: parent; anchors.margins: 16; spacing: 4
-        // A small static light; the status itself is in the accessible name.
+        anchors.fill: parent
+        // Keep the light out of the content flow, as on the mobile card.
         Item {
             objectName: "cardStatus"
-            Layout.preferredWidth: 20; Layout.preferredHeight: 20
-            Layout.topMargin: -4; Layout.leftMargin: -4
+            x: 9; y: 9; width: 20; height: 20
             opacity: card.group ? 0 : 1
             Accessible.role: Accessible.StaticText
             Accessible.name: card.statusText + " · " + card.deviceName
@@ -125,12 +124,14 @@ Rectangle {
             Rectangle { anchors.centerIn: parent; width: 8; height: 8; radius: 4; color: card.statusColor }
         }
         Item {
-            Layout.fillWidth: true; Layout.fillHeight: true; Layout.minimumHeight: 56
+            id: artworkArea
+            anchors.left: parent.left; anchors.right: parent.right
+            anchors.top: parent.top; anchors.bottom: cardName.top
             AbstractButton {
                 objectName: "cardDetails"
                 visible: !card.group
                 anchors.centerIn: parent
-                width: 64; height: 64
+                width: Math.min(92, Math.max(36, parent.height - 8)); height: width
                 hoverEnabled: true
                 Accessible.name: qsTr("Device details") + " · " + card.deviceName
                 onClicked: card.detailsRequested()
@@ -141,7 +142,7 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     Accessible.name: card.operatingSystem
                 }
-                padding: 8
+                padding: 6
             }
             Grid {
                 visible: card.group
@@ -152,15 +153,31 @@ Rectangle {
                 }
             }
         }
-        Label { text: card.deviceName; textFormat: Text.PlainText; font.pixelSize: 16; font.weight: Font.DemiBold; color: ui.text; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; maximumLineCount: 1; Layout.fillWidth: true }
-        Label { text: card.group ? (card.memberCount === 1 ? qsTr("1 device") : qsTr("%1 devices").arg(card.memberCount)) : card.operatingSystem || qsTr("Computer"); textFormat: Text.PlainText; color: ui.muted; font.pixelSize: ui.small; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; maximumLineCount: 1; Layout.fillWidth: true }
+        Label {
+            id: cardName
+            anchors.left: parent.left; anchors.right: parent.right; anchors.leftMargin: 12; anchors.rightMargin: 12
+            anchors.bottom: cardSystem.top; anchors.bottomMargin: 2
+            text: card.deviceName; textFormat: Text.PlainText; font.pixelSize: 16; font.weight: Font.DemiBold
+            color: ui.text; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; maximumLineCount: 1
+        }
+        Label {
+            id: cardSystem
+            anchors.left: parent.left; anchors.right: parent.right; anchors.leftMargin: 12; anchors.rightMargin: 12
+            anchors.bottom: cardAction.top; anchors.bottomMargin: 6
+            text: card.group ? (card.memberCount === 1 ? qsTr("1 device") : qsTr("%1 devices").arg(card.memberCount)) : card.operatingSystem || qsTr("Computer")
+            textFormat: Text.PlainText; color: ui.muted; font.pixelSize: ui.small
+            horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; maximumLineCount: 1
+        }
         UiButton {
             objectName: "cardAction"
+            id: cardAction
             text: card.actionText
             highlighted: card.primaryAction
             tinted: !card.primaryAction
             enabled: card.sessionState !== "stopping" && (!card.unknown || card.activeSession || card.sessionState === "starting")
-            Layout.fillWidth: true; Layout.topMargin: 10
+            anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+            anchors.leftMargin: 12; anchors.rightMargin: 12; anchors.bottomMargin: 10
+            height: 36
             onClicked: card.activateRequested()
             Accessible.name: text + " · " + card.deviceName
         }
