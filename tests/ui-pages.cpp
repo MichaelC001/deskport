@@ -1290,13 +1290,15 @@ QtObject {
         for (int width : {1120, 800, 640}) {
             window->resize(width, 620); QTest::qWait(10);
             QVERIFY(grid->property("resizing").toBool());
+            const int gridWidth=int(grid->property("width").toReal());
+            const int columns=grid->property("columns").toInt();
             QCOMPARE(grid->property("cellWidth").toInt(),
-                     std::min(204, int(grid->property("width").toReal()) / grid->property("columns").toInt()));
+                     std::min(204, (std::max(1,gridWidth-32)-(columns-1)*12)/columns+12));
             QTRY_VERIFY_WITH_TIMEOUT(!grid->property("resizing").toBool(),250);
             const int cell=grid->property("cellWidth").toInt();
-            const int visibleColumns=int(grid->property("width").toReal()) / cell;
-            QCOMPARE(grid->property("leftMargin").toReal(),
-                     qreal(std::max(0, (int(grid->property("width").toReal())-visibleColumns*cell)/2)));
+            QCOMPARE(grid->property("visualMargin").toInt(),
+                     std::max(0, (gridWidth-columns*cell)/2));
+            QCOMPARE(grid->property("leftMargin").toReal(),0.0);
             QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
             QVERIFY(settingsButton->mapToScene(QPointF(settingsButton->width(),0)).x() <= width);
@@ -1312,10 +1314,12 @@ QtObject {
             const int columns=grid->property("columns").toInt();
             const qreal cell=grid->property("cellWidth").toReal();
             const qreal row=grid->property("cellHeight").toReal();
-            const qreal margin=grid->property("leftMargin").toReal();
+            const qreal margin=grid->property("visualMargin").toReal();
             for(int i=0; i<columns+1; ++i) {
                 auto item=findVisual(gridItem,"device-"+resizeModel->devices[i]); QVERIFY(item);
-                QVERIFY2(std::abs(item->x()-margin-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
+                QVERIFY2(std::abs(item->x()-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
+                QVERIFY2(std::abs(item->mapToItem(qobject_cast<QQuickItem*>(grid),QPointF(0,0)).x()-margin-(i%columns)*cell)<1.0,
+                         "card must stay centered inside the grid viewport");
                 QVERIFY2(std::abs(item->y()-(i/columns)*row)<1.0,"card must occupy its expected row during resize");
                 QCOMPARE(item->width(), item->height());
                 QVERIFY(item->width() <= 192);
