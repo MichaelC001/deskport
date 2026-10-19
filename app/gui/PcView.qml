@@ -326,12 +326,13 @@ GridView {
     boundsBehavior: Flickable.OvershootBounds
     topMargin: 16
     bottomMargin: 5
-    // Match the mobile library's compact square cards. A whole-cell width
-    // keeps GridView stable while each capped card stays centered in its cell.
-    readonly property int columns: Math.min(8, Math.max(1, Math.floor((Math.max(1, width - 32) + 12) / 176)))
-    cellWidth: Math.max(1, Math.floor(width / columns))
+    // Match the mobile library's compact square cards. The whole-point cell
+    // width avoids a partially completed row during window resizing.
+    readonly property int columns: Math.max(1, Math.floor((Math.max(1, width - 32) + 12) / 176))
+    cellWidth: Math.max(1, Math.min(204, Math.floor(width / columns)))
     readonly property int cardSide: Math.max(1, Math.min(192, cellWidth - 12))
     cellHeight: cardSide + 12
+    leftMargin: Math.max(0, Math.floor((width - Math.floor(width / cellWidth) * cellWidth) / 2))
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
@@ -443,11 +444,9 @@ GridView {
         // The add card hides while editing; it never moves.
         opacity: model.isAdd && pcGrid.arranging ? 0 : 1
         enabled: !(model.isAdd && pcGrid.arranging)
-        width: pcGrid.cellWidth; height: pcGrid.cardSide
+        width: pcGrid.cardSide; height: pcGrid.cardSide
         // Material supplies vertical padding independently of the general padding.
-        padding: 0; topPadding: 0; bottomPadding: 0
-        leftPadding: Math.max(0, Math.floor((width - pcGrid.cardSide) / 2))
-        rightPadding: width - pcGrid.cardSide - leftPadding
+        padding: 0; topPadding: 0; bottomPadding: 0; leftPadding: 0; rightPadding: 0
         background: Item {}
         grid: pcGrid
         Accessible.name: model.isAdd ? qsTr("Add a device") : model.name
