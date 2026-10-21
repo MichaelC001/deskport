@@ -93,15 +93,18 @@ Rectangle {
             Layout.fillWidth: true; Layout.fillHeight: true
             AbstractButton {
                 objectName: "addPlus"
-                anchors.centerIn: parent
-                width: 64; height: 64
+                anchors.fill: parent
                 hoverEnabled: true
                 Accessible.name: qsTr("Add a device")
                 onClicked: card.addDeviceRequested()
-                background: Rectangle { radius: 32; color: parent.hovered ? Qt.rgba(ui.accent.r, ui.accent.g, ui.accent.b, 0.22) : ui.tint }
-                contentItem: IconImage {
-                    source: "qrc:/res/ui/plus.svg"; color: ui.accent
-                    sourceSize.width: 34; sourceSize.height: 34
+                background: Item {}
+                contentItem: Item {
+                    IconImage {
+                        anchors.centerIn: parent
+                        width: Math.min(34, Math.max(0, parent.height - 4)); height: width
+                        source: "qrc:/res/ui/plus.svg"; color: ui.accent
+                        sourceSize.width: 34; sourceSize.height: 34
+                    }
                 }
             }
         }

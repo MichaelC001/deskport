@@ -332,7 +332,8 @@ GridView {
     cellWidth: Math.max(1, Math.min(204, Math.floor((Math.max(1, width - 32) - (columns - 1) * 12) / columns) + 12))
     readonly property int cardSide: Math.max(1, Math.min(192, cellWidth - 12))
     cellHeight: cardSide + 12
-    readonly property int visualMargin: Math.max(0, Math.floor((width - columns * cellWidth) / 2))
+    // Center the visible cards, excluding the final cell's trailing gap.
+    readonly property int visualMargin: Math.max(0, Math.floor((width - ((columns - 1) * cellWidth + cardSide)) / 2))
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
