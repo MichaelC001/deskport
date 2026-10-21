@@ -1,3 +1,12 @@
+## Compact desktop add card — 2026-10-21
+
+Keep the two add-card actions at their existing size. The plus has no circular
+background, and its click area stays within the space above those actions.
+Center each row by its visible card span, excluding the trailing cell gap, so
+left and right margins match. The synthetic resize check measures both margins
+and all three add-card hit areas at several widths; installed-package appearance
+and live interaction still need user review.
+
 ## Desktop 0.7.3 formal release — 2026-10-18
 
 Package the full desktop release from integrated source `50431b29`, binary
@@ -237,6 +246,9 @@ input, audio, clipboard, HDR or Seamless acceptance is inferred.
 
 Device, group and add cards now keep a 1:1 aspect ratio as the window changes
 column count. Devices inside group folders use the same square geometry.
+The desktop library follows the mobile compact grid: cards range up to 192 px,
+use a 164 px target minimum for column selection, and give system artwork more
+of the available space. Window and real-device visual acceptance remain separate.
 
 ## Windows virtual-output system scaling — 2026-10-17
 

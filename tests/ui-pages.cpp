@@ -2,6 +2,7 @@
 #include <QSignalSpy>
 #include "diagnostics.h"
 #include <QDesktopServices>
+#include <algorithm>
 #include <cmath>
 #include <QtTest>
 #include <QRegularExpression>
@@ -1289,8 +1290,15 @@ QtObject {
         for (int width : {1120, 800, 640}) {
             window->resize(width, 620); QTest::qWait(10);
             QVERIFY(grid->property("resizing").toBool());
-            QCOMPARE(grid->property("cellWidth").toInt(),int(grid->property("width").toReal()) / grid->property("columns").toInt());
+            const int gridWidth=int(grid->property("width").toReal());
+            const int columns=grid->property("columns").toInt();
+            QCOMPARE(grid->property("cellWidth").toInt(),
+                     std::min(204, (std::max(1,gridWidth-32)-(columns-1)*12)/columns+12));
             QTRY_VERIFY_WITH_TIMEOUT(!grid->property("resizing").toBool(),250);
+            const int cell=grid->property("cellWidth").toInt();
+            const int side=grid->property("cardSide").toInt();
+            QCOMPARE(grid->property("visualMargin").toInt(),
+                     std::max(0, (gridWidth-(columns-1)*cell-side)/2));
             QCOMPARE(grid->property("leftMargin").toReal(),0.0);
             QCOMPARE(grid->property("rightMargin").toReal(),0.0);
             auto settingsButton=findVisual(window->contentItem(),"settingsButton");
@@ -1306,22 +1314,51 @@ QtObject {
             window->resize(width,620); QTest::qWait(25);
             const int columns=grid->property("columns").toInt();
             const qreal cell=grid->property("cellWidth").toReal();
+            const qreal row=grid->property("cellHeight").toReal();
+            const qreal margin=grid->property("visualMargin").toReal();
             for(int i=0; i<columns+1; ++i) {
                 auto item=findVisual(gridItem,"device-"+resizeModel->devices[i]); QVERIFY(item);
                 QVERIFY2(std::abs(item->x()-(i%columns)*cell)<1.0,"card must occupy its expected column during resize");
-                QVERIFY2(std::abs(item->y()-(i/columns)*cell)<1.0,"card must occupy its expected row during resize");
+                QVERIFY2(std::abs(item->mapToItem(qobject_cast<QQuickItem*>(grid),QPointF(0,0)).x()-margin-(i%columns)*cell)<1.0,
+                         "card must stay centered inside the grid viewport");
+                QVERIFY2(std::abs(item->y()-(i/columns)*row)<1.0,"card must occupy its expected row during resize");
                 QCOMPARE(item->width(), item->height());
+                QVERIFY(item->width() <= 192);
                 auto surface=qobject_cast<QQuickItem*>(item->property("contentItem").value<QObject*>()); QVERIFY(surface);
                 QCOMPARE(surface->width(), surface->height());
                 QCOMPARE(surface->width(), item->width());
                 QVERIFY(item->isVisible());
             }
+            auto firstRow=qobject_cast<QQuickItem*>(findVisual(gridItem,"device-"+resizeModel->devices[0]));
+            auto lastRow=qobject_cast<QQuickItem*>(findVisual(gridItem,"device-"+resizeModel->devices[columns-1]));
+            QVERIFY(firstRow && lastRow);
+            auto viewport=qobject_cast<QQuickItem*>(grid); QVERIFY(viewport);
+            const qreal left=firstRow->mapToItem(viewport,QPointF()).x();
+            const qreal right=grid->property("width").toReal()-lastRow->mapToItem(viewport,QPointF(lastRow->width(),0)).x();
+            QVERIFY2(std::abs(left-right)<=1.0,"visible card row must have equal side margins");
         }
         if(!qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty()) {
             window->resize(1021,800); QTest::qWait(100);
             QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/devices-resize.png"));
         }
         resizeModel->setDeviceCount(2);
+        resizeModel->setShowAdd(true);
+        for (int width : {560, 640, 720, 800}) {
+            window->resize(width,620); QTest::qWait(100);
+            auto add=findVisual(gridItem,"addCard"); QVERIFY(add);
+            auto plus=findVisual(add,"addPlus"); QVERIFY(plus);
+            auto addDevice=findVisual(add,"addDevice"); QVERIFY(addDevice);
+            auto addGroup=findVisual(add,"addGroup"); QVERIFY(addGroup);
+            const auto top=[add](QQuickItem* item) { return item->mapToItem(add,QPointF(0,0)).y(); };
+            QVERIFY(plus->height()>0);
+            QVERIFY(top(plus)>=0);
+            QVERIFY(top(plus)+plus->height()<=top(addDevice)+0.5);
+            QVERIFY(top(addDevice)+addDevice->height()<=top(addGroup)+0.5);
+            QVERIFY(top(addGroup)+addGroup->height()<=add->height()+0.5);
+            if (width==720 && !qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS").isEmpty())
+                QVERIFY(window->grabWindow().save(qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS")+"/add-card-narrow.png"));
+        }
+        resizeModel->setShowAdd(false);
         window->resize(800,620); QTest::qWait(100);
         a=findVisual(gridItem,"device-device-a"); b=findVisual(gridItem,"device-device-b");
         first=qobject_cast<QQuickItem*>(a); QVERIFY(first && b);

@@ -326,10 +326,14 @@ GridView {
     boundsBehavior: Flickable.OvershootBounds
     topMargin: 16
     bottomMargin: 5
-    // Integer cells avoid rounding a full row into one fewer column.
-    readonly property int columns: Math.max(1, Math.floor(width / 235))
-    cellWidth: Math.max(1, Math.floor(width / columns))
-    cellHeight: cellWidth
+    // Match the mobile library's compact square cards. The whole-point cell
+    // width avoids a partially completed row during window resizing.
+    readonly property int columns: Math.max(1, Math.floor((Math.max(1, width - 32) + 12) / 176))
+    cellWidth: Math.max(1, Math.min(204, Math.floor((Math.max(1, width - 32) - (columns - 1) * 12) / columns) + 12))
+    readonly property int cardSide: Math.max(1, Math.min(192, cellWidth - 12))
+    cellHeight: cardSide + 12
+    // Center the visible cards, excluding the final cell's trailing gap.
+    readonly property int visualMargin: Math.max(0, Math.floor((width - ((columns - 1) * cellWidth + cardSide)) / 2))
     objectName: qsTr("Devices")
 
     Component.onCompleted: {
@@ -441,7 +445,8 @@ GridView {
         // The add card hides while editing; it never moves.
         opacity: model.isAdd && pcGrid.arranging ? 0 : 1
         enabled: !(model.isAdd && pcGrid.arranging)
-        width: pcGrid.cellWidth - 12; height: pcGrid.cellHeight - 12;
+        width: pcGrid.cardSide; height: pcGrid.cardSide
+        transform: Translate { x: pcGrid.visualMargin }
         // Material supplies vertical padding independently of the general padding.
         padding: 0; topPadding: 0; bottomPadding: 0; leftPadding: 0; rightPadding: 0
         background: Item {}
@@ -527,7 +532,7 @@ GridView {
             onPositionChanged: function(mouse) {
                 if (!pressed) return
                 var point = mapToItem(pcGrid.contentItem, mouse.x, mouse.y)
-                var target = pcGrid.indexAt(point.x, point.y)
+                var target = pcGrid.indexAt(point.x - pcGrid.visualMargin, point.y)
                 var card = target >= 0 && target !== index ? pcGrid.itemAtIndex(target) : null
                 pcGrid.combineIndex = -1
                 if (!card) return
