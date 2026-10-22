@@ -573,7 +573,9 @@ def clean(args, paths, record):
         if not path.exists():
             continue
         current = footprint(path)
-        if current != record.get("trees", {}).get(key):
+        # Allocated blocks can settle after writes without changing file identity.
+        # Keep bytes for capacity reporting, not the tree-change decision.
+        if current["fingerprint"] != record.get("trees", {}).get(key, {}).get("fingerprint"):
             raise Refused(f"Output changed since the recorded build: {path}; inspect it manually")
         deletion_guard(path, paths, candidates)
         inactive(path)
@@ -590,7 +592,7 @@ def clean(args, paths, record):
         path = Path(item["path"])
         deletion_guard(path, paths, candidates)
         inactive(path)
-        if footprint(path) != {k: item[k] for k in ("fingerprint", "bytes")}:
+        if footprint(path)["fingerprint"] != item["fingerprint"]:
             raise Refused("Output changed after cleanup planning")
         fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:

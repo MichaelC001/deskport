@@ -141,6 +141,53 @@ class WorkflowTests(unittest.TestCase):
                 w.clean(self.args, self.paths, self.record)
             item.unlink()
 
+    def test_allocation_only_change_after_freeze_allows_cleanup(self):
+        self.args.work_only = True
+        self.record["trees"]["work"]["bytes"] -= 4096
+        with patch.object(w, "inactive"), patch.object(w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+            w.clean(self.args, self.paths, self.record)
+        self.assertFalse(self.paths["work"].exists())
+        self.assertTrue(self.package.exists())
+        self.assertTrue((self.paths["cache"] / "library.a").exists())
+
+    def test_allocation_only_change_after_plan_allows_cleanup(self):
+        self.args.work_only = True
+        original = w.footprint
+        calls = 0
+
+        def allocation_settles(path):
+            nonlocal calls
+            current = original(path)
+            if path == self.paths["work"]:
+                calls += 1
+                if calls > 1:
+                    current["bytes"] += 4096
+            return current
+
+        with patch.object(w, "footprint", side_effect=allocation_settles), patch.object(w, "inactive"), patch.object(
+                w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+            w.clean(self.args, self.paths, self.record)
+        self.assertGreater(calls, 1)
+        self.assertFalse(self.paths["work"].exists())
+        self.assertTrue(self.package.exists())
+
+    def test_metadata_change_after_plan_still_refuses_cleanup(self):
+        self.args.work_only = True
+        calls = 0
+
+        def change_work_during_recheck(path):
+            nonlocal calls
+            if path == self.paths["work"]:
+                calls += 1
+                if calls > 1:
+                    (path / "user-notes.txt").write_text("retain")
+
+        with patch.object(w, "inactive", side_effect=change_work_during_recheck), patch.object(
+                w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()), self.assertRaises(w.Refused):
+            w.clean(self.args, self.paths, self.record)
+        self.assertEqual((self.paths["work"] / "user-notes.txt").read_text(), "retain")
+        self.assertTrue(self.package.exists())
+
     def test_inbound_reference_from_other_run_refused(self):
         (self.paths["cache"] / "borrowed").symlink_to(self.paths["work"])
         with self.assertRaises(w.Refused):
