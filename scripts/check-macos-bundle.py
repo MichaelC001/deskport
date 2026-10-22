@@ -10,8 +10,9 @@ import tempfile
 
 root = pathlib.Path(sys.argv[1]).resolve()
 errors = []
-scratch = pathlib.Path(os.environ.get(
-    'DESKPORT_BUILD_ROOT', pathlib.Path.home() / 'mygit/build/deskport')) / 'bundle-checks'
+scratch = (pathlib.Path(os.environ['DESKPORT_TEST_DIR']) if os.environ.get('DESKPORT_TEST_DIR')
+           else pathlib.Path(os.environ.get(
+               'DESKPORT_BUILD_ROOT', pathlib.Path.home() / 'mygit/build/deskport'))) / 'bundle-checks'
 scratch.mkdir(parents=True, exist_ok=True)
 with (root / 'Contents/Info.plist').open('rb') as stream:
     info = plistlib.load(stream)
