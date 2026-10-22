@@ -2,6 +2,7 @@
 # Cross-build the pinned static libdatachannel for the browser host transport.
 # ICE uses its bundled libjuice; TLS uses the same static OpenSSL as the host.
 set -euo pipefail
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 FULL="$WB/full"
 TOOLCHAIN_FILE="${DESKPORT_HOST_TOOLCHAIN_FILE:-$WB/scripts/mingw-host-toolchain.cmake}"

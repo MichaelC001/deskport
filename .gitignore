@@ -10,8 +10,34 @@ config.tests/*/Makefile
 /result*
 /.direnv/
 .env
-*.pem
+.env.*
+!.env.example
 *.key
+*.p12
+*.pfx
+*.p8
+*.keychain
+*.keychain-db
+*.mobileprovision
+*.provisionprofile
+*.jks
+*.keystore
+*signing*.env
+*signing*.env.*
+*signing*.local
+*signing*.local.*
+!config/build-signing.env.example
+# Notary responses may contain account or signing metadata. Public certificates
+# (*.pem, *.crt, *.cer, *.pub) and license notices remain visible to Git.
+notary*.json
+notary*.log
+notary*.txt
+app-submit.json
+app-info.json
+app-log.json
+dmg-submit.json
+dmg-info.json
+dmg-log.json
 
 /build-macos
 /dist

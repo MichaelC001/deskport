@@ -463,8 +463,11 @@ With Nix and flakes enabled:
 ```sh
 git clone https://github.com/keithxc/deskport.git
 cd deskport
-nix build
-./result/bin/deskport
+git submodule update --init shared/deskport-core
+run="local-$(date -u +%Y%m%dT%H%M%SZ)"
+bash scripts/build.sh build --target linux-nix --run "$run"
+work=$(DESKPORT_RUN_ID="$run" DESKPORT_TARGET=linux-nix bash scripts/build-paths.sh work)
+"$work/result/bin/deskport"
 ```
 
 The viewer's third-party source dependencies are vendored; the shared core and
@@ -481,19 +484,25 @@ on the host's sharing page if different, or use `host:47989` to connect explicit
 to a default standalone Sunshine installation. Saved/discovered endpoints retain
 their own ports.
 
-For an editable native build:
+For an editable native build with external compiler output:
 
 ```sh
 git submodule update --init shared/deskport-core
 nix develop
-mkdir -p build
-cd build
-qmake ../moonlight-qt.pro CONFIG+=disable-prebuilts
+source_checkout="$PWD"
+native_work="$(bash scripts/build-paths.sh checkout)/native-linux/work"
+mkdir -p "$native_work"
+cd "$native_work"
+qmake "$source_checkout/moonlight-qt.pro" CONFIG+=disable-prebuilts
 make -j4
 ./app/deskport
 ```
 
 The upstream project filenames remain unchanged to keep the fork reviewable.
+See [managed build, signing and cleanup commands](docs/BUILD_WORKFLOW.md) for
+macOS, Windows and Linux packaging. Generated work stays outside source; reusable
+dependencies have their own cache, and completed GitHub delivery can be verified
+and cleaned with one command. Signing examples contain placeholders only.
 
 ## What is different from Moonlight?
 
@@ -536,8 +545,8 @@ and [upstream notes](docs/UPSTREAM.md) for provenance and maintenance boundaries
 ## Validation
 
 ```sh
-nix build
-python3 scripts/deskport-smoke.py ./result
+run="check-$(date -u +%Y%m%dT%H%M%SZ)"
+bash scripts/build.sh build --target linux-nix --run "$run"
 ```
 
 The smoke check uses temporary XDG configuration/cache directories and an offscreen

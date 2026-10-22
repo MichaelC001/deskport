@@ -3,9 +3,13 @@
 import json
 import os
 from pathlib import Path
-import shutil
 import sys
-wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(Path(__file__).resolve().parents[1])))
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, hold_cache_lock
+import shutil
+config = initialize(paths())
+cache_guard = hold_cache_lock(config)
+wb = config['work']
 out = Path(sys.argv[1])
 for component in ('qtbase', 'qtdeclarative', 'qtshadertools', 'qtsvg', 'libplacebo', 'glslang', 'freetype', 'opus', 'SDL2', 'SDL2_ttf', 'openssl'):
     root = wb / 'work' / component

@@ -558,14 +558,24 @@ TRANSLATIONS += \
     languages/qml_lt.ts \
     languages/qml_et.ts
 
-# resources.qrc embeds source-tree catalogs. Compile them before generating
-# resource dependencies so every platform packages the current translations.
+# Compile catalogs into the build tree and let qmake generate their resource
+# collection there. Resource aliases remain :/languages/qml_<locale>.qm.
 qtPrepareTool(DESKPORT_LRELEASE, lrelease)
 # Split Qt packages (including Nix) put linguist tools outside QT_HOST_BINS.
 !exists($$DESKPORT_LRELEASE): DESKPORT_LRELEASE = lrelease
+DESKPORT_TRANSLATION_DIR = $$OUT_PWD/translations
+!mkpath($$DESKPORT_TRANSLATION_DIR): error(Could not create translation build directory)
+deskport_translations.prefix = /languages
+deskport_translations.base = $$DESKPORT_TRANSLATION_DIR
 for(catalog, TRANSLATIONS) {
-    !system($$DESKPORT_LRELEASE -silent $$shell_quote($$PWD/$$catalog)): error(Could not compile translation $$catalog)
+    catalog_name = $$basename(catalog)
+    compiled_name = $$replace(catalog_name, \\.ts$, .qm)
+    compiled_catalog = $$DESKPORT_TRANSLATION_DIR/$$compiled_name
+    !system($$DESKPORT_LRELEASE -silent $$shell_quote($$PWD/$$catalog) -qm $$shell_quote($$compiled_catalog)): error(Could not compile translation $$catalog)
+    # pt_BR is retained for translation tooling but was never shipped in qrc.
+    !equals(catalog_name, qml_pt_BR.ts): deskport_translations.files += $$compiled_catalog
 }
+RESOURCES += deskport_translations
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

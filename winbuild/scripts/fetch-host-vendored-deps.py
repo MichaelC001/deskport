@@ -4,16 +4,20 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, hold_cache_lock
 import shutil
 import subprocess
-import sys
 import tarfile
 import tempfile
 import urllib.request
 
 source = Path(sys.argv[1]).resolve()
 manifest_path = Path(__file__).with_name("host-vendored-deps.json")
-cache = Path(os.environ.get("DESKPORT_HOST_DEP_CACHE", source.parent / "host-vendored-deps"))
+config = initialize(paths())
+cache_guard = hold_cache_lock(config)
+cache = Path(os.environ.get("DESKPORT_HOST_DEP_CACHE", config["cache"] / "full/host-vendored-deps"))
 cache.mkdir(parents=True, exist_ok=True)
 
 def sha256(path):
@@ -37,7 +41,7 @@ for item in json.loads(manifest_path.read_text()):
             raise SystemExit("Host dependency archive checksum mismatch: " + item["name"])
         temporary.replace(archive)
 
-    with tempfile.TemporaryDirectory(prefix="deskport-host-dep-") as staging_name:
+    with tempfile.TemporaryDirectory(prefix="host-dep-", dir=config["work"]) as staging_name:
         staging = Path(staging_name)
         with tarfile.open(archive) as package:
             package.extractall(staging, filter="data")

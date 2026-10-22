@@ -8,15 +8,19 @@ import struct
 import subprocess
 import sys
 import zipfile
+import os
+sys.dont_write_bytecode = True
+from build_paths import paths
 external_runtime = re.compile(r'qt[56]|avcodec|avutil|avformat|avfilter|swscale|swresample|SDL[23]|libgcc|libstdc|libwinpthread|libmcfgthread|libssl|libcrypto|libplacebo|libopus|libcurl|libfreetype|libsoundio|vcruntime|msvcp[0-9]', re.I)
 art = Path(sys.argv[1]).resolve()
 suffix = '-'+sys.argv[2] if len(sys.argv) > 2 else ''
-version = (Path(__file__).resolve().parents[2] / 'app/version.txt').read_text().strip()
+config = paths()
+version = (config['source'] / 'app/version.txt').read_text().strip()
 assert re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?', version), version
 exe = art / (f'DeskPort-{version}-windows-x64-setup'+suffix+'.exe')
 zip_path = art / (f'DeskPort-{version}-windows-x64-portable'+suffix+'.zip')
-audit = art/('audit'+suffix)
-audit.mkdir(exist_ok=True)
+audit = Path(os.environ.get('DESKPORT_WINDOWS_AUDIT_DIR', config['work'] / 'audit'))
+audit.mkdir(parents=True, exist_ok=True)
 extracted = audit/'installer-extracted'
 subprocess.run(['7z','x','-y',str(exe),'-o'+str(extracted)],check=True,stdout=(audit/'extract.log').open('w'))
 subprocess.run(['7z','t',str(exe)],check=True,stdout=(audit/'installer-test.txt').open('w'))
@@ -35,7 +39,9 @@ with zipfile.ZipFile(zip_path) as z:
     assert files-set(compared)=={'portable.dat'},files-set(compared)
     (audit/'payload-comparison.json').write_text(json.dumps({'matching_files':len(compared),'zip_only':['portable.dat'],'installer_plugins':['nsDialogs.dll','System.dll']},indent=2)+'\n')
     (audit/'portable-contents.txt').write_text('\n'.join(sorted(files))+'\n')
-uninstaller=art/'Uninstall.exe'
+uninstaller=audit/'Uninstall.exe'
+if not uninstaller.is_file():
+    uninstaller=art/'Uninstall.exe'  # Auditing an older package remains supported.
 assert uninstaller.is_file(), 'Generated uninstaller is required for auditing'
 summary=[]
 for p in [exe, uninstaller]+sorted(extracted.rglob('*')):

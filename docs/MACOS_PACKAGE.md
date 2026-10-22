@@ -1,5 +1,12 @@
 # macOS all-in-one package
 
+For new builds, prefer the [managed build workflow](BUILD_WORKFLOW.md). It calls
+these same recipes with isolated run directories, private signing configuration,
+recorded artifacts and verified GitHub cleanup. Copy the placeholder-only
+`config/build-signing.env.example` outside the repository; use your own signing
+identity and keychain profile. Never add private keys or signing credentials to
+Git, source archives or release uploads.
+
 ## Required activation workflow (2026-09-14)
 
 Build and verify, publish a GitHub prerelease, then update and push the consuming
@@ -361,7 +368,7 @@ for DeskPort. The script builds the patched Sunshine executable from pinned
 sources and verifies the pinned publisher-signed DMG used for its resources.
 It then relocates libraries and signs all nested code with the chosen identity.
 Do not ad-hoc re-sign an installed host as an update strategy. Public distribution
-needs a Developer ID signature, notarization and a corresponding-source release;
+needs a Developer ID signature, notarization and source-provenance metadata;
 local development builds do not satisfy those public-release requirements.
 Use the same Apple Development signing identity and bundle identifier across local
 updates. Ad-hoc signing requires explicit `DESKPORT_ALLOW_ADHOC=1` and is only for

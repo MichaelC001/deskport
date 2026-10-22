@@ -1,5 +1,33 @@
 # DeskPort project instructions
 
+- New GitHub releases upload installers, checksums and small provenance records.
+  Do not generate or upload separate source/relink archives by default; reference
+  the source repository and exact commit instead. Preserve notices inside packages.
+  Verify uploaded assets against GitHub's server-provided SHA-256 digest and size;
+  full-byte download verification is explicit opt-in, never an automatic fallback.
+
+## Managed build lifecycle — 2026-10-22
+
+- Use `bash scripts/build.sh` for new desktop build/package runs; read
+  `docs/BUILD_WORKFLOW.md`. Keep legacy entry points for explicit compatibility
+  or resume work, and pass their output paths deliberately.
+- Generated work, packages, private logs and tests belong to a uniquely identified
+  run. Retain compiled third-party dependencies separately; never make a retained
+  cache depend on a disposable run. Do not move existing CMake/qmake caches.
+- Signing configuration stays outside Git and build output. The public
+  `config/build-signing.env.example` contains placeholders only. Keep private
+  keys and notary credentials in the operator's own keychain; run the privacy
+  checks before exporting source or publishing materials.
+- After an authorized upload, verify every recorded GitHub asset's server SHA-256
+  digest and size before deleting its local package. Managed cleanup keeps small
+  receipts and dependency caches, and refuses changed/active/protected trees.
+  Legacy outputs still require the workspace's reviewed cleanup manifest.
+- Respect the build free-space reserve and managed work/cache budgets. A build
+  permission does not authorize publication, activation or deleting historical
+  releases, source material, SDKs or Nix store roots.
+
+## Project contracts
+
 - Discuss work in Chinese; public documentation, code and commit messages use English.
 - Preserve upstream notices and keep changes to the media pipeline small and justified.
 - Primary target: Linux KDE Wayland / AMD client to macOS Sunshine host.

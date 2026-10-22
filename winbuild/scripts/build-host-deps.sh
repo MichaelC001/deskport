@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 FULL="$WB/full"
 TOOLCHAIN_FILE="${DESKPORT_HOST_TOOLCHAIN_FILE:-$WB/scripts/mingw-host-toolchain.cmake}"
 export PREFIX="$FULL/prefix"
 mkdir -p "$PREFIX"
+if [ -f "$PREFIX/.stamp-host-deps" ] && [ -f "$PREFIX/lib/libcurl.a" ] && [ -f "$PREFIX/lib/libminiupnpc.a" ] && [ -f "$PREFIX/lib/minhook.x64.a" ] && [ -f "$PREFIX/lib/libvpl.a" ]; then
+  echo "== skip host-deps (shared cache complete)"; exit 0
+fi
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 for name in curl miniupnpc minhook onevpl; do
   if [ ! -d "$FULL/$name" ]; then
@@ -27,3 +31,5 @@ cmake --install "$FULL/minhook-build"
 cmake -S "$FULL/onevpl" -B "$FULL/onevpl-build" "${common[@]}" -DBUILD_TOOLS=OFF -DBUILD_EXAMPLES=OFF -DBUILD_TESTS=OFF
 cmake --build "$FULL/onevpl-build" --parallel "$JOBS"
 cmake --install "$FULL/onevpl-build"
+
+touch "$PREFIX/.stamp-host-deps"

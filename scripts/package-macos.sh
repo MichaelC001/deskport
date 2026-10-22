@@ -3,7 +3,10 @@
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
 cd "$repo"
+export DESKPORT_TARGET=macos
 source "$repo/scripts/build-paths.sh"
+DESKPORT_HOST_SOURCE_DIR=$(deskport_output_path "${DESKPORT_HOST_SOURCE_DIR:-$DESKPORT_MACOS_BUILD_DIR/sunshine-vendored-source}")
+export DESKPORT_HOST_SOURCE_DIR
 version=$(cat app/version.txt)
 : "${DESKPORT_SIGN_IDENTITY:?Set a stable local code-signing identity; use - only for disposable development builds}"
 if [ "$DESKPORT_SIGN_IDENTITY" = - ] && [ "${DESKPORT_ALLOW_ADHOC:-0}" != 1 ]; then
@@ -40,7 +43,7 @@ rmdir "$probe_dir"
     "$qt_bin/qmake" -r "$repo/moonlight-qt.pro" CONFIG+=release CONFIG-=debug_and_release \
         QMAKE_APPLE_DEVICE_ARCHS=arm64 QMAKE_MACOSX_DEPLOYMENT_TARGET=26.0 \
         QMAKE_CC=/usr/bin/clang QMAKE_CXX=/usr/bin/clang++ \
-        "QMAKE_XCODE_DEVELOPER_PATH=$DEVELOPER_DIR" "${qml_args[@]}"
+        "QMAKE_XCODE_DEVELOPER_PATH=$DEVELOPER_DIR" ${qml_args[@]+"${qml_args[@]}"}
     make -j"${DESKPORT_JOBS:-4}"
 )
 bash scripts/build-macos-host.sh

@@ -31,7 +31,8 @@ if [ ! -f "$prefix/lib/cmake/LibDataChannel/LibDataChannelConfig.cmake" ]; then
     cmake --build "$work/cache/libdatachannel-build" -j "${DESKPORT_JOBS:-4}"
     cmake --install "$work/cache/libdatachannel-build"
 fi
-# Notices travel with the binaries; exact source travels with the release.
+# Notices travel with the binaries. The pinned Git and submodule revisions above
+# identify the build source without generating another release source archive.
 notices="$work/cache/libdatachannel-notices"
 rm -rf "$notices"; mkdir -p "$notices"
 cp "$source/LICENSE" "$notices/libdatachannel-LICENSE"
@@ -40,6 +41,4 @@ for dependency in json libjuice libsrtp plog usrsctp; do
         [ -f "$source/deps/$dependency/$file" ] && cp "$source/deps/$dependency/$file" "$notices/$dependency-$file"
     done
 done
-mkdir -p "$work/output"
-tar -C "$work/cache" --exclude=.git -czf "$work/output/libdatachannel-$version-source.tar.gz" "libdatachannel-$version-source"
 echo "$prefix"

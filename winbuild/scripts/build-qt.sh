@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Cross-build a static Qt 6.11.1 for x86_64-w64-mingw32.
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 
 QT_PREFIX="$WB/qt-static"

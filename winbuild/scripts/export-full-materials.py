@@ -4,12 +4,17 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, hold_cache_lock
+from material_archive import material_filter
 import re
 import subprocess
 import tarfile
-import sys
-root = Path(os.environ.get('DESKPORT_WINDOWS_SOURCE_ROOT', str(Path(__file__).resolve().parents[2])))
-wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(root / 'winbuild')))
+config = initialize(paths())
+cache_guard = hold_cache_lock(config)
+root = config['source']
+wb = config['work']
 out = Path(sys.argv[1]).resolve()
 suffix = os.environ.get("MATERIAL_SUFFIX", "")
 inputs = {}
@@ -43,13 +48,10 @@ if not host_source.is_dir():
 if '--source-only' not in sys.argv and not host_build.is_dir():
     raise SystemExit('Missing prepared Windows host build: ' + str(host_build))
 
-def filter_source(info):
-    if '.git' in Path(info.name).parts:
-        return None
-    return info
 for name in ('source-materials'+suffix+'.tar.gz','relink-materials'+suffix+'.tar.gz'):
     if (out/name).exists(): raise SystemExit('Refusing to replace existing material: '+name)
 with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel=1, dereference=True) as tar:
+    filter_source = material_filter()
     tracked = subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
     for name in tracked:
         p=root/name
@@ -60,9 +62,9 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         tar.add(p,arcname='deskport/'+name,filter=filter_source)
     shell_nix = out.parent / 'shell.nix'
     if shell_nix.exists():
-        tar.add(shell_nix, arcname='shell.nix')
+        tar.add(shell_nix, arcname='shell.nix',filter=filter_source)
     full = wb/'full'
-    host_names = ('media-source','curl','miniupnpc','minhook','onevpl','cppwinrt','host-vendored-deps','libdatachannel',
+    host_names = ('cpm-source-cache','media-source','curl','miniupnpc','minhook','onevpl','cppwinrt','host-vendored-deps','libdatachannel',
                   'mingw-host-toolchain.cmake','fetch-host-deps.py','download-hashes.json',
                   'host-deps-inputs.json','build-deps-releases.json','VDD-LICENSE',
                   'Signed-Driver-v24.12.24-x64.zip','Sunshine-Windows-AMD64-lite.zip')
@@ -76,7 +78,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
         p = cache/entry['file']
         if not p.is_file() or hashlib.file_digest(p.open('rb'),'sha256').hexdigest() != entry['sha256']:
             raise SystemExit(f"Missing or unverified build input {entry['file']} in {cache}; run fetch-inputs.py")
-        tar.add(p,arcname='deskport/winbuild/input-cache/'+entry['file'])
+        tar.add(p,arcname='deskport/winbuild/input-cache/'+entry['file'],filter=filter_source)
     tar.add(host_source, arcname=host_source_arcname, filter=filter_source)
     for p in full.glob('*.tar.*'):
         tar.add(p,arcname='deskport/winbuild/full/'+p.name,filter=filter_source)
@@ -99,6 +101,7 @@ with tarfile.open(out/('source-materials'+suffix+'.tar.gz'),'w:gz',compresslevel
 print('Source archive complete',flush=True)
 if '--source-only' in sys.argv: sys.exit(0)
 with tarfile.open(out/('relink-materials'+suffix+'.tar.gz'),'w:gz',compresslevel=1, dereference=True) as tar:
+    filter_source = material_filter()
     for name in ('build-app','prefix','qt-static','compat-include','toolshim','full/media-prefix','full/prefix','full/ffmpeg-build','full/cbs-build','full/deskport-display-recovery.exe','full/deskport-display-service.exe','full/deskport-driver-setup.exe','full/deskport-maintenance.exe'):
         tar.add(wb/name,arcname='deskport/winbuild/'+name,filter=filter_source)
     tar.add(host_build, arcname=host_build_arcname, filter=filter_source)

@@ -19,6 +19,17 @@ jobs:
         run: python3 .github/scripts/check-pc-support.py --self-test
       - name: Initialize shared core
         run: git submodule update --init shared/deskport-core
+      - name: Managed build paths, privacy and cleanup regressions
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          python3 scripts/check-build-privacy.py
+          python3 scripts/test-build-paths.py
+          python3 scripts/test-prepare-host-source.py
+          python3 scripts/test-build-workflow.py
+          python3 scripts/test-build-privacy.py
+          python3 scripts/test-source-export.py
+          python3 winbuild/scripts/test-build-paths.py
       - name: Shared core adapter contract
         run: nix develop -c python3 scripts/test-core.py
       - name: Isolated Wayland clipboard regressions
@@ -31,16 +42,13 @@ jobs:
           nix develop -c python3 scripts/test-wayland-clipboard.py
           nix develop -c python3 scripts/test-clipboard-demand.py
       - name: Build
-        run: nix build -L
+        run: bash scripts/build.sh build --target linux-nix --run ci --min-free-gib 5
       - name: Portable runtime regression checks
         run: |
           python3 scripts/test-appimage-graphics.py
           python3 scripts/test-appimage-pipewire.py
           python3 scripts/test-appimage-qt-runtime.py
           python3 scripts/test-appimage-source-index.py
-      - name: CLI and desktop-entry smoke check
-        run: python3 scripts/deskport-smoke.py ./result
-
       - name: Smart streaming policy and translations
         run: |
           nix develop -c python3 scripts/test-smart-stream.py

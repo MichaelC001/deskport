@@ -3,16 +3,18 @@
 
 Each file is downloaded from its upstream URLs, then from the project mirror,
 into a reusable cache and accepted only when its size and SHA-256 match. It is
-then copied or unpacked below the Windows build root. Nothing is placed from an
-unverified file, and an existing placement is replaced so stale trees cannot
-survive a pin change.
+then placed once in the recipe-keyed dependency cache. Verified placement
+markers preserve compiled dependency trees on later runs. Changed pins select
+a new cache, so existing runs and their dependency trees remain intact.
 
   fetch-inputs.py [--only NAME ...] [--download-only] [--export-mirror DIR]
 
-DESKPORT_WINDOWS_BUILD_ROOT selects the build root (default: winbuild/), and
-DESKPORT_WINDOWS_INPUT_CACHE the download cache (default: <root>/input-cache).
+DESKPORT_WINDOWS_BUILD_ROOT selects the run work directory outside the checkout.
+DESKPORT_DEPENDENCY_CACHE_DIR selects persistent dependencies;
+DESKPORT_WINDOWS_INPUT_CACHE optionally selects the verified download cache.
 """
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -24,6 +26,8 @@ import tempfile
 import urllib.request
 import zipfile
 from pathlib import Path
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, cache_lock
 
 SCRIPTS = Path(__file__).resolve().parent
 MANIFEST = SCRIPTS.parent / 'inputs.json'
@@ -128,6 +132,27 @@ def place(entry, archive, build_root):
     return destination
 
 
+def place_once(entry, archive, build_root):
+    """Keep matching inputs, including intentionally patched media sources."""
+    marker = build_root / '.input-placements.json'
+    placements = json.loads(marker.read_text()) if marker.exists() else {}
+    relative = entry.get('copy', entry.get('extract'))
+    destination = build_root / relative
+    identity = hashlib.sha256(json.dumps(entry, sort_keys=True).encode()).hexdigest()
+    if placements.get(relative) == identity and destination.exists():
+        if 'copy' not in entry or verified(destination, entry):
+            return destination
+    destination = place(entry, archive, build_root)
+    # Replacing a parent extraction invalidates all previously placed children.
+    placements = {key: value for key, value in placements.items()
+                  if not key.startswith(relative + '/')}
+    placements[relative] = identity
+    temporary = marker.with_suffix('.tmp')
+    temporary.write_text(json.dumps(placements, indent=2) + '\n')
+    temporary.replace(marker)
+    return destination
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--only', nargs='+', metavar='NAME', help='limit to these input names')
@@ -136,8 +161,9 @@ def main():
     args = parser.parse_args()
 
     manifest = json.loads(MANIFEST.read_text())
-    build_root = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', SCRIPTS.parent)).resolve()
-    cache = Path(os.environ.get('DESKPORT_WINDOWS_INPUT_CACHE', build_root / 'input-cache')).resolve()
+    config = initialize(paths())
+    build_root = config['cache']
+    cache = config['downloads']
     cache.mkdir(parents=True, exist_ok=True)
     entries = manifest['inputs']
     if args.only:
@@ -146,17 +172,19 @@ def main():
             raise SystemExit('Unknown inputs: ' + ', '.join(sorted(unknown)))
         entries = [e for e in entries if e['name'] in args.only]
 
-    for entry in entries:
-        archive = download(entry, cache, manifest['mirror'])
-        if args.export_mirror:
-            mirror = Path(args.export_mirror)
-            mirror.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(archive, mirror / entry['file'])
-        if args.download_only or args.export_mirror:
-            print(f"verified {entry['file']}")
-            continue
-        destination = place(entry, archive, build_root)
-        print(f"{entry['name']}: {destination.relative_to(build_root)}")
+    with cache_lock(config), (cache / '.download.lock').open('a') as download_lock:
+        fcntl.flock(download_lock, fcntl.LOCK_EX)
+        for entry in entries:
+            archive = download(entry, cache, manifest['mirror'])
+            if args.export_mirror:
+                mirror = Path(args.export_mirror)
+                mirror.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(archive, mirror / entry['file'])
+            if args.download_only or args.export_mirror:
+                print(f"verified {entry['file']}")
+                continue
+            destination = place_once(entry, archive, build_root)
+            print(f"{entry['name']}: {destination.relative_to(build_root)}")
     if args.export_mirror:
         with open(Path(args.export_mirror) / 'SHA256SUMS', 'w') as sums:
             for entry in manifest['inputs']:

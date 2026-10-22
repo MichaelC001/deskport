@@ -1,3 +1,34 @@
+## Managed build and artifact lifecycle — 2026-10-22
+
+Unify desktop build commands and generated output ownership so repeated packaging
+does not retain an unbounded series of compiler trees and installers. Keep
+recipe-keyed third-party dependencies separate from per-run work, packages and
+private logs. Move translation compilation into the build tree. Windows retains
+its stable dependency paths while isolating application/host objects and audit
+extraction. Local signing configuration stays outside source; public templates
+contain placeholders and source exports pass privacy checks.
+
+The managed entry point records source identity and exact artifact hashes,
+uploads only enumerated installers/metadata, verifies GitHub server SHA-256
+digests and sizes without downloading installers again, and supports
+cleaning a delivered run while retaining dependency caches and small receipts.
+Cleanup refuses changed, active, referenced or protected trees and leaves legacy
+outputs, installed packages, Nix roots and deployment state outside its scope.
+Storage budgets stop new builds from silently accumulating unlimited managed work
+or dependency versions. Separate source/relink archives are no longer generated
+or uploaded by the managed release flow; source is identified by its repository
+and exact commit. Full-download verification remains an explicit option.
+See [the workflow](BUILD_WORKFLOW.md).
+
+Validation passed for path/privacy/export/cleanup tests, native Linux Nix
+compilation, complete isolated CLI smoke, the complete shared-core suite, real
+qmake translation fixtures, compiled translations and device preferences. The
+native build used the captured 2026-10-22 source snapshot; later driver/test/docs
+changes were checked separately. Full Windows packaging, macOS
+signing/notarization, real GitHub publication and physical streaming/input still
+require their own exact-run verification. This change does not publish or
+activate a new release.
+
 ## Compact desktop add card — 2026-10-21
 
 Keep the two add-card actions at their existing size. The plus has no circular

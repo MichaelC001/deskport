@@ -14,6 +14,7 @@ NPM_BIN="${DESKPORT_NPM:-$(command -v npm || true)}"
 TOOLCHAIN="${DESKPORT_HOST_TOOLCHAIN_FILE:-$FULL/mingw-host-toolchain.cmake}"
 [ -f "$TOOLCHAIN" ] || TOOLCHAIN="$WB/scripts/mingw-host-toolchain.cmake"
 "${NICE_WRAP[@]}" cmake -S "$HOST_SOURCE" -B "$HOST_BUILD" -G Ninja \
+ -DCPM_SOURCE_CACHE="$DESKPORT_WINDOWS_DEPENDENCY_ROOT/full/cpm-source-cache" \
  -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
  -DCMAKE_CXX_FLAGS="-I$WB/compat-include" -DCMAKE_C_FLAGS="-I$WB/compat-include" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ \
  -DCMAKE_PREFIX_PATH="$PREFIX;$WB/prefix" \

@@ -22,14 +22,18 @@ apt-get install -y --no-install-recommends \
     libxcb-shm0-dev libxcb-xfixes0-dev libxfixes-dev libxrandr-dev libxtst-dev \
     libvulkan-dev glslang-tools nodejs npm python3-jinja2
 mkdir -p "$work/build" "$work/cache" "$work/output"
-# qmake compiles embedded translations into the source tree. Keep the caller's
-# checkout read-only and use a disposable writable source snapshot instead.
+# Build from one private snapshot and clean only the temporary tree owned by
+# this invocation, on success or failure. Source is recovered from the pinned
+# Git revision and vendor manifests; release output contains no source archive.
+# Existing snapshots from older runs are deliberately untouched.
 input_repo=$repo
 repo=$(mktemp -d "$work/source.XXXXXX")
+trap 'rm -rf "$repo"' EXIT
 tar -C "$input_repo" --exclude-vcs --exclude='./winbuild' \
     --exclude='./build*' --exclude='./dist*' --exclude='./result*' \
     --exclude='*.noindex' -cf - . | tar -xf - -C "$repo"
 chmod -R u+w "$repo"
+python3 "$repo/scripts/check-build-privacy.py" --source-dir "$repo"
 export DESKPORT_SOURCE="$repo"
 python3 - "$repo/scripts/linux-tools.json" "$work/cache" <<'PY'
 import hashlib,json,pathlib,subprocess,sys
@@ -113,7 +117,6 @@ bash "$repo/scripts/build-appimage-qt-wayland.sh"
 python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/sharun" \
     --libva-prefix "$work/cache/libva-2.23.0-runtime" \
     --qt-wayland-prefix "$work/cache/qtwayland-6.4.2-runtime"
-cp -a "$appimage_dir/usr/share/doc/deskport/qtwayland-backport" "$work/output/"
 mkdir -p "$work/build/appimage-runtime-test"
 TMPDIR="$work/build/appimage-runtime-test" PYTHONPYCACHEPREFIX="$work/cache/pycache" \
     DESKPORT_TEST_SHARUN="$work/cache/sharun" python3 "$repo/scripts/test-appimage-runtime.py"
@@ -134,5 +137,5 @@ cd "$work/output"
 if [ "$format" = appimage ]; then
     sha256sum "DeskPort-$version-x86_64.AppImage" > SHA256SUMS-linux.txt
 else
-    sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst libdatachannel-*-source.tar.gz > SHA256SUMS-linux.txt
+    sha256sum *.AppImage *.deb *.rpm *.pkg.tar.zst > SHA256SUMS-linux.txt
 fi

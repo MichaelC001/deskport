@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Build the static third-party dependencies for the Windows x64 cross build.
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 
 S_ZLIB="${S_ZLIB:-$WB/source-inputs/zlib-1.3.2.tar.gz}"

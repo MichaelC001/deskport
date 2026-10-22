@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build the pinned host media sources with the existing MSVCRT toolchain.
 # The client prefix and its completed Qt/FFmpeg build are never modified.
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 FULL="$WB/full"
 # Patches, CMake metadata and nv-codec-headers come from the prepared host
@@ -11,6 +12,9 @@ AMF_INCLUDE="$FULL/amf/include"
 MEDIA="$FULL/media-source"
 DEST="$FULL/media-prefix"
 mkdir -p "$MEDIA" "$DEST"
+if [ -f "$DEST/.stamp-host-media" ] && [ -f "$DEST/lib/libcbs.a" ] && [ -f "$DEST/lib/libavcodec.a" ] && [ -f "$DEST/lib/libx264.a" ] && [ -f "$DEST/lib/libx265.a" ]; then
+  echo "== skip host-media (shared cache complete)"; exit 0
+fi
 export PKG_CONFIG_LIBDIR="$DEST/lib/pkgconfig:$FULL/prefix/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 for component in x264 x265_git SVT-AV1 FFmpeg; do
   if [ ! -d "$MEDIA/$component" ]; then
@@ -79,3 +83,5 @@ for group,prefix in [('AVCODEC_GENERATED_SRC_PATH','libavcodec'),('AVUTIL_GENERA
   if source.exists():
    out=dest/prefix/name;out.parent.mkdir(parents=True,exist_ok=True);shutil.copy(source,out)
 PY
+
+touch "$DEST/.stamp-host-media"

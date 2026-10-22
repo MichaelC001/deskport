@@ -2,11 +2,13 @@
 # Prepare a separate Developer ID candidate, or finish its Apple notarization.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
+export DESKPORT_TARGET=macos
+source "$repo/scripts/build-paths.sh"
 export DEVELOPER_DIR=${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}
 mode=${1:?Usage: release-macos.sh prepare SOURCE_APP OUTPUT_DIR | notarize OUTPUT_DIR}
 : "${DESKPORT_SIGN_IDENTITY:?Set the exact Developer ID Application certificate SHA-1}"
 : "${DESKPORT_SIGN_TEAM:?Set the Developer ID team}"
-scratch_root=${DESKPORT_BUILD_ROOT:-$HOME/mygit/build/deskport}/release-macos
+scratch_root="$DESKPORT_MACOS_BUILD_DIR/release-scratch.noindex"
 mkdir -p "$scratch_root"
 stage=
 check=

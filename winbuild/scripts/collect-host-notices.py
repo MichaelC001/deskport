@@ -2,15 +2,19 @@
 """Retain host source notices and header-only dependency copyright text."""
 import os
 from pathlib import Path
-import shutil
 import sys
-wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(Path(__file__).resolve().parents[1])))
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, hold_cache_lock
+import shutil
+config = initialize(paths())
+cache_guard = hold_cache_lock(config)
+wb = config['work']
 out = Path(sys.argv[1])
 source = Path(os.environ.get('DESKPORT_HOST_SOURCE_DIR', wb/'full/sunshine-prepared'))
 build = Path(os.environ.get('DESKPORT_HOST_BUILD_DIR', wb/'full/host-build-prepared'))
 roots = [source/'third-party']
 roots += sorted((build/'_deps').glob('*-src'))
-roots += [p for p in [wb/'full/libdatachannel'] if p.exists()]
+roots += [p for p in [wb/'full/libdatachannel', wb/'full/cpm-source-cache'] if p.exists()]
 for root in roots:
     label = 'sunshine-third-party' if root.name == 'third-party' else root.name
     for base, dirs, files in os.walk(root):

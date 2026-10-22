@@ -16,7 +16,7 @@ if [ -e "$STAGE" ] || [ -e "$OUT" ]; then
   echo "Use new PACKAGE_STAGE and PACKAGE_OUT paths; existing outputs are preserved." >&2
   exit 1
 fi
-mkdir -p "$STAGE/licenses" "$OUT"
+mkdir -p "$STAGE/licenses" "$OUT" "$DESKPORT_WINDOWS_AUDIT_DIR"
 
 cp "$EXE" "$STAGE/DeskPort.exe"
 "$STRIP" --strip-unneeded "$STAGE/DeskPort.exe"
@@ -63,7 +63,7 @@ rm "$STAGE/portable.dat"
 
 makensis -V2 \
   "-DVERSION=$VERSION" \
-  "-DAUDIT_UNINSTALLER=$OUT/Uninstall.exe" \
+  "-DAUDIT_UNINSTALLER=$DESKPORT_WINDOWS_AUDIT_DIR/Uninstall.exe" \
   "-DPAYLOAD=$STAGE" \
   "-DOUTFILE=$OUT/DeskPort-$VERSION-windows-x64-setup$PACKAGE_SUFFIX.exe" \
   "$WB/scripts/deskport.nsi"

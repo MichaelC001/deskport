@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Optional Vulkan renderer dependencies: glslang + libplacebo (static).
+export DESKPORT_WINDOWS_DEPENDENCY_BUILD=1
 source "$(dirname "$0")/env.sh"
 
 S_GLSLANG="${S_GLSLANG:-$WB/source-inputs/glslang}"

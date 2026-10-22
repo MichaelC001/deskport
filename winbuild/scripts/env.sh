@@ -1,15 +1,29 @@
 # Shared environment for the DeskPort Windows x64 static cross build.
 set -euo pipefail
-WB="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC_ROOT="$(cd "$WB/.." && pwd)"
-WB="${DESKPORT_WINDOWS_BUILD_ROOT:-$WB}"
-SRC_ROOT="${DESKPORT_WINDOWS_SOURCE_ROOT:-$SRC_ROOT}"
+SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# The helper prints only quoted assignments; failure must stop before eval.
+path_exports="$(python3 "$SCRIPTS/build_paths.py" --initialize --shell)"
+eval "$path_exports"
+unset path_exports
+SRC_ROOT="$DESKPORT_WINDOWS_SOURCE_ROOT"
+WB="$DESKPORT_WINDOWS_BUILD_ROOT"
+if [ "${DESKPORT_WINDOWS_DEPENDENCY_BUILD:-0}" = 1 ]; then
+  # Compile shared libraries at their permanent path, never through run links.
+  WB="$DESKPORT_WINDOWS_DEPENDENCY_ROOT"
+fi
 export WB SRC_ROOT
 export TRIPLE=x86_64-w64-mingw32
 export PREFIX="$WB/prefix"
 export WORK="$WB/work"
-export LOGS="$WB/logs"
+export LOGS="$DESKPORT_LOG_DIR"
 mkdir -p "$PREFIX" "$WORK" "$LOGS"
+# Every shell entry point, including a standalone dependency recipe, serializes
+# writes to the persistent cache. Child recipes inherit the held lock.
+if [ "${DESKPORT_WINDOWS_CACHE_LOCK_HELD:-0}" != 1 ]; then
+  exec 9>"$DESKPORT_WINDOWS_DEPENDENCY_ROOT/.build.lock"
+  flock -x 9
+  export DESKPORT_WINDOWS_CACHE_LOCK_HELD=1
+fi
 
 export CC="$TRIPLE-gcc"
 export CXX="$TRIPLE-g++"

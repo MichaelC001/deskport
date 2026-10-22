@@ -1,10 +1,30 @@
 #!/usr/bin/env python3
 """Check shipped binary catalogs against finished source translations at runtime."""
 from pathlib import Path
-import json, os, subprocess, tempfile
+import json, os, shutil, subprocess, tempfile
 root = Path(__file__).resolve().parents[1]
-with tempfile.TemporaryDirectory(prefix='deskport-translations-') as tmp:
+test_root = Path(os.environ.get('DESKPORT_TEST_DIR') or
+    (subprocess.check_output(['bash', str(root/'scripts/build-paths.sh'), 'checkout'], text=True).strip() + '/tests'))
+test_root.mkdir(parents=True, exist_ok=True)
+with tempfile.TemporaryDirectory(prefix='deskport-translations-', dir=test_root) as tmp:
     work = Path(tmp)
+    languages = [locale['qt'] for locale in json.loads((root/'shared/deskport-core/i18n/languages.json').read_text()) if locale['qt'] != 'en']
+    catalogs = work / 'catalogs'
+    catalogs.mkdir()
+    existing = os.environ.get('DESKPORT_TRANSLATIONS_DIR')
+    qmake = os.environ.get('DESKPORT_QMAKE', 'qmake')
+    lrelease = os.environ.get('DESKPORT_LRELEASE') or shutil.which('lrelease')
+    if not existing and not lrelease:
+        qt_bins = subprocess.check_output([qmake, '-query', 'QT_HOST_BINS'], text=True).strip()
+        lrelease = str(Path(qt_bins) / 'lrelease')
+    for language in languages:
+        source = root / 'app/languages' / f'qml_{language}.ts'
+        shutil.copy2(source, catalogs / source.name)
+        compiled = catalogs / f'qml_{language}.qm'
+        if existing:
+            shutil.copy2(Path(existing) / compiled.name, compiled)
+        else:
+            subprocess.run([lrelease, '-silent', str(source), '-qm', str(compiled)], check=True)
     (work/'test.cpp').write_text(r'''
 #include <QCoreApplication>
 #include <QDir>
@@ -49,6 +69,6 @@ int main(int argc, char** argv) {
 }
 ''')
     (work/'test.pro').write_text('QT = core\nCONFIG += console c++17\nCONFIG -= app_bundle\nTARGET = translation-test\nSOURCES = test.cpp\n')
-    subprocess.run([os.environ.get('DESKPORT_QMAKE','qmake'),'test.pro'],cwd=work,check=True,stdout=subprocess.DEVNULL)
+    subprocess.run([qmake,'test.pro'],cwd=work,check=True,stdout=subprocess.DEVNULL)
     subprocess.run(['make','-j4'],cwd=work,check=True,stdout=subprocess.DEVNULL)
-    subprocess.run([str(work/'translation-test'),str(root/'app/languages'), *[locale['qt'] for locale in json.loads((root/'shared/deskport-core/i18n/languages.json').read_text()) if locale['qt'] != 'en']],check=True)
+    subprocess.run([str(work/'translation-test'), str(catalogs), *languages],check=True)

@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Extract original toolchain license notices without depending on Nix paths."""
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from build_paths import paths, initialize, hold_cache_lock
 import os
 import tarfile
 import shutil
 
-wb = Path(os.environ.get('DESKPORT_WINDOWS_BUILD_ROOT', str(Path(__file__).resolve().parents[1])))
+config = initialize(paths())
+cache_guard = hold_cache_lock(config)
+wb = config['cache']
 out = wb / 'toolchain-notices'
 source_inputs = wb / 'source-inputs'
 

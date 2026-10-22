@@ -2,8 +2,9 @@
 # Build the pinned DeskPort host with virtual-display input routing.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
+export DESKPORT_TARGET=macos
 source "$repo/scripts/build-paths.sh"
-source_dir="$DESKPORT_HOST_SOURCE_DIR"
+source_dir=$(deskport_output_path "${DESKPORT_HOST_SOURCE_DIR:-$DESKPORT_MACOS_BUILD_DIR/sunshine-vendored-source}")
 build_root="$DESKPORT_MACOS_BUILD_DIR"
 build_dir="$build_root/sunshine-vendored-build"
 python3 "$repo/scripts/prepare-host-source.py" "$source_dir"
@@ -110,9 +111,18 @@ if [ -z "${DESKPORT_FFMPEG_ROOT:-}" ]; then
     ffmpeg_url=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["url"])' "$ffmpeg_manifest")
     ffmpeg_sha256=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$ffmpeg_manifest")
     ffmpeg_root="$build_root/ffmpeg-$ffmpeg_sha256"
+    if [ -n "${DESKPORT_RUN_ID:-}" ]; then
+        mkdir -p "$DESKPORT_DEPENDENCY_CACHE_DIR"
+        ffmpeg_root="$DESKPORT_DEPENDENCY_CACHE_DIR/ffmpeg-$ffmpeg_sha256"
+    fi
     if [ ! -f "$ffmpeg_root/lib/libavcodec.a" ]; then
+        ffmpeg_lock="$ffmpeg_root.lock"
+        mkdir "$ffmpeg_lock" 2>/dev/null || {
+            echo "Pinned FFmpeg cache is locked; inspect $ffmpeg_lock before retrying." >&2
+            exit 2
+        }
         ffmpeg_stage=$(mktemp -d "$build_root/.ffmpeg.XXXXXX")
-        trap 'rm -rf "$ffmpeg_stage"' EXIT
+        trap 'rm -rf "$ffmpeg_stage"; rmdir "$ffmpeg_lock"' EXIT
         /usr/bin/curl --fail --location --retry 3 --output "$ffmpeg_stage/ffmpeg.tar.gz" "$ffmpeg_url"
         actual_ffmpeg_sha256=$(shasum -a 256 "$ffmpeg_stage/ffmpeg.tar.gz" | awk '{print $1}')
         if [ "$actual_ffmpeg_sha256" != "$ffmpeg_sha256" ]; then
@@ -129,6 +139,7 @@ if [ -z "${DESKPORT_FFMPEG_ROOT:-}" ]; then
         mv "$ffmpeg_stage/ffmpeg" "$ffmpeg_root"
         rm "$ffmpeg_stage/ffmpeg.tar.gz"
         rmdir "$ffmpeg_stage"
+        rmdir "$ffmpeg_lock"
         trap - EXIT
     fi
     export DESKPORT_FFMPEG_ROOT="$ffmpeg_root"
