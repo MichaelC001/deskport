@@ -59,7 +59,7 @@ for p in [exe, uninstaller]+sorted(extracted.rglob('*')):
     directory=offset+24+(112 if magic==0x20b else 96)
     security=struct.unpack_from('<II',data,directory+4*8)
     delay=struct.unpack_from('<II',data,directory+13*8)
-    summary.append({'file':str(p.relative_to(art)), 'machine':hex(machine), 'sha256':hashlib.sha256(data).hexdigest(),'imports':imports,'security_directory':security,'delay_import_directory':delay})
+    summary.append({'file':p.name if p in (exe, uninstaller) else str(p.relative_to(audit)), 'machine':hex(machine), 'sha256':hashlib.sha256(data).hexdigest(),'imports':imports,'security_directory':security,'delay_import_directory':delay})
     if p.name=='DeskPort.exe':
         subprocess.run([sys.executable, str(Path(__file__).with_name('verify-version.py')), str(p), version], check=True)
         assert machine==0x8664
