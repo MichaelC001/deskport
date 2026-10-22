@@ -85,7 +85,7 @@ for component in curl miniupnpc minhook onevpl; do
     find "$WB/full/$component" -maxdepth 1 -type f \( -iname '*license*' -o -iname 'copying*' \) -exec cp {} "$STAGE/licenses/host-$component/" \;
 done
 # Boost is linked by the host; retain its top-level license as well.
-cp "$HOST_BUILD/_deps/boost-src/LICENSE_1_0.txt" "$STAGE/licenses/host-Boost-BSL-1.0.txt"
+cp "$DESKPORT_HOST_BOOST_SOURCE_DIR/LICENSE_1_0.txt" "$STAGE/licenses/host-Boost-BSL-1.0.txt"
 # Retain exact linked-component notices, including the separate license map.
 for component in libvirtualhid libdisplaydevice ViGEmClient Simple-Web-Server nvapi; do
     directory="$HOST_SOURCE/third-party/$component"

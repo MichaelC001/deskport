@@ -6,6 +6,8 @@ HOST_SOURCE="${DESKPORT_HOST_SOURCE_DIR:-$FULL/sunshine-prepared}"
 HOST_BUILD="${DESKPORT_HOST_BUILD_DIR:-$FULL/host-build-prepared}"
 "$WB/scripts/prepare-host.sh" >/dev/null
 "$WB/scripts/build-host-datachannel.sh"
+HOST_BOOST_SOURCE="$(python3 "$WB/scripts/host_boost.py" "$DESKPORT_WINDOWS_DEPENDENCY_ROOT" "$DESKPORT_WINDOWS_INPUT_CACHE" "$HOST_SOURCE")"
+[ "$HOST_BOOST_SOURCE" = "$DESKPORT_HOST_BOOST_SOURCE_DIR" ] || { echo "Unexpected Boost source cache path" >&2; exit 1; }
 export PREFIX="$FULL/prefix"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$WB/prefix/lib/pkgconfig"
 export BUILD_VERSION=2026.906.222525 BRANCH=deskport
@@ -14,6 +16,7 @@ NPM_BIN="${DESKPORT_NPM:-$(command -v npm || true)}"
 TOOLCHAIN="${DESKPORT_HOST_TOOLCHAIN_FILE:-$FULL/mingw-host-toolchain.cmake}"
 [ -f "$TOOLCHAIN" ] || TOOLCHAIN="$WB/scripts/mingw-host-toolchain.cmake"
 "${NICE_WRAP[@]}" cmake -S "$HOST_SOURCE" -B "$HOST_BUILD" -G Ninja \
+ -DFETCHCONTENT_SOURCE_DIR_BOOST="$HOST_BOOST_SOURCE" \
  -DCPM_SOURCE_CACHE="$DESKPORT_WINDOWS_DEPENDENCY_ROOT/full/cpm-source-cache" \
  -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
  -DCMAKE_CXX_FLAGS="-I$WB/compat-include" -DCMAKE_C_FLAGS="-I$WB/compat-include" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ \

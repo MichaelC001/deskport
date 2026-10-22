@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 sys.dont_write_bytecode = True
 from build_paths import paths, initialize, hold_cache_lock
+from host_boost import source_path as boost_source_path
 import shutil
 config = initialize(paths())
 cache_guard = hold_cache_lock(config)
@@ -13,10 +14,11 @@ out = Path(sys.argv[1])
 source = Path(os.environ.get('DESKPORT_HOST_SOURCE_DIR', wb/'full/sunshine-prepared'))
 build = Path(os.environ.get('DESKPORT_HOST_BUILD_DIR', wb/'full/host-build-prepared'))
 roots = [source/'third-party']
-roots += sorted((build/'_deps').glob('*-src'))
+roots += [p for p in sorted((build/'_deps').glob('*-src')) if p.name != 'boost-src']
+roots += [boost_source_path(config['cache'])]
 roots += [p for p in [wb/'full/libdatachannel', wb/'full/cpm-source-cache'] if p.exists()]
 for root in roots:
-    label = 'sunshine-third-party' if root.name == 'third-party' else root.name
+    label = 'sunshine-third-party' if root.name == 'third-party' else ('boost-src' if root == boost_source_path(config['cache']) else root.name)
     for base, dirs, files in os.walk(root):
         dirs[:] = [d for d in dirs if d not in ('.git', 'node_modules', '__pycache__')]
         for name in files:

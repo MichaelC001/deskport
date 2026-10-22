@@ -13,6 +13,9 @@ import shlex
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+from host_boost import source_path as boost_source_path
+
 SCRIPTS = Path(__file__).resolve().parent
 SOURCE = Path(os.environ.get('DESKPORT_WINDOWS_SOURCE_ROOT', SCRIPTS.parents[1])).resolve()
 CACHE_RECIPES = (
@@ -183,6 +186,7 @@ def shell(config):
         'DESKPORT_WINDOWS_DEPENDENCY_ROOT': config['cache'],
         'DESKPORT_WINDOWS_INPUT_CACHE': config['downloads'],
         'DESKPORT_HOST_DEP_CACHE': config['cache'] / 'full/host-vendored-deps',
+        'DESKPORT_HOST_BOOST_SOURCE_DIR': boost_source_path(config['cache']),
         'DESKPORT_RUN_ID': config['run_id'],
         'DESKPORT_WINDOWS_AUDIT_DIR': os.environ.get('DESKPORT_WINDOWS_AUDIT_DIR', config['work'] / 'audit'),
         'DESKPORT_LOG_DIR': config['logs'],

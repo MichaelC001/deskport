@@ -189,6 +189,7 @@ python3 scripts/test-prepare-host-source.py
 python3 scripts/test-build-privacy.py
 python3 scripts/test-source-export.py
 python3 winbuild/scripts/test-build-paths.py
+python3 winbuild/scripts/test-host-boost.py
 ```
 
 These cover path isolation, source privacy, optional source export, mocked GitHub
