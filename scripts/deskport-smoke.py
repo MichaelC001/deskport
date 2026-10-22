@@ -23,7 +23,8 @@ def main():
     assert entry["Desktop Entry"]["StartupWMClass"] == "io.github.keithxc.DeskPort"
     assert (output / "share/icons/hicolor/scalable/apps/deskport.svg").is_file()
 
-    with tempfile.TemporaryDirectory(prefix="deskport-smoke-") as temporary:
+    # Keep the private Wayland socket short, including long managed TMPDIR paths.
+    with tempfile.TemporaryDirectory(prefix="ds-") as temporary:
         root = Path(temporary)
         env = os.environ.copy()
         for key, name in (
@@ -31,7 +32,7 @@ def main():
             ("XDG_CACHE_HOME", "cache"),
             ("XDG_DATA_HOME", "data"),
             ("XDG_STATE_HOME", "state"),
-            ("XDG_RUNTIME_DIR", "runtime"),
+            ("XDG_RUNTIME_DIR", "r"),
         ):
             path = root / name
             path.mkdir(mode=0o700)
@@ -52,7 +53,8 @@ def main():
         seamless = output / "libexec/deskport-seamless-host"
         assert seamless.is_file(), f"Missing Seamless sidecar: {seamless}"
         result = subprocess.run(
-            [str(seamless), "--self-test", "--width", "320", "--height", "200"],
+            [str(seamless), "--self-test", "--socket", "s",
+             "--width", "320", "--height", "200"],
             env=env, cwd=root, capture_output=True, text=True, timeout=30,
         )
         assert result.returncode == 0, result.stdout + result.stderr
