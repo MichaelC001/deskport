@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from xml.sax.saxutils import escape
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -69,8 +70,21 @@ QMAKE_RPATHDIR += "{sdl}"
             ], "QT += dbus\n")
             # A private bus is mandatory: this fixture must never contact the
             # user's portal, request permission or bind a real shortcut.
-            subprocess.run(["dbus-run-session", "--", str(executable)],
-                           env=dict(env, DESKPORT_TEST_PRIVATE_BUS="1"), check=True, timeout=60)
+            # Nix's dbus-run-session cannot assume /etc/dbus-1/session.conf.
+            # Keep Unix sockets outside the deeply nested managed tests path.
+            socket_root = Path(subprocess.check_output([
+                "bash", str(ROOT / "scripts/build-paths.sh"), "root"], text=True).strip()) / "sockets"
+            socket_root.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix="gs-", dir=socket_root) as bus_tmp:
+                config = work / "bus.conf"
+                config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=' +
+                                  escape(bus_tmp) + '</listen><auth>EXTERNAL</auth>' +
+                                  '<policy context="default"><allow own="*"/>' +
+                                  '<allow send_destination="*"/><allow receive_sender="*"/>' +
+                                  '</policy></busconfig>')
+                # No service directories: never activate the user's desktop portal.
+                subprocess.run(["dbus-run-session", "--config-file", str(config), "--", str(executable)],
+                               env=dict(env, DESKPORT_TEST_PRIVATE_BUS="1"), check=True, timeout=60)
 
 
 if __name__ == "__main__":
