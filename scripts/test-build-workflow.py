@@ -8,10 +8,11 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
 from unittest.mock import patch
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
@@ -332,6 +333,79 @@ class WorkflowTests(unittest.TestCase):
                 w.build(args, paths, {"DESKPORT_JOBS": "invalid"})
         self.assertFalse(paths["target"].exists())
         self.assertFalse(paths["record"].exists())
+
+    def test_all_linux_packages_record_archive_and_flatpak_before_freeze(self):
+        paths, args = self.fresh_build()
+        args.command, args.target, args.format, args.flatpak = "package", "linux-portable", "all", True
+        version = (ROOT / "app/version.txt").read_text().strip()
+        phases = []
+
+        def command(command, actual_paths, env, phase):
+            phases.append(phase)
+            if phase == "build":
+                paths["dist"].mkdir()
+                appdir = paths["work"] / "DeskPort.AppDir"
+                appdir.mkdir()
+                (appdir / "LICENSE").write_text("retained upstream notice")
+                (paths["work"] / "private.log").write_text("not a package input")
+                for suffix in ("AppImage", "deb", "rpm", "pkg.tar.zst"):
+                    (paths["dist"] / f"DeskPort-{version}.{suffix}").write_bytes(b"package")
+            elif phase == "portable-archive":
+                subprocess.run([str(value) for value in command], check=True,
+                               env={**os.environ, "COPYFILE_DISABLE": "1"})
+            elif phase == "flatpak":
+                output = Path(command[-2])
+                output.mkdir()
+                (output / f"DeskPort-{version}-client-x86_64.flatpak").write_bytes(b"flatpak")
+
+        with patch.object(w, "host_check"), patch.object(w, "tool_check"), \
+                patch.object(w, "capacity"), patch.object(w, "privacy"), \
+                patch.object(w, "git_state", return_value=self.source), \
+                patch.object(w.shutil, "which", return_value="flatpak"), \
+                patch.object(w, "run_logged", side_effect=command), redirect_stdout(io.StringIO()):
+            w.build(args, paths, {})
+        record = w.read_record(paths, args)
+        names = {asset["name"] for asset in record["assets"]}
+        archive_name = f"DeskPort-{version}-linux-x86_64.tar.gz"
+        flatpak_name = f"DeskPort-{version}-client-x86_64.flatpak"
+        self.assertEqual(phases, ["build", "portable-archive", "flatpak"])
+        self.assertIn(archive_name, names)
+        self.assertIn(flatpak_name, names)
+        self.assertFalse((paths["work"] / "flatpak" / flatpak_name).exists())
+        with tarfile.open(paths["dist"] / archive_name) as archive:
+            self.assertEqual(set(archive.getnames()), {"DeskPort.AppDir", "DeskPort.AppDir/LICENSE"})
+        checksums = (paths["dist"] / "SHA256SUMS-linux-portable.txt").read_text()
+        self.assertIn(archive_name, checksums)
+        self.assertIn(flatpak_name, checksums)
+        self.assertEqual(record["trees"]["dist"], w.footprint(paths["dist"]))
+        self.assertFalse(any(w.source_material_archive(name) for name in names))
+
+    def test_flatpak_requires_all_linux_portable_package_before_work_is_created(self):
+        for arguments in (["package", "--target", "macos", "--format", "all"],
+                          ["build", "--target", "linux-portable", "--format", "all"],
+                          ["package", "--target", "linux-portable"]):
+            with patch.object(w, "layout") as layout, redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                w.main(arguments + ["--run", "invalid-flatpak", "--flatpak"])
+            layout.assert_not_called()
+
+    def test_linux_container_receives_explicit_cpu_limits_and_rejects_invalid_limits(self):
+        fakebin = self.base / "fakebin"
+        fakebin.mkdir()
+        podman = fakebin / "podman"
+        podman.write_text('#!/usr/bin/env python3\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n')
+        podman.chmod(0o755)
+        env = {**os.environ, "PATH": str(fakebin) + os.pathsep + os.environ["PATH"],
+               "DESKPORT_BUILD_ROOT": str(self.base / "outputs"),
+               "DESKPORT_LINUX_CPUSET": "0-3", "DESKPORT_LINUX_CPU_LIMIT": "2"}
+        env.pop("DESKPORT_RUN_ID", None)
+        command = ["bash", ROOT / "scripts/package-linux.sh"]
+        arguments = json.loads(subprocess.check_output(command, env=env))
+        self.assertEqual(arguments[arguments.index("--cpuset-cpus") + 1], "0-3")
+        self.assertEqual(arguments[arguments.index("--cpus") + 1], "2")
+        for key, value in (("DESKPORT_LINUX_CPUSET", "0-3;bad"), ("DESKPORT_LINUX_CPU_LIMIT", "0")):
+            result = subprocess.run(command, env={**env, key: value}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(result.stdout, "")
 
     def test_nix_result_link_is_disposable_work_and_smoke_tmp_is_removed(self):
         paths, args = self.fresh_build()

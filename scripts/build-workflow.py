@@ -308,6 +308,8 @@ def finish_package(args, paths, env, record):
 def build(args, paths, env):
     host_check(args.target)
     tool_check(args.target)
+    if getattr(args, "flatpak", False) and not shutil.which("flatpak"):
+        raise Refused("Flatpak packaging requires the flatpak command")
     capacity(paths, args)
     privacy()
     env["DESKPORT_MIN_FREE_GIB"] = str(args.min_free_gib if args.min_free_gib is not None else (80 if platform.system() == "Darwin" else 20))
@@ -359,6 +361,18 @@ def build(args, paths, env):
                 run_logged([sys.executable, "scripts/deskport-smoke.py", paths["work"] / "result"], paths, smoke_env, "smoke")
         record["status"] = "built"
         if args.command == "package" and args.target != "linux-nix":
+            if args.target == "linux-portable" and args.format == "all":
+                version = (ROOT / "app/version.txt").read_text().strip()
+                run_logged(["tar", "-C", paths["work"], "-czf",
+                            paths["dist"] / f"DeskPort-{version}-linux-x86_64.tar.gz",
+                            "DeskPort.AppDir"], paths, env, "portable-archive")
+                if args.flatpak:
+                    output = paths["work"] / "flatpak"
+                    run_logged(["bash", "scripts/package-flatpak.sh",
+                                paths["work"] / "DeskPort.AppDir", output, version],
+                               paths, env, "flatpak")
+                    bundle = output / f"DeskPort-{version}-client-x86_64.flatpak"
+                    bundle.replace(paths["dist"] / bundle.name)
             if args.distribution:
                 candidate = paths["dist"] / "notarized"
                 run_logged(["nix", "develop", "-c", "bash", "scripts/release-macos.sh", "prepare",
@@ -624,6 +638,7 @@ def main(argv=None):
     parser.add_argument("--run", help="Unique run ID; generated for build/package, required for existing runs")
     parser.add_argument("--distribution", action="store_true", help="macOS Developer ID and notarization")
     parser.add_argument("--format", choices=("appimage", "all"), default="appimage")
+    parser.add_argument("--flatpak", action="store_true", help="Include the client-only Flatpak with linux-portable --format all")
     parser.add_argument("--signing-config", help="Private literal env file outside the repository")
     parser.add_argument("--repo", help="Explicit GitHub OWNER/REPO (existing release only)")
     parser.add_argument("--tag", help="Existing GitHub release tag")
@@ -648,6 +663,8 @@ def main(argv=None):
         parser.error("--repo and --tag are required")
     if args.command == "build" and args.distribution:
         parser.error("--distribution is only available with package")
+    if args.flatpak and (args.command != "package" or args.target != "linux-portable" or args.format != "all"):
+        parser.error("--flatpak requires package --target linux-portable --format all")
     paths, env = layout(args.target, args.run)
     if args.command == "paths":
         print(json.dumps({k: str(v) for k, v in paths.items()}, indent=2))

@@ -26,9 +26,11 @@ bash scripts/build.sh notarize --target macos --run example-distribution
 # Linux x86_64 build host: full Windows client/host and installer audit.
 bash scripts/build.sh package --target windows --run example-windows
 
-# Explicit Linux portable selection. Use --format all only when all native
-# distribution packages are required; it does not include the viewer-only Flatpak.
+# Explicit Linux portable selection; the default is AppImage only.
 bash scripts/build.sh package --target linux-portable --run example-appimage
+
+# All native distribution packages, portable archive and client-only Flatpak.
+bash scripts/build.sh package --target linux-portable --run example-linux-all --format all --flatpak
 ```
 
 Omit `--run` on `build` or `package` for a UTC timestamp and source revision ID.
@@ -36,6 +38,15 @@ An existing run is never silently reused or overwritten. Run commands on the
 appropriate host: macOS on an Apple Silicon Mac, Linux/Windows on an x86_64
 Linux builder. The entry point does not synchronize or modify another checkout
 over SSH. Apple/Android mobile clients remain in their private repository.
+
+For Linux portable packaging, `--format all` produces AppImage, DEB, RPM, Arch
+and a portable `.tar.gz` containing the installed application tree and notices.
+Add `--flatpak` to include the client-only Flatpak in the same run's recorded
+assets and checksums; this needs the host's `flatpak` command. Flatpak staging
+stays in disposable work. Neither option exports a separate source archive.
+Set `DESKPORT_JOBS` to cap parallel compilation, and optionally set
+`DESKPORT_LINUX_CPUSET` (for example `0-3`) and `DESKPORT_LINUX_CPU_LIMIT`
+(for example `2`) to explicitly constrain the build container's CPUs.
 
 `build --target macos` currently invokes the existing application packager,
 including local signing. `build --target windows` stops after host compilation.

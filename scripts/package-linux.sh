@@ -6,6 +6,20 @@ export DESKPORT_TARGET=linux-portable
 source "$repo/scripts/build-paths.sh"
 format=${DESKPORT_LINUX_FORMAT:-all}
 case "$format" in all|appimage) ;; *) echo "DESKPORT_LINUX_FORMAT must be all or appimage" >&2; exit 2 ;; esac
+resources=()
+if [ -n "${DESKPORT_LINUX_CPUSET:-}" ]; then
+    [[ "$DESKPORT_LINUX_CPUSET" =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ ]] || {
+        echo "DESKPORT_LINUX_CPUSET must be a CPU list such as 0-3" >&2; exit 2;
+    }
+    resources+=(--cpuset-cpus "$DESKPORT_LINUX_CPUSET")
+fi
+if [ -n "${DESKPORT_LINUX_CPU_LIMIT:-}" ]; then
+    [[ "$DESKPORT_LINUX_CPU_LIMIT" =~ ^[0-9]+([.][0-9]+)?$ ]] &&
+        [[ ! "$DESKPORT_LINUX_CPU_LIMIT" =~ ^0+([.]0+)?$ ]] || {
+        echo "DESKPORT_LINUX_CPU_LIMIT must be a positive number" >&2; exit 2;
+    }
+    resources+=(--cpus "$DESKPORT_LINUX_CPU_LIMIT")
+fi
 work=$DESKPORT_LINUX_WORK
 mkdir -p "$work"
 work=$(cd "$work" && pwd)
@@ -39,6 +53,7 @@ if [ -n "${DESKPORT_RUN_ID:-}" ]; then
     mounts+=(-v "$cache:$cache" -v "$dist:$dist")
 fi
 podman run --rm \
+    "${resources[@]}" \
     "${mounts[@]}" \
     -e "DESKPORT_JOBS=${DESKPORT_JOBS:-4}" \
     -e "DESKPORT_LINUX_FORMAT=$format" \
