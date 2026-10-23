@@ -31,6 +31,9 @@ bash scripts/build.sh package --target linux-portable --run example-appimage
 
 # All native distribution packages, portable archive and client-only Flatpak.
 bash scripts/build.sh package --target linux-portable --run example-linux-all --format all --flatpak
+
+# Rebuild the same application version under distinct immutable download names.
+bash scripts/build.sh package --target macos --run example-macos-r2 --distribution --asset-suffix r2
 ```
 
 Omit `--run` on `build` or `package` for a UTC timestamp and source revision ID.
@@ -38,6 +41,18 @@ An existing run is never silently reused or overwritten. Run commands on the
 appropriate host: macOS on an Apple Silicon Mac, Linux/Windows on an x86_64
 Linux builder. The entry point does not synchronize or modify another checkout
 over SSH. Apple/Android mobile clients remain in their private repository.
+
+Use `--asset-suffix r2` when a rebuilt version needs distinct download URLs.
+Only final filenames change: for example `DeskPort-0.7.4-macos-arm64-r2.zip`
+and `deskport-0.7.4-1-x86_64-r2.pkg.tar.zst`. The application and package
+versions stay unchanged. Build metadata, supporting public records and checksum
+filenames receive the same suffix, and their entries reference the final names.
+Suffixes contain 1–32 ASCII letters, digits, dashes or underscores and start with
+a letter or digit. Conflicting destinations are refused before renaming.
+The suffix is fixed in `run.json`; `notarize` inherits it and refuses a different
+explicit suffix. Repeating a completed notarization checks the recorded assets
+without regenerating packages or adding the suffix again. Publish, verification
+and cleanup use the run's recorded names; no suffix argument is needed.
 
 For Linux portable packaging, `--format all` produces AppImage, DEB, RPM, Arch
 and a portable `.tar.gz` containing the installed application tree and notices.

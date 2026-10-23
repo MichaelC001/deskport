@@ -23,24 +23,20 @@ The isolated manager (18 cases), private-bus portal (14 cases), SDL state,
 30 window transitions and shared-core regressions pass. Physical key delivery,
 compositor permission, focus and live streaming acceptance remain unverified.
 
-## Desktop 0.7.4 staged release — 2026-10-23
+## Desktop 0.7.4 replacement release — 2026-10-23
 
-Published macOS arm64 DMG/ZIP and Linux x86_64 DEB/RPM/Arch/AppImage/portable
-archive/viewer-only Flatpak, with the Nix flake pinned to the same source.
-The release remains a prerelease; Latest and the README's stable downloads stay
-on 0.7.3. Windows x64 Setup/portable packages are built and statically audited,
-retained for native verification before publication and stable promotion.
+The operator requested a fresh 0.7.4 build including the global recall shortcut
+before final publication. The earlier macOS/Linux prerelease and prepared
+Windows packages used `423ab9fe`; their checks remain historical evidence.
+Prepare all desktop formats from one new source revision, verify bounded native
+shortcut behavior on macOS, Linux and Windows, then publish distinct `r2` asset
+names, update mynix source/package pins and retire the superseded installers.
+The application version stays 0.7.4. Latest remains 0.7.3 during preparation.
 
-The release contains compact, centered device cards and the managed build
-lifecycle introduced since 0.7.3. The managed Linux inventory includes the
-portable archive and viewer-only Flatpak. All 17 uploaded installers, checksums
-and small provenance/verification records passed GitHub server SHA-256 and size
-verification. Source is identified by exact public commit, with notices retained
-inside packages. No separate source/relink archives were uploaded and installers
-were not downloaded again for verification. macOS notarization and Gatekeeper,
-Linux Nix, container installer, offline AppImage and isolated Flatpak checks
-passed. mynix was pulled, updated and pushed. Activation remains manual, and
-compilation/package checks do not establish live-device acceptance.
+Retain checksums, provenance, dependency caches and current rollback evidence.
+Do not reuse a download URL for different package bytes. GitHub asset validation
+uses server SHA-256 and byte size without downloading installers again.
+Activation of mynix-managed systems remains manual.
 See [0.7.4 release notes](RELEASE_0.7.4.md).
 
 ## Managed build and artifact lifecycle — 2026-10-22

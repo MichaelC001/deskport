@@ -31,6 +31,7 @@ SCHEMA = 1
 OWNERSHIP = "deskport-managed-build-v1"
 SIGN_KEYS = {"DESKPORT_SIGN_IDENTITY", "DESKPORT_SIGN_TEAM", "DESKPORT_NOTARY_PROFILE"}
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,100}\Z")
+ASSET_SUFFIX = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,31}\Z")
 
 
 class Refused(RuntimeError):
@@ -273,6 +274,42 @@ def capacity(paths, args):
         raise Refused(f"Managed run outputs exceed {args.max_work_gib:g} GiB; clean completed runs before building")
 
 
+def asset_suffix(value):
+    if value is not None and not ASSET_SUFFIX.fullmatch(value):
+        raise Refused("Asset suffix must be 1-32 alphanumeric/dash/underscore characters, starting with an alphanumeric")
+    return value or ""
+
+
+def suffixed_name(name, suffix):
+    if not suffix:
+        return name
+    extension = next((ext for ext in (".pkg.tar.zst", ".tar.gz", ".tar.xz", ".tar.zst")
+                      if name.endswith(ext)), Path(name).suffix)
+    stem = name[:-len(extension)] if extension else name
+    result = stem + ("" if stem.endswith("-" + suffix) else "-" + suffix) + extension
+    if not NAME.fullmatch(result):
+        raise Refused("Suffixed asset name exceeds the portable filename limit")
+    return result
+
+
+def suffix_assets(paths, assets, suffix):
+    """Preflight the complete rename set; never overwrite an existing file."""
+    plan = [(paths["dist"] / a["path"],
+             (paths["dist"] / a["path"]).with_name(suffixed_name(a["name"], suffix))) for a in assets]
+    if len({destination.name for _, destination in plan}) != len(plan):
+        raise Refused("Asset suffix would create duplicate download names")
+    for source, destination in plan:
+        no_links(destination)
+        if source != destination and destination.exists():
+            raise Refused(f"Asset suffix destination already exists: {destination.name}")
+    for source, destination in plan:
+        if source != destination:
+            # Unlike rename(), link() refuses a destination created after preflight.
+            os.link(source, destination)
+            source.unlink()
+    return [asset_info(paths, destination) for _, destination in plan]
+
+
 def finish_package(args, paths, env, record):
     """Record exact artifacts only after all platform packaging steps succeeded."""
     state = record["source"]
@@ -286,26 +323,35 @@ def finish_package(args, paths, env, record):
             source_file = paths["dist"] / "notarized" / name
             if source_file.is_file():
                 shutil.copyfile(source_file, evidence / name)
+    suffix = asset_suffix(record.get("asset_suffix") or None)
+    metadata = paths["dist"] / suffixed_name(f"DeskPort-{version}-{args.target}-build.json", suffix)
+    checksums = paths["dist"] / suffixed_name(f"SHA256SUMS-{args.target}.txt", suffix)
+    for destination in (metadata, checksums):
+        no_links(destination)
+        if destination.exists() and asset_info(paths, destination) not in record.get("assets", []):
+            raise Refused(f"Unrecorded or changed generated asset already exists: {destination.name}")
     assets = collect_assets(paths, args.target, record["status"])
     if args.target == "linux-portable":
         for p in sorted(paths["dist"].iterdir()):
-            if p.name in {"AppImage-runtime-sources.json", "build-packages.txt"}:
+            if p.name in {suffixed_name(name, value) for name in ("AppImage-runtime-sources.json", "build-packages.txt")
+                          for value in ("", suffix)}:
                 assets.append(asset_info(paths, p))
+    assets = suffix_assets(paths, assets, suffix)
     # Public metadata contains no machine paths, hostnames, signing identities,
     # keychain profiles or raw logs.
-    metadata = paths["dist"] / f"DeskPort-{version}-{args.target}-build.json"
     write_json(metadata, {"schema": SCHEMA, "version": version, "target": args.target,
+                          "asset_suffix": suffix,
                           "source": state,
                           "source_url": f"https://github.com/keithxc/deskport/tree/{state['revision']}",
                           "assets": [{k: a[k] for k in ("name", "size", "sha256")} for a in assets]})
     assets.append(asset_info(paths, metadata))
-    checksums = paths["dist"] / f"SHA256SUMS-{args.target}.txt"
     checksums.write_text("".join(f"{a['sha256']}  {a['name']}\n" for a in assets))
     assets.append(asset_info(paths, checksums))
     record.update(assets=assets, source_unchanged=True, failed=False)
 
 
 def build(args, paths, env):
+    suffix = asset_suffix(getattr(args, "asset_suffix", None))
     host_check(args.target)
     tool_check(args.target)
     if getattr(args, "flatpak", False) and not shutil.which("flatpak"):
@@ -334,7 +380,7 @@ def build(args, paths, env):
     paths["cache"].mkdir(parents=True, exist_ok=True)
     (paths["cache"] / ".keep").touch()
     record = dict(owner=OWNERSHIP, schema=SCHEMA, checkout=str(ROOT), run=args.run,
-                  target=args.target, source=state, status="building", assets=[],
+                  target=args.target, source=state, status="building", assets=[], asset_suffix=suffix,
                   created_at=datetime.now(timezone.utc).isoformat())
     write_json(paths["record"] / "run.json", record)
     try:
@@ -637,6 +683,7 @@ def main(argv=None):
     parser.add_argument("--target", choices=TARGETS, required=True)
     parser.add_argument("--run", help="Unique run ID; generated for build/package, required for existing runs")
     parser.add_argument("--distribution", action="store_true", help="macOS Developer ID and notarization")
+    parser.add_argument("--asset-suffix", help="Optional download filename suffix, e.g. r2; inherited by notarize")
     parser.add_argument("--format", choices=("appimage", "all"), default="appimage")
     parser.add_argument("--flatpak", action="store_true", help="Include the client-only Flatpak with linux-portable --format all")
     parser.add_argument("--signing-config", help="Private literal env file outside the repository")
@@ -650,6 +697,9 @@ def main(argv=None):
     parser.add_argument("--max-cache-gib", type=float, default=40, help="Refuse new builds above this cache budget")
     parser.add_argument("--max-work-gib", type=float, default=30, help="Refuse new builds above this managed-output budget")
     args = parser.parse_args(argv)
+    asset_suffix(args.asset_suffix)
+    if args.asset_suffix is not None and args.command not in {"build", "package", "notarize"}:
+        parser.error("--asset-suffix is only available with build, package or notarize")
     if any(value is not None and (not 0 < value < float("inf")) for value in (args.min_free_gib, args.max_cache_gib, args.max_work_gib)):
         parser.error("Storage limits must be positive finite numbers")
     if args.run is None:
@@ -688,11 +738,19 @@ def main(argv=None):
             if args.command == "notarize":
                 if args.target != "macos" or record["status"] not in {"signed", "notarized"}:
                     raise Refused("Only an existing signed macOS candidate can resume notarization")
+                suffix = asset_suffix(record.get("asset_suffix") or None)
+                if args.asset_suffix is not None and args.asset_suffix != suffix:
+                    raise Refused("Notarization must retain the run's original asset suffix")
                 host_check(args.target)
                 local_signing(env, args.signing_config)
                 try:
-                    run_logged(["nix", "develop", "-c", "bash", "scripts/release-macos.sh", "notarize",
-                                paths["dist"] / "notarized"], paths, env, "notarize")
+                    if record["status"] != "notarized":
+                        run_logged(["nix", "develop", "-c", "bash", "scripts/release-macos.sh", "notarize",
+                                    paths["dist"] / "notarized"], paths, env, "notarize")
+                    else:
+                        for item in record["assets"]:
+                            if asset_info(paths, paths["dist"] / item["path"]) != item:
+                                raise Refused(f"Local asset changed after packaging: {item['name']}")
                     record.update(status="notarized", failed=False)
                     finish_package(args, paths, env, record)
                 except BaseException:

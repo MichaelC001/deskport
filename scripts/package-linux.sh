@@ -6,7 +6,8 @@ export DESKPORT_TARGET=linux-portable
 source "$repo/scripts/build-paths.sh"
 format=${DESKPORT_LINUX_FORMAT:-all}
 case "$format" in all|appimage) ;; *) echo "DESKPORT_LINUX_FORMAT must be all or appimage" >&2; exit 2 ;; esac
-resources=()
+# Keep the array nonempty: Bash 3.2 treats an empty array as unset under -u.
+resources=(--rm)
 if [ -n "${DESKPORT_LINUX_CPUSET:-}" ]; then
     [[ "$DESKPORT_LINUX_CPUSET" =~ ^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$ ]] || {
         echo "DESKPORT_LINUX_CPUSET must be a CPU list such as 0-3" >&2; exit 2;
@@ -52,7 +53,7 @@ if [ -n "${DESKPORT_RUN_ID:-}" ]; then
     trap 'rm -f "$cache_lock/pid"; rmdir "$cache_lock"' EXIT
     mounts+=(-v "$cache:$cache" -v "$dist:$dist")
 fi
-podman run --rm \
+podman run \
     "${resources[@]}" \
     "${mounts[@]}" \
     -e "DESKPORT_JOBS=${DESKPORT_JOBS:-4}" \

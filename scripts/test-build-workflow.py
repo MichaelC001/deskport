@@ -269,6 +269,99 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(receipt["assets"][0]["verification"], "github-sha256")
             download.assert_not_called()
 
+    def test_suffix_preserves_extensions_contents_version_and_repeat_finish(self):
+        self.package.unlink()
+        self.args.target = "linux-portable"
+        self.record.update(status="built", asset_suffix="r2", assets=[])
+        originals = ["DeskPort-0.7.4-x86_64.AppImage", "deskport-0.7.4.pkg.tar.zst",
+                     "DeskPort-0.7.4-linux-x86_64.tar.gz", "deskport_0.7.4_amd64.deb",
+                     "AppImage-runtime-sources.json", "build-packages.txt"]
+        for name in originals:
+            (self.paths["dist"] / name).write_bytes(name.encode())
+        with patch.object(w, "git_state", return_value=self.source):
+            w.finish_package(self.args, self.paths, {}, self.record)
+            first = list(self.record["assets"])
+            w.finish_package(self.args, self.paths, {}, self.record)
+        self.assertEqual(self.record["assets"], first)
+        names = {a["name"] for a in first}
+        self.assertIn("deskport-0.7.4-r2.pkg.tar.zst", names)
+        self.assertIn("DeskPort-0.7.4-linux-x86_64-r2.tar.gz", names)
+        self.assertIn("AppImage-runtime-sources-r2.json", names)
+        for name in originals:
+            self.assertEqual((self.paths["dist"] / w.suffixed_name(name, "r2")).read_bytes(), name.encode())
+            self.assertFalse((self.paths["dist"] / name).exists())
+        version = (ROOT / "app/version.txt").read_text().strip()
+        metadata = json.loads((self.paths["dist"] / f"DeskPort-{version}-linux-portable-build-r2.json").read_text())
+        self.assertEqual(metadata["version"], version)
+        self.assertEqual(metadata["asset_suffix"], "r2")
+        checksums = (self.paths["dist"] / "SHA256SUMS-linux-portable-r2.txt").read_text().splitlines()
+        self.assertEqual({line.split("  ")[1] for line in checksums}, names - {"SHA256SUMS-linux-portable-r2.txt"})
+        for line in checksums:
+            sha, name = line.split("  ")
+            self.assertEqual(sha, w.digest(self.paths["dist"] / name))
+
+    def test_suffix_conflicts_refuse_before_any_rename(self):
+        extra = self.paths["dist"] / "DeskPort-aaa.zip"
+        extra.write_bytes(b"first asset must remain")
+        destination = self.package.with_name("DeskPort-test-r2.zip")
+        destination.write_bytes(b"existing destination")
+        self.args.target = "windows"
+        self.record.update(status="built", asset_suffix="r2")
+        with patch.object(w, "git_state", return_value=self.source), self.assertRaises(w.Refused):
+            w.finish_package(self.args, self.paths, {}, self.record)
+        self.assertTrue(extra.exists())
+        self.assertTrue(self.package.exists())
+        self.assertEqual(destination.read_bytes(), b"existing destination")
+        destination.unlink()
+        generated = self.paths["dist"] / "SHA256SUMS-windows-r2.txt"
+        generated.write_text("unrelated record")
+        with patch.object(w, "git_state", return_value=self.source), self.assertRaises(w.Refused):
+            w.finish_package(self.args, self.paths, {}, self.record)
+        self.assertTrue(extra.exists())
+        self.assertTrue(self.package.exists())
+        self.assertEqual(generated.read_text(), "unrelated record")
+
+    def test_invalid_suffix_is_rejected_before_layout_or_run_creation(self):
+        for value in ("", "../r2", "r.2", "-r2", "r 2", "r2/next", "a" * 33):
+            with patch.object(w, "layout") as layout, self.assertRaises(w.Refused):
+                w.main(["package", "--target", "windows", "--asset-suffix=" + value])
+            layout.assert_not_called()
+        paths, args = self.fresh_build()
+        args.asset_suffix = "../bad"
+        with self.assertRaises(w.Refused):
+            w.build(args, paths, {})
+        self.assertFalse(paths["target"].exists())
+
+    def test_notarize_inherits_suffix_and_does_not_recreate_completed_packages(self):
+        candidate = self.paths["dist"] / "notarized"
+        candidate.mkdir()
+        self.package.unlink()
+        self.record.update(status="signed", asset_suffix="r2", assets=[])
+        w.freeze(self.paths, self.record)
+
+        def notarize(*_args):
+            (candidate / "DeskPort-test.zip").write_bytes(b"signed and notarized zip")
+            (candidate / "DeskPort-test.dmg").write_bytes(b"signed and notarized dmg")
+
+        command = ["notarize", "--target", "macos", "--run", "run"]
+        with patch.object(w, "layout", return_value=(self.paths, {})), patch.object(w, "host_check"), \
+                patch.object(w, "local_signing"), patch.object(w, "git_state", return_value=self.source), \
+                patch.object(w, "run_logged", side_effect=notarize) as native:
+            w.main(command)
+            completed = w.read_record(self.paths, self.args)
+            self.assertEqual(completed["asset_suffix"], "r2")
+            self.assertIn("notarized/DeskPort-test-r2.zip", {a["path"] for a in completed["assets"]})
+            w.main(command + ["--asset-suffix", "r2"])
+            self.assertEqual(native.call_count, 1)
+            self.assertEqual(w.read_record(self.paths, self.args)["assets"], completed["assets"])
+            with self.assertRaises(w.Refused):
+                w.main(command + ["--asset-suffix", "r3"])
+            self.assertEqual(native.call_count, 1)
+            (candidate / "DeskPort-test-r2.zip").write_bytes(b"changed after notarization")
+            with self.assertRaises(w.Refused):
+                w.main(command)
+            self.assertEqual(native.call_count, 1)
+
     def test_missing_or_invalid_digest_keeps_files_without_implicit_download(self):
         for value in (None, "", "sha256:bad", "md5:" + "a" * 32):
             self.asset["digest"] = value
@@ -336,7 +429,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_all_linux_packages_record_archive_and_flatpak_before_freeze(self):
         paths, args = self.fresh_build()
-        args.command, args.target, args.format, args.flatpak = "package", "linux-portable", "all", True
+        args.command, args.target, args.format, args.flatpak, args.asset_suffix = "package", "linux-portable", "all", True, "r2"
         version = (ROOT / "app/version.txt").read_text().strip()
         phases = []
 
@@ -366,15 +459,16 @@ class WorkflowTests(unittest.TestCase):
             w.build(args, paths, {})
         record = w.read_record(paths, args)
         names = {asset["name"] for asset in record["assets"]}
-        archive_name = f"DeskPort-{version}-linux-x86_64.tar.gz"
-        flatpak_name = f"DeskPort-{version}-client-x86_64.flatpak"
+        self.assertEqual(record["asset_suffix"], "r2")
+        archive_name = f"DeskPort-{version}-linux-x86_64-r2.tar.gz"
+        flatpak_name = f"DeskPort-{version}-client-x86_64-r2.flatpak"
         self.assertEqual(phases, ["build", "portable-archive", "flatpak"])
         self.assertIn(archive_name, names)
         self.assertIn(flatpak_name, names)
-        self.assertFalse((paths["work"] / "flatpak" / flatpak_name).exists())
+        self.assertFalse((paths["work"] / "flatpak" / f"DeskPort-{version}-client-x86_64.flatpak").exists())
         with tarfile.open(paths["dist"] / archive_name) as archive:
             self.assertEqual(set(archive.getnames()), {"DeskPort.AppDir", "DeskPort.AppDir/LICENSE"})
-        checksums = (paths["dist"] / "SHA256SUMS-linux-portable.txt").read_text()
+        checksums = (paths["dist"] / "SHA256SUMS-linux-portable-r2.txt").read_text()
         self.assertIn(archive_name, checksums)
         self.assertIn(flatpak_name, checksums)
         self.assertEqual(record["trees"]["dist"], w.footprint(paths["dist"]))
@@ -466,19 +560,21 @@ elif args[0]=='api' and '/releases/assets/' in args[1]:
 else: sys.exit(9)
 ''')
         gh.chmod(0o755)
-        metadata = self.paths["dist"] / "DeskPort-test-build.json"
-        metadata.write_text(json.dumps({"source": self.source}))
-        self.record["assets"].append(w.asset_info(self.paths, metadata))
+        self.args.target = "windows"
+        self.record.update(status="built", asset_suffix="r2")
+        with patch.object(w, "git_state", return_value=self.source):
+            w.finish_package(self.args, self.paths, {}, self.record)
         w.freeze(self.paths, self.record)
         with patch.dict(os.environ, {"PATH": str(fakebin) + os.pathsep + os.environ["PATH"], "DESKPORT_TEST_GITHUB": str(remote)}), \
                 patch.object(w, "privacy"), patch.object(w, "git_state", return_value=self.source), \
                 patch.object(w, "inactive"), redirect_stdout(io.StringIO()):
             w.publish(self.args, self.paths, self.record)
             receipt = json.loads((self.paths["record"] / "github-receipt.json").read_text())
-            self.assertEqual(len(receipt["assets"]), 2)
+            self.assertEqual(len(receipt["assets"]), 3)
+            self.assertTrue(all("-r2." in item["name"] for item in receipt["assets"]))
             w.clean(self.args, self.paths, self.record)
         self.assertFalse(self.paths["target"].exists())
-        self.assertEqual(len(list(remote.iterdir())), 2)
+        self.assertEqual(len(list(remote.iterdir())), 3)
         self.assertTrue((self.paths["cache"] / "library.a").exists())
 
 

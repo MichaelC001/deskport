@@ -1,13 +1,22 @@
 # DeskPort 0.7.4
 
-Staged desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
-Linux and macOS packages are published, while Windows packages are built and
-statically audited, awaiting native validation. The release remains a prerelease
-and is not marked Latest until that validation is completed and promotion is confirmed.
-The current stable release remains 0.7.3 during this stage.
+Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
+A replacement build is being prepared with the built-in global window shortcut.
+The earlier 0.7.4 packages used source `423ab9fe` and do not include that feature.
+Replacement downloads use an `r2` filename suffix while the application version
+remains 0.7.4. The earlier package receipts remain retained as historical evidence.
+The release stays a prerelease until the replacement packages are validated;
+the current stable release remains 0.7.3 during preparation.
 
 ## Changes since 0.7.3
 
+- **Built-in window shortcut:** Command + apostrophe on macOS and Windows/Super
+  + apostrophe on Windows/Linux recall or hide DeskPort. The resident process
+  uses the native platform registration; the viewer forwards the same chord
+  while capturing keyboard input. Activation waits for key release and removes
+  duplicate notifications. Wayland requires the GlobalShortcuts portal and its
+  permission/binding flow; unavailable or conflicting bindings are reported
+  without replacing other applications' shortcuts.
 - **Compact device cards:** desktop device and add cards use a compact square
   layout. Each visible row is centered by its actual card span, including
   partially filled rows, without changing grid keyboard navigation. The add
@@ -46,36 +55,25 @@ or the isolated Seamless development branch.
   follow that gate.
 
 See the [release assets](https://github.com/keithxc/deskport/releases/tag/v0.7.4).
-`SHA256SUMS.txt`, `PROVENANCE.json` and `VERIFICATION.txt` record the published
-asset set, exact source, CI and validation results. Platform build records carry
-the corresponding package hashes. Nix uses the pinned public source instead of
-a separate binary attachment. Mobile clients are outside this desktop release.
+The replacement package set will be identified by `SHA256SUMS-r2.txt`,
+`PROVENANCE-r2.json` and `VERIFICATION-r2.txt`. Platform build records include
+exact source revisions and asset hashes. Nix uses the pinned public source;
+mobile clients are outside this desktop release.
 
 ## Validation boundary
 
-The packages use source commit `423ab9febd633e58fe16afc6f02fa27515621854`.
-Its Windows source, display-control and Linux build CI checks passed. The
-published macOS packages passed Developer ID, Apple notarization, stapling and
-extracted-ZIP Gatekeeper checks. Linux passed the Nix build and isolated smoke
-checks, container package installation on Ubuntu 24.04, Debian 13, Fedora 44
-and Arch, offline AppImage checks on Ubuntu 22.04, isolated Flatpak installation
-and recovery checks, and portable archive safety/notices checks.
+The earlier staging checks apply only to their recorded source and package
+hashes. They do not establish acceptance of the replacement binaries. The new
+packages require fresh platform packaging checks and bounded native shortcut
+checks before publication. Compilation, mocked portal tests and registration
+alone do not establish real window activation or physical keyboard acceptance.
 
-All 17 uploaded assets were checked against GitHub's server-provided SHA-256
-digest and exact byte size. `VERIFICATION.txt` records the detailed scope and
-`SHA256SUMS.txt` covers the other 16 assets in this staging snapshot. Windows
-packages remain unpublished. Earlier 0.7.3 checks retain their original package
-identity and are not claimed as validation of these new bytes.
+The [PC support matrix](PC_SUPPORT_MATRIX.md) retains the separately scoped
+limits for Windows pre-login/secure desktop, GNOME capture/recovery, physical
+Hyprland/X11 behavior, native Wayland IME, broad browser/device coverage,
+long-session recovery, clipboard/audio quality, HDR and latency. Local shortcut
+validation does not establish physical streaming or remote-input acceptance.
 
-The [PC support matrix](PC_SUPPORT_MATRIX.md) retains the platform acceptance
-limits: Windows pre-login/secure desktop and installation lifecycle, GNOME
-capture/recovery, physical Hyprland/X11 behavior, native Wayland IME, broad
-browser/device coverage, long-session recovery, clipboard/audio quality, HDR
-and latency remain separately scoped. Successful builds, CI, isolated tests
-and package audits do not establish physical streaming or remote-input
-acceptance.
-
-mynix was pulled, updated and pushed with the exact source and signed macOS
-package pins. Updating mynix does not activate an installation; the user performs
-`rebuild switch` and subsequent live validation. Stable promotion remains pending
-until Windows validation is confirmed.
+mynix will be pulled before updating the exact source and new immutable macOS
+ZIP URL/hash. Updating the pins does not activate an installation; the user
+performs `rebuild switch` and subsequent live validation.
