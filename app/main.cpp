@@ -1,3 +1,7 @@
+// Qt owns the application entry point. This must precede every header that
+// can include SDL, including shortcut and session headers.
+#define SDL_MAIN_HANDLED
+
 #include "backend/diagnostics.h"
 #include <QApplication>
 #include <QAbstractNativeEventFilter>
@@ -65,10 +69,6 @@ static void forwardTerminationSignal(int)
 }
 #endif
 
-// Don't let SDL hook our main function, since Qt is already
-// doing the same thing. This needs to be before any headers
-// that might include SDL.h themselves.
-#define SDL_MAIN_HANDLED
 #include <SDL.h>
 
 #ifdef HAVE_FFMPEG
