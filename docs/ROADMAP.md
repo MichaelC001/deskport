@@ -13,11 +13,15 @@ The viewer also handles the chord while SDL captures keyboard shortcuts; forward
 it to the resident process and suppress duplicate native/worker notifications.
 Pass Wayland activation tokens through to the recalled window or viewer worker.
 
-Validation: isolated manager/SDL state, transition-window and private-bus portal
-regressions cover cancellation, binding changes, repeats and token lifetime.
-Native Linux/Windows compilation and physical desktop input acceptance remain
-pending while the x86_64 builder is offline. Compilation and synthetic checks do
-not establish focus, compositor permission or live streaming acceptance.
+Validation: the macOS managed build and native registration/cleanup checks pass;
+the Linux Nix build, isolated CLI smoke and private-X11 registration/conflict/
+cleanup checks pass. The complete Windows client cross-build and PE version
+checks pass, reusing retained dependencies through the compatibility app-only
+resume entry point. Its link check caught an SDL/Qt entry-point conflict; define
+SDL_MAIN_HANDLED before all headers so Qt retains ownership of qMain.
+The isolated manager (18 cases), private-bus portal (14 cases), SDL state,
+30 window transitions and shared-core regressions pass. Physical key delivery,
+compositor permission, focus and live streaming acceptance remain unverified.
 
 ## Desktop 0.7.4 staged release — 2026-10-23
 
