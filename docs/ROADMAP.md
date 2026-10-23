@@ -21,6 +21,12 @@ shortcut lifecycle, SDL chord and 14 private-bus portal checks pass. The Linux
 validation recipe only adds CPU 0–3 / nice 15 builder limits with four build
 cores. Native key delivery and live streaming were not exercised.
 
+The first Linux CI run stopped before compilation because the PC evidence
+register still named the previous core pin. The manual/catalog-only core diff
+was reviewed, and the register and matrix now use the matching source/core
+snapshot. Historical
+package, hardware and CI evidence retain their original tested revisions.
+
 ## Global window recall shortcut — 2026-10-23
 
 Reason: recall or hide DeskPort from any application without reaching for its

@@ -1,10 +1,16 @@
 # PC implementation and acceptance matrix
 
-Reviewed 2026-10-18 against integration source `4d2e2abdf86681076b7e7d5f4d15047cbe5367b4` and pinned core
-`f34fc7b1524ce436185c4b085a903e6af4314790`. This is a source snapshot, not an installed version.
+Reviewed 2026-10-24 against source `eedc5b2884e80e26d3c94df6bc0a026ab3b1ba01` and pinned core
+`e482f24563b2026693e284fbd8ca54eb420b7896`. This is a source snapshot, not an installed version.
 Seven tested task branches are integrated with their scoped acceptance records;
 the remaining ten tasks retain explicit gates in [the integration ledger](PC_TASK_INTEGRATION.md).
 Historical package and hardware results retain their exact source identities.
+
+This snapshot includes the per-computer global window shortcut preference and
+expanded offline manual. The core changes since the previous snapshot affect
+manual text and UI catalogs; display arithmetic and wire contracts are unchanged.
+This review updates the source inventory, without advancing historical package,
+hardware or hosted-CI evidence to the newer revision.
 
 This page is the current PC scope index. Dated release notes and roadmap entries
 retain their original environment and result. A later implementation supersedes
