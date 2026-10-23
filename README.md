@@ -110,6 +110,12 @@ A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
+**0.7.4 staged release:** Linux and macOS packages are being prepared for the
+[0.7.4 release](https://github.com/keithxc/deskport/releases/tag/v0.7.4).
+Windows native validation and promotion to Latest remain pending. The stable
+downloads below stay on 0.7.3 until that gate passes. See the
+[0.7.4 release notes](docs/RELEASE_0.7.4.md) for changes and validation scope.
+
 **macOS:** Open the [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.3/DeskPort-0.7.3-macos-arm64.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
