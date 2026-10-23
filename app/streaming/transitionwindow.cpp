@@ -65,18 +65,26 @@ void TransitionWindow::pump() {
         else if (event.user.code == DeskPortRestoreViewer) m_PresentationShown=true;
         else if (event.user.code == DeskPortEndSession) m_Cancelled = true;
         else if (event.user.code == DeskPortHideWindow || event.user.code == DeskPortShowDevices) SDL_HideWindow(m_Window);
-        else if (event.user.code == DeskPortToggleWindow) {
-            if (desktopWindowInFront(m_Window)) SDL_HideWindow(m_Window); else recallDesktopWindow(m_Window);
+        else if (event.user.code == DeskPortToggleWindow || event.user.code == DeskPortShortcutToggleWindow) {
+            if (desktopWindowInFront(m_Window, event.user.code == DeskPortToggleWindow)) SDL_HideWindow(m_Window); else recallDesktopWindow(m_Window);
         }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT) > 0)
         if (event.window.windowID == SDL_GetWindowID(m_Window)) {
             if (event.window.event == SDL_WINDOWEVENT_CLOSE) SDL_HideWindow(m_Window);
-            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) noteDesktopWindowFocusLost();
+            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) { noteDesktopWindowFocusLost(); m_ShortcutChord.reset(); }
+            else if (event.window.event == SDL_WINDOWEVENT_HIDDEN || event.window.event == SDL_WINDOWEVENT_MINIMIZED) m_ShortcutChord.reset();
         }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_QUIT, SDL_QUIT) > 0) SDL_HideWindow(m_Window);
     // Never replay keystrokes or clicks made while the stream was unavailable.
-    // Only an open question consumes them, for its own buttons.
+    // Only local shortcuts and an open question consume them.
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_MOUSEWHEEL) > 0) {
+        if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && desktopWindowVisible(m_Window) && event.key.windowID == SDL_GetWindowID(m_Window)) {
+            const auto shortcut = m_ShortcutChord.handle(event.key);
+            if (shortcut != ShortcutState::KeyResult::Pass) {
+                if (shortcut == ShortcutState::KeyResult::Released) m_ShortcutRequested = true;
+                continue;
+            }
+        }
         if (event.type == SDL_KEYDOWN && m_Asking && m_Answer < 0 &&
             (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_RETURN)) m_Answer = 0;
         else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) m_Cancelled = true;

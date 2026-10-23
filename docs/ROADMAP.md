@@ -1,3 +1,24 @@
+## Global window recall shortcut — 2026-10-23
+
+Reason: recall or hide DeskPort from any application without reaching for its
+tray icon. Register Meta + apostrophe in the resident process, using Command on
+macOS and Windows/Super on Windows/Linux. Reuse the tray action and its session
+selection, while checking current focus instead of the tray click's focus-loss
+grace period. Hidden sessions remain connected and release remote input.
+
+Use Carbon hotkeys, Windows RegisterHotKey, X11 passive grabs and the Wayland
+GlobalShortcuts portal. Portal permission and compositor binding choices remain
+with the user. Registration errors leave existing desktop bindings untouched.
+The viewer also handles the chord while SDL captures keyboard shortcuts; forward
+it to the resident process and suppress duplicate native/worker notifications.
+Pass Wayland activation tokens through to the recalled window or viewer worker.
+
+Validation: isolated manager/SDL state, transition-window and private-bus portal
+regressions cover cancellation, binding changes, repeats and token lifetime.
+Native Linux/Windows compilation and physical desktop input acceptance remain
+pending while the x86_64 builder is offline. Compilation and synthetic checks do
+not establish focus, compositor permission or live streaming acceptance.
+
 ## Desktop 0.7.4 staged release — 2026-10-23
 
 Prepare macOS arm64 DMG/ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable

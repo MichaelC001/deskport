@@ -32,6 +32,12 @@ jobs:
           python3 winbuild/scripts/test-build-paths.py
       - name: Shared core adapter contract
         run: nix develop -c python3 scripts/test-core.py
+      - name: Isolated global shortcut and window regressions
+        run: |
+          export TMPDIR="$(bash scripts/build-paths.sh checkout)/runs.noindex/ci-shortcut-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/linux-nix/tests"
+          mkdir -p "$TMPDIR"
+          nix develop -c python3 scripts/test-global-shortcut.py
+          nix develop -c python3 scripts/test-transition-window.py
       - name: Isolated Wayland clipboard regressions
         env:
           QT_QPA_PLATFORM: offscreen

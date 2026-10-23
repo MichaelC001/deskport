@@ -147,7 +147,7 @@
         let pkgs = import nixpkgs { inherit system; };
         in { default = pkgs.mkShell {
           inputsFrom = [ self.packages.${system}.default ];
-          packages = [ pkgs.git pkgs.python3 pkgs.desktop-file-utils pkgs.lsof ];
+          packages = [ pkgs.git pkgs.python3 pkgs.desktop-file-utils pkgs.lsof pkgs.dbus ];
         }; }) // {
           aarch64-darwin.default =
             let

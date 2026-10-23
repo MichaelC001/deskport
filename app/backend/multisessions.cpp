@@ -48,6 +48,10 @@ QStringList MultiSessions::tuningLimited() const {
 void MultiSessions::setDiagnosticsEnabled(bool enabled) {
     for (auto entry : m_Entries) send(entry, {{"command","diagnostics"},{"enabled",enabled}});
 }
+void MultiSessions::setShortcutEnabled(bool enabled) {
+    m_ShortcutEnabled = enabled;
+    for (auto entry : m_Entries) send(entry, {{"command","shortcut"},{"enabled",enabled}});
+}
 QStringList MultiSessions::ordered() const {
     // Devices the saved layout does not mention follow in connection order.
     return HostLayout::load().flattened(m_Order);
@@ -135,7 +139,7 @@ void MultiSessions::accept() {
                     QJsonObject peer;
                     for (const auto& key : {"hostId","name","hostPort","hostCert","os"}) peer[key]=source.value(key);
                     peer["address"]=(*owner)->address;
-                    send(*owner,{{"command","initialize"},{"peer",peer}});
+                    send(*owner,{{"command","initialize"},{"peer",peer},{"shortcutEnabled",m_ShortcutEnabled}});
                     if ((*owner)->state == "stopping") send(*owner,{{"command","disconnect"}});
                     present();
                 } else if ((*owner)->socket == socket) receive(*owner, message);
@@ -151,6 +155,11 @@ void MultiSessions::send(Entry* entry, const QJsonObject& message) {
 }
 void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     const auto type = message.value("type").toString();
+    if (type == "shortcut") {
+        if (m_ShortcutEnabled && !m_Shutdown && entry->exposed &&
+            (m_Wanted == entry->id || m_Visible == entry->id)) emit shortcutRequested();
+        return;
+    }
     if (type == "traffic") {
         for (const auto& key : {"received", "sent"}) {
             const auto value=message.value(key).toDouble(-1);
@@ -213,14 +222,14 @@ void MultiSessions::selectNext() {
         if (entry && entry->state == "connected" && entry->id != m_Wanted) { select(entry->id); return; }
     }
 }
-bool MultiSessions::viewerInFront() const {
+bool MultiSessions::viewerInFront(bool trayClick) const {
     // While several desktops connect, the wanted viewer can be on screen before
     // the others finish hiding, so it is never recorded as visible. Its own
     // focus report is the evidence that it is the window in front.
     for (const auto& id : {m_Visible, m_Wanted}) {
         const auto entry = m_Entries.value(id);
         if (entry && entry->exposed &&
-            (entry->focused || (entry->focusLost.isValid() && entry->focusLost.elapsed() < 600))) return true;
+            (entry->focused || (trayClick && entry->focusLost.isValid() && entry->focusLost.elapsed() < 600))) return true;
     }
     return false;
 }

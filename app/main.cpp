@@ -13,6 +13,8 @@
 #include "backend/hostmanager.h"
 #include "backend/browserhost.h"
 #include "backend/multisessions.h"
+#include "backend/globalshortcut.h"
+#include "streaming/shortcutstate.h"
 #include "backend/trafficbudget.h"
 #include "backend/sessionworker.h"
 #include "backend/peermanager.h"
@@ -1023,6 +1025,12 @@ int main(int argc, char *argv[])
     if (resident && !controlServer.listen())
         qWarning() << "Cannot open the local CLI endpoint:" << controlServer.errorString();
     MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
+    GlobalShortcut globalShortcut;
+    QObject::connect(&globalShortcut, &GlobalShortcut::fallbackAvailabilityChanged, &managedSessions, [&managedSessions](bool enabled) {
+        ShortcutState::setEnabled(enabled);
+        managedSessions.setShortcutEnabled(enabled);
+    });
+    QObject::connect(&managedSessions, &MultiSessions::shortcutRequested, &globalShortcut, &GlobalShortcut::fallbackActivated);
     multiSessions = &managedSessions;
     QObject::connect(&Diagnostics::instance(), &Diagnostics::changed, &managedSessions, [&managedSessions] {
         managedSessions.setDiagnosticsEnabled(Diagnostics::instance().enabled());
@@ -1116,16 +1124,15 @@ int main(int argc, char *argv[])
     QObject::connect(&app, &QGuiApplication::focusWindowChanged, &app, [&frontLeft](QWindow* focus) {
         if (!focus) frontLeft.start();
     });
-    const auto windowInFront = [&frontLeft](QWindow* window) {
+    const auto windowInFront = [&frontLeft](QWindow* window, bool trayClick) {
         if (!window || !window->isVisible() || window->windowState() == Qt::WindowMinimized) return false;
-        return window->isActive() || (frontLeft.isValid() && frontLeft.elapsed() < 600);
+        return window->isActive() || (trayClick && frontLeft.isValid() && frontLeft.elapsed() < 600);
     };
-    auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront] {
+    auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront](bool trayClick, const QByteArray& token) {
         // Qt raises its own window with the shell's activation token from the
         // environment. An SDL viewer window in this process or in a session
         // worker needs the token handed over explicitly.
-        const QByteArray token = qgetenv("XDG_ACTIVATION_TOKEN");
-        if (managedSessions.busy() && managedSessions.viewerInFront()) {
+        if (managedSessions.busy() && managedSessions.viewerInFront(trayClick)) {
             // Hiding the viewer releases its input; the sessions stay connected.
             managedSessions.showDevices();
         } else if (managedSessions.busy()) {
@@ -1135,7 +1142,7 @@ int main(int argc, char *argv[])
             if (!managedSessions.recall()) {
                 managedSessions.setActivationToken({});
                 auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-                if (!windowInFront(window)) showDevices();
+                if (!windowInFront(window, trayClick)) showDevices();
                 else window->hide();
             }
         } else if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
@@ -1143,11 +1150,11 @@ int main(int argc, char *argv[])
             recallViewer();
         } else if (Session::get()) {
             WindowActivation::setPending(token);
-            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortToggleWindow;
+            SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = trayClick ? DeskPortToggleWindow : DeskPortShortcutToggleWindow;
             SDL_PushEvent(&event);
         } else {
             auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-            if (windowInFront(window)) window->hide();
+            if (windowInFront(window, trayClick)) window->hide();
             else showDevices();
         }
         // A token is valid for one activation only; never keep it for a later one.
@@ -1196,7 +1203,15 @@ int main(int argc, char *argv[])
         });
     });
     QObject::connect(&hostManager, &HostManager::viewerRecallRequested, &app, recallViewer);
-    QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, toggleWindow);
+    QObject::connect(&hostManager, &HostManager::toggleWindowRequested, &app, [toggleWindow] {
+        toggleWindow(true, qgetenv("XDG_ACTIVATION_TOKEN"));
+    });
+    QObject::connect(&globalShortcut, &GlobalShortcut::activated, &app, [toggleWindow](const QByteArray& token) {
+        // Qt consumes the token for its own window; SDL workers receive it via IPC.
+        if (!token.isEmpty()) qputenv("XDG_ACTIVATION_TOKEN", token);
+        toggleWindow(false, token);
+    });
+    engine.rootContext()->setContextProperty("globalShortcut", &globalShortcut);
 #ifdef Q_OS_DARWIN
     MacTitleBar macTitleBar;
 #endif
@@ -1287,6 +1302,7 @@ int main(int argc, char *argv[])
         if (pendingActivation) showDevices();
     }
 
+    if (resident) QTimer::singleShot(0, &globalShortcut, &GlobalShortcut::start);
     int err = app.exec();
 
     if (hostManager.restarting()) relaunchAfterExit();

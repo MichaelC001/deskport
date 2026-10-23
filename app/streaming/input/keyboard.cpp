@@ -158,6 +158,12 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
+    const auto shortcut = m_ShortcutChord.handle(*event);
+    if (shortcut != ShortcutState::KeyResult::Pass) {
+        if (shortcut == ShortcutState::KeyResult::Pressed) releaseRemoteInput();
+        else if (shortcut == ShortcutState::KeyResult::Released) Session::get()->requestShortcutToggle();
+        return;
+    }
     short keyCode;
     char modifiers;
 

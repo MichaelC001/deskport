@@ -106,6 +106,34 @@ int main(int argc, char** argv) {
         SDL_Event recall {}; recall.type = SDL_USEREVENT; recall.user.code = DeskPortRecallWindow;
         SDL_PushEvent(&recall); transition.pump();
         assert(!(SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN));
+        // The connecting window must report the local shortcut on release,
+        // without changing presentation before the shell handles that request.
+        SDL_Event shortcut {}; shortcut.type = SDL_KEYDOWN; shortcut.key.state = SDL_PRESSED;
+        shortcut.key.windowID = id; shortcut.key.keysym.sym = SDLK_QUOTE;
+        shortcut.key.keysym.scancode = SDL_SCANCODE_APOSTROPHE; shortcut.key.keysym.mod = KMOD_LGUI;
+        ShortcutState::setEnabled(true);
+        SDL_PushEvent(&shortcut); transition.pump();
+        assert(!transition.takeShortcutRequested());
+        assert(desktopWindowVisible(window));
+        shortcut.type = SDL_KEYUP; shortcut.key.state = SDL_RELEASED;
+        SDL_PushEvent(&shortcut); transition.pump();
+        assert(transition.takeShortcutRequested());
+        assert(!transition.takeShortcutRequested());
+        assert(desktopWindowVisible(window));
+        shortcut.type = SDL_KEYDOWN; shortcut.key.state = SDL_PRESSED;
+        SDL_PushEvent(&shortcut); transition.pump();
+        SDL_Event focusLost {}; focusLost.type = SDL_WINDOWEVENT;
+        focusLost.window.windowID = id; focusLost.window.event = SDL_WINDOWEVENT_FOCUS_LOST;
+        SDL_PushEvent(&focusLost); transition.pump();
+        shortcut.type = SDL_KEYUP; shortcut.key.state = SDL_RELEASED;
+        SDL_PushEvent(&shortcut); transition.pump();
+        assert(!transition.takeShortcutRequested());
+        ShortcutState::setEnabled(false);
+        shortcut.type = SDL_KEYDOWN; shortcut.key.state = SDL_PRESSED;
+        SDL_PushEvent(&shortcut); transition.pump();
+        shortcut.type = SDL_KEYUP; shortcut.key.state = SDL_RELEASED;
+        SDL_PushEvent(&shortcut); transition.pump();
+        assert(!transition.takeShortcutRequested());
         SDL_Event devices {}; devices.type = SDL_USEREVENT; devices.user.code = DeskPortShowDevices;
         SDL_PushEvent(&devices); transition.pump();
         assert(SDL_GetWindowFlags(window) & SDL_WINDOW_HIDDEN);

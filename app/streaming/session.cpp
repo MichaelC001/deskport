@@ -866,6 +866,7 @@ void Session::pumpTransitionWindow() {
     if (window->takePresentationShown() && m_ViewerRequested) emit presentationShown();
     // The connecting window is the viewer too: the tray hides it when in front.
     if (window->window()) reportViewerFocus(SDL_GetWindowFlags(window->window()) & SDL_WINDOW_INPUT_FOCUS);
+    if (window->takeShortcutRequested() && m_ViewerRequested) requestShortcutToggle();
 }
 
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {
@@ -2051,6 +2052,10 @@ void Session::requestNextViewer() {
     if (m_QtWindow && m_QtWindow->metaObject()->indexOfMethod("showNextSession()") >= 0)
         QMetaObject::invokeMethod(m_QtWindow, "showNextSession", Qt::QueuedConnection);
 }
+void Session::requestShortcutToggle() {
+    if (ShortcutState::enabled() && m_QtWindow)
+        QMetaObject::invokeMethod(m_QtWindow, "requestShortcutToggle", Qt::QueuedConnection);
+}
 bool Session::leaveFullscreen() {
     if (!m_Window || !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) return false;
     toggleFullscreen();
@@ -2854,11 +2859,12 @@ void Session::execInternal()
                 emit presentationShown();
                 break;
             case DeskPortToggleWindow:
+            case DeskPortShortcutToggleWindow:
                 // The control center and the remote window are never shown at
                 // the same time, so a hidden remote window means the tray click
                 // is coming back from the control center. A window behind
                 // others is brought forward rather than hidden.
-                if (desktopWindowInFront(m_Window)) {
+                if (desktopWindowInFront(m_Window, event.user.code == DeskPortToggleWindow)) {
                     m_InputHandler->setCaptureActive(false);
                     SDL_HideWindow(m_Window);
                 } else {
@@ -2909,6 +2915,7 @@ void Session::execInternal()
             case SDL_WINDOWEVENT_HIDDEN:
             case SDL_WINDOWEVENT_MINIMIZED:
             case SDL_WINDOWEVENT_FOCUS_LOST:
+                m_InputHandler->resetShortcutChord();
                 if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                     noteDesktopWindowFocusLost();
                     reportViewerFocus(false);

@@ -6,6 +6,7 @@
 class QPainter;
 #include "windowactivation.h"
 #include "waylandloading.h"
+#include "shortcutstate.h"
 
 constexpr int DeskPortRecallWindow = 105;
 constexpr int DeskPortEndSession = 106;
@@ -18,6 +19,8 @@ constexpr int DeskPortTransportEnded = 112;
 // Resumes presentation state for background recovery without showing,
 // raising or focusing the viewer window.
 constexpr int DeskPortRestoreViewer = 113;
+// Shortcut callbacks retain focus, so they do not use the tray's focus grace.
+constexpr int DeskPortShortcutToggleWindow = 114;
 inline bool desktopWindowVisible(SDL_Window* window) {
     return window && !(SDL_GetWindowFlags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
 }
@@ -34,11 +37,11 @@ inline Uint32& desktopWindowFocusLostAt() { static Uint32 ticks = 0; return tick
 inline void noteDesktopWindowFocusLost() { desktopWindowFocusLostAt() = SDL_GetTicks(); }
 // A tray click hides the viewer only when it is the window in front; a
 // visible window behind other windows is brought forward instead.
-inline bool desktopWindowInFront(SDL_Window* window) {
+inline bool desktopWindowInFront(SDL_Window* window, bool trayClick = true) {
     if (!desktopWindowVisible(window)) return false;
     if (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) return true;
     const Uint32 lost = desktopWindowFocusLostAt();
-    return lost && SDL_GetTicks() - lost < 600;
+    return trayClick && lost && SDL_GetTicks() - lost < 600;
 }
 
 // Owns the existing native window between streaming sessions. All calls are made
@@ -50,6 +53,7 @@ public:
     ~TransitionWindow();
     void pump();
     bool takePresentationShown() { const bool shown=m_PresentationShown; m_PresentationShown=false; return shown; }
+    bool takeShortcutRequested() { const bool requested=m_ShortcutRequested; m_ShortcutRequested=false; return requested; }
     SDL_Window* window() const { return m_Window; }
     bool cancelled() const { return m_Cancelled; }
     SDL_Window* takeWindow();
@@ -76,6 +80,8 @@ private:
     QImage m_Frame, m_Backdrop;
     bool m_Cancelled = false;
     bool m_PresentationShown = false;
+    bool m_ShortcutRequested = false;
+    ShortcutState::KeyChord m_ShortcutChord;
     bool m_Pumping = false;
     unsigned m_PresentedFrames = 0;
     Uint32 m_LastPaint = 0;

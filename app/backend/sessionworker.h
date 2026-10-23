@@ -15,6 +15,7 @@ public:
     Q_INVOKABLE void showDevicesDuringSession();
     Q_INVOKABLE void prepareViewerRecall();
     Q_INVOKABLE void showNextSession();
+    Q_INVOKABLE void requestShortcutToggle();
 private:
     void attach(Session* session);
     void command(const QJsonObject& message);

@@ -564,6 +564,20 @@ Closing a window keeps DeskPort running in the tray/menu bar. Use **Open DeskPor
 to recall it, **Disconnect viewer** to end only the current connection, or
 **Quit DeskPort** to exit the service. Local sharing continues when a viewer closes.
 
+**Meta + '** (apostrophe) performs the same window toggle as a left click on the
+tray icon: hide the foreground viewer, recall the latest session, or toggle the
+device list when no session is active. Meta means Command on macOS and the
+Windows/Super key on Windows/Linux. The app must be running. Hiding releases
+remote input and keeps the connection alive.
+
+Wayland uses the desktop's GlobalShortcuts portal; its permission dialog may ask
+you to approve the binding, and desktop shortcut settings can override it. X11,
+Windows and macOS register with their native shortcut APIs. An occupied binding,
+an unsupported keyboard layout or a missing portal leaves the tray controls
+available and logs the registration failure. No system shortcut configuration is
+rewritten. Set `DESKPORT_DISABLE_GLOBAL_SHORTCUT=1` to skip registration for an
+isolated run.
+
 Plain-text clipboard sharing and system-shortcut capture are enabled by default on
 both bound devices. Setting changes apply after reconnecting. Only new copies are
 shared, up to 1 MiB. Supported images and files are fetched on demand between

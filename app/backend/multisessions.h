@@ -34,6 +34,7 @@ public:
     QVariantMap selectedTraffic() const;
     QStringList tuningLimited() const;
     void setDiagnosticsEnabled(bool enabled);
+    void setShortcutEnabled(bool enabled);
     Q_INVOKABLE void open(QString id, QString name, QString address, QString app = QStringLiteral("Desktop"));
     Q_INVOKABLE void select(QString id);
     Q_INVOKABLE void showDevices();
@@ -50,7 +51,7 @@ public:
     Q_INVOKABLE bool recall();
     // The shown viewer is the window in front. Plasma takes focus from it just
     // before a tray click arrives, so focus lost a moment ago still counts.
-    bool viewerInFront() const;
+    bool viewerInFront(bool trayClick = true) const;
     // The desktop shell's activation token for the next raised viewer.
     void setActivationToken(const QByteArray& token) { m_ActivationToken = token; }
     void shutdown();
@@ -63,6 +64,7 @@ signals:
     void sessionClosed(QString id);
     void devicesRequested();
     void viewerShown();
+    void shortcutRequested();
 private:
     struct Entry {
         QString id, name, address, app, token, state = QStringLiteral("starting"), error;
@@ -102,5 +104,6 @@ private:
     QByteArray m_ActivationToken;
     quint64 m_Epoch = 0;
     bool m_Shutdown = false;
+    bool m_ShortcutEnabled = false;
 };
 

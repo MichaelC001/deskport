@@ -5,6 +5,7 @@
 
 #include <SDL.h>
 #include "localtextinput.h"
+#include "streaming/shortcutstate.h"
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -61,6 +62,7 @@ public:
     void setWindow(SDL_Window* window);
 
     void handleKeyEvent(SDL_KeyboardEvent* event);
+    void resetShortcutChord() { m_ShortcutChord.reset(); }
     void handleTextEvent(const SDL_Event& event);
 
     void handleMouseButtonEvent(SDL_MouseButtonEvent* event);
@@ -175,6 +177,7 @@ private:
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
     SDL_Window* m_Window = nullptr;
+    ShortcutState::KeyChord m_ShortcutChord;
     LocalTextInput m_LocalTextInput;
     bool m_RemoteInputEnabled;
     bool m_MultiController;

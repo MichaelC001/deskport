@@ -1,4 +1,12 @@
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp backend/trafficbudget.cpp
+SOURCES += backend/globalshortcut.cpp
+HEADERS += backend/globalshortcut.h streaming/shortcutstate.h
+win32: SOURCES += backend/globalshortcut_native.cpp
+macx {
+    OBJECTIVE_SOURCES += backend/globalshortcut_mac.mm
+    LIBS += -framework Carbon
+}
+linux: SOURCES += backend/globalshortcut_linux.cpp
 SOURCES += backend/browsergateway.cpp backend/browserhost.cpp
 HEADERS += backend/browsergateway.h backend/browserhost.h
 RESOURCES += browser/browser.qrc

@@ -165,6 +165,9 @@ ApplicationWindow {
         window.raise()
         window.requestActivate()
     }
+    function requestShortcutToggle() {
+        if (typeof globalShortcut !== "undefined") globalShortcut.fallbackActivated()
+    }
     function prepareViewerRecall() {
         if (!activeStreamPage) return false
         if (activeStreamPage && stackView.currentItem !== activeStreamPage) stackView.pop(activeStreamPage, StackView.Immediate)

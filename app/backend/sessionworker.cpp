@@ -74,6 +74,7 @@ void SessionWorker::attach(Session* session) {
 void SessionWorker::command(const QJsonObject& message) {
     const auto action=message.value("command").toString();
     if (action=="initialize" && !m_Computers && !m_Stopping) {
+        ShortcutState::setEnabled(message.value("shortcutEnabled").toBool());
         m_Computers = new ComputerManager(StreamingPreferences::get(), true, m_Host);
         const auto peer=message.value("peer").toObject();
         if (!peer.isEmpty() && (peer.value("hostId").toString().compare(m_Host,Qt::CaseInsensitive) != 0 ||
@@ -83,6 +84,8 @@ void SessionWorker::command(const QJsonObject& message) {
         connect(launcher,&CliStartStream::Launcher::failed,this,[this](QString error) { finish(error); });
         connect(launcher,&CliStartStream::Launcher::appQuitRequired,this,[this](QString) { finish(tr("Another application is running on that server.")); });
         launcher->execute(m_Computers);
+    } else if (action=="shortcut" && message.value("enabled").isBool()) {
+        ShortcutState::setEnabled(message.value("enabled").toBool());
     } else if (action=="diagnostics" && message.value("enabled").isBool()) {
         Diagnostics::instance().setEnabled(message.value("enabled").toBool());
     } else if (action=="show") {
@@ -109,6 +112,9 @@ void SessionWorker::command(const QJsonObject& message) {
 void SessionWorker::showDevicesDuringSession() { m_Visible=false; if(m_Session)m_Session->setViewerRequested(false); send({{"type","devices"}}); }
 void SessionWorker::prepareViewerRecall() { send({{"type","devices"}}); }
 void SessionWorker::showNextSession() { if(m_Visible) send({{"type","next"}}); }
+void SessionWorker::requestShortcutToggle() {
+    if (m_Visible && !m_Stopping && ShortcutState::enabled()) send({{"type","shortcut"}});
+}
 void SessionWorker::finish(const QString& error) {
     if(m_Finished)return; m_Finished=true;
     if(!error.isEmpty())send({{"type","error"},{"message",error}});
