@@ -2844,7 +2844,7 @@ void Session::execInternal()
                 if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
                 if (!m_ViewerRequested) break;
                 if (!m_Clipboard) initializeClipboard();
-                recallDesktopWindow(m_Window);
+                recallDesktopWindow(m_Window, true);
                 // Showing is a presentation change, never a new desktop size.
                 if (!m_IsFullScreen && (m_HiddenWindowFlags & SDL_WINDOW_MAXIMIZED) &&
                     !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MAXIMIZED)) SDL_MaximizeWindow(m_Window);
@@ -2865,11 +2865,15 @@ void Session::execInternal()
                 // is coming back from the control center. A window behind
                 // others is brought forward rather than hidden.
                 if (desktopWindowInFront(m_Window, event.user.code == DeskPortToggleWindow)) {
+                    WindowActivation::setPending({});
                     m_InputHandler->setCaptureActive(false);
                     SDL_HideWindow(m_Window);
                 } else {
                     if (m_QtWindow) QMetaObject::invokeMethod(m_QtWindow, "prepareViewerRecall", Qt::QueuedConnection);
-                    recallDesktopWindow(m_Window);
+                    m_ResizeSettler.reset();
+                    recallDesktopWindow(m_Window, true);
+                    m_RecallGraceUntil = SDL_GetTicks() + 1500;
+                    if (!m_RecallGraceUntil) m_RecallGraceUntil = 1;
                 }
                 break;
             case SDL_CODE_FRAME_READY:

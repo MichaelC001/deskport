@@ -1057,6 +1057,7 @@ int main(int argc, char *argv[])
     uiHeartbeat.start(100);
     QQmlApplicationEngine engine;
     auto showDevices = [&engine, &pendingActivation, &managedSessions] {
+        WindowActivation::setPending({});
         managedSessions.showDevices();
         QElapsedTimer presentation;
         presentation.start();
@@ -1105,6 +1106,7 @@ int main(int argc, char *argv[])
         showDevices();
     };
     QObject::connect(&hostManager, &HostManager::hideRequested, &app, [&] {
+        WindowActivation::setPending({});
         if (managedSessions.busy()) managedSessions.showDevices();
         if (Session::get()) {
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = DeskPortHideWindow;
@@ -1129,6 +1131,10 @@ int main(int argc, char *argv[])
         return window->isActive() || (trayClick && frontLeft.isValid() && frontLeft.elapsed() < 600);
     };
     auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront](bool trayClick, const QByteArray& token) {
+        auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
+        const auto prepareQtRecall = [=] {
+            if (!trayClick) WindowActivation::prepareShortcutRecall(window, token);
+        };
         // Qt raises its own window with the shell's activation token from the
         // environment. An SDL viewer window in this process or in a session
         // worker needs the token handed over explicitly.
@@ -1138,24 +1144,23 @@ int main(int argc, char *argv[])
         } else if (managedSessions.busy()) {
             // Go straight to the last viewed desktop, never through the device
             // list; the list stays available from the tray menu.
-            managedSessions.setActivationToken(token);
+            managedSessions.setActivationToken(token, !trayClick);
             if (!managedSessions.recall()) {
                 managedSessions.setActivationToken({});
-                auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
-                if (!windowInFront(window, trayClick)) showDevices();
+                if (!windowInFront(window, trayClick)) { prepareQtRecall(); showDevices(); }
                 else window->hide();
             }
         } else if (SessionLifetime::busy() && (!Session::get() || !Session::get()->viewerReady())) {
-            WindowActivation::setPending(token);
+            WindowActivation::setPending(token, !trayClick);
+            prepareQtRecall();
             recallViewer();
         } else if (Session::get()) {
-            WindowActivation::setPending(token);
+            WindowActivation::setPending(token, !trayClick);
             SDL_Event event {}; event.type = SDL_USEREVENT; event.user.code = trayClick ? DeskPortToggleWindow : DeskPortShortcutToggleWindow;
             SDL_PushEvent(&event);
         } else {
-            auto window = engine.rootObjects().isEmpty() ? nullptr : qobject_cast<QWindow*>(engine.rootObjects().first());
             if (windowInFront(window, trayClick)) window->hide();
-            else showDevices();
+            else { prepareQtRecall(); showDevices(); }
         }
         // A token is valid for one activation only; never keep it for a later one.
         qunsetenv("XDG_ACTIVATION_TOKEN");

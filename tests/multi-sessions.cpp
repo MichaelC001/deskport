@@ -17,6 +17,7 @@ static int worker(QApplication& app) {
     QLocalSocket socket;
     QByteArray buffer;
     int fullscreenRequests = 0, raisedShows = 0, quietShows = 0;
+    int shortcutShows = 0, tokenShows = 0;
     bool presenting = false;
     const QString id=app.arguments().value(2);
     const auto mode=app.arguments().value(3);
@@ -31,8 +32,14 @@ static int worker(QApplication& app) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
             if(action=="show") {
+                if (!o.value("raise").toBool(true) &&
+                    (o.value("shortcut").toBool() || !o.value("activationToken").toString().isEmpty()))
+                    QCoreApplication::exit(8); // Recovery must not inherit an old user action.
+                shortcutShows += o.value("shortcut").toBool();
+                tokenShows += !o.value("activationToken").toString().isEmpty();
                 presenting=true; ++(o.value("raise").toBool(true) ? raisedShows : quietShows);
                 send({{"type","shown"}});
+                if (mode.startsWith("activation")) send({{"type","traffic"},{"received",shortcutShows},{"sent",tokenShows}});
                 if (mode=="recover") send({{"type","traffic"},{"received",quietShows},{"sent",raisedShows}});
                 // Models a transport restart under a retained window: an
                 // unsolicited hide acknowledgement, then a new ready viewer.
@@ -46,7 +53,7 @@ static int worker(QApplication& app) {
                 // Models a busy background viewer: it only answers while presenting.
                 if (mode=="lazy" && !presenting) continue;
                 presenting=false;
-                QTimer::singleShot(mode=="slow" ? 300 : 0,&app,[&,o] { send({{"type","hidden"},{"epoch",o.value("epoch")}}); });
+                QTimer::singleShot(mode.endsWith("slow") ? 300 : 0,&app,[&,o] { send({{"type","hidden"},{"epoch",o.value("epoch")}}); });
             } else if(action=="disconnect") QTimer::singleShot(0,&app,&QCoreApplication::quit);
             else if(action=="tuning") // Echo the value; a tuning change never asks for a reconnect.
                 send({{"type","traffic"},{"received",qRound(o.value("value").toDouble()*100)},{"sent",fullscreenRequests}});
@@ -238,6 +245,72 @@ private slots:
         manager.open("a","Fixture","127.0.0.1"); manager.disconnectSession("a");
         QTest::qWait(100); QVERIFY(!manager.busy());
         QCOMPARE(manager.sessions().first().toMap().value("state").toString(),QString("disconnected"));
+    }
+    void shortcutActivationIsOneShotAndCancelledByDevices() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
+        QJsonObject records;
+        for (auto id : {"a","b"}) records[id]=QJsonObject{{"hostId",id},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        MultiSessions manager(&peers,cert,key);
+        QSignalSpy shown(&manager,&MultiSessions::viewerShown);
+        manager.open("a","Fixture","127.0.0.1","activation");
+        QTRY_VERIFY(!shown.isEmpty());
+        manager.setActivationToken("fixture-token",true);
+        QVERIFY(manager.recall());
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),1);
+        QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        int count=shown.count();
+        QVERIFY(manager.recall()); QTRY_VERIFY(shown.count()>count);
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),1);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        manager.setActivationToken({},true); // KDE's tokenless portal gesture.
+        QVERIFY(manager.recall());
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),2);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        manager.setActivationToken("cancelled-token",true);
+        manager.showDevices();
+        count=shown.count();
+        QVERIFY(manager.recall()); QTRY_VERIFY(shown.count()>count);
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),2);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        manager.setActivationToken("tray-token");
+        QVERIFY(manager.recall());
+        QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),2);
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),2);
+        const auto visible = [&](QString id) {
+            for (auto item : manager.sessions()) if (item.toMap().value("id") == id) return item.toMap().value("visible").toBool();
+            return false;
+        };
+        manager.open("b","Slow fixture","127.0.0.1","activation-slow");
+        QTRY_VERIFY(visible("b"));
+        manager.select("a"); // The user action waits for B to release input.
+        manager.setActivationToken("delayed-token",true);
+        QVERIFY(manager.recall());
+        QTRY_VERIFY(visible("a"));
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),3);
+        QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),3);
+        manager.select("b"); QTRY_VERIFY(visible("b"));
+        manager.select("a");
+        manager.setActivationToken("superseded-token",true);
+        QVERIFY(manager.recall());
+        manager.select("b"); // A later selection cannot inherit A's action.
+        QTest::qWait(400);
+        QTRY_VERIFY(visible("b"));
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),0);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),0);
+        manager.select("a");
+        manager.setActivationToken("disconnected-token",true);
+        QVERIFY(manager.recall());
+        manager.disconnectSession("a");
+        manager.select("b"); QTest::qWait(400);
+        QTRY_VERIFY(visible("b"));
+        QCOMPARE(manager.selectedTraffic().value("received").toInt(),0);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),0);
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
     }
 };
 int main(int argc,char**argv) {

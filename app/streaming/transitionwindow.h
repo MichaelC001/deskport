@@ -24,12 +24,8 @@ constexpr int DeskPortShortcutToggleWindow = 114;
 inline bool desktopWindowVisible(SDL_Window* window) {
     return window && !(SDL_GetWindowFlags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
 }
-inline void recallDesktopWindow(SDL_Window* window) {
-    if (!window) return;
-    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) SDL_RestoreWindow(window);
-    SDL_ShowWindow(window);
-    // Without the shell's token, Wayland compositors only flash the window.
-    if (!WindowActivation::activate(window)) SDL_RaiseWindow(window);
+inline void recallDesktopWindow(SDL_Window* window, bool userRequested = false) {
+    WindowActivation::recall(window, userRequested);
 }
 // Clicking a panel icon can take keyboard focus from the viewer just before
 // the click is reported, so the moment the viewer last lost focus is kept.

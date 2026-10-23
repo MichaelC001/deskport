@@ -39,6 +39,15 @@ uses server SHA-256 and byte size without downloading installers again.
 Activation of mynix-managed systems remains manual.
 See [0.7.4 release notes](RELEASE_0.7.4.md).
 
+Native KDE Wayland checks found that a portal can deliver the shortcut without
+an activation token: hidden-window recall worked, but a visible background
+window did not move forward. The replacement adds a same-window hide/show
+fallback only for an explicit tokenless global shortcut on native Wayland.
+Qt device-list and SDL viewer windows share that restriction; ordinary recovery
+must not acquire it. The worker IPC carries and consumes this user intent once,
+and viewer recall resets the existing resize-settling grace period. Native
+candidate checks and package rebuilding remain required before publication.
+
 ## Managed build and artifact lifecycle — 2026-10-22
 
 Unify desktop build commands and generated output ownership so repeated packaging

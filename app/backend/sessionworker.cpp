@@ -92,13 +92,18 @@ void SessionWorker::command(const QJsonObject& message) {
         // Only a user's request raises the window; recovery restores state quietly.
         const bool raise=message.value("raise").toBool(true);
         m_Visible=true;
-        if(raise) WindowActivation::setPending(message.value("activationToken").toString().toUtf8());
+        // A quiet recovery can arrive while an explicit recall is queued on
+        // the SDL thread. It must not cancel that user's pending activation.
+        if (raise) WindowActivation::setPending(message.value("activationToken").toString().toUtf8(),
+                                                message.value("shortcut").toBool());
         if(m_Session) { m_Session->setViewerRequested(true); if(m_Session->viewerReady()) postEvent(raise ? DeskPortRecallWindow : DeskPortRestoreViewer); }
     } else if(action=="hide") {
+        WindowActivation::setPending({});
         m_Visible=false; m_HideEpoch=quint64(message.value("epoch").toDouble());
         if(m_Session) { m_Session->setViewerRequested(false); postEvent(DeskPortHideWindow); }
         if(!m_Session || !m_Session->inputDispatching()) send({{"type","hidden"},{"epoch",double(m_HideEpoch)}});
     } else if(action=="disconnect") {
+        WindowActivation::setPending({});
         m_Stopping=true; if(m_Session) {m_Session->cancelRecovery();postEvent(DeskPortEndSession);} else finish();
     } else if(action=="reconnect" && m_Session) m_Session->requestReconnect();
     else if(action=="tuning" && StreamingPreferences::validDesktopAdjustment(message.value("value").toDouble())) {

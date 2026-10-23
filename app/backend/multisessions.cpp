@@ -202,6 +202,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
 void MultiSessions::select(QString id) {
     id = id.toLower();
     if (!m_Entries.contains(id) || m_Shutdown) return;
+    if (!m_ActivationTarget.isEmpty() && m_ActivationTarget != id) setActivationToken({});
     const auto selected=m_Entries.value(id);
     if (selected->state != "starting" && selected->state != "connected") { emit devicesRequested(); return; }
     m_Selected = id; m_Wanted = id;
@@ -234,10 +235,17 @@ bool MultiSessions::viewerInFront(bool trayClick) const {
     return false;
 }
 bool MultiSessions::recall() {
-    if (m_Shutdown) return false;
+    if (m_Shutdown) { setActivationToken({}); return false; }
+    const auto recallEntry = [this](const QString& id) {
+        // An activation waiting for another viewer to hide belongs only to
+        // this target. Cancellation or a later selection cannot transfer it.
+        if (m_ShortcutRecall || !m_ActivationToken.isEmpty()) m_ActivationTarget = id;
+        select(id);
+    };
     const auto last = m_Entries.value(m_Selected);
-    if (last && (last->state == "connected" || last->state == "starting")) { select(last->id); return true; }
-    for (const auto& id : ordered()) if (m_Entries.value(id)->state == "connected") { select(id); return true; }
+    if (last && (last->state == "connected" || last->state == "starting")) { recallEntry(last->id); return true; }
+    for (const auto& id : ordered()) if (m_Entries.value(id)->state == "connected") { recallEntry(id); return true; }
+    setActivationToken({});
     return false;
 }
 void MultiSessions::hide(Entry* entry) {
@@ -269,11 +277,13 @@ void MultiSessions::present(bool raise) {
 #endif
         // Presenting can wait for another viewer to hide; the token waits too.
         if (raise && !m_ActivationToken.isEmpty()) show["activationToken"] = QString::fromUtf8(m_ActivationToken);
-        m_ActivationToken.clear();
+        if (raise && m_ShortcutRecall) show["shortcut"] = true;
+        setActivationToken({});
         send(entry, show);
     }
 }
 void MultiSessions::showDevices() {
+    setActivationToken({});
     bool exposed = false;
     for (auto entry : m_Entries) exposed |= entry->socket && entry->exposed;
     // Repeated Devices requests (tray, top bar and worker) are idempotent.
@@ -287,6 +297,7 @@ void MultiSessions::showDevices() {
 void MultiSessions::disconnectSession(QString id) {
     auto entry = m_Entries.value(id.toLower()); if (!entry) return;
     id = entry->id;
+    if (m_ActivationTarget == id) setActivationToken({});
     const bool leavingViewer = m_Wanted == id || m_Visible == id;
     entry->state = "stopping";
     if (leavingViewer) showDevices();
@@ -319,8 +330,9 @@ void MultiSessions::fullscreen(QString id) {
     }
 }
 void MultiSessions::suspend() { for (auto entry : m_Entries) disconnectSession(entry->id); }
-void MultiSessions::shutdown() { m_Shutdown=true; for (auto entry : m_Entries) disconnectSession(entry->id); }
+void MultiSessions::shutdown() { m_Shutdown=true; setActivationToken({}); for (auto entry : m_Entries) disconnectSession(entry->id); }
 void MultiSessions::ended(Entry* entry, const QString& error) {
+    if (m_ActivationTarget == entry->id) setActivationToken({});
     emit sessionClosed(entry->id);
     if (entry->reserved) { SessionGraph::release(m_Identity,entry->token); entry->reserved=false; }
     if (entry->socket) { entry->socket->abort(); entry->socket=nullptr; }

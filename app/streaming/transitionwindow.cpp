@@ -61,12 +61,12 @@ void TransitionWindow::pump() {
     if (!m_Window) return;
     SDL_Event event;
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_USEREVENT, SDL_USEREVENT) > 0)
-        if (event.user.code == DeskPortRecallWindow) { recallDesktopWindow(m_Window); m_PresentationShown=true; }
+        if (event.user.code == DeskPortRecallWindow) { recallDesktopWindow(m_Window, true); m_PresentationShown=true; }
         else if (event.user.code == DeskPortRestoreViewer) m_PresentationShown=true;
-        else if (event.user.code == DeskPortEndSession) m_Cancelled = true;
+        else if (event.user.code == DeskPortEndSession) { WindowActivation::setPending({}); m_Cancelled = true; }
         else if (event.user.code == DeskPortHideWindow || event.user.code == DeskPortShowDevices) SDL_HideWindow(m_Window);
         else if (event.user.code == DeskPortToggleWindow || event.user.code == DeskPortShortcutToggleWindow) {
-            if (desktopWindowInFront(m_Window, event.user.code == DeskPortToggleWindow)) SDL_HideWindow(m_Window); else recallDesktopWindow(m_Window);
+            if (desktopWindowInFront(m_Window, event.user.code == DeskPortToggleWindow)) { WindowActivation::setPending({}); SDL_HideWindow(m_Window); } else recallDesktopWindow(m_Window, true);
         }
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_WINDOWEVENT, SDL_WINDOWEVENT) > 0)
         if (event.window.windowID == SDL_GetWindowID(m_Window)) {

@@ -16,7 +16,10 @@ the current stable release remains 0.7.3 during preparation.
   while capturing keyboard input. Activation waits for key release and removes
   duplicate notifications. Wayland requires the GlobalShortcuts portal and its
   permission/binding flow; unavailable or conflicting bindings are reported
-  without replacing other applications' shortcuts.
+  without replacing other applications' shortcuts. A tokenless Wayland
+  shortcut can remap the same visible background window to bring it forward;
+  this fallback is limited to the user's shortcut action and does not apply
+  to automatic session recovery.
 - **Compact device cards:** desktop device and add cards use a compact square
   layout. Each visible row is centered by its actual card span, including
   partially filled rows, without changing grid keyboard navigation. The add

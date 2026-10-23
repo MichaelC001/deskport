@@ -53,7 +53,9 @@ public:
     // before a tray click arrives, so focus lost a moment ago still counts.
     bool viewerInFront(bool trayClick = true) const;
     // The desktop shell's activation token for the next raised viewer.
-    void setActivationToken(const QByteArray& token) { m_ActivationToken = token; }
+    void setActivationToken(const QByteArray& token, bool shortcut = false) {
+        m_ActivationToken = token; m_ShortcutRecall = shortcut; m_ActivationTarget.clear();
+    }
     void shutdown();
     void suspend();
 signals:
@@ -102,6 +104,8 @@ private:
     QString m_Selected, m_Wanted, m_Visible, m_Identity;
     QSet<QString> m_Hiding;
     QByteArray m_ActivationToken;
+    QString m_ActivationTarget;
+    bool m_ShortcutRecall = false;
     quint64 m_Epoch = 0;
     bool m_Shutdown = false;
     bool m_ShortcutEnabled = false;
