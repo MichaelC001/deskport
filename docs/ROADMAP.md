@@ -25,20 +25,22 @@ compositor permission, focus and live streaming acceptance remain unverified.
 
 ## Desktop 0.7.4 staged release — 2026-10-23
 
-Prepare macOS arm64 DMG/ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable
-archive/viewer-only Flatpak and the Nix flake, plus Windows x64 Setup/portable
-packages. Publish the Linux/macOS assets without promoting the release to
-Latest; retain Windows packages for native verification before stable promotion.
-Keep 0.7.3 as the current stable download in the README during this gate.
+Published macOS arm64 DMG/ZIP and Linux x86_64 DEB/RPM/Arch/AppImage/portable
+archive/viewer-only Flatpak, with the Nix flake pinned to the same source.
+The release remains a prerelease; Latest and the README's stable downloads stay
+on 0.7.3. Windows x64 Setup/portable packages are built and statically audited,
+retained for native verification before publication and stable promotion.
 
 The release contains compact, centered device cards and the managed build
-lifecycle introduced since 0.7.3. Include the portable archive and optional
-viewer-only Flatpak in the managed Linux artifact inventory. Publish installers,
-checksums and small provenance/verification records; identify source through
-the exact public repository commit and retain package notices. Separate
-source/relink archives and full-byte download verification are not part of this
-release. Update mynix only after pulling its latest changes. Activation remains
-manual, and compilation/package checks do not establish live-device acceptance.
+lifecycle introduced since 0.7.3. The managed Linux inventory includes the
+portable archive and viewer-only Flatpak. All 17 uploaded installers, checksums
+and small provenance/verification records passed GitHub server SHA-256 and size
+verification. Source is identified by exact public commit, with notices retained
+inside packages. No separate source/relink archives were uploaded and installers
+were not downloaded again for verification. macOS notarization and Gatekeeper,
+Linux Nix, container installer, offline AppImage and isolated Flatpak checks
+passed. mynix was pulled, updated and pushed. Activation remains manual, and
+compilation/package checks do not establish live-device acceptance.
 See [0.7.4 release notes](RELEASE_0.7.4.md).
 
 ## Managed build and artifact lifecycle — 2026-10-22
