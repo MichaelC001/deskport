@@ -110,7 +110,7 @@ A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**0.7.4 staged release:** Linux and macOS packages are being prepared for the
+**0.7.4 staged release:** Linux and macOS packages are available from the
 [0.7.4 release](https://github.com/keithxc/deskport/releases/tag/v0.7.4).
 Windows native validation and promotion to Latest remain pending. The stable
 downloads below stay on 0.7.3 until that gate passes. See the

@@ -1,9 +1,9 @@
 # DeskPort 0.7.4
 
 Staged desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
-Linux and macOS packages are published first, while Windows packages are
-prepared for native validation. The release remains a prerelease and is not
-marked Latest until that validation is completed and promotion is confirmed.
+Linux and macOS packages are published, while Windows packages are built and
+statically audited, awaiting native validation. The release remains a prerelease
+and is not marked Latest until that validation is completed and promotion is confirmed.
 The current stable release remains 0.7.3 during this stage.
 
 ## Changes since 0.7.3
@@ -53,8 +53,18 @@ a separate binary attachment. Mobile clients are outside this desktop release.
 
 ## Validation boundary
 
-Exact 0.7.4 build, signing, package and upload results are recorded with the
-artifacts as they complete. Earlier 0.7.3 checks retain their original package
+The packages use source commit `423ab9febd633e58fe16afc6f02fa27515621854`.
+Its Windows source, display-control and Linux build CI checks passed. The
+published macOS packages passed Developer ID, Apple notarization, stapling and
+extracted-ZIP Gatekeeper checks. Linux passed the Nix build and isolated smoke
+checks, container package installation on Ubuntu 24.04, Debian 13, Fedora 44
+and Arch, offline AppImage checks on Ubuntu 22.04, isolated Flatpak installation
+and recovery checks, and portable archive safety/notices checks.
+
+All 17 uploaded assets were checked against GitHub's server-provided SHA-256
+digest and exact byte size. `VERIFICATION.txt` records the detailed scope and
+`SHA256SUMS.txt` covers the other 16 assets in this staging snapshot. Windows
+packages remain unpublished. Earlier 0.7.3 checks retain their original package
 identity and are not claimed as validation of these new bytes.
 
 The [PC support matrix](PC_SUPPORT_MATRIX.md) retains the platform acceptance
@@ -65,6 +75,7 @@ and latency remain separately scoped. Successful builds, CI, isolated tests
 and package audits do not establish physical streaming or remote-input
 acceptance.
 
-Updating mynix does not activate an installation. The user performs
-`rebuild switch` and subsequent live validation. Stable promotion remains
-pending until Windows validation is confirmed.
+mynix was pulled, updated and pushed with the exact source and signed macOS
+package pins. Updating mynix does not activate an installation; the user performs
+`rebuild switch` and subsequent live validation. Stable promotion remains pending
+until Windows validation is confirmed.
