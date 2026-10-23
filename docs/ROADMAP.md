@@ -13,25 +13,28 @@ The viewer also handles the chord while SDL captures keyboard shortcuts; forward
 it to the resident process and suppress duplicate native/worker notifications.
 Pass Wayland activation tokens through to the recalled window or viewer worker.
 
-Validation: the macOS managed build and native registration/cleanup checks pass;
+Initial implementation validation: the macOS managed build and native registration/cleanup checks pass;
 the Linux Nix build, isolated CLI smoke and private-X11 registration/conflict/
 cleanup checks pass. The complete Windows client cross-build and PE version
 checks pass, reusing retained dependencies through the compatibility app-only
 resume entry point. Its link check caught an SDL/Qt entry-point conflict; define
 SDL_MAIN_HANDLED before all headers so Qt retains ownership of qMain.
 The isolated manager (18 cases), private-bus portal (14 cases), SDL state,
-30 window transitions and shared-core regressions pass. Physical key delivery,
-compositor permission, focus and live streaming acceptance remain unverified.
+30 window transitions and shared-core regressions pass. At that stage, physical
+key delivery, compositor permission, focus and live streaming were unverified;
+the replacement-release checks below supersede that initial validation scope.
 
 ## Desktop 0.7.4 replacement release — 2026-10-23
 
 The operator requested a fresh 0.7.4 build including the global recall shortcut
 before final publication. The earlier macOS/Linux prerelease and prepared
 Windows packages used `423ab9fe`; their checks remain historical evidence.
-Prepare all desktop formats with the updated shortcut, verify bounded native
-shortcut behavior on macOS, Linux and Windows, then publish distinct `r2` asset
-names, update mynix source/package pins and retire the superseded installers.
-The application version stays 0.7.4. Latest remains 0.7.3 during preparation.
+Published all desktop formats under distinct `r2` asset names after bounded
+native shortcut checks on macOS, Linux and Windows. The application version
+stays 0.7.4, and the release is marked Latest stable. The eight superseded
+macOS/Linux installer assets are retired; nine small historical records remain.
+mynix source/package pins were updated after pulling, and the complete target
+configurations were prebuilt without activation.
 
 Retain checksums, provenance, dependency caches and current rollback evidence.
 Do not reuse a download URL for different package bytes. GitHub asset validation
@@ -45,8 +48,9 @@ window did not move forward. The replacement adds a same-window hide/show
 fallback only for an explicit tokenless global shortcut on native Wayland.
 Qt device-list and SDL viewer windows share that restriction; ordinary recovery
 must not acquire it. The worker IPC carries and consumes this user intent once,
-and viewer recall resets the existing resize-settling grace period. Native
-candidate checks and package rebuilding remain required before publication.
+and viewer recall resets the existing resize-settling grace period. The final
+Nix application passed three rounds of hide/recall, background activation,
+repeat suppression and minimized recall on a real KDE Wayland session.
 
 An additional private X11 desktop check found that holding the chord longer
 than Qt's focus-loss timer could leave the foreground device list visible.
@@ -56,6 +60,29 @@ queries native X11 focus before deciding whether to hide the device list.
 Tray clicks retain their existing focus-loss grace period. This change is
 compiled only with X11 support; macOS and Windows packages retain their verified
 binary source revision, recorded separately from the later Linux revision.
+The complete X11 application passed long and short holds, three hide/recall
+cycles, background activation and minimized recall on a private KWin desktop.
+The isolated Qt/Xvfb regression reproduces grab-induced stale Qt focus without
+injecting input. Both exact source revisions passed all three CI workflows.
+
+macOS packages retain Developer ID signatures, notarization and stapling, with
+Gatekeeper verification after ZIP extraction; native shortcut checks used the
+exact sealed candidate. Windows exact-package checks cover normal-user shortcut
+registration/conflict/reclaim, upgrade, uninstall/reinstall, service recovery,
+identity/pairing retention and Defender with no exclusions or detections.
+Recorded harness failures remain separate from corrected display/readiness
+audits. Physical keyboard hardware, audio, clipboard and broad GPU/compositor
+acceptance remain outside those local checks.
+The subsequent bounded Windows-to-macOS run used exact installed replacement
+binaries over a verified IPv4 endpoint; the original hostname selected
+unreachable IPv6 control addresses. Live HEVC video, fixture-only text/clicks,
+viewer hide/recall, hidden-input isolation and balanced modifier release passed.
+The SDL foreground hide path uses chord-break semantics; native recall waits
+for all chord keys. An overly strict copied harness assertion is retained and
+separately corrected against that existing contract. No takeover challenge
+occurred, and the observed rendering rate was below 60 FPS; broad performance,
+audio, clipboard and recovery acceptance remain separate.
+See the release verification record for per-format package checks.
 
 ## Managed build and artifact lifecycle — 2026-10-22
 

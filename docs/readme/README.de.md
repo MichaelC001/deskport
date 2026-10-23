@@ -4,6 +4,11 @@
 
 <h1 align="center">DeskPort</h1>
 
+> **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
+> The translated package examples and verification history below still describe
+> 0.7.3. Use the [current installation guide](../../README.md#install) and
+> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+
 <p align="center">
   <a href="../../README.md">English</a> ·
   <a href="README.zh-CN.md">简体中文</a> ·

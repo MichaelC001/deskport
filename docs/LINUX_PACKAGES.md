@@ -4,29 +4,45 @@ For full desktop VM install/upgrade/rollback/removal coverage and its limits,
 see [Linux desktop acceptance](LINUX_DESKTOP_ACCEPTANCE.md). Container package
 checks and AppImage GUI smoke do not establish that lifecycle matrix.
 
-DeskPort 0.7.1 provides x86_64 Linux downloads for users who do not build from
+DeskPort 0.7.4 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package.
 
 ## AppImage runtime
 
-The 0.7.1 AppImage bundles a private glibc loader and runtime for the viewer and
+The AppImage bundles a private glibc loader and runtime for the viewer and
 Sunshine host, using pinned sharun 0.8.1. It also includes matching PipeWire SPA
 plugins and VA-API runtime support. Native packages and portable archives retain
 their glibc 2.39 minimum. Hardware encoding, decoding and virtual displays still
 depend on the host kernel, GPU drivers and compositor.
+
+The replacement downloads use an `r2` filename suffix; the application remains
+0.7.4. Verify them with `SHA256SUMS-r2.txt` from the
+[release page](https://github.com/keithxc/deskport/releases/tag/v0.7.4).
+Nix commands use `--refresh` because this replaces an earlier build under the
+same release tag; locked consumers should update to the exact source revision
+recorded in `PROVENANCE-r2.json`.
+
+## Replacing the earlier 0.7.4
+
+Fully quit the old DeskPort instance before replacing it, then launch the new
+installation. The package version remains 0.7.4, so verify the `r2` filename
+and checksum rather than relying on the displayed version. The APT and Flatpak
+commands below explicitly reinstall an existing copy. If the earlier 0.7.4 RPM
+is already installed, use `sudo dnf reinstall ./deskport-0.7.4-1.x86_64-r2.rpm`
+instead of the fresh-install command in the table.
 
 ## Choose a download
 
 | Format | Target | Install |
 | --- | --- | --- |
 | portable `.tar.gz` | x86_64, glibc 2.39+ | Extract and run `DeskPort.AppDir/AppRun` |
-| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install ./deskport_0.7.1-1_amd64.deb` |
-| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.7.1-1.x86_64.rpm` |
-| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst` |
+| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install --reinstall ./deskport_0.7.4-1_amd64-r2.deb` |
+| `.rpm` | Fedora 44 | `sudo dnf install ./deskport-0.7.4-1.x86_64-r2.rpm` |
+| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.4-1-x86_64-r2.pkg.tar.zst` |
 | `.AppImage` | x86_64 glibc desktops, private runtime included | Make executable, then open |
 | `.flatpak` | Distributions with Flatpak and Freedesktop Platform 25.08 | See below |
-| Nix | NixOS / Linux with Nix | `nix run github:keithxc/deskport/v0.7.1` |
+| Nix | NixOS / Linux with Nix | `nix run --refresh github:keithxc/deskport/v0.7.4` |
 
 Native packages install a private runtime in `/opt/deskport`, an application-menu
 entry and `/usr/bin/deskport`. Package managers install required system graphics,
@@ -39,8 +55,8 @@ supported source/Nix build rather than the native glibc 2.39 binaries.
 For AppImage:
 
 ```sh
-chmod +x DeskPort-0.7.1-x86_64.AppImage
-./DeskPort-0.7.1-x86_64.AppImage
+chmod +x DeskPort-0.7.4-x86_64-r2.AppImage
+./DeskPort-0.7.4-x86_64-r2.AppImage
 ```
 
 Keep the AppImage in a permanent location before enabling login startup. Moving
@@ -51,7 +67,7 @@ AppImage with an FHS environment. Desktop graphics drivers remain system-provide
 For Flatpak:
 
 ```sh
-flatpak install --user ./DeskPort-0.7.1-client-x86_64.flatpak
+flatpak install --user --reinstall ./DeskPort-0.7.4-client-x86_64-r2.flatpak
 flatpak run io.github.keithxc.DeskPort
 ```
 
@@ -79,10 +95,12 @@ Do not use `yay -S deskport-bin` until this page confirms publication.
 For the existing release package:
 
 ```sh
-sudo pacman -U ./deskport-0.7.1-1-x86_64.pkg.tar.zst
+sudo pacman -U ./deskport-0.7.4-1-x86_64-r2.pkg.tar.zst
 ```
 
-To build the candidate locally, from a checkout containing the recipe:
+The retained AUR candidate recipe targets historical version 0.6.3, not the
+current 0.7.4 replacement. Use the release package above for the current version.
+To build that historical candidate locally, from a checkout containing the recipe:
 
 ```sh
 cd packaging/aur/deskport-bin
@@ -104,7 +122,7 @@ repositories. Future AUR publication will not enable `pacman -S deskport`.
 **Available now:** the upstream flake, pinned to a released tag:
 
 ```sh
-nix run github:keithxc/deskport/v0.7.1
+nix run --refresh github:keithxc/deskport/v0.7.4
 ```
 
 For a flake-based NixOS configuration, add the input and install its package in a
@@ -112,7 +130,7 @@ module that receives `inputs` through your existing `specialArgs` configuration:
 
 ```nix
 # flake.nix inputs
-inputs.deskport.url = "github:keithxc/deskport/v0.7.1";
+inputs.deskport.url = "github:keithxc/deskport/v0.7.4";
 
 # NixOS module
 { inputs, pkgs, ... }: {
