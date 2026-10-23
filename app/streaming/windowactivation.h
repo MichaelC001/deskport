@@ -19,4 +19,9 @@ void recall(SDL_Window* window, bool userRequested = false);
 // Some portals omit activation tokens; remapping lets the compositor apply its
 // normal show policy instead of requesting activation with an old input serial.
 void prepareShortcutRecall(QWindow* window, const QByteArray& token);
+#ifdef HAS_X11
+// X11 passive keyboard grabs can temporarily clear Qt's cached active window
+// even though the server's input focus has not moved. Query it for the shortcut.
+bool shortcutWindowIsActive(QWindow* window);
+#endif
 }

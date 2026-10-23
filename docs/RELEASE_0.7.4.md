@@ -1,12 +1,11 @@
 # DeskPort 0.7.4
 
 Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
-A replacement build is being prepared with the built-in global window shortcut.
-The earlier 0.7.4 packages used source `423ab9fe` and do not include that feature.
-Replacement downloads use an `r2` filename suffix while the application version
-remains 0.7.4. The earlier package receipts remain retained as historical evidence.
-The release stays a prerelease until the replacement packages are validated;
-the current stable release remains 0.7.3 during preparation.
+The replacement downloads use an `r2` filename suffix and include the built-in
+global window shortcut. The application version remains 0.7.4. Earlier packages
+used source `423ab9fe` and did not include the shortcut; their small receipts
+remain historical evidence and do not describe the replacement binaries.
+The GitHub release identifies the current publication status.
 
 ## Changes since 0.7.3
 
@@ -19,7 +18,9 @@ the current stable release remains 0.7.3 during preparation.
   without replacing other applications' shortcuts. A tokenless Wayland
   shortcut can remap the same visible background window to bring it forward;
   this fallback is limited to the user's shortcut action and does not apply
-  to automatic session recovery.
+  to automatic session recovery. X11 checks the server's input focus so that
+  holding the shortcut through Qt's temporary grab-related focus loss still
+  hides the foreground device list on release.
 - **Compact device cards:** desktop device and add cards use a compact square
   layout. Each visible row is centered by its actual card span, including
   partially filled rows, without changing grid keyboard navigation. The add
@@ -52,24 +53,25 @@ or the isolated Seamless development branch.
   Native packages require glibc 2.39 or newer. The AppImage bundles a private
   runtime; compositor, graphics, capture and input prerequisites still apply.
 - Linux x86_64 Flatpak: viewer only, using Freedesktop Platform 25.08.
-- Windows x64: full Setup and portable viewer ZIP are prepared separately.
-  Native package/Defender checks and user validation remain pending; the
-  application and installer are unsigned. Windows publication and promotion
-  follow that gate.
+- Windows x64: full Setup and portable viewer ZIP. The application and installer
+  are unsigned; release verification includes native package, Defender and
+  installation lifecycle checks.
 
 See the [release assets](https://github.com/keithxc/deskport/releases/tag/v0.7.4).
-The replacement package set will be identified by `SHA256SUMS-r2.txt`,
-`PROVENANCE-r2.json` and `VERIFICATION-r2.txt`. Platform build records include
-exact source revisions and asset hashes. Nix uses the pinned public source;
+Use `SHA256SUMS-r2.txt`, `PROVENANCE-r2.json` and `VERIFICATION-r2.txt` for the
+replacement package set. Platform build records include exact source revisions
+and asset hashes. The Linux-only X11 correction follows the verified macOS and
+Windows binary revision; provenance records each platform separately rather
+than attributing every binary to the release tag. Nix uses the pinned public source;
 mobile clients are outside this desktop release.
 
 ## Validation boundary
 
-The earlier staging checks apply only to their recorded source and package
-hashes. They do not establish acceptance of the replacement binaries. The new
-packages require fresh platform packaging checks and bounded native shortcut
-checks before publication. Compilation, mocked portal tests and registration
-alone do not establish real window activation or physical keyboard acceptance.
+The release verification record reports exact-package checks, including
+bounded native shortcut checks, with their environments and limits. Earlier
+staging checks apply only to their recorded source and package hashes.
+Compilation, mocked portal tests and registration alone do not establish real
+window activation or physical keyboard acceptance.
 
 The [PC support matrix](PC_SUPPORT_MATRIX.md) retains the separately scoped
 limits for Windows pre-login/secure desktop, GNOME capture/recovery, physical
@@ -77,6 +79,6 @@ Hyprland/X11 behavior, native Wayland IME, broad browser/device coverage,
 long-session recovery, clipboard/audio quality, HDR and latency. Local shortcut
 validation does not establish physical streaming or remote-input acceptance.
 
-mynix will be pulled before updating the exact source and new immutable macOS
-ZIP URL/hash. Updating the pins does not activate an installation; the user
+mynix delivery uses the exact source and immutable macOS ZIP URL/hash after
+pulling the repository. Updating the pins does not activate an installation; the user
 performs `rebuild switch` and subsequent live validation.

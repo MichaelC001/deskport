@@ -28,7 +28,7 @@ compositor permission, focus and live streaming acceptance remain unverified.
 The operator requested a fresh 0.7.4 build including the global recall shortcut
 before final publication. The earlier macOS/Linux prerelease and prepared
 Windows packages used `423ab9fe`; their checks remain historical evidence.
-Prepare all desktop formats from one new source revision, verify bounded native
+Prepare all desktop formats with the updated shortcut, verify bounded native
 shortcut behavior on macOS, Linux and Windows, then publish distinct `r2` asset
 names, update mynix source/package pins and retire the superseded installers.
 The application version stays 0.7.4. Latest remains 0.7.3 during preparation.
@@ -47,6 +47,15 @@ Qt device-list and SDL viewer windows share that restriction; ordinary recovery
 must not acquire it. The worker IPC carries and consumes this user intent once,
 and viewer recall resets the existing resize-settling grace period. Native
 candidate checks and package rebuilding remain required before publication.
+
+An additional private X11 desktop check found that holding the chord longer
+than Qt's focus-loss timer could leave the foreground device list visible.
+The passive keyboard grab temporarily cleared Qt's cached active window while
+the X server's input focus remained on the same client window. The shortcut now
+queries native X11 focus before deciding whether to hide the device list.
+Tray clicks retain their existing focus-loss grace period. This change is
+compiled only with X11 support; macOS and Windows packages retain their verified
+binary source revision, recorded separately from the later Linux revision.
 
 ## Managed build and artifact lifecycle — 2026-10-22
 

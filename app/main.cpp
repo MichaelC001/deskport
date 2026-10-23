@@ -1128,6 +1128,9 @@ int main(int argc, char *argv[])
     });
     const auto windowInFront = [&frontLeft](QWindow* window, bool trayClick) {
         if (!window || !window->isVisible() || window->windowState() == Qt::WindowMinimized) return false;
+#ifdef HAS_X11
+        if (!trayClick) return WindowActivation::shortcutWindowIsActive(window);
+#endif
         return window->isActive() || (trayClick && frontLeft.isValid() && frontLeft.elapsed() < 600);
     };
     auto toggleWindow = [&engine, &showDevices, &recallViewer, &managedSessions, windowInFront](bool trayClick, const QByteArray& token) {

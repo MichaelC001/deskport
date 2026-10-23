@@ -38,6 +38,11 @@ jobs:
           mkdir -p "$TMPDIR"
           nix develop -c python3 scripts/test-global-shortcut.py
           nix develop -c python3 scripts/test-transition-window.py
+          if ! command -v Xvfb >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install --yes xvfb
+          fi
+          nix develop -c python3 scripts/test-window-activation-x11.py
       - name: Isolated Wayland clipboard regressions
         env:
           QT_QPA_PLATFORM: offscreen

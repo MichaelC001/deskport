@@ -9,6 +9,9 @@
 #include <cstring>
 #include "xdg-activation-v1.h"
 #endif
+#ifdef HAS_X11
+#include <X11/Xlib.h>
+#endif
 
 namespace {
 QMutex s_Lock;
@@ -91,3 +94,18 @@ void WindowActivation::prepareShortcutRecall(QWindow* window, const QByteArray& 
     Q_UNUSED(token);
 #endif
 }
+
+#ifdef HAS_X11
+bool WindowActivation::shortcutWindowIsActive(QWindow* window) {
+    if (!window) return false;
+    if (QGuiApplication::platformName() != "xcb") return window->isActive();
+    auto* display = XOpenDisplay(nullptr);
+    if (!display) return window->isActive();
+    Window focus = None;
+    int revert = RevertToNone;
+    const bool queried = XGetInputFocus(display, &focus, &revert) != 0;
+    const bool active = queried ? focus == static_cast<Window>(window->winId()) : window->isActive();
+    XCloseDisplay(display);
+    return active;
+}
+#endif
