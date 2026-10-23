@@ -2034,7 +2034,7 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>Lampu</translation>
+            <translation>Terang</translation>
         </message>
         <message>
             <source>Dark</source>
@@ -2275,6 +2275,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Kode sumber dan modifikasi: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Pintasan keyboard</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Pintasan jendela global</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 menampilkan atau menyembunyikan DeskPort. Aktif secara default; perubahan langsung berlaku.</translation>
         </message>
     </context>
     <context>

@@ -2284,6 +2284,18 @@
             <source>Source code and modifications: %1</source>
             <translation>ソースコードと変更内容：%1</translation>
         </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>キーボードショートカット</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>ウィンドウのグローバルショートカット</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 で DeskPort を表示または非表示にします。既定で有効です。変更はすぐに適用されます。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

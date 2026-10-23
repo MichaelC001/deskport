@@ -215,6 +215,7 @@ void StreamingPreferences::reload()
     uiTheme = settings.value("ui/uiTheme", 0).toInt();
     uiAccent = qBound(0, settings.value("ui/accent", 0).toInt(), 4);
     showTraffic = settings.value("ui/showTraffic", false).toBool();
+    globalShortcutEnabled = settings.value("ui/globalShortcutEnabled", true).toBool();
     dataSaver = settings.value("datasaver", false).toBool();
     compactDevices = settings.value("ui/compactDevices", true).toBool();
     showLocalCursor = settings.value("showLocalCursor", true).toBool();
@@ -473,6 +474,7 @@ void StreamingPreferences::save()
     settings.setValue("ui/uiTheme", uiTheme);
     settings.setValue("ui/accent", uiAccent);
     settings.setValue("ui/showTraffic", showTraffic);
+    settings.setValue("ui/globalShortcutEnabled", globalShortcutEnabled);
     settings.setValue("datasaver", dataSaver);
     settings.setValue("ui/compactDevices", compactDevices);
     settings.setValue("showLocalCursor", showLocalCursor);

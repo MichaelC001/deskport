@@ -2276,6 +2276,18 @@
             <source>Source code and modifications: %1</source>
             <translation>འབྱུང་ཁུངས་ཨང་རྟགས་དང་བསྒྱུར་བཅོས།: %1</translation>
         </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>མཐེབ་གཞོང་མྱུར་མཐེབ།</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>སྒེའུ་ཁུང་གི་ཀུན་ཁྱབ་མྱུར་མཐེབ།</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 ཡིས་ DeskPort སྟོན་པའམ་སྦེད་པ་ཡིན། སོར་བཞག་གིས་ཁ་ཕྱེ་ཡོད། བཟོ་བཅོས་དེ་མ་ཐག་ནུས་པ་ཐོན།</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

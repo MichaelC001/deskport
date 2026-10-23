@@ -82,6 +82,18 @@ UiPage {
     }
 
     UiGroup {
+        title: qsTr("Keyboard shortcuts")
+        UiRow {
+            objectName: "globalShortcutSwitch"
+            iconSource: "qrc:/res/ui/input.svg"
+            title: qsTr("Global window shortcut")
+            detail: qsTr("%1 shows or hides DeskPort. Enabled by default; changes apply immediately.").arg(Qt.platform.os === "osx" ? "Command + '" : Qt.platform.os === "windows" ? "Windows + '" : "Meta (Super) + '")
+            switchable: true; on: preferences.globalShortcutEnabled; divider: false
+            onSwitched: function(value) { preferences.globalShortcutEnabled = value; save() }
+        }
+    }
+
+    UiGroup {
         title: qsTr("Diagnostics and feedback")
         footnote: diagnostics.status.length > 0 ? diagnostics.status : qsTr("Off by default. Logs stay on this computer until you share them. See Privacy for what is recorded.")
         UiRow {

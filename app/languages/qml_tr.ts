@@ -2039,11 +2039,11 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>Işık</translation>
+            <translation>Açık</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>Karanlık</translation>
+            <translation>Koyu</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Kaynak kodu ve değişiklikler: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Klavye kısayolları</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Genel pencere kısayolu</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 DeskPort'u gösterir veya gizler. Varsayılan olarak açıktır; değişiklikler hemen uygulanır.</translation>
         </message>
     </context>
     <context>

@@ -1,3 +1,16 @@
+## Desktop manual and window shortcut labels — 2026-10-24
+
+Core `e482f24563b2026693e284fbd8ca54eb420b7896` expands the offline manual to
+13 chapters / 66 steps and adds the desktop global-shortcut settings labels.
+Git and Nix reference the same tree. New manual paragraphs are authored in
+English and both Chinese scripts; missing translations use the existing English
+fallback. Settings labels have draft translations in all 22 primary locales.
+No display arithmetic, wire message or mobile implementation changes.
+
+This core commit is published on main before the desktop consumer update.
+It also retains the newer shared appearance terminology and manual-navigation
+translation corrections.
+
 ## Combined local IME and Web catalog — 2026-10-18
 
 Core `f34fc7b1524ce436185c4b085a903e6af4314790` merges the reviewed local-IME

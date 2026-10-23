@@ -1310,7 +1310,15 @@ int main(int argc, char *argv[])
         if (pendingActivation) showDevices();
     }
 
-    if (resident) QTimer::singleShot(0, &globalShortcut, &GlobalShortcut::start);
+    if (resident) {
+        auto* preferences = StreamingPreferences::get();
+        QObject::connect(preferences, &StreamingPreferences::globalShortcutEnabledChanged,
+                         &globalShortcut, [preferences, &globalShortcut] {
+            globalShortcut.setEnabled(preferences->globalShortcutEnabled);
+        });
+        globalShortcut.setEnabled(preferences->globalShortcutEnabled);
+        QTimer::singleShot(0, &globalShortcut, &GlobalShortcut::start);
+    }
     int err = app.exec();
 
     if (hostManager.restarting()) relaunchAfterExit();

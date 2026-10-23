@@ -1808,7 +1808,7 @@
         </message>
         <message>
             <source>Manual</source>
-            <translation>Thủ công</translation>
+            <translation>Hướng dẫn</translation>
         </message>
         <message>
             <source>How to use DeskPort</source>
@@ -1871,7 +1871,7 @@
         </message>
         <message>
             <source>Follow system</source>
-            <translation>Theo dõi hệ thống</translation>
+            <translation>Theo hệ thống</translation>
         </message>
         <message>
             <source>Restart DeskPort to apply this language.</source>
@@ -2039,11 +2039,11 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>Ánh sáng</translation>
+            <translation>Sáng</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>Tối tăm</translation>
+            <translation>Tối</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Mã nguồn và sửa đổi: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Phím tắt</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Phím tắt cửa sổ toàn hệ thống</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 hiện hoặc ẩn DeskPort. Bật theo mặc định; thay đổi có hiệu lực ngay.</translation>
         </message>
     </context>
     <context>
@@ -3765,7 +3777,7 @@
         <name>HelpView</name>
         <message>
             <source>Manual</source>
-            <translation>Thủ công</translation>
+            <translation>Hướng dẫn</translation>
         </message>
     </context>
     <context>

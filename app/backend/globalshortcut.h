@@ -62,6 +62,7 @@ public:
     explicit GlobalShortcut(QObject* parent = nullptr);
     ~GlobalShortcut();
     void start();
+    void setEnabled(bool enabled);
     Q_INVOKABLE void fallbackActivated();
     bool available() const { return m_Available; }
 signals:
@@ -74,5 +75,6 @@ private:
     ShortcutActivationGate m_Gate;
     QElapsedTimer m_Clock;
     QByteArray m_Token;
+    bool m_Enabled = true;
     bool m_Available = false;
 };

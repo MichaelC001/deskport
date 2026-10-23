@@ -1808,7 +1808,7 @@
         </message>
         <message>
             <source>Manual</source>
-            <translation>Handmatig</translation>
+            <translation>Handleiding</translation>
         </message>
         <message>
             <source>How to use DeskPort</source>
@@ -2035,7 +2035,7 @@
         </message>
         <message>
             <source>Appearance</source>
-            <translation>Verschijning</translation>
+            <translation>Uiterlijk</translation>
         </message>
         <message>
             <source>Light</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Broncode en aanpassingen: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Sneltoetsen</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Algemene venstersneltoets</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 toont of verbergt DeskPort. Standaard ingeschakeld; wijzigingen worden direct toegepast.</translation>
         </message>
     </context>
     <context>
@@ -3765,7 +3777,7 @@
         <name>HelpView</name>
         <message>
             <source>Manual</source>
-            <translation>Handmatig</translation>
+            <translation>Handleiding</translation>
         </message>
     </context>
     <context>

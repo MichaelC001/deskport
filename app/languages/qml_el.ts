@@ -1324,6 +1324,18 @@
             <source>Language</source>
             <translation>Γλώσσα</translation>
         </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation type="unfinished" />
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

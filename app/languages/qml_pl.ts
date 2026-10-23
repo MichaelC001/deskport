@@ -2039,7 +2039,7 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>Światło</translation>
+            <translation>Jasny</translation>
         </message>
         <message>
             <source>Dark</source>
@@ -2167,7 +2167,7 @@
         </message>
         <message>
             <source>Theme</source>
-            <translation>Temat</translation>
+            <translation>Motyw</translation>
         </message>
         <message>
             <source>Accent color</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Kod źródłowy i modyfikacje: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Skróty klawiszowe</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Globalny skrót okna</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 pokazuje lub ukrywa DeskPort. Domyślnie włączony; zmiany są stosowane natychmiast.</translation>
         </message>
     </context>
     <context>

@@ -14,14 +14,15 @@ void GlobalShortcut::setAvailable(bool available) {
 }
 
 void GlobalShortcut::start() {
-    if (m_Backend || qEnvironmentVariableIsSet("DESKPORT_DISABLE_GLOBAL_SHORTCUT")) return;
+    if (!m_Enabled || m_Backend || qEnvironmentVariableIsSet("DESKPORT_DISABLE_GLOBAL_SHORTCUT")) return;
     // Isolated test/offscreen runs must not bind a real desktop shortcut or
     // display a portal permission dialog.
     const auto platform = QGuiApplication::platformName();
     if (platform == "offscreen" || platform == "minimal") return;
     m_Backend = createGlobalShortcutBackend(this);
-    m_Backend->edge = [this](bool pressed, const QByteArray& token) {
-        if (!m_Available) return;
+    auto* backend = m_Backend;
+    m_Backend->edge = [this, backend](bool pressed, const QByteArray& token) {
+        if (m_Backend != backend || !m_Enabled || !m_Available) return;
         if (!token.isEmpty()) m_Token = token;
         const bool activate = m_Gate.nativeEdge(pressed, m_Clock.elapsed());
         const auto activation = m_Token;
@@ -30,13 +31,36 @@ void GlobalShortcut::start() {
         if (!pressed) m_Token.clear();
         if (activate) emit activated(activation);
     };
-    m_Backend->availability = [this](bool available) { setAvailable(available); };
-    m_Backend->error = [this](const QString& error) {
+    m_Backend->availability = [this, backend](bool available) {
+        if (m_Backend == backend && m_Enabled) setAvailable(available);
+    };
+    m_Backend->error = [this, backend](const QString& error) {
+        if (m_Backend != backend || !m_Enabled) return;
         setAvailable(false);
         qWarning().noquote() << "DeskPort global shortcut Meta+Apostrophe unavailable:" << error;
     };
     // Asynchronous backends report success after the user grants the binding.
     if (m_Backend->start()) setAvailable(true);
+}
+
+void GlobalShortcut::setEnabled(bool enabled) {
+    if (m_Enabled == enabled) return;
+    m_Enabled = enabled;
+    if (enabled) {
+        start();
+        return;
+    }
+    // Invalidate callbacks before stopping: an asynchronous portal reply or a
+    // queued release from the old registration must never revive the binding.
+    auto* backend = m_Backend;
+    m_Backend = nullptr;
+    setAvailable(false);
+    m_Gate.reset();
+    m_Token.clear();
+    if (backend) {
+        backend->stop();
+        backend->deleteLater();
+    }
 }
 
 void GlobalShortcut::fallbackActivated() {

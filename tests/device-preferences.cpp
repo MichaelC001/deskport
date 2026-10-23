@@ -59,6 +59,28 @@ private slots:
         a->reload(); b->reload(); global->reload();
         QVERIFY(a->localTextInput); QVERIFY(!b->localTextInput); QVERIFY(!global->localTextInput);
     }
+    void globalWindowShortcutDefaultsOnAndCannotBeOverriddenByDevice() {
+        auto global = StreamingPreferences::get();
+        QVERIFY(global->globalShortcutEnabled);
+        QSignalSpy changed(global, &StreamingPreferences::globalShortcutEnabledChanged);
+        QVERIFY(global->setProperty("globalShortcutEnabled", false));
+        QCOMPARE(changed.count(), 1);
+        global->save();
+        global->reload();
+        QVERIFY(!global->globalShortcutEnabled);
+        QObject owner;
+        auto device = global->snapshot("shortcut-device", &owner);
+        QVERIFY(!device->globalShortcutEnabled);
+        device->globalShortcutEnabled = true;
+        device->save();
+        global->reload();
+        QVERIFY(!global->globalShortcutEnabled);
+        QVERIFY(global->setProperty("globalShortcutEnabled", true));
+        global->save();
+        global->reload(); device->reload();
+        QVERIFY(global->globalShortcutEnabled);
+        QVERIFY(device->globalShortcutEnabled);
+    }
     void uiLanguageChangesPreserveDevicePolicyAndSavedIds() {
         auto preferences = StreamingPreferences::get();
         const auto previousLanguage = preferences->language;

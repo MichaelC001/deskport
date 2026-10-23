@@ -2035,15 +2035,15 @@
         </message>
         <message>
             <source>Appearance</source>
-            <translation>उपस्थिति</translation>
+            <translation>दिखावट</translation>
         </message>
         <message>
             <source>Light</source>
-            <translation>रोशनी</translation>
+            <translation>हल्के रंग</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>अँधेरा</translation>
+            <translation>गहरे रंग</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2167,11 +2167,11 @@
         </message>
         <message>
             <source>Theme</source>
-            <translation>विषय</translation>
+            <translation>थीम</translation>
         </message>
         <message>
             <source>Accent color</source>
-            <translation>उच्चारण रंग</translation>
+            <translation>एक्सेंट रंग</translation>
         </message>
         <message>
             <source>Blue</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>स्रोत कोड और संशोधन: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>कीबोर्ड शॉर्टकट</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>ग्लोबल विंडो शॉर्टकट</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 DeskPort को दिखाता या छिपाता है। डिफ़ॉल्ट रूप से चालू है; बदलाव तुरंत लागू होते हैं।</translation>
         </message>
     </context>
     <context>

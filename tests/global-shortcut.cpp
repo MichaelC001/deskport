@@ -238,6 +238,72 @@ private slots:
         QCOMPARE(created, 0);
         QCOMPARE(activated.count(), 0);
     }
+
+    void disabledPreferenceSkipsRegistrationUntilEnabled() {
+        GlobalShortcut shortcut;
+        shortcut.setEnabled(false);
+        shortcut.start();
+        shortcut.fallbackActivated();
+        QCOMPARE(created, 0);
+        QVERIFY(!shortcut.available());
+        shortcut.setEnabled(true);
+        QVERIFY(shortcut.available());
+        QCOMPARE(created, 1);
+        shortcut.setEnabled(true);
+        QCOMPARE(created, 1);
+    }
+
+    void disablingReleasesBindingAndIgnoresLateCallbacks() {
+        GlobalShortcut shortcut;
+        QSignalSpy activated(&shortcut, &GlobalShortcut::activated);
+        QSignalSpy fallback(&shortcut, &GlobalShortcut::fallbackAvailabilityChanged);
+        shortcut.start();
+        auto* oldBackend = backend;
+        oldBackend->edge(true, "discarded-token");
+        shortcut.setEnabled(false);
+        QCOMPARE(stopped, 1);
+        QVERIFY(!shortcut.available());
+        QVERIFY(!fallback.last().at(0).toBool());
+        oldBackend->availability(true);
+        oldBackend->edge(false, {});
+        shortcut.fallbackActivated();
+        QVERIFY(!shortcut.available());
+        QCOMPARE(activated.count(), 0);
+        shortcut.setEnabled(false);
+        QCOMPARE(stopped, 1);
+        shortcut.setEnabled(true);
+        QCOMPARE(created, 2);
+        QVERIFY(shortcut.available());
+        oldBackend->availability(false);
+        oldBackend->error("stale registration error");
+        QVERIFY(shortcut.available());
+        backend->edge(false, {});
+        QCOMPARE(activated.count(), 0);
+        backend->edge(true, {});
+        backend->edge(false, {});
+        QCOMPARE(activated.count(), 1);
+        QVERIFY(activated.last().at(0).toByteArray().isEmpty());
+    }
+
+    void disablingCancelsPendingPortalRegistration() {
+        synchronousRegistration = false;
+        GlobalShortcut shortcut;
+        QSignalSpy activated(&shortcut, &GlobalShortcut::activated);
+        shortcut.start();
+        auto* oldBackend = backend;
+        shortcut.setEnabled(false);
+        oldBackend->availability(true);
+        QVERIFY(!shortcut.available());
+        shortcut.setEnabled(true);
+        QCOMPARE(created, 2);
+        QVERIFY(!shortcut.available());
+        oldBackend->availability(true);
+        QVERIFY(!shortcut.available());
+        backend->availability(true);
+        QVERIFY(shortcut.available());
+        shortcut.fallbackActivated();
+        QCOMPARE(activated.count(), 1);
+    }
 };
 
 int main(int argc, char** argv) {

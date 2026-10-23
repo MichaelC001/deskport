@@ -2034,11 +2034,11 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>ضوء</translation>
+            <translation>فاتح</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>مظلم</translation>
+            <translation>داكن</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2275,6 +2275,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>كود المصدر والتعديلات: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>اختصارات لوحة المفاتيح</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>اختصار النافذة العام</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>يُظهر %1 تطبيق DeskPort أو يخفيه. مفعّل افتراضيًا؛ تُطبّق التغييرات فورًا.</translation>
         </message>
     </context>
     <context>

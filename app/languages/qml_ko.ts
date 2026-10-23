@@ -2276,6 +2276,18 @@
             <source>Source code and modifications: %1</source>
             <translation>소스 코드 및 수정 사항: %1</translation>
         </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>키보드 단축키</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>전역 창 단축키</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 키로 DeskPort를 표시하거나 숨깁니다. 기본으로 켜져 있으며 변경 사항은 즉시 적용됩니다.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

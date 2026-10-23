@@ -1871,7 +1871,7 @@
         </message>
         <message>
             <source>Follow system</source>
-            <translation>Слідкуйте за системою</translation>
+            <translation>Як у системі</translation>
         </message>
         <message>
             <source>Restart DeskPort to apply this language.</source>
@@ -2039,11 +2039,11 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>світло</translation>
+            <translation>Світла</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>Темний</translation>
+            <translation>Темна</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Вихідний код і модифікації: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Сполучення клавіш</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Глобальне сполучення для вікна</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 показує або приховує DeskPort. Увімкнено типово; зміни застосовуються одразу.</translation>
         </message>
     </context>
     <context>

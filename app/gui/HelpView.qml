@@ -18,7 +18,9 @@ UiPage {
         return Manual.chapters(StreamingPreferences.manualLanguage())
     }
     readonly property var icons: ({ about: "ui/info", share: "share-screen", connect: "ui/link", organize: "devices-grid",
-                                    fullscreen: "ui/fullscreen", picture: "ui/picture", trouble: "ui/wrench" })
+                                    windows: "ui/reconnect", shortcuts: "ui/input", fullscreen: "ui/fullscreen",
+                                    picture: "ui/picture", input: "ui/input", quality: "ui/traffic",
+                                    browser: "ui/link", diagnostics: "ui/diagnostics", trouble: "ui/wrench" })
     function iconFor(id) { return "qrc:/res/" + (icons[id] || "ui/guide") + ".svg" }
     Repeater {
         model: page.chapters

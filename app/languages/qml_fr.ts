@@ -1866,7 +1866,7 @@
         </message>
         <message>
             <source>Follow system</source>
-            <translation>Langue du système</translation>
+            <translation>Suivre le système</translation>
         </message>
         <message>
             <source>Restart DeskPort to apply this language.</source>
@@ -2275,6 +2275,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Code source et modifications : %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Raccourcis clavier</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Raccourci global de la fenêtre</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 affiche ou masque DeskPort. Activé par défaut ; les changements sont immédiats.</translation>
         </message>
     </context>
     <context>

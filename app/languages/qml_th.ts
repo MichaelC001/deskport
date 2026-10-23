@@ -1871,7 +1871,7 @@
         </message>
         <message>
             <source>Follow system</source>
-            <translation>ติดตามระบบ</translation>
+            <translation>ตามระบบ</translation>
         </message>
         <message>
             <source>Restart DeskPort to apply this language.</source>
@@ -2035,11 +2035,11 @@
         </message>
         <message>
             <source>Appearance</source>
-            <translation>รูปร่าง</translation>
+            <translation>รูปลักษณ์</translation>
         </message>
         <message>
             <source>Light</source>
-            <translation>แสงสว่าง</translation>
+            <translation>สว่าง</translation>
         </message>
         <message>
             <source>Dark</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>ซอร์สโค้ดและการแก้ไข: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>แป้นพิมพ์ลัด</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>ปุ่มลัดหน้าต่างทั้งระบบ</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 แสดงหรือซ่อน DeskPort เปิดใช้งานตามค่าเริ่มต้น การเปลี่ยนแปลงมีผลทันที</translation>
         </message>
     </context>
     <context>

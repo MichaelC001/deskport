@@ -352,6 +352,7 @@ TestPreferences {
  property double desktopAdjustment: 1.0
  property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
  property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
+ property bool globalShortcutEnabled: true
  property int language: 1; property int retranslations: 0
  function retranslate() { retranslations++; return true }
  function manualLanguage() { return "en" }
@@ -1662,16 +1663,24 @@ QtObject {
         const QString english=page->property("heading").toString();
         QCOMPARE(english,QString("Make DeskPort your own."));
         auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
+        auto shortcut=page->findChild<QObject*>("globalShortcutSwitch"); QVERIFY(shortcut);
+        QVERIFY(shortcut->property("on").toBool());
+        QVERIFY(QMetaObject::invokeMethod(shortcut,"switched",Q_ARG(bool,false)));
+        QVERIFY(!shortcut->property("on").toBool());
+        QVERIFY(QMetaObject::invokeMethod(shortcut,"switched",Q_ARG(bool,true)));
+        QVERIFY(shortcut->property("on").toBool());
         QVERIFY(!page->findChild<QObject*>("windowModeChoice"));
         for (const auto& language : {"zh_CN","zh_TW","ja","ko","de","fr","es","pt","ar","bo","it","ru","id","tr","vi","th","nl","pl","uk","hi","ms"}) {
             QTranslator translator;
-            QVERIFY(translator.load(gui+"/../languages/qml_"+language+".qm"));
+            const auto catalogs = qEnvironmentVariable("DESKPORT_TRANSLATIONS_DIR", gui+"/../languages");
+            QVERIFY(translator.load(catalogs+"/qml_"+language+".qm"));
             QVERIFY(QCoreApplication::installTranslator(&translator));
             engine.retranslate();
             QVERIFY(page->property("heading").toString()!=english);
             QCOMPARE(themeChoice->property("currentIndex").toInt(),0);
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Enable diagnostic logs").isEmpty());
+            QVERIFY(!translator.translate("SettingsHome","Global window shortcut").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Match the client window resolution").isEmpty());
             QVERIFY(!translator.translate("HostView","Built-in virtual display").isEmpty());
             QVERIFY(!translator.translate("HostView","Active · %1 × %2 pixels").isEmpty());
@@ -1679,6 +1688,25 @@ QtObject {
             QCoreApplication::removeTranslator(&translator);
             engine.retranslate();
             QCOMPARE(page->property("heading").toString(),english);
+        }
+    }
+    void bundledManualIncludesDesktopFeaturesInChineseAndEnglish() {
+        Manual manual;
+        for (const auto& language : {"en", "zh-Hans", "zh-Hant"}) {
+            const auto chapters = manual.chapters(language);
+            const auto shortcut = std::find_if(chapters.begin(), chapters.end(), [](const QVariant& entry) {
+                return entry.toMap()["id"] == "shortcuts";
+            });
+            QVERIFY(shortcut != chapters.end());
+            const auto steps = shortcut->toMap()["steps"].toStringList().join('\n');
+            QVERIFY(steps.contains("Meta + '"));
+            QVERIFY(steps.contains("Ctrl+Alt+Shift+Z"));
+            QVERIFY(steps.contains(language == QByteArray("en") ? "on by default" :
+                                   language == QByteArray("zh-Hans") ? "默认开启" : "預設開啟"));
+            QStringList ids;
+            for (const auto& entry : chapters) ids << entry.toMap()["id"].toString();
+            for (const auto& id : {"windows", "input", "quality", "browser", "diagnostics", "trouble"})
+                QVERIFY(ids.contains(id));
         }
     }
 };

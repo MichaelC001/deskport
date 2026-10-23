@@ -2039,11 +2039,11 @@
         </message>
         <message>
             <source>Light</source>
-            <translation>Leggero</translation>
+            <translation>Chiaro</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>Buio</translation>
+            <translation>Scuro</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Codice sorgente e modifiche: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Scorciatoie da tastiera</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Scorciatoia globale della finestra</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 mostra o nasconde DeskPort. Attiva per impostazione predefinita; le modifiche si applicano subito.</translation>
         </message>
     </context>
     <context>

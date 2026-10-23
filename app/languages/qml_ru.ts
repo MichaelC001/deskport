@@ -2035,15 +2035,15 @@
         </message>
         <message>
             <source>Appearance</source>
-            <translation>Появление</translation>
+            <translation>Внешний вид</translation>
         </message>
         <message>
             <source>Light</source>
-            <translation>Свет</translation>
+            <translation>Светлая</translation>
         </message>
         <message>
             <source>Dark</source>
-            <translation>Темный</translation>
+            <translation>Тёмная</translation>
         </message>
         <message>
             <source>Appearance changes apply immediately.</source>
@@ -2280,6 +2280,18 @@
         <message>
             <source>Source code and modifications: %1</source>
             <translation>Исходный код и модификации: %1</translation>
+        </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>Сочетания клавиш</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>Глобальное сочетание для окна</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 показывает или скрывает DeskPort. Включено по умолчанию; изменения применяются сразу.</translation>
         </message>
     </context>
     <context>

@@ -1,3 +1,26 @@
+## Window shortcut preference and expanded manual — 2026-10-24
+
+Add Settings → Keyboard shortcuts → Global window shortcut, enabled by default
+and saved only on this computer. Changes apply immediately: disabling unregisters
+the native binding, disables SDL/worker fallback and discards pending activation
+state. Re-enabling creates a fresh registration; stale asynchronous callbacks
+cannot reactivate the previous binding.
+
+Expand the bundled shared manual from 7 chapters / 25 steps to 13 chapters /
+66 steps, covering background sessions, platform shortcuts and permissions,
+display tuning, input/IME/clipboard, picture/audio/data, browser access and
+diagnostics. New manual text is authored in English and both Chinese scripts;
+other languages retain their existing translations with English fallback.
+The new settings labels have draft translations in all 22 primary locales.
+Advance the core Git/Nix pins together; no wire or display policy changes.
+
+Validation: macOS preference, shortcut lifecycle, compiled translation, shared
+core and QML settings/manual/navigation checks pass, with synthetic narrow-window
+screenshots reviewed. The pk4 Nix build and isolated CLI smoke pass; Linux
+shortcut lifecycle, SDL chord and 14 private-bus portal checks pass. The Linux
+validation recipe only adds CPU 0–3 / nice 15 builder limits with four build
+cores. Native key delivery and live streaming were not exercised.
+
 ## Global window recall shortcut — 2026-10-23
 
 Reason: recall or hide DeskPort from any application without reaching for its

@@ -2324,6 +2324,18 @@
             <source>Source code and modifications: %1</source>
             <translation>源代码和修改：%1</translation>
         </message>
+        <message>
+            <source>Keyboard shortcuts</source>
+            <translation>键盘快捷键</translation>
+        </message>
+        <message>
+            <source>Global window shortcut</source>
+            <translation>全局窗口快捷键</translation>
+        </message>
+        <message>
+            <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
+            <translation>%1 显示或隐藏 DeskPort。默认开启，更改立即生效。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
