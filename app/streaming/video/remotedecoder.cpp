@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QtEndian>
 #include <atomic>
+#include "streaming/session.h"
 
 namespace {
 std::atomic<quint64> generation{0};
@@ -49,8 +50,10 @@ int RemoteVideoDecoder::submitDecodeUnit(PDECODE_UNIT unit) {
 }
 void RemoteVideoDecoder::run(QByteArray config) {
     const auto fail = [this] {
-        { std::lock_guard<std::mutex> lock(m_Mutex); m_Failed = true; }
+        bool reset;
+        { std::lock_guard<std::mutex> lock(m_Mutex); m_Failed = true; reset = m_Initialized && !m_Stopped; }
         m_Ready.notify_one();
+        if (reset) { SDL_Event event{}; event.type = SDL_RENDER_DEVICE_RESET; SDL_PushEvent(&event); }
     };
     QLocalSocket socket;
     socket.setReadBufferSize(16384);

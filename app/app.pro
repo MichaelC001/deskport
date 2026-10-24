@@ -1,4 +1,10 @@
 SOURCES += gui/canvasselftest.cpp
+SOURCES += gui/canvaspointer.cpp
+HEADERS += gui/canvaspointer.h
+linux {
+    SOURCES += gui/canvaspointer_wayland.cpp backend/relative-pointer-v1.c backend/pointer-constraints-v1.c
+    HEADERS += backend/relative-pointer-v1.h backend/pointer-constraints-v1.h
+}
 HEADERS += streaming/video/videostatus.h
 SOURCES += gui/sessionpresentation.cpp streaming/video/remotedecoder.cpp
 HEADERS += gui/sessionpresentation.h streaming/video/remotedecoder.h
@@ -669,7 +675,7 @@ unix:!macx: {
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
     INSTALLS += target desktop icons appstream
-    shortcut_protocol_notice.files = $$PWD/backend/keyboard-shortcuts-inhibit-v1.LICENSE.txt
+    shortcut_protocol_notice.files = $$PWD/backend/keyboard-shortcuts-inhibit-v1.LICENSE.txt $$PWD/backend/pointer-protocols.LICENSE.txt
     shortcut_protocol_notice.path = $$PREFIX/$$DATADIR/doc/deskport/licenses/
     INSTALLS += shortcut_protocol_notice
     APP_ICON_SIZES = 16 32 48 64 128 256 512

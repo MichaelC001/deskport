@@ -1,5 +1,6 @@
 #include "overlaymanager.h"
 #include "path.h"
+#include "streaming/canvasbridge.h"
 #include <QImage>
 #include <QPainter>
 #include <QTextLayout>
@@ -124,6 +125,10 @@ void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)
 
 void OverlayManager::notifyOverlayUpdated(OverlayType type)
 {
+    if (CanvasBridge::enabled()) {
+        CanvasBridge::overlay(int(type), m_Overlays[type].enabled, QString::fromUtf8(m_Overlays[type].text));
+        return;
+    }
     if (m_Renderer == nullptr) {
         return;
     }

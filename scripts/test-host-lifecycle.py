@@ -188,7 +188,8 @@ else:
         extra_sources += f' "{root}/app/backend/clipboardchannel.cpp" "{root}/app/streaming/clipboardsync.cpp"'
     if "--sessions" in sys.argv:
         extra_sources += f' "{root}/app/backend/multisessions.cpp" "{root}/app/gui/hostlayout.cpp"'
-        extra_headers += f' "{root}/app/backend/multisessions.h"'
+        extra_headers += f' "{root}/app/backend/multisessions.h" "{root}/app/gui/sessionpresentation.h"'
+        extra_sources += f' "{root}/tests/session-presentation-stub.cpp"'
     suite = "host-control" if "--cli" in sys.argv else "multi-sessions" if "--sessions" in sys.argv else "service" if "--service" in sys.argv else "clipboard" if "--clipboard" in sys.argv else "ui-pages" if "--ui" in sys.argv else "peer-binding" if binding else "host-lifecycle"
     project = work / "tests.pro"
     project.write_text(f'''QT += core gui widgets network testlib qml quick quickcontrols2
@@ -199,7 +200,7 @@ TARGET = host-lifecycle-tests
 DESTDIR = "{macos}"
 SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
 HEADERS += "{root}/app/backend/diagnostics.h" "{root}/app/backend/hostmanager.h" {extra_headers}
-INCLUDEPATH += "{root}/app/backend" "{root}/app" "{root}/app/gui"
+INCLUDEPATH += "{root}/app/backend" "{root}/app" "{root}/app/gui" "{root}/moonlight-common-c/moonlight-common-c/src"
 RESOURCES += "{work}/test-resources.qrc"
 macx {{
     OBJECTIVE_SOURCES += "{root}/app/backend/macpermissions.mm" "{root}/app/backend/macdock.mm" "{root}/app/backend/macclipboard.mm" "{root}/app/backend/macunattended.mm"

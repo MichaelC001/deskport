@@ -16,6 +16,7 @@ Rectangle {
         textInputEnabled: sessionManager.canvas.textInput === true
         cursorHidden: sessionManager.canvas.cursorHidden === true
         captureRequested: sessionManager.canvas.grab === true
+        relativePointer: sessionManager.canvas.relative === true
         onViewportChanged: function(state) { sessionManager.updateCanvas(state) }
         onInput: function(event) { sessionManager.canvasInput(event) }
     }

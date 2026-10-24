@@ -1244,8 +1244,12 @@ int main(int argc, char *argv[])
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
         initialView = "qrc:/gui/PcView.qml";
-        // Media runs in session workers; the shell renders off its GUI thread
-        // wherever Qt supports it. No Qt Quick window exists before this point.
+        // The embedded Linux canvas uses Vulkan. Keep the shell on the same
+        // graphics API: mixed EGL/Vulkan Wayland queues can deadlock on remap.
+#ifdef Q_OS_LINUX
+        if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+#endif
+        // No Qt Quick window exists before this point.
         if (!renderLoopOverridden) qunsetenv("QSG_RENDER_LOOP");
         break;
     case GlobalCommandLineParser::StreamRequested:

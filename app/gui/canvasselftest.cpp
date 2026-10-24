@@ -1,4 +1,6 @@
 #include "sessioncanvas.h"
+#include "streaming/video/ffmpeg.h"
+#include "streaming/video/encodedframe.h"
 #include <QApplication>
 #include <QQuickWindow>
 #include <QJsonDocument>
@@ -11,6 +13,9 @@ int runCanvasSelfTest(int argc, char** argv) {
     SDL_SetMainReady();
     QCoreApplication::setApplicationName("DeskPortCanvasTest");
     QApplication app(argc, argv);
+#ifdef Q_OS_LINUX
+    if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+#endif
     QQuickWindow window;
     window.setTitle("DeskPort isolated canvas test");
     window.setColor(QColor("#101216"));
@@ -60,6 +65,7 @@ int runCanvasSelfTest(int argc, char** argv) {
         selected->frame(EncodedVideoFrame::encode(unit, generation));
         if (!selected->ready() || stageTime.elapsed() < 500) return;
         ++renderedStages;
+        fprintf(stderr, "Canvas self-test stage %d completed\n", stage);
         if (++stage == 10) {
             const auto capabilities = selected->capabilities();
             canvas->setPresentation(nullptr);

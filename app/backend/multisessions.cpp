@@ -4,6 +4,7 @@
 #include "sessiongraph.h"
 #include "gui/hostlayout.h"
 #include "gui/sessionpresentation.h"
+#include "streaming/video/encodedframe.h"
 #include <QtEndian>
 #include <QCoreApplication>
 #include <QJsonDocument>
@@ -34,6 +35,7 @@ MultiSessions::~MultiSessions() {
     for (auto entry : m_Entries) {
         if (entry->process) entry->process->disconnect(this);
         if (entry->socket) { entry->socket->disconnect(this); entry->socket->abort(); }
+        if (entry->videoSocket) { entry->videoSocket->disconnect(this); entry->videoSocket->abort(); }
         if (entry->reserved) SessionGraph::release(m_Identity, entry->token);
         delete entry->presentation;
         delete entry;
@@ -116,6 +118,7 @@ void MultiSessions::open(QString id, QString name, QString address, QString app)
     entry->name = name; entry->address = address; entry->app = app;
     entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false; entry->exposed = false;
     entry->token = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    if (entry->videoSocket) { entry->videoSocket->abort(); entry->videoSocket = nullptr; }
     delete entry->presentation;
     entry->presentation = new SessionPresentation(this);
     connect(entry->presentation, &SessionPresentation::idrRequested, this, [this, entry] { send(entry, {{"command","video-idr"}}); });
@@ -250,12 +253,18 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     const auto type = message.value("type").toString();
     if (type == "canvas") {
         const auto value = message.value("value").toObject();
+        if (entry->presentation) entry->presentation->overlays(value.value("overlays").toObject());
         entry->canvas = {{"textInput",value.value("textInput").toBool()},
                          {"question",value.value("question").toObject()},
                          {"label",value.value("label").toString().left(1024)},
                          {"waiting",value.value("waiting").toBool()},
+                         {"relative",value.value("relative").toBool()},
                          {"grab",value.value("grab").toBool()}, {"cursorHidden",value.value("cursorHidden").toBool()}};
         if (m_Wanted == entry->id) emit canvasChanged();
+        return;
+    }
+    if (type == "canvas-minimize") {
+        if (m_CanvasWindow && m_Wanted == entry->id && entry->exposed && m_Hiding.isEmpty()) m_CanvasWindow->showMinimized();
         return;
     }
     if (type == "canvas-fullscreen") {
@@ -459,6 +468,8 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     emit sessionClosed(entry->id);
     if (entry->reserved) { SessionGraph::release(m_Identity,entry->token); entry->reserved=false; }
     if (entry->socket) { entry->socket->abort(); entry->socket=nullptr; }
+    if (entry->videoSocket) { entry->videoSocket->abort(); entry->videoSocket=nullptr; }
+    if (entry->presentation) entry->presentation->detach();
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
     const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
     if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }

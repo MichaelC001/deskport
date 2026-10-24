@@ -165,8 +165,15 @@ void CanvasBridge::synchronize(SDL_Window* window) {
         SDL_PushEvent(&event);
     }
 }
-void CanvasBridge::capture(bool grab, bool hidden) {
+void CanvasBridge::capture(bool grab, bool hidden, bool relative) {
     QMutexLocker lock(&stateMutex); details["grab"] = grab; details["cursorHidden"] = hidden;
+    details["relative"] = relative;
+}
+void CanvasBridge::overlay(int type, bool enabled, const QString& text) {
+    QMutexLocker lock(&stateMutex);
+    auto overlays = details["overlays"].toObject();
+    overlays[QString::number(type)] = QJsonObject{{"enabled",enabled},{"text",text.left(512)}};
+    details["overlays"] = overlays;
 }
 void CanvasBridge::textInput(bool enabled) { QMutexLocker lock(&stateMutex); details["textInput"] = enabled; }
 void CanvasBridge::label(const QString& text) { QMutexLocker lock(&stateMutex); details["label"] = text; }

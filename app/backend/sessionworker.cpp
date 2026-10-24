@@ -62,6 +62,7 @@ void SessionWorker::attach(Session* session) {
     if (m_PendingTuning > 0) { session->applyDesktopAdjustment(m_PendingTuning); m_PendingTuning = 0; }
     if (m_Stopping) session->cancelRecovery();
     connect(session, &Session::canvasFullscreenRequested, this, [this] { send({{"type","canvas-fullscreen"}}); });
+    connect(session, &Session::canvasMinimizeRequested, this, [this] { send({{"type","canvas-minimize"}}); });
     send({{"type","connecting"}});
     connect(session,&Session::connectionStarted,this,[this] { send({{"type","connected"}}); });
     connect(session,&Session::viewerReadyChanged,this,[this,session] {

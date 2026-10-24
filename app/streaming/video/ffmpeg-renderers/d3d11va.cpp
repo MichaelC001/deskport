@@ -342,6 +342,26 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    if (params->presentationWindow) {
+        const auto monitor = MonitorFromWindow(reinterpret_cast<HWND>(params->presentationWindow->winId()), MONITOR_DEFAULTTONEAREST);
+        // The hidden SDL probe can be on another GPU. Match the actual canvas.
+        bool found = false;
+        for (UINT a = 0; !found; ++a) {
+            IDXGIAdapter* adapter = nullptr;
+            if (m_Factory->EnumAdapters(a, &adapter) != S_OK) break;
+            for (UINT o = 0; !found; ++o) {
+                IDXGIOutput* output = nullptr;
+                if (adapter->EnumOutputs(o, &output) != S_OK) break;
+                DXGI_OUTPUT_DESC description{};
+                if (SUCCEEDED(output->GetDesc(&description)) && description.Monitor == monitor) {
+                    adapterIndex = int(a); outputIndex = int(o); found = true;
+                }
+                output->Release();
+            }
+            adapter->Release();
+        }
+    }
+
     // First try the adapter corresponding to the display where our window resides.
     // This will let us avoid a copy if the display GPU has the required decoder.
     if (!createDeviceByAdapterIndex(adapterIndex)) {

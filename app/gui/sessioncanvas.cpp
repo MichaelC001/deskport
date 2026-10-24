@@ -48,6 +48,14 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     setAcceptedMouseButtons(Qt::AllButtons); setAcceptHoverEvents(true);
     setActiveFocusOnTab(true);
     setFlag(ItemAcceptsInputMethod);
+    m_Pointer = createCanvasPointer([this](qreal dx, qreal dy) {
+        m_RelativeRemainder += QPointF(dx, dy);
+        const QPoint delta(int(m_RelativeRemainder.x()), int(m_RelativeRemainder.y()));
+        m_RelativeRemainder -= delta;
+        if (!delta.isNull()) emit input({{"type","motion"},{"x",m_Mouse.x()},{"y",m_Mouse.y()},
+                                       {"dx",delta.x()},{"dy",delta.y()}});
+    });
+    connect(this, &SessionCanvas::relativePointerChanged, this, &SessionCanvas::refresh);
     connect(this, &SessionCanvas::textInputChanged, this, [] { QGuiApplication::inputMethod()->update(Qt::ImEnabled); });
     connect(this, &SessionCanvas::cursorHiddenChanged, this, &SessionCanvas::refresh);
     m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
@@ -79,6 +87,7 @@ SessionCanvas::~SessionCanvas() {
     // already been destroyed. Disconnect callbacks before entering it.
     disconnect(this, nullptr, this, nullptr);
     m_Timer.stop(); m_ResizeTimer.stop();
+    m_Pointer.reset();
     if (m_Presentation) m_Presentation->detach();
     m_Inhibitor.setEnabled(false);
     if (m_Grabbed && m_Surface) m_Surface->setKeyboardGrabEnabled(false);
@@ -112,6 +121,7 @@ bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     }
     case QEvent::InputMethod: {
         auto inputMethod = static_cast<QInputMethodEvent*>(event);
+        if (m_Presentation) m_Presentation->preedit(m_TextInput ? inputMethod->preeditString().left(1024) : QString());
         if (m_TextInput && !inputMethod->commitString().isEmpty())
             emit input({{"type","text"},{"text",inputMethod->commitString().left(1024)}});
         event->accept(); return true;
@@ -144,6 +154,7 @@ void SessionCanvas::refresh() {
     }
     const bool focused = visible && ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
+    if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
     m_Inhibitor.setEnabled(capture);
     if (!capture && m_Grabbed) { m_Surface->setKeyboardGrabEnabled(false); m_Grabbed = false; }
     else if (capture && !m_Inhibitor.isInhibited() && !m_Grabbed) m_Grabbed = m_Surface->setKeyboardGrabEnabled(true);

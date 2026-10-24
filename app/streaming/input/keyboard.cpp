@@ -1,4 +1,5 @@
 #include "streaming/session.h"
+#include "streaming/canvasbridge.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -95,7 +96,8 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
     case KeyComboToggleMinimize:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected minimize combo");
-        SDL_MinimizeWindow(m_Window);
+        if (CanvasBridge::owns(m_Window)) emit Session::get()->canvasMinimizeRequested();
+        else SDL_MinimizeWindow(m_Window);
         break;
 
     case KeyComboPasteText:

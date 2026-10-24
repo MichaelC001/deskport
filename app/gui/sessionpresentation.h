@@ -4,8 +4,6 @@
 #include <QJsonObject>
 #include <QWindow>
 #include <memory>
-#include "streaming/video/queuedframesource.h"
-#include "streaming/video/ffmpeg.h"
 
 // Presentation lifetime is independent of the network worker. Only the selected
 // session owns the shared child canvas; switching joins its decoder first.
@@ -16,11 +14,13 @@ class SessionPresentation : public QObject {
 public:
     explicit SessionPresentation(QObject* parent = nullptr);
     ~SessionPresentation() override;
-    bool ready() const { return m_Ready; }
-    bool active() const { return bool(m_Decoder); }
+    bool ready() const;
+    bool active() const;
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
     void status(const QJsonObject& status);
+    void overlays(const QJsonObject& overlays);
+    void preedit(const QString& text);
     void attach(QWindow* canvas);
     void detach();
     void resized();
@@ -34,13 +34,6 @@ private:
     bool start();
     void stop();
     void readyFrame(quint64 generation);
-    QPointer<QWindow> m_Canvas;
-    QJsonObject m_Config;
-    QJsonObject m_Status;
-    SDL_Window* m_Probe = nullptr;
-    Overlay::OverlayManager m_Overlays;
-    std::unique_ptr<QueuedVideoSource> m_Source;
-    std::unique_ptr<FFmpegVideoDecoder> m_Decoder;
-    quint64 m_Generation = 0, m_PresentationGeneration = 0;
-    bool m_Ready = false, m_SdlInitialized = false;
+    struct Impl;
+    std::unique_ptr<Impl> m_Impl;
 };

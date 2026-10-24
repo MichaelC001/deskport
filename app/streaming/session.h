@@ -209,6 +209,7 @@ signals:
     void viewerFocusChanged(bool focused);
     void presentationShown();
     void canvasFullscreenRequested();
+    void canvasMinimizeRequested();
 
 private:
     std::atomic<bool> m_InputDispatching{false};

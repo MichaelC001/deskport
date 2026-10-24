@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QJsonObject>
 #include "sessionpresentation.h"
+#include "canvaspointer.h"
 #include "backend/shortcutrecorderinhibitor.h"
 
 class SessionCanvas : public QQuickItem {
@@ -12,6 +13,7 @@ class SessionCanvas : public QQuickItem {
     Q_PROPERTY(bool textInputEnabled MEMBER m_TextInput NOTIFY textInputChanged)
     Q_PROPERTY(bool cursorHidden MEMBER m_CursorHidden NOTIFY cursorHiddenChanged)
     Q_PROPERTY(bool captureRequested MEMBER m_CaptureRequested NOTIFY captureRequestedChanged)
+    Q_PROPERTY(bool relativePointer MEMBER m_RelativePointer NOTIFY relativePointerChanged)
 public:
     explicit SessionCanvas(QQuickItem* parent = nullptr);
     ~SessionCanvas() override;
@@ -22,6 +24,7 @@ signals:
     void presentationChanged();
     void frameReadyChanged();
     void captureRequestedChanged();
+    void relativePointerChanged();
     void textInputChanged();
     void cursorHiddenChanged();
     void viewportChanged(QJsonObject state);
@@ -54,4 +57,7 @@ private:
     QPoint m_Mouse;
     bool m_Hovered = false, m_CaptureRequested = false, m_Grabbed = false;
     ShortcutRecorderInhibitor m_Inhibitor;
+    std::unique_ptr<CanvasPointer> m_Pointer;
+    bool m_RelativePointer = false;
+    QPointF m_RelativeRemainder;
 };

@@ -394,7 +394,8 @@ void SdlInputHandler::updateKeyboardGrabState()
 
     if (CanvasBridge::owns(m_Window)) {
         CanvasBridge::textInput(m_LocalTextInput.active());
-        CanvasBridge::capture(shouldGrab, keyboardRoutingActive() && m_MouseCursorCapturedVisibilityState == SDL_DISABLE);
+        CanvasBridge::capture(shouldGrab, keyboardRoutingActive() && m_MouseCursorCapturedVisibilityState == SDL_DISABLE,
+                              isCaptureActive() && !m_AbsoluteMouseMode);
         return;
     }
     if (m_AbsoluteMouseMode) {

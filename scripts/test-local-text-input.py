@@ -16,7 +16,7 @@ CONFIG -= app_bundle debug_and_release
 CONFIG += debug
 CONFIG -= release
 TARGET = local-text-input
-SOURCES = "{root}/tests/local-text-input.cpp" "{root}/app/streaming/video/overlaymanager.cpp"
+SOURCES = "{root}/tests/local-text-input.cpp" "{root}/app/streaming/video/overlaymanager.cpp" "{root}/app/streaming/canvasbridge.cpp"
 INCLUDEPATH += "{root}/app"
 macx {{
  OBJECTIVE_SOURCES += "{root}/tests/local-text-input-macos.mm"
