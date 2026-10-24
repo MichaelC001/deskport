@@ -45,6 +45,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_DragButton(0),
       m_NumFingersDown(0)
 {
+    m_LocalTextInput.setNativeInput(!CanvasBridge::enabled());
     // System keys are always captured when running without a DE
     if (!WMUtils::isRunningDesktopEnvironment()) {
         m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
@@ -392,6 +393,7 @@ void SdlInputHandler::updateKeyboardGrabState()
     }
 
     if (CanvasBridge::owns(m_Window)) {
+        CanvasBridge::textInput(m_LocalTextInput.active());
         CanvasBridge::capture(shouldGrab, keyboardRoutingActive() && m_MouseCursorCapturedVisibilityState == SDL_DISABLE);
         return;
     }

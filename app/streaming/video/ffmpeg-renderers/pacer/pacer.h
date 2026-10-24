@@ -65,7 +65,7 @@ private:
     QWaitCondition m_VsyncSignalled;
     SDL_Thread* m_RenderThread;
     SDL_Thread* m_VsyncThread;
-    bool m_Stopping;
+    std::atomic<bool> m_Stopping;
     bool m_FirstPresentation = true;
     // Converts an occasional frame for transition backdrops off the render path.
     // Joined before the decoder and its hardware device are released.

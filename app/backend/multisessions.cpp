@@ -1,3 +1,4 @@
+#include <QGuiApplication>
 #include "multisessions.h"
 #include "peermanager.h"
 #include "sessiongraph.h"
@@ -57,7 +58,7 @@ void MultiSessions::updateCanvas(QJsonObject state) {
 }
 void MultiSessions::canvasInput(QJsonObject event) {
     const auto entry = m_Entries.value(m_Wanted);
-    if (!m_CanvasWindow || !m_CanvasWindow->isVisible() || !m_CanvasWindow->isActive() || !entry ||
+    if (!m_CanvasWindow || !m_CanvasWindow->isVisible() || (!m_CanvasWindow->isActive() && !(QGuiApplication::focusWindow() && m_CanvasWindow->isAncestorOf(QGuiApplication::focusWindow()))) || !entry ||
         !entry->exposed || !m_Hiding.isEmpty() || entry->state != "connected") return;
     send(entry, {{"command","canvas-input"},{"epoch",double(m_Epoch)},{"event",event}});
 }
@@ -242,7 +243,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     const auto type = message.value("type").toString();
     if (type == "canvas") {
         const auto value = message.value("value").toObject();
-        entry->canvas = {{"frameKey",value.value("frameKey").toString().left(64)},
+        entry->canvas = {{"textInput",value.value("textInput").toBool()},
                          {"label",value.value("label").toString().left(1024)},
                          {"waiting",value.value("waiting").toBool()},
                          {"grab",value.value("grab").toBool()}, {"cursorHidden",value.value("cursorHidden").toBool()}};

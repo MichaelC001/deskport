@@ -6,11 +6,13 @@ SessionPresentation::~SessionPresentation() { stop(); }
 void SessionPresentation::stop() {
     ++m_PresentationGeneration;
     if (m_Source) m_Source->stop();
+    const bool wasActive = bool(m_Decoder);
     m_Decoder.reset(); // joins decoding, pacing and rendering before surface teardown
     m_Source.reset();
     if (m_Probe) { SDL_DestroyWindow(m_Probe); m_Probe = nullptr; }
     if (m_SdlInitialized) { SDL_QuitSubSystem(SDL_INIT_VIDEO); m_SdlInitialized = false; }
     if (m_Ready) { m_Ready = false; emit readyChanged(); }
+    if (wasActive) emit activeChanged();
 }
 bool SessionPresentation::configure(const QJsonObject& config) {
     const auto generation = config.value("generation").toDouble();
@@ -76,6 +78,7 @@ bool SessionPresentation::start() {
     };
     m_Decoder = std::make_unique<FFmpegVideoDecoder>(false, m_Source.get(), &m_Overlays);
     if (!m_Decoder->initialize(&params)) { stop(); return false; }
+    emit activeChanged();
     emit idrRequested();
     return true;
 }

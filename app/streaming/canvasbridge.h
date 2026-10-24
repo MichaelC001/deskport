@@ -23,6 +23,7 @@ bool fullscreen();
 void input(const QJsonObject& event);
 void inputEnabled(bool enabled);
 void capture(bool grab, bool cursorHidden);
+void textInput(bool enabled);
 void label(const QString& text);
 QJsonObject description();
 }

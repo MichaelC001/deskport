@@ -9,6 +9,8 @@ Rectangle {
         objectName: "sessionCanvas"
         anchors.fill: parent
         presentation: sessionManager.presentation
+        textInputEnabled: sessionManager.canvas.textInput === true
+        cursorHidden: sessionManager.canvas.cursorHidden === true
         captureRequested: sessionManager.canvas.grab === true
         onViewportChanged: function(state) { sessionManager.updateCanvas(state) }
         onInput: function(event) { sessionManager.canvasInput(event) }

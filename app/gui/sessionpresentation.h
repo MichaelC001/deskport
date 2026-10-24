@@ -12,10 +12,12 @@
 class SessionPresentation : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
 public:
     explicit SessionPresentation(QObject* parent = nullptr);
     ~SessionPresentation() override;
     bool ready() const { return m_Ready; }
+    bool active() const { return bool(m_Decoder); }
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
     void attach(QWindow* canvas);
@@ -24,6 +26,7 @@ public:
     QJsonObject capabilities() const;
 signals:
     void readyChanged();
+    void activeChanged();
     void idrRequested();
     void failed(QString error);
 private:

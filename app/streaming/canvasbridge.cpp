@@ -103,7 +103,7 @@ void CanvasBridge::synchronize(SDL_Window* window) {
         const auto type = value["type"].toString();
         if (type == "key") {
             const int scan = bounded(value, "scan", SDL_NUM_SCANCODES - 1);
-            const int symbol = bounded(value, "symbol", SDL_SCANCODE_MASK + SDL_NUM_SCANCODES);
+            const int symbol = bounded(value, "symbol", SDLK_SCANCODE_MASK + SDL_NUM_SCANCODES);
             const int modifiers = bounded(value, "modifiers", 65535);
             if (scan < 0 || symbol < 0 || modifiers < 0) continue;
             event.type = value["down"].toBool() ? SDL_KEYDOWN : SDL_KEYUP;
@@ -125,6 +125,23 @@ void CanvasBridge::synchronize(SDL_Window* window) {
                 event.button.state = value["down"].toBool() ? SDL_PRESSED : SDL_RELEASED;
                 event.button.x = x; event.button.y = y;
             }
+        } else if (type == "text") {
+            const auto text = value["text"].toString();
+            if (text.size() > 4096) continue;
+            QByteArray chunk;
+            const auto flush = [&] {
+                if (chunk.isEmpty()) return;
+                SDL_Event commit{}; commit.type = SDL_TEXTINPUT;
+                commit.text.windowID = SDL_GetWindowID(window); commit.text.timestamp = SDL_GetTicks();
+                SDL_strlcpy(commit.text.text, chunk.constData(), sizeof(commit.text.text));
+                SDL_PushEvent(&commit); chunk.clear();
+            };
+            for (auto scalar : text.toUcs4()) {
+                const auto encoded = QString::fromUcs4(&scalar, 1).toUtf8();
+                if (chunk.size() + encoded.size() > 31) flush();
+                chunk += encoded;
+            }
+            flush(); continue;
         } else if (type == "wheel") {
             event.type = SDL_MOUSEWHEEL; event.wheel.windowID = SDL_GetWindowID(window);
             event.wheel.x = qBound(-120, value["x"].toInt(), 120); event.wheel.y = qBound(-120, value["y"].toInt(), 120);
@@ -136,6 +153,7 @@ void CanvasBridge::synchronize(SDL_Window* window) {
 void CanvasBridge::capture(bool grab, bool hidden) {
     QMutexLocker lock(&stateMutex); details["grab"] = grab; details["cursorHidden"] = hidden;
 }
+void CanvasBridge::textInput(bool enabled) { QMutexLocker lock(&stateMutex); details["textInput"] = enabled; }
 void CanvasBridge::label(const QString& text) { QMutexLocker lock(&stateMutex); details["label"] = text; }
 QJsonObject CanvasBridge::description() {
     QJsonObject result;

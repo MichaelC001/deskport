@@ -9,6 +9,8 @@ class SessionCanvas : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(QObject* presentation READ presentation WRITE setPresentation NOTIFY presentationChanged)
     Q_PROPERTY(bool frameReady READ frameReady NOTIFY frameReadyChanged)
+    Q_PROPERTY(bool textInputEnabled MEMBER m_TextInput NOTIFY textInputChanged)
+    Q_PROPERTY(bool cursorHidden MEMBER m_CursorHidden NOTIFY cursorHiddenChanged)
     Q_PROPERTY(bool captureRequested MEMBER m_CaptureRequested NOTIFY captureRequestedChanged)
 public:
     explicit SessionCanvas(QQuickItem* parent = nullptr);
@@ -20,6 +22,8 @@ signals:
     void presentationChanged();
     void frameReadyChanged();
     void captureRequestedChanged();
+    void textInputChanged();
+    void cursorHiddenChanged();
     void viewportChanged(QJsonObject state);
     void input(QJsonObject event);
 protected:
@@ -44,6 +48,7 @@ private:
     QWindow* m_Surface = nullptr;
     QTimer m_ResizeTimer;
     int m_Buttons = 0;
+    bool m_TextInput = false, m_CursorHidden = false;
     QTimer m_Timer;
     QJsonObject m_LastState;
     QPoint m_Mouse;

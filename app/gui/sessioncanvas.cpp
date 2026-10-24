@@ -1,3 +1,7 @@
+#include <QInputMethodEvent>
+#include <QInputMethodQueryEvent>
+#include <QInputMethod>
+#include <QGuiApplication>
 #include "sessioncanvas.h"
 #include "backend/shortcutbinding.h"
 #include <QQuickWindow>
@@ -43,6 +47,9 @@ int button(Qt::MouseButton value) {
 SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibitor(this) {
     setAcceptedMouseButtons(Qt::AllButtons); setAcceptHoverEvents(true);
     setActiveFocusOnTab(true);
+    setFlag(ItemAcceptsInputMethod);
+    connect(this, &SessionCanvas::textInputChanged, this, [] { QGuiApplication::inputMethod()->update(Qt::ImEnabled); });
+    connect(this, &SessionCanvas::cursorHiddenChanged, this, &SessionCanvas::refresh);
     m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
     connect(&m_ResizeTimer, &QTimer::timeout, this, [this] { if (m_Presentation) m_Presentation->resized(); });
     connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow* window) {
@@ -78,6 +85,7 @@ void SessionCanvas::setPresentation(QObject* value) {
     m_Presentation = presentation;
     if (presentation) {
         connect(presentation, &SessionPresentation::readyChanged, this, &SessionCanvas::frameReadyChanged);
+        connect(presentation, &SessionPresentation::activeChanged, this, &SessionCanvas::refresh);
         if (m_Surface) presentation->attach(m_Surface);
     }
     emit presentationChanged(); emit frameReadyChanged(); refresh();
@@ -89,6 +97,18 @@ void SessionCanvas::geometryChange(const QRectF& next, const QRectF& previous) {
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     if (watched != m_Surface) return QQuickItem::eventFilter(watched, event);
     switch (event->type()) {
+    case QEvent::InputMethodQuery: {
+        auto query = static_cast<QInputMethodQueryEvent*>(event);
+        query->setValue(Qt::ImEnabled, m_TextInput);
+        query->setValue(Qt::ImCursorRectangle, QRect(0, 0, 1, 48));
+        event->accept(); return true;
+    }
+    case QEvent::InputMethod: {
+        auto inputMethod = static_cast<QInputMethodEvent*>(event);
+        if (m_TextInput && !inputMethod->commitString().isEmpty())
+            emit input({{"type","text"},{"text",inputMethod->commitString().left(1024)}});
+        event->accept(); return true;
+    }
     case QEvent::KeyPress: keyPressEvent(static_cast<QKeyEvent*>(event)); return true;
     case QEvent::KeyRelease: keyReleaseEvent(static_cast<QKeyEvent*>(event)); return true;
     case QEvent::MouseButtonPress: mousePressEvent(static_cast<QMouseEvent*>(event)); return true;
@@ -112,7 +132,8 @@ void SessionCanvas::refresh() {
     const bool visible = isVisible() && window()->isVisible() && window()->windowState() != Qt::WindowMinimized;
     if (m_Surface) {
         m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), QSize(qRound(width()), qRound(height()))));
-        m_Surface->setVisible(visible && m_Presentation);
+        m_Surface->setVisible(visible && m_Presentation && m_Presentation->active());
+        m_Surface->setCursor(m_CursorHidden ? Qt::BlankCursor : Qt::ArrowCursor);
     }
     const bool focused = visible && ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
@@ -136,6 +157,9 @@ void SessionCanvas::key(QKeyEvent* event, bool down) {
     refresh();
     emit input({{"type","key"},{"down",down},{"repeat",event->isAutoRepeat()},
                 {"symbol",int(key)},{"scan",int(SDL_GetScancodeFromKey(key))},{"modifiers",modifiers}});
+    if (down && m_TextInput && !event->text().isEmpty() &&
+        !(mods & (Qt::ControlModifier | Qt::MetaModifier)) && event->text().at(0).unicode() >= 0x20)
+        emit input({{"type","text"},{"text",event->text().left(1024)}});
     event->accept();
 }
 void SessionCanvas::keyPressEvent(QKeyEvent* event) { key(event, true); }

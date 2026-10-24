@@ -17,6 +17,7 @@ public:
         : m_Enabled(enabled), m_Commit(std::move(commit)), m_Preedit(std::move(preedit)) {}
     ~LocalTextInput() { setActive(false); }
 
+    void setNativeInput(bool enabled) { setActive(false); m_Native = enabled; }
     bool enabled() const { return m_Enabled; }
     bool active() const { return m_Active; }
     bool composing() const { return m_Composing; }
@@ -26,6 +27,7 @@ public:
         if (active) {
             // SDL2 may start enabled before a focused window exists. Force the
             // native backend to attach its input context to this viewer now.
+            if (m_Native) {
             SDL_StopTextInput();
             discardQueuedText();
             SDL_SetHint("SDL_IME_INTERNAL_EDITING", "0");
@@ -34,17 +36,20 @@ public:
             // A stable local composition area, NOT a remote caret estimate.
             SDL_Rect anchor {0, 0, 1, 48};
             SDL_SetTextInputRect(&anchor);
+            }
             m_Started = SDL_GetTicks();
             m_Armed = false;
             m_Active = true;
-            SDL_StartTextInput();
+            if (m_Native) SDL_StartTextInput();
         } else {
             m_Active = false; // Native cancellation must never commit remotely.
+            if (m_Native) {
 #if SDL_VERSION_ATLEAST(2, 0, 22)
             SDL_ClearComposition();
 #endif
             SDL_StopTextInput();
             discardQueuedText();
+            }
             m_Composing = false;
             m_Command = false;
             m_Consumed.clear();
@@ -64,7 +69,7 @@ public:
         m_Preedit(value, qMax(0, start), qMax(0, length));
     }
     void text(Uint32 window, Uint32 timestamp, const char* text, Uint32 ownWindow) {
-        if (!accept(window, timestamp, ownWindow) || !text || m_Command || !m_Armed) return;
+        if (!accept(window, timestamp, ownWindow) || !text || m_Command || (m_Native && !m_Armed)) return;
         const QByteArray value(text);
         // SDL commits are UTF-8; reject malformed/control input defensively.
         // Return/Tab are physical controls when there is no composition.
@@ -114,6 +119,7 @@ private:
             SDL_free(event.editExt.text);
 #endif
     }
+    bool m_Native = true;
     bool m_Enabled = false, m_Active = false, m_Composing = false, m_Command = false, m_Armed = false;
     Uint32 m_Started = 0;
     QSet<int> m_Consumed;
