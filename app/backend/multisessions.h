@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QMap>
 #include <QSet>
+#include <QJsonObject>
 #include <functional>
 #include <QWindow>
 class PeerManager;

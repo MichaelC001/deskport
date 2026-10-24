@@ -100,6 +100,11 @@ toolchain and recipes. Application runs link to those dependencies, never the
 reverse. Linux portable dependencies use a recipe-keyed cache. The Mac retains
 its verified FFmpeg extraction cache and the existing Nix toolchain cache.
 Old CMake/qmake caches are not moved: their absolute paths may be embedded.
+When an isolated checkout can reuse another checkout's retained dependencies,
+pass `--dependency-cache /absolute/path/dependencies.noindex/windows` (or the
+matching target). The existing directory must carry its `.keep` marker and have
+no symlink ancestors. Dependency recipes still select their input hash and hold
+their cache lock. Work, packages, logs and receipts remain in the new run.
 
 `bash scripts/build.sh cache --target windows` reports retained cache usage.
 New builds stop if managed run outputs exceed 30 GiB or dependency caches exceed

@@ -72,6 +72,24 @@ class WorkflowTests(unittest.TestCase):
             with self.assertRaises((w.Refused, subprocess.CalledProcessError)):
                 w.layout("macos", "run")
 
+    def test_reuse_retained_dependency_cache_without_relocation(self):
+        cache = self.base / "other/dependencies.noindex/windows"
+        cache.mkdir(parents=True)
+        (cache / ".keep").touch()
+        with patch.dict(os.environ, {"DESKPORT_BUILD_ROOT": str(self.base / "new")}):
+            paths, env = w.layout("windows", "reuse", str(cache))
+        self.assertEqual(paths["cache"], cache)
+        self.assertEqual(env["DESKPORT_DEPENDENCY_CACHE_DIR"], str(cache))
+        self.assertNotEqual(paths["work"], cache)
+        self.assertFalse(paths["work"].exists())
+        for invalid in (self.paths["work"], cache.parent, cache / "missing", ROOT):
+            with self.assertRaises(w.Refused):
+                w.layout("windows", "reuse", str(invalid))
+        link = self.base / "linked"
+        link.symlink_to(cache.parent)
+        with self.assertRaises(w.Refused):
+            w.layout("windows", "reuse", str(link / "windows"))
+
     def test_private_config_is_data_not_shell(self):
         config = self.base / "signing.env"
         config.write_text("DESKPORT_SIGN_" + "IDENTITY='$(touch BAD)'\n")

@@ -73,7 +73,7 @@ def git_state():
             "core": check(["git", "-C", ROOT / "shared/deskport-core", "rev-parse", "HEAD"])}
 
 
-def layout(target, run):
+def layout(target, run, dependency_cache=None):
     if not NAME.fullmatch(run) or run in {".", ".."}:
         raise Refused("Run ID must be a single alphanumeric/dot/dash/underscore name")
     env = {**os.environ, "DESKPORT_TARGET": target, "DESKPORT_RUN_ID": run}
@@ -93,6 +93,15 @@ def layout(target, run):
     target_root = base / "runs.noindex" / run / target
     # Large library caches live independently of disposable application runs.
     cache = base / "dependencies.noindex" / target
+    if dependency_cache is not None:
+        cache = Path(dependency_cache).expanduser().absolute()
+        no_links(cache)
+        # Borrow an existing retained cache in place. Never adopt a run or move
+        # CMake/qmake trees whose configured paths belong to another checkout.
+        if (cache.name != target or cache.parent.name != "dependencies.noindex" or
+                "runs.noindex" in cache.parts or not (cache / ".keep").is_file() or
+                cache == ROOT or ROOT in cache.parents or str(cache).startswith("/nix/store/")):
+            raise Refused("Dependency cache must be an existing retained dependencies.noindex/<target> directory")
     if target == "linux-portable":
         key = hashlib.sha256(b"deskport-linux-portable-dependencies-v1\0")
         recipes = [ROOT / "flake.lock", ROOT / "scripts/linux-tools.json", ROOT / "scripts/package-linux-container.sh"]
@@ -687,6 +696,7 @@ def main(argv=None):
     parser.add_argument("--format", choices=("appimage", "all"), default="appimage")
     parser.add_argument("--flatpak", action="store_true", help="Include the client-only Flatpak with linux-portable --format all")
     parser.add_argument("--signing-config", help="Private literal env file outside the repository")
+    parser.add_argument("--dependency-cache", help="Reuse an existing retained dependencies.noindex/<target> cache in place")
     parser.add_argument("--repo", help="Explicit GitHub OWNER/REPO (existing release only)")
     parser.add_argument("--tag", help="Existing GitHub release tag")
     parser.add_argument("--clean", action="store_true", help="After publish, verify again and clean this run")
@@ -715,7 +725,7 @@ def main(argv=None):
         parser.error("--distribution is only available with package")
     if args.flatpak and (args.command != "package" or args.target != "linux-portable" or args.format != "all"):
         parser.error("--flatpak requires package --target linux-portable --format all")
-    paths, env = layout(args.target, args.run)
+    paths, env = layout(args.target, args.run, args.dependency_cache)
     if args.command == "paths":
         print(json.dumps({k: str(v) for k, v in paths.items()}, indent=2))
         return 0
