@@ -573,6 +573,14 @@ Session::DecoderProbe Session::probeDecoder(SDL_Window* window,
         result.capabilities = decoder->getDecoderCapabilities();
         result.colorSpace = decoder->getDecoderColorspace();
         result.colorRange = decoder->getDecoderColorRange();
+#ifdef Q_OS_LINUX
+        if (CanvasBridge::enabled()) {
+            // The shell's embedded Linux frontend is libplacebo, including
+            // when the worker's capability probe selected VAAPI/EGL.
+            result.colorSpace = COLORSPACE_REC_709;
+            result.colorRange = COLOR_RANGE_FULL;
+        }
+#endif
         result.fullScreen = decoder->isAlwaysFullScreen();
         delete decoder;
         m_DecoderProbes.insert(key, result);

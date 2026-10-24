@@ -127,6 +127,11 @@ public:
     void setOverlayManager(Overlay::OverlayManager* overlays) { m_Overlays = overlays; }
     Overlay::OverlayManager& overlayManager() { SDL_assert(m_Overlays); return *m_Overlays; }
     virtual bool supportsEmbeddedWindow() const { return false; }
+    void setResetCallback(std::function<void()> callback) { m_Reset = std::move(callback); }
+    void requestReset(Uint32 type) {
+        if (m_Reset) m_Reset();
+        else { SDL_Event event{}; event.type = type; SDL_PushEvent(&event); }
+    }
 
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
@@ -321,5 +326,6 @@ public:
 #endif
 private:
     Overlay::OverlayManager* m_Overlays = nullptr;
+    std::function<void()> m_Reset;
 
 };

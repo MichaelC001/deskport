@@ -686,9 +686,7 @@ void PlVkRenderer::waitToRender()
     if (pl_gpu_is_failed(m_Vulkan->gpu)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "GPU is in failed state. Recreating renderer.");
-        SDL_Event event;
-        event.type = SDL_RENDER_DEVICE_RESET;
-        SDL_PushEvent(&event);
+        requestReset(SDL_RENDER_DEVICE_RESET);
         return;
     }
 
@@ -854,9 +852,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
                      "pl_swapchain_submit_frame() failed");
 
         // Recreate the renderer
-        SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
-        SDL_PushEvent(&event);
+        requestReset(SDL_RENDER_TARGETS_RESET);
         goto UnmapExit;
     }
 

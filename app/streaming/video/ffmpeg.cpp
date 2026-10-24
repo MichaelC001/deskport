@@ -239,6 +239,10 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly, VideoFrameSource* source,
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 }
 
+QByteArray FFmpegVideoDecoder::sampleFrame() {
+    return QByteArray(reinterpret_cast<const char*>(k_H264TestFrame), sizeof(k_H264TestFrame));
+}
+
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
 {
     reset();
@@ -307,6 +311,7 @@ void FFmpegVideoDecoder::reset()
 bool FFmpegVideoDecoder::initializeRenderer(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params)
 {
     renderer->setOverlayManager(m_Overlays);
+    renderer->setResetCallback(params->presentationCallbacks.resetRequired);
     return renderer->initialize(params);
 }
 

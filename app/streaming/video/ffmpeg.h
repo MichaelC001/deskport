@@ -31,6 +31,7 @@ public:
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override;
 
     virtual IFFmpegRenderer* getBackendRenderer();
+    static QByteArray sampleFrame();
 
 private:
     bool completeInitialization(const AVCodec* decoder,

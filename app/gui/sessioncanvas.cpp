@@ -52,7 +52,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     connect(this, &SessionCanvas::cursorHiddenChanged, this, &SessionCanvas::refresh);
     m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
     connect(&m_ResizeTimer, &QTimer::timeout, this, [this] { if (m_Presentation) m_Presentation->resized(); });
-    connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow* window) {
+    const auto attachWindow = [this](QQuickWindow* window) {
         if (m_Presentation) m_Presentation->detach();
         delete m_Surface; m_Surface = nullptr;
         if (window) {
@@ -66,7 +66,9 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
             refresh();
             if (m_Presentation) m_Presentation->attach(m_Surface);
         }
-    });
+    };
+    connect(this, &QQuickItem::windowChanged, this, attachWindow);
+    if (window()) attachWindow(window());
     connect(this, &QQuickItem::visibleChanged, this, [this] { if (isVisible()) forceActiveFocus(); refresh(); });
     connect(this, &SessionCanvas::captureRequestedChanged, this, &SessionCanvas::refresh);
     connect(&m_Timer, &QTimer::timeout, this, &SessionCanvas::refresh);

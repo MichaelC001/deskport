@@ -28,14 +28,14 @@ public:
             // SDL2 may start enabled before a focused window exists. Force the
             // native backend to attach its input context to this viewer now.
             if (m_Native) {
-            SDL_StopTextInput();
-            discardQueuedText();
-            SDL_SetHint("SDL_IME_INTERNAL_EDITING", "0");
-            SDL_SetHint("SDL_IME_SHOW_UI", "1");
-            SDL_SetHint("SDL_IME_SUPPORT_EXTENDED_TEXT", "1");
-            // A stable local composition area, NOT a remote caret estimate.
-            SDL_Rect anchor {0, 0, 1, 48};
-            SDL_SetTextInputRect(&anchor);
+                SDL_StopTextInput();
+                discardQueuedText();
+                SDL_SetHint("SDL_IME_INTERNAL_EDITING", "0");
+                SDL_SetHint("SDL_IME_SHOW_UI", "1");
+                SDL_SetHint("SDL_IME_SUPPORT_EXTENDED_TEXT", "1");
+                // A stable local composition area, NOT a remote caret estimate.
+                SDL_Rect anchor {0, 0, 1, 48};
+                SDL_SetTextInputRect(&anchor);
             }
             m_Started = SDL_GetTicks();
             m_Armed = false;
@@ -45,10 +45,10 @@ public:
             m_Active = false; // Native cancellation must never commit remotely.
             if (m_Native) {
 #if SDL_VERSION_ATLEAST(2, 0, 22)
-            SDL_ClearComposition();
+                SDL_ClearComposition();
 #endif
-            SDL_StopTextInput();
-            discardQueuedText();
+                SDL_StopTextInput();
+                discardQueuedText();
             }
             m_Composing = false;
             m_Command = false;

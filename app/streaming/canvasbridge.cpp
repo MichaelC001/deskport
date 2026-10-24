@@ -136,7 +136,7 @@ void CanvasBridge::synchronize(SDL_Window* window) {
                 SDL_strlcpy(commit.text.text, chunk.constData(), sizeof(commit.text.text));
                 SDL_PushEvent(&commit); chunk.clear();
             };
-            for (auto scalar : text.toUcs4()) {
+            for (char32_t scalar : text.toUcs4()) {
                 const auto encoded = QString::fromUcs4(&scalar, 1).toUtf8();
                 if (chunk.size() + encoded.size() > 31) flush();
                 chunk += encoded;

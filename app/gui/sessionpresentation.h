@@ -20,6 +20,7 @@ public:
     bool active() const { return bool(m_Decoder); }
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
+    void status(const QJsonObject& status);
     void attach(QWindow* canvas);
     void detach();
     void resized();
@@ -35,6 +36,7 @@ private:
     void readyFrame(quint64 generation);
     QPointer<QWindow> m_Canvas;
     QJsonObject m_Config;
+    QJsonObject m_Status;
     SDL_Window* m_Probe = nullptr;
     Overlay::OverlayManager m_Overlays;
     std::unique_ptr<QueuedVideoSource> m_Source;

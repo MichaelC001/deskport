@@ -265,6 +265,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
         return;
     }
     if (type == "traffic") {
+        if (entry->presentation && message.value("video").isObject()) entry->presentation->status(message.value("video").toObject());
         for (const auto& key : {"received", "sent"}) {
             const auto value=message.value(key).toDouble(-1);
             if (value >= 0 && value < 1e18) entry->traffic[key]=value;

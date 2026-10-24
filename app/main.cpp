@@ -1,3 +1,4 @@
+int runCanvasSelfTest(int argc, char** argv);
 // Qt owns the application entry point. This must precede every header that
 // can include SDL, including shortcut and session headers.
 #define SDL_MAIN_HANDLED
@@ -340,6 +341,7 @@ static void relaunchAfterExit()
 
 int main(int argc, char *argv[])
 {
+    if (argc == 2 && QByteArray(argv[1]) == "--canvas-self-test") return runCanvasSelfTest(argc, argv);
     for (int i = 1; i < argc; ++i) {
         if (QByteArray(argv[i]) == "--clipboard-helper") return runClipboardHelper(argc, argv);
     }

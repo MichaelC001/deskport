@@ -510,18 +510,14 @@ public:
         // Handle changes to the frame's colorspace from last time we rendered
         if (!updateColorSpaceForFrame(frame)) {
             // Trigger the main thread to recreate the decoder
-            SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
-            SDL_PushEvent(&event);
+            requestReset(SDL_RENDER_DEVICE_RESET);
             return;
         }
 
         // Handle changes to the video size or drawable size
         if (!updateVideoRegionSizeForFrame(frame)) {
             // Trigger the main thread to recreate the decoder
-            SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
-            SDL_PushEvent(&event);
+            requestReset(SDL_RENDER_DEVICE_RESET);
             return;
         }
 

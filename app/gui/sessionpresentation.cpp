@@ -1,5 +1,6 @@
 #include "sessionpresentation.h"
 #include <QThread>
+#include "streaming/video/videostatus.h"
 
 SessionPresentation::SessionPresentation(QObject* parent) : QObject(parent) {}
 SessionPresentation::~SessionPresentation() { stop(); }
@@ -77,6 +78,7 @@ bool SessionPresentation::start() {
         }, Qt::QueuedConnection);
     };
     m_Decoder = std::make_unique<FFmpegVideoDecoder>(false, m_Source.get(), &m_Overlays);
+    status(m_Status);
     if (!m_Decoder->initialize(&params)) { stop(); return false; }
     emit activeChanged();
     emit idrRequested();
@@ -91,6 +93,18 @@ void SessionPresentation::frame(QByteArray bytes) {
     auto frame = EncodedVideoFrame::decode(bytes, LiGetMillis());
     if (!frame) { emit failed(tr("Invalid local video frame.")); return; }
     m_Source->push(std::move(frame));
+}
+void SessionPresentation::status(const QJsonObject& value) {
+    m_Status = value;
+    if (!m_Source) return;
+    SS_HDR_METADATA hdr{};
+    const bool hasMetadata = VideoStatus::mastering(value, hdr);
+    const auto bounded = [&](const char* key) {
+        const auto number = value.value(key).toDouble();
+        return number >= 0 && number <= UINT32_MAX ? uint32_t(number) : 0;
+    };
+    m_Source->updateMetadata(value.value("hdr").toBool(), hasMetadata ? &hdr : nullptr,
+                             bounded("rtt"), bounded("variance"));
 }
 QJsonObject SessionPresentation::capabilities() const {
     return {{"ok",true}, {"hardware",m_Decoder && m_Decoder->isHardwareAccelerated()},

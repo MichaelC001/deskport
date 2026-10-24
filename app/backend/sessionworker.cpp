@@ -1,5 +1,6 @@
 #include "sessionworker.h"
 #include "streaming/canvasbridge.h"
+#include "streaming/video/videostatus.h"
 #include "diagnostics.h"
 #include "computermanager.h"
 #include "cli/startstream.h"
@@ -21,6 +22,7 @@ int SessionWorker::run() {
     connect(&traffic, &QTimer::timeout, this, [this] {
         if (m_Session) {
             auto state=QJsonObject::fromVariantMap(m_Session->traffic()); state["type"]="traffic";
+            if (CanvasBridge::enabled() && m_Session->inputDispatching()) state["video"] = VideoStatus::read();
             state["tuningLimited"]=m_Session->desktopTuningLimited(); send(state);
         }
     });

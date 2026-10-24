@@ -1,3 +1,5 @@
+SOURCES += gui/canvasselftest.cpp
+HEADERS += streaming/video/videostatus.h
 SOURCES += gui/sessionpresentation.cpp streaming/video/remotedecoder.cpp
 HEADERS += gui/sessionpresentation.h streaming/video/remotedecoder.h
 SOURCES += gui/sessioncanvas.cpp streaming/canvasbridge.cpp
