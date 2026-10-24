@@ -24,6 +24,23 @@ The shared manual has 13 chapters / 68 steps and documents the single-row entry,
 key chooser and KDE conflict handling. New chooser text has draft translations
 in all 22 primary locales. No media, shared display policy or peer wire changes.
 
+Validation on implementation `df3a24e3`: macOS passes 25 controller checks,
+7 recorder-lifetime checks, SDL mapping/held-key cases, 23 Carbon key mappings
+without global registration, 8 preference checks, 8 QML results and 18,203 compiled
+translation comparisons. UI fixtures click the actual modifier controls and key
+menu, check physical Control/Command semantics, verify the QWindow recording
+handoff, and complete keyboard-only saving in a 480x360 window. Shared-core,
+catalog, privacy and PC evidence checks pass.
+
+The pk4 native managed Nix build and isolated CLI smoke pass, together with
+25 controller, 7 recorder-lifetime, 15 private-bus portal, 8 preference and
+4 worker transport results, plus SDL assertions. The build also verifies the
+installed protocol notice. A pre-existing tracked test marker from an older run
+was removed from main and ignored; the final package contains no stale test ID.
+These checks do not register shortcuts on the live desktop or inject real input.
+KDE compositor delivery and real streaming/input acceptance remain deployment
+checks; no running application or service was replaced or restarted.
+
 ## Custom global recall shortcut — 2026-10-24
 
 Reason: users need to avoid reserved or conflicting desktop bindings. Settings →
