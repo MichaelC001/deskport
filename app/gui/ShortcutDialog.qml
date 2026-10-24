@@ -32,8 +32,8 @@ NavigableDialog {
         objectName: "shortcutRecorder"
         implicitHeight: contents.implicitHeight
         focus: true
-        Keys.onShortcutOverride: event.accepted = true
-        Keys.onPressed: {
+        Keys.onShortcutOverride: function(event) { event.accepted = true }
+        Keys.onPressed: function(event) {
             event.accepted = true
             if (event.isAutoRepeat) return
             if (event.key === Qt.Key_Escape && event.modifiers === Qt.NoModifier) { dialog.reject(); return }
@@ -41,7 +41,7 @@ NavigableDialog {
             if (event.key === Qt.Key_Control || event.key === Qt.Key_Meta || event.key === Qt.Key_Alt || event.key === Qt.Key_Shift) return
             dialog.capture(event.key, event.modifiers)
         }
-        Keys.onReleased: event.accepted = true
+        Keys.onReleased: function(event) { event.accepted = true }
         ColumnLayout {
             id: contents
             width: parent.width
