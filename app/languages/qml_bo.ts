@@ -3816,5 +3816,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>མྱུར་མཐེབ་ཞིག་གནོན། Control དང་ Alt/Option ཡང་ན་ Meta/Command དང་ལྷན་དུ་ཡི་གེ་དང་ཨང་ཀི་ F1–F12 སྟོང་ཆ་ཡང་ན་འབྲེལ་རྟགས་སྤྱོད། Shift འདེམས་ཆོག</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>མྱུར་མཐེབ་གནོན་པའམ། གཤམ་ནས་དེའི་མཐེབ་འདེམས།</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>མཐེབ་འདེམས་པ།</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>མྱུར་མཐེབ་ཟིན་ཐོ་འགོད་པ།</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>མྱུར་མཐེབ་ཁ་ཤས་ཅོག་ངོས་ཀྱིས་ཟུར་བཅད་ཡོད། ཟིན་ཐོ་འགོད་སྐབས་ལན་མེད་ན། གཤམ་ནས་མཐེབ་འདེམས། ཉར་ཚགས་སྐབས་ཅོག་ངོས་ཀྱིས་འགལ་ཟླ་སེལ་དགོས་པའི་རེ་འདུན་སྟོན་སྲིད།</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>མྱུར་མཐེབ་ལ་ Control དང་ Alt/Option ཡང་ན་ Meta/Command དགོས།</translation>
+        </message>
     </context>
 </TS>

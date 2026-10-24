@@ -3816,5 +3816,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>اضغط اختصارًا. استخدم Control أو Alt/Option أو Meta/Command مع حرف أو رقم أو F1–F12 أو مسافة أو فاصلة عليا. Shift اختياري.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>اضغط اختصارًا أو اختر مفاتيحه أدناه.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>اختيار المفاتيح</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>تسجيل الاختصار</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>بعض الاختصارات محجوزة لسطح المكتب. إذا لم يستجب التسجيل، فاختر المفاتيح أدناه. قد يطلب منك سطح المكتب حل تعارض عند الحفظ.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>يجب أن يتضمن الاختصار Control أو Alt/Option أو Meta/Command.</translation>
+        </message>
     </context>
 </TS>

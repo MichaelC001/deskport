@@ -90,17 +90,16 @@ UiPage {
             objectName: "globalShortcutSwitch"
             iconSource: "qrc:/res/ui/input.svg"
             title: qsTr("Global window shortcut")
-            detail: qsTr("%1 shows or hides DeskPort. Enabled by default; changes apply immediately.").arg(preferences.shortcutDisplay(preferences.globalShortcutSequence))
-            switchable: true; on: preferences.globalShortcutEnabled
-            onSwitched: function(value) { preferences.globalShortcutEnabled = value; save() }
-        }
-        UiRow {
-            objectName: "globalShortcutChoice"
-            iconSource: "qrc:/res/ui/input.svg"
-            title: qsTr("Change shortcut")
             value: preferences.shortcutDisplay(preferences.globalShortcutSequence)
-            divider: false
-            onClicked: shortcutDialog.open()
+            valueEditable: true
+            valueAccessibleName: qsTr("Change shortcut")
+            switchable: true; on: preferences.globalShortcutEnabled; divider: false
+            Accessible.description: qsTr("%1 shows or hides DeskPort. Enabled by default; changes apply immediately.").arg(value)
+            ToolTip.visible: hovered
+            ToolTip.delay: 800
+            ToolTip.text: Accessible.description
+            onValueClicked: shortcutDialog.open()
+            onSwitched: function(value) { preferences.globalShortcutEnabled = value; save() }
         }
     }
 

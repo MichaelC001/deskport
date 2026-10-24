@@ -35,14 +35,33 @@ inline void configure(bool enabled, const QString& sequence) {
     SDL_Keycode key = SDLK_UNKNOWN;
     if (binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12)
         key = SDLK_F1 + binding.key - Qt::Key_F1;
-    else if (binding.valid()) key = binding.character();
+    // SDL's F13-F24 keycodes are not contiguous with F1-F12.
+    else if (binding.key >= Qt::Key_F13 && binding.key <= Qt::Key_F24)
+        key = SDLK_F13 + binding.key - Qt::Key_F13;
+    else if (binding.character()) key = binding.character();
+    else switch (binding.key) {
+    case Qt::Key_Tab: key = SDLK_TAB; break;
+    case Qt::Key_Backspace: key = SDLK_BACKSPACE; break;
+    case Qt::Key_Delete: key = SDLK_DELETE; break;
+    case Qt::Key_Insert: key = SDLK_INSERT; break;
+    case Qt::Key_Home: key = SDLK_HOME; break;
+    case Qt::Key_End: key = SDLK_END; break;
+    case Qt::Key_PageUp: key = SDLK_PAGEUP; break;
+    case Qt::Key_PageDown: key = SDLK_PAGEDOWN; break;
+    case Qt::Key_Left: key = SDLK_LEFT; break;
+    case Qt::Key_Right: key = SDLK_RIGHT; break;
+    case Qt::Key_Up: key = SDLK_UP; break;
+    case Qt::Key_Down: key = SDLK_DOWN; break;
+    case Qt::Key_Escape: key = SDLK_ESCAPE; break;
+    case Qt::Key_Return: key = SDLK_RETURN; break;
+    }
     unsigned mask = 0;
     if (binding.modifiers & Qt::ControlModifier) mask |= 1;
     if (binding.modifiers & Qt::AltModifier) mask |= 2;
     if (binding.modifiers & Qt::ShiftModifier) mask |= 4;
     if (binding.modifiers & Qt::MetaModifier) mask |= 8;
     store(quint64(quint32(key)) | (quint64(mask) << 32) |
-          (enabled && binding.valid() ? Enabled : quint64(0)));
+          (enabled && binding.valid() && key != SDLK_UNKNOWN ? Enabled : quint64(0)));
 }
 
 enum class KeyResult { Pass, Pressed, Consumed, Released };

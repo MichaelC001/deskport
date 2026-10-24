@@ -46,13 +46,30 @@ bool currentKey(const ShortcutBinding& binding, UInt32& key, UInt32& modifiers) 
     if (binding.modifiers & Qt::ControlModifier) modifiers |= controlKey;
     if (binding.modifiers & Qt::AltModifier) modifiers |= optionKey;
     if (binding.modifiers & Qt::ShiftModifier) modifiers |= shiftKey;
-    if (binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12) {
+    if (binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F20) {
         const UInt32 functionKeys[] {kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5, kVK_F6,
-                                     kVK_F7, kVK_F8, kVK_F9, kVK_F10, kVK_F11, kVK_F12};
+                                     kVK_F7, kVK_F8, kVK_F9, kVK_F10, kVK_F11, kVK_F12,
+                                     kVK_F13, kVK_F14, kVK_F15, kVK_F16, kVK_F17, kVK_F18,
+                                     kVK_F19, kVK_F20};
         key = functionKeys[binding.key - Qt::Key_F1];
         return true;
     }
-    if (binding.key == Qt::Key_Space) { key = kVK_Space; return true; }
+    switch (binding.key) {
+    case Qt::Key_Space: key = kVK_Space; return true;
+    case Qt::Key_Tab: key = kVK_Tab; return true;
+    case Qt::Key_Backspace: key = kVK_Delete; return true;
+    case Qt::Key_Delete: key = kVK_ForwardDelete; return true;
+    case Qt::Key_Home: key = kVK_Home; return true;
+    case Qt::Key_End: key = kVK_End; return true;
+    case Qt::Key_PageUp: key = kVK_PageUp; return true;
+    case Qt::Key_PageDown: key = kVK_PageDown; return true;
+    case Qt::Key_Left: key = kVK_LeftArrow; return true;
+    case Qt::Key_Right: key = kVK_RightArrow; return true;
+    case Qt::Key_Up: key = kVK_UpArrow; return true;
+    case Qt::Key_Down: key = kVK_DownArrow; return true;
+    case Qt::Key_Escape: key = kVK_Escape; return true;
+    case Qt::Key_Return: key = kVK_Return; return true;
+    }
     auto source = TISCopyCurrentKeyboardLayoutInputSource();
     const bool hasLayout = source && TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData);
     const bool found = layoutKey(source, binding, key);

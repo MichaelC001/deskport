@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>กดปุ่มลัด ใช้ Control, Alt/Option หรือ Meta/Command ร่วมกับตัวอักษร ตัวเลข F1–F12 เว้นวรรค หรืออัญประกาศเดี่ยว จะเพิ่ม Shift ก็ได้</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>กดปุ่มลัดหรือเลือกปุ่มด้านล่าง</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>เลือกปุ่ม</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>บันทึกชุดปุ่มลัด</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>ปุ่มลัดบางชุดสงวนไว้สำหรับเดสก์ท็อป หากการบันทึกไม่ตอบสนอง ให้เลือกปุ่มด้านล่าง เมื่อบันทึก เดสก์ท็อปอาจขอให้คุณแก้ไขปุ่มลัดที่ขัดแย้งกัน</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>ปุ่มลัดต้องมี Control, Alt/Option หรือ Meta/Command</translation>
+        </message>
     </context>
 </TS>

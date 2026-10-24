@@ -1,12 +1,19 @@
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp backend/trafficbudget.cpp
 SOURCES += backend/globalshortcut.cpp
 HEADERS += backend/globalshortcut.h backend/shortcutbinding.h streaming/shortcutstate.h
+SOURCES += backend/shortcutrecorderinhibitor.cpp
+HEADERS += backend/shortcutrecorderinhibitor.h
 win32: SOURCES += backend/globalshortcut_native.cpp
 macx {
     OBJECTIVE_SOURCES += backend/globalshortcut_mac.mm
     LIBS += -framework Carbon
 }
-linux: SOURCES += backend/globalshortcut_linux.cpp
+linux {
+    QT += gui-private
+    SOURCES += backend/globalshortcut_linux.cpp backend/shortcutrecorderinhibitor_wayland.cpp
+    SOURCES += backend/keyboard-shortcuts-inhibit-v1.c
+    HEADERS += backend/keyboard-shortcuts-inhibit-v1.h
+}
 SOURCES += backend/browsergateway.cpp backend/browserhost.cpp
 HEADERS += backend/browsergateway.h backend/browserhost.h
 RESOURCES += browser/browser.qrc
@@ -655,6 +662,9 @@ unix:!macx: {
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
     INSTALLS += target desktop icons appstream
+    shortcut_protocol_notice.files = $$PWD/backend/keyboard-shortcuts-inhibit-v1.LICENSE.txt
+    shortcut_protocol_notice.path = $$PREFIX/$$DATADIR/doc/deskport/licenses/
+    INSTALLS += shortcut_protocol_notice
     APP_ICON_SIZES = 16 32 48 64 128 256 512
     for(icon_size, APP_ICON_SIZES) {
         icon_target = icon_$${icon_size}

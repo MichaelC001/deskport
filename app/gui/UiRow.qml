@@ -4,14 +4,16 @@ import QtQuick.Controls.impl 2.12
 import QtQuick.Layouts 1.3
 
 // One row of a settings group: icon tile, title with an optional explanation,
-// the current value in grey, then a chevron or a switch. A switch row toggles
-// when any part of it is clicked; the new value arrives through switched().
+// the current value, then a chevron or a switch. An editable value has its own
+// button; clicking the rest of a switch row emits switched().
 ItemDelegate {
     id: row
     property url iconSource
     property string title
     property string detail
     property string value
+    property bool valueEditable: false
+    property string valueAccessibleName: title
     property bool switchable: false
     property bool on: false
     property bool destructive: false
@@ -23,6 +25,7 @@ ItemDelegate {
     // Whether the row draws its separator from the next row.
     property bool divider: true
     signal switched(bool value)
+    signal valueClicked()
     width: parent ? parent.width : implicitWidth
     implicitHeight: Math.max(52, layout.implicitHeight + 20)
     leftPadding: 16; rightPadding: 14; topPadding: 10; bottomPadding: 10
@@ -60,7 +63,9 @@ ItemDelegate {
             Label {
                 text: row.title; textFormat: Text.PlainText
                 color: row.destructive ? ui.danger : ui.text; font.pixelSize: ui.body
-                wrapMode: Text.WordWrap; Layout.fillWidth: true
+                wrapMode: row.valueEditable ? Text.NoWrap : Text.WordWrap
+                elide: row.valueEditable ? Text.ElideRight : Text.ElideNone
+                Layout.fillWidth: true
             }
             Label {
                 visible: text.length > 0
@@ -70,11 +75,22 @@ ItemDelegate {
             }
         }
         Label {
-            visible: text.length > 0
+            visible: !row.valueEditable && text.length > 0
             text: row.value; textFormat: Text.PlainText
             color: ui.muted; font.pixelSize: ui.body
             horizontalAlignment: Text.AlignRight; elide: Text.ElideRight
             Layout.maximumWidth: row.width * 0.45
+        }
+        UiButton {
+            objectName: row.objectName.length > 0 ? row.objectName + "Value" : ""
+            visible: row.valueEditable && text.length > 0
+            text: row.value
+            tinted: true
+            font.pixelSize: ui.body
+            Layout.maximumWidth: row.width * 0.45
+            Accessible.name: row.valueAccessibleName
+            Accessible.description: row.value
+            onClicked: row.valueClicked()
         }
         Switch {
             visible: row.switchable

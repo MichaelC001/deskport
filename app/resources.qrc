@@ -3,6 +3,7 @@
         <file>res/os/LICENSE.txt</file>
         <file alias="licenses/deskport-catalog.txt">../shared/deskport-core/portable/LICENSE</file>
         <file alias="licenses/qrcodegen.txt">../third_party/qrcodegen/LICENSE</file>
+        <file alias="licenses/keyboard-shortcuts-inhibit-v1.txt">backend/keyboard-shortcuts-inhibit-v1.LICENSE.txt</file>
         <file>res/os/apple.svg</file>
         <file>res/os/arch.svg</file>
         <file>res/os/computer.svg</file>

@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Pressione um atalho. Combine Control, Alt/Option ou Meta/Command com uma letra, número, F1–F12, espaço ou apóstrofo. Shift é opcional.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Pressione um atalho ou escolha suas teclas abaixo.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Escolher teclas</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Gravar atalho</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Alguns atalhos são reservados pelo ambiente de trabalho. Se a gravação não responder, escolha as teclas abaixo. Ao salvar, o ambiente de trabalho pode pedir que você resolva um conflito.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Um atalho precisa de Control, Alt/Option ou Meta/Command.</translation>
+        </message>
     </context>
 </TS>

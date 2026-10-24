@@ -3928,6 +3928,26 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>按下组合键。使用 Control、Alt/Option 或 Meta/Command 搭配字母、数字、F1–F12、空格或单引号，也可加上 Shift。</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>按下组合键，或在下方选择按键。</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>选择按键</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>录入快捷键</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>部分组合键由桌面环境保留。如果录入没有反应，请在下方选择按键。保存时，桌面环境可能要求你解决快捷键冲突。</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>快捷键必须包含 Control、Alt/Option 或 Meta/Command。</translation>
+        </message>
     </context>
     <context>
         <name>Diagnostics</name>

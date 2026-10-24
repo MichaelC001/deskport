@@ -3908,6 +3908,26 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>按下組合鍵。使用 Control、Alt/Option 或 Meta/Command 搭配字母、數字、F1–F12、空白或單引號，也可加上 Shift。</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>按下組合鍵，或在下方選擇按鍵。</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>選擇按鍵</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>錄入快速鍵</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>部分組合鍵由桌面環境保留。如果錄入沒有反應，請在下方選擇按鍵。儲存時，桌面環境可能要求你解決快速鍵衝突。</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>快速鍵必須包含 Control、Alt/Option 或 Meta/Command。</translation>
+        </message>
     </context>
     <context>
         <name>Diagnostics</name>

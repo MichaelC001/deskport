@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Нажмите сочетание. Используйте Control, Alt/Option или Meta/Command с буквой, цифрой, F1–F12, пробелом или апострофом. Shift можно добавить.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Нажмите сочетание клавиш или выберите его клавиши ниже.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Выбрать клавиши</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Записать сочетание</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Некоторые сочетания зарезервированы рабочим столом. Если запись не реагирует, выберите клавиши ниже. При сохранении рабочий стол может предложить разрешить конфликт.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Сочетание должно включать Control, Alt/Option или Meta/Command.</translation>
+        </message>
     </context>
 </TS>

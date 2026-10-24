@@ -1,3 +1,13 @@
+## Shortcut key chooser and KDE conflicts — 2026-10-24
+
+Core `505ae0ccd0a4ead4decb6eaba62585bf278e6dbe` adds the desktop key-chooser
+labels in all 22 primary locales and updates the manual's single-row settings
+entry. English and both Chinese scripts explain recording, mouse selection and
+KDE Plasma's commonly occupied Meta+1–9 bindings; other manual locales use
+English fallback. Git and Nix pins reference the same published tree. Keyboard
+mapping and the window-scoped Wayland recorder inhibitor stay desktop-owned;
+shared policy and peer wire contracts are unchanged.
+
 ## Custom desktop recall labels and manual — 2026-10-24
 
 Core `b12d33c8811be6ee96efd45a0aeb14f775903ca1` adds the shortcut recorder,

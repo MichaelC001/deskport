@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Bir kısayola basın. Control, Alt/Option veya Meta/Command ile harf, sayı, F1–F12, boşluk veya kesme işareti kullanın. Shift isteğe bağlıdır.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Bir kısayola basın veya aşağıdan tuşlarını seçin.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Tuşları seç</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Kısayolu kaydet</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Bazı kısayollar masaüstü tarafından ayrılmıştır. Kayıt yanıt vermiyorsa aşağıdan tuşları seçin. Kaydederken masaüstü bir çakışmayı çözmenizi isteyebilir.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Bir kısayol Control, Alt/Option veya Meta/Command içermelidir.</translation>
+        </message>
     </context>
 </TS>

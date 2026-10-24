@@ -153,6 +153,8 @@ public:
     Q_PROPERTY(QString globalShortcutSequence MEMBER globalShortcutSequence NOTIFY globalShortcutSequenceChanged)
     Q_INVOKABLE QString shortcutFromKey(int key, int modifiers) const;
     Q_INVOKABLE QString shortcutDisplay(const QString& sequence) const;
+    Q_INVOKABLE QVariantList shortcutKeys() const;
+    Q_INVOKABLE QVariantMap shortcutParts(const QString& sequence) const;
     Q_PROPERTY(bool dataSaver MEMBER dataSaver NOTIFY dataSaverChanged)
     Q_PROPERTY(bool compactDevices MEMBER compactDevices NOTIFY compactDevicesChanged)
     Q_PROPERTY(bool showLocalCursor MEMBER showLocalCursor NOTIFY showLocalCursorChanged)

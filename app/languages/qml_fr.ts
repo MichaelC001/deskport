@@ -3816,5 +3816,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Appuyez sur un raccourci. Associez Control, Alt/Option ou Meta/Command à une lettre, un chiffre, F1–F12, Espace ou une apostrophe. Shift est facultatif.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Appuyez sur un raccourci ou choisissez ses touches ci-dessous.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Choisir les touches</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Enregistrer la combinaison</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Certains raccourcis sont réservés par le bureau. Si la saisie ne réagit pas, choisissez les touches ci-dessous. Le bureau peut vous demander de résoudre un conflit lors de la sauvegarde.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Un raccourci doit inclure Control, Alt/Option ou Meta/Command.</translation>
+        </message>
     </context>
 </TS>

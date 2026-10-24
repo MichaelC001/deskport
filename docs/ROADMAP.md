@@ -1,3 +1,29 @@
+## Single-row shortcut settings and desktop-reserved keys — 2026-10-24
+
+Reason: the shortcut setting occupied two rows, and compositor-owned combinations
+such as KDE Plasma's Meta+1–9 never reached the Qt recorder. Settings now places
+the current combination and enable switch on one row with independent controls.
+The explanation remains available as a tooltip and accessibility description.
+
+The recorder requests window-scoped Wayland shortcut inhibition only while its
+window is visible and active. Losing focus, closing the recorder, selecting keys
+with the mouse, or destroying its native surface releases that request. It uses
+Qt's existing display/seat/surface and an asynchronous private event queue, never
+a desktop-wide shortcut block. A mouse/keyboard key chooser also works when the
+desktop retains a reserved combination or Qt reports a shifted printable symbol.
+Ordinary Tab navigation, cancellation and saving remain keyboard-accessible.
+
+Bindings now include common base punctuation and navigation/editing keys, plus
+F1–F20 on macOS and F1–F24 on Linux/Windows. A modifier remains mandatory;
+multi-step sequences, unsupported symbols and layout-dependent implicit extra
+modifiers are rejected. Native adapters and the SDL fallback share the same key
+inventory. The desktop still confirms binding conflicts; DeskPort never silently
+reassigns a task-manager or another application's shortcut.
+
+The shared manual has 13 chapters / 68 steps and documents the single-row entry,
+key chooser and KDE conflict handling. New chooser text has draft translations
+in all 22 primary locales. No media, shared display policy or peer wire changes.
+
 ## Custom global recall shortcut — 2026-10-24
 
 Reason: users need to avoid reserved or conflicting desktop bindings. Settings →

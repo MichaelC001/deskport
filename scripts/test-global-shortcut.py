@@ -46,11 +46,24 @@ def main():
         env.pop("DESKPORT_DISABLE_GLOBAL_SHORTCUT", None)
         executable = compile_test(work, "global-shortcut", [
             "tests/global-shortcut.cpp", "app/backend/globalshortcut.cpp",
-        ], headers=["app/backend/globalshortcut.h"])
+            "app/backend/shortcutrecorderinhibitor.cpp",
+        ] + (["app/backend/shortcutrecorderinhibitor_wayland.cpp",
+              "app/backend/keyboard-shortcuts-inhibit-v1.c"] if sys.platform.startswith("linux") else []),
+            "QT += gui-private\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n"
+            if sys.platform.startswith("linux") else "",
+            headers=["app/backend/globalshortcut.h"])
         subprocess.run([str(executable)], env=env, check=True, timeout=30)
         for platform in ("offscreen", "minimal"):
             subprocess.run([str(executable), "--isolated-gui"],
                            env=dict(env, QT_QPA_PLATFORM=platform), check=True, timeout=30)
+
+        executable = compile_test(work, "shortcut-recorder-inhibitor", [
+            "tests/shortcut-recorder-inhibitor.cpp", "app/backend/shortcutrecorderinhibitor.cpp",
+        ] + (["app/backend/shortcutrecorderinhibitor_wayland.cpp",
+              "app/backend/keyboard-shortcuts-inhibit-v1.c"] if sys.platform.startswith("linux") else []),
+            "QT += gui-private\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n"
+            if sys.platform.startswith("linux") else "")
+        subprocess.run([str(executable)], env=env, check=True, timeout=30)
 
         if sys.platform == "darwin":
             sdl = ROOT / "libs/mac/Frameworks"
@@ -66,7 +79,7 @@ QMAKE_RPATHDIR += "{sdl}"
 
         if sys.platform == "darwin":
             executable = compile_test(work, "global-shortcut-native", ["tests/global-shortcut-native.cpp"],
-                f'OBJECTIVE_SOURCES += "{ROOT}/app/backend/globalshortcut_mac.mm"\nLIBS += -framework Carbon\n')
+                "LIBS += -framework Carbon\n")
             subprocess.run([str(executable)], env=env, check=True, timeout=30)
 
         if sys.platform.startswith("linux"):

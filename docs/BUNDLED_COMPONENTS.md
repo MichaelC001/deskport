@@ -119,6 +119,17 @@ The generated product catalog is independently MIT-licensed. Its full notice is
 embedded at `:/licenses/deskport-catalog.txt` and retained in the pinned core
 `portable/LICENSE`. Existing GPL workspace and upstream licenses are unchanged.
 
+## Wayland shortcut recording — 2026-10-24
+
+The window-scoped recorder uses keyboard-shortcuts-inhibit-unstable-v1 from
+wayland-protocols 1.48. Its client C/header were generated with wayland-scanner
+1.25.0 (`private-code` and `client-header`) from
+`unstable/keyboard-shortcuts-inhibit/keyboard-shortcuts-inhibit-unstable-v1.xml`.
+The protocol's Red Hat MIT notice remains in the generated files, is embedded
+at `:/licenses/keyboard-shortcuts-inhibit-v1.txt`, and is installed under
+`share/doc/deskport/licenses` on Linux. The adapter borrows Qt's connection;
+it does not install a compositor plugin or change desktop shortcut settings.
+
 ## AppImage private runtime (0.6.4 prerelease)
 
 The AppImage-only packaging step adds sharun 0.8.1 (MIT) from

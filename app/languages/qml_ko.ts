@@ -3816,5 +3816,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>단축키를 누르세요. Control, Alt/Option 또는 Meta/Command와 문자, 숫자, F1–F12, 스페이스 또는 작은따옴표를 조합하세요. Shift도 추가할 수 있습니다.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>단축키를 누르거나 아래에서 키를 선택하세요.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>키 선택</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>단축키 기록</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>일부 단축키는 데스크톱에서 예약되어 있습니다. 기록에 반응이 없으면 아래에서 키를 선택하세요. 저장할 때 데스크톱에서 충돌 해결을 요청할 수 있습니다.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>단축키에는 Control, Alt/Option 또는 Meta/Command가 필요합니다.</translation>
+        </message>
     </context>
 </TS>

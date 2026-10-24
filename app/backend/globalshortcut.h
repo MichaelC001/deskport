@@ -3,8 +3,12 @@
 #include <QObject>
 #include <QByteArray>
 #include <QElapsedTimer>
+#include <QWindow>
 #include <functional>
+#include <memory>
 #include "shortcutbinding.h"
+
+class ShortcutRecorderInhibitor;
 
 // Native adapters report edges; the shell owns the action and its lifetime.
 // Only the resident GUI process constructs a backend.
@@ -73,6 +77,7 @@ public:
     bool setSequence(const QString& sequence);
     QString sequence() const { return m_Sequence; }
     Q_INVOKABLE void setRecording(bool recording);
+    Q_INVOKABLE void setRecordingWindow(QWindow* window);
     Q_INVOKABLE void fallbackActivated();
     bool available() const { return m_Available; }
     QString error() const { return m_Error; }
@@ -97,4 +102,5 @@ private:
     bool m_Started = false, m_Recording = false;
     bool m_Available = false;
     QString m_Sequence = ShortcutBinding::defaultSequence(), m_Error;
+    std::unique_ptr<ShortcutRecorderInhibitor> m_RecorderInhibitor;
 };

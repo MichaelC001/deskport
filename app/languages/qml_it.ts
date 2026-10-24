@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Premi una scorciatoia. Usa Control, Alt/Option o Meta/Command con una lettera, numero, F1–F12, spazio o apostrofo. Shift è facoltativo.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Premi una scorciatoia o scegli i suoi tasti qui sotto.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Scegli i tasti</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Registra scorciatoia</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Alcune scorciatoie sono riservate dal desktop. Se la registrazione non risponde, scegli i tasti qui sotto. Durante il salvataggio, il desktop potrebbe chiederti di risolvere un conflitto.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Una scorciatoia richiede Control, Alt/Option o Meta/Command.</translation>
+        </message>
     </context>
 </TS>

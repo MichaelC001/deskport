@@ -100,6 +100,20 @@ private slots:
         QCOMPARE(global->globalShortcutSequence, QStringLiteral("Meta+'"));
         QVERIFY(global->shortcutFromKey(Qt::Key_K, Qt::NoModifier).isEmpty());
         QVERIFY(!global->shortcutDisplay("Ctrl+Alt+K").isEmpty());
+        const auto choices = global->shortcutKeys();
+        QVERIFY(choices.size() > 60);
+        bool hasDigit = false, hasTab = false;
+        for (const auto& choice : choices) {
+            const auto item = choice.toMap();
+            QVERIFY(!item["label"].toString().isEmpty());
+            const int key = item["key"].toInt();
+            const int modifiers = global->shortcutParts("Meta+1")["modifiers"].toInt();
+            QVERIFY(!global->shortcutFromKey(key, modifiers).isEmpty());
+            hasDigit |= key == Qt::Key_1;
+            hasTab |= key == Qt::Key_Tab;
+        }
+        QVERIFY(hasDigit && hasTab);
+        QCOMPARE(global->shortcutParts("Meta+1")["key"].toInt(), int(Qt::Key_1));
     }
     void uiLanguageChangesPreserveDevicePolicyAndSavedIds() {
         auto preferences = StreamingPreferences::get();

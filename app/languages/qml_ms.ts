@@ -3816,5 +3816,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Tekan pintasan. Gunakan Control, Alt/Option atau Meta/Command bersama huruf, nombor, F1–F12, ruang atau apostrof. Shift adalah pilihan.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Tekan pintasan atau pilih kekuncinya di bawah.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Pilih kekunci</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Rakam pintasan</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Sesetengah pintasan dikhaskan oleh desktop. Jika rakaman tidak bertindak balas, pilih kekunci di bawah. Semasa menyimpan, desktop mungkin meminta anda menyelesaikan konflik.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Pintasan memerlukan Control, Alt/Option atau Meta/Command.</translation>
+        </message>
     </context>
 </TS>

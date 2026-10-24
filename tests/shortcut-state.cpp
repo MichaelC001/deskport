@@ -75,6 +75,34 @@ int main() {
     assert(chord.handle(key(SDL_KEYDOWN, SDLK_F8, KMOD_GUI, SDL_SCANCODE_F8)) == KeyResult::Pressed);
     ShortcutState::setEnabled(false); ShortcutState::setEnabled(true);
     assert(chord.handle(key(SDL_KEYUP, SDLK_F8, KMOD_GUI, SDL_SCANCODE_F8)) == KeyResult::Consumed);
+    const struct { const char* sequence; SDL_Keycode symbol; } namedKeys[] {
+        {"Ctrl+Tab", SDLK_TAB}, {"Ctrl+Backspace", SDLK_BACKSPACE},
+        {"Ctrl+Del", SDLK_DELETE}, {"Ctrl+Home", SDLK_HOME}, {"Ctrl+End", SDLK_END},
+        {"Ctrl+PgUp", SDLK_PAGEUP}, {"Ctrl+PgDown", SDLK_PAGEDOWN},
+        {"Ctrl+Left", SDLK_LEFT}, {"Ctrl+Right", SDLK_RIGHT},
+        {"Ctrl+Up", SDLK_UP}, {"Ctrl+Down", SDLK_DOWN},
+        {"Ctrl+Esc", SDLK_ESCAPE}, {"Ctrl+Return", SDLK_RETURN},
+        {"Ctrl+-", SDLK_MINUS}, {"Ctrl+=", SDLK_EQUALS},
+        {"Ctrl+[", SDLK_LEFTBRACKET}, {"Ctrl+]", SDLK_RIGHTBRACKET},
+        {"Ctrl+;", SDLK_SEMICOLON}, {"Ctrl+,", SDLK_COMMA},
+        {"Ctrl+.", SDLK_PERIOD}, {"Ctrl+/", SDLK_SLASH},
+        {"Ctrl+\\", SDLK_BACKSLASH}, {"Ctrl+`", SDLK_BACKQUOTE},
+        {"Ctrl+F13", SDLK_F13}, {"Ctrl+F20", SDLK_F20},
+#ifndef Q_OS_MACOS
+        {"Ctrl+Ins", SDLK_INSERT}, {"Ctrl+F24", SDLK_F24},
+#endif
+    };
+    for (const auto& selected : namedKeys) {
+        ShortcutState::configure(true, selected.sequence);
+        assert(ShortcutState::enabled());
+        assert(chord.handle(key(SDL_KEYDOWN, selected.symbol, KMOD_CTRL, SDL_SCANCODE_UNKNOWN)) == KeyResult::Pressed);
+        assert(chord.handle(key(SDL_KEYUP, selected.symbol, KMOD_CTRL, SDL_SCANCODE_UNKNOWN)) == KeyResult::Released);
+    }
+    // Shift is explicit and never selects a different printable layout symbol.
+    ShortcutState::configure(true, "Ctrl+Shift+1");
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_1, SDL_Keymod(KMOD_CTRL | KMOD_SHIFT), SDL_SCANCODE_1)) == KeyResult::Pressed);
+    assert(chord.handle(key(SDL_KEYUP, SDLK_1, SDL_Keymod(KMOD_CTRL | KMOD_SHIFT), SDL_SCANCODE_1)) == KeyResult::Released);
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_EXCLAIM, SDL_Keymod(KMOD_CTRL | KMOD_SHIFT), SDL_SCANCODE_1)) == KeyResult::Pass);
     ShortcutState::configure(true, "A");
     assert(!ShortcutState::enabled());
     assert(chord.handle(key(SDL_KEYDOWN, SDLK_a, KMOD_NONE, SDL_SCANCODE_A)) == KeyResult::Pass);

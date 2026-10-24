@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Натисніть сполучення. Використовуйте Control, Alt/Option або Meta/Command з літерою, цифрою, F1–F12, пробілом чи апострофом. Shift можна додати.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Натисніть сполучення або виберіть його клавіші нижче.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Вибрати клавіші</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Записати сполучення</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Деякі сполучення зарезервовано стільницею. Якщо запис не реагує, виберіть клавіші нижче. Під час збереження стільниця може запропонувати розв’язати конфлікт.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Сполучення має містити Control, Alt/Option або Meta/Command.</translation>
+        </message>
     </context>
 </TS>

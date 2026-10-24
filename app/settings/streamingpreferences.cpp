@@ -184,6 +184,20 @@ QString StreamingPreferences::shortcutDisplay(const QString& sequence) const
     return ShortcutBinding::display(sequence);
 }
 
+QVariantList StreamingPreferences::shortcutKeys() const
+{
+    QVariantList choices;
+    for (const int key : ShortcutBinding::supportedKeys())
+        choices.append(QVariantMap{{"key", key}, {"label", QKeySequence(key).toString(QKeySequence::NativeText)}});
+    return choices;
+}
+
+QVariantMap StreamingPreferences::shortcutParts(const QString& sequence) const
+{
+    const auto binding = ShortcutBinding::parse(sequence);
+    return {{"key", binding.key}, {"modifiers", int(ShortcutBinding::eventModifiers(binding.modifiers))}};
+}
+
 void StreamingPreferences::reload()
 {
     DeviceSettings settings(m_DeviceId);

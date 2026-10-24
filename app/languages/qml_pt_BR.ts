@@ -1379,5 +1379,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation type="unfinished" />
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation type="unfinished" />
+        </message>
     </context>
 </TS>

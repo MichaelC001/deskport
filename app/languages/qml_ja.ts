@@ -3840,5 +3840,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>キーを押してください。Control、Alt/Option、Meta/Command と英字、数字、F1–F12、スペース、アポストロフィを組み合わせます。Shift も追加できます。</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>ショートカットを押すか、下でキーを選択してください。</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>キーを選択</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>ショートカットを記録</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>一部のショートカットはデスクトップで予約されています。記録が反応しない場合は、下でキーを選択してください。保存時にデスクトップから競合の解決を求められることがあります。</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>ショートカットには Control、Alt/Option、Meta/Command のいずれかが必要です。</translation>
+        </message>
     </context>
 </TS>

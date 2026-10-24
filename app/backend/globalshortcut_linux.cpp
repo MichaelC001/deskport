@@ -246,8 +246,8 @@ private:
         }
         m_Group = state.group;
         int minimum, maximum; XDisplayKeycodes(m_Display, &minimum, &maximum);
-        const KeySym target = binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12 ?
-            XK_F1 + binding.key - Qt::Key_F1 : static_cast<unsigned char>(binding.character());
+        const auto name = binding.portalKey().toLatin1();
+        const KeySym target = XStringToKeysym(name.constData());
         for (int code = minimum; code <= maximum && !m_Key; ++code)
             if (XkbKeycodeToKeysym(m_Display, code, m_Group, 0) == target) m_Key = code;
         if (!m_Key) { if (error) error("This X11 layout cannot register the selected shortcut without extra modifiers."); return false; }

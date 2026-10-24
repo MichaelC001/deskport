@@ -14,6 +14,28 @@ QString shortcutText(const char* text) {
     return QCoreApplication::translate("GlobalShortcut", text);
 }
 
+SHORT layoutKey(const ShortcutBinding& binding, HKL layout) {
+    if (binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F24)
+        return SHORT(VK_F1 + binding.key - Qt::Key_F1);
+    switch (binding.key) {
+    case Qt::Key_Tab: return VK_TAB;
+    case Qt::Key_Backspace: return VK_BACK;
+    case Qt::Key_Delete: return VK_DELETE;
+    case Qt::Key_Insert: return VK_INSERT;
+    case Qt::Key_Home: return VK_HOME;
+    case Qt::Key_End: return VK_END;
+    case Qt::Key_PageUp: return VK_PRIOR;
+    case Qt::Key_PageDown: return VK_NEXT;
+    case Qt::Key_Left: return VK_LEFT;
+    case Qt::Key_Right: return VK_RIGHT;
+    case Qt::Key_Up: return VK_UP;
+    case Qt::Key_Down: return VK_DOWN;
+    case Qt::Key_Escape: return VK_ESCAPE;
+    case Qt::Key_Return: return VK_RETURN;
+    default: return VkKeyScanExW(wchar_t(binding.character()), layout);
+    }
+}
+
 class WindowsGlobalShortcut final : public GlobalShortcutBackend, private QAbstractNativeEventFilter {
 public:
     explicit WindowsGlobalShortcut(QObject* parent) : GlobalShortcutBackend(parent) {
@@ -78,8 +100,7 @@ private:
         const HKL layout = activeLayout();
         // Resolve the unmodified symbol in this layout. Never silently add
         // modifiers that the user did not record.
-        const SHORT mapping = binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12 ?
-            SHORT(VK_F1 + binding.key - Qt::Key_F1) : VkKeyScanExW(wchar_t(binding.character()), layout);
+        const SHORT mapping = layoutKey(binding, layout);
         if (m_Registered) UnregisterHotKey(nullptr, HotKeyId);
         m_Registered = false;
         m_Layout = layout;

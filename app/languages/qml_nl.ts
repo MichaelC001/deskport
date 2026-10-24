@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Druk een sneltoets in. Gebruik Control, Alt/Option of Meta/Command met een letter, cijfer, F1–F12, spatie of apostrof. Shift is optioneel.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Druk een sneltoets in of kies hieronder de toetsen.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Toetsen kiezen</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Sneltoets opnemen</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Sommige sneltoetsen zijn gereserveerd door het bureaublad. Als het opnemen niet reageert, kies dan hieronder de toetsen. Bij het opslaan kan het bureaublad vragen om een conflict op te lossen.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Een sneltoets vereist Control, Alt/Option of Meta/Command.</translation>
+        </message>
     </context>
 </TS>

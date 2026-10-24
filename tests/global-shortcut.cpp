@@ -282,7 +282,7 @@ private slots:
     void bindingValidationAndPlatformModifierMapping() {
         for (const auto& value : {"Meta+'", "Ctrl+Alt+K", "Alt+Space", "Meta+Shift+F12", "Ctrl+9"})
             QVERIFY2(ShortcutBinding::parse(value).valid(), value);
-        for (const auto& value : {"", "A", "Shift+A", "Ctrl+Left", "Ctrl+K, Ctrl+C"})
+        for (const auto& value : {"", "A", "Shift+A", "Ctrl+F25", "Ctrl+!", "Ctrl+K, Ctrl+C"})
             QVERIFY2(!ShortcutBinding::parse(value).valid(), value);
         QCOMPARE(ShortcutBinding::parse("Ctrl+Alt+K").portalTrigger(), QStringLiteral("CTRL+ALT+k"));
 #ifdef Q_OS_MACOS
@@ -290,6 +290,43 @@ private slots:
         QCOMPARE(ShortcutBinding::fromEvent(Qt::Key_K, Qt::MetaModifier), QStringLiteral("Ctrl+K"));
 #else
         QCOMPARE(ShortcutBinding::fromEvent(Qt::Key_K, Qt::ControlModifier), QStringLiteral("Ctrl+K"));
+#endif
+    }
+
+    void selectableKeysRoundTripAndUseXdgNames() {
+        const auto keys = ShortcutBinding::supportedKeys();
+        QVERIFY(keys.contains(Qt::Key_Tab));
+        QVERIFY(keys.contains(Qt::Key_Left));
+        QVERIFY(keys.contains(Qt::Key_QuoteLeft));
+        QVERIFY(!keys.contains(Qt::Key_Exclam)); // No assumed US Shift+1 conversion.
+        for (const int key : keys) {
+            const ShortcutBinding binding{key, Qt::ControlModifier};
+            const auto sequence = binding.portable();
+            QVERIFY2(!sequence.isEmpty(), qPrintable(QString::number(key)));
+            const auto parsed = ShortcutBinding::parse(sequence);
+            QCOMPARE(parsed.key, key);
+            QCOMPARE(parsed.modifiers, Qt::ControlModifier);
+            QVERIFY(!binding.portalKey().isEmpty());
+            QCOMPARE(binding.portalTrigger(), QStringLiteral("CTRL+") + binding.portalKey());
+        }
+        QCOMPARE(ShortcutBinding::parse("Ctrl+Backspace").portalTrigger(), QStringLiteral("CTRL+BackSpace"));
+        QCOMPARE(ShortcutBinding::parse("Meta+PgUp").portalTrigger(), QStringLiteral("LOGO+Prior"));
+        QCOMPARE(ShortcutBinding::parse("Alt+PgDown").portalTrigger(), QStringLiteral("ALT+Next"));
+        QCOMPARE(ShortcutBinding::parse("Ctrl+[").portalTrigger(), QStringLiteral("CTRL+bracketleft"));
+        QCOMPARE(ShortcutBinding::parse("Ctrl+`").portalTrigger(), QStringLiteral("CTRL+grave"));
+        const auto backtab = ShortcutBinding::parse(ShortcutBinding::fromEvent(Qt::Key_Backtab, Qt::AltModifier));
+        QCOMPARE(backtab.key, int(Qt::Key_Tab));
+        QCOMPARE(backtab.modifiers, Qt::AltModifier | Qt::ShiftModifier);
+        QVERIFY(ShortcutBinding::fromEvent(Qt::Key_Exclam, Qt::ControlModifier | Qt::ShiftModifier).isEmpty());
+#ifdef Q_OS_MACOS
+        QVERIFY(keys.contains(Qt::Key_F20));
+        QVERIFY(!keys.contains(Qt::Key_F21));
+        QVERIFY(!ShortcutBinding::parse("Ctrl+F21").valid());
+        QVERIFY(!keys.contains(Qt::Key_Insert));
+#else
+        QVERIFY(keys.contains(Qt::Key_F24));
+        QVERIFY(ShortcutBinding::parse("Ctrl+F24").valid());
+        QVERIFY(keys.contains(Qt::Key_Insert));
 #endif
     }
 

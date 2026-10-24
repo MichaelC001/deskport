@@ -15,6 +15,7 @@
 #include <QQmlComponent>
 #include <QQuickWindow>
 #include <QQuickItem>
+#include <QPointer>
 #include <QTranslator>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -37,6 +38,14 @@ static QQuickItem* findVisual(QQuickItem* item, const QString& name, bool visibl
 static QByteArray credential(const char* name) {
     QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll();
 }
+class TestGlobalShortcut : public QObject {
+    Q_OBJECT
+public:
+    bool recording = false;
+    QPointer<QWindow> recordingWindow;
+    Q_INVOKABLE void setRecording(bool value) { recording = value; }
+    Q_INVOKABLE void setRecordingWindow(QWindow* window) { recordingWindow = window; }
+};
 class TestUpdates : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString status MEMBER status CONSTANT)
@@ -217,6 +226,16 @@ public:
     using QObject::QObject;
     Q_INVOKABLE QString shortcutFromKey(int key, int modifiers) const { return ShortcutBinding::fromEvent(key, modifiers); }
     Q_INVOKABLE QString shortcutDisplay(const QString& value) const { return ShortcutBinding::display(value); }
+    Q_INVOKABLE QVariantList shortcutKeys() const {
+        QVariantList choices;
+        for (const int key : ShortcutBinding::supportedKeys())
+            choices.append(QVariantMap{{"key", key}, {"label", QKeySequence(key).toString(QKeySequence::NativeText)}});
+        return choices;
+    }
+    Q_INVOKABLE QVariantMap shortcutParts(const QString& value) const {
+        const auto binding = ShortcutBinding::parse(value);
+        return {{"key", binding.key}, {"modifiers", int(ShortcutBinding::eventModifiers(binding.modifiers))}};
+    }
     Q_PROPERTY(QString globalShortcutSequence READ shortcutSequence WRITE setShortcutSequence NOTIFY shortcutSequenceChanged)
     QString shortcutSequence() const { return m_ShortcutSequence; }
     void setShortcutSequence(const QString& value) { m_ShortcutSequence = value; emit shortcutSequenceChanged(); }
@@ -1656,8 +1675,73 @@ QtObject {
         const auto bad=warnings.filter(QRegularExpression("ReferenceError|TypeError|binding loop|Binding loop|Cannot assign|Unable to assign|Missing parent|Component is not ready"));
         QVERIFY2(bad.isEmpty(),qPrintable(bad.join('\n')));
     }
-    void customShortcutDialogRecordsCancelsAndResets() {
+    void shortcutSettingSharesOneRowWithIndependentControls() {
+        QTemporaryDir directory;
+        HostManager host(nullptr, directory.path());
+        PeerManager peers(&host,credential("TEST_CERT_A"),credential("TEST_KEY_A"),directory.path()+"/peers",0,QHostAddress::LocalHost);
         QQmlEngine engine;
+        engine.rootContext()->setContextProperty("diagnostics", &Diagnostics::instance());
+        engine.rootContext()->setContextProperty("hostManager", &host);
+        engine.rootContext()->setContextProperty("peerManager", &peers);
+        const QString gui=qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent themeComponent(&engine,QUrl::fromLocalFile(gui+"/UiTheme.qml"));
+        QScopedPointer<QObject> theme(themeComponent.create()); QVERIFY(theme);
+        engine.rootContext()->setContextProperty("ui",theme.data());
+        QQmlComponent component(&engine,QUrl::fromLocalFile(gui+"/SettingsHome.qml"));
+        QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
+        auto item=qobject_cast<QQuickItem*>(page.data()); QVERIFY(item);
+        QQuickWindow window; window.resize(660,900);
+        item->setParentItem(window.contentItem()); item->setSize(QSizeF(660,900));
+        window.show(); QTest::qWait(100);
+        auto row=page->findChild<QQuickItem*>("globalShortcutSwitch"); QVERIFY(row);
+        auto choice=page->findChild<QQuickItem*>("globalShortcutSwitchValue"); QVERIFY(choice);
+        auto dialog=page->findChild<QObject*>("shortcutDialog"); QVERIFY(dialog);
+        auto prefs=page->property("preferences").value<QObject*>(); QVERIFY(prefs);
+        const bool originallyEnabled=prefs->property("globalShortcutEnabled").toBool();
+        QVERIFY(choice->isVisible());
+        QVERIFY(row->property("detail").toString().isEmpty());
+        QVERIFY(!page->findChild<QObject*>("globalShortcutChoice"));
+        QVERIFY(row->isAncestorOf(choice));
+        QCOMPARE(choice->property("text").toString(), row->property("value").toString());
+        QVERIFY(std::abs(choice->mapToItem(row,QPointF(0,choice->height()/2)).y()-row->height()/2)<1.0);
+        QVERIFY(row->height()<=60);
+        const auto originalTitle=row->property("title").toString();
+        row->setProperty("title",QStringLiteral("A deliberately long translated global window shortcut title"));
+        window.resize(480,900); item->setSize(QSizeF(480,900)); QTest::qWait(50);
+        QVERIFY(row->height()<=60);
+        QVERIFY(choice->mapToItem(row,QPointF(choice->width(),0)).x()<=row->width());
+        row->setProperty("title",originalTitle);
+        window.resize(660,900); item->setSize(QSizeF(660,900)); QTest::qWait(50);
+
+        // Editing the value must not also toggle its parent switch row.
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,choice->mapToScene(QPointF(choice->width()/2,choice->height()/2)).toPoint());
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QCOMPARE(prefs->property("globalShortcutEnabled").toBool(),originallyEnabled);
+        QVERIFY(QMetaObject::invokeMethod(dialog,"reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool()); QTest::qWait(200);
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,row->mapToScene(QPointF(16,row->height()/2)).toPoint());
+        QTRY_COMPARE(prefs->property("globalShortcutEnabled").toBool(),!originallyEnabled);
+        QVERIFY(!dialog->property("visible").toBool());
+
+        // The same value button stays available while the shortcut is disabled.
+        if (prefs->property("globalShortcutEnabled").toBool()) prefs->setProperty("globalShortcutEnabled",false);
+        QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,choice->mapToScene(QPointF(choice->width()/2,choice->height()/2)).toPoint());
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QVERIFY(!prefs->property("globalShortcutEnabled").toBool());
+        QVERIFY(QMetaObject::invokeMethod(dialog,"reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        prefs->setProperty("globalShortcutEnabled",originallyEnabled);
+        const auto screenshots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!screenshots.isEmpty()) {
+            QTest::mouseMove(&window,QPoint(window.width()-4,window.height()-4));
+            QDir().mkpath(screenshots); QTest::qWait(150);
+            QVERIFY(window.grabWindow().save(screenshots+"/shortcut-setting-inline.png"));
+        }
+    }
+    void customShortcutDialogRecordsCancelsAndResets() {
+        TestGlobalShortcut shortcut;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty("globalShortcut",&shortcut);
         const auto gui = qEnvironmentVariable("TEST_GUI_DIR");
         QQmlComponent component(&engine);
         component.setData(R"(import QtQuick 2.12
@@ -1676,6 +1760,8 @@ Item {
         window.show();
         QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
         QTRY_VERIFY(dialog->property("opened").toBool());
+        QVERIFY(shortcut.recording);
+        QCOMPARE(shortcut.recordingWindow.data(),static_cast<QWindow*>(&window));
         QTest::keyClick(&window, Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
         const auto expected = ShortcutBinding::fromEvent(Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
         QCOMPARE(dialog->property("pending").toString(), expected);
@@ -1687,6 +1773,8 @@ Item {
         }
         QVERIFY(QMetaObject::invokeMethod(dialog,"reject"));
         QTRY_VERIFY(!dialog->property("visible").toBool());
+        QTRY_VERIFY(!shortcut.recording);
+        QVERIFY(shortcut.recordingWindow.isNull());
         QCOMPARE(prefs->property("globalShortcutSequence").toString(), QStringLiteral("Meta+'"));
         QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
         QTRY_VERIFY(dialog->property("opened").toBool());
@@ -1697,7 +1785,84 @@ Item {
         QTest::keyClick(&window, Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
         QVERIFY(QMetaObject::invokeMethod(dialog,"apply"));
         QTRY_VERIFY(!dialog->property("visible").toBool());
+        QTRY_VERIFY(!shortcut.recording);
+        QVERIFY(shortcut.recordingWindow.isNull());
         QCOMPARE(prefs->property("globalShortcutSequence").toString(), expected);
+        // The chooser uses ordinary controls even when a compositor consumes
+        // the complete Meta+digit chord before Qt can receive any key event.
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        auto chooser = dialog->findChild<QQuickItem*>("shortcutChooseKeys"); QVERIFY(chooser);
+        const auto click = [&window](QQuickItem* item) {
+            QTest::mouseClick(&window,Qt::LeftButton,Qt::NoModifier,
+                             item->mapToScene(QPointF(item->width()/2,item->height()/2)).toPoint());
+        };
+        click(chooser);
+        QVERIFY(dialog->property("choosing").toBool());
+        QVERIFY(shortcut.recording);
+        QVERIFY(shortcut.recordingWindow.isNull());
+        QTest::qWait(50);
+        click(chooser);
+        QVERIFY(!dialog->property("choosing").toBool());
+        QVERIFY(shortcut.recording);
+        QCOMPARE(shortcut.recordingWindow.data(),static_cast<QWindow*>(&window));
+        QTest::qWait(50);
+        click(chooser);
+        QVERIFY(dialog->property("choosing").toBool());
+        QVERIFY(shortcut.recordingWindow.isNull());
+        QTest::qWait(50);
+        QList<QQuickItem*> modifiers;
+        for (int i = 0; i < 4; ++i) {
+            auto modifier = findVisual(window.contentItem(),QString("shortcutModifier%1").arg(i));
+            QVERIFY(modifier); modifiers << modifier;
+            if (modifier->property("checked").toBool() != (i == 2)) click(modifier);
+        }
+        QCOMPARE(modifiers[0]->property("text").toString(),QString("Control"));
+#ifdef Q_OS_MACOS
+        QCOMPARE(modifiers[2]->property("text").toString(),QString("Command"));
+#else
+        QCOMPARE(modifiers[2]->property("text").toString(),QString("Meta"));
+#endif
+        auto primary = dialog->findChild<QQuickItem*>("shortcutPrimaryKey"); QVERIFY(primary);
+        const auto choices = dialog->property("keyChoices").toList();
+        int digitIndex = -1;
+        for (int i = 0; i < choices.size(); ++i)
+            if (choices[i].toMap()["key"].toInt() == Qt::Key_1) digitIndex = i;
+        QVERIFY(digitIndex >= 0);
+        click(primary);
+        auto popup = primary->property("popup").value<QObject*>(); QVERIFY(popup);
+        QTRY_VERIFY(popup->property("visible").toBool());
+        QTest::keyClick(&window,Qt::Key_Home);
+        for (int i = 0; i < digitIndex; ++i) QTest::keyClick(&window,Qt::Key_Down);
+        QTest::keyClick(&window,Qt::Key_Return);
+        QTRY_VERIFY(!popup->property("visible").toBool());
+        QCOMPARE(primary->property("currentIndex").toInt(),digitIndex);
+        QCOMPARE(dialog->property("pending").toString(), QString("Meta+1"));
+        QVERIFY(!dialog->property("invalid").toBool());
+        // The physical Control label must remain distinct from Command on Mac.
+        click(modifiers[2]); click(modifiers[0]);
+        QCOMPARE(dialog->property("pending").toString(),QString("Ctrl+1"));
+        click(modifiers[0]); click(modifiers[2]);
+        QCOMPARE(dialog->property("pending").toString(),QString("Meta+1"));
+        if (!screenshots.isEmpty()) {
+            QTest::mouseMove(&window,QPoint(window.width()-4,window.height()-4));
+            QTest::qWait(100);
+            QVERIFY(window.grabWindow().save(screenshots + "/custom-shortcut-choose-keys.png"));
+        }
+        QVERIFY(QMetaObject::invokeMethod(dialog,"apply"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QTRY_VERIFY(!shortcut.recording);
+        QVERIFY(shortcut.recordingWindow.isNull());
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(), QString("Meta+1"));
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        click(chooser);
+        for (int i = 0; i < modifiers.size(); ++i)
+            if (modifiers[i]->property("checked").toBool() != (i == 3)) click(modifiers[i]);
+        QVERIFY(dialog->property("invalid").toBool());
+        QVERIFY(!apply->property("enabled").toBool());
+        QVERIFY(QMetaObject::invokeMethod(dialog,"reject"));
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(), QString("Meta+1"));
         QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
         QTRY_VERIFY(dialog->property("opened").toBool());
         auto reset = dialog->findChild<QObject*>("shortcutReset"); QVERIFY(reset);
@@ -1705,6 +1870,62 @@ Item {
         QCOMPARE(dialog->property("pending").toString(), QStringLiteral("Meta+'"));
         QVERIFY(QMetaObject::invokeMethod(dialog,"apply"));
         QCOMPARE(prefs->property("globalShortcutSequence").toString(), QStringLiteral("Meta+'"));
+    }
+    void shortcutChooserSupportsKeyboardAndSmallWindows() {
+        QQmlEngine engine;
+        const auto gui=qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick 2.12
+import StreamingPreferences 1.0
+import "."
+Item {
+    property var preferences: StreamingPreferences
+    ShortcutDialog { parent: root; objectName: "shortcutDialog" }
+    id: root; width: 480; height: 360
+})",QUrl::fromLocalFile(gui+"/shortcut-keyboard-test.qml"));
+        QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
+        auto prefs=root->property("preferences").value<QObject*>(); QVERIFY(prefs);
+        const auto originalSequence=prefs->property("globalShortcutSequence").toString();
+        auto dialog=root->findChild<QObject*>("shortcutDialog"); QVERIFY(dialog);
+        QQuickWindow window; window.resize(480,360);
+        qobject_cast<QQuickItem*>(root.data())->setParentItem(window.contentItem());
+        window.show();
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        auto chooser=dialog->findChild<QQuickItem*>("shortcutChooseKeys"); QVERIFY(chooser);
+        auto primary=dialog->findChild<QQuickItem*>("shortcutPrimaryKey"); QVERIFY(primary);
+        auto apply=dialog->findChild<QQuickItem*>("shortcutApply"); QVERIFY(apply);
+        auto scroll=dialog->findChild<QQuickItem*>("shortcutScroll"); QVERIFY(scroll);
+        const auto beforeNavigation=dialog->property("pending").toString();
+        for (int i=0; i<12 && !chooser->hasActiveFocus(); ++i) QTest::keyClick(&window,Qt::Key_Tab);
+        QVERIFY(chooser->hasActiveFocus());
+        QCOMPARE(dialog->property("pending").toString(),beforeNavigation);
+        QTest::keyClick(&window,Qt::Key_Space);
+        QVERIFY(dialog->property("choosing").toBool());
+        for (int i=0; i<12 && !primary->hasActiveFocus(); ++i) QTest::keyClick(&window,Qt::Key_Tab);
+        QVERIFY(primary->hasActiveFocus());
+        QTest::keyClick(&window,Qt::Key_Home);
+        QTest::keyClick(&window,Qt::Key_Down);
+        QCOMPARE(dialog->property("chosenKey").toInt(),int(Qt::Key_B));
+        QTest::qWait(100);
+        QVERIFY(dialog->property("height").toReal()<=360*0.82+1);
+        const auto keyTop=primary->mapToScene(QPointF()).y();
+        const auto keyBottom=primary->mapToScene(QPointF(0,primary->height())).y();
+        const auto scrollTop=scroll->mapToScene(QPointF()).y();
+        const auto scrollBottom=scroll->mapToScene(QPointF(0,scroll->height())).y();
+        QVERIFY(keyTop>=scrollTop && keyBottom<=scrollBottom+1);
+        const auto screenshots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!screenshots.isEmpty()) {
+            QDir().mkpath(screenshots);
+            QVERIFY(window.grabWindow().save(screenshots+"/custom-shortcut-small-window.png"));
+        }
+        for (int i=0; i<12 && !apply->hasActiveFocus(); ++i) QTest::keyClick(&window,Qt::Key_Tab);
+        QVERIFY(apply->hasActiveFocus());
+        const auto expected=dialog->property("pending").toString();
+        QTest::keyClick(&window,Qt::Key_Space);
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(),expected);
+        prefs->setProperty("globalShortcutSequence",originalSequence);
     }
     void commonLanguagesRetranslateSettings() {
         QTemporaryDir directory;

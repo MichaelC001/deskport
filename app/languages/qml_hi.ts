@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>शॉर्टकट दबाएँ। Control, Alt/Option या Meta/Command के साथ अक्षर, अंक, F1–F12, स्पेस या अपॉस्ट्रॉफ़ चुनें। Shift वैकल्पिक है।</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>शॉर्टकट दबाएँ या नीचे उसकी कुंजियाँ चुनें।</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>कुंजियाँ चुनें</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>शॉर्टकट रिकॉर्ड करें</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>कुछ शॉर्टकट डेस्कटॉप के लिए आरक्षित हैं। यदि रिकॉर्डिंग प्रतिक्रिया नहीं देती, तो नीचे कुंजियाँ चुनें। सहेजते समय डेस्कटॉप आपसे किसी टकराव को सुलझाने के लिए कह सकता है।</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>शॉर्टकट में Control, Alt/Option या Meta/Command होना चाहिए।</translation>
+        </message>
     </context>
 </TS>

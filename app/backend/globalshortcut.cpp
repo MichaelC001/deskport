@@ -1,8 +1,10 @@
 #include "globalshortcut.h"
+#include "shortcutrecorderinhibitor.h"
 #include <QGuiApplication>
 #include <QDebug>
 
-GlobalShortcut::GlobalShortcut(QObject* parent) : QObject(parent) { m_Clock.start(); }
+GlobalShortcut::GlobalShortcut(QObject* parent) : QObject(parent),
+    m_RecorderInhibitor(new ShortcutRecorderInhibitor) { m_Clock.start(); }
 GlobalShortcut::~GlobalShortcut() { if (m_Backend) m_Backend->stop(); }
 
 void GlobalShortcut::setAvailable(bool available) {
@@ -74,8 +76,14 @@ bool GlobalShortcut::setSequence(const QString& sequence) {
 void GlobalShortcut::setRecording(bool recording) {
     if (m_Recording == recording) return;
     m_Recording = recording;
+    m_RecorderInhibitor->setEnabled(recording);
+    if (!recording) m_RecorderInhibitor->setWindow(nullptr);
     if (recording) stop();
     else if (m_Started) start();
+}
+
+void GlobalShortcut::setRecordingWindow(QWindow* window) {
+    m_RecorderInhibitor->setWindow(window);
 }
 
 void GlobalShortcut::stop() {

@@ -3821,5 +3821,25 @@
             <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation>Nhấn tổ hợp phím. Dùng Control, Alt/Option hoặc Meta/Command cùng chữ cái, chữ số, F1–F12, dấu cách hoặc dấu nháy đơn. Có thể thêm Shift.</translation>
         </message>
+        <message>
+            <source>Press a shortcut, or choose its keys below.</source>
+            <translation>Nhấn tổ hợp phím hoặc chọn các phím bên dưới.</translation>
+        </message>
+        <message>
+            <source>Choose keys</source>
+            <translation>Chọn phím</translation>
+        </message>
+        <message>
+            <source>Record shortcut</source>
+            <translation>Ghi tổ hợp phím</translation>
+        </message>
+        <message>
+            <source>Some shortcuts are reserved by the desktop. If recording does not respond, choose the keys below. The desktop may ask you to resolve a conflict when you save.</source>
+            <translation>Một số phím tắt được môi trường màn hình dành riêng. Nếu việc ghi không phản hồi, hãy chọn các phím bên dưới. Khi lưu, môi trường màn hình có thể yêu cầu bạn giải quyết xung đột.</translation>
+        </message>
+        <message>
+            <source>A shortcut needs Control, Alt/Option or Meta/Command.</source>
+            <translation>Phím tắt cần có Control, Alt/Option hoặc Meta/Command.</translation>
+        </message>
     </context>
 </TS>
