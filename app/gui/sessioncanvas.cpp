@@ -149,7 +149,7 @@ void SessionCanvas::refresh() {
     const bool visible = isVisible() && window()->isVisible() && window()->windowState() != Qt::WindowMinimized;
     if (m_Surface) {
         m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), QSize(qRound(width()), qRound(height()))));
-        m_Surface->setVisible(visible && m_Presentation && m_Presentation->active());
+        m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
         m_Surface->setCursor(m_CursorHidden ? Qt::BlankCursor : Qt::ArrowCursor);
     }
     const bool focused = visible && ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));

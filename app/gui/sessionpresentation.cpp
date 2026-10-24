@@ -14,17 +14,20 @@ struct SessionPresentation::Impl {
     std::unique_ptr<FFmpegVideoDecoder> m_Decoder;
     quint64 m_Generation = 0, m_PresentationGeneration = 0;
     bool m_Ready = false, m_SdlInitialized = false;
+    bool m_HasFrames = false;
     int m_ResetAttempts = 0;
 };
 SessionPresentation::SessionPresentation(QObject* parent) : QObject(parent), m_Impl(std::make_unique<Impl>()) {}
 bool SessionPresentation::ready() const { return m_Impl->m_Ready; }
 bool SessionPresentation::active() const { return bool(m_Impl->m_Decoder); }
+bool SessionPresentation::hasFrames() const { return m_Impl->m_HasFrames; }
 void SessionPresentation::preedit(const QString& text) { m_Impl->m_Overlays.updateTextInput(text, 0, text.size()); }
 SessionPresentation::~SessionPresentation() { stop(); }
 void SessionPresentation::stop() {
     ++m_Impl->m_PresentationGeneration;
     if (m_Impl->m_Source) m_Impl->m_Source->stop();
     const bool wasActive = bool(m_Impl->m_Decoder);
+    m_Impl->m_HasFrames = false;
     m_Impl->m_Decoder.reset(); // joins decoding, pacing and rendering before surface teardown
     m_Impl->m_Source.reset();
     if (m_Impl->m_Probe) { SDL_DestroyWindow(m_Impl->m_Probe); m_Impl->m_Probe = nullptr; }
@@ -112,6 +115,11 @@ void SessionPresentation::frame(QByteArray bytes) {
     if (!m_Impl->m_Source) return;
     auto frame = EncodedVideoFrame::decode(bytes, LiGetMillis());
     if (!frame) { emit failed(tr("Invalid local video frame.")); return; }
+    if (frame->generation != m_Impl->m_Generation) return;
+    if (!m_Impl->m_HasFrames) {
+        // Keep connection controls visible until encoded video actually arrives.
+        m_Impl->m_HasFrames = true; emit activeChanged();
+    }
     m_Impl->m_Source->push(std::move(frame));
 }
 void SessionPresentation::status(const QJsonObject& value) {

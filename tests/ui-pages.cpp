@@ -57,6 +57,24 @@ public:
     QString status = "available", version = "0.4.6", notes = "Release notes", date = "2026-09-21", url = "https://github.com/keithxc/deskport/releases/tag/v0.4.6";
     Q_INVOKABLE void start() {}
 };
+// QML wiring fixture; the native renderer is exercised by --canvas-self-test.
+class TestCanvas : public QQuickItem {
+    Q_OBJECT
+    Q_PROPERTY(QObject* presentation MEMBER presentation)
+    Q_PROPERTY(bool frameReady MEMBER ready NOTIFY readyChanged)
+    Q_PROPERTY(bool textInputEnabled MEMBER textInput)
+    Q_PROPERTY(bool cursorHidden MEMBER cursorHidden)
+    Q_PROPERTY(bool captureRequested MEMBER capture)
+    Q_PROPERTY(bool relativePointer MEMBER relative)
+public:
+    using QQuickItem::QQuickItem;
+    QObject* presentation = nullptr;
+    bool ready = false, textInput = false, cursorHidden = false, capture = false, relative = false;
+signals:
+    void readyChanged();
+    void viewportChanged(QJsonObject state);
+    void input(QJsonObject event);
+};
 class TestSession : public QObject {
     Q_OBJECT
 public:
@@ -360,6 +378,7 @@ private slots:
         QVERIFY(restarted.start(directory.path()));
     }
     void initTestCase() {
+        qmlRegisterType<TestCanvas>("DeskPort.Canvas",1,0,"SessionCanvas");
         qmlRegisterType<TestComputers>("ComputerModel",1,0,"ComputerModel");
         qmlRegisterSingletonType<QObject>("AutoUpdateChecker",1,0,"AutoUpdateChecker",+[](QQmlEngine*,QJSEngine*) -> QObject* { return new TestUpdates; });
         qmlRegisterType<TestSession>("Session",1,0,"Session");
@@ -967,6 +986,13 @@ QtObject {
         fixture.setData(R"(import QtQuick 2.9
 QtObject {
  property bool busy: true
+ property bool canvasVisible: false
+ property var canvas: ({})
+ property var presentation: null
+ property int answer: -1
+ function updateCanvas(state) {}
+ function canvasInput(event) {}
+ function answerCanvasQuestion(choice) { answer=choice }
  property string selectedId: "device-a"
  property var selectedTraffic: ({received:100, sent:20})
  property int listRequests: 0
@@ -1037,6 +1063,21 @@ QtObject {
         }
         const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
         if (!shots.isEmpty()) { QTest::qWait(250); QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
+        // Connection progress and confirmation replace content in this same root.
+        const auto nativeRoot = window->winId();
+        manager->setProperty("canvasVisible", true);
+        QTRY_VERIFY(findVisual(window->contentItem(), "sessionCanvas", true));
+        QVERIFY(findVisual(window->contentItem(), "canvasCancelConnection", true));
+        QVariantMap question{{"id",1},{"title","Fixture host in use"},{"text","Continue?"},{"cancel","Cancel"},{"accept","Continue"}};
+        manager->setProperty("canvas", QVariantMap{{"question",question}});
+        QTRY_VERIFY(findVisual(window->contentItem(), "canvasConfirmConnection", true));
+        auto confirm = findVisual(window->contentItem(), "canvasConfirmConnection", true);
+        QVERIFY(QMetaObject::invokeMethod(confirm, "clicked"));
+        QCOMPARE(manager->property("answer").toInt(),1);
+        manager->setProperty("canvas", QVariantMap{});
+        manager->setProperty("canvasVisible", false);
+        QTRY_VERIFY(!findVisual(window->contentItem(), "sessionCanvas", true));
+        QCOMPARE(window->winId(),nativeRoot);
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }
     void navigationAndDeviceIdentity_data() {

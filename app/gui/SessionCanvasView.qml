@@ -32,6 +32,7 @@ Rectangle {
         }
         UiButton {
             anchors.horizontalCenter: parent.horizontalCenter
+            objectName: "canvasCancelConnection"
             text: qsTranslate("StreamSegue", "Cancel connection")
             onClicked: sessionManager.disconnectSession(sessionManager.selectedId)
         }
@@ -46,7 +47,7 @@ Rectangle {
         Row {
             spacing: 12
             UiButton { text: canvasPage.question.cancel || ""; onClicked: sessionManager.answerCanvasQuestion(0) }
-            UiButton { text: canvasPage.question.accept || ""; onClicked: sessionManager.answerCanvasQuestion(1) }
+            UiButton { objectName: "canvasConfirmConnection"; text: canvasPage.question.accept || ""; onClicked: sessionManager.answerCanvasQuestion(1) }
         }
     }
 }

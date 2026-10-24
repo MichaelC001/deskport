@@ -16,6 +16,7 @@ public:
     ~SessionPresentation() override;
     bool ready() const;
     bool active() const;
+    bool hasFrames() const;
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
     void status(const QJsonObject& status);

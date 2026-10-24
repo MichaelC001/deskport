@@ -9,11 +9,23 @@ A presentation generation and decoder stop/join barrier isolate switches and
 reconnects. The local transport rejects malformed frames and drops dependent
 frame chains on backpressure until a fresh key frame arrives.
 
-The owned-frame, queue, stale-generation and stop/wake fixtures pass on macOS.
-Full builds, native canvas/input acceptance and private test delivery are still
-pending. This implementation is not yet a qualified release candidate. No
-mobile source, shared display policy, network protocol or deployed service is
-changed by this work.
+The owned-frame, queue, stale-generation, stop/wake and focus-release fixtures
+pass on macOS, along with the existing IME and nine worker-control cases.
+The isolated native canvas exercise passes ten decoded presentation stages on
+macOS (VideoToolbox/Metal) and Windows (D3D11), preserving one native root across
+resize, switching and hide/recall. It found and fixed a destruction-time Qt
+callback. Linux compilation passes; native Wayland testing identified a mixed
+EGL/Vulkan remap deadlock, so the embedded shell now defaults to Vulkan too.
+
+Qt owns input focus and composition. Window-scoped Wayland relative-pointer and
+pointer-constraint protocols retain relative motion; other desktop backends use
+a captured, recentered pointer. Focus loss and queue overflow retain an explicit
+release boundary even if focus returns before the worker's next tick. Connection
+confirmation, performance/status overlays and minimize/fullscreen actions are
+routed through the shell. Final native Linux/input acceptance and private test
+delivery remain pending; compilation and isolated fixtures do not establish
+live-host, physical-input, latency, audio or HDR acceptance. No mobile source,
+shared display policy, network protocol or deployed service is changed.
 
 ## Single-row shortcut settings and desktop-reserved keys — 2026-10-24
 
