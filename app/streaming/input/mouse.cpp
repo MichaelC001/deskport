@@ -1,3 +1,4 @@
+#include "streaming/canvasbridge.h"
 #include "input.h"
 
 #include <Limelight.h>
@@ -8,7 +9,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
-    if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS)) return;
+    if (!(CanvasBridge::flags(m_Window) & SDL_WINDOW_INPUT_FOCUS)) return;
     if (event->which == SDL_TOUCH_MOUSEID) {
         // Ignore synthetic mouse events
         return;
@@ -138,7 +139,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // a) it is in the video region now
         // b) it just left the video region (to ensure the mouse is clamped to the video boundary)
         // c) a mouse button is still down from before the cursor left the video region (to allow smooth dragging)
-        Uint32 buttonState = SDL_GetMouseState(nullptr, nullptr);
+        Uint32 buttonState = CanvasBridge::owns(m_Window) ? CanvasBridge::mouseState(nullptr, nullptr) : SDL_GetMouseState(nullptr, nullptr);
         if (buttonState == 0) {
             if (m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
                 // Stop capturing the mouse now
@@ -180,7 +181,8 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 
     if (m_AbsoluteMouseMode) {
         int mouseX, mouseY;
-        SDL_GetMouseState(&mouseX, &mouseY);
+        if (CanvasBridge::owns(m_Window)) CanvasBridge::mouseState(&mouseX, &mouseY);
+        else SDL_GetMouseState(&mouseX, &mouseY);
         if (!isMouseInVideoRegion(mouseX, mouseY)) {
             // Ignore scroll events outside the video region
             return;
@@ -283,7 +285,7 @@ void SdlInputHandler::updatePointerRegionLock()
     // have full control over it and we don't touch it anymore.
     if (!m_PointerRegionLockToggledByUser) {
         // Lock the pointer in true full-screen mode and leave it unlocked in other modes
-        m_PointerRegionLockActive = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+        m_PointerRegionLockActive = (CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
     }
 
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.

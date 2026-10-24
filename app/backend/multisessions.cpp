@@ -2,6 +2,8 @@
 #include "peermanager.h"
 #include "sessiongraph.h"
 #include "gui/hostlayout.h"
+#include "gui/sessionpresentation.h"
+#include <QtEndian>
 #include <QCoreApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -21,6 +23,9 @@ MultiSessions::MultiSessions(PeerManager* peers, QByteArray certificate, QByteAr
     m_Server.setSocketOptions(QLocalServer::UserAccessOption);
     m_Server.listen(QStringLiteral("deskport-sessions-") + QUuid::createUuid().toString(QUuid::WithoutBraces));
     connect(&m_Server, &QLocalServer::newConnection, this, &MultiSessions::accept);
+    m_VideoServer.setSocketOptions(QLocalServer::UserAccessOption);
+    m_VideoServer.listen(QStringLiteral("deskport-video-") + QUuid::createUuid().toString(QUuid::WithoutBraces));
+    connect(&m_VideoServer, &QLocalServer::newConnection, this, &MultiSessions::acceptVideo);
 }
 MultiSessions::~MultiSessions() {
     // Normal application exit waits asynchronously for shutdown(). Children also
@@ -29,9 +34,34 @@ MultiSessions::~MultiSessions() {
         if (entry->process) entry->process->disconnect(this);
         if (entry->socket) { entry->socket->disconnect(this); entry->socket->abort(); }
         if (entry->reserved) SessionGraph::release(m_Identity, entry->token);
+        delete entry->presentation;
         delete entry;
     }
 }
+void MultiSessions::setCanvasWindow(QWindow* window) {
+    Q_ASSERT(!busy()); m_CanvasWindow = window;
+    if (window) connect(window, &QWindow::visibleChanged, this, [this](bool visible) { if (!visible) showDevices(); });
+    emit changed(); emit canvasChanged();
+}
+QObject* MultiSessions::presentation() const {
+    const auto entry = m_Entries.value(m_Wanted);
+    return entry ? entry->presentation : nullptr;
+}
+QVariantMap MultiSessions::canvas() const {
+    const auto entry = m_Entries.value(m_Wanted);
+    return entry ? entry->canvas : QVariantMap{};
+}
+void MultiSessions::updateCanvas(QJsonObject state) {
+    m_CanvasState = state;
+    if (auto entry = m_Entries.value(m_Wanted)) send(entry, {{"command","canvas-state"},{"state",state}});
+}
+void MultiSessions::canvasInput(QJsonObject event) {
+    const auto entry = m_Entries.value(m_Wanted);
+    if (!m_CanvasWindow || !m_CanvasWindow->isVisible() || !m_CanvasWindow->isActive() || !entry ||
+        !entry->exposed || !m_Hiding.isEmpty() || entry->state != "connected") return;
+    send(entry, {{"command","canvas-input"},{"epoch",double(m_Epoch)},{"event",event}});
+}
+
 bool MultiSessions::busy() const {
     for (auto entry : m_Entries) if (entry->process && entry->process->state() != QProcess::NotRunning) return true;
     return false;
@@ -78,6 +108,12 @@ void MultiSessions::open(QString id, QString name, QString address, QString app)
     entry->name = name; entry->address = address; entry->app = app;
     entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false; entry->exposed = false;
     entry->token = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    delete entry->presentation;
+    entry->presentation = new SessionPresentation(this);
+    connect(entry->presentation, &SessionPresentation::idrRequested, this, [this, entry] { send(entry, {{"command","video-idr"}}); });
+    connect(entry->presentation, &SessionPresentation::failed, this, [this, entry](QString error) {
+        entry->error = error; disconnectSession(entry->id);
+    });
     select(id);
     emit devicesRequested(); emit changed();
     QTimer::singleShot(0, this, [this, id] { launch(id); });
@@ -88,7 +124,7 @@ void MultiSessions::launch(const QString& id) {
     const auto peer = m_Peers->sessionPeer(id);
     const QSslCertificate cert(peer.value("clientCert").toString().toUtf8());
     const int port = peer.value("bindingPort").toInt();
-    if (!m_Server.isListening() || !peer.value("ready").toBool() || !peer.value("granted").toBool() || cert.isNull() || port < 1 || port > 65535 || entry->address.isEmpty()) {
+    if (!m_Server.isListening() || (canvasEnabled() && !m_VideoServer.isListening()) || !peer.value("ready").toBool() || !peer.value("granted").toBool() || cert.isNull() || port < 1 || port > 65535 || entry->address.isEmpty()) {
         ended(entry, tr("The device binding is unavailable. Refresh the device and try again.")); return;
     }
     entry->reserved = SessionGraph::reserve(m_Identity, {entry->token,entry->address,quint16(port),cert,m_Certificate,m_Key});
@@ -97,6 +133,7 @@ void MultiSessions::launch(const QString& id) {
     auto environment = QProcessEnvironment::systemEnvironment();
     environment.insert("DESKPORT_SESSION_ENDPOINT", m_Server.fullServerName());
     environment.insert("DESKPORT_SESSION_TOKEN", entry->token);
+    if (canvasEnabled()) environment.insert("DESKPORT_VIDEO_ENDPOINT", m_VideoServer.fullServerName());
     process->setProcessEnvironment(environment);
     process->setProgram(QCoreApplication::applicationFilePath());
     process->setArguments({"--session-worker", entry->id, entry->app});
@@ -140,8 +177,10 @@ void MultiSessions::accept() {
                     QJsonObject peer;
                     for (const auto& key : {"hostId","name","hostPort","hostCert","os"}) peer[key]=source.value(key);
                     peer["address"]=(*owner)->address;
-                    send(*owner,{{"command","initialize"},{"peer",peer},{"shortcutEnabled",m_ShortcutEnabled},
-                                 {"shortcutSequence",m_ShortcutSequence}});
+                    QJsonObject initialize {{"command","initialize"},{"peer",peer},{"shortcutEnabled",m_ShortcutEnabled},
+                                            {"shortcutSequence",m_ShortcutSequence}};
+                    if (canvasEnabled()) initialize["canvas"] = m_CanvasState;
+                    send(*owner, initialize);
                     if ((*owner)->state == "stopping") send(*owner,{{"command","disconnect"}});
                     present();
                 } else if ((*owner)->socket == socket) receive(*owner, message);
@@ -155,8 +194,70 @@ void MultiSessions::accept() {
 void MultiSessions::send(Entry* entry, const QJsonObject& message) {
     if (entry && entry->socket && entry->socket->bytesToWrite() < 16384) entry->socket->write(frame(message));
 }
+void MultiSessions::acceptVideo() {
+    constexpr int MaxPacket = EncodedVideoFrame::MaxBytes + EncodedVideoFrame::MaxSegments * 5 + 64;
+    while (auto socket = m_VideoServer.nextPendingConnection()) {
+        socket->setReadBufferSize(MaxPacket + 4);
+        struct State { QByteArray bytes; Entry* owner = nullptr; bool configured = false; };
+        auto state = std::make_shared<State>();
+        connect(socket, &QLocalSocket::readyRead, this, [this, socket, state] {
+            state->bytes += socket->readAll();
+            if (!state->owner) {
+                const auto end = state->bytes.indexOf('\n');
+                if (end < 0) { if (state->bytes.size() > 256) socket->abort(); return; }
+                if (end > 256) { socket->abort(); return; }
+                const auto token = QJsonDocument::fromJson(state->bytes.left(end)).object().value("token").toString();
+                state->bytes.remove(0, end + 1);
+                for (auto entry : m_Entries) if (entry->token == token && entry->presentation &&
+                    entry->process && entry->process->state() != QProcess::NotRunning) {
+                    state->owner = entry;
+                    if (entry->videoSocket) entry->videoSocket->abort();
+                    entry->videoSocket = socket;
+                    break;
+                }
+                if (!state->owner) { socket->abort(); return; }
+            }
+            if (state->owner->videoSocket != socket) { socket->abort(); return; }
+            while (state->bytes.size() >= 4) {
+                const quint32 length = qFromBigEndian<quint32>(state->bytes.constData());
+                if (!length || length > MaxPacket || (!state->configured && length > 16384)) { socket->abort(); return; }
+                if (quint64(state->bytes.size()) < length + 4ULL) return;
+                const auto packet = state->bytes.mid(4, length);
+                state->bytes.remove(0, length + 4);
+                if (!state->configured) {
+                    const auto config = QJsonDocument::fromJson(packet).object();
+                    const bool ok = state->owner->presentation->configure(config);
+                    socket->write(frame(ok ? state->owner->presentation->capabilities() : QJsonObject{{"ok",false}}));
+                    socket->flush();
+                    if (!ok) { socket->disconnectFromServer(); return; }
+                    state->configured = true;
+                } else state->owner->presentation->frame(packet);
+            }
+        });
+        connect(socket, &QLocalSocket::disconnected, socket, &QObject::deleteLater);
+        QTimer::singleShot(5000, socket, [socket, state] { if (!state->configured) socket->abort(); });
+    }
+}
 void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     const auto type = message.value("type").toString();
+    if (type == "canvas") {
+        const auto value = message.value("value").toObject();
+        entry->canvas = {{"frameKey",value.value("frameKey").toString().left(64)},
+                         {"label",value.value("label").toString().left(1024)},
+                         {"waiting",value.value("waiting").toBool()},
+                         {"grab",value.value("grab").toBool()}, {"cursorHidden",value.value("cursorHidden").toBool()}};
+        if (m_Wanted == entry->id) emit canvasChanged();
+        return;
+    }
+    if (type == "canvas-fullscreen") {
+        if (m_CanvasWindow && m_Wanted == entry->id && entry->exposed && m_Hiding.isEmpty()) {
+            if (m_CanvasWindow->windowState() == Qt::WindowFullScreen) {
+                if (m_CanvasRestoreState == Qt::WindowMaximized) m_CanvasWindow->showMaximized();
+                else m_CanvasWindow->showNormal();
+            } else { m_CanvasRestoreState = m_CanvasWindow->windowState(); m_CanvasWindow->showFullScreen(); }
+        }
+        return;
+    }
     if (type == "shortcut") {
         if (m_ShortcutEnabled && !m_Shutdown && entry->exposed &&
             (m_Wanted == entry->id || m_Visible == entry->id)) emit shortcutRequested();
@@ -208,6 +309,7 @@ void MultiSessions::select(QString id) {
     const auto selected=m_Entries.value(id);
     if (selected->state != "starting" && selected->state != "connected") { emit devicesRequested(); return; }
     m_Selected = id; m_Wanted = id;
+    emit canvasChanged();
     ++m_Epoch;
     // Only a viewer that may be presenting has to release input first; waiting
     // on hidden background viewers would add their latency to every switch.
@@ -271,7 +373,15 @@ void MultiSessions::present(bool raise) {
     auto entry = m_Entries.value(m_Wanted);
     if (entry && entry->socket && entry->state != "stopping" && entry->state != "error") {
         entry->exposed = true;
-        QJsonObject show {{"command","show"},{"raise",raise}};
+        QJsonObject show {{"command","show"},{"raise",raise},{"epoch",double(m_Epoch)}};
+        if (m_CanvasWindow) {
+            send(entry, {{"command","canvas-state"},{"state",m_CanvasState}});
+            if (raise) {
+                if (m_CanvasWindow->windowState() == Qt::WindowMinimized) m_CanvasWindow->showNormal();
+                else m_CanvasWindow->show();
+                m_CanvasWindow->raise(); m_CanvasWindow->requestActivate();
+            }
+        }
 #ifdef Q_OS_WIN
         // Windows lets only the process that received the tray click take the
         // foreground; without this the worker's viewer opens behind others.
@@ -291,6 +401,7 @@ void MultiSessions::showDevices() {
     // Repeated Devices requests (tray, top bar and worker) are idempotent.
     if (m_Wanted.isEmpty() && !exposed) return;
     m_Wanted.clear(); ++m_Epoch;
+    emit canvasChanged();
     for (auto entry : m_Entries) if (entry->socket && entry->exposed) {
         hide(entry);
     }
@@ -341,7 +452,7 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
     const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
     if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }
-    if (m_Wanted==entry->id) { m_Wanted.clear(); emit devicesRequested(); }
+    if (m_Wanted==entry->id) { m_Wanted.clear(); emit canvasChanged(); emit devicesRequested(); }
     present(awaited); emit changed();
 }
 

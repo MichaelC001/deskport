@@ -12,6 +12,7 @@ import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
+    readonly property bool canvasVisible: typeof sessionManager !== "undefined" && sessionManager.canvasVisible
     readonly property bool navigationVisible: !stackView.currentItem || stackView.currentItem.hidesNavigation !== true
 
     // Set by SettingsView to force the back operation to pop all
@@ -217,6 +218,7 @@ ApplicationWindow {
 
     StackView {
         id: stackView
+        visible: !window.canvasVisible
         initialItem: initialView
         anchors.fill: parent
         anchors.leftMargin: navigationVisible ? 16 : 0
@@ -377,6 +379,14 @@ ApplicationWindow {
             if (explicitAdd && addDeviceDialog.visible) addDeviceDialog.close()
         }
     }
+    Loader {
+        anchors.fill: parent
+        anchors.topMargin: topBar.visible ? topBar.height : 0
+        active: window.canvasVisible
+        visible: active
+        source: "SessionCanvasView.qml"
+    }
+
     BindingApproval {
         manager: peerManager
         appWindow: window

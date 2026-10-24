@@ -614,8 +614,8 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+    bool overlayEnabled = overlayManager().isOverlayEnabled(type);
     if (newSurface == nullptr && overlayEnabled) {
         // There's no updated surface and the overlay is enabled, so just leave the old surface alone.
         return;

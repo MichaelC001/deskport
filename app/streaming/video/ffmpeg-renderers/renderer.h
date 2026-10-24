@@ -124,6 +124,10 @@ private:
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
+    void setOverlayManager(Overlay::OverlayManager* overlays) { m_Overlays = overlays; }
+    Overlay::OverlayManager& overlayManager() { SDL_assert(m_Overlays); return *m_Overlays; }
+    virtual bool supportsEmbeddedWindow() const { return false; }
+
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
@@ -315,4 +319,7 @@ public:
 
     virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
+private:
+    Overlay::OverlayManager* m_Overlays = nullptr;
+
 };

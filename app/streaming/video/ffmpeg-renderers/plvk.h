@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer.h"
+#include <memory>
 
 #ifdef Q_OS_WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -9,12 +10,23 @@
 #include <libplacebo/log.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
+#ifdef Q_OS_LINUX
+#include <QVulkanInstance>
+#include <QWindow>
+#endif
 
 class PlVkRenderer : public IFFmpegRenderer {
 public:
     PlVkRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~PlVkRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
+    bool supportsEmbeddedWindow() const override {
+#ifdef Q_OS_LINUX
+        return true;
+#else
+        return false;
+#endif
+    }
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
@@ -52,6 +64,11 @@ private:
 
     // SDL state
     SDL_Window* m_Window = nullptr;
+#ifdef Q_OS_LINUX
+    std::unique_ptr<QVulkanInstance> m_QtInstance;
+    QWindow* m_PresentationWindow = nullptr;
+    QSize m_PresentationSize;
+#endif
 
     // The libplacebo rendering state
     pl_log m_Log = nullptr;

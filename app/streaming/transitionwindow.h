@@ -5,6 +5,7 @@
 #include <QImage>
 class QPainter;
 #include "windowactivation.h"
+#include "canvasbridge.h"
 #include "waylandloading.h"
 #include "shortcutstate.h"
 
@@ -22,7 +23,7 @@ constexpr int DeskPortRestoreViewer = 113;
 // Shortcut callbacks retain focus, so they do not use the tray's focus grace.
 constexpr int DeskPortShortcutToggleWindow = 114;
 inline bool desktopWindowVisible(SDL_Window* window) {
-    return window && !(SDL_GetWindowFlags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
+    return window && !(CanvasBridge::flags(window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED));
 }
 inline void recallDesktopWindow(SDL_Window* window, bool userRequested = false) {
     WindowActivation::recall(window, userRequested);
@@ -35,7 +36,7 @@ inline void noteDesktopWindowFocusLost() { desktopWindowFocusLostAt() = SDL_GetT
 // visible window behind other windows is brought forward instead.
 inline bool desktopWindowInFront(SDL_Window* window, bool trayClick = true) {
     if (!desktopWindowVisible(window)) return false;
-    if (SDL_GetWindowFlags(window) & SDL_WINDOW_INPUT_FOCUS) return true;
+    if (CanvasBridge::flags(window) & SDL_WINDOW_INPUT_FOCUS) return true;
     const Uint32 lost = desktopWindowFocusLostAt();
     return trayClick && lost && SDL_GetTicks() - lost < 600;
 }
@@ -53,7 +54,7 @@ public:
     SDL_Window* window() const { return m_Window; }
     bool cancelled() const { return m_Cancelled; }
     SDL_Window* takeWindow();
-    bool rendering() const { return bool(m_Renderer) || (m_Wayland && m_Wayland->valid()); }
+    bool rendering() const { return CanvasBridge::owns(m_Window) || bool(m_Renderer) || (m_Wayland && m_Wayland->valid()); }
     const QImage& frame() const { return m_Frame; }
     const QImage& backdrop() const { return m_Backdrop; }
     const QString& label() const { return m_Label; }

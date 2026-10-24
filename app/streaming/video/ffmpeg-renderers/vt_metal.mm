@@ -1,3 +1,4 @@
+#include <QWindow>
 // Nasty hack to avoid conflict between AVFoundation and
 // libavutil both defining AVMediaType
 #define AVMediaType AVMediaType_FFmpeg
@@ -109,6 +110,26 @@ struct Vertex
 
 #define MAX_VIDEO_PLANES 3
 
+// This view is a child of the Qt-owned canvas, never a separate NSWindow.
+@interface DeskPortMetalCanvasView : NSView
+@end
+@implementation DeskPortMetalCanvasView
+- (instancetype)initWithFrame:(NSRect)frame {
+    self = [super initWithFrame:frame];
+    if (self) { self.wantsLayer = YES; self.layer = [CAMetalLayer layer]; }
+    return self;
+}
+- (void)updateDrawableSize {
+    CAMetalLayer* layer = (CAMetalLayer*)self.layer;
+    const NSSize pixels = [self convertSizeToBacking:self.bounds.size];
+    layer.contentsScale = self.window.backingScaleFactor;
+    layer.drawableSize = CGSizeMake(MAX(1, pixels.width), MAX(1, pixels.height));
+}
+- (void)setFrameSize:(NSSize)size { [super setFrameSize:size]; [self updateDrawableSize]; }
+- (void)viewDidChangeBackingProperties { [super viewDidChangeBackingProperties]; [self updateDrawableSize]; }
+- (NSView*)hitTest:(NSPoint)point { Q_UNUSED(point); return nil; }
+@end
+
 class VTMetalRenderer : public VTBaseRenderer
 {
 public:
@@ -195,8 +216,10 @@ public:
             CFRelease(m_TextureCache);
         }
 
-        if (m_MetalView != nullptr) {
-            SDL_Metal_DestroyView(m_MetalView);
+        if (m_MetalView != nullptr) SDL_Metal_DestroyView(m_MetalView);
+        if (m_QtMetalView) {
+            [m_QtMetalView removeFromSuperview];
+            [m_QtMetalView release];
         }
     }}
 
@@ -242,7 +265,10 @@ public:
     bool updateVideoRegionSizeForFrame(AVFrame* frame)
     {
         int drawableWidth, drawableHeight;
-        SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+        if (m_QtMetalView) {
+            drawableWidth = m_MetalLayer.drawableSize.width;
+            drawableHeight = m_MetalLayer.drawableSize.height;
+        } else SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
 
         // Check if anything has changed since the last vertex buffer upload
         if (m_VideoVertexBuffer &&
@@ -690,6 +716,8 @@ public:
         return nullptr;
     }
 
+    bool supportsEmbeddedWindow() const override { return true; }
+
     virtual bool initialize(PDECODER_PARAMETERS params) override
     { @autoreleasepool {
         int err;
@@ -721,15 +749,18 @@ public:
             return false;
         }
 
-        m_MetalView = SDL_Metal_CreateView(m_Window);
-        if (!m_MetalView) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_Metal_CreateView() failed: %s",
-                         SDL_GetError());
-            return false;
+        if (params->presentationWindow) {
+            NSView* parent = (__bridge NSView*)reinterpret_cast<void*>(params->presentationWindow->winId());
+            m_QtMetalView = [[DeskPortMetalCanvasView alloc] initWithFrame:parent.bounds];
+            m_QtMetalView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+            [parent addSubview:m_QtMetalView];
+            [m_QtMetalView updateDrawableSize];
+            m_MetalLayer = (CAMetalLayer*)m_QtMetalView.layer;
+        } else {
+            m_MetalView = SDL_Metal_CreateView(m_Window);
+            if (!m_MetalView) return false;
+            m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
         }
-
-        m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
 
         // Choose a device
         m_MetalLayer.device = device;
@@ -780,8 +811,8 @@ public:
 
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     { @autoreleasepool {
-        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-        bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+        SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+        bool overlayEnabled = overlayManager().isOverlayEnabled(type);
         if (newSurface == nullptr && overlayEnabled) {
             // The overlay is enabled and there is no new surface. Leave the old texture alone.
             return;
@@ -930,6 +961,7 @@ private:
     id<CAMetalDrawable> m_NextDrawable;
     id<MTLTexture> m_SwMappingTextures[MAX_VIDEO_PLANES];
     SDL_MetalView m_MetalView;
+    DeskPortMetalCanvasView* m_QtMetalView = nil;
     int m_LastColorSpace;
     bool m_LastFullRange;
     int m_LastFrameWidth;

@@ -1,3 +1,20 @@
+## In-process desktop canvas — 2026-10-25 (in progress)
+
+The desktop shell retains its original top-level window while switching between
+Devices, connection progress and the selected remote desktop. Network workers
+retain isolated Moonlight connection state; encoded video units cross a bounded,
+authenticated local channel. Decoding and GPU presentation move into the shell.
+D3D11, Metal and Qt-owned Vulkan surfaces reuse the existing media renderers.
+A presentation generation and decoder stop/join barrier isolate switches and
+reconnects. The local transport rejects malformed frames and drops dependent
+frame chains on backpressure until a fresh key frame arrives.
+
+The owned-frame, queue, stale-generation and stop/wake fixtures pass on macOS.
+Full builds, native canvas/input acceptance and private test delivery are still
+pending. This implementation is not yet a qualified release candidate. No
+mobile source, shared display policy, network protocol or deployed service is
+changed by this work.
+
 ## Single-row shortcut settings and desktop-reserved keys — 2026-10-24
 
 Reason: the shortcut setting occupied two rows, and compositor-owned combinations

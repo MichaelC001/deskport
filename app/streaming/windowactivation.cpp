@@ -1,4 +1,5 @@
 #include "windowactivation.h"
+#include "canvasbridge.h"
 #include <QMutex>
 #include <QGuiApplication>
 #include <QWindow>
@@ -64,6 +65,7 @@ void WindowActivation::recall(SDL_Window* window, bool userRequested) {
         s_Shortcut = false;
     }
     if (!window) return;
+    if (CanvasBridge::owns(window)) { CanvasBridge::requested(true); return; }
     const auto flags = SDL_GetWindowFlags(window);
 #if defined(HAS_WAYLAND)
     // A portal gesture without a token cannot activate an existing background

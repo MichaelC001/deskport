@@ -208,6 +208,7 @@ signals:
     // Keyboard focus of the viewer window, reported from the SDL thread.
     void viewerFocusChanged(bool focused);
     void presentationShown();
+    void canvasFullscreenRequested();
 
 private:
     std::atomic<bool> m_InputDispatching{false};

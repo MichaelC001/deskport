@@ -801,8 +801,8 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     HRESULT hr;
 
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+    bool overlayEnabled = overlayManager().isOverlayEnabled(type);
     if (newSurface == nullptr && overlayEnabled) {
         // The overlay is enabled and there is no new surface. Leave the old texture alone.
         return;
@@ -919,7 +919,7 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
 {
     HRESULT hr;
 
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayManager().isOverlayEnabled(type)) {
         return;
     }
 

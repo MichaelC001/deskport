@@ -3,6 +3,14 @@
 #include <Limelight.h>
 #include <SDL.h>
 #include "settings/streamingpreferences.h"
+#include <functional>
+class QWindow;
+
+struct VideoPresentationCallbacks {
+    std::function<void()> frameReady;
+    std::function<void()> firstFrame;
+    std::function<void()> resetRequired;
+};
 
 #define SDL_CODE_FRAME_READY 0
 
@@ -44,6 +52,9 @@ typedef struct _DECODER_PARAMETERS {
     bool enableVsync;
     bool enableFramePacing;
     bool testOnly;
+    // A child of the shell's persistent window. Null keeps the CLI path.
+    QWindow* presentationWindow = nullptr;
+    VideoPresentationCallbacks presentationCallbacks;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
 #define WINDOW_STATE_CHANGE_SIZE 0x01

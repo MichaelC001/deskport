@@ -35,7 +35,7 @@ extern "C" {
 // V-sync happens.
 #define TIMER_SLACK_MS 3
 
-Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
+Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats, VideoPresentationCallbacks callbacks) :
     m_RenderThread(nullptr),
     m_VsyncThread(nullptr),
     m_Stopping(false),
@@ -43,7 +43,8 @@ Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_VsyncRenderer(renderer),
     m_MaxVideoFps(0),
     m_DisplayFps(0),
-    m_VideoStats(videoStats)
+    m_VideoStats(videoStats),
+    m_Callbacks(std::move(callbacks))
 {
 
 }
@@ -192,6 +193,9 @@ void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
 
     if (m_RenderThread != nullptr) {
         m_RenderQueueNotEmpty.wakeOne();
+    }
+    else if (m_Callbacks.frameReady) {
+        m_Callbacks.frameReady();
     }
     else {
         SDL_Event event;
@@ -408,7 +412,7 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
 
     bool snapshotRequested = false;
-    if (!m_SnapshotBusy && StreamSnapshot::due(beforeRender, &snapshotRequested)) captureSnapshot(frame, snapshotRequested);
+    if (!m_Callbacks.firstFrame && !m_SnapshotBusy && StreamSnapshot::due(beforeRender, &snapshotRequested)) captureSnapshot(frame, snapshotRequested);
 
     // Render it
     const int submittedWidth = frame->width, submittedHeight = frame->height;
@@ -417,6 +421,7 @@ void Pacer::renderFrame(AVFrame* frame)
         // Renderer submission is observable here; physical scanout is not.
         deskportResizeStage("first-render-submit", submittedWidth, submittedHeight);
         m_FirstPresentation = false;
+        if (m_Callbacks.firstFrame) m_Callbacks.firstFrame();
     }
     Uint32 afterRender = SDL_GetTicks();
 

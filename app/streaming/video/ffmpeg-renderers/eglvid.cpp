@@ -161,7 +161,7 @@ void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     // notifyOverlayUpdated() is called on an arbitrary thread, which may
     // not be have the OpenGL context current on it.
 
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayManager().isOverlayEnabled(type)) {
         // If the overlay has been disabled, mark the data as invalid/stale.
         SDL_AtomicSet(&m_OverlayHasValidData[type], 0);
         return;
@@ -189,12 +189,12 @@ AVPixelFormat EGLRenderer::getPreferredPixelFormat(int videoFormat)
 void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, int viewportHeight)
 {
     // Do nothing if this overlay is disabled
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayManager().isOverlayEnabled(type)) {
         return;
     }
 
     // Upload a new overlay texture if needed
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
     if (newSurface != nullptr) {
         SDL_assert(!SDL_MUSTLOCK(newSurface));
         SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);

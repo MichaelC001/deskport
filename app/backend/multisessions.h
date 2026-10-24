@@ -9,12 +9,14 @@
 #include <QMap>
 #include <QSet>
 #include <functional>
+#include <QWindow>
 class PeerManager;
+class SessionPresentation;
 class Session;
 class ComputerManager;
 
 // The shell owns presentation and process lifetime; a worker owns exactly one
-// legacy media context. No network/decoder operation runs in the shell process.
+// legacy network context. Decoding and rendering belong to the shell process.
 class MultiSessions : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantList sessions READ sessions NOTIFY changed)
@@ -22,6 +24,10 @@ class MultiSessions : public QObject {
     Q_PROPERTY(QString selectedId READ selectedId NOTIFY changed)
     Q_PROPERTY(QVariantMap selectedTraffic READ selectedTraffic NOTIFY trafficChanged)
     Q_PROPERTY(bool busy READ busy NOTIFY changed)
+    Q_PROPERTY(bool canvasEnabled READ canvasEnabled NOTIFY changed)
+    Q_PROPERTY(bool canvasVisible READ canvasVisible NOTIFY changed)
+    Q_PROPERTY(QVariantMap canvas READ canvas NOTIFY canvasChanged)
+    Q_PROPERTY(QObject* presentation READ presentation NOTIFY canvasChanged)
     // Sessions whose requested desktop enlargement is capped by the host.
     Q_PROPERTY(QStringList tuningLimited READ tuningLimited NOTIFY changed)
 public:
@@ -31,6 +37,13 @@ public:
     QVariantMap states() const;
     QString selectedId() const { return m_Selected; }
     bool busy() const;
+    void setCanvasWindow(QWindow* window);
+    bool canvasEnabled() const { return !m_CanvasWindow.isNull(); }
+    bool canvasVisible() const { return canvasEnabled() && !m_Wanted.isEmpty(); }
+    QVariantMap canvas() const;
+    QObject* presentation() const;
+    Q_INVOKABLE void updateCanvas(QJsonObject state);
+    Q_INVOKABLE void canvasInput(QJsonObject event);
     QVariantMap selectedTraffic() const;
     QStringList tuningLimited() const;
     void setDiagnosticsEnabled(bool enabled);
@@ -60,6 +73,7 @@ public:
     void suspend();
 signals:
     void changed();
+    void canvasChanged();
     void trafficChanged();
     // Cumulative received + sent bytes of one live session, and its end.
     void sessionTraffic(QString id, double total);
@@ -71,8 +85,9 @@ private:
     struct Entry {
         QString id, name, address, app, token, state = QStringLiteral("starting"), error;
         QProcess* process = nullptr;
-        QPointer<QLocalSocket> socket;
-        QVariantMap traffic;
+        QPointer<QLocalSocket> socket, videoSocket;
+        SessionPresentation* presentation = nullptr;
+        QVariantMap traffic, canvas;
         bool reserved = false;
         bool fullscreenPending = false;
         bool tuningLimited = false;
@@ -90,15 +105,19 @@ private:
     QStringList ordered() const;
     void launch(const QString& id);
     void accept();
+    void acceptVideo();
     void send(Entry* entry, const QJsonObject& message);
     void receive(Entry* entry, const QJsonObject& message);
     // Raising is for user actions; background recovery presents quietly.
     void present(bool raise = true);
     void hide(Entry* entry);
     void ended(Entry* entry, const QString& error);
+    QPointer<QWindow> m_CanvasWindow;
+    Qt::WindowState m_CanvasRestoreState = Qt::WindowNoState;
+    QJsonObject m_CanvasState {{"width",1120},{"height",704},{"scale",1.0}};
     QByteArray m_Certificate, m_Key;
     PeerManager* m_Peers;
-    QLocalServer m_Server;
+    QLocalServer m_Server, m_VideoServer;
     QMap<QString, Entry*> m_Entries;
     QStringList m_Order;
     QString m_Selected, m_Wanted, m_Visible, m_Identity;

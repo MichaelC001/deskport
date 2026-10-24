@@ -27,7 +27,7 @@ def main():
             "QT += core gui", "CONFIG += console c++17 link_pkgconfig", "CONFIG -= app_bundle",
             "DEFINES += HAS_X11", "PKGCONFIG += sdl2 x11", "TARGET = window-activation-x11",
             f'INCLUDEPATH += "{ROOT}/app"',
-            f'SOURCES += "{ROOT}/tests/window-activation-x11.cpp" "{ROOT}/app/streaming/windowactivation.cpp"',
+            f'SOURCES += "{ROOT}/tests/window-activation-x11.cpp" "{ROOT}/app/streaming/windowactivation.cpp" "{ROOT}/app/streaming/canvasbridge.cpp"',
         ])
         (work / "test.pro").write_text(project + "\n")
         qmake = os.environ.get("DESKPORT_QMAKE", "qmake")

@@ -1,3 +1,8 @@
+SOURCES += gui/sessionpresentation.cpp streaming/video/remotedecoder.cpp
+HEADERS += gui/sessionpresentation.h streaming/video/remotedecoder.h
+SOURCES += gui/sessioncanvas.cpp streaming/canvasbridge.cpp
+HEADERS += gui/sessioncanvas.h streaming/canvasbridge.h
+HEADERS += streaming/video/framesource.h streaming/video/encodedframe.h streaming/video/queuedframesource.h
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp backend/trafficbudget.cpp
 SOURCES += backend/globalshortcut.cpp
 HEADERS += backend/globalshortcut.h backend/shortcutbinding.h streaming/shortcutstate.h

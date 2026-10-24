@@ -1,4 +1,5 @@
 #include "sessionworker.h"
+#include "streaming/canvasbridge.h"
 #include "diagnostics.h"
 #include "computermanager.h"
 #include "cli/startstream.h"
@@ -24,6 +25,13 @@ int SessionWorker::run() {
         }
     });
     traffic.start(1000);
+    QTimer canvas; QJsonObject lastCanvas;
+    connect(&canvas, &QTimer::timeout, this, [this, &lastCanvas] {
+        if (!CanvasBridge::enabled()) return;
+        const auto value = CanvasBridge::description();
+        if (value != lastCanvas) { send({{"type","canvas"},{"value",value}}); lastCanvas = value; }
+    });
+    canvas.start(20);
     connect(&m_Socket,&QLocalSocket::connected,this,[this] {
         send({{"token",m_Token}});
 
@@ -51,6 +59,7 @@ void SessionWorker::attach(Session* session) {
     m_Session=session; session->setViewerRequested(m_Visible);
     if (m_PendingTuning > 0) { session->applyDesktopAdjustment(m_PendingTuning); m_PendingTuning = 0; }
     if (m_Stopping) session->cancelRecovery();
+    connect(session, &Session::canvasFullscreenRequested, this, [this] { send({{"type","canvas-fullscreen"}}); });
     send({{"type","connecting"}});
     connect(session,&Session::connectionStarted,this,[this] { send({{"type","connected"}}); });
     connect(session,&Session::viewerReadyChanged,this,[this,session] {
@@ -76,6 +85,7 @@ void SessionWorker::command(const QJsonObject& message) {
     if (action=="initialize" && !m_Computers && !m_Stopping) {
         ShortcutState::configure(message.value("shortcutEnabled").toBool(),
             message.value("shortcutSequence").toString(ShortcutBinding::defaultSequence()));
+        if (message.value("canvas").isObject()) CanvasBridge::configure(message.value("canvas").toObject());
         m_Computers = new ComputerManager(StreamingPreferences::get(), true, m_Host);
         const auto peer=message.value("peer").toObject();
         if (!peer.isEmpty() && (peer.value("hostId").toString().compare(m_Host,Qt::CaseInsensitive) != 0 ||
@@ -85,6 +95,13 @@ void SessionWorker::command(const QJsonObject& message) {
         connect(launcher,&CliStartStream::Launcher::failed,this,[this](QString error) { finish(error); });
         connect(launcher,&CliStartStream::Launcher::appQuitRequired,this,[this](QString) { finish(tr("Another application is running on that server.")); });
         launcher->execute(m_Computers);
+    } else if (action=="canvas-state" && CanvasBridge::enabled()) {
+        CanvasBridge::state(message.value("state").toObject());
+    } else if (action=="canvas-input" && CanvasBridge::enabled()) {
+        if (m_Visible && quint64(message.value("epoch").toDouble()) == m_InputEpoch)
+            CanvasBridge::input(message.value("event").toObject());
+    } else if (action=="video-idr" && m_Session && m_Session->inputDispatching()) {
+        LiRequestIdrFrame();
     } else if (action=="shortcut" && message.value("enabled").isBool()) {
         ShortcutState::configure(message.value("enabled").toBool(),
             message.value("sequence").toString(ShortcutBinding::defaultSequence()));
@@ -93,7 +110,9 @@ void SessionWorker::command(const QJsonObject& message) {
     } else if (action=="show") {
         // Only a user's request raises the window; recovery restores state quietly.
         const bool raise=message.value("raise").toBool(true);
-        m_Visible=true;
+        m_Visible=true; m_InputEpoch = quint64(message.value("epoch").toDouble());
+        CanvasBridge::requested(true);
+        CanvasBridge::inputEnabled(m_Session && m_Session->inputDispatching());
         // A quiet recovery can arrive while an explicit recall is queued on
         // the SDL thread. It must not cancel that user's pending activation.
         if (raise) WindowActivation::setPending(message.value("activationToken").toString().toUtf8(),
@@ -101,6 +120,7 @@ void SessionWorker::command(const QJsonObject& message) {
         if(m_Session) { m_Session->setViewerRequested(true); if(m_Session->viewerReady()) postEvent(raise ? DeskPortRecallWindow : DeskPortRestoreViewer); }
     } else if(action=="hide") {
         WindowActivation::setPending({});
+        CanvasBridge::requested(false);
         m_Visible=false; m_HideEpoch=quint64(message.value("epoch").toDouble());
         if(m_Session) { m_Session->setViewerRequested(false); postEvent(DeskPortHideWindow); }
         if(!m_Session || !m_Session->inputDispatching()) send({{"type","hidden"},{"epoch",double(m_HideEpoch)}});

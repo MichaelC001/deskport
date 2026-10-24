@@ -359,8 +359,8 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     VdpStatus status;
 
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+    bool overlayEnabled = overlayManager().isOverlayEnabled(type);
     if (newSurface == nullptr && overlayEnabled) {
         // There's no updated surface and the overlay is enabled, so just leave the old surface alone.
         return;
@@ -476,7 +476,7 @@ void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::Overlay
     VdpStatus status;
 
     // Don't even bother locking the mutex if the overlay is disabled
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayManager().isOverlayEnabled(type)) {
         return;
     }
 

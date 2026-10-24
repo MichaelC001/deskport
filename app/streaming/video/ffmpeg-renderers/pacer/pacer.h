@@ -27,7 +27,8 @@ public:
 class Pacer
 {
 public:
-    Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats);
+    Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats,
+          VideoPresentationCallbacks callbacks = {});
 
     ~Pacer();
 
@@ -78,4 +79,5 @@ private:
     int m_DisplayFps;
     PVIDEO_STATS m_VideoStats;
     int m_RendererAttributes;
+    VideoPresentationCallbacks m_Callbacks;
 };

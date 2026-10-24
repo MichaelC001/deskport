@@ -138,6 +138,15 @@ PlVkRenderer::~PlVkRenderer()
     pl_vulkan_destroy(&m_Vulkan);
 
     // This surface was created by SDL, so there's no libplacebo API to destroy it
+#ifdef Q_OS_LINUX
+    if (m_PresentationWindow) {
+        // Qt owns this surface. Release it before destroying the borrowed
+        // Vulkan instance; the shell's top-level window is never destroyed.
+        m_PresentationWindow->destroy();
+        m_PresentationWindow->setVulkanInstance(nullptr);
+        m_QtInstance.reset();
+    } else
+#endif
     if (fn_vkDestroySurfaceKHR && m_VkSurface) {
         fn_vkDestroySurfaceKHR(m_PlVkInstance->instance, m_VkSurface, nullptr);
     }
@@ -416,6 +425,19 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
     POPULATE_FUNCTION(vkEnumerateDeviceExtensionProperties);
 
+#ifdef Q_OS_LINUX
+    if (params->presentationWindow) {
+        m_QtInstance = std::make_unique<QVulkanInstance>();
+        m_QtInstance->setVkInstance(m_PlVkInstance->instance);
+        if (!m_QtInstance->create()) return false;
+        m_PresentationWindow = params->presentationWindow;
+        m_PresentationWindow->setVulkanInstance(m_QtInstance.get());
+        m_PresentationWindow->create();
+        m_VkSurface = QVulkanInstance::surfaceForWindow(m_PresentationWindow);
+        m_PresentationSize = m_PresentationWindow->size() * m_PresentationWindow->devicePixelRatio();
+        if (!m_VkSurface) return false;
+    } else
+#endif
     if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_CreateSurface() failed: %s",
@@ -683,6 +705,12 @@ void PlVkRenderer::waitToRender()
 
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
+#ifdef Q_OS_LINUX
+    if (m_PresentationWindow) {
+        vkDrawableW = m_PresentationSize.width();
+        vkDrawableH = m_PresentationSize.height();
+    } else
+#endif
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
     if (!pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH)) {
         // Swapchain (re)creation can fail if the window is occluded
@@ -760,7 +788,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         }
 
         // If we have an overlay but it's been disabled, free the overlay texture
-        if (m_Overlays[i].hasOverlay && !Session::get()->getOverlayManager().isOverlayEnabled((Overlay::OverlayType)i)) {
+        if (m_Overlays[i].hasOverlay && !overlayManager().isOverlayEnabled((Overlay::OverlayType)i)) {
             texturesToDestroy.push_back(m_Overlays[i].overlay.tex);
             m_Overlays[i].hasOverlay = false;
         }
@@ -861,8 +889,8 @@ bool PlVkRenderer::testRenderFrame(AVFrame *frame)
 
 void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface == nullptr && overlayManager().isOverlayEnabled(type)) {
         // The overlay is enabled and there is no new surface. Leave the old texture alone.
         return;
     }

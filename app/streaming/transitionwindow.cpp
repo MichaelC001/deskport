@@ -14,6 +14,7 @@ TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text, QIma
     SDL_SetWindowGrab(window, SDL_FALSE);
     SDL_ShowCursor(SDL_ENABLE);
     m_Label = text;
+    if (CanvasBridge::owns(window)) { CanvasBridge::label(text); return; }
     if (qstrcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         m_Wayland = std::make_unique<WaylandLoading>(window);
     }
@@ -53,6 +54,7 @@ SDL_Window* TransitionWindow::takeWindow() {
 }
 void TransitionWindow::pump() {
     if (!m_Window || m_Pumping) return;
+    CanvasBridge::synchronize(m_Window);
     m_Pumping = true;
     // Cocoa event pumping can dispatch Qt work that pumps this window again or
     // hands its native window to the next stream; stop if that happened.
@@ -106,6 +108,7 @@ void TransitionWindow::pump() {
     if (m_Cancelled) { SDL_HideWindow(m_Window); return; }
     SDL_FlushEvents(SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERBUTTONUP);
     SDL_FlushEvents(SDL_FINGERDOWN, SDL_MULTIGESTURE);
+    if (CanvasBridge::owns(m_Window)) return;
     if (!rendering() || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED))) return;
     int w, h;
 #if SDL_VERSION_ATLEAST(2, 26, 0)

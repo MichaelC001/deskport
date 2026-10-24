@@ -1,3 +1,4 @@
+#include <QWindow>
 // For D3D11_DECODER_PROFILE values
 #include <initguid.h>
 
@@ -397,6 +398,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // Use the current window size as the swapchain size
     SDL_GetWindowSize(params->window, (int*)&swapChainDesc.Width, (int*)&swapChainDesc.Height);
 
+    if (params->presentationWindow) {
+        RECT client{};
+        if (!GetClientRect(reinterpret_cast<HWND>(params->presentationWindow->winId()), &client)) return false;
+        swapChainDesc.Width = qMax<LONG>(1, client.right - client.left);
+        swapChainDesc.Height = qMax<LONG>(1, client.bottom - client.top);
+    }
+
     m_DisplayWidth = swapChainDesc.Width;
     m_DisplayHeight = swapChainDesc.Height;
 
@@ -451,7 +459,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // full-screen exclusive mode (SDL_WINDOW_FULLSCREEN), so this actually works out okay.
     ComPtr<IDXGISwapChain1> swapChain;
     hr = m_Factory->CreateSwapChainForHwnd(m_Device.Get(),
-                                           info.info.win.window,
+                                           params->presentationWindow ? reinterpret_cast<HWND>(params->presentationWindow->winId()) : info.info.win.window,
                                            &swapChainDesc,
                                            nullptr,
                                            nullptr,
@@ -685,7 +693,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
 void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 {
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayManager().isOverlayEnabled(type)) {
         return;
     }
 
@@ -902,8 +910,8 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     HRESULT hr;
 
-    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+    SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
+    bool overlayEnabled = overlayManager().isOverlayEnabled(type);
     if (newSurface == nullptr && overlayEnabled) {
         // The overlay is enabled and there is no new surface. Leave the old texture alone.
         return;

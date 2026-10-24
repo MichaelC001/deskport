@@ -14,8 +14,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-transition-') as temporary:
 CONFIG += console c++17
 CONFIG -= app_bundle
 QMAKE_CXXFLAGS += -UNDEBUG
-SOURCES += "{root}/tests/transition-window.cpp" "{root}/app/streaming/transitionwindow.cpp" "{root}/app/streaming/waylandloading.cpp" "{root}/app/streaming/windowactivation.cpp"
-INCLUDEPATH += "{root}/app/streaming"
+SOURCES += "{root}/tests/transition-window.cpp" "{root}/app/streaming/transitionwindow.cpp" "{root}/app/streaming/waylandloading.cpp" "{root}/app/streaming/windowactivation.cpp" "{root}/app/streaming/canvasbridge.cpp"
+INCLUDEPATH += "{root}/app/streaming" "{root}/app"
 TARGET = transition-test
 '''
     if sys.platform == 'darwin':

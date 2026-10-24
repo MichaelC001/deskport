@@ -4,6 +4,7 @@
 #include <QQueue>
 
 #include "decoder.h"
+#include "framesource.h"
 #include "ffmpeg-renderers/renderer.h"
 #include "ffmpeg-renderers/pacer/pacer.h"
 
@@ -13,7 +14,8 @@ extern "C" {
 
 class FFmpegVideoDecoder : public IVideoDecoder {
 public:
-    FFmpegVideoDecoder(bool testOnly);
+    FFmpegVideoDecoder(bool testOnly, VideoFrameSource* source = nullptr,
+                       Overlay::OverlayManager* overlays = nullptr);
     virtual ~FFmpegVideoDecoder() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool isHardwareAccelerated() override;
@@ -76,7 +78,13 @@ private:
 
     static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass);
 
+    bool initializeRenderer(IFFmpegRenderer* renderer, PDECODER_PARAMETERS params);
     void reset();
+
+    MoonlightFrameSource m_LegacySource;
+    VideoFrameSource* m_Source;
+    Overlay::OverlayManager* m_Overlays;
+    VideoPresentationCallbacks m_PresentationCallbacks;
 
     void writeBuffer(PLENTRY entry, int& offset);
 

@@ -504,18 +504,18 @@ public:
                 break;
             }
 
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
+            SDL_Color color = overlayManager().getOverlayColor(type);
             [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
-            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
+            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:overlayManager().getOverlayFontSize(type)]];
 
             [m_StreamView addSubview: m_OverlayTextFields[type]];
         }
 
         // Update text contents
-        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
+        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:overlayManager().getOverlayText(type)]];
 
         // Unhide if it's enabled
-        [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
+        [m_OverlayTextFields[type] setHidden: !overlayManager().isOverlayEnabled(type)];
     }}
 
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override

@@ -219,11 +219,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 
 void SdlRenderer::renderOverlay(Overlay::OverlayType type)
 {
-    if (Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (overlayManager().isOverlayEnabled(type)) {
         // If a new surface has been created for updated overlay data, convert it into a texture.
         // NB: We have to do this conversion at render-time because we can only interact
         // with the renderer on a single thread.
-        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+        SDL_Surface* newSurface = overlayManager().getUpdatedOverlaySurface(type);
         if (newSurface != nullptr) {
             if (m_OverlayTextures[type] != nullptr) {
                 SDL_DestroyTexture(m_OverlayTextures[type]);

@@ -1,3 +1,4 @@
+#include "video/remotedecoder.h"
 #include "../backend/sessionfailure.h"
 #include "backend/diagnostics.h"
 #include "connectionwait.h"
@@ -367,6 +368,12 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.enableFramePacing = enableFramePacing;
     params.testOnly = testOnly;
     params.vds = vds;
+    if (!testOnly && CanvasBridge::enabled()) {
+        chosenDecoder = new RemoteVideoDecoder;
+        if (chosenDecoder->initialize(&params)) return true;
+        delete chosenDecoder; chosenDecoder = nullptr;
+        return false;
+    }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",
@@ -585,6 +592,8 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                                     m_StreamConfig.height, m_StreamConfig.fps);
     if (probe.availability == DecoderAvailability::None) return false;
     m_VideoCallbacks.capabilities = probe.capabilities;
+    if (CanvasBridge::enabled()) m_VideoCallbacks.capabilities =
+        (m_VideoCallbacks.capabilities & ~CAPABILITY_PULL_RENDERER) | CAPABILITY_DIRECT_SUBMIT;
     if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
         // It is an error to pass a push callback when in pull mode
         m_VideoCallbacks.submitDecodeUnit = nullptr;
@@ -655,6 +664,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 
 namespace {
 QSize windowPixels(SDL_Window* window) {
+    if (CanvasBridge::owns(window)) return CanvasBridge::pixels();
     int width, height;
 #if SDL_VERSION_ATLEAST(2, 26, 0)
     SDL_GetWindowSizeInPixels(window, &width, &height);
@@ -665,6 +675,7 @@ QSize windowPixels(SDL_Window* window) {
 }
 }
 qreal Session::systemScaleForWindow(SDL_Window* window) const {
+    if (CanvasBridge::owns(window)) return CanvasBridge::scale();
     // XWayland commonly exposes physical pixels for both SDL sizes, hiding the
     // compositor's fractional scaling. Match Qt's logical output geometry to the
     // SDL pixel mode; QScreen DPR can itself be rounded to 2 on a 1.5x compositor.
@@ -865,7 +876,7 @@ void Session::pumpTransitionWindow() {
     if (!self) return;
     if (window->takePresentationShown() && m_ViewerRequested) emit presentationShown();
     // The connecting window is the viewer too: the tray hides it when in front.
-    if (window->window()) reportViewerFocus(SDL_GetWindowFlags(window->window()) & SDL_WINDOW_INPUT_FOCUS);
+    if (window->window()) reportViewerFocus(CanvasBridge::flags(window->window()) & SDL_WINDOW_INPUT_FOCUS);
     if (window->takeShortcutRequested() && m_ViewerRequested) requestShortcutToggle();
 }
 
@@ -915,9 +926,9 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
             if (latest.pixels.isValid()) {
                 m_AdaptiveNextSize = latest.pixels; m_AdaptiveScale = latest.scale;
                 int x, y, w, h; SDL_GetWindowPosition(retained, &x, &y); SDL_GetWindowSize(retained, &w, &h);
-                m_IsFullScreen = (SDL_GetWindowFlags(retained) & SDL_WINDOW_FULLSCREEN) != 0;
-                m_AdaptiveMaximized = (SDL_GetWindowFlags(retained) & SDL_WINDOW_MAXIMIZED) != 0;
-                if (!m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, w, h);
+                m_IsFullScreen = (CanvasBridge::flags(retained) & SDL_WINDOW_FULLSCREEN) != 0;
+                m_AdaptiveMaximized = (CanvasBridge::flags(retained) & SDL_WINDOW_MAXIMIZED) != 0;
+                if (!CanvasBridge::enabled() && !m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, w, h);
             }
         }
     }
@@ -988,12 +999,13 @@ void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     }
 }
 void Session::hideViewerWindow() {
-    const auto flags = SDL_GetWindowFlags(m_Window);
+    if (CanvasBridge::owns(m_Window)) CanvasBridge::requested(false);
+    const auto flags = CanvasBridge::flags(m_Window);
     if (!(flags & SDL_WINDOW_HIDDEN)) m_HiddenWindowFlags = flags;
     SDL_HideWindow(m_Window);
 }
 bool Session::checkAdaptiveResize() {
-    if (!m_ViewerRequested || (SDL_GetWindowFlags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) ||
+    if (!m_ViewerRequested || (CanvasBridge::flags(m_Window) & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) ||
         (m_RecallGraceUntil && !SDL_TICKS_PASSED(SDL_GetTicks(), m_RecallGraceUntil))) {
         // Hidden time does not establish a stable visible size. Compositors can
         // report transient frame geometry while a retained window is remapped,
@@ -1025,10 +1037,10 @@ bool Session::checkAdaptiveResize() {
     // apps and the authenticated display lease across the new resume request.
     int x, y, width, height;
     SDL_GetWindowPosition(m_Window, &x, &y); SDL_GetWindowSize(m_Window, &width, &height);
-    const auto flags = SDL_GetWindowFlags(m_Window);
+    const auto flags = CanvasBridge::flags(m_Window);
     m_IsFullScreen = (flags & SDL_WINDOW_FULLSCREEN) != 0;
     m_AdaptiveMaximized = (flags & SDL_WINDOW_MAXIMIZED) != 0;
-    if (!m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, width, height);
+    if (!CanvasBridge::enabled() && !m_IsFullScreen && !m_AdaptiveMaximized) m_AdaptiveGeometry = QRect(x, y, width, height);
     m_AdaptiveNextSize = size; m_AdaptiveScale = scale;
     deskportResizeStage("stop-begin", size.width(), size.height());
     qInfo() << "Adaptive display restarting stream for" << size;
@@ -1037,7 +1049,7 @@ bool Session::checkAdaptiveResize() {
 
 void Session::restoreAdaptiveWindow()
 {
-    if (!m_Preferences->adaptiveResolution || m_AdaptiveResume) return;
+    if (CanvasBridge::enabled() || !m_Preferences->adaptiveResolution || m_AdaptiveResume) return;
     QByteArray outputs;
     QDataStream stream(&outputs, QIODevice::WriteOnly);
     stream.setVersion(QDataStream::Qt_5_9);
@@ -1065,8 +1077,8 @@ void Session::restoreAdaptiveWindow()
 
 void Session::rememberAdaptiveWindow()
 {
-    if (!m_AdaptiveDisplay || m_UnexpectedTermination || !m_Window || m_WindowOutputs.isEmpty()) return;
-    const auto flags = SDL_GetWindowFlags(m_Window);
+    if (CanvasBridge::enabled() || !m_AdaptiveDisplay || m_UnexpectedTermination || !m_Window || m_WindowOutputs.isEmpty()) return;
+    const auto flags = CanvasBridge::flags(m_Window);
     if (flags & (SDL_WINDOW_MINIMIZED | SDL_WINDOW_HIDDEN)) return;
     int x, y, w, h;
     SDL_GetWindowPosition(m_Window, &x, &y);
@@ -1140,6 +1152,7 @@ bool Session::initialize()
     m_StreamConfig.width = m_Preferences->width;
     m_StreamConfig.height = m_Preferences->height;
     restoreAdaptiveWindow();
+    if (CanvasBridge::enabled()) m_IsFullScreen = CanvasBridge::fullscreen();
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
@@ -1147,9 +1160,9 @@ bool Session::initialize()
     // Negotiate from the mapped viewer, after the compositor has tiled it.
     // A hidden probe window has only the requested geometry and can otherwise
     // cause an immediate full reconnect as soon as the first frame arrives.
-    if (!m_TransitionWindow && m_Preferences->adaptiveResolution) {
+    if (!m_TransitionWindow && (m_Preferences->adaptiveResolution || CanvasBridge::enabled())) {
         Uint32 flags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN;
-        if (!m_IsFullScreen && (m_AdaptiveMaximized ||
+        if (!CanvasBridge::enabled() && !m_IsFullScreen && (m_AdaptiveMaximized ||
             (!m_RestoredWindow && m_QtWindow && (m_QtWindow->windowState() & Qt::WindowMaximized))))
             flags |= SDL_WINDOW_MAXIMIZED;
         const auto title = m_Computer->name.toUtf8();
@@ -1157,8 +1170,9 @@ bool Session::initialize()
                                        flags | StreamUtils::getPlatformWindowFlags());
         if (!viewer) viewer = SDL_CreateWindow(title.constData(), x, y, width, height, flags);
         if (!viewer) { SDL_QuitSubSystem(SDL_INIT_VIDEO); return false; }
+        CanvasBridge::registerWindow(viewer);
         setDeskPortWindowIcon(viewer);
-        if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(viewer, m_FullScreenFlag);
+        if (!CanvasBridge::enabled() && m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(viewer, m_FullScreenFlag);
         m_TransitionWindow = std::make_shared<TransitionWindow>(viewer, tr("Connecting to desktop…"));
         if (!m_TransitionWindow->rendering()) {
             m_TransitionWindow.reset(); SDL_QuitSubSystem(SDL_INIT_VIDEO); return false;
@@ -2035,7 +2049,7 @@ void Session::updateOptimalWindowDisplayMode()
         bestMode = desktopMode;
     }
 
-    if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if ((CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         // Only print when the window is actually in full-screen exclusive mode,
         // otherwise we're not actually using the mode we've set here
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -2057,14 +2071,15 @@ void Session::requestShortcutToggle() {
         QMetaObject::invokeMethod(m_QtWindow, "requestShortcutToggle", Qt::QueuedConnection);
 }
 bool Session::leaveFullscreen() {
-    if (!m_Window || !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) return false;
+    if (!m_Window || !(CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN)) return false;
     toggleFullscreen();
     if (m_InputHandler) { m_InputHandler->raiseAllKeys(); m_InputHandler->setCaptureActive(false); }
     return true;
 }
 void Session::toggleFullscreen()
 {
-    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
+    if (CanvasBridge::owns(m_Window)) { emit canvasFullscreenRequested(); return; }
+    bool fullScreen = !(CanvasBridge::flags(m_Window) & m_FullScreenFlag);
 
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     // Destroy the video decoder before toggling full-screen because D3D9 can try
@@ -2096,7 +2111,7 @@ void Session::toggleFullscreen()
     }
 #endif
 
-    m_IsFullScreen = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) != 0;
+    m_IsFullScreen = (CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN) != 0;
 
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
@@ -2602,7 +2617,7 @@ void Session::execInternal()
 
     // Establish a real, recallable loading window before host launch/RTSP can
     // block. The SDL owner keeps pumping it even on Linux's exec worker.
-    if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    if (!CanvasBridge::enabled() && m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     m_TransitionWindow = std::make_shared<TransitionWindow>(m_Window, transitionLabel, transitionBackdrop);
     m_Window = nullptr;
     if (!m_TransitionWindow->rendering()) {
@@ -2653,7 +2668,7 @@ void Session::execInternal()
     updateOptimalWindowDisplayMode();
 
     // Enter full screen if requested
-    if (m_IsFullScreen && m_ViewerRequested) {
+    if (!CanvasBridge::enabled() && m_IsFullScreen && m_ViewerRequested) {
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
@@ -2717,11 +2732,14 @@ void Session::execInternal()
         m_Clipboard.reset();
     };
     m_InputDispatching = true;
+    CanvasBridge::inputEnabled(m_ViewerRequested);
     // Pause the host's video only after the viewer has stayed hidden for a
     // while. Hiding and showing it again in quick succession, such as repeated
     // tray clicks, then never waits for the stream to resume.
     QElapsedTimer viewerHidden;
     for (;;) {
+        CanvasBridge::synchronize(m_Window);
+        if (CanvasBridge::owns(m_Window)) m_IsFullScreen = CanvasBridge::fullscreen();
         if (!m_ThreadedExec && serviceEvents.elapsed() >= 20) {
             QCoreApplication::processEvents(QEventLoop::AllEvents, 2);
             serviceEvents.restart();
@@ -2841,13 +2859,13 @@ void Session::execInternal()
                 break;
             case DeskPortRecallWindow:
                 m_ResizeSettler.reset();
-                if (m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+                if (!CanvasBridge::enabled() && m_IsFullScreen && m_ViewerRequested) SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
                 if (!m_ViewerRequested) break;
                 if (!m_Clipboard) initializeClipboard();
                 recallDesktopWindow(m_Window, true);
                 // Showing is a presentation change, never a new desktop size.
-                if (!m_IsFullScreen && (m_HiddenWindowFlags & SDL_WINDOW_MAXIMIZED) &&
-                    !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MAXIMIZED)) SDL_MaximizeWindow(m_Window);
+                if (!CanvasBridge::enabled() && !m_IsFullScreen && (m_HiddenWindowFlags & SDL_WINDOW_MAXIMIZED) &&
+                    !(CanvasBridge::flags(m_Window) & SDL_WINDOW_MAXIMIZED)) SDL_MaximizeWindow(m_Window);
                 m_RecallGraceUntil = SDL_GetTicks() + 1500;
                 if (!m_RecallGraceUntil) m_RecallGraceUntil = 1;
                 emit presentationShown();
@@ -2934,7 +2952,7 @@ void Session::execInternal()
                 // Win32 can preserve focus across hide/show without another
                 // FOCUS_GAINED event. Reattach the native IME when visible.
                 if (m_Preferences->localTextInput && m_ViewerRequested &&
-                    (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS))
+                    (CanvasBridge::flags(m_Window) & SDL_WINDOW_INPUT_FOCUS))
                     m_InputHandler->notifyFocusGained();
                 break;
             case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -2980,7 +2998,7 @@ void Session::execInternal()
             // us to start drawing on the screen even while our window is minimized. Minimizing on Windows also
             // moves the window to -32000, -32000 which can cause a false window display index change. Avoid
             // that whole mess by never recreating the decoder if we're minimized.
-            else if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+            else if (CanvasBridge::flags(m_Window) & SDL_WINDOW_MINIMIZED) {
                 break;
             }
 #endif
@@ -3122,7 +3140,7 @@ void Session::execInternal()
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
                 if (needsPostDecoderCreationCapture) {
-                    const auto flags = SDL_GetWindowFlags(m_Window);
+                    const auto flags = CanvasBridge::flags(m_Window);
                     if (m_ViewerRequested && (flags & SDL_WINDOW_INPUT_FOCUS) && !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)))
                         m_InputHandler->setCaptureActive(true);
                     needsPostDecoderCreationCapture = false;
@@ -3201,6 +3219,7 @@ void Session::execInternal()
     }
 
 DispatchDeferredCleanup:
+    CanvasBridge::inputEnabled(false);
     setViewerReady(false);
     m_Clipboard.reset();
     if (!adaptiveRestartPending()) rememberAdaptiveWindow();
@@ -3246,14 +3265,14 @@ DispatchDeferredCleanup:
     // a large window.
     if (!m_IsFullScreen && m_QtWindow != nullptr && m_Window != nullptr) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+        if (CanvasBridge::flags(m_Window) & SDL_WINDOW_MINIMIZED) {
             m_QtWindow->setWindowStates(m_QtWindow->windowStates() | Qt::WindowMinimized);
         }
         else if (m_QtWindow->windowStates() & Qt::WindowMinimized) {
             m_QtWindow->setWindowStates(m_QtWindow->windowStates() & ~Qt::WindowMinimized);
         }
 #else
-        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+        if (CanvasBridge::flags(m_Window) & SDL_WINDOW_MINIMIZED) {
             m_QtWindow->setWindowState(Qt::WindowMinimized);
         }
         else if (m_QtWindow->windowState() & Qt::WindowMinimized) {

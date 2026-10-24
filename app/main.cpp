@@ -17,6 +17,7 @@
 #include "backend/hostmanager.h"
 #include "backend/browserhost.h"
 #include "backend/multisessions.h"
+#include "gui/sessioncanvas.h"
 #include "backend/globalshortcut.h"
 #include "streaming/shortcutstate.h"
 #include "backend/trafficbudget.h"
@@ -1024,6 +1025,7 @@ int main(int argc, char *argv[])
                                     [&browserHost](const QString& id) { return browserHost.revokeBrowser(id); });
     if (resident && !controlServer.listen())
         qWarning() << "Cannot open the local CLI endpoint:" << controlServer.errorString();
+    qmlRegisterType<SessionCanvas>("DeskPort.Canvas", 1, 0, "SessionCanvas");
     MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
     GlobalShortcut globalShortcut;
     QObject::connect(&globalShortcut, &GlobalShortcut::fallbackAvailabilityChanged, &managedSessions, [&managedSessions, &globalShortcut](bool enabled) {
@@ -1144,6 +1146,7 @@ int main(int argc, char *argv[])
         if (managedSessions.busy() && managedSessions.viewerInFront(trayClick)) {
             // Hiding the viewer releases its input; the sessions stay connected.
             managedSessions.showDevices();
+            if (managedSessions.canvasEnabled() && window) window->hide();
         } else if (managedSessions.busy()) {
             // Go straight to the last viewed desktop, never through the device
             // list; the list stays available from the tray menu.
@@ -1171,8 +1174,10 @@ int main(int argc, char *argv[])
     QObject::connect(&managedSessions, &MultiSessions::devicesRequested, &engine, [&engine] {
         if (!engine.rootObjects().isEmpty()) QMetaObject::invokeMethod(engine.rootObjects().first(), "presentDevices");
     });
-    QObject::connect(&managedSessions, &MultiSessions::viewerShown, &engine, [&engine] {
-        if (!engine.rootObjects().isEmpty()) if(auto window=qobject_cast<QWindow*>(engine.rootObjects().first())) window->hide();
+    QObject::connect(&managedSessions, &MultiSessions::viewerShown, &engine, [&engine, &managedSessions] {
+        if (!engine.rootObjects().isEmpty()) if(auto window=qobject_cast<QWindow*>(engine.rootObjects().first())) {
+            if (!managedSessions.canvasEnabled()) window->hide();
+        }
     });
     engine.rootContext()->setContextProperty("sessionManager", &managedSessions);
     // Daily traffic budget: worker sessions report through the shell; an
@@ -1289,6 +1294,7 @@ int main(int argc, char *argv[])
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
+        managedSessions.setCanvasWindow(qobject_cast<QWindow*>(engine.rootObjects().first()));
 #ifdef Q_OS_WIN
         if (auto window = qobject_cast<QWindow*>(engine.rootObjects().first())) {
             auto* preferences = StreamingPreferences::get();

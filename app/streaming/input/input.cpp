@@ -1,3 +1,4 @@
+#include "streaming/canvasbridge.h"
 #include <Limelight.h>
 #include <SDL.h>
 #include "streaming/session.h"
@@ -306,7 +307,7 @@ void SdlInputHandler::releaseRemoteInput(bool cancelText)
 
 bool SdlInputHandler::keyboardRoutingActive()
 {
-    const auto flags = SDL_GetWindowFlags(m_Window);
+    const auto flags = CanvasBridge::flags(m_Window);
     return isCaptureActive() && (flags & SDL_WINDOW_INPUT_FOCUS) &&
         !(flags & (SDL_WINDOW_HIDDEN | SDL_WINDOW_MINIMIZED)) &&
         (!m_AbsoluteMouseMode || m_PointerInside || m_LocalTextInput.enabled());
@@ -315,8 +316,9 @@ bool SdlInputHandler::keyboardRoutingActive()
 void SdlInputHandler::notifyPointerPosition()
 {
     int x, y;
-    SDL_GetMouseState(&x, &y);
-    const bool inside = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MOUSE_FOCUS) && isMouseInVideoRegion(x, y);
+    if (CanvasBridge::owns(m_Window)) CanvasBridge::mouseState(&x, &y);
+    else SDL_GetMouseState(&x, &y);
+    const bool inside = (CanvasBridge::flags(m_Window) & SDL_WINDOW_MOUSE_FOCUS) && isMouseInVideoRegion(x, y);
     if (m_PointerInside && !inside && m_AbsoluteMouseMode) releaseRemoteInput(!m_LocalTextInput.enabled());
     m_PointerInside = inside;
     updateKeyboardGrabState();
@@ -336,7 +338,7 @@ void SdlInputHandler::notifyFocusLost()
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
     // (desktop and exclusive), so we must check for that before releasing mouse capture.
-    if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
+    if (!(CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
         setCaptureActive(false);
     }
 
@@ -370,7 +372,7 @@ void SdlInputHandler::notifyFocusGained()
 bool SdlInputHandler::isCaptureActive()
 {
     if (!m_RemoteInputEnabled) return false;
-    if (SDL_GetRelativeMouseMode()) {
+    if (!CanvasBridge::owns(m_Window) && SDL_GetRelativeMouseMode()) {
         return true;
     }
 
@@ -381,7 +383,7 @@ bool SdlInputHandler::isCaptureActive()
 void SdlInputHandler::updateKeyboardGrabState()
 {
     m_LocalTextInput.setActive(keyboardRoutingActive());
-    Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
+    Uint32 windowFlags = CanvasBridge::flags(m_Window);
     bool shouldGrab = !m_LocalTextInput.enabled() && keyboardRoutingActive() && m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF;
     if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
             !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
@@ -389,6 +391,10 @@ void SdlInputHandler::updateKeyboardGrabState()
         shouldGrab = false;
     }
 
+    if (CanvasBridge::owns(m_Window)) {
+        CanvasBridge::capture(shouldGrab, keyboardRoutingActive() && m_MouseCursorCapturedVisibilityState == SDL_DISABLE);
+        return;
+    }
     if (m_AbsoluteMouseMode) {
         const QString title = keyboardRoutingActive()
             ? (shouldGrab ? QCoreApplication::translate("SdlInputHandler", "DeskPort — Remote keyboard · Ctrl+Alt+Shift+Z releases") : QCoreApplication::translate("SdlInputHandler", "DeskPort — Remote typing · system shortcuts local"))
@@ -417,7 +423,7 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
         return false;
     }
 
-    Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
+    Uint32 windowFlags = CanvasBridge::flags(m_Window);
     if (!(windowFlags & SDL_WINDOW_INPUT_FOCUS)
 #if SDL_VERSION_ATLEAST(2, 0, 15)
             || !(windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
@@ -440,6 +446,12 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     active = active && m_RemoteInputEnabled;
+    if (CanvasBridge::owns(m_Window)) {
+        m_FakeCaptureActive = active;
+        if (!active) releaseRemoteInput();
+        notifyPointerPosition();
+        return;
+    }
     if (active) {
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {

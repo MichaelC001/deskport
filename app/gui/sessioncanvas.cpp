@@ -1,0 +1,167 @@
+#include "sessioncanvas.h"
+#include "backend/shortcutbinding.h"
+#include <QQuickWindow>
+
+#include <QKeyEvent>
+#include <QMouseEvent>
+#include <QHoverEvent>
+#include <QWheelEvent>
+#include <SDL.h>
+
+namespace {
+SDL_Keycode symbol(int key) {
+    if (key >= Qt::Key_A && key <= Qt::Key_Z) return SDLK_a + key - Qt::Key_A;
+    if (key >= Qt::Key_Space && key <= Qt::Key_AsciiTilde) return key;
+    if (key >= Qt::Key_F1 && key <= Qt::Key_F24) return key <= Qt::Key_F12 ? SDLK_F1 + key - Qt::Key_F1 : SDLK_F13 + key - Qt::Key_F13;
+    switch (key) {
+    case Qt::Key_Return: return SDLK_RETURN; case Qt::Key_Enter: return SDLK_KP_ENTER;
+    case Qt::Key_Tab: case Qt::Key_Backtab: return SDLK_TAB;
+    case Qt::Key_Backspace: return SDLK_BACKSPACE; case Qt::Key_Delete: return SDLK_DELETE;
+    case Qt::Key_Insert: return SDLK_INSERT; case Qt::Key_Escape: return SDLK_ESCAPE;
+    case Qt::Key_Home: return SDLK_HOME; case Qt::Key_End: return SDLK_END;
+    case Qt::Key_PageUp: return SDLK_PAGEUP; case Qt::Key_PageDown: return SDLK_PAGEDOWN;
+    case Qt::Key_Left: return SDLK_LEFT; case Qt::Key_Right: return SDLK_RIGHT;
+    case Qt::Key_Up: return SDLK_UP; case Qt::Key_Down: return SDLK_DOWN;
+    case Qt::Key_Shift: return SDLK_LSHIFT; case Qt::Key_Alt: return SDLK_LALT;
+    case Qt::Key_AltGr: return SDLK_RALT; case Qt::Key_CapsLock: return SDLK_CAPSLOCK;
+#ifdef Q_OS_MACOS
+    case Qt::Key_Control: return SDLK_LGUI; case Qt::Key_Meta: return SDLK_LCTRL;
+#else
+    case Qt::Key_Control: return SDLK_LCTRL; case Qt::Key_Meta: return SDLK_LGUI;
+#endif
+    default: return SDLK_UNKNOWN;
+    }
+}
+int button(Qt::MouseButton value) {
+    switch (value) {
+    case Qt::LeftButton: return SDL_BUTTON_LEFT; case Qt::RightButton: return SDL_BUTTON_RIGHT;
+    case Qt::MiddleButton: return SDL_BUTTON_MIDDLE; case Qt::BackButton: return SDL_BUTTON_X1;
+    case Qt::ForwardButton: return SDL_BUTTON_X2; default: return 0;
+    }
+}
+}
+SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibitor(this) {
+    setAcceptedMouseButtons(Qt::AllButtons); setAcceptHoverEvents(true);
+    setActiveFocusOnTab(true);
+    m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
+    connect(&m_ResizeTimer, &QTimer::timeout, this, [this] { if (m_Presentation) m_Presentation->resized(); });
+    connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow* window) {
+        if (m_Presentation) m_Presentation->detach();
+        delete m_Surface; m_Surface = nullptr;
+        if (window) {
+            m_Surface = new QWindow(window);
+            m_Surface->setFlags(Qt::FramelessWindowHint);
+#ifdef Q_OS_LINUX
+            m_Surface->setSurfaceType(QSurface::VulkanSurface);
+#endif
+            m_Surface->installEventFilter(this);
+            m_Inhibitor.setWindow(m_Surface);
+            refresh();
+            if (m_Presentation) m_Presentation->attach(m_Surface);
+        }
+    });
+    connect(this, &QQuickItem::visibleChanged, this, [this] { if (isVisible()) forceActiveFocus(); refresh(); });
+    connect(this, &SessionCanvas::captureRequestedChanged, this, &SessionCanvas::refresh);
+    connect(&m_Timer, &QTimer::timeout, this, &SessionCanvas::refresh);
+    m_Timer.start(16);
+}
+SessionCanvas::~SessionCanvas() {
+    if (m_Presentation) m_Presentation->detach();
+    m_Inhibitor.setEnabled(false);
+    if (m_Grabbed && m_Surface) m_Surface->setKeyboardGrabEnabled(false);
+    delete m_Surface;
+}
+void SessionCanvas::setPresentation(QObject* value) {
+    auto presentation = qobject_cast<SessionPresentation*>(value);
+    if (presentation == m_Presentation) return;
+    if (m_Presentation) { disconnect(m_Presentation, nullptr, this, nullptr); m_Presentation->detach(); }
+    m_Presentation = presentation;
+    if (presentation) {
+        connect(presentation, &SessionPresentation::readyChanged, this, &SessionCanvas::frameReadyChanged);
+        if (m_Surface) presentation->attach(m_Surface);
+    }
+    emit presentationChanged(); emit frameReadyChanged(); refresh();
+}
+void SessionCanvas::geometryChange(const QRectF& next, const QRectF& previous) {
+    QQuickItem::geometryChange(next, previous); refresh();
+    if (next.size() != previous.size() && m_Presentation) m_ResizeTimer.start();
+}
+bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
+    if (watched != m_Surface) return QQuickItem::eventFilter(watched, event);
+    switch (event->type()) {
+    case QEvent::KeyPress: keyPressEvent(static_cast<QKeyEvent*>(event)); return true;
+    case QEvent::KeyRelease: keyReleaseEvent(static_cast<QKeyEvent*>(event)); return true;
+    case QEvent::MouseButtonPress: mousePressEvent(static_cast<QMouseEvent*>(event)); return true;
+    case QEvent::MouseButtonRelease: mouseReleaseEvent(static_cast<QMouseEvent*>(event)); return true;
+    case QEvent::MouseMove: mouseMoveEvent(static_cast<QMouseEvent*>(event)); return true;
+    case QEvent::Wheel: wheelEvent(static_cast<QWheelEvent*>(event)); return true;
+    case QEvent::Enter: m_Hovered = true; refresh(); break;
+    case QEvent::Leave: m_Hovered = false; refresh(); break;
+    case QEvent::FocusIn: forceActiveFocus(); refresh(); break;
+    case QEvent::FocusOut: refresh(); break;
+    default: break;
+    }
+    return QQuickItem::eventFilter(watched, event);
+}
+QPoint SessionCanvas::position(const QPointF& point) const {
+    return QPoint(qBound(0, qRound(point.x()), qMax(0, int(width()) - 1)),
+                  qBound(0, qRound(point.y()), qMax(0, int(height()) - 1)));
+}
+void SessionCanvas::refresh() {
+    if (!window() || width() < 1 || height() < 1) return;
+    const bool visible = isVisible() && window()->isVisible() && window()->windowState() != Qt::WindowMinimized;
+    if (m_Surface) {
+        m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), QSize(qRound(width()), qRound(height()))));
+        m_Surface->setVisible(visible && m_Presentation);
+    }
+    const bool focused = visible && ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
+    const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
+    m_Inhibitor.setEnabled(capture);
+    if (!capture && m_Grabbed) { m_Surface->setKeyboardGrabEnabled(false); m_Grabbed = false; }
+    else if (capture && !m_Inhibitor.isInhibited() && !m_Grabbed) m_Grabbed = m_Surface->setKeyboardGrabEnabled(true);
+    const QJsonObject state {{"width",int(width())},{"height",int(height())},{"scale",window()->devicePixelRatio()},
+        {"visible",visible},{"focused",focused},{"hovered",m_Hovered},{"fullscreen",window()->windowState() == Qt::WindowFullScreen},
+        {"grabbed",m_Inhibitor.isInhibited() || m_Grabbed},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"buttons",m_Buttons}};
+    if (state != m_LastState) { m_LastState = state; emit viewportChanged(state); }
+}
+void SessionCanvas::key(QKeyEvent* event, bool down) {
+    const auto key = symbol(event->key());
+    if (!key) { event->ignore(); return; }
+    const auto mods = ShortcutBinding::eventModifiers(event->modifiers());
+    int modifiers = 0;
+    if (mods & Qt::ControlModifier) modifiers |= KMOD_CTRL;
+    if (mods & Qt::AltModifier) modifiers |= KMOD_ALT;
+    if (mods & Qt::ShiftModifier) modifiers |= KMOD_SHIFT;
+    if (mods & Qt::MetaModifier) modifiers |= KMOD_GUI;
+    refresh();
+    emit input({{"type","key"},{"down",down},{"repeat",event->isAutoRepeat()},
+                {"symbol",int(key)},{"scan",int(SDL_GetScancodeFromKey(key))},{"modifiers",modifiers}});
+    event->accept();
+}
+void SessionCanvas::keyPressEvent(QKeyEvent* event) { key(event, true); }
+void SessionCanvas::keyReleaseEvent(QKeyEvent* event) { key(event, false); }
+void SessionCanvas::mouse(QMouseEvent* event, bool down, bool isButton) {
+    if (down) { forceActiveFocus(); if (m_Surface) m_Surface->requestActivate(); }
+    if (isButton && button(event->button())) {
+        const int mask = SDL_BUTTON(button(event->button()));
+        if (down) m_Buttons |= mask; else m_Buttons &= ~mask;
+    }
+    const auto old = m_Mouse; m_Mouse = position(event->position()); m_Hovered = true; refresh();
+    QJsonObject value {{"type",isButton ? "button" : "motion"},{"x",m_Mouse.x()},{"y",m_Mouse.y()}};
+    if (isButton) { value["button"] = button(event->button()); value["down"] = down; }
+    else { value["dx"] = m_Mouse.x() - old.x(); value["dy"] = m_Mouse.y() - old.y(); }
+    emit input(value); event->accept();
+}
+void SessionCanvas::mousePressEvent(QMouseEvent* event) { mouse(event, true, true); }
+void SessionCanvas::mouseReleaseEvent(QMouseEvent* event) { mouse(event, false, true); }
+void SessionCanvas::mouseMoveEvent(QMouseEvent* event) { mouse(event, false, false); }
+void SessionCanvas::hoverEnterEvent(QHoverEvent* event) { m_Hovered = true; m_Mouse = position(event->position()); forceActiveFocus(); refresh(); }
+void SessionCanvas::hoverLeaveEvent(QHoverEvent*) { m_Hovered = false; refresh(); }
+void SessionCanvas::hoverMoveEvent(QHoverEvent* event) {
+    const auto old = m_Mouse; m_Mouse = position(event->position()); refresh();
+    emit input({{"type","motion"},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"dx",m_Mouse.x()-old.x()},{"dy",m_Mouse.y()-old.y()}});
+}
+void SessionCanvas::wheelEvent(QWheelEvent* event) {
+    emit input({{"type","wheel"},{"x",event->angleDelta().x()/120.0},{"y",event->angleDelta().y()/120.0}}); event->accept();
+}
+void SessionCanvas::focusOutEvent(QFocusEvent* event) { QQuickItem::focusOutEvent(event); refresh(); }
