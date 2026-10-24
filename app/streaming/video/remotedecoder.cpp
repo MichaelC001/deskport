@@ -3,9 +3,9 @@
 #include <QLocalSocket>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QElapsedTimer>
 #include <QtEndian>
 #include <atomic>
-#include "streaming/session.h"
 
 namespace {
 std::atomic<quint64> generation{0};
@@ -14,7 +14,12 @@ bool writePacket(QLocalSocket& socket, const QByteArray& bytes) {
     if (socket.write(reinterpret_cast<const char*>(&length), sizeof(length)) != sizeof(length) ||
         socket.write(bytes) != bytes.size()) return false;
     // Bound shutdown latency even when the shell stops consuming frames.
-    while (socket.bytesToWrite()) if (!socket.waitForBytesWritten(1000)) return false;
+    QElapsedTimer deadline;
+    deadline.start();
+    while (socket.bytesToWrite()) {
+        const auto remaining = 1000 - deadline.elapsed();
+        if (remaining <= 0 || !socket.waitForBytesWritten(int(remaining))) return false;
+    }
     return true;
 }
 }
@@ -62,8 +67,11 @@ void RemoteVideoDecoder::run(QByteArray config) {
     const auto auth = QJsonDocument(QJsonObject{{"token",qEnvironmentVariable("DESKPORT_SESSION_TOKEN")}}).toJson(QJsonDocument::Compact) + '\n';
     if (socket.write(auth) != auth.size() || !writePacket(socket, config)) { fail(); return; }
     QByteArray reply;
+    QElapsedTimer handshake;
+    handshake.start();
     while (!reply.contains('\n') && reply.size() < 16384) {
-        if (!socket.waitForReadyRead(5000)) { fail(); return; }
+        const auto remaining = 5000 - handshake.elapsed();
+        if (remaining <= 0 || (!socket.bytesAvailable() && !socket.waitForReadyRead(int(remaining)))) { fail(); return; }
         reply += socket.readAll();
     }
     const auto result = QJsonDocument::fromJson(reply.trimmed()).object();

@@ -10,7 +10,7 @@ a = p.parse_args()
 root = Path(__file__).resolve().parents[1]
 work = a.output.resolve()
 work.mkdir(parents=True, exist_ok=False)
-(work / 'canvas-input.pro').write_text(f'''QT = core
+(work / 'canvas-input.pro').write_text(f'''QT = core gui
 CONFIG += console c++17 link_pkgconfig
 CONFIG -= app_bundle
 TARGET = canvas-input-test

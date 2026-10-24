@@ -70,18 +70,26 @@ int runCanvasSelfTest(int argc, char** argv) {
             const auto capabilities = selected->capabilities();
             canvas->setPresentation(nullptr);
             if (first.active() || second.active()) { fail("decoder survived detach"); return; }
-            printf("PASS: one persistent native root, 10 decoded presentation stages, resize, session switch, hide/recall and decoder teardown; %s\n",
+            printf("PASS: one persistent native root, 10 decoded presentation stages, resize, session switch, live hide/minimize/recall and decoder teardown; %s\n",
                    QJsonDocument(capabilities).toJson(QJsonDocument::Compact).constData());
             result = 0; app.quit(); return;
         }
-        canvas->setPresentation(nullptr);
-        if (stage % 3 == 0) { window.hide(); window.show(); }
-        window.resize(stage % 2 ? QSize(800, 520) : QSize(1040, 700));
-        selected = stage % 2 ? &second : &first;
-        ++generation;
-        if (!configure()) { fail("configuration rejected"); return; }
-        canvas->setPresentation(selected);
-        stageTime.restart();
+        feed.stop();
+        // Exercise an occluded live renderer before joining it, including the
+        // compositor's asynchronous unmap notifications.
+        if (stage % 3 == 0) window.hide();
+        else if (stage % 3 == 1) window.showMinimized();
+        QTimer::singleShot(250, &app, [&] {
+            canvas->setPresentation(nullptr);
+            window.showNormal();
+            window.resize(stage % 2 ? QSize(800, 520) : QSize(1040, 700));
+            selected = stage % 2 ? &second : &first;
+            ++generation;
+            if (!configure()) { fail("configuration rejected"); return; }
+            canvas->setPresentation(selected);
+            stageTime.restart();
+            feed.start(50);
+        });
     });
     QTimer::singleShot(0, &app, [&] {
         if (!configure()) { fail("initial configuration rejected"); return; }

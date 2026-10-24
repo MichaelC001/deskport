@@ -1,4 +1,5 @@
 #include "streaming/canvasbridge.h"
+#include "gui/canvaskey.h"
 #include <QCoreApplication>
 #include <cassert>
 #include <cstdio>
@@ -11,6 +12,18 @@ static std::vector<SDL_Event> events() {
 }
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
+    assert(CanvasKey::windows(0x1e) == SDL_SCANCODE_A);
+    assert(CanvasKey::windows(0x11d) == SDL_SCANCODE_RCTRL);
+    assert(CanvasKey::windows(0x11c) == SDL_SCANCODE_KP_ENTER);
+    assert(CanvasKey::windows(0x14b) == SDL_SCANCODE_LEFT);
+    assert(CanvasKey::evdev(30) == SDL_SCANCODE_A);
+    assert(CanvasKey::evdev(100) == SDL_SCANCODE_RALT);
+    assert(CanvasKey::evdev(105) == SDL_SCANCODE_LEFT);
+    assert(CanvasKey::evdev(194) == SDL_SCANCODE_F24);
+    assert(CanvasKey::mac(0) == SDL_SCANCODE_A);
+    assert(CanvasKey::mac(12) == SDL_SCANCODE_Q);
+    assert(CanvasKey::mac(62) == SDL_SCANCODE_RCTRL);
+    assert(CanvasKey::mac(76) == SDL_SCANCODE_KP_ENTER);
     SDL_SetMainReady(); SDL_setenv("SDL_VIDEODRIVER", "dummy", 1);
     assert(SDL_Init(SDL_INIT_VIDEO) == 0);
     auto window = SDL_CreateWindow("isolated input fixture", 0, 0, 800, 600, SDL_WINDOW_HIDDEN);

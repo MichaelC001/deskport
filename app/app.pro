@@ -1,6 +1,7 @@
 SOURCES += gui/canvasselftest.cpp
 SOURCES += gui/canvaspointer.cpp
 HEADERS += gui/canvaspointer.h
+HEADERS += gui/canvaskey.h
 linux {
     SOURCES += gui/canvaspointer_wayland.cpp backend/relative-pointer-v1.c backend/pointer-constraints-v1.c
     HEADERS += backend/relative-pointer-v1.h backend/pointer-constraints-v1.h

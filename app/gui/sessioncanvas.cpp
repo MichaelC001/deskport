@@ -3,6 +3,7 @@
 #include <QInputMethod>
 #include <QGuiApplication>
 #include "sessioncanvas.h"
+#include "canvaskey.h"
 #include "backend/shortcutbinding.h"
 #include <QQuickWindow>
 
@@ -152,7 +153,8 @@ void SessionCanvas::refresh() {
         m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
         m_Surface->setCursor(m_CursorHidden ? Qt::BlankCursor : Qt::ArrowCursor);
     }
-    const bool focused = visible && ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
+    const bool focused = visible && m_Presentation && m_Presentation->ready() &&
+        ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
     if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
     m_Inhibitor.setEnabled(capture);
@@ -164,8 +166,10 @@ void SessionCanvas::refresh() {
     if (state != m_LastState) { m_LastState = state; emit viewportChanged(state); }
 }
 void SessionCanvas::key(QKeyEvent* event, bool down) {
-    const auto key = symbol(event->key());
-    if (!key) { event->ignore(); return; }
+    auto key = symbol(event->key());
+    const auto scan = CanvasKey::physical(*event, key);
+    if (!key) key = SDL_GetKeyFromScancode(scan);
+    if (!key && scan == SDL_SCANCODE_UNKNOWN) { event->ignore(); return; }
     const auto mods = ShortcutBinding::eventModifiers(event->modifiers());
     int modifiers = 0;
     if (mods & Qt::ControlModifier) modifiers |= KMOD_CTRL;
@@ -174,7 +178,7 @@ void SessionCanvas::key(QKeyEvent* event, bool down) {
     if (mods & Qt::MetaModifier) modifiers |= KMOD_GUI;
     refresh();
     emit input({{"type","key"},{"down",down},{"repeat",event->isAutoRepeat()},
-                {"symbol",int(key)},{"scan",int(SDL_GetScancodeFromKey(key))},{"modifiers",modifiers}});
+                {"symbol",int(key)},{"scan",int(scan)},{"modifiers",modifiers}});
     if (down && m_TextInput && !event->text().isEmpty() &&
         !(mods & (Qt::ControlModifier | Qt::MetaModifier)) && event->text().at(0).unicode() >= 0x20)
         emit input({{"type","text"},{"text",event->text().left(1024)}});
