@@ -68,20 +68,25 @@ NavigableDialog {
             }
         }
     }
-    footer: DialogButtonBox {
-        padding: 20; topPadding: 4; spacing: 8
-        background: Item {}
-        UiButton {
-            text: qsTranslate("QPlatformTheme", "Cancel")
-            focusPolicy: Qt.NoFocus
-            onClicked: dialog.reject()
-        }
-        UiButton {
-            objectName: "shortcutApply"
-            text: qsTr("Save shortcut")
-            enabled: dialog.pending.length > 0
-            focusPolicy: Qt.NoFocus; filled: true
-            onClicked: dialog.apply()
+    footer: Item {
+        implicitHeight: buttons.implicitHeight + 24
+        RowLayout {
+            id: buttons
+            anchors.right: parent.right; anchors.rightMargin: 20
+            anchors.top: parent.top; anchors.topMargin: 4
+            spacing: 8
+            UiButton {
+                text: qsTranslate("QPlatformTheme", "Cancel")
+                focusPolicy: Qt.NoFocus
+                onClicked: dialog.reject()
+            }
+            UiButton {
+                objectName: "shortcutApply"
+                text: qsTr("Save shortcut")
+                enabled: dialog.pending.length > 0
+                focusPolicy: Qt.NoFocus; filled: true
+                onClicked: dialog.apply()
+            }
         }
     }
 }

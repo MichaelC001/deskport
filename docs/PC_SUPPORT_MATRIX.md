@@ -1,13 +1,13 @@
 # PC implementation and acceptance matrix
 
-Reviewed 2026-10-24 against source `eedc5b2884e80e26d3c94df6bc0a026ab3b1ba01` and pinned core
-`e482f24563b2026693e284fbd8ca54eb420b7896`. This is a source snapshot, not an installed version.
+Reviewed 2026-10-24 against source `caf1906916174353aa0dce91f0bfa6d2bbaea107` and pinned core
+`b12d33c8811be6ee96efd45a0aeb14f775903ca1`. This is a source snapshot, not an installed version.
 Seven tested task branches are integrated with their scoped acceptance records;
 the remaining ten tasks retain explicit gates in [the integration ledger](PC_TASK_INTEGRATION.md).
 Historical package and hardware results retain their exact source identities.
 
 This snapshot includes the per-computer global window shortcut preference and
-expanded offline manual. The core changes since the previous snapshot affect
+expanded offline manual, plus locally configurable recall bindings. The core changes since the previous snapshot affect
 manual text and UI catalogs; display arithmetic and wire contracts are unchanged.
 This review updates the source inventory, without advancing historical package,
 hardware or hosted-CI evidence to the newer revision.
