@@ -45,6 +45,7 @@ public:
     QObject* presentation() const;
     Q_INVOKABLE void updateCanvas(QJsonObject state);
     Q_INVOKABLE void canvasInput(QJsonObject event);
+    Q_INVOKABLE void answerCanvasQuestion(int choice);
     QVariantMap selectedTraffic() const;
     QStringList tuningLimited() const;
     void setDiagnosticsEnabled(bool enabled);

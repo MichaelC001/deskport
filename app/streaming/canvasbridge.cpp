@@ -12,6 +12,9 @@ QJsonObject viewport, details;
 QQueue<QJsonObject> pendingInput;
 constexpr int MaxWidth = 16384, MaxHeight = 16384;
 bool previousFocus = false, previousHover = false;
+bool releasePending = false;
+quint64 questionId = 0;
+int questionAnswer = -1;
 constexpr const char* CanvasTag = "deskport-shell-canvas";
 int bounded(const QJsonObject& object, const char* key, int maximum) {
     const auto value = object.value(key).toDouble(-1);
@@ -28,7 +31,12 @@ void CanvasBridge::state(const QJsonObject& value) {
     const int width = bounded(value, "width", MaxWidth), height = bounded(value, "height", MaxHeight);
     const qreal scale = value.value("scale").toDouble();
     if (width < 1 || height < 1 || !std::isfinite(scale) || scale < 0.5 || scale > 4) return;
-    QMutexLocker lock(&stateMutex); viewport = value;
+    QMutexLocker lock(&stateMutex);
+    if (!value["visible"].toBool() || !value["focused"].toBool()) {
+        releasePending = true;
+        pendingInput.clear();
+    }
+    viewport = value;
 }
 void CanvasBridge::requested(bool visible) {
     wanted = visible;
@@ -71,7 +79,7 @@ Uint32 CanvasBridge::mouseState(int* x, int* y) {
 }
 void CanvasBridge::inputEnabled(bool enabled) {
     acceptsInput = enabled;
-    if (!enabled) { QMutexLocker lock(&stateMutex); pendingInput.clear(); details["grab"] = false; }
+    if (!enabled) { QMutexLocker lock(&stateMutex); pendingInput.clear(); releasePending = true; details["grab"] = false; }
 }
 void CanvasBridge::input(const QJsonObject& event) {
     if (!enabled() || !wanted || !acceptsInput) return;
@@ -80,6 +88,7 @@ void CanvasBridge::input(const QJsonObject& event) {
     if (pendingInput.size() >= 256) {
         // Never replay a backlog after the user has released control.
         pendingInput.clear(); acceptsInput = false;
+        releasePending = true;
         viewport["focused"] = false; details["grab"] = false;
         return;
     }
@@ -87,13 +96,19 @@ void CanvasBridge::input(const QJsonObject& event) {
 }
 void CanvasBridge::synchronize(SDL_Window* window) {
     if (!owns(window)) return;
-    QJsonObject state; QQueue<QJsonObject> input;
-    { QMutexLocker lock(&stateMutex); state = viewport; input.swap(pendingInput); }
+    QJsonObject state; QQueue<QJsonObject> input; bool release;
+    { QMutexLocker lock(&stateMutex); state = viewport; input.swap(pendingInput); release = releasePending; releasePending = false; }
     const int width = state["width"].toInt(1120), height = state["height"].toInt(704);
     int currentWidth, currentHeight; SDL_GetWindowSize(window, &currentWidth, &currentHeight);
     if (width != currentWidth || height != currentHeight) SDL_SetWindowSize(window, width, height);
     const bool focus = wanted && state["visible"].toBool() && state["focused"].toBool();
     const bool hover = focus && state["hovered"].toBool();
+    if (release) {
+        // A rapid focus return must not erase the release boundary. Deliver
+        // loss before gain and discard input queued across that boundary.
+        windowEvent(window, SDL_WINDOWEVENT_FOCUS_LOST);
+        previousFocus = false; input.clear();
+    }
     if (previousFocus != focus) windowEvent(window, focus ? SDL_WINDOWEVENT_FOCUS_GAINED : SDL_WINDOWEVENT_FOCUS_LOST);
     if (previousHover != hover) windowEvent(window, hover ? SDL_WINDOWEVENT_ENTER : SDL_WINDOWEVENT_LEAVE);
     previousFocus = focus; previousHover = hover;
@@ -160,3 +175,14 @@ QJsonObject CanvasBridge::description() {
     { QMutexLocker lock(&stateMutex); result = details; }
     return result;
 }
+void CanvasBridge::question(const QString& title, const QString& text, const QString& cancel, const QString& accept) {
+    QMutexLocker lock(&stateMutex);
+    questionAnswer = -1;
+    details["question"] = QJsonObject{{"id",double(++questionId)}, {"title",title}, {"text",text}, {"cancel",cancel}, {"accept",accept}};
+}
+void CanvasBridge::answer(quint64 id, int choice) {
+    QMutexLocker lock(&stateMutex);
+    if (wanted && id == questionId && details.value("question").isObject() && (choice == 0 || choice == 1)) questionAnswer = choice;
+}
+int CanvasBridge::takeAnswer() { QMutexLocker lock(&stateMutex); return questionAnswer; }
+void CanvasBridge::dismissQuestion() { QMutexLocker lock(&stateMutex); details.remove("question"); questionAnswer = -1; }

@@ -159,12 +159,14 @@ void TransitionWindow::pump() {
 }
 
 void TransitionWindow::ask(const QString& title, const QString& text, const QString& cancel, const QString& accept, double scale) {
+    if (CanvasBridge::owns(m_Window)) CanvasBridge::question(title, text, cancel, accept);
     m_QuestionTitle = title; m_QuestionText = text; m_CancelText = cancel; m_AcceptText = accept;
     m_QuestionScale = std::clamp(scale, 1.0, 4.0);
     m_Asking = true; m_Answer = -1; m_PresentedFrames = 0;
     m_CancelButton = m_AcceptButton = QRectF();
 }
 int TransitionWindow::takeAnswer() {
+    if (CanvasBridge::owns(m_Window)) m_Answer = CanvasBridge::takeAnswer();
     if (m_Answer < 0) return -1;
     const int answer = m_Answer;
     dismiss();

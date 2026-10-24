@@ -102,6 +102,8 @@ void SessionWorker::command(const QJsonObject& message) {
     } else if (action=="canvas-input" && CanvasBridge::enabled()) {
         if (m_Visible && quint64(message.value("epoch").toDouble()) == m_InputEpoch)
             CanvasBridge::input(message.value("event").toObject());
+    } else if (action=="canvas-answer" && CanvasBridge::enabled() && m_Visible) {
+        CanvasBridge::answer(quint64(message.value("id").toDouble()), message.value("choice").toInt(-1));
     } else if (action=="video-idr" && m_Session && m_Session->inputDispatching()) {
         LiRequestIdrFrame();
     } else if (action=="shortcut" && message.value("enabled").isBool()) {

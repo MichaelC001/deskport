@@ -92,6 +92,26 @@ class WindowsPaths(unittest.TestCase):
         override.write_bytes(b'changed input')
         self.assertNotEqual(first, build_paths.paths()['cache'])
 
+    def test_core_pin_only_reuses_verified_cache_without_moving_paths(self):
+        old = self.root / 'old-source'
+        for relative in build_paths.CACHE_RECIPES:
+            target = old / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(build_paths.SOURCE / relative, target)
+        lock_path = old / 'flake.lock'
+        lock = json.loads(lock_path.read_text())
+        lock['nodes']['deskport-core']['locked']['rev'] = 'old-application-core'
+        lock_path.write_text(json.dumps(lock))
+        cache = self.root / 'dependencies' / build_paths.recipe_key(old)
+        (cache / 'qt-static/lib').mkdir(parents=True)
+        (cache / 'scripts').symlink_to(old / 'winbuild/scripts')
+        self.assertEqual(build_paths.paths()['cache'], cache)
+        initialized = build_paths.initialize(build_paths.paths())
+        self.assertEqual((initialized['cache'] / 'scripts').resolve(), old / 'winbuild/scripts')
+        # The same policy cannot admit a dependency/toolchain change.
+        (old / 'winbuild/inputs.json').write_text('{}')
+        self.assertNotEqual(build_paths.paths()['cache'], cache)
+
     def test_existing_placement_keeps_generated_objects(self):
         root = self.root / 'placements'
         root.mkdir()

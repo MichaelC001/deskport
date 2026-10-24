@@ -26,4 +26,8 @@ void capture(bool grab, bool cursorHidden);
 void textInput(bool enabled);
 void label(const QString& text);
 QJsonObject description();
+void question(const QString& title, const QString& text, const QString& cancel, const QString& accept);
+void answer(quint64 id, int choice);
+int takeAnswer();
+void dismissQuestion();
 }

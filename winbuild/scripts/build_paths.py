@@ -42,10 +42,10 @@ SHARED_DIRECTORIES = (
 )
 
 
-def recipe_key():
+def recipe_key(source=SOURCE):
     digest = hashlib.sha256(b'deskport-windows-dependencies-v1\0')
     for relative in CACHE_RECIPES:
-        digest.update(relative.encode() + b'\0' + (SOURCE / relative).read_bytes())
+        digest.update(relative.encode() + b'\0' + (source / relative).read_bytes())
     # Overrides must not silently reuse binaries compiled from different inputs.
     for name, value in sorted(os.environ.items()):
         if not name.startswith('S_') and name != 'DESKPORT_HOST_TOOLCHAIN_FILE':
@@ -62,6 +62,34 @@ def recipe_key():
         else:
             raise SystemExit(f'Missing Windows dependency override {name}: {path}')
     return digest.hexdigest()[:24]
+
+
+def compatible_cache(cache_base):
+    """Reuse absolute-path caches when only the application core pin changed.
+
+    Verify the old recipe identity and every dependency input before reuse.
+    The retained scripts/toolchain path is deliberately not moved or replaced.
+    """
+    def dependency_lock(source):
+        lock = json.loads((source / 'flake.lock').read_text())
+        lock['nodes'].pop('deskport-core', None)
+        return lock
+    for candidate in sorted(cache_base.glob('*')):
+        link = candidate / 'scripts'
+        if not link.is_symlink() or not (candidate / 'qt-static/lib').is_dir():
+            continue
+        old_source = link.resolve().parents[1]
+        try:
+            if recipe_key(old_source) != candidate.name:
+                continue
+            if dependency_lock(old_source) != dependency_lock(SOURCE):
+                continue
+            if all((old_source / p).read_bytes() == (SOURCE / p).read_bytes()
+                   for p in CACHE_RECIPES if p != 'flake.lock'):
+                return candidate
+        except (OSError, ValueError, KeyError):
+            continue
+    return None
 
 
 def common_paths():
@@ -89,6 +117,8 @@ def paths():
     logs = Path(os.environ.get('DESKPORT_LOG_DIR') or common.get('DESKPORT_LOG_DIR') or run / 'logs').resolve()
     cache_base = Path(common.get('DESKPORT_DEPENDENCY_CACHE_DIR') or checkout / 'dependencies.noindex/windows').resolve()
     cache = cache_base / recipe_key()
+    # A shared policy revision cannot change Qt, FFmpeg or the host toolchain.
+    cache = compatible_cache(cache_base) or cache
     downloads = Path(os.environ.get('DESKPORT_WINDOWS_INPUT_CACHE') or cache_base / 'downloads').resolve()
     for label, path in (('work', work), ('dist', dist), ('logs', logs), ('dependency cache', cache_base), ('input cache', downloads)):
         if path == SOURCE or SOURCE in path.parents:
@@ -129,7 +159,8 @@ def initialize_locked(config):
     for relative in ('source-inputs', 'work', 'prefix', 'qt-static', 'compat-include', 'toolshim', 'toolchain-notices'):
         (cache / relative).mkdir(parents=True, exist_ok=True)
     checked_link(work / 'scripts', SCRIPTS)
-    checked_link(cache / 'scripts', SCRIPTS)
+    if cache != compatible_cache(config['cache_base']):
+        checked_link(cache / 'scripts', SCRIPTS)
     links = {'scripts': str(SCRIPTS)}
     for relative in SHARED_DIRECTORIES:
         # Do not create leaf source/build trees here: recipes use their absence

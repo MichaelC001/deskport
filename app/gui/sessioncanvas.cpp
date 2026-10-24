@@ -75,14 +75,19 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     m_Timer.start(16);
 }
 SessionCanvas::~SessionCanvas() {
+    // QQuickItem's destructor emits windowChanged after our members have
+    // already been destroyed. Disconnect callbacks before entering it.
+    disconnect(this, nullptr, this, nullptr);
+    m_Timer.stop(); m_ResizeTimer.stop();
     if (m_Presentation) m_Presentation->detach();
     m_Inhibitor.setEnabled(false);
     if (m_Grabbed && m_Surface) m_Surface->setKeyboardGrabEnabled(false);
-    delete m_Surface;
+    delete m_Surface; m_Surface = nullptr;
 }
 void SessionCanvas::setPresentation(QObject* value) {
     auto presentation = qobject_cast<SessionPresentation*>(value);
     if (presentation == m_Presentation) return;
+    m_ResizeTimer.stop();
     if (m_Presentation) { disconnect(m_Presentation, nullptr, this, nullptr); m_Presentation->detach(); }
     m_Presentation = presentation;
     if (presentation) {

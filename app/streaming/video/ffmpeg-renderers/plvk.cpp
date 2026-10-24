@@ -155,6 +155,10 @@ PlVkRenderer::~PlVkRenderer()
         av_buffer_unref(&m_HwDeviceCtx);
     }
 
+#ifdef Q_OS_LINUX
+    // Also release a partially initialized Qt wrapper on initialization failure.
+    m_QtInstance.reset();
+#endif
     pl_vk_inst_destroy(&m_PlVkInstance);
 
     // m_Log must always be the last object destroyed

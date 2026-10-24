@@ -66,7 +66,7 @@ public:
     void ask(const QString& title, const QString& text, const QString& cancel, const QString& accept, double scale);
     int takeAnswer();
     // Withdraws an unanswered question and shows the connecting state again.
-    void dismiss() { m_Asking = false; m_Answer = -1; m_PresentedFrames = 0; }
+    void dismiss() { m_Asking = false; m_Answer = -1; m_PresentedFrames = 0; if (CanvasBridge::owns(m_Window)) CanvasBridge::dismissQuestion(); }
 private:
     void clearRenderer();
     void drawQuestion(QPainter& painter, int width, int height, double scale);

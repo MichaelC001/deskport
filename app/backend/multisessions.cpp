@@ -62,6 +62,13 @@ void MultiSessions::canvasInput(QJsonObject event) {
         !entry->exposed || !m_Hiding.isEmpty() || entry->state != "connected") return;
     send(entry, {{"command","canvas-input"},{"epoch",double(m_Epoch)},{"event",event}});
 }
+void MultiSessions::answerCanvasQuestion(int choice) {
+    const auto entry = m_Entries.value(m_Wanted);
+    if (!entry || (choice != 0 && choice != 1)) return;
+    const auto question = entry->canvas.value("question").toJsonObject();
+    if (question.isEmpty()) return;
+    send(entry, {{"command","canvas-answer"}, {"id",question.value("id")}, {"choice",choice}});
+}
 
 bool MultiSessions::busy() const {
     for (auto entry : m_Entries) if (entry->process && entry->process->state() != QProcess::NotRunning) return true;
@@ -244,6 +251,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     if (type == "canvas") {
         const auto value = message.value("value").toObject();
         entry->canvas = {{"textInput",value.value("textInput").toBool()},
+                         {"question",value.value("question").toObject()},
                          {"label",value.value("label").toString().left(1024)},
                          {"waiting",value.value("waiting").toBool()},
                          {"grab",value.value("grab").toBool()}, {"cursorHidden",value.value("cursorHidden").toBool()}};
