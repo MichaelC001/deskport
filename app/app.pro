@@ -1,6 +1,6 @@
 SOURCES += backend/multisessions.cpp backend/sessionworker.cpp backend/trafficbudget.cpp
 SOURCES += backend/globalshortcut.cpp
-HEADERS += backend/globalshortcut.h streaming/shortcutstate.h
+HEADERS += backend/globalshortcut.h backend/shortcutbinding.h streaming/shortcutstate.h
 win32: SOURCES += backend/globalshortcut_native.cpp
 macx {
     OBJECTIVE_SOURCES += backend/globalshortcut_mac.mm

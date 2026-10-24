@@ -1,6 +1,7 @@
 #include "streamingpreferences.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "utils.h"
+#include "backend/shortcutbinding.h"
 
 #include <QSettings>
 #include <QCryptographicHash>
@@ -173,6 +174,16 @@ bool StreamingPreferences::saveDesktopAdjustment(const QString& hostId, double v
     return settings.status() == QSettings::NoError;
 }
 
+QString StreamingPreferences::shortcutFromKey(int key, int modifiers) const
+{
+    return ShortcutBinding::fromEvent(key, modifiers);
+}
+
+QString StreamingPreferences::shortcutDisplay(const QString& sequence) const
+{
+    return ShortcutBinding::display(sequence);
+}
+
 void StreamingPreferences::reload()
 {
     DeviceSettings settings(m_DeviceId);
@@ -216,6 +227,9 @@ void StreamingPreferences::reload()
     uiAccent = qBound(0, settings.value("ui/accent", 0).toInt(), 4);
     showTraffic = settings.value("ui/showTraffic", false).toBool();
     globalShortcutEnabled = settings.value("ui/globalShortcutEnabled", true).toBool();
+    globalShortcutSequence = ShortcutBinding::parse(settings.value("ui/globalShortcutSequence",
+        ShortcutBinding::defaultSequence()).toString()).portable();
+    if (globalShortcutSequence.isEmpty()) globalShortcutSequence = ShortcutBinding::defaultSequence();
     dataSaver = settings.value("datasaver", false).toBool();
     compactDevices = settings.value("ui/compactDevices", true).toBool();
     showLocalCursor = settings.value("showLocalCursor", true).toBool();
@@ -475,6 +489,8 @@ void StreamingPreferences::save()
     settings.setValue("ui/accent", uiAccent);
     settings.setValue("ui/showTraffic", showTraffic);
     settings.setValue("ui/globalShortcutEnabled", globalShortcutEnabled);
+    const auto shortcut = ShortcutBinding::parse(globalShortcutSequence).portable();
+    settings.setValue("ui/globalShortcutSequence", shortcut.isEmpty() ? ShortcutBinding::defaultSequence() : shortcut);
     settings.setValue("datasaver", dataSaver);
     settings.setValue("ui/compactDevices", compactDevices);
     settings.setValue("showLocalCursor", showLocalCursor);

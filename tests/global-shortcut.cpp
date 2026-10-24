@@ -220,9 +220,10 @@ private slots:
         shortcut.start();
         backend->edge(true, "old-token");
         QTest::ignoreMessage(QtWarningMsg,
-            "DeskPort global shortcut Meta+Apostrophe unavailable: fixture registration failure");
+            "DeskPort global shortcut unavailable: fixture registration failure");
         backend->error(QStringLiteral("fixture registration failure"));
         QVERIFY(!shortcut.available());
+        QCOMPARE(shortcut.error(), QStringLiteral("fixture registration failure"));
         backend->edge(false, {});
         shortcut.fallbackActivated();
         QCOMPARE(activated.count(), 0);
@@ -237,6 +238,59 @@ private slots:
         QVERIFY(!shortcut.available());
         QCOMPARE(created, 0);
         QCOMPARE(activated.count(), 0);
+    }
+
+    void customBindingReplacesRegistrationAndDiscardsOldEdges() {
+        GlobalShortcut shortcut;
+        QSignalSpy activated(&shortcut, &GlobalShortcut::activated);
+        QVERIFY(shortcut.setSequence("Ctrl+Alt+K"));
+        QCOMPARE(created, 0); // Configuration before startup never registers.
+        shortcut.start();
+        QCOMPARE(backend->binding.portable(), QStringLiteral("Ctrl+Alt+K"));
+        auto* old = backend;
+        old->edge(true, "old-token");
+        QVERIFY(shortcut.setSequence("Meta+F8"));
+        QCOMPARE(stopped, 1);
+        QCOMPARE(created, 2);
+        QCOMPARE(backend->binding.portable(), QStringLiteral("Meta+F8"));
+        old->availability(true); old->edge(false, "old-token");
+        QCOMPARE(activated.count(), 0);
+        backend->edge(true, {}); backend->edge(false, {});
+        QCOMPARE(activated.count(), 1);
+        QVERIFY(!shortcut.setSequence("K"));
+        QVERIFY(!shortcut.setSequence("Ctrl+K, Ctrl+C"));
+        QCOMPARE(shortcut.sequence(), QStringLiteral("Meta+F8"));
+        QCOMPARE(created, 2);
+    }
+
+    void recordingSuspendsBindingAndAppliesOnlyWhenClosed() {
+        GlobalShortcut shortcut;
+        shortcut.start();
+        shortcut.setRecording(true);
+        QCOMPARE(stopped, 1);
+        QVERIFY(!shortcut.available());
+        QVERIFY(shortcut.setSequence("Ctrl+Shift+F12"));
+        QCOMPARE(created, 1);
+        shortcut.setRecording(false);
+        QCOMPARE(created, 2);
+        QCOMPARE(backend->binding.portable(), QStringLiteral("Ctrl+Shift+F12"));
+        shortcut.setEnabled(false);
+        shortcut.setRecording(true); shortcut.setRecording(false);
+        QCOMPARE(created, 2);
+    }
+
+    void bindingValidationAndPlatformModifierMapping() {
+        for (const auto& value : {"Meta+'", "Ctrl+Alt+K", "Alt+Space", "Meta+Shift+F12", "Ctrl+9"})
+            QVERIFY2(ShortcutBinding::parse(value).valid(), value);
+        for (const auto& value : {"", "A", "Shift+A", "Ctrl+Left", "Ctrl+K, Ctrl+C"})
+            QVERIFY2(!ShortcutBinding::parse(value).valid(), value);
+        QCOMPARE(ShortcutBinding::parse("Ctrl+Alt+K").portalTrigger(), QStringLiteral("CTRL+ALT+k"));
+#ifdef Q_OS_MACOS
+        QCOMPARE(ShortcutBinding::fromEvent(Qt::Key_K, Qt::ControlModifier), QStringLiteral("Meta+K"));
+        QCOMPARE(ShortcutBinding::fromEvent(Qt::Key_K, Qt::MetaModifier), QStringLiteral("Ctrl+K"));
+#else
+        QCOMPARE(ShortcutBinding::fromEvent(Qt::Key_K, Qt::ControlModifier), QStringLiteral("Ctrl+K"));
+#endif
     }
 
     void disabledPreferenceSkipsRegistrationUntilEnabled() {

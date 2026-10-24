@@ -74,7 +74,8 @@ void SessionWorker::attach(Session* session) {
 void SessionWorker::command(const QJsonObject& message) {
     const auto action=message.value("command").toString();
     if (action=="initialize" && !m_Computers && !m_Stopping) {
-        ShortcutState::setEnabled(message.value("shortcutEnabled").toBool());
+        ShortcutState::configure(message.value("shortcutEnabled").toBool(),
+            message.value("shortcutSequence").toString(ShortcutBinding::defaultSequence()));
         m_Computers = new ComputerManager(StreamingPreferences::get(), true, m_Host);
         const auto peer=message.value("peer").toObject();
         if (!peer.isEmpty() && (peer.value("hostId").toString().compare(m_Host,Qt::CaseInsensitive) != 0 ||
@@ -85,7 +86,8 @@ void SessionWorker::command(const QJsonObject& message) {
         connect(launcher,&CliStartStream::Launcher::appQuitRequired,this,[this](QString) { finish(tr("Another application is running on that server.")); });
         launcher->execute(m_Computers);
     } else if (action=="shortcut" && message.value("enabled").isBool()) {
-        ShortcutState::setEnabled(message.value("enabled").toBool());
+        ShortcutState::configure(message.value("enabled").toBool(),
+            message.value("sequence").toString(ShortcutBinding::defaultSequence()));
     } else if (action=="diagnostics" && message.value("enabled").isBool()) {
         Diagnostics::instance().setEnabled(message.value("enabled").toBool());
     } else if (action=="show") {

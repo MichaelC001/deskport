@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 ཡིས་ DeskPort སྟོན་པའམ་སྦེད་པ་ཡིན། སོར་བཞག་གིས་ཁ་ཕྱེ་ཡོད། བཟོ་བཅོས་དེ་མ་ཐག་ནུས་པ་ཐོན།</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>མྱུར་མཐེབ་བརྗེ་བ།</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>མྱུར་མཐེབ་སྤྱོད་མི་ཐུབ། %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>ཅོག་ངོས་མྱུར་མཐེབ། %1 ཅོག་ངོས་སྒྲིག་འགོད་ནང་སྦྲེལ་བ་དོ་དམ་བྱེད།</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>མཐུད་མཚམས་འཇོག་པ།</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>མྱུར་མཐེབ་བརྗེ་བ།</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>སོར་བཞག་སླར་གསོ།</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>མྱུར་མཐེབ་ཉར་ཚགས།</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>རྒྱབ་སྐྱོར་ཡོད་པའི་མཐེབ་སྦྱོར་ཞིག་འདེམས།</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>མྱུར་མཐེབ་ཞིག་གནོན། Control དང་ Alt/Option ཡང་ན་ Meta/Command དང་ལྷན་དུ་ཡི་གེ་དང་ཨང་ཀི་ F1–F12 སྟོང་ཆ་ཡང་ན་འབྲེལ་རྟགས་སྤྱོད། Shift འདེམས་ཆོག</translation>
         </message>
     </context>
 </TS>

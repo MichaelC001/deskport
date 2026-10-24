@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 zeigt oder verbirgt DeskPort. Standardmäßig aktiviert; Änderungen gelten sofort.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Tastenkürzel ändern</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Tastenkürzel nicht verfügbar: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Desktop-Tastenkürzel: %1. Die Belegung lässt sich in den Desktop-Einstellungen verwalten.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Verbindung wird getrennt…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Tastenkürzel ändern</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Standard wiederherstellen</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Tastenkürzel speichern</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Wählen Sie eine unterstützte Tastenkombination.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Drücken Sie ein Tastenkürzel. Kombinieren Sie Control, Alt/Option oder Meta/Command mit einem Buchstaben, einer Ziffer, F1–F12, Leerzeichen oder Apostroph. Shift ist optional.</translation>
         </message>
     </context>
 </TS>

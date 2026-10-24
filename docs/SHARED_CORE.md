@@ -1,3 +1,13 @@
+## Custom desktop recall labels and manual — 2026-10-24
+
+Core `b12d33c8811be6ee96efd45a0aeb14f775903ca1` adds the shortcut recorder,
+validation/status labels and a manual paragraph covering save, cancel and reset.
+The Git/Nix pins reference the same published tree. Settings text has draft
+translations in all 22 primary locales; the new manual paragraph is authored in
+English and both Chinese scripts with English fallback elsewhere. Registration,
+validation and local worker IPC remain desktop-owned; shared policy and peer
+wire contracts are unchanged.
+
 ## Desktop manual and window shortcut labels — 2026-10-24
 
 Core `e482f24563b2026693e284fbd8ca54eb420b7896` expands the offline manual to

@@ -12,44 +12,56 @@ QString shortcutText(const char* text) {
     return QCoreApplication::translate("GlobalShortcut", text);
 }
 
-bool apostropheKey(TISInputSourceRef source, UInt32& key, UInt32& modifiers) {
+bool layoutKey(TISInputSourceRef source, const ShortcutBinding& binding, UInt32& key) {
     if (!source) return false;
     const auto data = static_cast<CFDataRef>(TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData));
     if (!data) return false;
     const auto layout = reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(data));
     // Command can select a different layout (for example, Dvorak-QWERTY).
-    // Both base and Command layers must name apostrophe, matching SDL's
+    // Both base and Command layers must name the selected symbol, matching SDL's
     // unmodified key symbol without silently requiring another modifier.
     for (UInt16 candidate = 0; candidate < 128; ++candidate) {
         bool matches = true;
         for (UInt32 layer : {UInt32(0), UInt32(cmdKey >> 8)}) {
+            if (layer && !(binding.modifiers & Qt::MetaModifier)) continue;
             UInt32 deadKey = 0;
             UniChar output[4] {};
             UniCharCount length = 0;
             const OSStatus status = UCKeyTranslate(layout, candidate, kUCKeyActionDown,
                 layer, LMGetKbdType(), kUCKeyTranslateNoDeadKeysMask,
                 &deadKey, 4, &length, output);
-            if (status != noErr || length != 1 || output[0] != '\'') { matches = false; break; }
+            if (status != noErr || length != 1 || output[0] != UniChar(binding.character())) { matches = false; break; }
         }
         if (matches) {
             key = candidate;
-            modifiers = cmdKey;
             return true;
         }
     }
     return false;
 }
 
-bool currentApostropheKey(UInt32& key, UInt32& modifiers) {
+bool currentKey(const ShortcutBinding& binding, UInt32& key, UInt32& modifiers) {
+    modifiers = 0;
+    if (binding.modifiers & Qt::MetaModifier) modifiers |= cmdKey;
+    if (binding.modifiers & Qt::ControlModifier) modifiers |= controlKey;
+    if (binding.modifiers & Qt::AltModifier) modifiers |= optionKey;
+    if (binding.modifiers & Qt::ShiftModifier) modifiers |= shiftKey;
+    if (binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12) {
+        const UInt32 functionKeys[] {kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5, kVK_F6,
+                                     kVK_F7, kVK_F8, kVK_F9, kVK_F10, kVK_F11, kVK_F12};
+        key = functionKeys[binding.key - Qt::Key_F1];
+        return true;
+    }
+    if (binding.key == Qt::Key_Space) { key = kVK_Space; return true; }
     auto source = TISCopyCurrentKeyboardLayoutInputSource();
     const bool hasLayout = source && TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData);
-    const bool found = apostropheKey(source, key, modifiers);
+    const bool found = layoutKey(source, binding, key);
     if (source) CFRelease(source);
     if (found || hasLayout) return found;
     // Input methods can omit Unicode layout data. Use their underlying ASCII
     // layout without changing the user's selected input method.
     source = TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
-    const bool fallback = apostropheKey(source, key, modifiers);
+    const bool fallback = layoutKey(source, binding, key);
     if (source) CFRelease(source);
     return fallback;
 }
@@ -100,14 +112,14 @@ private:
         if (!m_Running) return false;
         if (m_Pressed) { m_RebindPending = true; return true; }
         UInt32 key = 0, modifiers = 0;
-        const bool mapped = currentApostropheKey(key, modifiers);
+        const bool mapped = currentKey(binding, key, modifiers);
         if (mapped && m_HotKey && key == m_Key && modifiers == m_Modifiers) return true;
         // Invalidate queued events even when mapping or registration will fail.
         ++m_RegistrationId;
         if (m_HotKey) UnregisterEventHotKey(m_HotKey);
         m_HotKey = nullptr;
         if (!mapped) {
-            if (error) error(shortcutText("This keyboard layout cannot register Command + apostrophe without extra modifiers."));
+            if (error) error(shortcutText("This keyboard layout cannot register the selected shortcut without extra modifiers."));
             return false;
         }
         const EventHotKeyID id {HotKeySignature, m_RegistrationId};
@@ -115,7 +127,7 @@ private:
             kEventHotKeyExclusive, &m_HotKey);
         if (status != noErr) {
             m_HotKey = nullptr;
-            if (error) error(shortcutText("Command + apostrophe is unavailable or already in use (macOS error %1).").arg(status));
+            if (error) error(shortcutText("The selected shortcut is unavailable or already in use (macOS error %1).").arg(status));
             return false;
         }
         m_Key = key;

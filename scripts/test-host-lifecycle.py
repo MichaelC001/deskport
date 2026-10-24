@@ -214,6 +214,12 @@ macx {{
             else:
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
     environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"), XDG_DATA_HOME=str(work / "data"))
+    if "--sessions" in sys.argv:
+        # QLocalServer appends a UUID. Managed run paths can exceed macOS's
+        # Unix socket limit; only socket files use this short shared directory.
+        socket_root = Path(subprocess.check_output(["bash", str(root / "scripts/build-paths.sh"), "root"], text=True).strip()) / "sockets"
+        socket_root.mkdir(parents=True, exist_ok=True)
+        environment["TMPDIR"] = str(socket_root)
     if "--cli" in sys.argv:
         environment["DESKPORT_CLI_TEST_CONFIG"] = str(work / "cli-config")
     if "--service" in sys.argv:

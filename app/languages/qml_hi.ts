@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 DeskPort को दिखाता या छिपाता है। डिफ़ॉल्ट रूप से चालू है; बदलाव तुरंत लागू होते हैं।</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>शॉर्टकट बदलें</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>शॉर्टकट उपलब्ध नहीं: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>डेस्कटॉप शॉर्टकट: %1। इसका संयोजन डेस्कटॉप सेटिंग में बदलें।</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>डिस्कनेक्ट हो रहा है...</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>शॉर्टकट बदलें</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>डिफ़ॉल्ट बहाल करें</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>शॉर्टकट सहेजें</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>समर्थित कुंजी संयोजन चुनें।</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>शॉर्टकट दबाएँ। Control, Alt/Option या Meta/Command के साथ अक्षर, अंक, F1–F12, स्पेस या अपॉस्ट्रॉफ़ चुनें। Shift वैकल्पिक है।</translation>
         </message>
     </context>
 </TS>

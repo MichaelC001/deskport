@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 root = Path(__file__).resolve().parents[1]
 subprocess.run([sys.executable, str(root/'scripts/sync-translations.py'), '--check'], check=True)
 languages = [language['qt'] for language in json.loads((root/'shared/deskport-core/i18n/languages.json').read_text()) if language['qt'] != 'en']
-pages = ("main", "PcView", "DeviceCard", "DevicePanel", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "HelpView", "NavigableDialog", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue", "StreamSegue")
+pages = ("main", "PcView", "DeviceCard", "DevicePanel", "DeviceSettings", "DeviceAdvanced", "SettingsHome", "ShortcutDialog", "HelpView", "NavigableDialog", "HostView", "BindView", "PeerEditor", "SetupView", "BindingApproval", "DesktopSegue", "StreamSegue")
 for language in languages:
     tree = ET.parse(root / "app/languages" / f"qml_{language}.ts")
     contexts = {

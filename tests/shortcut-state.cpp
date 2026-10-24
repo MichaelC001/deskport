@@ -64,6 +64,20 @@ int main() {
     assert(chord.handle(key(SDL_KEYDOWN)) == KeyResult::Pressed);
     chord.reset(); // Focus loss cancels a partial chord.
     assert(chord.handle(key(SDL_KEYUP)) == KeyResult::Pass);
+    ShortcutState::configure(true, "Ctrl+Alt+K");
+    assert(chord.handle(key(SDL_KEYDOWN)) == KeyResult::Pass); // Default no longer matches.
+    const auto custom = SDL_Keymod(KMOD_LCTRL | KMOD_RALT);
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_k, custom, SDL_SCANCODE_K)) == KeyResult::Pressed);
+    assert(chord.handle(key(SDL_KEYUP, SDLK_k, custom, SDL_SCANCODE_K)) == KeyResult::Released);
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_k, custom, SDL_SCANCODE_K)) == KeyResult::Pressed);
+    ShortcutState::configure(true, "Meta+F8");
+    assert(chord.handle(key(SDL_KEYUP, SDLK_k, custom, SDL_SCANCODE_K)) == KeyResult::Consumed);
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_F8, KMOD_GUI, SDL_SCANCODE_F8)) == KeyResult::Pressed);
+    ShortcutState::setEnabled(false); ShortcutState::setEnabled(true);
+    assert(chord.handle(key(SDL_KEYUP, SDLK_F8, KMOD_GUI, SDL_SCANCODE_F8)) == KeyResult::Consumed);
+    ShortcutState::configure(true, "A");
+    assert(!ShortcutState::enabled());
+    assert(chord.handle(key(SDL_KEYDOWN, SDLK_a, KMOD_NONE, SDL_SCANCODE_A)) == KeyResult::Pass);
     ShortcutState::setEnabled(false);
-    puts("PASS: shortcut fallback consumes the chord, follows layout symbols, releases once and respects registration/focus loss");
+    puts("PASS: default/custom shortcut fallback, configuration changes, held keys, layout symbols and registration/focus loss");
 }

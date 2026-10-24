@@ -64,6 +64,11 @@ QMAKE_RPATHDIR += "{sdl}"
         executable = compile_test(work, "shortcut-state", ["tests/shortcut-state.cpp"], extra)
         subprocess.run([str(executable)], env=env, check=True, timeout=30)
 
+        if sys.platform == "darwin":
+            executable = compile_test(work, "global-shortcut-native", ["tests/global-shortcut-native.cpp"],
+                f'OBJECTIVE_SOURCES += "{ROOT}/app/backend/globalshortcut_mac.mm"\nLIBS += -framework Carbon\n')
+            subprocess.run([str(executable)], env=env, check=True, timeout=30)
+
         if sys.platform.startswith("linux"):
             executable = compile_test(work, "global-shortcut-portal", [
                 "tests/global-shortcut-portal.cpp", "app/backend/globalshortcut_linux.cpp",

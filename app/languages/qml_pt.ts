@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 mostra ou oculta o DeskPort. Ativado por padrão; as alterações são imediatas.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Alterar atalho</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Atalho indisponível: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Atalho do ambiente de trabalho: %1. Gerencie a associação nas configurações do ambiente.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Desconectando…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Alterar atalho</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Restaurar padrão</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Salvar atalho</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Escolha uma combinação de teclas compatível.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Pressione um atalho. Combine Control, Alt/Option ou Meta/Command com uma letra, número, F1–F12, espaço ou apóstrofo. Shift é opcional.</translation>
         </message>
     </context>
 </TS>

@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QElapsedTimer>
 #include <functional>
+#include "shortcutbinding.h"
 
 // Native adapters report edges; the shell owns the action and its lifetime.
 // Only the resident GUI process constructs a backend.
@@ -15,8 +16,10 @@ public:
     std::function<void(bool, const QByteArray&)> edge;
     std::function<void(QString)> error;
     std::function<void(bool)> availability;
+    ShortcutBinding binding = ShortcutBinding::parse(ShortcutBinding::defaultSequence());
+    QString triggerDescription;
     // Portals may let users change the binding. Never keep intercepting the
-    // fixed SDL chord if the compositor assigned a different shortcut.
+    // requested SDL chord if the compositor assigned a different shortcut.
     bool fixedChord = true;
 };
 
@@ -58,23 +61,40 @@ private:
 
 class GlobalShortcut : public QObject {
     Q_OBJECT
+    Q_PROPERTY(bool available READ available NOTIFY statusChanged)
+    Q_PROPERTY(QString error READ error NOTIFY statusChanged)
+    Q_PROPERTY(bool desktopAssigned READ desktopAssigned NOTIFY statusChanged)
+    Q_PROPERTY(QString effectiveShortcut READ effectiveShortcut NOTIFY statusChanged)
 public:
     explicit GlobalShortcut(QObject* parent = nullptr);
     ~GlobalShortcut();
     void start();
     void setEnabled(bool enabled);
+    bool setSequence(const QString& sequence);
+    QString sequence() const { return m_Sequence; }
+    Q_INVOKABLE void setRecording(bool recording);
     Q_INVOKABLE void fallbackActivated();
     bool available() const { return m_Available; }
+    QString error() const { return m_Error; }
+    bool desktopAssigned() const { return m_Backend && m_Available && !m_Backend->fixedChord; }
+    QString effectiveShortcut() const {
+        return m_Backend && !m_Backend->triggerDescription.isEmpty() ? m_Backend->triggerDescription :
+            ShortcutBinding::display(m_Sequence);
+    }
 signals:
     void activated(QByteArray activationToken);
     void availabilityChanged(bool available);
     void fallbackAvailabilityChanged(bool available);
+    void statusChanged();
 private:
     void setAvailable(bool available);
+    void stop();
     GlobalShortcutBackend* m_Backend = nullptr;
     ShortcutActivationGate m_Gate;
     QElapsedTimer m_Clock;
     QByteArray m_Token;
     bool m_Enabled = true;
+    bool m_Started = false, m_Recording = false;
     bool m_Available = false;
+    QString m_Sequence = ShortcutBinding::defaultSequence(), m_Error;
 };

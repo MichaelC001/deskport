@@ -13,6 +13,7 @@
 #include <QTimer>
 #include <QUuid>
 #include <QVariantMap>
+#include <QCryptographicHash>
 
 struct PortalShortcut { QString id; QVariantMap options; };
 using PortalShortcuts = QList<PortalShortcut>;
@@ -75,6 +76,14 @@ public:
                          SLOT(shortcutsChanged(QDBusObjectPath,PortalShortcuts)));
     }
 private:
+    QString shortcutId() const {
+        // Preserve the existing default action and its compositor preference.
+        // A newly selected chord gets a new action so an older remembered
+        // binding cannot silently override the user's new preferred trigger.
+        return binding.portable() == ShortcutBinding::defaultSequence() ? ShortcutId :
+            ShortcutId + '-' + QString::fromLatin1(QCryptographicHash::hash(binding.portable().toUtf8(),
+                QCryptographicHash::Sha256).toHex().left(12));
+    }
     using Reply = std::function<void(const QDBusMessage&)>;
     void call(const QString& interface, const QString& method, const QVariantList& args, Reply done, bool optional = false) {
         auto message = QDBusMessage::createMethodCall(Service, Path, interface, method);
@@ -139,10 +148,8 @@ private:
                 if (m_Session.isEmpty()) m_Session = qvariant_cast<QDBusObjectPath>(values.value("session_handle")).path();
                 if (!m_Session.startsWith(Path + "/session/")) { fail("The shortcut portal returned an invalid session."); return; }
                 m_Bus.connect(Service, m_Session, "org.freedesktop.portal.Session", "Closed", this, SLOT(closed()));
-                // Reuse the action ID on every launch so the compositor retains
-                // the user's approved binding. The requested default is LOGO+'.
-                PortalShortcuts shortcuts{{ShortcutId, {{"description", QStringLiteral("Show or hide DeskPort")},
-                                                        {"preferred_trigger", QStringLiteral("LOGO+apostrophe")}}}};
+                PortalShortcuts shortcuts{{shortcutId(), {{"description", QStringLiteral("Show or hide DeskPort")},
+                                                        {"preferred_trigger", binding.portalTrigger()}}}};
                 request("BindShortcuts", {QVariant::fromValue(QDBusObjectPath(m_Session)), QVariant::fromValue(shortcuts), QString()}, {},
                         [this](const QVariantMap& values) { update(qdbus_cast<PortalShortcuts>(values.value("shortcuts"))); });
             });
@@ -154,11 +161,14 @@ private:
         if (availability) availability(false);
         m_Ready = false;
         fixedChord = false;
-        for (const auto& shortcut : shortcuts) if (shortcut.id == ShortcutId &&
+        triggerDescription.clear();
+        for (const auto& shortcut : shortcuts) if (shortcut.id == shortcutId() &&
             !shortcut.options.value("trigger_description").toString().isEmpty()) {
             m_Ready = true;
             const auto description = shortcut.options.value("trigger_description").toString();
-            fixedChord = QKeySequence::fromString(description, QKeySequence::NativeText) == QKeySequence(Qt::META | Qt::Key_Apostrophe);
+            triggerDescription = description;
+            fixedChord = QKeySequence::fromString(description, QKeySequence::NativeText) ==
+                QKeySequence::fromString(binding.portable(), QKeySequence::PortableText);
         }
         if (!m_Ready) { m_Down = false; if (error) error("The desktop did not bind the DeskPort shortcut."); }
         else if (availability) availability(true);
@@ -172,12 +182,12 @@ private slots:
         done(values);
     }
     void pressed(const QDBusObjectPath& session, const QString& id, qulonglong, const QVariantMap& options) {
-        if (!m_Ready || session.path() != m_Session || id != ShortcutId || m_Down) return;
+        if (!m_Ready || session.path() != m_Session || id != shortcutId() || m_Down) return;
         m_Down = true;
         if (edge) edge(true, options.value("activation_token").toString().toUtf8());
     }
     void released(const QDBusObjectPath& session, const QString& id, qulonglong, const QVariantMap& options) {
-        if (!m_Ready || session.path() != m_Session || id != ShortcutId || !m_Down) return;
+        if (!m_Ready || session.path() != m_Session || id != shortcutId() || !m_Down) return;
         m_Down = false;
         if (edge) edge(false, options.value("activation_token").toString().toUtf8());
     }
@@ -229,17 +239,19 @@ private:
         if (availability) availability(false);
         XUngrabKey(m_Display, AnyKey, AnyModifier, DefaultRootWindow(m_Display));
         m_Down = false;
-        m_Key = 0; m_Modifiers = Mod4Mask;
+        m_Key = 0; m_Modifiers = 0;
         XkbStateRec state {};
         if (XkbGetState(m_Display, XkbUseCoreKbd, &state) != Success) {
             if (error) error("The current X11 keyboard group is unavailable."); return false;
         }
         m_Group = state.group;
         int minimum, maximum; XDisplayKeycodes(m_Display, &minimum, &maximum);
+        const KeySym target = binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12 ?
+            XK_F1 + binding.key - Qt::Key_F1 : static_cast<unsigned char>(binding.character());
         for (int code = minimum; code <= maximum && !m_Key; ++code)
-            if (XkbKeycodeToKeysym(m_Display, code, m_Group, 0) == XK_apostrophe) m_Key = code;
-        if (!m_Key) { if (error) error("This X11 layout has no apostrophe key without extra modifiers."); return false; }
-        unsigned numLock = 0, super = 0;
+            if (XkbKeycodeToKeysym(m_Display, code, m_Group, 0) == target) m_Key = code;
+        if (!m_Key) { if (error) error("This X11 layout cannot register the selected shortcut without extra modifiers."); return false; }
+        unsigned numLock = 0, super = 0, alt = 0;
         auto mapping = XGetModifierMapping(m_Display);
         if (mapping) {
             for (int mod = 0; mod < 8; ++mod) for (int key = 0; key < mapping->max_keypermod; ++key) {
@@ -248,10 +260,14 @@ private:
                 const auto symbol = XkbKeycodeToKeysym(m_Display, code, 0, 0);
                 if (symbol == XK_Num_Lock) numLock |= 1u << mod;
                 if (symbol == XK_Super_L || symbol == XK_Super_R) super |= 1u << mod;
+                if (symbol == XK_Alt_L || symbol == XK_Alt_R) alt |= 1u << mod;
             }
             XFreeModifiermap(mapping);
         }
-        if (super) m_Modifiers = (m_Modifiers & ~Mod4Mask) | super;
+        if (binding.modifiers & Qt::MetaModifier) m_Modifiers |= super ? super : Mod4Mask;
+        if (binding.modifiers & Qt::AltModifier) m_Modifiers |= alt ? alt : Mod1Mask;
+        if (binding.modifiers & Qt::ControlModifier) m_Modifiers |= ControlMask;
+        if (binding.modifiers & Qt::ShiftModifier) m_Modifiers |= ShiftMask;
         // XGrabKey errors are asynchronous. Capture only this connection's
         // errors during its short synchronized registration transaction.
         s_GrabDisplay = m_Display; s_GrabError = 0;
@@ -263,7 +279,7 @@ private:
         XSetErrorHandler(s_PreviousError); s_GrabDisplay = nullptr;
         if (s_GrabError) {
             XUngrabKey(m_Display, AnyKey, AnyModifier, DefaultRootWindow(m_Display)); XFlush(m_Display);
-            if (error) error("Meta + apostrophe is already in use on this X11 desktop."); return false;
+            if (error) error("The selected shortcut is already in use on this X11 desktop."); return false;
         }
         if (availability) availability(true);
         return true;

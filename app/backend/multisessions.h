@@ -34,7 +34,7 @@ public:
     QVariantMap selectedTraffic() const;
     QStringList tuningLimited() const;
     void setDiagnosticsEnabled(bool enabled);
-    void setShortcutEnabled(bool enabled);
+    void setShortcutEnabled(bool enabled, const QString& sequence = QStringLiteral("Meta+'"));
     Q_INVOKABLE void open(QString id, QString name, QString address, QString app = QStringLiteral("Desktop"));
     Q_INVOKABLE void select(QString id);
     Q_INVOKABLE void showDevices();
@@ -109,5 +109,6 @@ private:
     quint64 m_Epoch = 0;
     bool m_Shutdown = false;
     bool m_ShortcutEnabled = false;
+    QString m_ShortcutSequence = QStringLiteral("Meta+'");
 };
 

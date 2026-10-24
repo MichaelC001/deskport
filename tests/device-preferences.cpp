@@ -81,6 +81,26 @@ private slots:
         QVERIFY(global->globalShortcutEnabled);
         QVERIFY(device->globalShortcutEnabled);
     }
+    void customShortcutIsValidatedPersistedAndLocalOnly() {
+        auto global = StreamingPreferences::get();
+        QCOMPARE(global->globalShortcutSequence, QStringLiteral("Meta+'"));
+        QSignalSpy changed(global, &StreamingPreferences::globalShortcutSequenceChanged);
+        QVERIFY(global->setProperty("globalShortcutSequence", "Ctrl+Alt+K"));
+        QCOMPARE(changed.count(), 1);
+        global->save(); global->reload();
+        QCOMPARE(global->globalShortcutSequence, QStringLiteral("Ctrl+Alt+K"));
+        QObject owner;
+        auto device = global->snapshot("custom-shortcut-device", &owner);
+        device->globalShortcutSequence = "Meta+F8"; device->save();
+        global->reload();
+        QCOMPARE(global->globalShortcutSequence, QStringLiteral("Ctrl+Alt+K"));
+        QSettings raw;
+        raw.setValue("ui/globalShortcutSequence", "Shift+A"); raw.sync();
+        global->reload();
+        QCOMPARE(global->globalShortcutSequence, QStringLiteral("Meta+'"));
+        QVERIFY(global->shortcutFromKey(Qt::Key_K, Qt::NoModifier).isEmpty());
+        QVERIFY(!global->shortcutDisplay("Ctrl+Alt+K").isEmpty());
+    }
     void uiLanguageChangesPreserveDevicePolicyAndSavedIds() {
         auto preferences = StreamingPreferences::get();
         const auto previousLanguage = preferences->language;

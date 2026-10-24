@@ -83,15 +83,28 @@ UiPage {
 
     UiGroup {
         title: qsTr("Keyboard shortcuts")
+        footnote: typeof globalShortcut === "undefined" || !preferences.globalShortcutEnabled ? "" :
+                  globalShortcut.error.length > 0 ? qsTr("Shortcut unavailable: %1").arg(globalShortcut.error) :
+                  globalShortcut.desktopAssigned ? qsTr("Desktop shortcut: %1. Manage its binding in your desktop settings.").arg(globalShortcut.effectiveShortcut) : ""
         UiRow {
             objectName: "globalShortcutSwitch"
             iconSource: "qrc:/res/ui/input.svg"
             title: qsTr("Global window shortcut")
-            detail: qsTr("%1 shows or hides DeskPort. Enabled by default; changes apply immediately.").arg(Qt.platform.os === "osx" ? "Command + '" : Qt.platform.os === "windows" ? "Windows + '" : "Meta (Super) + '")
-            switchable: true; on: preferences.globalShortcutEnabled; divider: false
+            detail: qsTr("%1 shows or hides DeskPort. Enabled by default; changes apply immediately.").arg(preferences.shortcutDisplay(preferences.globalShortcutSequence))
+            switchable: true; on: preferences.globalShortcutEnabled
             onSwitched: function(value) { preferences.globalShortcutEnabled = value; save() }
         }
+        UiRow {
+            objectName: "globalShortcutChoice"
+            iconSource: "qrc:/res/ui/input.svg"
+            title: qsTr("Change shortcut")
+            value: preferences.shortcutDisplay(preferences.globalShortcutSequence)
+            divider: false
+            onClicked: shortcutDialog.open()
+        }
     }
+
+    ShortcutDialog { id: shortcutDialog }
 
     UiGroup {
         title: qsTr("Diagnostics and feedback")

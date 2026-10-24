@@ -2336,6 +2336,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 显示或隐藏 DeskPort。默认开启，更改立即生效。</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>更改快捷键</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>快捷键不可用：%1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>桌面快捷键：%1。可在桌面环境设置中管理绑定。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3892,6 +3904,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>正在断开连接…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>更改快捷键</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>恢复默认</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>保存快捷键</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>请选择支持的组合键。</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>按下组合键。使用 Control、Alt/Option 或 Meta/Command 搭配字母、数字、F1–F12、空格或单引号，也可加上 Shift。</translation>
         </message>
     </context>
     <context>

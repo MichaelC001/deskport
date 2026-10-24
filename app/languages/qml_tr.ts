@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 DeskPort'u gösterir veya gizler. Varsayılan olarak açıktır; değişiklikler hemen uygulanır.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Kısayolu değiştir</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Kısayol kullanılamıyor: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Masaüstü kısayolu: %1. Atamasını masaüstü ayarlarından yönetin.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Bağlantı kesiliyor…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Kısayolu değiştir</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Varsayılana dön</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Kısayolu kaydet</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Desteklenen bir tuş birleşimi seçin.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Bir kısayola basın. Control, Alt/Option veya Meta/Command ile harf, sayı, F1–F12, boşluk veya kesme işareti kullanın. Shift isteğe bağlıdır.</translation>
         </message>
     </context>
 </TS>

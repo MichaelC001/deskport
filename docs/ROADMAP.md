@@ -1,3 +1,28 @@
+## Custom global recall shortcut — 2026-10-24
+
+Reason: users need to avoid reserved or conflicting desktop bindings. Settings →
+Keyboard shortcuts → Change shortcut records one chord, saves it locally and
+applies it immediately. Restore default selects Meta + apostrophe (Command on
+macOS); cancellation preserves the previous selection. The recorder temporarily
+unregisters the native binding. The on/off switch remains enabled by default.
+
+Require Control, Alt/Option or Meta/Command and one letter, digit, F1–F12, Space
+or apostrophe; Shift is optional. Reject unmodified keys and multi-step sequences.
+Canonical settings keep Meta as the physical Command/Super/Windows modifier on
+all platforms, independent of Qt's macOS Control/Meta menu convention.
+
+Native Carbon, RegisterHotKey, X11 and Wayland adapters consume the same binding.
+Changing it cancels held gestures and updates both existing and new viewer
+workers. An occupied or layout-incompatible chord reports an error; the SDL
+fallback runs only when the native registration succeeds and agrees with the
+requested chord. Wayland's desktop assignment remains authoritative and appears
+in Settings. Different requested chords use distinct portal action IDs to avoid
+silently reusing a previously remembered assignment.
+
+The shared manual now has 67 steps. Recorder/status labels have draft translations
+in all 22 primary locales. No media, display policy or peer wire changes. Native
+key delivery and live streaming acceptance for custom bindings remain pending.
+
 ## Window shortcut preference and expanded manual — 2026-10-24
 
 Add Settings → Keyboard shortcuts → Global window shortcut, enabled by default

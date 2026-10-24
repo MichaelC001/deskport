@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 toont of verbergt DeskPort. Standaard ingeschakeld; wijzigingen worden direct toegepast.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Sneltoets wijzigen</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Sneltoets niet beschikbaar: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Bureaubladsneltoets: %1. Beheer de toewijzing in de bureaubladinstellingen.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Verbinding verbreken…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Sneltoets wijzigen</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Standaard herstellen</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Sneltoets opslaan</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Kies een ondersteunde toetsencombinatie.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Druk een sneltoets in. Gebruik Control, Alt/Option of Meta/Command met een letter, cijfer, F1–F12, spatie of apostrof. Shift is optioneel.</translation>
         </message>
     </context>
 </TS>

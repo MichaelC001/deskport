@@ -76,22 +76,27 @@ private:
     bool rebind() {
         if (!m_Running) return false;
         const HKL layout = activeLayout();
-        // Use the apostrophe symbol in the active layout, not the US OEM key
-        // number (which can name a different character on other keyboards).
-        const SHORT mapping = VkKeyScanExW(L'\'', layout);
+        // Resolve the unmodified symbol in this layout. Never silently add
+        // modifiers that the user did not record.
+        const SHORT mapping = binding.key >= Qt::Key_F1 && binding.key <= Qt::Key_F12 ?
+            SHORT(VK_F1 + binding.key - Qt::Key_F1) : VkKeyScanExW(wchar_t(binding.character()), layout);
         if (m_Registered) UnregisterHotKey(nullptr, HotKeyId);
         m_Registered = false;
         m_Layout = layout;
         if (mapping == -1 || HIBYTE(mapping) != 0) {
-            if (error) error(shortcutText("This keyboard layout needs extra modifiers for apostrophe; Meta + apostrophe is unavailable."));
+            if (error) error(shortcutText("This keyboard layout cannot register the selected shortcut without extra modifiers."));
             return false;
         }
         m_Key = LOBYTE(mapping);
-        const UINT modifiers = MOD_WIN | MOD_NOREPEAT;
+        m_Modifiers = 0;
+        if (binding.modifiers & Qt::MetaModifier) m_Modifiers |= MOD_WIN;
+        if (binding.modifiers & Qt::ControlModifier) m_Modifiers |= MOD_CONTROL;
+        if (binding.modifiers & Qt::AltModifier) m_Modifiers |= MOD_ALT;
+        if (binding.modifiers & Qt::ShiftModifier) m_Modifiers |= MOD_SHIFT;
         // A failed registration leaves other applications' bindings intact.
-        if (!RegisterHotKey(nullptr, HotKeyId, modifiers, m_Key)) {
+        if (!RegisterHotKey(nullptr, HotKeyId, m_Modifiers | MOD_NOREPEAT, m_Key)) {
             const DWORD code = GetLastError();
-            if (error) error(shortcutText("Meta + apostrophe is unavailable or already in use (Windows error %1).").arg(code));
+            if (error) error(shortcutText("The selected shortcut is unavailable or already in use (Windows error %1).").arg(code));
             return false;
         }
         m_Registered = true;
@@ -109,7 +114,7 @@ private:
         if (result) *result = 0;
         // WM_HOTKEY contains only the physical modifier mask; MOD_NOREPEAT is
         // a registration option, not a modifier delivered in this message.
-        if (HIWORD(msg->lParam) != m_Key || LOWORD(msg->lParam) != MOD_WIN) return true;
+        if (HIWORD(msg->lParam) != m_Key || LOWORD(msg->lParam) != m_Modifiers) return true;
         if (!inputDesktopActive()) { cancelGesture(); return true; }
         if (!m_Pressed) {
             m_Pressed = true;
@@ -144,7 +149,7 @@ private:
 
     QTimer m_ReleaseTimer, m_LayoutTimer;
     HKL m_Layout = nullptr;
-    UINT m_Key = 0;
+    UINT m_Key = 0, m_Modifiers = 0;
     bool m_Running = false, m_Registered = false, m_Pressed = false;
 };
 }

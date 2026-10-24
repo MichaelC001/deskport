@@ -75,6 +75,7 @@
 <file>gui/DeviceCard.qml</file>
 <file>gui/SetupView.qml</file>
 <file>gui/SettingsHome.qml</file>
+<file>gui/ShortcutDialog.qml</file>
         <file>gui/BindView.qml</file>
         <file>gui/PeerEditor.qml</file>
         <file>gui/BindingApproval.qml</file>

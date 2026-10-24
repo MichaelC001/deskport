@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 mostra o nasconde DeskPort. Attiva per impostazione predefinita; le modifiche si applicano subito.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Cambia scorciatoia</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Scorciatoia non disponibile: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Scorciatoia del desktop: %1. Gestisci l'associazione nelle impostazioni del desktop.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Disconnessione…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Cambia scorciatoia</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Ripristina predefinito</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Salva scorciatoia</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Scegli una combinazione di tasti supportata.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Premi una scorciatoia. Usa Control, Alt/Option o Meta/Command con una lettera, numero, F1–F12, spazio o apostrofo. Shift è facoltativo.</translation>
         </message>
     </context>
 </TS>

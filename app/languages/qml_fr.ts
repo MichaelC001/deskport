@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 affiche ou masque DeskPort. Activé par défaut ; les changements sont immédiats.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Modifier le raccourci</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Raccourci indisponible : %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Raccourci du bureau : %1. Gérez son affectation dans les paramètres du bureau.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Déconnexion…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Modifier le raccourci</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Rétablir la valeur par défaut</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Enregistrer le raccourci</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Choisissez une combinaison de touches prise en charge.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Appuyez sur un raccourci. Associez Control, Alt/Option ou Meta/Command à une lettre, un chiffre, F1–F12, Espace ou une apostrophe. Shift est facultatif.</translation>
         </message>
     </context>
 </TS>

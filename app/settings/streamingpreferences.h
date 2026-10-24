@@ -150,6 +150,9 @@ public:
     Q_PROPERTY(int uiAccent MEMBER uiAccent NOTIFY uiAccentChanged)
     Q_PROPERTY(bool showTraffic MEMBER showTraffic NOTIFY showTrafficChanged)
     Q_PROPERTY(bool globalShortcutEnabled MEMBER globalShortcutEnabled NOTIFY globalShortcutEnabledChanged)
+    Q_PROPERTY(QString globalShortcutSequence MEMBER globalShortcutSequence NOTIFY globalShortcutSequenceChanged)
+    Q_INVOKABLE QString shortcutFromKey(int key, int modifiers) const;
+    Q_INVOKABLE QString shortcutDisplay(const QString& sequence) const;
     Q_PROPERTY(bool dataSaver MEMBER dataSaver NOTIFY dataSaverChanged)
     Q_PROPERTY(bool compactDevices MEMBER compactDevices NOTIFY compactDevicesChanged)
     Q_PROPERTY(bool showLocalCursor MEMBER showLocalCursor NOTIFY showLocalCursorChanged)
@@ -204,6 +207,7 @@ public:
     int uiAccent;
     bool showTraffic;
     bool globalShortcutEnabled;
+    QString globalShortcutSequence;
     bool dataSaver;
     bool compactDevices;
     bool showLocalCursor;
@@ -256,6 +260,7 @@ signals:
     void uiAccentChanged();
     void showTrafficChanged();
     void globalShortcutEnabledChanged();
+    void globalShortcutSequenceChanged();
     void dataSaverChanged();
     void compactDevicesChanged();
     void showLocalCursorChanged();

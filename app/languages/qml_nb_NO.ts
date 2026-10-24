@@ -1336,6 +1336,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation type="unfinished" />
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation type="unfinished" />
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -1363,6 +1375,29 @@
         <name>DeviceSettings</name>
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
+            <translation type="unfinished" />
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
             <translation type="unfinished" />
         </message>
     </context>

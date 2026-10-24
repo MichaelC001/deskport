@@ -48,9 +48,10 @@ QStringList MultiSessions::tuningLimited() const {
 void MultiSessions::setDiagnosticsEnabled(bool enabled) {
     for (auto entry : m_Entries) send(entry, {{"command","diagnostics"},{"enabled",enabled}});
 }
-void MultiSessions::setShortcutEnabled(bool enabled) {
+void MultiSessions::setShortcutEnabled(bool enabled, const QString& sequence) {
     m_ShortcutEnabled = enabled;
-    for (auto entry : m_Entries) send(entry, {{"command","shortcut"},{"enabled",enabled}});
+    m_ShortcutSequence = sequence;
+    for (auto entry : m_Entries) send(entry, {{"command","shortcut"},{"enabled",enabled},{"sequence",sequence}});
 }
 QStringList MultiSessions::ordered() const {
     // Devices the saved layout does not mention follow in connection order.
@@ -139,7 +140,8 @@ void MultiSessions::accept() {
                     QJsonObject peer;
                     for (const auto& key : {"hostId","name","hostPort","hostCert","os"}) peer[key]=source.value(key);
                     peer["address"]=(*owner)->address;
-                    send(*owner,{{"command","initialize"},{"peer",peer},{"shortcutEnabled",m_ShortcutEnabled}});
+                    send(*owner,{{"command","initialize"},{"peer",peer},{"shortcutEnabled",m_ShortcutEnabled},
+                                 {"shortcutSequence",m_ShortcutSequence}});
                     if ((*owner)->state == "stopping") send(*owner,{{"command","disconnect"}});
                     present();
                 } else if ((*owner)->socket == socket) receive(*owner, message);

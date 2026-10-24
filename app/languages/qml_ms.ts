@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 menunjukkan atau menyembunyikan DeskPort. Dihidupkan secara lalai; perubahan berkuat kuasa serta-merta.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Tukar pintasan</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Pintasan tidak tersedia: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Pintasan desktop: %1. Urus penetapannya dalam tetapan desktop.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Memutuskan sambungan…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Tukar pintasan</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Pulihkan lalai</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Simpan pintasan</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Pilih gabungan kekunci yang disokong.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Tekan pintasan. Gunakan Control, Alt/Option atau Meta/Command bersama huruf, nombor, F1–F12, ruang atau apostrof. Shift adalah pilihan.</translation>
         </message>
     </context>
 </TS>

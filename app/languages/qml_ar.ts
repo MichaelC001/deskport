@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>يُظهر %1 تطبيق DeskPort أو يخفيه. مفعّل افتراضيًا؛ تُطبّق التغييرات فورًا.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>تغيير الاختصار</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>الاختصار غير متاح: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>اختصار سطح المكتب: %1. أدر تعيينه في إعدادات سطح المكتب.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>جارٍ قطع الاتصال…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>تغيير الاختصار</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>استعادة الافتراضي</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>حفظ الاختصار</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>اختر مجموعة مفاتيح مدعومة.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>اضغط اختصارًا. استخدم Control أو Alt/Option أو Meta/Command مع حرف أو رقم أو F1–F12 أو مسافة أو فاصلة عليا. Shift اختياري.</translation>
         </message>
     </context>
 </TS>

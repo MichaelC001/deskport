@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 показує або приховує DeskPort. Увімкнено типово; зміни застосовуються одразу.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Змінити сполучення</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Сполучення недоступне: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Сполучення стільниці: %1. Змініть призначення в параметрах стільниці.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Відключення…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Змінити сполучення</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Відновити типове</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Зберегти сполучення</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Виберіть підтримуване сполучення клавіш.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Натисніть сполучення. Використовуйте Control, Alt/Option або Meta/Command з літерою, цифрою, F1–F12, пробілом чи апострофом. Shift можна додати.</translation>
         </message>
     </context>
 </TS>

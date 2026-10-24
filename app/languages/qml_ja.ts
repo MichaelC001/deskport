@@ -2296,6 +2296,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 で DeskPort を表示または非表示にします。既定で有効です。変更はすぐに適用されます。</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>ショートカットを変更</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>ショートカットを使用できません：%1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>デスクトップのショートカット：%1。割り当てはデスクトップ設定で管理できます。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3804,6 +3816,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>切断中…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>ショートカットを変更</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>既定に戻す</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>ショートカットを保存</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>対応するキーの組み合わせを選んでください。</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>キーを押してください。Control、Alt/Option、Meta/Command と英字、数字、F1–F12、スペース、アポストロフィを組み合わせます。Shift も追加できます。</translation>
         </message>
     </context>
 </TS>

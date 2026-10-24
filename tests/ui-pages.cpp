@@ -1,4 +1,5 @@
 #include "trafficbudget.h"
+#include "backend/shortcutbinding.h"
 #include <QSignalSpy>
 #include "diagnostics.h"
 #include <QDesktopServices>
@@ -214,6 +215,15 @@ class TestPreferences : public QObject {
     Q_OBJECT
 public:
     using QObject::QObject;
+    Q_INVOKABLE QString shortcutFromKey(int key, int modifiers) const { return ShortcutBinding::fromEvent(key, modifiers); }
+    Q_INVOKABLE QString shortcutDisplay(const QString& value) const { return ShortcutBinding::display(value); }
+    Q_PROPERTY(QString globalShortcutSequence READ shortcutSequence WRITE setShortcutSequence NOTIFY shortcutSequenceChanged)
+    QString shortcutSequence() const { return m_ShortcutSequence; }
+    void setShortcutSequence(const QString& value) { m_ShortcutSequence = value; emit shortcutSequenceChanged(); }
+    QString m_ShortcutSequence = ShortcutBinding::defaultSequence();
+signals:
+    void shortcutSequenceChanged();
+public:
     Q_PROPERTY(QVariantList desktopAdjustmentChoices READ adjustmentChoices CONSTANT)
     Q_PROPERTY(QStringList desktopAdjustmentLabels READ adjustmentLabels CONSTANT)
     Q_PROPERTY(QVariantList sharedLanguages READ sharedLanguages CONSTANT)
@@ -1646,6 +1656,56 @@ QtObject {
         const auto bad=warnings.filter(QRegularExpression("ReferenceError|TypeError|binding loop|Binding loop|Cannot assign|Unable to assign|Missing parent|Component is not ready"));
         QVERIFY2(bad.isEmpty(),qPrintable(bad.join('\n')));
     }
+    void customShortcutDialogRecordsCancelsAndResets() {
+        QQmlEngine engine;
+        const auto gui = qEnvironmentVariable("TEST_GUI_DIR");
+        QQmlComponent component(&engine);
+        component.setData(R"(import QtQuick 2.12
+import StreamingPreferences 1.0
+import "."
+Item {
+    property var preferences: StreamingPreferences
+    ShortcutDialog { id: dialog; parent: root; objectName: "shortcutDialog" }
+    id: root; width: 600; height: 650
+})", QUrl::fromLocalFile(gui + "/shortcut-test.qml"));
+        QScopedPointer<QObject> root(component.create()); QVERIFY2(root, qPrintable(component.errorString()));
+        auto prefs = root->property("preferences").value<QObject*>(); QVERIFY(prefs);
+        auto dialog = root->findChild<QObject*>("shortcutDialog"); QVERIFY(dialog);
+        QQuickWindow window; window.resize(600,650);
+        qobject_cast<QQuickItem*>(root.data())->setParentItem(window.contentItem());
+        window.show();
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QTest::keyClick(&window, Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
+        const auto expected = ShortcutBinding::fromEvent(Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
+        QCOMPARE(dialog->property("pending").toString(), expected);
+        const auto screenshots = qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
+        if (!screenshots.isEmpty()) {
+            QDir().mkpath(screenshots);
+            QTest::qWait(100);
+            QVERIFY(window.grabWindow().save(screenshots + "/custom-shortcut.png"));
+        }
+        QVERIFY(QMetaObject::invokeMethod(dialog,"reject"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(), QStringLiteral("Meta+'"));
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        QTest::keyClick(&window, Qt::Key_A);
+        QVERIFY(dialog->property("invalid").toBool());
+        auto apply = dialog->findChild<QObject*>("shortcutApply"); QVERIFY(apply);
+        QVERIFY(!apply->property("enabled").toBool());
+        QTest::keyClick(&window, Qt::Key_K, Qt::AltModifier | Qt::ControlModifier);
+        QVERIFY(QMetaObject::invokeMethod(dialog,"apply"));
+        QTRY_VERIFY(!dialog->property("visible").toBool());
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(), expected);
+        QVERIFY(QMetaObject::invokeMethod(dialog,"open"));
+        QTRY_VERIFY(dialog->property("opened").toBool());
+        auto reset = dialog->findChild<QObject*>("shortcutReset"); QVERIFY(reset);
+        QVERIFY(QMetaObject::invokeMethod(reset,"clicked"));
+        QCOMPARE(dialog->property("pending").toString(), QStringLiteral("Meta+'"));
+        QVERIFY(QMetaObject::invokeMethod(dialog,"apply"));
+        QCOMPARE(prefs->property("globalShortcutSequence").toString(), QStringLiteral("Meta+'"));
+    }
     void commonLanguagesRetranslateSettings() {
         QTemporaryDir directory;
         HostManager host(nullptr, directory.path());
@@ -1681,6 +1741,8 @@ QtObject {
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Enable diagnostic logs").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Global window shortcut").isEmpty());
+            QVERIFY(!translator.translate("SettingsHome","Change shortcut").isEmpty());
+            QVERIFY(!translator.translate("ShortcutDialog","Save shortcut").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Match the client window resolution").isEmpty());
             QVERIFY(!translator.translate("HostView","Built-in virtual display").isEmpty());
             QVERIFY(!translator.translate("HostView","Active · %1 × %2 pixels").isEmpty());

@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 показывает или скрывает DeskPort. Включено по умолчанию; изменения применяются сразу.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Изменить сочетание</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Сочетание недоступно: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Сочетание рабочего стола: %1. Настройте его в параметрах рабочего стола.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Отключение…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Изменить сочетание</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Восстановить по умолчанию</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Сохранить сочетание</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Выберите поддерживаемое сочетание клавиш.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Нажмите сочетание. Используйте Control, Alt/Option или Meta/Command с буквой, цифрой, F1–F12, пробелом или апострофом. Shift можно добавить.</translation>
         </message>
     </context>
 </TS>

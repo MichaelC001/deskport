@@ -42,6 +42,7 @@ public:
     uint createResponse = 0, bindResponse = 0;
     int registrations = 0, creates = 0, binds = 0, requestCloses = 0, sessionCloses = 0;
     QString appId, requestedSession, parentWindow, heldRequest;
+    QString assigned = QKeySequence(Qt::META | Qt::Key_Apostrophe).toString(QKeySequence::NativeText);
     QVariantMap createOptions, bindOptions;
     FixtureShortcuts shortcuts;
     QList<QDBusMessage> registerReplies;
@@ -68,8 +69,8 @@ public:
             ? QVariant::fromValue(QDBusObjectPath(session)) : QVariant(session)}});
     }
     FixtureShortcuts bound() const {
-        return {{Action, bindGranted ? QVariantMap{{"trigger_description",
-            QKeySequence(Qt::META | Qt::Key_Apostrophe).toString(QKeySequence::NativeText)}} : QVariantMap{}}};
+        return {{shortcuts.isEmpty() ? Action : shortcuts.first().id,
+            bindGranted ? QVariantMap{{"trigger_description", assigned}} : QVariantMap{}}};
     }
     void edge(bool pressed, QString id = Action, QString sourceSession = {}, QByteArray token = {}) {
         auto signal = QDBusMessage::createSignal(Path, Interface, pressed ? "Activated" : "Deactivated");
@@ -146,6 +147,26 @@ struct Observer {
 class GlobalShortcutPortalTest : public QObject {
     Q_OBJECT
 private slots:
+    void customBindingUsesDistinctPortalActionAndRequestedTrigger() {
+        Portal portal;
+        portal.assigned = QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_K).toString(QKeySequence::NativeText);
+        Observer observer;
+        observer.backend->binding = ShortcutBinding::parse("Ctrl+Alt+K");
+        QVERIFY(!observer.backend->start());
+        QTRY_VERIFY(observer.ready);
+        QCOMPARE(portal.shortcuts.size(), 1);
+        const auto action = portal.shortcuts.first().id;
+        QVERIFY(action.startsWith("toggle-window-"));
+        QCOMPARE(portal.shortcuts.first().options.value("preferred_trigger").toString(), QStringLiteral("CTRL+ALT+k"));
+        QVERIFY(observer.backend->fixedChord);
+        QCOMPARE(observer.backend->triggerDescription, portal.assigned);
+        portal.edge(true); portal.edge(false); // Previous default action cannot toggle.
+        QTest::qWait(30);
+        QVERIFY(observer.edges.isEmpty());
+        portal.edge(true, action); portal.edge(false, action);
+        QTRY_COMPARE(observer.edges.size(), 2);
+        observer.backend->stop();
+    }
     void bindingAndEdges_data() {
         QTest::addColumn<bool>("objectHandle");
         QTest::addColumn<bool>("registryAvailable");

@@ -1026,9 +1026,9 @@ int main(int argc, char *argv[])
         qWarning() << "Cannot open the local CLI endpoint:" << controlServer.errorString();
     MultiSessions managedSessions(&peerManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
     GlobalShortcut globalShortcut;
-    QObject::connect(&globalShortcut, &GlobalShortcut::fallbackAvailabilityChanged, &managedSessions, [&managedSessions](bool enabled) {
-        ShortcutState::setEnabled(enabled);
-        managedSessions.setShortcutEnabled(enabled);
+    QObject::connect(&globalShortcut, &GlobalShortcut::fallbackAvailabilityChanged, &managedSessions, [&managedSessions, &globalShortcut](bool enabled) {
+        ShortcutState::configure(enabled, globalShortcut.sequence());
+        managedSessions.setShortcutEnabled(enabled, globalShortcut.sequence());
     });
     QObject::connect(&managedSessions, &MultiSessions::shortcutRequested, &globalShortcut, &GlobalShortcut::fallbackActivated);
     multiSessions = &managedSessions;
@@ -1312,10 +1312,15 @@ int main(int argc, char *argv[])
 
     if (resident) {
         auto* preferences = StreamingPreferences::get();
+        QObject::connect(preferences, &StreamingPreferences::globalShortcutSequenceChanged,
+                         &globalShortcut, [preferences, &globalShortcut] {
+            globalShortcut.setSequence(preferences->globalShortcutSequence);
+        });
         QObject::connect(preferences, &StreamingPreferences::globalShortcutEnabledChanged,
                          &globalShortcut, [preferences, &globalShortcut] {
             globalShortcut.setEnabled(preferences->globalShortcutEnabled);
         });
+        globalShortcut.setSequence(preferences->globalShortcutSequence);
         globalShortcut.setEnabled(preferences->globalShortcutEnabled);
         QTimer::singleShot(0, &globalShortcut, &GlobalShortcut::start);
     }

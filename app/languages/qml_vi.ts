@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 hiện hoặc ẩn DeskPort. Bật theo mặc định; thay đổi có hiệu lực ngay.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Đổi phím tắt</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>Không dùng được phím tắt: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>Phím tắt của môi trường màn hình: %1. Quản lý tổ hợp trong cài đặt môi trường màn hình.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>Đang ngắt kết nối…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>Đổi phím tắt</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>Khôi phục mặc định</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>Lưu phím tắt</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>Chọn tổ hợp phím được hỗ trợ.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>Nhấn tổ hợp phím. Dùng Control, Alt/Option hoặc Meta/Command cùng chữ cái, chữ số, F1–F12, dấu cách hoặc dấu nháy đơn. Có thể thêm Shift.</translation>
         </message>
     </context>
 </TS>

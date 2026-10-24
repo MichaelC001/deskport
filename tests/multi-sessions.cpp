@@ -31,6 +31,11 @@ static int worker(QApplication& app) {
         while (buffer.contains('\n')) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
+            if(mode=="shortcut-config" && (action=="initialize" || action=="shortcut")) {
+                const auto sequence = o.value(action=="initialize" ? "shortcutSequence" : "sequence").toString();
+                const bool enabled = o.value(action=="initialize" ? "shortcutEnabled" : "enabled").toBool();
+                send({{"type","traffic"},{"received",sequence=="Ctrl+Alt+K" ? 1 : sequence=="Meta+F8" ? 2 : 0},{"sent",enabled ? 1 : 0}});
+            }
             if(action=="show") {
                 if (!o.value("raise").toBool(true) &&
                     (o.value("shortcut").toBool() || !o.value("activationToken").toString().isEmpty()))
@@ -69,6 +74,26 @@ static int worker(QApplication& app) {
 class MultiSessionsTest : public QObject {
     Q_OBJECT
 private slots:
+    void shortcutConfigurationReachesNewAndExistingWorkers() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
+        const QJsonObject records{{"a", QJsonObject{{"hostId","a"},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}}}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        MultiSessions manager(&peers,cert,key);
+        manager.setShortcutEnabled(true,"Ctrl+Alt+K");
+        manager.open("a","Fixture","127.0.0.1","shortcut-config");
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),1);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        manager.setShortcutEnabled(false,"Meta+F8");
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),2);
+        QCOMPARE(manager.selectedTraffic().value("sent").toInt(),0);
+        manager.setShortcutEnabled(true,"Meta+F8");
+        QTRY_COMPARE(manager.selectedTraffic().value("sent").toInt(),1);
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
+    }
     void concurrentWorkersAndInputHandoff() {
         QTemporaryDir dir;
         auto cert=credential("TEST_CERT_A"), key=credential("TEST_KEY_A");

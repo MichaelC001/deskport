@@ -2288,6 +2288,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 키로 DeskPort를 표시하거나 숨깁니다. 기본으로 켜져 있으며 변경 사항은 즉시 적용됩니다.</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>단축키 변경</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>단축키를 사용할 수 없음: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>데스크톱 단축키: %1. 데스크톱 설정에서 할당을 관리하세요.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3780,6 +3792,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>연결 해제 중…</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>단축키 변경</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>기본값 복원</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>단축키 저장</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>지원되는 키 조합을 선택하세요.</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>단축키를 누르세요. Control, Alt/Option 또는 Meta/Command와 문자, 숫자, F1–F12, 스페이스 또는 작은따옴표를 조합하세요. Shift도 추가할 수 있습니다.</translation>
         </message>
     </context>
 </TS>

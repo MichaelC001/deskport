@@ -2293,6 +2293,18 @@
             <source>%1 shows or hides DeskPort. Enabled by default; changes apply immediately.</source>
             <translation>%1 แสดงหรือซ่อน DeskPort เปิดใช้งานตามค่าเริ่มต้น การเปลี่ยนแปลงมีผลทันที</translation>
         </message>
+        <message>
+            <source>Change shortcut</source>
+            <translation>เปลี่ยนปุ่มลัด</translation>
+        </message>
+        <message>
+            <source>Shortcut unavailable: %1</source>
+            <translation>ใช้ปุ่มลัดไม่ได้: %1</translation>
+        </message>
+        <message>
+            <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
+            <translation>ปุ่มลัดเดสก์ท็อป: %1 จัดการการกำหนดปุ่มในการตั้งค่าเดสก์ท็อป</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3785,6 +3797,29 @@
         <message>
             <source>Disconnecting…</source>
             <translation>กำลังยกเลิกการเชื่อมต่อ...</translation>
+        </message>
+    </context>
+    <context>
+        <name>ShortcutDialog</name>
+        <message>
+            <source>Change shortcut</source>
+            <translation>เปลี่ยนปุ่มลัด</translation>
+        </message>
+        <message>
+            <source>Restore default</source>
+            <translation>คืนค่าเริ่มต้น</translation>
+        </message>
+        <message>
+            <source>Save shortcut</source>
+            <translation>บันทึกปุ่มลัด</translation>
+        </message>
+        <message>
+            <source>Choose a supported key combination.</source>
+            <translation>เลือกชุดปุ่มที่รองรับ</translation>
+        </message>
+        <message>
+            <source>Press a shortcut. Use Control, Alt/Option or Meta/Command with a letter, number, F1–F12, Space or apostrophe. Shift is optional.</source>
+            <translation>กดปุ่มลัด ใช้ Control, Alt/Option หรือ Meta/Command ร่วมกับตัวอักษร ตัวเลข F1–F12 เว้นวรรค หรืออัญประกาศเดี่ยว จะเพิ่ม Shift ก็ได้</translation>
         </message>
     </context>
 </TS>
