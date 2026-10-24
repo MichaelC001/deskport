@@ -19,6 +19,15 @@ requested chord. Wayland's desktop assignment remains authoritative and appears
 in Settings. Different requested chords use distinct portal action IDs to avoid
 silently reusing a previously remembered assignment.
 
+Validation on source `e5bfe1c7`: macOS passes 24 shortcut-controller tests, SDL
+custom/held-key cases, native Carbon adapter compile/link without registering a
+key, 8 preference tests, 6 QML page/recorder/manual tests, 4 worker transport tests
+and 18,098 compiled translation comparisons. Synthetic recorder screenshots were
+reviewed. The pk4 native Nix build and isolated CLI smoke pass, together with 24
+controller tests, SDL cases, 15 private-bus Wayland portal tests and 4 worker
+transport tests. Shared core and PC evidence checks also pass. No running
+installation or service was changed by these checks.
+
 The shared manual now has 67 steps. Recorder/status labels have draft translations
 in all 22 primary locales. No media, display policy or peer wire changes. Native
 key delivery and live streaming acceptance for custom bindings remain pending.
