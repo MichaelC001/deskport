@@ -13,7 +13,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-runtime-') as directory:
     state = Path(directory)
     env = {'PATH': '/usr/bin:/bin', 'HOME': directory,
            'DISPLAY': os.environ['DISPLAY'], 'QT_QPA_PLATFORM': 'xcb',
-           'SDL_AUDIODRIVER': 'dummy'}
+           'SDL_AUDIODRIVER': 'dummy', 'QT_LOGGING_TO_CONSOLE': '1',
+           'DESKPORT_CLIENT_LOG': str(state / 'client.log')}
     for variable in ('XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_RUNTIME_DIR'):
         path = state / variable.lower()
         path.mkdir(mode=0o700)
@@ -28,7 +29,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-runtime-') as directory:
         try:
             time.sleep(10)
             log.flush()
-            assert child.poll() is None, (state / 'viewer.log').read_text()
+            assert child.poll() is None, (child.returncode, (state / 'viewer.log').read_text(),
+                (state / 'client.log').read_text() if (state / 'client.log').exists() else '')
             executable = Path(f'/proc/{child.pid}/exe').resolve()
             assert executable == root / 'usr/bin/deskport', executable
             maps = Path(f'/proc/{child.pid}/maps').read_text()

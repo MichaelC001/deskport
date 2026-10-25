@@ -20,7 +20,7 @@ apt-get install -y --no-install-recommends \
     cmake ninja-build pkg-config libcap-dev libcurl4-openssl-dev libevdev-dev \
     libgbm-dev libminiupnpc-dev libnuma-dev libpulse-dev libsystemd-dev libudev-dev \
     libxcb-shm0-dev libxcb-xfixes0-dev libxfixes-dev libxrandr-dev libxtst-dev \
-    libvulkan-dev glslang-tools nodejs npm python3-jinja2
+    libvulkan-dev libplacebo-dev glslang-tools nodejs npm python3-jinja2
 mkdir -p "$work/build" "$work/cache" "$work/output"
 # Build from one private snapshot and clean only the temporary tree owned by
 # this invocation, on success or failure. Source is recovered from the pinned
@@ -53,8 +53,10 @@ for name,item in json.load(open(sys.argv[1])).items():
 PY
 bash "$repo/scripts/build-linux-host.sh"
 cd "$work/build"
-qmake6 -r "$repo/moonlight-qt.pro" CONFIG+=release CONFIG+=disable-cuda \
-    CONFIG+=disable-libplacebo PREFIX=/usr
+# The embedded Linux canvas presents through libplacebo's Vulkan swapchain.
+# A package without this frontend can launch but cannot display remote frames.
+pkg-config --exists libplacebo
+qmake6 -r "$repo/moonlight-qt.pro" CONFIG+=release CONFIG+=disable-cuda PREFIX=/usr
 make -j"${DESKPORT_JOBS:-4}"
 appdir="$work/DeskPort.AppDir"
 rm -rf "$appdir"

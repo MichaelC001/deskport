@@ -39,6 +39,9 @@ int runCanvasSelfTest(int argc, char** argv);
 #include <QIcon>
 #include <QQuickStyle>
 #include <QQuickWindow>
+#ifdef Q_OS_LINUX
+#include <QVulkanInstance>
+#endif
 #include <QMutex>
 #include <QtDebug>
 #include <QNetworkProxyFactory>
@@ -1249,7 +1252,13 @@ int main(int argc, char *argv[])
         // The embedded Linux canvas uses Vulkan. Keep the shell on the same
         // graphics API: mixed EGL/Vulkan Wayland queues can deadlock on remap.
 #ifdef Q_OS_LINUX
-        if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+        if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) {
+            // Qt 6.4 can crash when a Vulkan Quick window has no usable ICD.
+            // Keep Devices and connection errors available on those systems.
+            QVulkanInstance probe;
+            if (probe.create()) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+            else qWarning() << "Vulkan is unavailable; using the default shell graphics backend";
+        }
 #endif
         // No Qt Quick window exists before this point.
         if (!renderLoopOverridden) qunsetenv("QSG_RENDER_LOOP");

@@ -1,3 +1,14 @@
+## Linux release graphics verification — 2026-10-25
+
+The 0.7.5 AppImage startup check on an isolated Ubuntu 22.04 Xvfb container
+found a Qt 6.4 crash when no Vulkan ICD was installed. Probe Vulkan before
+selecting the shell's graphics API; keep the device list available through Qt's
+default backend when Vulkan cannot initialize. The embedded Linux video canvas
+still requires a working Vulkan driver. Portable packaging must enable and
+bundle libplacebo, which was disabled by the older standalone-viewer recipe.
+Final rebuilt packages require both the no-ICD startup check and full desktop
+synthetic canvas tests; installer/API smoke alone did not detect this omission.
+
 ## Desktop 0.7.5 release preparation — 2026-10-25
 
 Prepare all desktop package formats from the retained-canvas implementation.

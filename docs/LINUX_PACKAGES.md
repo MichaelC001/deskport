@@ -6,7 +6,9 @@ checks and AppImage GUI smoke do not establish that lifecycle matrix.
 
 DeskPort 0.7.5 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
-host tree, Qt and media libraries. The Flatpak is a **client-only** package.
+host tree, Qt and media libraries. The Flatpak is a **client-only** package. Linux remote video uses libplacebo
+and requires a working Vulkan driver; the device list remains available when
+Vulkan cannot initialize.
 
 ## AppImage runtime
 

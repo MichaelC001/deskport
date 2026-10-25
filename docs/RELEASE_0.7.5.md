@@ -21,6 +21,10 @@ Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
 - **Configurable recall shortcut:** choose and record a global window shortcut
   in Settings, with immediate updates to native registration and captured viewer
   input. Conflicts and unavailable platform bindings remain visible to the user.
+- **Linux package rendering:** include the libplacebo frontend required by the
+  embedded canvas. The device list remains available when Vulkan cannot
+  initialize, instead of crashing in Qt 6.4. Linux video presentation requires a
+  working Vulkan driver.
 - **Input and regression coverage:** preserve physical canvas keys, isolate
   macOS modifier events with missing native codes, bound local transport waits,
   and exercise retained presentation through resize, fullscreen, maximize,
