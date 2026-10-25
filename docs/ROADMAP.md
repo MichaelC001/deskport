@@ -5,7 +5,16 @@ video surface blank. The local decoder queue now retries key-frame requests
 while dependent frames arrive, at most twice per second, instead of waiting
 forever after an initial request overlaps a paused host. Recovery tests cover
 that lost request, request throttling, overflow and decoder-error recovery.
-Native verification and follow-up delivery are in progress.
+All three final clients pass the ten-stage native canvas exercise. Live video
+was checked in all six directions between Windows, macOS and Linux. Devices
+recall restores video in the original window on each platform; simulated mouse
+clicks exercise connection and takeover, and a reverse connection is rejected
+while it would form a cycle. These checks used LAN IPv4; hostname routes also
+exposed display-negotiation timeouts. Audio, HDR, latency and long-duration
+reliability remain outside this acceptance. The corrected self-test uses source
+`3f1f44cbc7635ae1bda6264f455f28dae3ddc667`, with unchanged shared core.
+macOS signing/notarization, Windows payload audits and both complete Nix consumer
+configuration prebuilds pass. Publication and consumer synchronization follow.
 
 ## Live canvas handshake correction — 2026-10-25
 
