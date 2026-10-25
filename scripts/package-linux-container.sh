@@ -13,7 +13,7 @@ apt-get install -y --no-install-recommends \
     qt6-base-dev qt6-base-private-dev qt6-declarative-dev qt6-svg-dev qt6-tools-dev-tools qt6-wayland qt6-wayland-dev \
     qml6-module-qtquick qml6-module-qtquick-controls qml6-module-qtquick-layouts \
     qml6-module-qtquick-templates qml6-module-qtquick-window qml6-module-qtqml-workerscript \
-    libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavutil-dev \
+    libssl-dev libsdl2-dev libsdl2-ttf-dev libopus-dev libavcodec-dev libavformat-dev libavutil-dev \
     libswscale-dev libva-dev libvdpau-dev libdrm-dev libegl1-mesa-dev libgl1-mesa-dev \
     libwayland-dev libx11-dev libx11-xcb-dev libxcb-dri3-dev libxkbcommon-dev libxcb-cursor0 libfuse2t64 \
     libpipewire-0.3-0t64 libpipewire-0.3-dev libpipewire-0.3-modules pipewire-bin desktop-file-utils \
