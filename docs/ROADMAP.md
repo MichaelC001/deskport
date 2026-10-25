@@ -16,8 +16,23 @@ this callback path. AppKit's empty title-bar spacer toolbar is hidden during
 fullscreen so it cannot cover the QML controls. Connection and recall now use
 visibility changes rather than `show()`, which could restore a maximized or
 fullscreen window to normal. An isolated session-manager regression exercises
-these states across connection and recall. Expanded physical acceptance remains
-in progress.
+these states across connection and recall. All three final native packages pass
+16 decoded presentation stages; the session-manager suite passes ten tests.
+Live macOS checks cover maximized connection, fullscreen/restore and fullscreen
+Devices recall. Windows checks cover mouse resizing immediately after connection,
+maximize/fullscreen/small-window transitions and a maximized connection to Linux
+with twenty unchanged geometry samples. The native root is retained throughout.
+Physical mouse-drag resizing remains unverified on macOS and Linux. The Linux
+physical desktop's existing rule prohibits maximize; an isolated KWin session
+covers that native state without changing the user's policy. Audio, HDR, latency
+and long-duration acceptance remain open.
+
+The [window-state self-test release](https://github.com/keithxc/deskport-test-builds/releases/tag/test-20261025-window-state-5eab8059)
+uses source `5eab8059ad7e8e507e977a4bcaf35867a2fad15a` and unchanged core.
+macOS notarization, installed Windows payload verification, both complete Nix
+configuration prebuilds and all ten uploaded asset SHA-256/size checks pass.
+The consumer update is `bb394e7f2c36d5090e4395687202840e52348811`; Nix activation
+remains manual. Private screenshots and device logs are excluded from publication.
 
 ## Retained canvas key-frame recovery — 2026-10-25
 
