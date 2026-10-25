@@ -6,7 +6,11 @@ now retains the authenticated video endpoint and token in process memory before
 environment cleanup. Decoder recreation reuses those credentials. A real local
 socket regression exercises authentication after clearing the environment,
 frame integrity, peer loss and rejection of missing credentials. Cross-device
-streaming acceptance remains pending the corrected native build.
+streaming acceptance remains pending the corrected native build. Initial live
+video on macOS also exposed a recall race: a replacement QML canvas attached its
+retained session before anchors supplied a size. Decoder initialization now
+waits for that geometry, and the native exercise recreates a zero-size canvas
+before applying layout to cover this path.
 
 ## In-process desktop canvas — 2026-10-25 self-test
 

@@ -43,16 +43,20 @@ bool SessionPresentation::configure(const QJsonObject& config) {
         width < 1 || width > 16384 || height < 1 || height > 16384 || fps < 1 || fps > 1000 ||
         !(format & (VIDEO_FORMAT_MASK_H264 | VIDEO_FORMAT_MASK_H265 | VIDEO_FORMAT_MASK_AV1))) return false;
     stop(); m_Impl->m_Config = config; m_Impl->m_Generation = quint64(generation); m_Impl->m_ResetAttempts = 0;
-    return !m_Impl->m_Canvas || start();
+    return !m_Impl->m_Canvas || m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1 || start();
 }
 void SessionPresentation::attach(QWindow* canvas) {
     if (m_Impl->m_Canvas == canvas) return;
     stop(); m_Impl->m_Canvas = canvas;
-    if (m_Impl->m_Canvas && !m_Impl->m_Config.isEmpty() && !start()) emit failed(tr("Unable to initialize the desktop canvas."));
+    // QML creates a fresh canvas before its anchors have assigned a size when
+    // returning from Devices. Its geometry notification starts the decoder.
+    if (m_Impl->m_Canvas && m_Impl->m_Canvas->width() > 0 && m_Impl->m_Canvas->height() > 0 &&
+        !m_Impl->m_Config.isEmpty() && !start()) emit failed(tr("Unable to initialize the desktop canvas."));
 }
 void SessionPresentation::detach() { stop(); m_Impl->m_Canvas = nullptr; }
 void SessionPresentation::resized() {
-    if (!m_Impl->m_Canvas || m_Impl->m_Config.isEmpty()) return;
+    if (!m_Impl->m_Canvas || m_Impl->m_Config.isEmpty() ||
+        m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1) return;
     stop();
     if (!start()) emit failed(tr("Unable to resize the desktop canvas."));
 }

@@ -86,6 +86,14 @@ int runCanvasSelfTest(int argc, char** argv) {
             selected = stage % 2 ? &second : &first;
             ++generation;
             if (!configure()) { fail("configuration rejected"); return; }
+            if (stage == 2) {
+                // The QML Loader destroys Devices' previous canvas and binds
+                // presentation before anchors size the replacement on recall.
+                delete canvas;
+                canvas = new SessionCanvas(window.contentItem());
+                canvas->setPresentation(selected);
+                layout();
+            }
             canvas->setPresentation(selected);
             stageTime.restart();
             feed.start(50);
