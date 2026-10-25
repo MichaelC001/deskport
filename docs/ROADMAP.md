@@ -8,6 +8,11 @@ still requires a working Vulkan driver. Portable packaging must enable and
 bundle libplacebo, which was disabled by the older standalone-viewer recipe.
 Final rebuilt packages require both the no-ICD startup check and full desktop
 synthetic canvas tests; installer/API smoke alone did not detect this omission.
+The Fedora KDE package test also found that Qt 6.4's Wayland loader requested
+the unversioned development library. Linux startup now defaults `QT_VULKAN_LIB`
+to `libvulkan.so.1`, preserving explicit operator overrides. The canvas fixture
+probes the instance before creating its Quick window and reports an unavailable
+driver without crashing. Rebuilt final packages must repeat the desktop gates.
 
 ## Desktop 0.7.5 release preparation — 2026-10-25
 

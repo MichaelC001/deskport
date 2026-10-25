@@ -6,6 +6,9 @@
 #include <QJsonDocument>
 #include <QElapsedTimer>
 #include <cstdio>
+#ifdef Q_OS_LINUX
+#include <QVulkanInstance>
+#endif
 #ifdef Q_OS_MACOS
 #include "backend/mactitlebar.h"
 #endif
@@ -17,7 +20,14 @@ int runCanvasSelfTest(int argc, char** argv) {
     QCoreApplication::setApplicationName("DeskPortCanvasTest");
     QApplication app(argc, argv);
 #ifdef Q_OS_LINUX
-    if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) {
+        QVulkanInstance probe;
+        if (!probe.create()) {
+            fprintf(stderr, "Canvas self-test failed: Vulkan instance is unavailable\n");
+            return 1;
+        }
+        QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+    }
 #endif
     QQuickWindow window;
 #ifdef Q_OS_MACOS

@@ -22,7 +22,8 @@ Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
   in Settings, with immediate updates to native registration and captured viewer
   input. Conflicts and unavailable platform bindings remain visible to the user.
 - **Linux package rendering:** include the libplacebo frontend required by the
-  embedded canvas. The device list remains available when Vulkan cannot
+  embedded canvas and load the Vulkan runtime without requiring development
+  packages. The device list remains available when Vulkan cannot
   initialize, instead of crashing in Qt 6.4. Linux video presentation requires a
   working Vulkan driver.
 - **Input and regression coverage:** preserve physical canvas keys, isolate

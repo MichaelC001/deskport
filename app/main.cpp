@@ -345,6 +345,12 @@ static void relaunchAfterExit()
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_LINUX
+    // Qt 6.4's Wayland plugin defaults to the unversioned development library.
+    // Installed systems and portable packages provide the runtime SONAME.
+    if (!qEnvironmentVariableIsSet("QT_VULKAN_LIB"))
+        qputenv("QT_VULKAN_LIB", "libvulkan.so.1");
+#endif
     if (argc == 2 && QByteArray(argv[1]) == "--canvas-self-test") return runCanvasSelfTest(argc, argv);
     for (int i = 1; i < argc; ++i) {
         if (QByteArray(argv[i]) == "--clipboard-helper") return runClipboardHelper(argc, argv);
