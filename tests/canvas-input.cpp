@@ -26,6 +26,14 @@ int main(int argc, char** argv) {
     assert(CanvasKey::mac(76) == SDL_SCANCODE_KP_ENTER);
     SDL_SetMainReady(); SDL_setenv("SDL_VIDEODRIVER", "dummy", 1);
     assert(SDL_Init(SDL_INIT_VIDEO) == 0);
+#ifdef Q_OS_MACOS
+    QKeyEvent command(QEvent::KeyPress, Qt::Key_Control, Qt::ControlModifier);
+    assert(CanvasKey::physical(command, SDLK_LGUI) == SDL_SCANCODE_LGUI);
+    QKeyEvent rightCommand(QEvent::KeyPress, Qt::Key_Control, Qt::ControlModifier, 0, 54, 0);
+    assert(CanvasKey::physical(rightCommand, SDLK_LGUI) == SDL_SCANCODE_RGUI);
+    QKeyEvent physicalA(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, 0, 0, 0);
+    assert(CanvasKey::physical(physicalA, SDLK_a) == SDL_SCANCODE_A);
+#endif
     auto window = SDL_CreateWindow("isolated input fixture", 0, 0, 800, 600, SDL_WINDOW_HIDDEN);
     assert(window);
     QJsonObject state{{"width",800},{"height",600},{"scale",1},{"visible",true},{"focused",true},{"hovered",true}};

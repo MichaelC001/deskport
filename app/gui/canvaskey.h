@@ -92,7 +92,10 @@ inline SDL_Scancode physical(const QKeyEvent& event, SDL_Keycode symbol) {
 #ifdef Q_OS_WIN
     scan = windows(event.nativeScanCode());
 #elif defined(Q_OS_MACOS)
-    scan = mac(event.nativeVirtualKey());
+    // Qt's flags-change events can omit the native key code. Zero is also
+    // Carbon's physical A key, so a modifier must not be decoded as A.
+    const bool modifier = symbol >= SDLK_LCTRL && symbol <= SDLK_RGUI;
+    if (event.nativeVirtualKey() || !modifier) scan = mac(event.nativeVirtualKey());
 #elif defined(Q_OS_LINUX)
     if ((QGuiApplication::platformName().startsWith("wayland") || QGuiApplication::platformName() == "xcb") && event.nativeScanCode() >= 8)
         scan = evdev(event.nativeScanCode() - 8);
