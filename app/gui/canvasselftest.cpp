@@ -76,6 +76,16 @@ int runCanvasSelfTest(int argc, char** argv) {
         unit.presentationTimeMs = elapsed.elapsed();
         selected->frame(EncodedVideoFrame::encode(unit, generation));
         if (!selected->ready() || stageTime.elapsed() < 500) return;
+#ifdef Q_OS_MACOS
+        const bool canvasMode = stage != 0 && stage != 4 && stage != 14;
+        if (titleBar.isFullscreenTransitioning()) return;
+        if (!titleBar.isNativeFullscreen() && titleBar.isContentUnderTitleBar() == canvasMode) {
+            fail("canvas overlaps the native title bar or Devices lost its unified bar"); return;
+        }
+        if (titleBar.isToolbarVisible() != (!canvasMode && !titleBar.isNativeFullscreen())) {
+            fail("native toolbar does not match the selected content"); return;
+        }
+#endif
         if (stage >= 10) {
             const auto expected = stage == 10 || stage == 14 ? Qt::WindowFullScreen :
                                   stage == 12 ? Qt::WindowMaximized : Qt::WindowNoState;
@@ -85,9 +95,6 @@ int runCanvasSelfTest(int argc, char** argv) {
             // Exercise the production title-bar policy and the native result.
             if (titleBar.isFullscreenTransitioning()) return;
             if (titleBar.isNativeFullscreen() != (expected == Qt::WindowFullScreen)) return;
-            if (titleBar.isToolbarVisible() == (expected == Qt::WindowFullScreen)) {
-                fail("native toolbar visibility does not match the window state"); return;
-            }
 #endif
         }
         ++renderedStages;
@@ -101,6 +108,11 @@ int runCanvasSelfTest(int argc, char** argv) {
             result = 0; app.quit(); return;
         }
         feed.stop();
+#ifdef Q_OS_MACOS
+        // Include Devices recall in normal/fullscreen states without replacing
+        // the native window or detaching the live decoder first.
+        titleBar.setCanvasVisible(stage != 0 && stage != 4 && stage != 14);
+#endif
         if (stage >= 10) {
             // Keep the live decoder attached across real compositor transitions.
             if (stage == 10 || stage == 14) window.showFullScreen();

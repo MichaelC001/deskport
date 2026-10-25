@@ -1,3 +1,14 @@
+## Edge-to-edge retained canvas — 2026-10-25
+
+Connection progress, takeover confirmation and remote video replace the whole
+window content area. DeskPort's navigation bar is hidden until Devices returns;
+the canvas no longer reserves its height. Windowed macOS uses the standard
+system title bar outside remote pixels instead of the unified application bar,
+and restores the unified bar on Devices without replacing the native window.
+The shell regression checks full content bounds through resize, confirmation
+and return; the native macOS exercise changes chrome with a live decoder across
+windowed and fullscreen states. Package and live acceptance are in progress.
+
 ## Native window-state regression — 2026-10-25
 
 Expanded live checks found that the macOS device-list title-bar policy disabled

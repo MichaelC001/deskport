@@ -1065,18 +1065,34 @@ QtObject {
         if (!shots.isEmpty()) { QTest::qWait(250); QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
         // Connection progress and confirmation replace content in this same root.
         const auto nativeRoot = window->winId();
+        auto topBar = findVisual(window->contentItem(), "topBar", true); QVERIFY(topBar);
         manager->setProperty("canvasVisible", true);
         QTRY_VERIFY(findVisual(window->contentItem(), "sessionCanvas", true));
+        QTRY_VERIFY(!topBar->isVisible());
+        auto canvasPage = findVisual(window->contentItem(), "sessionCanvasPage", true); QVERIFY(canvasPage);
+        auto verifyCanvasBounds = [&] {
+            QCOMPARE(canvasPage->mapToScene(QPointF()), QPointF());
+            QCOMPARE(canvasPage->size(), window->contentItem()->size());
+            QVERIFY(!topBar->isVisible());
+            QCOMPARE(window->winId(), nativeRoot);
+        };
+        verifyCanvasBounds();
+        window->resize(1040,740);
+        QTRY_COMPARE(canvasPage->width(), qreal(1040));
+        verifyCanvasBounds();
         QVERIFY(findVisual(window->contentItem(), "canvasCancelConnection", true));
         QVariantMap question{{"id",1},{"title","Fixture host in use"},{"text","Continue?"},{"cancel","Cancel"},{"accept","Continue"}};
         manager->setProperty("canvas", QVariantMap{{"question",question}});
         QTRY_VERIFY(findVisual(window->contentItem(), "canvasConfirmConnection", true));
+        verifyCanvasBounds();
         auto confirm = findVisual(window->contentItem(), "canvasConfirmConnection", true);
         QVERIFY(QMetaObject::invokeMethod(confirm, "clicked"));
         QCOMPARE(manager->property("answer").toInt(),1);
         manager->setProperty("canvas", QVariantMap{});
+        if (!shots.isEmpty()) { QTest::qWait(250); QVERIFY(window->grabWindow().save(shots+"/edge-to-edge-connecting.png")); }
         manager->setProperty("canvasVisible", false);
         QTRY_VERIFY(!findVisual(window->contentItem(), "sessionCanvas", true));
+        QTRY_VERIFY(topBar->isVisible());
         QCOMPARE(window->winId(),nativeRoot);
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }

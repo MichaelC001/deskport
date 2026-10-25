@@ -13,7 +13,7 @@ import SdlGamepadKeyNavigation 1.0
 ApplicationWindow {
     property bool pollingActive: false
     readonly property bool canvasVisible: typeof sessionManager !== "undefined" && sessionManager.canvasVisible
-    readonly property bool navigationVisible: !stackView.currentItem || stackView.currentItem.hidesNavigation !== true
+    readonly property bool navigationVisible: !canvasVisible && (!stackView.currentItem || stackView.currentItem.hidesNavigation !== true)
 
     // Set by SettingsView to force the back operation to pop all
     // pages except the initial view. This is required when doing
@@ -380,8 +380,8 @@ ApplicationWindow {
         }
     }
     Loader {
+        objectName: "sessionCanvasPage"
         anchors.fill: parent
-        anchors.topMargin: topBar.visible ? topBar.height : 0
         active: window.canvasVisible
         visible: active
         source: "SessionCanvasView.qml"

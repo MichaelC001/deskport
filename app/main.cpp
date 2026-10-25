@@ -1320,6 +1320,10 @@ int main(int argc, char *argv[])
 #endif
 #ifdef Q_OS_DARWIN
         macTitleBar.attach(qobject_cast<QQuickWindow*>(engine.rootObjects().first()));
+        QObject::connect(&managedSessions, &MultiSessions::changed, &macTitleBar, [&] {
+            macTitleBar.setCanvasVisible(managedSessions.canvasVisible());
+        });
+        macTitleBar.setCanvasVisible(managedSessions.canvasVisible());
 #endif
         if (pendingActivation) showDevices();
     }

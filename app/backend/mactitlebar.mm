@@ -70,13 +70,12 @@ void MacTitleBar::attach(QQuickWindow* window)
         [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name object:native
             queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
                 m_FullscreenTransitioning = starting;
-                // This empty toolbar only reserves space for the window buttons.
-                // AppKit otherwise overlays it on the QML controls in full screen.
-                if ([name isEqualToString:NSWindowWillEnterFullScreenNotification]) native.toolbar.visible = NO;
-                else if ([name isEqualToString:NSWindowDidExitFullScreenNotification]) native.toolbar.visible = YES;
+                updateChrome();
             }]];
     }
     m_FullscreenObservers = [observers retain];
+    connect(window, &QWindow::visibleChanged, this, [this] { updateChrome(); });
+    updateChrome();
     // The drag must start from the original AppKit event, before Qt delivers it.
     id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
         if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
@@ -100,6 +99,28 @@ void MacTitleBar::attach(QQuickWindow* window)
     m_Monitor = [monitor retain];
 }
 
+void MacTitleBar::setCanvasVisible(bool visible)
+{
+    if (m_CanvasVisible == visible) return;
+    m_CanvasVisible = visible;
+    updateChrome();
+}
+
+void MacTitleBar::updateChrome()
+{
+    NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
+    if (!native) return;
+    // Devices use a unified application bar. Streaming uses only the normal
+    // system title bar, outside the canvas, so no controls cover remote pixels.
+    // Update the existing NSWindow rather than changing Qt flags/recreating it.
+    const auto style = m_CanvasVisible ? native.styleMask & ~NSWindowStyleMaskFullSizeContentView
+                                       : native.styleMask | NSWindowStyleMaskFullSizeContentView;
+    if (native.styleMask != style) native.styleMask = style;
+    native.titleVisibility = m_CanvasVisible ? NSWindowTitleVisible : NSWindowTitleHidden;
+    native.titlebarAppearsTransparent = !m_CanvasVisible;
+    native.toolbar.visible = !m_CanvasVisible && !m_FullscreenTransitioning && !isNativeFullscreen();
+}
+
 bool MacTitleBar::isNativeFullscreen() const
 {
     NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
@@ -110,4 +131,10 @@ bool MacTitleBar::isToolbarVisible() const
 {
     NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
     return native && native.toolbar.visible;
+}
+
+bool MacTitleBar::isContentUnderTitleBar() const
+{
+    NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
+    return native && (native.styleMask & NSWindowStyleMaskFullSizeContentView);
 }
