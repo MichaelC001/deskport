@@ -13,6 +13,11 @@ the unversioned development library. Linux startup now defaults `QT_VULKAN_LIB`
 to `libvulkan.so.1`, preserving explicit operator overrides. The canvas fixture
 probes the instance before creating its Quick window and reports an unavailable
 driver without crashing. Rebuilt final packages must repeat the desktop gates.
+Software Vulkan testing further exposed SDL's failed-decoder fallback changing
+the hidden capability window to OpenGL. Embedded Linux sessions now reject that
+standalone SDL renderer before it changes the window, preserving Vulkan for
+subsequent software-decoder attempts. Auto-decoder VM regression remains a
+release gate, alongside native hardware presentation.
 
 ## Desktop 0.7.5 release preparation — 2026-10-25
 

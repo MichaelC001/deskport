@@ -130,6 +130,16 @@ bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
 
 bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
+#ifdef Q_OS_LINUX
+    if (params->presentationWindow) {
+        // Embedded presentation belongs to the Qt Vulkan surface. Creating an
+        // SDL renderer can recreate the hidden probe as an OpenGL window and
+        // prevent later hardware-to-software fallback from using Vulkan.
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Skipping SDL renderer for an embedded Vulkan canvas");
+        return false;
+    }
+#endif
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
     m_VideoFormat = params->videoFormat;
