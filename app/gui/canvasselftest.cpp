@@ -30,7 +30,12 @@ int runCanvasSelfTest(int argc, char** argv) {
             fprintf(stderr, "Canvas self-test failed: Vulkan instance is unavailable\n");
             return 1;
         }
-        QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+        if (QGuiApplication::platformName().startsWith("wayland"))
+            QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
+        else
+#endif
+            QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
     }
 #endif
     QQuickWindow window;

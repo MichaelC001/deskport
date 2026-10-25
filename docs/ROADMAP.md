@@ -26,6 +26,11 @@ path for Qt versions before 6.8 serializes embedded Wayland presentation with
 window events, rebuilds only the child swapchain and retains the decoder and
 last decoded frame. Modern Qt keeps its existing threaded renderer. The isolated
 canvas entry point also mirrors normal startup's SDL/Qt platform selection.
+An isolated Fedora comparison then passed all 16 canvas stages with an OpenGL
+Quick shell while the default Vulkan shell failed after minimize. On these old
+Qt Wayland builds, use OpenGL for the shell while the child continues presenting
+video through Vulkan. This avoids the top-level stale Vulkan surface as well;
+modern Qt and explicit backend overrides retain their existing behavior.
 This correction requires renewed final-package desktop validation before release.
 
 ## Desktop 0.7.5 release preparation — 2026-10-25
