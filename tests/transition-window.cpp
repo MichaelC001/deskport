@@ -1,11 +1,12 @@
 #include <QGuiApplication>
 #include <QImage>
+#include "transitionwindow.h"
+#include "connectionwait.h"
 #include <SDL.h>
+// Load Qt headers before Xlib macros exposed by SDL_syswm.h.
 #include <SDL_syswm.h>
 #include <cassert>
 #include <cstdio>
-#include "transitionwindow.h"
-#include "connectionwait.h"
 #include <atomic>
 
 static void* nativeWindow(SDL_Window* window) {

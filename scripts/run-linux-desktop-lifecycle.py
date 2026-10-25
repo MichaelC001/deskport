@@ -27,8 +27,12 @@ def digest(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--profile', required=True)
-    parser.add_argument('--old', type=Path, required=True, help='Existing 0.7.1 package directory')
-    parser.add_argument('--new', type=Path, required=True, help='Existing 0.7.2 package directory')
+    parser.add_argument('--old', type=Path, required=True, help='Previous release package directory')
+    parser.add_argument('--new', type=Path, required=True, help='Candidate release package directory')
+    parser.add_argument('--old-version', default='0.7.1')
+    parser.add_argument('--new-version', default='0.7.2')
+    parser.add_argument('--old-suffix', default='', help='Previous asset suffix, such as r2')
+    parser.add_argument('--new-suffix', default='', help='Candidate asset suffix')
     parser.add_argument('--output', type=Path, required=True, help='New run directory below ~/mygit/build/deskport')
     parser.add_argument('--thread', required=True)
     parser.add_argument('--native', choices=('deb', 'rpm', 'arch'))
@@ -101,8 +105,14 @@ def main():
             archive.add(guest, arcname='scenario.py')
             archive.add(Path(__file__).with_name('check-linux-package.py'), arcname='check-linux-package.py')
             for route in manifest['routes']:
-                for role, version, directory in [('old', '0.7.1', args.old), ('new', '0.7.2', args.new)]:
-                    path = directory / patterns[route].format(v=version)
+                for role, version, directory, suffix in [
+                        ('old', args.old_version, args.old, args.old_suffix),
+                        ('new', args.new_version, args.new, args.new_suffix)]:
+                    name = patterns[route].format(v=version)
+                    if suffix:
+                        extension = '.pkg.tar.zst' if route == 'arch' else Path(name).suffix
+                        name = name[:-len(extension)] + '-' + suffix + extension
+                    path = directory / name
                     assert path.is_file() and not path.is_symlink(), path
                     manifest['packages'].append(dict(name=path.name, sha256=digest(path), bytes=path.stat().st_size,
                         role=role, route=route, version=version))

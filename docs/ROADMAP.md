@@ -1,3 +1,13 @@
+## Desktop 0.7.5 release preparation — 2026-10-25
+
+Prepare all desktop package formats from the retained-canvas implementation.
+The transition regression loads Qt headers before SDL's X11 system headers to
+avoid Xlib macro collisions on Linux. Its 30 stages pass on the Linux builder.
+The desktop VM lifecycle runner accepts explicit old/new application versions
+and asset suffixes so the 0.7.4 replacement can be compared with 0.7.5.
+Final package, VM, signing, release and mynix outcomes are recorded separately
+in the 0.7.5 release verification; preparation does not imply publication.
+
 ## Immediate Devices recall — 2026-10-25
 
 Returning to Devices now hides the selected session canvas without destroying
