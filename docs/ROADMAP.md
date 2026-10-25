@@ -5,8 +5,11 @@ native fullscreen on the retained streaming window. Keep the green button's
 zoom action while allowing AppKit fullscreen transitions. The isolated canvas
 exercise now retains its live decoder through fullscreen, restore, maximize
 and a second fullscreen cycle, and checks the native AppKit fullscreen flag
-instead of trusting Qt state alone. Native compilation and expanded physical
-window-state acceptance are pending for this correction.
+instead of trusting Qt state alone. It waits for AppKit transition completion
+before requesting the next state: the native fullscreen flag changes before
+the animation finishes, and a restore during that animation can be ignored.
+Native compilation and expanded physical window-state acceptance remain in
+progress for this correction.
 
 ## Retained canvas key-frame recovery — 2026-10-25
 

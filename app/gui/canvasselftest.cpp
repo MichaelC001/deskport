@@ -54,7 +54,11 @@ int runCanvasSelfTest(int argc, char** argv) {
     QObject::connect(&second, &SessionPresentation::failed, &app, fail);
     QTimer feed;
     QObject::connect(&feed, &QTimer::timeout, &app, [&] {
-        if (elapsed.elapsed() > 60000) { fail("timed out waiting for a rendered frame or native window state"); return; }
+        if (elapsed.elapsed() > 60000) {
+            fail(QString("stage %1 timed out: ready=%2 state=%3 size=%4x%5")
+                .arg(stage).arg(selected->ready()).arg(int(window.windowState())).arg(window.width()).arg(window.height()));
+            return;
+        }
         if (window.winId() != original) { fail("top-level native window changed"); return; }
         int visibleRoots = 0;
         for (auto candidate : QGuiApplication::topLevelWindows()) if (candidate->isVisible()) ++visibleRoots;
@@ -79,6 +83,7 @@ int runCanvasSelfTest(int argc, char** argv) {
 #ifdef Q_OS_MACOS
             // Qt can report FullScreen even when AppKit refused the transition.
             // Exercise the production title-bar policy and the native result.
+            if (titleBar.isFullscreenTransitioning()) return;
             if (titleBar.isNativeFullscreen() != (expected == Qt::WindowFullScreen)) return;
 #endif
         }

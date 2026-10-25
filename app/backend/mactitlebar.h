@@ -17,9 +17,12 @@ public:
     ~MacTitleBar() override;
     void attach(QQuickWindow* window);
     bool isNativeFullscreen() const;
+    bool isFullscreenTransitioning() const { return m_FullscreenTransitioning; }
 private:
     // True when the point (window coordinates) is on the bar but not on a control.
     bool isDragArea(const QPointF& point) const;
     QQuickWindow* m_Window = nullptr;
     void* m_Monitor = nullptr;
+    void* m_FullscreenObservers = nullptr;
+    bool m_FullscreenTransitioning = false;
 };

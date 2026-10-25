@@ -10,6 +10,10 @@ MacTitleBar::MacTitleBar(QObject* parent) : QObject(parent) {}
 MacTitleBar::~MacTitleBar()
 {
     if (m_Monitor) [NSEvent removeMonitor:(__bridge id)m_Monitor];
+    if (m_FullscreenObservers) {
+        NSArray* observers = CFBridgingRelease(m_FullscreenObservers);
+        for (id observer in observers) [NSNotificationCenter.defaultCenter removeObserver:observer];
+    }
 }
 
 bool MacTitleBar::isDragArea(const QPointF& point) const
@@ -54,6 +58,15 @@ void MacTitleBar::attach(QQuickWindow* window)
     NSButton* zoom = [native standardWindowButton:NSWindowZoomButton];
     zoom.target = native;
     zoom.action = @selector(performZoom:);
+    NSMutableArray* observers = [NSMutableArray array];
+    for (NSString* name in @[NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
+                              NSWindowDidEnterFullScreenNotification, NSWindowDidExitFullScreenNotification]) {
+        const bool starting = [name isEqualToString:NSWindowWillEnterFullScreenNotification] ||
+                              [name isEqualToString:NSWindowWillExitFullScreenNotification];
+        [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name object:native
+            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) { m_FullscreenTransitioning = starting; }]];
+    }
+    m_FullscreenObservers = (__bridge_retained void*)observers;
     // The drag must start from the original AppKit event, before Qt delivers it.
     id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
         if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
