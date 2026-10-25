@@ -1,3 +1,12 @@
+## Retained canvas key-frame recovery — 2026-10-25
+
+A live Windows recall from Devices retained the root window but left its new
+video surface blank. The local decoder queue now retries key-frame requests
+while dependent frames arrive, at most twice per second, instead of waiting
+forever after an initial request overlaps a paused host. Recovery tests cover
+that lost request, request throttling, overflow and decoder-error recovery.
+Native verification and follow-up delivery are in progress.
+
 ## Live canvas handshake correction — 2026-10-25
 
 Post-activation live connections exposed a startup bug: worker bootstrap removed

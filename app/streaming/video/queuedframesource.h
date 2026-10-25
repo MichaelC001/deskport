@@ -3,6 +3,7 @@
 #include "encodedframe.h"
 #include "framesource.h"
 #include <condition_variable>
+#include <chrono>
 #include <deque>
 #include <functional>
 #include <mutex>
@@ -28,10 +29,15 @@ public:
             }
             if (!m_NeedsIdr || frame->unit.frameType == FRAME_TYPE_IDR) {
                 m_NeedsIdr = false;
+                if (frame->unit.frameType == FRAME_TYPE_IDR) m_LastIdrRequest = {};
                 m_Bytes += frame->unit.fullLength;
                 m_Frames.push_back(std::move(frame));
                 accepted = true;
             }
+            // A recall can request its first key frame while the host is still
+            // paused. Retry when dependent frames arrive without that key frame.
+            // Merely dropping them would leave the replacement decoder blank.
+            request |= m_NeedsIdr;
         }
         m_Ready.notify_one();
         if (request) requestIdr();
@@ -68,7 +74,17 @@ public:
         }
         m_Ready.notify_one();
     }
-    void requestIdr() override { if (m_RequestIdr) m_RequestIdr(); }
+    void requestIdr() override {
+        {
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            if (m_Stopped) return;
+            const auto now = std::chrono::steady_clock::now();
+            if (m_LastIdrRequest != std::chrono::steady_clock::time_point{} &&
+                now - m_LastIdrRequest < std::chrono::milliseconds(500)) return;
+            m_LastIdrRequest = now;
+        }
+        if (m_RequestIdr) m_RequestIdr();
+    }
     void updateMetadata(bool active, const SS_HDR_METADATA* hdr, uint32_t latency, uint32_t variance) {
         std::lock_guard<std::mutex> lock(m_Mutex);
         m_HdrActive = active; m_HasMetadata = hdr != nullptr;
@@ -103,6 +119,7 @@ private:
     std::deque<std::unique_ptr<EncodedVideoFrame>> m_Frames;
     int m_Bytes = 0;
     bool m_Wake = false, m_Stopped = false, m_NeedsIdr = true;
+    std::chrono::steady_clock::time_point m_LastIdrRequest{};
     bool m_HdrActive = false, m_HasMetadata = false;
     SS_HDR_METADATA m_Hdr{};
     uint32_t m_Rtt = 0, m_Variance = 0;
