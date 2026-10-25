@@ -1,3 +1,13 @@
+## Native window-state regression — 2026-10-25
+
+Expanded live checks found that the macOS device-list title-bar policy disabled
+native fullscreen on the retained streaming window. Keep the green button's
+zoom action while allowing AppKit fullscreen transitions. The isolated canvas
+exercise now retains its live decoder through fullscreen, restore, maximize
+and a second fullscreen cycle, and checks the native AppKit fullscreen flag
+instead of trusting Qt state alone. Native compilation and expanded physical
+window-state acceptance are pending for this correction.
+
 ## Retained canvas key-frame recovery — 2026-10-25
 
 A live Windows recall from Devices retained the root window but left its new

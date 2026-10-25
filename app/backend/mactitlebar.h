@@ -16,6 +16,7 @@ public:
     explicit MacTitleBar(QObject* parent = nullptr);
     ~MacTitleBar() override;
     void attach(QQuickWindow* window);
+    bool isNativeFullscreen() const;
 private:
     // True when the point (window coordinates) is on the bar but not on a control.
     bool isDragArea(const QPointF& point) const;

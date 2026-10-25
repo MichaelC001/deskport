@@ -6,6 +6,9 @@
 #include <QJsonDocument>
 #include <QElapsedTimer>
 #include <cstdio>
+#ifdef Q_OS_MACOS
+#include "backend/mactitlebar.h"
+#endif
 
 // Explicit isolated renderer exercise: no settings, credentials, network,
 // clipboard, host service, global shortcut or remote input is initialized.
@@ -17,6 +20,11 @@ int runCanvasSelfTest(int argc, char** argv) {
     if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 #endif
     QQuickWindow window;
+#ifdef Q_OS_MACOS
+    window.setFlags(Qt::Window | Qt::ExpandedClientAreaHint | Qt::NoTitleBarBackgroundHint);
+    MacTitleBar titleBar;
+    titleBar.attach(&window);
+#endif
     window.setTitle("DeskPort isolated canvas test");
     window.setColor(QColor("#101216"));
     window.resize(960, 640);
@@ -46,7 +54,7 @@ int runCanvasSelfTest(int argc, char** argv) {
     QObject::connect(&second, &SessionPresentation::failed, &app, fail);
     QTimer feed;
     QObject::connect(&feed, &QTimer::timeout, &app, [&] {
-        if (elapsed.elapsed() > 45000) { fail("timed out waiting for a rendered frame"); return; }
+        if (elapsed.elapsed() > 60000) { fail("timed out waiting for a rendered frame or native window state"); return; }
         if (window.winId() != original) { fail("top-level native window changed"); return; }
         int visibleRoots = 0;
         for (auto candidate : QGuiApplication::topLevelWindows()) if (candidate->isVisible()) ++visibleRoots;
@@ -64,17 +72,36 @@ int runCanvasSelfTest(int argc, char** argv) {
         unit.presentationTimeMs = elapsed.elapsed();
         selected->frame(EncodedVideoFrame::encode(unit, generation));
         if (!selected->ready() || stageTime.elapsed() < 500) return;
+        if (stage >= 10) {
+            const auto expected = stage == 10 || stage == 14 ? Qt::WindowFullScreen :
+                                  stage == 12 ? Qt::WindowMaximized : Qt::WindowNoState;
+            if (window.windowState() != expected) return;
+#ifdef Q_OS_MACOS
+            // Qt can report FullScreen even when AppKit refused the transition.
+            // Exercise the production title-bar policy and the native result.
+            if (titleBar.isNativeFullscreen() != (expected == Qt::WindowFullScreen)) return;
+#endif
+        }
         ++renderedStages;
         fprintf(stderr, "Canvas self-test stage %d completed\n", stage);
-        if (++stage == 10) {
+        if (++stage == 16) {
             const auto capabilities = selected->capabilities();
             canvas->setPresentation(nullptr);
             if (first.active() || second.active()) { fail("decoder survived detach"); return; }
-            printf("PASS: one persistent native root, 10 decoded presentation stages, resize, session switch, live hide/minimize/recall and decoder teardown; %s\n",
+            printf("PASS: one persistent native root, 16 decoded presentation stages, resize, session switch, live hide/minimize/recall, native fullscreen/maximize/restore and decoder teardown; %s\n",
                    QJsonDocument(capabilities).toJson(QJsonDocument::Compact).constData());
             result = 0; app.quit(); return;
         }
         feed.stop();
+        if (stage >= 10) {
+            // Keep the live decoder attached across real compositor transitions.
+            if (stage == 10 || stage == 14) window.showFullScreen();
+            else if (stage == 12) window.showMaximized();
+            else { window.showNormal(); window.resize(800, 560); }
+            stageTime.restart();
+            feed.start(50);
+            return;
+        }
         // Exercise an occluded live renderer before joining it, including the
         // compositor's asynchronous unmap notifications.
         if (stage % 3 == 0) window.hide();

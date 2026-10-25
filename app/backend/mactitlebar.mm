@@ -47,10 +47,13 @@ void MacTitleBar::attach(QQuickWindow* window)
         NSButton* zoom = [native standardWindowButton:NSWindowZoomButton];
         if (guarded && zoom) guarded->setProperty("windowButtonsEnd", NSMaxX([zoom convertRect:zoom.bounds toView:nil]));
     });
-    // The green button zooms the device list to fill the screen instead of
-    // entering full screen, where the title bar and window buttons hide.
-    native.collectionBehavior = (native.collectionBehavior & ~NSWindowCollectionBehaviorFullScreenPrimary)
-        | NSWindowCollectionBehaviorFullScreenNone;
+    // Keep the green button's zoom action without disabling full screen for
+    // the entire window. The retained stream now uses this same native root.
+    native.collectionBehavior = (native.collectionBehavior & ~NSWindowCollectionBehaviorFullScreenNone)
+        | NSWindowCollectionBehaviorFullScreenPrimary;
+    NSButton* zoom = [native standardWindowButton:NSWindowZoomButton];
+    zoom.target = native;
+    zoom.action = @selector(performZoom:);
     // The drag must start from the original AppKit event, before Qt delivers it.
     id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
         if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
@@ -72,4 +75,10 @@ void MacTitleBar::attach(QQuickWindow* window)
         return nil;
     }];
     m_Monitor = (__bridge_retained void*)monitor;
+}
+
+bool MacTitleBar::isNativeFullscreen() const
+{
+    NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
+    return native && (native.styleMask & NSWindowStyleMaskFullScreen);
 }
