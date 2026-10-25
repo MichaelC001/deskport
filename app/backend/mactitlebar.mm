@@ -9,10 +9,14 @@ MacTitleBar::MacTitleBar(QObject* parent) : QObject(parent) {}
 
 MacTitleBar::~MacTitleBar()
 {
-    if (m_Monitor) [NSEvent removeMonitor:(__bridge id)m_Monitor];
+    if (m_Monitor) {
+        [NSEvent removeMonitor:(id)m_Monitor];
+        [(id)m_Monitor release];
+    }
     if (m_FullscreenObservers) {
-        NSArray* observers = CFBridgingRelease(m_FullscreenObservers);
+        NSArray* observers = (NSArray*)m_FullscreenObservers;
         for (id observer in observers) [NSNotificationCenter.defaultCenter removeObserver:observer];
+        [observers release];
     }
 }
 
@@ -66,7 +70,7 @@ void MacTitleBar::attach(QQuickWindow* window)
         [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name object:native
             queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) { m_FullscreenTransitioning = starting; }]];
     }
-    m_FullscreenObservers = (__bridge_retained void*)observers;
+    m_FullscreenObservers = [observers retain];
     // The drag must start from the original AppKit event, before Qt delivers it.
     id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
         if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
@@ -87,7 +91,7 @@ void MacTitleBar::attach(QQuickWindow* window)
         }
         return nil;
     }];
-    m_Monitor = (__bridge_retained void*)monitor;
+    m_Monitor = [monitor retain];
 }
 
 bool MacTitleBar::isNativeFullscreen() const

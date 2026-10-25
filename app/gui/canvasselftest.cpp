@@ -43,7 +43,7 @@ int runCanvasSelfTest(int argc, char** argv) {
     elapsed.start(); stageTime.start();
     const auto configure = [&] {
         return selected->configure({{"generation",double(generation)}, {"format",VIDEO_FORMAT_H264},
-            {"width",1280}, {"height",720}, {"fps",60}, {"vsync",false},
+            {"width",1280}, {"height",720}, {"fps",60}, {"vsync",stage % 2 != 0},
             {"decoder",int(StreamingPreferences::VDS_AUTO)}});
     };
     const auto fail = [&](QString error) {

@@ -1,4 +1,5 @@
 #include <QWindow>
+#include <memory>
 // Nasty hack to avoid conflict between AVFoundation and
 // libavutil both defining AVMediaType
 #define AVMediaType AVMediaType_FFmpeg
@@ -130,6 +131,19 @@ struct Vertex
 - (NSView*)hitTest:(NSPoint)point { Q_UNUSED(point); return nil; }
 @end
 
+// Drawable presentation can complete on AppKit's main thread after a resized
+// renderer has been destroyed. Callbacks own only this synchronization state,
+// never the renderer, and release it after the final drawable is retired.
+struct MetalPresentationState {
+    SDL_mutex* mutex = SDL_CreateMutex();
+    SDL_cond* condition = SDL_CreateCond();
+    int pending = 0;
+    ~MetalPresentationState() {
+        if (condition) SDL_DestroyCond(condition);
+        if (mutex) SDL_DestroyMutex(mutex);
+    }
+};
+
 class VTMetalRenderer : public VTBaseRenderer
 {
 public:
@@ -156,22 +170,12 @@ public:
           m_LastFrameHeight(-1),
           m_LastDrawableWidth(-1),
           m_LastDrawableHeight(-1),
-          m_PresentationMutex(SDL_CreateMutex()),
-          m_PresentationCond(SDL_CreateCond()),
-          m_PendingPresentationCount(0)
+          m_Presentation(std::make_shared<MetalPresentationState>())
     {
     }
 
     virtual ~VTMetalRenderer() override
     { @autoreleasepool {
-        if (m_PresentationCond != nullptr) {
-            SDL_DestroyCond(m_PresentationCond);
-        }
-
-        if (m_PresentationMutex != nullptr) {
-            SDL_DestroyMutex(m_PresentationMutex);
-        }
-
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
         }
@@ -244,14 +248,14 @@ public:
 
             if (m_MetalLayer.displaySyncEnabled) {
                 // Pace ourselves by waiting if too many frames are pending presentation
-                SDL_LockMutex(m_PresentationMutex);
-                if (m_PendingPresentationCount > 2) {
-                    if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                SDL_LockMutex(m_Presentation->mutex);
+                if (m_Presentation->pending > 2) {
+                    if (SDL_CondWaitTimeout(m_Presentation->condition, m_Presentation->mutex, 100) == SDL_MUTEX_TIMEDOUT) {
                         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                     "Presentation wait timed out after 100 ms");
                     }
                 }
-                SDL_UnlockMutex(m_PresentationMutex);
+                SDL_UnlockMutex(m_Presentation->mutex);
             }
         }
     }}
@@ -653,14 +657,15 @@ public:
 
         if (m_MetalLayer.displaySyncEnabled) {
             // Queue a completion callback on the drawable to pace our rendering
-            SDL_LockMutex(m_PresentationMutex);
-            m_PendingPresentationCount++;
-            SDL_UnlockMutex(m_PresentationMutex);
+            SDL_LockMutex(m_Presentation->mutex);
+            m_Presentation->pending++;
+            SDL_UnlockMutex(m_Presentation->mutex);
+            const auto presentation = m_Presentation;
             [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
-                SDL_LockMutex(m_PresentationMutex);
-                m_PendingPresentationCount--;
-                SDL_CondSignal(m_PresentationCond);
-                SDL_UnlockMutex(m_PresentationMutex);
+                SDL_LockMutex(presentation->mutex);
+                presentation->pending--;
+                SDL_CondSignal(presentation->condition);
+                SDL_UnlockMutex(presentation->mutex);
             }];
         }
 
@@ -964,9 +969,7 @@ private:
     int m_LastFrameHeight;
     int m_LastDrawableWidth;
     int m_LastDrawableHeight;
-    SDL_mutex* m_PresentationMutex;
-    SDL_cond* m_PresentationCond;
-    int m_PendingPresentationCount;
+    std::shared_ptr<MetalPresentationState> m_Presentation;
 };
 
 IFFmpegRenderer* VTMetalRendererFactory::createRenderer(bool hwAccel) {

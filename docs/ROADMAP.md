@@ -8,8 +8,11 @@ and a second fullscreen cycle, and checks the native AppKit fullscreen flag
 instead of trusting Qt state alone. It waits for AppKit transition completion
 before requesting the next state: the native fullscreen flag changes before
 the animation finishes, and a restore during that animation can be ignored.
-Native compilation and expanded physical window-state acceptance remain in
-progress for this correction.
+Live fullscreen exit also exposed a Metal presentation callback accessing its
+destroyed renderer after resize. Pending callbacks now retain independent
+synchronization state until they are released. The native canvas exercise
+alternates V-Sync and keeps it enabled for the window-state stages to exercise
+this callback path. Expanded physical acceptance remains in progress.
 
 ## Retained canvas key-frame recovery — 2026-10-25
 
