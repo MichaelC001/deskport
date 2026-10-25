@@ -5,12 +5,20 @@ Post-activation live connections exposed a startup bug: worker bootstrap removed
 now retains the authenticated video endpoint and token in process memory before
 environment cleanup. Decoder recreation reuses those credentials. A real local
 socket regression exercises authentication after clearing the environment,
-frame integrity, peer loss and rejection of missing credentials. Cross-device
-streaming acceptance remains pending the corrected native build. Initial live
+frame integrity, peer loss and rejection of missing credentials. Initial live
 video on macOS also exposed a recall race: a replacement QML canvas attached its
 retained session before anchors supplied a size. Decoder initialization now
 waits for that geometry, and the native exercise recreates a zero-size canvas
 before applying layout to cover this path.
+
+Corrected native clients show live desktops for macOS to Linux, macOS to Windows,
+and Linux to Windows. macOS also returns from Devices to the retained live
+desktop in the same root window. All three platforms pass the updated ten-stage
+native canvas exercise, including the zero-size replacement. Windows tray
+activation was visually checked with the resident application. Windows-origin
+connections and Linux to macOS remain pending; physical mouse, audio, HDR and
+latency acceptance are not established. The follow-up packages are prepared,
+with publication pending completion of the remaining live checks.
 
 ## In-process desktop canvas — 2026-10-25 self-test
 
