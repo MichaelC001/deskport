@@ -17,6 +17,7 @@ public:
     ~MacTitleBar() override;
     void attach(QQuickWindow* window);
     bool isNativeFullscreen() const;
+    bool isToolbarVisible() const;
     bool isFullscreenTransitioning() const { return m_FullscreenTransitioning; }
 private:
     // True when the point (window coordinates) is on the bar but not on a control.

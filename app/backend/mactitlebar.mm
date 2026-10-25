@@ -46,7 +46,7 @@ void MacTitleBar::attach(QQuickWindow* window)
     native.titleVisibility = NSWindowTitleHidden;
     // An empty unified toolbar makes the title bar 52 points tall and centres the
     // window buttons in it; it contributes no items of its own.
-    native.toolbar = [[NSToolbar alloc] initWithIdentifier:@"DeskPortTopBar"];
+    native.toolbar = [[[NSToolbar alloc] initWithIdentifier:@"DeskPortTopBar"] autorelease];
     native.toolbarStyle = NSWindowToolbarStyleUnified;
     // Tell the top bar where the window buttons end once AppKit has laid them
     // out; their size differs between macOS versions.
@@ -68,7 +68,13 @@ void MacTitleBar::attach(QQuickWindow* window)
         const bool starting = [name isEqualToString:NSWindowWillEnterFullScreenNotification] ||
                               [name isEqualToString:NSWindowWillExitFullScreenNotification];
         [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name object:native
-            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) { m_FullscreenTransitioning = starting; }]];
+            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+                m_FullscreenTransitioning = starting;
+                // This empty toolbar only reserves space for the window buttons.
+                // AppKit otherwise overlays it on the QML controls in full screen.
+                if ([name isEqualToString:NSWindowWillEnterFullScreenNotification]) native.toolbar.visible = NO;
+                else if ([name isEqualToString:NSWindowDidExitFullScreenNotification]) native.toolbar.visible = YES;
+            }]];
     }
     m_FullscreenObservers = [observers retain];
     // The drag must start from the original AppKit event, before Qt delivers it.
@@ -98,4 +104,10 @@ bool MacTitleBar::isNativeFullscreen() const
 {
     NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
     return native && (native.styleMask & NSWindowStyleMaskFullScreen);
+}
+
+bool MacTitleBar::isToolbarVisible() const
+{
+    NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
+    return native && native.toolbar.visible;
 }

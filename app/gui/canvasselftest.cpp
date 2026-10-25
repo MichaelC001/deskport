@@ -85,6 +85,9 @@ int runCanvasSelfTest(int argc, char** argv) {
             // Exercise the production title-bar policy and the native result.
             if (titleBar.isFullscreenTransitioning()) return;
             if (titleBar.isNativeFullscreen() != (expected == Qt::WindowFullScreen)) return;
+            if (titleBar.isToolbarVisible() == (expected == Qt::WindowFullScreen)) {
+                fail("native toolbar visibility does not match the window state"); return;
+            }
 #endif
         }
         ++renderedStages;
