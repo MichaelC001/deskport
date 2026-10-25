@@ -1,3 +1,24 @@
+## Desktop 0.7.5 final package verification — 2026-10-25
+
+The final source `5c4b2f2e` passes Linux build, Windows source and display-contract
+CI. Signed/notarized macOS and native Windows packages, the Linux Nix build and
+the separate mynix-selected Nix package pass 16 synthetic canvas stages. All
+six desktop guests pass package lifecycle checks; Fedora KDE, Ubuntu GNOME,
+Debian KDE, Arch KDE and Bazzite KDE also pass all 16 canvas stages per format.
+Ubuntu geometry tests use a disposable guest with auto-maximize disabled.
+
+Omarchy 4.0.4 / Hyprland 0.56.2 remains a documented compatibility limitation:
+both tested formats complete stages 0–10, but normal-window restoration reports
+Maximized and fails stage 11 with the decoder still ready. Protocol traces
+confirm unmaximize/unfullscreen requests; the compositor forces a maximized
+flag on map and toggles maximize requests. Do not count this as complete canvas
+acceptance or hide the failed result. Guest window rules are restored, all VMs
+are torn down and baseline hashes remain unchanged. GNOME, older KWin and
+Hyprland host-display limitations are also retained in the release record.
+
+See [0.7.5 validation details](RELEASE_0.7.5.md#validation-boundary). Publication,
+mynix delivery and user activation remain distinct from these package results.
+
 ## Linux release graphics verification — 2026-10-25
 
 The 0.7.5 AppImage startup check on an isolated Ubuntu 22.04 Xvfb container

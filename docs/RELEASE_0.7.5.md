@@ -62,6 +62,32 @@ Final-package validation is recorded in the release verification asset. Earlier
 0.7.5 packages. Virtual desktop and synthetic decoder checks do not establish
 physical GPU, audio, HDR, latency or long-session acceptance.
 
+The release source is `5c4b2f2e19a03726f63972e13b59727bfbeadb4a`; its Linux
+build, Windows source checks and display-contract CI workflows pass. The macOS
+and Windows binaries use `18dc883a25767e475ab8d0c38caf8852af071fca`; subsequent
+executable changes affect Linux only.
+
+- Native macOS, Windows and NixOS packages pass the 16-stage synthetic canvas
+  test. The Nix package selected by the mynix delivery also passes separately.
+- Fedora KDE, Ubuntu GNOME, Debian KDE, Arch KDE and Bazzite KDE pass 16 canvas
+  stages for each tested package route. Ubuntu's geometry check temporarily
+  disables GNOME automatic maximization in its disposable guest.
+- All six desktop guests pass package install, upgrade, rollback, uninstall and
+  configuration-retention checks; every VM teardown and baseline hash is verified.
+- **Omarchy 4.0.4 / Hyprland 0.56.2 has a known window-restoration limitation.**
+  AppImage and Arch packages complete stages 0–10, including retained-frame
+  recall and fullscreen entry, but returning to a normal window times out with
+  Qt reporting Maximized while the decoder stays ready. Stages 11–15 are not
+  accepted. This remains a failed canvas acceptance result even with a floating
+  test window and explicit maximize requests enabled in the disposable guest.
+  Protocol diagnostics record the application's unmaximize/unfullscreen requests;
+  Hyprland's [mapped-window state](https://github.com/hyprwm/Hyprland/blob/v0.56.2/src/protocols/XDGShell.cpp#L482-L489)
+  and [maximize request handling](https://github.com/hyprwm/Hyprland/blob/v0.56.2/src/desktop/view/Window.cpp#L1286-L1333)
+  explain the compatibility boundary. No deployed compositor configuration is changed.
+- Host virtual-display checks remain limited on GNOME, pre-6.6 KWin and the
+  tested Hyprland guest. Package availability does not imply every host display
+  policy or every Linux distribution is validated.
+
 The [PC support matrix](PC_SUPPORT_MATRIX.md) retains platform-specific limits,
 including GNOME capture/recovery, Windows secure desktop, native Wayland IME
 and broader hardware coverage. Updating mynix does not activate an installation;
