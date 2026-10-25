@@ -11,8 +11,20 @@ unified toolbar returned. Preserve the outer frame across chrome changes so
 recall cannot request a new remote resolution. An isolated native comparison
 reproduces the old growth and passes with frame preservation. The decoder
 exercise now includes hiding the whole window, showing Devices and returning
-without new frames, checking both window and canvas dimensions. Final
-three-platform native and live acceptance for this correction is pending.
+without new frames, checking both window and canvas dimensions. All three final
+packaged consumers pass the 16 native stages; QML has 31 passing checks and the
+session manager has 10. Live mouse return passed twice on macOS and Windows and
+once on Linux, with no new decoder start or remote-mode request. Windows opened
+Devices through its physical tray context menu; macOS and Linux used native
+close plus single-instance activation. No connection spinner appeared on return.
+
+The package-only self-test
+[`test-20261025-retained-canvas-8b20ede7`](https://github.com/keithxc/deskport-test-builds/releases/tag/test-20261025-retained-canvas-8b20ede7)
+uses source `8b20ede7`; all ten assets match GitHub's server SHA-256 and size.
+Both complete Nix configurations were built and mynix is pinned by `a4a82e1`.
+Nix activation remains manual. Windows Setup and its restored background
+resident match the final executable hash. Audio, HDR, latency, long-duration
+behavior and live mouse-border dragging were not revalidated by this correction.
 
 ## Edge-to-edge retained canvas — 2026-10-25
 
