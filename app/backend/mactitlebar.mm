@@ -110,6 +110,7 @@ void MacTitleBar::updateChrome()
 {
     NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
     if (!native) return;
+    const NSRect frame = native.frame;
     // Devices use a unified application bar. Streaming uses only the normal
     // system title bar, outside the canvas, so no controls cover remote pixels.
     // Update the existing NSWindow rather than changing Qt flags/recreating it.
@@ -119,6 +120,11 @@ void MacTitleBar::updateChrome()
     native.titleVisibility = m_CanvasVisible ? NSWindowTitleVisible : NSWindowTitleHidden;
     native.titlebarAppearsTransparent = !m_CanvasVisible;
     native.toolbar.visible = !m_CanvasVisible && !m_FullscreenTransitioning && !isNativeFullscreen();
+    // AppKit can grow the frame when restoring the unified toolbar. A page
+    // change must preserve the outer window size, otherwise recall negotiates
+    // another remote resolution even though the user never resized the window.
+    if (!m_FullscreenTransitioning && !isNativeFullscreen() && !NSEqualRects(native.frame, frame))
+        [native setFrame:frame display:YES];
 }
 
 bool MacTitleBar::isNativeFullscreen() const

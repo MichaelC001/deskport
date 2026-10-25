@@ -6,7 +6,13 @@ temporary hidden-page geometry does not restart the decoder. Real visible
 resizes and graphics-device recovery still rebuild the presentation when needed.
 Remote input remains released while Devices is visible. Session-manager and
 QML regressions pass, including object identity and ready-frame retention.
-Native decoder and live visual acceptance for this correction are pending.
+Native macOS live testing also exposed AppKit growing the window when its
+unified toolbar returned. Preserve the outer frame across chrome changes so
+recall cannot request a new remote resolution. An isolated native comparison
+reproduces the old growth and passes with frame preservation. The decoder
+exercise now includes hiding the whole window, showing Devices and returning
+without new frames, checking both window and canvas dimensions. Final
+three-platform native and live acceptance for this correction is pending.
 
 ## Edge-to-edge retained canvas — 2026-10-25
 

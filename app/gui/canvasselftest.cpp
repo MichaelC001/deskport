@@ -132,21 +132,27 @@ int runCanvasSelfTest(int argc, char** argv) {
             // gives it temporary geometry. Recall must not request a new frame.
             const auto resets = presentationResets;
             const auto size = canvas->size();
+            const auto frameSize = window.frameGeometry().size();
             canvas->setVisible(false);
+            window.hide();
 #ifdef Q_OS_MACOS
             titleBar.setCanvasVisible(false);
 #endif
+            window.setVisible(true);
             canvas->setSize(size + QSizeF(0, 40));
-            QTimer::singleShot(500, &app, [&, resets, size] {
+            QTimer::singleShot(500, &app, [&, resets, size, frameSize] {
                 if (!selected->active() || !selected->ready() || presentationResets != resets) {
                     fail("Devices discarded the retained presentation"); return;
                 }
 #ifdef Q_OS_MACOS
                 titleBar.setCanvasVisible(true);
 #endif
-                canvas->setSize(size);
+                layout();
                 canvas->setVisible(true);
-                QTimer::singleShot(300, &app, [&, resets] {
+                QTimer::singleShot(300, &app, [&, resets, size, frameSize] {
+                    if (window.frameGeometry().size() != frameSize || canvas->size() != size) {
+                        fail("Devices recall changed the window or canvas size"); return;
+                    }
                     if (!selected->active() || !selected->ready() || presentationResets != resets) {
                         fail("recall restarted the retained presentation"); return;
                     }
