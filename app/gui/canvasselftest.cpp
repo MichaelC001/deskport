@@ -20,6 +20,10 @@ int runCanvasSelfTest(int argc, char** argv) {
     QCoreApplication::setApplicationName("DeskPortCanvasTest");
     QApplication app(argc, argv);
 #ifdef Q_OS_LINUX
+    // This entry point bypasses normal startup's platform selection. Match that
+    // selection so SDL's Vulkan extensions describe the visible Qt surface.
+    if (QGuiApplication::platformName().startsWith("wayland")) qputenv("SDL_VIDEODRIVER", "wayland");
+    else if (QGuiApplication::platformName() == "xcb") qputenv("SDL_VIDEODRIVER", "x11");
     if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) {
         QVulkanInstance probe;
         if (!probe.create()) {

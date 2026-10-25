@@ -15,7 +15,11 @@
 #include <QWindow>
 #endif
 
-class PlVkRenderer : public IFFmpegRenderer {
+class PlVkRenderer :
+#ifdef Q_OS_LINUX
+    public QObject,
+#endif
+    public IFFmpegRenderer {
 public:
     PlVkRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~PlVkRenderer() override;
@@ -31,6 +35,10 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void waitToRender() override;
+#ifdef Q_OS_LINUX
+    bool isRenderThreadSupported() override { return !m_EmbeddedSurfaceWorkaround; }
+    bool eventFilter(QObject* watched, QEvent* event) override;
+#endif
     virtual void cleanupRenderContext() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
@@ -68,6 +76,14 @@ private:
     std::unique_ptr<QVulkanInstance> m_QtInstance;
     QWindow* m_PresentationWindow = nullptr;
     QSize m_PresentationSize;
+    AVFrame* m_LastPresentationFrame = nullptr;
+    bool m_EmbeddedSurfaceWorkaround = false;
+    bool m_SurfaceInvalidated = false;
+    bool m_RecreatingSurface = false;
+    void restorePresentationSurface();
+    void queueRetainedPresentation();
+    VkPresentModeKHR m_PresentMode = VK_PRESENT_MODE_FIFO_KHR;
+    bool createSwapchain();
 #endif
 
     // The libplacebo rendering state

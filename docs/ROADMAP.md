@@ -19,6 +19,15 @@ standalone SDL renderer before it changes the window, preserving Vulkan for
 subsequent software-decoder attempts. Auto-decoder VM regression remains a
 release gate, alongside native hardware presentation.
 
+The full Qt 6.4 package tests exposed a Wayland surface lifetime failure on
+hide/minimize: SDL auto-decoding reaches software presentation, but the render
+worker can still use a wl_surface that Qt has invalidated. The compatibility
+path for Qt versions before 6.8 serializes embedded Wayland presentation with
+window events, rebuilds only the child swapchain and retains the decoder and
+last decoded frame. Modern Qt keeps its existing threaded renderer. The isolated
+canvas entry point also mirrors normal startup's SDL/Qt platform selection.
+This correction requires renewed final-package desktop validation before release.
+
 ## Desktop 0.7.5 release preparation — 2026-10-25
 
 Prepare all desktop package formats from the retained-canvas implementation.

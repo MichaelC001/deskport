@@ -67,6 +67,12 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
         if (m_Presentation) m_Presentation->detach();
         delete m_Surface; m_Surface = nullptr;
         if (window) {
+#if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+            // Stop exposing the embedded surface in the same event turn as the
+            // parent hides; a timer leaves queued presentations using stale WSI.
+            connect(window, &QWindow::visibleChanged, this, &SessionCanvas::refresh, Qt::UniqueConnection);
+            connect(window, &QWindow::windowStateChanged, this, &SessionCanvas::refresh, Qt::UniqueConnection);
+#endif
             m_Surface = new QWindow(window);
             m_Surface->setFlags(Qt::FramelessWindowHint);
 #ifdef Q_OS_LINUX

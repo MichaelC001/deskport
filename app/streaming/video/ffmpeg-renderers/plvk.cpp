@@ -13,6 +13,12 @@
 
 #include <vector>
 #include <set>
+#ifdef Q_OS_LINUX
+#include <QEvent>
+#include <QGuiApplication>
+#include <QTimer>
+#include <QThread>
+#endif
 
 #ifndef VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME
 #define VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME "VK_KHR_video_decode_av1"
@@ -119,6 +125,10 @@ PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
 
 PlVkRenderer::~PlVkRenderer()
 {
+#ifdef Q_OS_LINUX
+    if (m_PresentationWindow) m_PresentationWindow->removeEventFilter(this);
+    av_frame_free(&m_LastPresentationFrame);
+#endif
     // The render context must have been cleaned up by now
     SDL_assert(!m_HasPendingSwapchainFrame);
 
@@ -435,6 +445,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         m_QtInstance->setVkInstance(m_PlVkInstance->instance);
         if (!m_QtInstance->create()) return false;
         m_PresentationWindow = params->presentationWindow;
+#if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
+        m_EmbeddedSurfaceWorkaround = QGuiApplication::platformName().startsWith("wayland");
+#endif
         m_PresentationWindow->setVulkanInstance(m_QtInstance.get());
         m_PresentationWindow->create();
         m_VkSurface = QVulkanInstance::surfaceForWindow(m_PresentationWindow);
@@ -496,6 +509,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+#ifdef Q_OS_LINUX
+    m_PresentMode = presentMode;
+#endif
     pl_vulkan_swapchain_params vkSwapchainParams = {};
     vkSwapchainParams.surface = m_VkSurface;
     vkSwapchainParams.present_mode = presentMode;
@@ -567,8 +583,70 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+#ifdef Q_OS_LINUX
+    if (m_EmbeddedSurfaceWorkaround) m_PresentationWindow->installEventFilter(this);
+#endif
     return true;
 }
+
+#ifdef Q_OS_LINUX
+bool PlVkRenderer::createSwapchain()
+{
+    pl_vulkan_swapchain_params params = {};
+    params.surface = m_VkSurface;
+    params.present_mode = m_PresentMode;
+    params.swapchain_depth = 1;
+#if PL_API_VER >= 338
+    params.disable_10bit_sdr = true;
+#endif
+    m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &params);
+    if (!m_Swapchain) SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "pl_vulkan_create_swapchain() failed");
+    return m_Swapchain != nullptr;
+}
+
+void PlVkRenderer::queueRetainedPresentation()
+{
+    QTimer::singleShot(0, this, [this] {
+        if (m_SurfaceInvalidated) restorePresentationSurface();
+        if (m_LastPresentationFrame && m_PresentationWindow->isExposed())
+            renderFrame(m_LastPresentationFrame);
+    });
+}
+
+bool PlVkRenderer::eventFilter(QObject* watched, QEvent* event)
+{
+    if (watched == m_PresentationWindow && !m_RecreatingSurface) {
+        if (event->type() == QEvent::Hide) {
+            // Qt Wayland unmaps and replaces wl_surface on hide. A render worker
+            // must not submit to that surface concurrently with Qt's teardown.
+            cleanupRenderContext();
+            pl_swapchain_destroy(&m_Swapchain);
+            m_SurfaceInvalidated = true;
+        } else if (event->type() == QEvent::Show || event->type() == QEvent::Expose) {
+            queueRetainedPresentation();
+        }
+    }
+    return false;
+}
+
+void PlVkRenderer::restorePresentationSurface()
+{
+    if (!m_PresentationWindow->isVisible() || m_RecreatingSurface) return;
+    m_RecreatingSurface = true;
+    // Qt 6.4 keeps its cached VkSurfaceKHR after the Wayland surface is gone.
+    // Recreate only the embedded platform surface, retaining the decoder, GPU,
+    // last frame and the application's native top-level window.
+    m_PresentationWindow->destroy();
+    m_PresentationWindow->setVulkanInstance(m_QtInstance.get());
+    m_PresentationWindow->create();
+    m_VkSurface = QVulkanInstance::surfaceForWindow(m_PresentationWindow);
+    m_SurfaceInvalidated = false;
+    if (!m_VkSurface || !createSwapchain()) requestReset(SDL_RENDER_DEVICE_RESET);
+    m_PresentationWindow->show();
+    m_RecreatingSurface = false;
+    queueRetainedPresentation();
+}
+#endif
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
@@ -686,6 +764,9 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
 
 void PlVkRenderer::waitToRender()
 {
+#ifdef Q_OS_LINUX
+    if (m_EmbeddedSurfaceWorkaround && (!m_PresentationWindow->isExposed() || !m_Swapchain)) return;
+#endif
     // Check if the GPU has failed before doing anything else
     if (pl_gpu_is_failed(m_Vulkan->gpu)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -702,7 +783,10 @@ void PlVkRenderer::waitToRender()
     //
     // NB: This seems to cause performance problems with the Windows display stack
     // (particularly on Nvidia) so we will only do this for non-Windows platforms.
-    pl_swapchain_swap_buffers(m_Swapchain);
+#ifdef Q_OS_LINUX
+    if (!m_EmbeddedSurfaceWorkaround)
+#endif
+        pl_swapchain_swap_buffers(m_Swapchain);
 #endif
 
     // Handle the swapchain being resized
@@ -742,6 +826,18 @@ void PlVkRenderer::cleanupRenderContext()
 
 void PlVkRenderer::renderFrame(AVFrame *frame)
 {
+#ifdef Q_OS_LINUX
+    if (m_EmbeddedSurfaceWorkaround) {
+        Q_ASSERT(QThread::currentThread() == m_PresentationWindow->thread());
+        AVFrame* retained = av_frame_clone(frame);
+        av_frame_free(&m_LastPresentationFrame);
+        m_LastPresentationFrame = retained;
+        frame = retained;
+        if (!frame) return;
+        if (m_SurfaceInvalidated) restorePresentationSurface();
+        waitToRender();
+    }
+#endif
     pl_frame mappedFrame, targetFrame;
 
     // If waitToRender() failed to get the next swapchain frame, skip
