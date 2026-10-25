@@ -12,7 +12,12 @@ Live fullscreen exit also exposed a Metal presentation callback accessing its
 destroyed renderer after resize. Pending callbacks now retain independent
 synchronization state until they are released. The native canvas exercise
 alternates V-Sync and keeps it enabled for the window-state stages to exercise
-this callback path. Expanded physical acceptance remains in progress.
+this callback path. AppKit's empty title-bar spacer toolbar is hidden during
+fullscreen so it cannot cover the QML controls. Connection and recall now use
+visibility changes rather than `show()`, which could restore a maximized or
+fullscreen window to normal. An isolated session-manager regression exercises
+these states across connection and recall. Expanded physical acceptance remains
+in progress.
 
 ## Retained canvas key-frame recovery — 2026-10-25
 

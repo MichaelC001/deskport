@@ -74,6 +74,32 @@ static int worker(QApplication& app) {
 class MultiSessionsTest : public QObject {
     Q_OBJECT
 private slots:
+    void presentingCanvasPreservesWindowState() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
+        const QJsonObject records{{"a", QJsonObject{{"hostId","a"},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}}}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        QWindow window; window.resize(900,600); window.showMaximized();
+        MultiSessions manager(&peers,cert,key); manager.setCanvasWindow(&window);
+        const auto root=window.winId();
+        manager.open("a","Fixture","127.0.0.1","recover");
+        QTRY_VERIFY(manager.selectedTraffic().value("sent").toInt() >= 1);
+        QCOMPARE(window.windowState(),Qt::WindowMaximized);
+        for (auto state : {Qt::WindowFullScreen,Qt::WindowMaximized,Qt::WindowNoState}) {
+            window.setWindowState(state);
+            manager.showDevices();
+            QTest::qWait(100);
+            QVERIFY(manager.recall());
+            QTest::qWait(100);
+            QCOMPARE(window.windowState(),state);
+            QCOMPARE(window.winId(),root);
+            QVERIFY(window.isVisible());
+        }
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
+    }
     void shortcutConfigurationReachesNewAndExistingWorkers() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
         const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");

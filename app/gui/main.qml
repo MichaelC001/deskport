@@ -155,14 +155,14 @@ ApplicationWindow {
     function presentDevices() {
         if (!activeStreamPage) stackView.pop(null, StackView.Immediate)
         if (window.windowState === Qt.WindowMinimized) window.showNormal()
-        else window.show()
+        else window.visible = true
         window.raise()
         window.requestActivate()
     }
     function showDevicesDuringSession() {
         showDevices()
         if (window.windowState === Qt.WindowMinimized) window.showNormal()
-        else window.show()
+        else window.visible = true
         window.raise()
         window.requestActivate()
     }
@@ -179,7 +179,7 @@ ApplicationWindow {
         // Session ownership precedes native-window readiness. Keep the progress
         // page visible until its owner confirms a usable loading/video window.
         if (window.windowState === Qt.WindowMinimized) window.showNormal()
-        else window.show()
+        else window.visible = true
         window.raise()
         window.requestActivate()
         return true

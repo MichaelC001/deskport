@@ -1082,7 +1082,7 @@ int main(int argc, char *argv[])
                 QTimer::singleShot(5000, frame, &QObject::deleteLater);
             }
             if (window->windowState() == Qt::WindowMinimized) window->showNormal();
-            else window->show();
+            else window->setVisible(true);
             window->raise(); window->requestActivate();
 #ifdef Q_OS_MACOS
             // Ordering a window front does not activate an accessory application.

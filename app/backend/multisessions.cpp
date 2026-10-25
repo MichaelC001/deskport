@@ -397,7 +397,7 @@ void MultiSessions::present(bool raise) {
             send(entry, {{"command","canvas-state"},{"state",m_CanvasState}});
             if (raise) {
                 if (m_CanvasWindow->windowState() == Qt::WindowMinimized) m_CanvasWindow->showNormal();
-                else m_CanvasWindow->show();
+                else m_CanvasWindow->setVisible(true);
                 m_CanvasWindow->raise(); m_CanvasWindow->requestActivate();
             }
         }
