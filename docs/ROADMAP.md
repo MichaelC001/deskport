@@ -7,7 +7,21 @@ system title bar outside remote pixels instead of the unified application bar,
 and restores the unified bar on Devices without replacing the native window.
 The shell regression checks full content bounds through resize, confirmation
 and return; the native macOS exercise changes chrome with a live decoder across
-windowed and fullscreen states. Package and live acceptance are in progress.
+windowed and fullscreen states. The final macOS, Windows and Linux consumers
+passed all 16 native presentation stages. Live connections on every client
+confirmed the full-content canvas; fullscreen/restore was observed on each.
+Windows hide/recall restored Devices and its navigation with the same native
+window handle and background session. Physical mouse-border resize was not
+successfully revalidated in this revision; native fixture resize is separate
+from earlier version-specific mouse acceptance. A manually changed resolution
+interval is excluded from uninterrupted streaming acceptance.
+
+The package-only self-test
+[`test-20261025-edge-to-edge-d990b554`](https://github.com/keithxc/deskport-test-builds/releases/tag/test-20261025-edge-to-edge-d990b554)
+uses source `d990b554`; all ten release assets matched their server SHA-256 and
+size. Both Nix system configurations were built, and mynix is pinned by
+`45753ab`. macOS and Linux activation remains manual; Windows Setup installation
+and the final background resident were verified.
 
 ## Native window-state regression — 2026-10-25
 
