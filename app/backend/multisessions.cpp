@@ -47,8 +47,10 @@ void MultiSessions::setCanvasWindow(QWindow* window) {
     emit changed(); emit canvasChanged();
 }
 QObject* MultiSessions::presentation() const {
-    const auto entry = m_Entries.value(m_Wanted);
-    return entry ? entry->presentation : nullptr;
+    // Devices hides the selected canvas; it does not end its presentation.
+    // Keep its decoder and last frame until another session is selected or ends.
+    const auto entry = m_Entries.value(m_Selected);
+    return entry && (entry->state == "starting" || entry->state == "connected") ? entry->presentation : nullptr;
 }
 QVariantMap MultiSessions::canvas() const {
     const auto entry = m_Entries.value(m_Wanted);
@@ -473,7 +475,8 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
     const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
     if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }
-    if (m_Wanted==entry->id) { m_Wanted.clear(); emit canvasChanged(); emit devicesRequested(); }
+    if (m_Wanted==entry->id) { m_Wanted.clear(); emit devicesRequested(); }
+    if (m_Selected==entry->id) emit canvasChanged();
     present(awaited); emit changed();
 }
 

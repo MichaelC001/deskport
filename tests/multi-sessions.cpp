@@ -87,18 +87,23 @@ private slots:
         const auto root=window.winId();
         manager.open("a","Fixture","127.0.0.1","recover");
         QTRY_VERIFY(manager.selectedTraffic().value("sent").toInt() >= 1);
+        const auto presentation = manager.presentation(); QVERIFY(presentation);
         QCOMPARE(window.windowState(),Qt::WindowMaximized);
         for (auto state : {Qt::WindowFullScreen,Qt::WindowMaximized,Qt::WindowNoState}) {
             window.setWindowState(state);
             manager.showDevices();
+            QCOMPARE(manager.presentation(), presentation);
+            QVERIFY(!manager.canvasVisible());
             QTest::qWait(100);
             QVERIFY(manager.recall());
+            QCOMPARE(manager.presentation(), presentation);
             QTest::qWait(100);
             QCOMPARE(window.windowState(),state);
             QCOMPARE(window.winId(),root);
             QVERIFY(window.isVisible());
         }
         manager.shutdown(); QTRY_VERIFY(!manager.busy());
+        QVERIFY(!manager.presentation());
     }
     void shortcutConfigurationReachesNewAndExistingWorkers() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");

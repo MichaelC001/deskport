@@ -60,7 +60,9 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     connect(this, &SessionCanvas::textInputChanged, this, [] { QGuiApplication::inputMethod()->update(Qt::ImEnabled); });
     connect(this, &SessionCanvas::cursorHiddenChanged, this, &SessionCanvas::refresh);
     m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
-    connect(&m_ResizeTimer, &QTimer::timeout, this, [this] { if (m_Presentation) m_Presentation->resized(); });
+    connect(&m_ResizeTimer, &QTimer::timeout, this, [this] {
+        if (isVisible() && m_Presentation) m_Presentation->resized();
+    });
     const auto attachWindow = [this](QQuickWindow* window) {
         if (m_Presentation) m_Presentation->detach();
         delete m_Surface; m_Surface = nullptr;
@@ -78,7 +80,13 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     };
     connect(this, &QQuickItem::windowChanged, this, attachWindow);
     if (window()) attachWindow(window());
-    connect(this, &QQuickItem::visibleChanged, this, [this] { if (isVisible()) forceActiveFocus(); refresh(); });
+    connect(this, &QQuickItem::visibleChanged, this, [this] {
+        if (isVisible()) forceActiveFocus();
+        refresh();
+        // A resize pending before hide still needs to be applied on recall.
+        // Presentation ignores a size that already matches its live decoder.
+        if (isVisible() && m_Presentation) m_ResizeTimer.start();
+    });
     connect(this, &SessionCanvas::captureRequestedChanged, this, &SessionCanvas::refresh);
     connect(&m_Timer, &QTimer::timeout, this, &SessionCanvas::refresh);
     m_Timer.start(16);
@@ -109,7 +117,6 @@ void SessionCanvas::setPresentation(QObject* value) {
 }
 void SessionCanvas::geometryChange(const QRectF& next, const QRectF& previous) {
     QQuickItem::geometryChange(next, previous); refresh();
-    if (next.size() != previous.size() && m_Presentation) m_ResizeTimer.start();
 }
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     if (watched != m_Surface) return QQuickItem::eventFilter(watched, event);
@@ -149,7 +156,15 @@ void SessionCanvas::refresh() {
     if (!window() || width() < 1 || height() < 1) return;
     const bool visible = isVisible() && window()->isVisible() && window()->windowState() != Qt::WindowMinimized;
     if (m_Surface) {
-        m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), QSize(qRound(width()), qRound(height()))));
+        // Devices can change the content geometry (notably macOS title bars).
+        // A hidden canvas keeps its remote geometry and decoder. Apply only the
+        // final visible geometry so recalling the same desktop needs no reset.
+        if (visible) {
+            const QSize size(qRound(width()), qRound(height()));
+            const bool resized = m_Surface->size() != size;
+            m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), size));
+            if (resized && m_Presentation) m_ResizeTimer.start();
+        }
         m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
         m_Surface->setCursor(m_CursorHidden ? Qt::BlankCursor : Qt::ArrowCursor);
     }

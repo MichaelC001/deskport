@@ -15,5 +15,5 @@ void SessionPresentation::overlays(const QJsonObject&) {}
 void SessionPresentation::preedit(const QString&) {}
 void SessionPresentation::attach(QWindow*) {}
 void SessionPresentation::detach() {}
-void SessionPresentation::resized() {}
+void SessionPresentation::resized(bool) {}
 QJsonObject SessionPresentation::capabilities() const { return {{"ok",true}}; }

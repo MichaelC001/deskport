@@ -52,6 +52,11 @@ int runCanvasSelfTest(int argc, char** argv) {
     };
     QObject::connect(&first, &SessionPresentation::failed, &app, fail);
     QObject::connect(&second, &SessionPresentation::failed, &app, fail);
+    int presentationResets = 0;
+    for (auto presentation : {&first, &second})
+        QObject::connect(presentation, &SessionPresentation::readyChanged, &app, [&, presentation] {
+            if (!presentation->ready()) ++presentationResets;
+        });
     QTimer feed;
     QObject::connect(&feed, &QTimer::timeout, &app, [&] {
         if (elapsed.elapsed() > 60000) {
@@ -120,6 +125,35 @@ int runCanvasSelfTest(int argc, char** argv) {
             else { window.showNormal(); window.resize(800, 560); }
             stageTime.restart();
             feed.start(50);
+            return;
+        }
+        if (stage == 9) {
+            // Devices retains the hidden canvas, even while its native chrome
+            // gives it temporary geometry. Recall must not request a new frame.
+            const auto resets = presentationResets;
+            const auto size = canvas->size();
+            canvas->setVisible(false);
+#ifdef Q_OS_MACOS
+            titleBar.setCanvasVisible(false);
+#endif
+            canvas->setSize(size + QSizeF(0, 40));
+            QTimer::singleShot(500, &app, [&, resets, size] {
+                if (!selected->active() || !selected->ready() || presentationResets != resets) {
+                    fail("Devices discarded the retained presentation"); return;
+                }
+#ifdef Q_OS_MACOS
+                titleBar.setCanvasVisible(true);
+#endif
+                canvas->setSize(size);
+                canvas->setVisible(true);
+                QTimer::singleShot(300, &app, [&, resets] {
+                    if (!selected->active() || !selected->ready() || presentationResets != resets) {
+                        fail("recall restarted the retained presentation"); return;
+                    }
+                    fprintf(stderr, "PASS: Devices recall retained the decoder and ready frame\n");
+                    stageTime.restart(); feed.start(50);
+                });
+            });
             return;
         }
         // Exercise an occluded live renderer before joining it, including the

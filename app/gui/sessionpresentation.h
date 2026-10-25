@@ -24,7 +24,7 @@ public:
     void preedit(const QString& text);
     void attach(QWindow* canvas);
     void detach();
-    void resized();
+    void resized(bool force = false);
     QJsonObject capabilities() const;
 signals:
     void readyChanged();

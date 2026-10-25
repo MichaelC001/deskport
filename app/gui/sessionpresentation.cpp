@@ -8,6 +8,7 @@ struct SessionPresentation::Impl {
     QPointer<QWindow> m_Canvas;
     QJsonObject m_Config;
     QJsonObject m_Status;
+    QSize m_SurfaceSize;
     SDL_Window* m_Probe = nullptr;
     Overlay::OverlayManager m_Overlays;
     std::unique_ptr<QueuedVideoSource> m_Source;
@@ -54,9 +55,10 @@ void SessionPresentation::attach(QWindow* canvas) {
         !m_Impl->m_Config.isEmpty() && !start()) emit failed(tr("Unable to initialize the desktop canvas."));
 }
 void SessionPresentation::detach() { stop(); m_Impl->m_Canvas = nullptr; }
-void SessionPresentation::resized() {
+void SessionPresentation::resized(bool force) {
     if (!m_Impl->m_Canvas || m_Impl->m_Config.isEmpty() ||
         m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1) return;
+    if (!force && active() && m_Impl->m_SurfaceSize == m_Impl->m_Canvas->size()) return;
     stop();
     if (!start()) emit failed(tr("Unable to resize the desktop canvas."));
 }
@@ -73,6 +75,7 @@ bool SessionPresentation::start() {
     m_Impl->m_Probe = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               m_Impl->m_Canvas->width(), m_Impl->m_Canvas->height(), flags);
     if (!m_Impl->m_Probe) { stop(); return false; }
+    m_Impl->m_SurfaceSize = m_Impl->m_Canvas->size();
     const auto generation = ++m_Impl->m_PresentationGeneration;
     m_Impl->m_Source = std::make_unique<QueuedVideoSource>(m_Impl->m_Generation, [this, generation] {
         QMetaObject::invokeMethod(this, [this, generation] {
@@ -101,7 +104,7 @@ bool SessionPresentation::start() {
             if (generation != m_Impl->m_PresentationGeneration) return;
             if (++m_Impl->m_ResetAttempts > 3) {
                 stop(); emit failed(tr("The desktop canvas could not recover its graphics device."));
-            } else resized();
+            } else resized(true);
         }, Qt::QueuedConnection);
     };
     m_Impl->m_Decoder = std::make_unique<FFmpegVideoDecoder>(false, m_Impl->m_Source.get(), &m_Impl->m_Overlays);

@@ -382,8 +382,10 @@ ApplicationWindow {
     Loader {
         objectName: "sessionCanvasPage"
         anchors.fill: parent
-        active: window.canvasVisible
-        visible: active
+        // Retain the selected presentation while Devices is visible. Destroying
+        // it would restart decoding and show connection progress on every recall.
+        active: window.canvasVisible || (typeof sessionManager !== "undefined" && !!sessionManager.presentation)
+        visible: window.canvasVisible
         source: "SessionCanvasView.qml"
     }
 

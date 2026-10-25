@@ -1066,6 +1066,8 @@ QtObject {
         // Connection progress and confirmation replace content in this same root.
         const auto nativeRoot = window->winId();
         auto topBar = findVisual(window->contentItem(), "topBar", true); QVERIFY(topBar);
+        QObject retainedPresentation;
+        manager->setProperty("presentation", QVariant::fromValue(&retainedPresentation));
         manager->setProperty("canvasVisible", true);
         QTRY_VERIFY(findVisual(window->contentItem(), "sessionCanvas", true));
         QTRY_VERIFY(!topBar->isVisible());
@@ -1090,9 +1092,22 @@ QtObject {
         QCOMPARE(manager->property("answer").toInt(),1);
         manager->setProperty("canvas", QVariantMap{});
         if (!shots.isEmpty()) { QTest::qWait(250); QVERIFY(window->grabWindow().save(shots+"/edge-to-edge-connecting.png")); }
+        QPointer<QQuickItem> retainedCanvas = findVisual(window->contentItem(), "sessionCanvas", true);
+        QVERIFY(retainedCanvas);
+        retainedCanvas->setProperty("frameReady", true);
+        QTRY_VERIFY(!findVisual(window->contentItem(), "canvasCancelConnection", true));
         manager->setProperty("canvasVisible", false);
         QTRY_VERIFY(!findVisual(window->contentItem(), "sessionCanvas", true));
+        QVERIFY(retainedCanvas); // Hidden, not destroyed with its decoder.
         QTRY_VERIFY(topBar->isVisible());
+        manager->setProperty("canvasVisible", true);
+        QTRY_COMPARE(findVisual(window->contentItem(), "sessionCanvas", true), retainedCanvas.data());
+        QVERIFY(retainedCanvas->property("frameReady").toBool());
+        QVERIFY(!findVisual(window->contentItem(), "canvasCancelConnection", true));
+        QVERIFY(!topBar->isVisible());
+        manager->setProperty("canvasVisible", false);
+        manager->setProperty("presentation", QVariant::fromValue<QObject*>(nullptr));
+        QTRY_VERIFY(!retainedCanvas); // Ending a session releases its canvas.
         QCOMPARE(window->winId(),nativeRoot);
         QVERIFY2(warnings.isEmpty(),qPrintable(warnings.join('\n')));
     }

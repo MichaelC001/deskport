@@ -1,3 +1,13 @@
+## Immediate Devices recall — 2026-10-25
+
+Returning to Devices now hides the selected session canvas without destroying
+its presentation, decoder or ready frame. Recall reuses that canvas directly;
+temporary hidden-page geometry does not restart the decoder. Real visible
+resizes and graphics-device recovery still rebuild the presentation when needed.
+Remote input remains released while Devices is visible. Session-manager and
+QML regressions pass, including object identity and ready-frame retention.
+Native decoder and live visual acceptance for this correction are pending.
+
 ## Edge-to-edge retained canvas — 2026-10-25
 
 Connection progress, takeover confirmation and remote video replace the whole
