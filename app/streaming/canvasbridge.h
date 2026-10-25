@@ -7,6 +7,10 @@
 // Authenticated shell/worker IPC supplies presentation state. SDL's real
 // window remains hidden and provides only the decoder's platform context.
 namespace CanvasBridge {
+// Retain authenticated transport credentials before worker startup clears them
+// from the environment. Decoder recreation uses the same session credentials.
+void setVideoTransport(const QString& endpoint, const QString& token);
+QPair<QString, QString> videoTransport();
 void configure(const QJsonObject& state);
 bool enabled();
 void state(const QJsonObject& state);

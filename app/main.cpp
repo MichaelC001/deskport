@@ -21,6 +21,7 @@ int runCanvasSelfTest(int argc, char** argv);
 #include "gui/sessioncanvas.h"
 #include "backend/globalshortcut.h"
 #include "streaming/shortcutstate.h"
+#include "streaming/canvasbridge.h"
 #include "backend/trafficbudget.h"
 #include "backend/sessionworker.h"
 #include "backend/peermanager.h"
@@ -760,6 +761,7 @@ int main(int argc, char *argv[])
     if (app.arguments().value(1) == "--session-worker") {
         const auto endpoint = qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT");
         const auto token = qEnvironmentVariable("DESKPORT_SESSION_TOKEN");
+        CanvasBridge::setVideoTransport(qEnvironmentVariable("DESKPORT_VIDEO_ENDPOINT"), token);
         qunsetenv("DESKPORT_SESSION_ENDPOINT"); qunsetenv("DESKPORT_SESSION_TOKEN");
         if (endpoint.isEmpty() || token.isEmpty() || app.arguments().size() != 4) return 2;
         app.setQuitOnLastWindowClosed(false);

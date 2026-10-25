@@ -1,5 +1,6 @@
 #include "remotedecoder.h"
 #include "encodedframe.h"
+#include "streaming/canvasbridge.h"
 #include <QLocalSocket>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -62,9 +63,11 @@ void RemoteVideoDecoder::run(QByteArray config) {
     };
     QLocalSocket socket;
     socket.setReadBufferSize(16384);
-    socket.connectToServer(qEnvironmentVariable("DESKPORT_VIDEO_ENDPOINT"));
+    const auto transport = CanvasBridge::videoTransport();
+    if (transport.first.isEmpty() || transport.second.isEmpty()) { fail(); return; }
+    socket.connectToServer(transport.first);
     if (!socket.waitForConnected(5000)) { fail(); return; }
-    const auto auth = QJsonDocument(QJsonObject{{"token",qEnvironmentVariable("DESKPORT_SESSION_TOKEN")}}).toJson(QJsonDocument::Compact) + '\n';
+    const auto auth = QJsonDocument(QJsonObject{{"token",transport.second}}).toJson(QJsonDocument::Compact) + '\n';
     if (socket.write(auth) != auth.size() || !writePacket(socket, config)) { fail(); return; }
     QByteArray reply;
     QElapsedTimer handshake;

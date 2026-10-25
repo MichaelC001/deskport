@@ -1,3 +1,13 @@
+## Live canvas handshake correction — 2026-10-25
+
+Post-activation live connections exposed a startup bug: worker bootstrap removed
+`DESKPORT_SESSION_TOKEN` before the encoded-video transport read it. The worker
+now retains the authenticated video endpoint and token in process memory before
+environment cleanup. Decoder recreation reuses those credentials. A real local
+socket regression exercises authentication after clearing the environment,
+frame integrity, peer loss and rejection of missing credentials. Cross-device
+streaming acceptance remains pending the corrected native build.
+
 ## In-process desktop canvas — 2026-10-25 self-test
 
 The desktop shell retains its original top-level window while switching between

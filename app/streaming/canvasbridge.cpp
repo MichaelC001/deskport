@@ -8,6 +8,7 @@
 namespace {
 std::atomic<bool> configured{false}, wanted{false}, acceptsInput{false};
 QMutex stateMutex;
+QPair<QString, QString> videoConnection;
 QJsonObject viewport, details;
 QQueue<QJsonObject> pendingInput;
 constexpr int MaxWidth = 16384, MaxHeight = 16384;
@@ -24,6 +25,14 @@ void windowEvent(SDL_Window* window, Uint8 kind) {
     SDL_Event event{}; event.type = SDL_WINDOWEVENT; event.window.windowID = SDL_GetWindowID(window);
     event.window.event = kind; SDL_PushEvent(&event);
 }
+}
+void CanvasBridge::setVideoTransport(const QString& endpoint, const QString& token) {
+    QMutexLocker lock(&stateMutex);
+    videoConnection = {endpoint, token};
+}
+QPair<QString, QString> CanvasBridge::videoTransport() {
+    QMutexLocker lock(&stateMutex);
+    return videoConnection;
 }
 void CanvasBridge::configure(const QJsonObject& value) { state(value); configured = true; }
 bool CanvasBridge::enabled() { return configured.load(); }
