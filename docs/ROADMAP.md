@@ -4306,24 +4306,26 @@ Accessibility authorization; failure leaves capture unconfirmed, without a
 permission prompt or TCC change. Native Cocoa modifier events keep their original
 path, and local composition releases the capture backend.
 
-The Windows 11 native SendInput fixture passed eight cases including left/right
-Win+Space, release order, repeat, the release chord, focus loss and local input.
-Embedded-window and held-modifier focus-loss cases have been added and await
-execution. The macOS compiled canvas/IME fixture passed five checks, while its
-native event-tap fixture is prepared. The Windows/Linux/macOS cross-host input
-matrix remains pending; these checks do not establish remote IME acceptance.
-Published 0.7.6 assets and Latest remain unchanged during this follow-up.
+The Windows 11 native SendInput fixture passes 10 cases, including left/right
+Win+Space, release order, repeat, the release chord, local input, an embedded
+surface and focus loss with Win held. The Cocoa event-tap fixture passes five
+cases with complete physical Command chords and asynchronous delivery waits.
+An explicit, marker-guarded input test profile isolates settings, pairing copies,
+diagnostics, workers and activation endpoints while disabling host startup and
+browser access. Local text mode disables native shortcut capture before routing
+composition through the normal platform input-method path.
 
-Native shortcut regression follow-up (2026-10-26): Windows native SendInput
-fixtures now pass 10 cases, including an embedded surface and focus loss with
-Win held. The Cocoa fixture requires a complete physical Command chord for its
-embedded-surface case. An explicit, marker-guarded input test profile isolates
-settings, pairing copies, diagnostics, workers and activation endpoints while
-disabling host startup and browser access. Six-direction live acceptance remains
-pending; fixture success is not remote input acceptance.
+Live acceptance (2026-10-27): macOS to Linux, macOS to Windows, Linux to macOS
+and Linux to Windows pass left/right Meta+Space, remote input-source changes
+and fixed ASCII text delivery, with the local input source unchanged. Windows
+as a client remains unverified: an OS security dialog intercepts the pointer
+before it reaches the candidate canvas. Native fixtures do not substitute for
+those two missing stream tests. These checks do not cover all keyboard layouts,
+composed Unicode text or every Linux compositor. Published 0.7.6 assets and
+Latest remain unchanged during this follow-up.
 
 The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
 a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
 user-event envelopes, decoded before visibility/input dispatch. Queue flushes
-require no heap cleanup. The native SDL2 adapter fixture passes on macOS; Linux
-compatibility and live text acceptance are checked separately.
+require no heap cleanup. The native SDL2 adapter fixture passes on macOS; the
+Linux SDL2 compatibility adapter, local-text fixture and Nix package build pass.
