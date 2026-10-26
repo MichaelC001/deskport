@@ -55,6 +55,11 @@ jobs:
           nix develop -c python3 scripts/test-clipboard-demand.py
       - name: Build
         run: bash scripts/build.sh build --target linux-nix --run ci --min-free-gib 5
+      - name: Linux receiving keyboard identity
+        run: |
+          export TMPDIR="$(bash scripts/build-paths.sh checkout)/runs.noindex/ci-keyboard-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/linux-nix/tests"
+          mkdir -p "$TMPDIR"
+          nix develop -c python3 scripts/test-host-linux-keyboard.py
       - name: Portable runtime regression checks
         run: |
           python3 scripts/test-appimage-graphics.py

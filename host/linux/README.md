@@ -1,5 +1,40 @@
 # Linux virtual display helper
 
+## Receiving keyboard and remappers
+
+Both Linux host builds expose their existing uinput keyboard as
+`DeskPort Keyboard`. The Nix host retains its non-default seat suffix, for
+example `DeskPort Keyboard (seat1)`. This lets receiver-side evdev remappers
+such as xremap select DeskPort separately from Sunshine's legacy
+`Keyboard passthrough` device. In particular, an existing xremap
+`--ignore 'Keyboard passthrough'` rule no longer excludes DeskPort input.
+Explicit device allowlists or custom udev rules matching the old name must
+be updated to include the new name.
+
+The input path is remote key down/up → host uinput → receiver remapper →
+desktop/application. DeskPort does not install a remapper or swap Meta/Ctrl;
+the receiver's active application rules decide which shortcuts to translate.
+Enable device hotplug watching in the remapper (xremap `--watch=device`) and
+give it permission to read the host keyboard's evdev node. Keep any existing
+sender-side remote-window bypass, so keys are not transformed on both ends.
+If the receiver is itself forwarding keys to another remote desktop, its
+focus guard may intentionally suspend remapping for that window.
+
+The host still needs write access to `/dev/uinput`. Without it, the Nix host
+cannot create its virtual keyboard; the portable host retains its upstream
+X11/XTest fallback, which does not pass through evdev remappers. When the
+remapper is stopped, the uinput keyboard sends the original keys directly.
+Mouse, gamepad, key-code translation, release handling and non-Linux hosts
+retain their existing behavior. No peer protocol or shared-core pin changes.
+
+`scripts/test-host-linux-keyboard.py` checks both vendored backends without
+creating input devices. After activating a build, confirm the receiving
+remapper selects `DeskPort Keyboard`, then check application shortcuts,
+modifier release after disconnect and reconnection on the actual desktop.
+Compilation and isolated regressions do not establish live input acceptance.
+
+## Virtual display lifecycle
+
 Output enumeration uses the KWin 6.7 device registry when available and retains
 the individual device globals used by KWin 6.6. Both removal paths end the owned
 lease without falling back to a physical capture target.

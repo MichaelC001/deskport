@@ -1,3 +1,27 @@
+## Linux receiving keyboard remapping — 2026-10-26
+
+The Linux host now names its uinput keyboard `DeskPort Keyboard` in both the
+Nix/inputtino and portable/libvirtualhid builds. Receiver-side xremap can select
+it independently of Sunshine; a legacy `--ignore 'Keyboard passthrough'` rule
+no longer excludes DeskPort. The Nix backend preserves its seat suffix. Existing
+key transitions, modifier release, device IDs, mouse handling and non-Linux
+backends remain unchanged. Custom shortcuts come from the receiving remapper's
+active application rules, while sender-side remote-window bypass can still
+prevent double translation.
+
+This is a device-identity patch to DeskPort's existing evdev path. The Deskflow
+libei-to-uinput adapter is unnecessary here. Both build entry points apply the
+same guarded overlay. See [receiving keyboard setup and limits](../host/linux/README.md#receiving-keyboard-and-remappers).
+
+Validation: compiled production initializer/profile regressions pass on macOS and
+Linux for both vendored revisions, including original-source negative controls,
+seat suffixes, non-Linux preservation, idempotence and upstream anchor drift.
+No input devices are created. The complete Linux Nix build and isolated package
+startup checks pass; the packaged host contains the new keyboard identity.
+A complete portable package rebuild and live remote-shortcut acceptance remain
+untested. No release, installation, service restart or Nix activation is part of
+this change.
+
 ## Remote IME shortcuts in the retained canvas — 2026-10-26
 
 The shell-canvas migration introduced two input routing regressions: `5a91636c`

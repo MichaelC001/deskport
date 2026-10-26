@@ -43,6 +43,7 @@
               python3 ${./scripts/patch-host-session-settings.py} .
               python3 ${./scripts/patch-host-session-takeover.py} .
               python3 ${./scripts/patch-host-linux-display.py} .
+              python3 ${./scripts/patch-host-linux-keyboard.py} .
               mkdir -p src/deskport/common
               cp ${./host/common/smartstream.h} src/deskport/common/smartstream.h
               cp ${./host/common/inputactivity.h} src/deskport/common/inputactivity.h
