@@ -4289,3 +4289,19 @@ compositor edits or additional input permissions.
   Physical display/client frame delivery, input, audio and latency remain untested.
 - See [Hyprland display leases](HYPRLAND_DISPLAY.md) for reproducible fixture and
   isolated native checks, verification results and hardware/focus limitations.
+# Windows retained-canvas keyboard capture follow-up — 2026-10-26
+
+The 0.7.6 Windows package did not provide native shell-shortcut inhibition:
+the shared inhibitor had a no-op Windows backend, and Qt window grabbing did
+not prevent Windows from consuming Win+Space before canvas key delivery.
+Earlier Qt-injected canvas and package checks did not cover this OS boundary.
+
+The candidate adds a foreground-scoped Win32 low-level keyboard hook, preserves
+physical scans and left/right modifiers, and cancels queued input on release.
+Windows capture is confirmed only by that hook, never by Qt's application grab.
+A native SendInput fixture covers both Windows keys, release order, repeat,
+the release chord, focus loss, hide and return to local input. Native execution
+and the Windows/Linux/macOS cross-host input matrix are pending; compilation
+alone must not be reported as remote IME acceptance. Published 0.7.6 assets and
+Latest remain unchanged during this follow-up.
+

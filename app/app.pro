@@ -17,7 +17,7 @@ SOURCES += backend/globalshortcut.cpp
 HEADERS += backend/globalshortcut.h backend/shortcutbinding.h streaming/shortcutstate.h
 SOURCES += backend/shortcutrecorderinhibitor.cpp
 HEADERS += backend/shortcutrecorderinhibitor.h
-win32: SOURCES += backend/globalshortcut_native.cpp
+win32: SOURCES += backend/globalshortcut_native.cpp backend/shortcutrecorderinhibitor_windows.cpp
 macx {
     OBJECTIVE_SOURCES += backend/globalshortcut_mac.mm
     LIBS += -framework Carbon

@@ -196,7 +196,11 @@ void SessionCanvas::refresh() {
     if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
     m_Inhibitor.setEnabled(capture);
     if (!capture && m_Grabbed) { m_Surface->setKeyboardGrabEnabled(false); m_Grabbed = false; }
+#ifndef Q_OS_WIN
+    // Qt's Win32 grab only redirects application events. It does not suppress
+    // shell shortcuts, so only the native hook may confirm Windows capture.
     else if (capture && !QGuiApplication::platformName().startsWith("wayland") && !m_Inhibitor.isInhibited() && !m_Grabbed) m_Grabbed = m_Surface->setKeyboardGrabEnabled(true);
+#endif
     const QJsonObject state {{"width",int(width())},{"height",int(height())},{"scale",window()->devicePixelRatio()},
         {"visible",visible},{"focused",focused},{"hovered",m_Hovered},{"fullscreen",window()->windowState() == Qt::WindowFullScreen},
         {"grabbed",m_Inhibitor.isInhibited() || m_Grabbed},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"buttons",m_Buttons}};
