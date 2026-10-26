@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--policy', type=int, choices=(0, 1, 2), default=2)
     parser.add_argument('--fault', choices=('stop', 'kill'), default='stop')
-    parser.add_argument('--adjustment', type=float, choices=(.75, 1., 1.5), default=1.)
+    parser.add_argument('--adjustment', type=float, choices=(.8, 1., 1.5), default=1.)
     parser.add_argument('--expected-width', type=int, default=1280)
     parser.add_argument('--expected-height', type=int, default=800)
     parser.add_argument('--mesa-prefix', type=Path, help='Explicit Nix software graphics closure in the guest')
