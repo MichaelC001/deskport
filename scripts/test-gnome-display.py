@@ -481,7 +481,9 @@ try:
                 checkpoint()
                 try:
                     if abrupt:
-                        subprocess.run(['systemctl','--user','stop','pipewire.socket'],check=True,timeout=20)
+                        # On Ubuntu the service Requires its socket: stopping
+                        # the socket also gracefully stops the service, so a
+                        # subsequent kill would never test abrupt loss.
                         subprocess.run(['systemctl','--user','kill','--signal=SIGKILL','--kill-whom=main','pipewire.service'],check=True,timeout=20)
                     else:
                         subprocess.run(['systemctl','--user','stop','pipewire.socket','pipewire.service'],check=True,timeout=20)
