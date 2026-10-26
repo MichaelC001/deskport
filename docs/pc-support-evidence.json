@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-10-24",
+  "review_date": "2026-10-26",
   "baseline_source_sha": "df3a24e304f3919e454122b36dc0c062420fbddf",
   "baseline_core_sha": "505ae0ccd0a4ead4decb6eaba62585bf278e6dbe",
   "evidence": [
@@ -75,6 +75,24 @@
       ],
       "package_sha256": null,
       "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "gnome-49-51",
+      "date": "2026-10-26",
+      "source_sha": "4f37c146109b4793cff1d55e4275a2da4fe537f4",
+      "source_unknown_reason": "",
+      "package": "Development helper, patched Nix Sunshine and explicit Mutter source patch; adapter baseline 59b8e324 and recovery follow-up 4f37c146",
+      "installed": "Disposable GNOME 51.0 guest only; no published package or user activation",
+      "environment_kind": "virtual-machine",
+      "environment": "Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.04 / GNOME 50.1 and Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktops with software graphics. |",
+      "features": "Guarded display policies, software capture, PipeWire loss, physical restoration and stream-close lifetime",
+      "result": "PASS: 28/28 headless checks on each of 49.4 and 50.4; 30/30 normal-workflow VM checks on 50.1 after isolating the GTK fixture; 54/54 on 51.0 with the explicit Mutter lifetime patch, including normal workflow, service stop/SIGKILL in all policies, restoration without compositor restart and fresh capture. |",
+      "limits": "Unpatched GNOME 51.0 still crashes on PipeWire loss; DeskPort installation does not patch the system compositor. Mutter 51.1 has only compiled source-regression evidence. Mirror requires matching physical modes/scales. No physical GPU, production transport input, automatic client reconnect, HDR/audio/clipboard or latency acceptance. |",
+      "references": [
+        "docs/GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "Multiple development binaries were tested; their individual SHA-256 identities are recorded in the linked checkpoint, not one distribution package."
     },
     {
       "id": "linux-hyprland",
