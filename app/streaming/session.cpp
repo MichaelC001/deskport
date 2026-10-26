@@ -2232,9 +2232,10 @@ bool Session::startConnectionAsync()
         streamAddress = http.address();
         http.setCancellationFlag(&m_RecoveryCancelled);
         deskportResizeStage("resume-request");
+        bool resume = m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0;
         for (int attempt = 0; ; ++attempt) {
             try {
-                http.startApp((m_AdaptiveResume || m_ManualResume || m_Computer->currentGameId != 0) ? "resume" : "launch",
+                http.startApp(resume ? "resume" : "launch",
                               m_Computer->isNvidiaServerSoftware,
                               m_App.id, &m_StreamConfig,
                               enableGameOptimizations,
@@ -2247,6 +2248,18 @@ bool Session::startConnectionAsync()
                               m_Preferences->dataSaver, m_RateCapKbps);
                 break;
             } catch (const GfeHttpResponseException& e) {
+                // A replacement supervisor has admitted this controller, but
+                // its fresh Sunshine process has no application to resume.
+                // Retry launch once, only for this precise authenticated reply
+                // during bounded recovery, while our new admission is alive.
+                if (resume && m_RecoveryDeadline && !m_RecoveryCancelled &&
+                    QDateTime::currentMSecsSinceEpoch() < m_RecoveryDeadline &&
+                    m_AdaptiveDisplay && !m_AdaptiveDisplay->failed() &&
+                    !m_AdaptiveDisplay->resumeToken().isEmpty() &&
+                    e.getStatusCode() == 503 && e.toQString().startsWith("No running app to resume")) {
+                    resume = false;
+                    continue;
+                }
 #ifdef Q_OS_WIN
                 // A newly recreated host display may be acknowledged before
                 // its capture backend is ready. Only retry this pre-stream
