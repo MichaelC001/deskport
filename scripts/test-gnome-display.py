@@ -542,6 +542,10 @@ try:
         owner=compositor_owner()
         for abrupt in (False,True):
             for policy in (2,1,0):
+                # Keep independent injected faults apart: the fixture's units
+                # allow five starts per ten seconds. Preserve that protection
+                # instead of exhausting it with this synthetic rapid loop.
+                time.sleep(5)
                 p=launch();identity=request(p,policy,width,height,scale)
                 verify(identity,policy,width,height,scale)
                 mode='SIGKILL' if abrupt else 'service stop'
