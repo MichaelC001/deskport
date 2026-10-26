@@ -4315,14 +4315,37 @@ diagnostics, workers and activation endpoints while disabling host startup and
 browser access. Local text mode disables native shortcut capture before routing
 composition through the normal platform input-method path.
 
-Live acceptance (2026-10-27): macOS to Linux, macOS to Windows, Linux to macOS
-and Linux to Windows pass left/right Meta+Space, remote input-source changes
-and fixed ASCII text delivery, with the local input source unchanged. Windows
-as a client remains unverified: an OS security dialog intercepts the pointer
-before it reaches the candidate canvas. Native fixtures do not substitute for
-those two missing stream tests. These checks do not cover all keyboard layouts,
-composed Unicode text or every Linux compositor. Published 0.7.6 assets and
-Latest remain unchanged during this follow-up.
+Live acceptance (2026-10-27): macOS to Linux, macOS to Windows, Linux to macOS,
+Linux to Windows and Windows to Linux pass left/right Meta+Space, remote
+input-source changes and fixed ASCII text delivery, with the local input source
+unchanged. The Windows security-dialog obstruction is resolved; its retained
+canvas now receives guarded native scan-code input. Windows to Linux also
+passes a 150 ms held-key probe without unintended repeats.
+
+Windows to macOS passes both Meta+Space variants and three six-character
+sequences with 150 ms key holds when addressing the host's Ethernet interface.
+The final check uses the uninstrumented r3 package client, whose executable hash
+matches its entry in the retained portable package. Both input sources return
+to their initial state.
+
+The host's Wi-Fi endpoint remains unreliable. An A-B-A endpoint comparison,
+using the same private diagnostic client and unchanged deployed host, produces
+29 extra letters through Wi-Fi, none through Ethernet, and 18 after returning
+to Wi-Fi. The final remote input-source shortcut also fails in the last Wi-Fi
+run; guarded local input restores it after disconnect. All three runs capture
+44 keyboard events and reach the initial socket send within 32 ms; maximum
+intervals from first socket acceptance to processed ACK are 1000, 16 and 625 ms
+respectively. The Windows client
+uses Wi-Fi throughout. This isolates a repeatable endpoint/path dependency,
+but does not identify the responsible network component or establish a
+transport-code fix. Private timing probes record no text or key codes and are
+not part of the delivery candidate.
+
+All six platform directions now have a successful guarded native-input check,
+with Windows-to-macOS acceptance conditional on the host's Ethernet endpoint.
+Physical-keyboard use, composed Unicode text, all keyboard layouts and every
+Linux compositor remain outside this acceptance. Published 0.7.6 assets and
+Latest remain unchanged in this follow-up.
 
 The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
 a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
