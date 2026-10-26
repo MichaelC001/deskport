@@ -320,6 +320,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
                 m_LinuxX11 = object["backend"].toString() == "x11";
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
+                m_LinuxGnomePolicies = m_LinuxGnome && object["displayPolicy"].toInt() == 1;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
                     m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
@@ -1425,7 +1426,11 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
 #endif
         request["displayPolicy"] = policy;
     m_Display.write(QJsonDocument(request).toJson(QJsonDocument::Compact) + '\n');
-    QTimer::singleShot(DisplayChangeTimeoutMs, this, [this, generation] {
+    // Mutter's independent guardian verifies output removal and may replay a
+    // saved layout before admitting a new stream. Do not time out a valid
+    // recovery at the ordinary five-second resize deadline.
+    const int timeoutMs = m_LinuxGnome ? 20000 : DisplayChangeTimeoutMs;
+    QTimer::singleShot(timeoutMs, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {
             const auto sequence = m_DisplaySequence; m_DisplaySequence = 0;
             emit displayResized(sequence, m_DisplayWidth, m_DisplayHeight, tr("Virtual display resize timed out"));
@@ -1443,7 +1448,8 @@ void HostManager::settleSessionDisplay(QObject* context, std::function<void(bool
     connect(this, &HostManager::displayResized, pending, [finish](int sequence, int, int, const QString& error) {
         if (sequence < 0) finish(error.isEmpty());
     });
-    QTimer::singleShot(DisplayChangeTimeoutMs + 5000, pending, [finish] { finish(false); });
+    const int timeoutMs = m_LinuxGnome ? 20000 : DisplayChangeTimeoutMs;
+    QTimer::singleShot(timeoutMs + 5000, pending, [finish] { finish(false); });
     restoreDisplay();
 }
 void HostManager::restoreDisplay() {

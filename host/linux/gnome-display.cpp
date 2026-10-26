@@ -43,7 +43,7 @@ class GnomeDisplay : public QObject {
     spa_hook listener{};
     std::atomic<int> actualWidth{0}, actualHeight{0};
     std::atomic<bool> pwFailed{false}, frame{false};
-    QSet<QString> original;
+    QSet<QByteArray> original;
     QJsonObject baseline;
     std::unique_ptr<QProcess> recovery = std::make_unique<QProcess>();
     GnomeTopology topology;
@@ -91,19 +91,28 @@ class GnomeDisplay : public QObject {
         return false;
     }
     bool setScale(int scale, int width, int height) {
-        const auto current = topology.snapshot();
-        if (current.isEmpty()) { error = topology.error; return false; }
+        QJsonObject current;
         if (connector.isEmpty()) {
-            QStringList candidates;
-            for (const auto& value : current["monitors"].toArray()) {
-                const auto spec = value.toObject()["spec"].toArray();
-                if (!original.contains(spec[0].toString()) && spec[1] == "MetaVendor" && spec[2] == "Virtual remote monitor")
-                    candidates.append(spec[0].toString());
-            }
-            if (candidates.size() != 1) { error = "Cannot uniquely identify the Mutter virtual output"; return false; }
-            connector = candidates.first();
-            for (const auto& value : current["monitors"].toArray())
-                if (value.toObject()["spec"].toArray()[0].toString() == connector) baseline["ownedSpec"] = value.toObject()["spec"];
+            // PipeWire format/frame delivery and DisplayConfig publication are
+            // independent. Also, Mutter reuses Meta-N connectors between leases:
+            // compare the complete spec (including its per-stream serial).
+            bool ambiguous = false;
+            const bool identified = wait([&] {
+                current = topology.snapshot();
+                if (current.isEmpty()) return false;
+                QJsonArray candidates;
+                for (const auto& value : current["monitors"].toArray()) {
+                    const auto spec = value.toObject()["spec"].toArray();
+                    if (spec.size() == 4 && !original.contains(QJsonDocument(spec).toJson(QJsonDocument::Compact)) &&
+                        spec[1] == "MetaVendor" && spec[2] == "Virtual remote monitor") candidates.append(spec);
+                }
+                if (candidates.size() > 1) { ambiguous = true; return true; }
+                if (candidates.size() != 1) return false;
+                baseline["ownedSpec"] = candidates[0];
+                connector = candidates[0].toArray()[0].toString();
+                return true;
+            }, 2000);
+            if (!identified || ambiguous) { error = "Cannot uniquely identify the Mutter virtual output"; return false; }
             if (!guardCommand(QJsonDocument(baseline).toJson(QJsonDocument::Compact), "armed")) { error = "Cannot persist owned Mutter output identity"; return false; }
         }
         const bool configured = topology.configure(baseline, connector, leasePolicy, width, height, scale);
@@ -203,7 +212,8 @@ public:
         baseline["policy"] = policy;
         baseline["leaseOwner"] = bus.baseService();
         if (!topology.supported(baseline, policy, width, height, scale)) { error = topology.error; return false; }
-        for (const auto& value : current["monitors"].toArray()) original.insert(value.toObject()["spec"].toArray()[0].toString());
+        for (const auto& value : current["monitors"].toArray())
+            original.insert(QJsonDocument(value.toObject()["spec"].toArray()).toJson(QJsonDocument::Compact));
         if (!guardCommand(QJsonDocument(baseline).toJson(QJsonDocument::Compact), "armed")) { error = "Cannot persist Mutter recovery snapshot"; return false; }
         bus.connect("org.gnome.Mutter.DisplayConfig", "/org/gnome/Mutter/DisplayConfig", "org.gnome.Mutter.DisplayConfig", "MonitorsChanged", this, SLOT(onMonitorsChanged()));
         auto result = call("/org/gnome/Mutter/ScreenCast", "org.gnome.Mutter.ScreenCast", "CreateSession", {QVariantMap{}});

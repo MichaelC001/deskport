@@ -195,6 +195,16 @@ bool GnomeTopology::configure(const QJsonObject& baseline, const QString& owned,
     if (virtualMonitor["spec"] != baseline["ownedSpec"]) {
         error = "The owned Mutter monitor identity disappeared or changed"; return false;
     }
+    if (policy != 2) for (const auto& value : current["monitors"].toArray()) {
+        const auto other = value.toObject();
+        if (other["spec"] != baseline["ownedSpec"] && foreignVirtual(other)) {
+            // A newly attached screen-cast output can make Mutter re-enable
+            // physical outputs. Do not race its view creation with another
+            // takeover; keep the verified workspace and report degradation.
+            error = "Another client attached a Mutter virtual monitor; physical policy is suspended";
+            return false;
+        }
+    }
     const auto mode = currentMode(virtualMonitor);
     if (mode["width"].toInt() != width || mode["height"].toInt() != height || !mode["scales"].toArray().contains(scale)) {
         error = "Mutter has not applied the requested owned pixels or cannot support its scale"; return false;

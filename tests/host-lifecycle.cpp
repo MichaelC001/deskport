@@ -463,6 +463,26 @@ private slots:
         QVERIFY(!host.displayPoliciesAvailable());
 #endif
     }
+    void gnomeRecoveryMayExceedOrdinaryResizeDeadline() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux Mutter recovery deadline");
+#else
+        qputenv("DESKPORT_TEST_MODE", "gnome-slow");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QSignalSpy results(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1668, 2388, 2, 7, 2));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 9000);
+        QVERIFY2(results.at(0).at(3).toString().isEmpty(), qPrintable(results.at(0).at(3).toString()));
+        QCOMPARE(host.displayWidth(), 1668);
+        bool settled = false, ok = false;
+        host.settleSessionDisplay(this, [&](bool success) { ok = success; settled = true; });
+        QTRY_VERIFY_WITH_TIMEOUT(settled, 9000);
+        QVERIFY(ok);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+#endif
+    }
     void localHostsAreFilteredWithoutMatchingNamesOrSubnets() {
         const QList<QHostAddress> local{QHostAddress("192.0.2.10"), QHostAddress("2001:db8::10")};
         for (const QString& value : {"127.0.0.1", "127.0.0.2", "::1", "192.0.2.10", "::ffff:192.0.2.10", "2001:db8::10"})

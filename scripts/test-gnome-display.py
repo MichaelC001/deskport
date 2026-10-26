@@ -47,13 +47,18 @@ def until(predicate, timeout=12):
         time.sleep(.05)
     raise AssertionError('Timed out: '+json.dumps(topology()))
 
+def exited(pid):
+    try:return Path('/proc/'+pid+'/stat').read_text().rsplit(') ',1)[1].startswith('Z')
+    except (FileNotFoundError,ProcessLookupError):return True
+
 baseline = topology()
 assert baseline, 'A synthetic local output is required'
 width, height = next(iter(baseline.values()))['pixels']
 scale = next(iter(baseline.values()))['scale']
 assert width % 4 == height % 4 == 0 and scale in (1, 2)
 children = []
-report = dict(gnome=subprocess.check_output(['gnome-shell','--version'], text=True).strip(),
+foreign_children = []
+report = dict(gnome=subprocess.check_output([os.environ.get('DESKPORT_GNOME_SHELL','gnome-shell'),'--version'], text=True).strip(),
               baseline=baseline, checks=[], requests=[], passed=False, hardware_gpu=False, production_stream_input=False)
 
 def launch(expected=None):
@@ -143,6 +148,13 @@ def capture_probe(identity,w,h,backing,missing=False):
                 if ('Found H.264 encoder:' in text or 'refusing physical display fallback' in text or
                     'Video failed to find working encoder' in text or process.poll() is not None):break
                 time.sleep(.1)
+            if time.monotonic() >= deadline and process.poll() is None:
+                debugger=os.environ.get('DESKPORT_TEST_GDB')
+                if debugger:
+                    trace=subprocess.run(['sudo','-n',debugger,'-batch','-ex','set debuginfod enabled off',
+                        '-ex','set pagination off','-ex','thread apply all bt','-p',str(process.pid)],
+                        capture_output=True,text=True,timeout=15)
+                    report.setdefault('capture_thread_stacks',[]).append(trace.stdout+trace.stderr)
         finally:
             if process.poll() is None:
                 process.terminate()
@@ -170,6 +182,7 @@ def capture(identity,w,h,backing,missing=False):
 def synthetic_input(owned):
     # Test Mutter's platform input path against a guest-only GTK window. This
     # deliberately does not claim Sunshine transport/uinput acceptance.
+    os.environ.setdefault('GSK_RENDERER','cairo')
     import gi
     gi.require_version('Gtk','4.0')
     from gi.repository import Gtk, Gdk
@@ -200,11 +213,18 @@ def synthetic_input(owned):
         remote('NotifyPointerMotionRelative',GLib.Variant('(dd)',(120.,160.)))
         remote('NotifyPointerButton',GLib.Variant('(ib)',(272,True)))
         remote('NotifyPointerButton',GLib.Variant('(ib)',(272,False)))
-        pump(.3);entry.grab_focus();pump(.1)
+        pump(.3);entry.grab_focus()
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline and (not window.is_active() or window.get_focus() is None):pump(.05)
+        assert window.is_active() and window.get_focus() is not None,'Synthetic input window did not acquire keyboard focus'
+        pump(.2)
         for key in 'deskport':
             remote('NotifyKeyboardKeysym',GLib.Variant('(ub)',(ord(key),True)))
+            pump(.03)
             remote('NotifyKeyboardKeysym',GLib.Variant('(ub)',(ord(key),False)))
-        pump(.5)
+            pump(.03)
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline and entry.get_text() != 'deskport':pump(.05)
         assert entry.get_text() == 'deskport' and clicks,(entry.get_text(),clicks)
         report['checks'].append('Mutter platform input: synthetic GTK primary 2x window received click and typed fixture text')
     finally:
@@ -223,7 +243,10 @@ try:
                 reply.setdefault('outputName',owned)
                 assert verify(reply,policy,w,h,backing) == owned
                 capture(identity,w,h,backing)
-        if policy == 1: synthetic_input(owned)
+        if policy == 1:
+            if os.environ.get('DESKPORT_GNOME_HEADLESS_TEST') == '1':
+                report['platform_input']='UNTESTED: headless fixture has no interactive desktop focus; use the full VM fixture'
+            else:synthetic_input(owned)
         release=request(p,policy,width,height,scale,False,seq=10)
         assert 'error' not in release and not release['active'], release
         until(lambda:topology() == baseline)
@@ -239,9 +262,24 @@ try:
         assert guards, 'Independent recovery process missing'
         p.kill(); p.wait(timeout=5)
         until(lambda:topology() == baseline)
-        until(lambda:all(not Path('/proc/'+pid).exists() or Path('/proc/'+pid+'/stat').read_text().split(') ')[1].startswith('Z') for pid in guards))
+        until(lambda:all(exited(pid) for pid in guards))
         if policy == 1:capture(identity,width,height,scale,missing=True)
         report['checks'].append(f'policy-{policy}: SIGKILL restored physical layout and guardian exited')
+    # Connector names may be recycled immediately. Each acknowledged lease must
+    # nevertheless identify a fresh capture stream, and release must finish
+    # removal before another admission snapshot is taken.
+    p=launch(); serials=set()
+    for cycle in range(20):
+        w,h,backing=((1280,720,1),(1668,2388,2))[cycle % 2]
+        identity=request(p,2,w,h,backing,seq=100+cycle*2)
+        verify(identity,2,w,h,backing)
+        assert identity['pipewireSerial'] not in serials, identity
+        serials.add(identity['pipewireSerial'])
+        release=request(p,2,w,h,backing,False,seq=101+cycle*2)
+        assert not release.get('error') and not release['active'],release
+        until(lambda:topology()==baseline)
+    p.stdin.close();restored(p)
+    report['checks'].append('20 alternating landscape/portrait leases: fresh PipeWire serials, synchronous removal and unchanged physical layout')
     p=launch();identity=request(p,1,width,height,scale)
     verify(identity,1,width,height,scale)
     guards=Path(f'/proc/{p.pid}/task/{p.pid}/children').read_text().split()
@@ -280,23 +318,38 @@ try:
     p.stdin.close();restored(p);assert not journal.exists()
     report['checks'].append('unavailable recovery mode retained original checkpoint, allowed a verified new workspace with warning, and recovered after fixture repair')
 
-    # A separate API-owned fixed-mode monitor models another client's output.
-    # Mutter creates fixed-mode RecordVirtual monitors without a sizing consumer.
+    # Another client's normal ScreenCast stream, sized by an independent
+    # consumer. Fixed-mode RecordVirtual was added after GNOME 49, so do not
+    # use that newer API as the cross-version hotplug fixture.
     def foreign_monitor():
         service='org.gnome.Mutter.ScreenCast'
         def sc(path,interface,method,params=None):
             return bus.call_sync(service,path,interface,method,params,None,Gio.DBusCallFlags.NONE,5000,None).unpack()
         before={tuple(spec) for spec,_modes,_props in state()['monitors']}
         path=sc('/org/gnome/Mutter/ScreenCast',service,'CreateSession',GLib.Variant('(a{sv})',({},)))[0]
-        sc(path,service+'.Session','RecordVirtual',GLib.Variant('(a{sv})',({'modes':GLib.Variant('aa{sv}',[{
-            'size':GLib.Variant('(uu)',(800,600)), 'is-preferred':GLib.Variant('b',True),
-            'refresh-rate':GLib.Variant('d',60.)}])},)))
+        stream=sc(path,service+'.Session','RecordVirtual',GLib.Variant('(a{sv})',({},)))[0]
+        nodes=[]
+        subscription=bus.signal_subscribe(service,service+'.Stream','PipeWireStreamAdded',stream,None,
+            Gio.DBusSignalFlags.NONE,lambda _c,_s,_p,_i,_n,params,*_rest:nodes.append(params.unpack()[0]))
         sc(path,service+'.Session','Start')
+        def node_ready():
+            while GLib.MainContext.default().iteration(False):pass
+            return bool(nodes)
+        until(node_ready)
+        bus.signal_unsubscribe(subscription)
+        sink=os.environ.get('DESKPORT_GNOME_VIDEO_SINK',str(Path(helper).with_name('pipewire-video-sink')))
+        consumer=subprocess.Popen([sink,str(nodes[0]),'800','600'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        foreign_children.append(consumer)
         def added():
             return [spec[0] for spec,_modes,_props in state()['monitors'] if tuple(spec) not in before]
         until(lambda:len(added())==1)
         output=added()[0]
-        return output,lambda:sc(path,service+'.Session','Stop')
+        def stop():
+            try:sc(path,service+'.Session','Stop')
+            finally:
+                if consumer.poll() is None:consumer.terminate()
+                consumer.wait(timeout=5)
+        return output,stop
     for detach_first in (False,True):
         p=launch();identity=request(p,1,width,height,scale)
         owned=verify(identity,1,width,height,scale)
@@ -385,6 +438,7 @@ try:
         try:
             subprocess.run(['systemctl','--user','stop','pipewire.socket','pipewire.service'],check=True,timeout=20)
             assert p.wait(timeout=20)!=0,'Loss of the PipeWire service must terminate the display owner'
+            report['checks'].append('guest PipeWire service death terminated the display owner')
         finally:
             subprocess.run(['systemctl','--user','start','pipewire.socket','pipewire.service','wireplumber.service'],check=True,timeout=20)
         until(lambda:topology()==baseline)
@@ -398,8 +452,29 @@ try:
     report['passed']=True
 except BaseException as error:
     report['failure']=repr(error)
+    debugger=os.environ.get('DESKPORT_TEST_GDB')
+    if debugger:
+        report['failure_processes']=subprocess.run(['ps','-eo','pid,comm,args'],capture_output=True,text=True).stdout
+        for name in ('gnome-shell','deskport-display','deskport-host'):
+            processes=subprocess.run(['pgrep','-f',f'(^|/){name}( |$)'],capture_output=True,text=True)
+            for pid in processes.stdout.split():
+                try:
+                    executable=Path(f'/proc/{pid}/cmdline').read_bytes().split(b'\0')[0].decode()
+                    if name not in Path(executable).name:continue
+                except (OSError,UnicodeError):continue
+                try:
+                    trace=subprocess.run(['sudo','-n',debugger,'-batch','-ex','set debuginfod enabled off',
+                        '-ex','set pagination off','-ex','thread apply all bt','-p',pid],
+                        capture_output=True,text=True,timeout=15)
+                    report.setdefault('failure_thread_stacks',[]).append(dict(name=name,pid=pid,trace=trace.stdout+trace.stderr))
+                except subprocess.TimeoutExpired as timeout:
+                    report.setdefault('failure_thread_stacks',[]).append(dict(name=name,pid=pid,
+                        trace=(timeout.stdout or b'').decode(errors='replace'),timed_out=True))
     raise
 finally:
+    for consumer in foreign_children:
+        if consumer.poll() is None:consumer.terminate()
+        consumer.wait(timeout=5)
     for p,log in children:
         if p.poll() is None:
             p.stdin.close()
