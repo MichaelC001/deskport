@@ -28,6 +28,90 @@ DeskPort alone does not patch the compositor. This qualifies a software VM and
 native loopback transport, not physical GPU/network/input, audio, HDR or clipboard.
 See [versioned GNOME evidence](GNOME_DISPLAY.md#gnome-511-full-desktop-and-native-recovery-follow-up).
 
+## Linux receiving keyboard remapping — 2026-10-26
+
+The Linux host now names its uinput keyboard `DeskPort Keyboard` in both the
+Nix/inputtino and portable/libvirtualhid builds. Receiver-side xremap can select
+it independently of Sunshine; a legacy `--ignore 'Keyboard passthrough'` rule
+no longer excludes DeskPort. The Nix backend preserves its seat suffix. Existing
+key transitions, modifier release, device IDs, mouse handling and non-Linux
+backends remain unchanged. Custom shortcuts come from the receiving remapper's
+active application rules, while sender-side remote-window bypass can still
+prevent double translation.
+
+This is a device-identity patch to DeskPort's existing evdev path. The Deskflow
+libei-to-uinput adapter is unnecessary here. Both build entry points apply the
+same guarded overlay. See [receiving keyboard setup and limits](../host/linux/README.md#receiving-keyboard-and-remappers).
+
+Validation: compiled production initializer/profile regressions pass on macOS and
+Linux for both vendored revisions, including original-source negative controls,
+seat suffixes, non-Linux preservation, idempotence and upstream anchor drift.
+No input devices are created. The complete Linux Nix build and isolated package
+startup checks pass; the packaged host contains the new keyboard identity.
+A complete portable package rebuild and live remote-shortcut acceptance remain
+untested. No release, installation, service restart or Nix activation is part of
+this change.
+
+## Responsive window actions while connecting — 2026-10-26
+
+The retained shell canvas now decides tray and global-shortcut toggles from its
+own native window focus, including child presentation surfaces. Previously the
+decision depended on a worker focus report that required the first video frame,
+so a connecting window could only be recalled instead of hidden.
+
+Count a pending connection before its deferred worker launch, and show the local
+canvas immediately on selection or recall, without waiting for IPC startup or a
+previous viewer's hide acknowledgement. Network setup continues in the worker;
+remote input still waits for the existing ownership handoff. Late readiness,
+hide acknowledgements and failures no longer reopen a hidden shell window.
+The tray device list remains available while a connection is pending.
+
+Validation: the new regression rejects the old implementation. On Linux x86_64,
+the session suite (11), UI suite (31), tray/lifecycle checks (4), native Nix build
+and isolated package smoke pass. Delayed authentication and hide replies, with
+no readiness or focus reports, leave menu actions and visibility responsive;
+the final fixture's longest UI heartbeat gap is 58 ms. Two real workers also
+pass 20 switches while connecting, independent cancellation and IPC-loss exit,
+without contacting a host. These checks do not certify native tray gestures,
+global shortcut activation, GPU setup latency or physical streaming on any
+platform. No deployed application or service is activated or restarted.
+
+## Remote IME shortcuts in the retained canvas — 2026-10-26
+
+The shell-canvas migration introduced two input routing regressions: `5a91636c`
+bound shortcut inhibition to the video subsurface, and `590078c4` unconditionally
+enabled local IME on the Qt Quick item. Wayland keyboard focus belongs to the
+shell root, while pointer focus can belong to the video subsurface. With remote
+IME selected, the local input method could consume Super+Space before it reached
+the Mac host despite the Always capture preference.
+
+Query and update local IME state on the focused Quick item as well as the native
+presentation window, and deliver local composition through either focus path only
+when opted in. Bind Wayland shortcut inhibition to the shell's keyboard surface;
+report capture only after the compositor's active notification and clear it on
+inactive/release. Keep pending requests distinct from effective inhibition and
+avoid a competing Qt keyboard grab on Wayland.
+
+Validation: the production-item regression fails on the old source (remote IME
+still enabled; local composition lost on the Quick-item path) and passes with the
+fix. Linux Nix build and package smoke, shared core, SDL local-text adapter, and
+global shortcut/lifecycle/portal tests pass. CI now runs the isolated canvas
+focus/IME regression. An authorized live KDE Wayland to macOS connection passed
+12 settled Super+Space toggles across windowed, fullscreen and restored-window
+states: the Mac input source changed and the Linux input source did not. With the
+viewer minimized and an isolated local text field focused, two toggles changed
+only the local input source. Native protocol evidence confirms inhibition on the
+keyboard root surface and release on focus loss. Keys were generated through an
+owned Linux uinput device; this does not certify every physical keyboard layout.
+One early restore sample arrived during the adaptive stream restart and did not
+switch either input source; all three post-ready restore samples passed.
+
+The broader existing canvas bridge fixture crashes while pushing synthetic
+SDL_TEXTINPUT through the locked SDL2-compat 2.32.68 / SDL3 3.4.10 runtime. Its
+bridge and test source are unchanged by this fix; do not count that fixture as
+passed or infer end-to-end local-IME acceptance from the Qt-item checks. No host,
+shared wire policy, installed application or Nix activation is changed here.
+
 ## GNOME recovery follow-up — 2026-10-26
 
 Source `4f37c146` resolves the two earlier failure investigations. GNOME 50.1's

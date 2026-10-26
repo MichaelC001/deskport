@@ -160,12 +160,13 @@ Generated from the reviewed register; recorded results are scoped to each row.
 
 | Field | Record |
 | --- | --- |
-| Date / tested source | 2026-10-26; production recovery `21ab78c0`, fixture `1160e6dd`, shared core `505ae0cc` unchanged. |
-| Package / installed identity | Managed Nix build `gnome511-reconnect03`; explicit Mutter source patch loaded only in disposable guests. No published package or user activation. Binary identities and earlier source checkpoints are linked below. |
-| Environment | Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.04 / GNOME 50.1 and Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktops; upstream Shell/Mutter 51.1 installed only in a disposable Ubuntu 26.10 guest. Software graphics throughout. |
-| Feature / actual result | PASS: 28/28 headless checks on each of 49.4 and 50.4; 30/30 normal-workflow VM checks on 50.1; 54/54 on patched 51.0. Patched 51.1 passes 72 desktop checks, including nine scale/input configurations with three independent GTK windows each, plus eight native GameStream recovery cases across all policies and supported 150%/80% desktop adjustments. Same client/supervisor, fresh rendered frames/capture, unchanged compositor and restored local layout are required. |
-| Limits / pending | GNOME 51 PipeWire-loss recovery requires the explicit Mutter patch; DeskPort installation does not patch the compositor. Mirror requires matching physical modes/scales. Native reconnect evidence uses guest loopback with seeded disposable trust; pairing UI, physical GPU/network/input, HDR/audio/clipboard and latency remain unqualified. The invalid 0.75 fixture failure is retained separately from the corrected eight-case acceptance. |
-| References | [GNOME checkpoint and test boundaries](GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26) |
+| Date / tested source | 2026-10-26; `21ab78c0985d6535f797f74532a09cd224d4bcfd` |
+| Package / installed identity | Managed Nix build gnome511-reconnect03; production recovery 21ab78c0, fixture 1160e6dd and shared core 505ae0cc. Explicit Mutter source patch loaded only in disposable guests; no published package or user activation |
+| Package SHA-256 | Unknown: No single distribution package was produced; the linked checkpoint records the tested application/display launcher SHA-256 values and exact Nix source snapshot. |
+| Environment | virtual-machine: Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.04 / GNOME 50.1 and Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktops; upstream Shell/Mutter 51.1 installed only in a disposable Ubuntu 26.10 guest. Software graphics throughout. |
+| Feature / actual result | Guarded display policies, shared workspace scaling, software capture, PipeWire loss, physical restoration and native client reconnection. PASS: 28/28 headless checks each on 49.4 and 50.4; 30/30 full-desktop checks on 50.1; 54/54 on patched 51.0. Patched 51.1 passes 72 desktop checks, including nine scale/input configurations with three independent GTK windows each, plus eight native GameStream recovery cases across all policies and supported 150%/80% desktop adjustments. Same client/supervisor, fresh rendered frames/capture, unchanged compositor and restored local layout are required. |
+| Limits / pending | GNOME 51 PipeWire-loss recovery requires the explicit Mutter patch; DeskPort installation does not patch the compositor. Mirror requires matching physical modes/scales. Native reconnect uses guest loopback with seeded disposable trust; pairing UI, physical GPU/network/input, HDR/audio/clipboard and latency remain unqualified. The invalid 0.75 fixture failure is retained separately from the corrected eight-case acceptance. |
+| References | [source 1](../docs/GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26) · [source 2](../docs/GNOME_DISPLAY.md#gnome-511-full-desktop-and-native-recovery-follow-up) |
 
 ### Evidence linux-hyprland
 

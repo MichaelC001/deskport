@@ -10,8 +10,11 @@
 class ShortcutRecorderInhibitionBackend {
 public:
     virtual ~ShortcutRecorderInhibitionBackend() = default;
+    // A successful start owns a pending request; only isActive confirms that
+    // the compositor accepted it. Revocation must not trigger forced retries.
     virtual bool start(QWindow* window) = 0;
     virtual void stop() = 0;
+    virtual bool isActive() const = 0;
 };
 
 std::unique_ptr<ShortcutRecorderInhibitionBackend> createShortcutRecorderInhibitionBackend();
@@ -25,7 +28,7 @@ public:
 
     void setWindow(QWindow* window);
     void setEnabled(bool enabled);
-    bool isInhibited() const { return m_Inhibited; }
+    bool isInhibited() const { return m_Requested && m_Backend && m_Backend->isActive(); }
 
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
@@ -36,5 +39,5 @@ private:
     QPointer<QWindow> m_Window;
     std::unique_ptr<ShortcutRecorderInhibitionBackend> m_Backend;
     bool m_Enabled = false;
-    bool m_Inhibited = false;
+    bool m_Requested = false;
 };

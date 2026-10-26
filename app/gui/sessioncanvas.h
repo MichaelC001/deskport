@@ -30,6 +30,8 @@ signals:
     void viewportChanged(QJsonObject state);
     void input(QJsonObject event);
 protected:
+    QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
+    void inputMethodEvent(QInputMethodEvent* event) override;
     bool eventFilter(QObject* watched, QEvent* event) override;
     void geometryChange(const QRectF& next, const QRectF& previous) override;
     void keyPressEvent(QKeyEvent* event) override;

@@ -41,7 +41,7 @@ void ShortcutRecorderInhibitor::setEnabled(bool enabled) {
 void ShortcutRecorderInhibitor::release() {
     // Also stop a failed/partial request; adapters must make stop idempotent.
     if (m_Backend) m_Backend->stop();
-    m_Inhibited = false;
+    m_Requested = false;
 }
 
 void ShortcutRecorderInhibitor::refresh() {
@@ -50,7 +50,7 @@ void ShortcutRecorderInhibitor::refresh() {
         release();
         return;
     }
-    if (!m_Inhibited && m_Backend) m_Inhibited = m_Backend->start(m_Window);
+    if (!m_Requested && m_Backend) m_Requested = m_Backend->start(m_Window);
 }
 
 bool ShortcutRecorderInhibitor::eventFilter(QObject* watched, QEvent* event) {
@@ -84,6 +84,7 @@ namespace {
 class NoShortcutRecorderInhibition final : public ShortcutRecorderInhibitionBackend {
     bool start(QWindow*) override { return false; }
     void stop() override {}
+    bool isActive() const override { return false; }
 };
 }
 std::unique_ptr<ShortcutRecorderInhibitionBackend> createShortcutRecorderInhibitionBackend() {

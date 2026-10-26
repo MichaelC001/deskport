@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "review_date": "2026-10-24",
+  "review_date": "2026-10-26",
   "baseline_source_sha": "df3a24e304f3919e454122b36dc0c062420fbddf",
   "baseline_core_sha": "505ae0ccd0a4ead4decb6eaba62585bf278e6dbe",
   "evidence": [
@@ -75,6 +75,25 @@
       ],
       "package_sha256": null,
       "package_hash_unknown_reason": "Exact package hash is not available in the cited public checkpoint."
+    },
+    {
+      "id": "gnome-49-51",
+      "date": "2026-10-26",
+      "source_sha": "21ab78c0985d6535f797f74532a09cd224d4bcfd",
+      "source_unknown_reason": "",
+      "package": "Managed Nix build gnome511-reconnect03; production recovery 21ab78c0, fixture 1160e6dd and shared core 505ae0cc",
+      "installed": "Explicit Mutter source patch loaded only in disposable guests; no published package or user activation",
+      "environment_kind": "virtual-machine",
+      "environment": "Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.04 / GNOME 50.1 and Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktops; upstream Shell/Mutter 51.1 installed only in a disposable Ubuntu 26.10 guest. Software graphics throughout.",
+      "features": "Guarded display policies, shared workspace scaling, software capture, PipeWire loss, physical restoration and native client reconnection",
+      "result": "PASS: 28/28 headless checks each on 49.4 and 50.4; 30/30 full-desktop checks on 50.1; 54/54 on patched 51.0. Patched 51.1 passes 72 desktop checks, including nine scale/input configurations with three independent GTK windows each, plus eight native GameStream recovery cases across all policies and supported 150%/80% desktop adjustments. Same client/supervisor, fresh rendered frames/capture, unchanged compositor and restored local layout are required.",
+      "limits": "GNOME 51 PipeWire-loss recovery requires the explicit Mutter patch; DeskPort installation does not patch the compositor. Mirror requires matching physical modes/scales. Native reconnect uses guest loopback with seeded disposable trust; pairing UI, physical GPU/network/input, HDR/audio/clipboard and latency remain unqualified. The invalid 0.75 fixture failure is retained separately from the corrected eight-case acceptance.",
+      "references": [
+        "docs/GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26",
+        "docs/GNOME_DISPLAY.md#gnome-511-full-desktop-and-native-recovery-follow-up"
+      ],
+      "package_sha256": null,
+      "package_hash_unknown_reason": "No single distribution package was produced; the linked checkpoint records the tested application/display launcher SHA-256 values and exact Nix source snapshot."
     },
     {
       "id": "linux-hyprland",

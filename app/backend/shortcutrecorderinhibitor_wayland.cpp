@@ -67,7 +67,10 @@ public:
         return true;
     }
 
+    bool isActive() const override { return m_Active; }
+
     void stop() override {
+        m_Active = false;
         ++m_Generation;
         m_Dispatch.stop();
         if (m_Inhibitor) zwp_keyboard_shortcuts_inhibitor_v1_destroy(m_Inhibitor);
@@ -111,9 +114,14 @@ private:
             });
         }
     }
-    static void active(void*, zwp_keyboard_shortcuts_inhibitor_v1*) {}
-    static void inactive(void*, zwp_keyboard_shortcuts_inhibitor_v1*) {}
+    static void active(void* data, zwp_keyboard_shortcuts_inhibitor_v1*) {
+        static_cast<WaylandShortcutRecorderInhibition*>(data)->m_Active = true;
+    }
+    static void inactive(void* data, zwp_keyboard_shortcuts_inhibitor_v1*) {
+        static_cast<WaylandShortcutRecorderInhibition*>(data)->m_Active = false;
+    }
 
+    bool m_Active = false;
     QTimer m_Dispatch;
     wl_display* m_Display = nullptr; // Borrowed from Qt; never disconnect it.
     wl_seat* m_Seat = nullptr;
