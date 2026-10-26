@@ -69,3 +69,23 @@ the documented SDL compatibility-fixture limitation.
 Package and synthetic canvas checks do not establish physical GPU, audio, HDR,
 latency, real-network recovery or long-session acceptance. Updating mynix prepares
 configuration builds; activation and live use remain manual.
+
+## Published artifacts
+
+[v0.7.6](https://github.com/keithxc/deskport/releases/tag/v0.7.6) is published
+as a stable release without changing GitHub Latest. All 21 assets passed
+GitHub server SHA-256 and byte-size verification. Linux downloads use the `r2`
+suffix and source `06274045c9323f74f8776bcbeb50660848542393`; unchanged macOS and
+Windows binaries retain source `a238f0ecc713f6cf1f231161cb7d98e05889239b`.
+The shared core remains unchanged.
+
+The Ubuntu startup fix passed 20 consecutive package checks on glibc 2.39.
+All four container checks passed. Fedora KDE, Ubuntu GNOME, Arch KDE and Bazzite
+KDE passed their final desktop lifecycle/canvas cases. Debian client lifecycle
+and canvas checks passed, while its older KWin cannot provide host virtual
+outputs. Omarchy retains unsupported virtual-output admission and a fullscreen
+restore timeout after 11 of 16 canvas stages. The
+[verification record](https://github.com/keithxc/deskport/releases/download/v0.7.6/VERIFICATION.txt)
+and [provenance](https://github.com/keithxc/deskport/releases/download/v0.7.6/PROVENANCE.json)
+record the exact scope. Configuration builds prepare the update; activation is
+still manual.

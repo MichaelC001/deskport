@@ -1,18 +1,25 @@
-## Desktop 0.7.6 release preparation — 2026-10-26
+## Desktop 0.7.6 stable release — 2026-10-26
 
-Release qualification reproduced an intermittent Linux host startup crash on
-Ubuntu 24.04. Core dumps identify the asynchronous log formatter's timezone
-lookup racing Linux GPU environment initialization. Move those environment
-updates before logging starts; final Linux packages require a fresh build and
-repeated startup qualification before publication.
+Published [v0.7.6](https://github.com/keithxc/deskport/releases/tag/v0.7.6)
+with 21 assets verified against GitHub server SHA-256 and byte size. The stable
+release deliberately leaves GitHub Latest unchanged; promotion remains a
+separate maintainer decision. Activation and live streaming acceptance are manual.
 
-Prepare all desktop package formats from the integrated GNOME recovery,
-remote-IME, connection-window and Linux keyboard-identity changes. Publish a
-stable versioned release while explicitly preserving the current GitHub Latest
-selection. Promotion follows a separate maintainer decision after initial use.
-Final package, CI, distribution and mynix build results are recorded in the
-release verification asset; preparation does not imply publication or activation.
-See [0.7.6 release notes](RELEASE_0.7.6.md).
+Linux source `06274045c9323f74f8776bcbeb50660848542393` moves GPU environment
+initialization before asynchronous logging. The reproduced Ubuntu 24.04 startup
+race is fixed, with 20 consecutive startup/API/GUI checks passing on the original
+glibc 2.39 runtime. All Linux formats were rebuilt with an `r2` asset suffix.
+The unchanged macOS and Windows binaries retain source `a238f0ec`.
+
+Final-source CI, macOS signing/notarization, native Windows checks, four Linux
+container checks, complete Nix/Darwin configuration prebuilds and native synthetic
+canvas checks passed. Six desktop VM runs cover package lifecycle and canvas
+behavior: Fedora, Ubuntu, Arch and Bazzite passed their applicable cases; Debian's
+older KWin lacks host virtual-output protocols, and Omarchy retains the known
+virtual-output/fullscreen-restore limits (11/16 canvas stages). These limitations
+remain explicit, rather than being counted as full platform passes. All owned
+VMs were stopped and their baseline integrity verified.
+See [0.7.6 release notes](RELEASE_0.7.6.md) and its `VERIFICATION.txt` asset.
 
 ## GNOME 51.1 native recovery and scaling — 2026-10-26
 
