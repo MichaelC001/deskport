@@ -1143,6 +1143,8 @@ int main(int argc, char *argv[])
     });
     const auto windowInFront = [&frontLeft](QWindow* window, bool trayClick) {
         if (!window || !window->isVisible() || window->windowState() == Qt::WindowMinimized) return false;
+        const auto focus = QGuiApplication::focusWindow();
+        if (focus && window->isAncestorOf(focus)) return true;
 #ifdef HAS_X11
         if (!trayClick) return WindowActivation::shortcutWindowIsActive(window);
 #endif
@@ -1156,13 +1158,20 @@ int main(int argc, char *argv[])
         // Qt raises its own window with the shell's activation token from the
         // environment. An SDL viewer window in this process or in a session
         // worker needs the token handed over explicitly.
-        if (managedSessions.busy() && managedSessions.viewerInFront(trayClick)) {
+        // The retained canvas belongs to this process, including its loading
+        // page. A worker cannot report its focus until video is ready, so using
+        // that report here makes every connecting-window toggle a recall.
+        const bool viewerInFront = managedSessions.canvasEnabled()
+            ? managedSessions.canvasVisible() && windowInFront(window, trayClick)
+            : managedSessions.viewerInFront(trayClick);
+        if (managedSessions.busy() && viewerInFront) {
             // Hiding the viewer releases its input; the sessions stay connected.
             managedSessions.showDevices();
             if (managedSessions.canvasEnabled() && window) window->hide();
         } else if (managedSessions.busy()) {
             // Go straight to the last viewed desktop, never through the device
             // list; the list stays available from the tray menu.
+            if (managedSessions.canvasEnabled()) prepareQtRecall();
             managedSessions.setActivationToken(token, !trayClick);
             if (!managedSessions.recall()) {
                 managedSessions.setActivationToken({});

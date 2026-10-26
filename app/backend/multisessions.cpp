@@ -75,7 +75,10 @@ void MultiSessions::answerCanvasQuestion(int choice) {
 }
 
 bool MultiSessions::busy() const {
-    for (auto entry : m_Entries) if (entry->process && entry->process->state() != QProcess::NotRunning) return true;
+    // Opening owns a session before the deferred process launch. Window actions
+    // in that first event turn must already target the connecting desktop.
+    for (auto entry : m_Entries) if (entry->state == "starting" ||
+        (entry->process && entry->process->state() != QProcess::NotRunning)) return true;
     return false;
 }
 QVariantMap MultiSessions::selectedTraffic() const {
@@ -331,6 +334,14 @@ void MultiSessions::select(QString id) {
     if (selected->state != "starting" && selected->state != "connected") { emit devicesRequested(); return; }
     m_Selected = id; m_Wanted = id;
     emit canvasChanged();
+    // The shell owns its window. Showing the connecting page must not wait for
+    // worker startup or another viewer's input-release acknowledgement. Remote
+    // input still waits for present() to complete that handoff.
+    if (m_CanvasWindow) {
+        if (m_CanvasWindow->windowState() == Qt::WindowMinimized) m_CanvasWindow->showNormal();
+        else m_CanvasWindow->setVisible(true);
+        m_CanvasWindow->raise(); m_CanvasWindow->requestActivate();
+    }
     ++m_Epoch;
     // Only a viewer that may be presenting has to release input first; waiting
     // on hidden background viewers would add their latency to every switch.
@@ -397,11 +408,6 @@ void MultiSessions::present(bool raise) {
         QJsonObject show {{"command","show"},{"raise",raise},{"epoch",double(m_Epoch)}};
         if (m_CanvasWindow) {
             send(entry, {{"command","canvas-state"},{"state",m_CanvasState}});
-            if (raise) {
-                if (m_CanvasWindow->windowState() == Qt::WindowMinimized) m_CanvasWindow->showNormal();
-                else m_CanvasWindow->setVisible(true);
-                m_CanvasWindow->raise(); m_CanvasWindow->requestActivate();
-            }
         }
 #ifdef Q_OS_WIN
         // Windows lets only the process that received the tray click take the
@@ -474,8 +480,14 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     if (entry->presentation) entry->presentation->detach();
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
     const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
-    if (m_Visible==entry->id) { m_Visible.clear(); emit devicesRequested(); }
-    if (m_Wanted==entry->id) { m_Wanted.clear(); emit devicesRequested(); }
+    // A worker can exit before acknowledging hide. Its old visible record must
+    // not reopen the shell after the user hid it or selected another desktop.
+    const bool showDevices = m_CanvasWindow
+        ? m_Wanted == entry->id && m_CanvasWindow->isVisible()
+        : m_Visible == entry->id || m_Wanted == entry->id;
+    if (m_Visible==entry->id) m_Visible.clear();
+    if (m_Wanted==entry->id) m_Wanted.clear();
+    if (showDevices) emit devicesRequested();
     if (m_Selected==entry->id) emit canvasChanged();
     present(awaited); emit changed();
 }
