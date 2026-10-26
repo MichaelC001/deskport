@@ -54,3 +54,11 @@ extends the software X screen and restores the root framebuffer on release.
 Only verified 1x is supported; global UI DPI, physical modes and system Xorg
 configuration are never changed. See [X11 adaptive display](../../docs/X11_ADAPTIVE_DISPLAY.md)
 for driver limits, ownership, journal recovery and isolated native checks.
+
+## GNOME display leases
+
+The Mutter adapter implements the shared session-display policy IDs through
+ScreenCast and temporary DisplayConfig transactions. Its independent guardian
+restores attached original monitors, preserves foreign outputs, and retains
+failed recovery journals. See [GNOME display compatibility](../../docs/GNOME_DISPLAY.md)
+for version evidence and the matching-mode mirror restriction.

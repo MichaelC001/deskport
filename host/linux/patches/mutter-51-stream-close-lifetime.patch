@@ -1,0 +1,29 @@
+From: DeskPort maintainers
+Subject: [PATCH] stream-source: keep the stream alive while emitting closed
+
+PipeWire core loss emits the source's closed signal. Its handler stops the
+stream and can release the session's last stream reference. Signal emission
+keeps the source alive until it returns, but the source only borrows its stream.
+The resulting source disposal dereferences the freed stream while looking up
+the backend/monitor manager (observed in meta_stream_source_virtual_dispose).
+
+Retain the stream across signal emission so source disposal still has a valid
+backend. This patch targets Mutter 51; it is a compositor fix, not a patch to
+the DeskPort executable or an instruction to replace a running desktop.
+
+--- a/src/backends/meta-stream-source.c
++++ b/src/backends/meta-stream-source.c
+@@ -2942,7 +2942,12 @@ pipewire_loop_source_dispatch (GSource     *base_source,
+     g_warning ("pipewire_loop_iterate failed: %s", spa_strerror (result));
+ 
+   if (priv->emit_closed_after_dispatch)
+-    g_signal_emit (source, signals[CLOSED], 0);
++    {
++      /* The closed handlers may release the stream before signal emission
++       * releases its temporary source reference. Source disposal needs it. */
++      g_autoptr (MetaStream) stream = g_object_ref (priv->stream);
++      g_signal_emit (source, signals[CLOSED], 0);
++    }
+ 
+   return G_SOURCE_CONTINUE;
+ }

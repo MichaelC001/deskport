@@ -186,6 +186,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
 #ifdef Q_OS_LINUX
                 m_LinuxOutputName = object["outputName"].toString();
                 m_LinuxGnome = object["gnome"].toBool();
+                m_LinuxGnomePolicies = m_LinuxGnome && object["displayPolicy"].toInt() == 1;
                 m_LinuxHyprland = object["backend"].toString() == "hyprland";
                 m_LinuxHyprlandPolicies = m_LinuxHyprland && object.value("displayPolicy").toBool();
                 m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
@@ -195,6 +196,14 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 }
 #endif
                 startServer(0);
+                continue;
+            }
+#endif
+#ifdef Q_OS_LINUX
+            if (object.contains("layoutWarning") && !object.contains("seq")) {
+                m_DisplayWarning = object["layoutWarning"].toString().isEmpty() ? QString() :
+                    tr("The remote workspace is ready, but some physical screens could not be configured. Check the host display layout.");
+                emit changed();
                 continue;
             }
 #endif
@@ -311,6 +320,7 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
                 m_LinuxHyprlandPolicyRequests = m_LinuxHyprland && object.contains("displayPolicy");
                 m_LinuxX11 = object["backend"].toString() == "x11";
                 if (object.contains("pipewireNode")) m_LinuxGnome = true;
+                m_LinuxGnomePolicies = m_LinuxGnome && object["displayPolicy"].toInt() == 1;
                 m_LinuxPipewireSerial = object["pipewireSerial"].toString();
                 if (m_LinuxOutputName.isEmpty() || m_LinuxOutputName.size() > 128 ||
                     m_LinuxOutputName.contains(QRegularExpression("[^A-Za-z0-9_-]"))) {
@@ -714,7 +724,7 @@ void HostManager::start(int width, int height) {
     const auto generation = ++m_Generation;
     // stderr is consumed by the shared diagnostics sink; stdout is the control protocol.
 #ifdef Q_OS_LINUX
-    m_LinuxOutputName.clear(); m_LinuxX11Lease.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxHyprland = false;
+    m_LinuxOutputName.clear(); m_LinuxX11Lease.clear(); m_LinuxPipewireNode = 0; m_LinuxGnome = false; m_LinuxGnomePolicies = false; m_LinuxHyprland = false;
     m_LinuxX11 = !qEnvironmentVariableIsEmpty("DESKPORT_X11_OUTPUT") ||
         (qEnvironmentVariableIsEmpty("WAYLAND_DISPLAY") && qgetenv("XDG_SESSION_TYPE").toLower() != "wayland" &&
          !qEnvironmentVariableIsEmpty("DISPLAY"));
@@ -1375,7 +1385,7 @@ bool HostManager::displayPoliciesAvailable() const {
 #ifdef Q_OS_WIN
     return adaptiveDisplayAvailable() && m_WindowsVirtualDisplay;
 #elif defined(Q_OS_LINUX)
-    return adaptiveDisplayAvailable() && !m_LinuxGnome && !m_LinuxX11 && (!m_LinuxHyprland || m_LinuxHyprlandPolicies);
+    return adaptiveDisplayAvailable() && (!m_LinuxGnome || m_LinuxGnomePolicies) && !m_LinuxX11 && (!m_LinuxHyprland || m_LinuxHyprlandPolicies);
 #else
     return adaptiveDisplayAvailable();
 #endif
@@ -1416,7 +1426,11 @@ bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, 
 #endif
         request["displayPolicy"] = policy;
     m_Display.write(QJsonDocument(request).toJson(QJsonDocument::Compact) + '\n');
-    QTimer::singleShot(DisplayChangeTimeoutMs, this, [this, generation] {
+    // Mutter's independent guardian verifies output removal and may replay a
+    // saved layout before admitting a new stream. Do not time out a valid
+    // recovery at the ordinary five-second resize deadline.
+    const int timeoutMs = m_LinuxGnome ? 20000 : DisplayChangeTimeoutMs;
+    QTimer::singleShot(timeoutMs, this, [this, generation] {
         if (m_DisplaySequence && generation == m_DisplayGeneration) {
             const auto sequence = m_DisplaySequence; m_DisplaySequence = 0;
             emit displayResized(sequence, m_DisplayWidth, m_DisplayHeight, tr("Virtual display resize timed out"));
@@ -1434,7 +1448,8 @@ void HostManager::settleSessionDisplay(QObject* context, std::function<void(bool
     connect(this, &HostManager::displayResized, pending, [finish](int sequence, int, int, const QString& error) {
         if (sequence < 0) finish(error.isEmpty());
     });
-    QTimer::singleShot(DisplayChangeTimeoutMs + 5000, pending, [finish] { finish(false); });
+    const int timeoutMs = m_LinuxGnome ? 20000 : DisplayChangeTimeoutMs;
+    QTimer::singleShot(timeoutMs + 5000, pending, [finish] { finish(false); });
     restoreDisplay();
 }
 void HostManager::restoreDisplay() {

@@ -66,8 +66,12 @@ and replication source; it verifies restoration before disarming its independent
 recovery process. Hyprland uses the same core policy IDs through public runtime monitor APIs,
 with a per-compositor recovery guardian and journal. See
 [Hyprland display leases](HYPRLAND_DISPLAY.md) for capability checks and limits.
-GNOME preserves the existing extended display behavior and
-does not advertise the three-policy capability. Nondefault choices are refused.
+GNOME advertises policies only with the guarded Mutter helper. Extension and
+primary-only support adaptive modes; mirroring requires the existing physical
+pixel dimensions, scale and rotation to match the workspace. Unsupported mirror
+requests fail before display mutation. The independent guardian verifies physical
+restoration and virtual-output removal before disarming its journal. See
+[GNOME display compatibility](GNOME_DISPLAY.md).
 Android address editing is implemented in the native-client repository; Android's
 authenticated virtual-display transport is a separate missing adapter.
 

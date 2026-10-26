@@ -30,10 +30,13 @@ DeskPort client with display control.
   available, DeskPort sequentially replaces only its virtual output with an exact
   initial mode, preserving the admitted name and recovery snapshot. Capture may
   briefly reconnect to that same owned name; physical fallback remains forbidden.
-- **GNOME / Mutter:** Mutter ScreenCast `RecordVirtual`, with PipeWire format
-  negotiation and temporary DisplayConfig scaling. The owned output is verified
-  against the current monitor state. Sunshine attaches to that output's PipeWire
-  object serial; it does not open a second screen picker. Tested with Mutter 50.4.
+- **GNOME / Mutter:** connection-owned ScreenCast `RecordVirtual`, PipeWire
+  format negotiation and temporary DisplayConfig transactions. Supports extension,
+  primary-only and compatible-mode mirroring, with a journaled independent recovery
+  process. Output admission compares the full monitor identity, including its
+  per-stream serial, and waits for DisplayConfig publication. Sunshine attaches
+  to the admitted PipeWire object serial without a second picker. See
+  [GNOME compatibility and validation](GNOME_DISPLAY.md).
 - **Hyprland / Omarchy:** a dedicated headless output through public Lua/text
   runtime monitor APIs, with direct WLR capture. Development sources implement
   the shared mirror, turn-off-others and extension policies behind native
@@ -68,10 +71,13 @@ Disconnecting restores the physical layout captured before the connection.
 This does not promise restoration of individual application window positions.
 Monitor hotplug or manual layout edits during sharing are not yet acceptance-tested.
 
-**GNOME and Hyprland use an extended virtual display.** Existing physical output settings
-remain unchanged; move applications onto the dedicated display. Arbitrary-client-mode
-physical mirroring on these backends is not implemented. Video may
-briefly reconnect during mode changes. An active logged-in Wayland session,
+**GNOME extension preserves the physical display layout.** Primary-only temporarily
+turns off previously active physical outputs. Mutter mirroring requires matching
+physical pixel dimensions, scale and unrotated displays; unsupported mirror modes
+are rejected before creating a virtual output. GNOME does not implement arbitrary
+letterboxed physical mirroring. Hyprland policies have their own capability guards
+in [Hyprland display leases](HYPRLAND_DISPLAY.md). Video may briefly reconnect
+during mode changes. An active logged-in Wayland session,
 PipeWire and the existing Sunshine input permissions are required. This does not
 implement a GNOME login-screen service or automatic session login.
 
@@ -91,6 +97,9 @@ other outputs. Set
 `DESKPORT_TEST_HOST=/path/to/deskport-host` to include real software-encoder
 capture at 1280×720@1×, 1668×2388@2× and 1920×1080@1× after recreation, plus refusal to capture another output
 after the owned display disappears.
+Use `--gnome-native` with PyGObject and GTK 4 typelibs to run the complete
+Mutter policy/recovery scenario in that private session. See the versioned
+[GNOME validation and limits](GNOME_DISPLAY.md), including service-loss behavior.
 
 The 0.3.6 Linux preview passed these capture checks and 12 successive mode/scale
 changes on both KWin 6.6.6 (permission checks enabled) and GNOME 50.4. Host

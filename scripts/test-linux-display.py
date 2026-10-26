@@ -13,8 +13,8 @@ import threading
 import time
 
 helper = str(Path(sys.argv[1]).resolve())
-gnome = '--gnome' in sys.argv
-policy = int(os.environ.get('DESKPORT_TEST_POLICY', '0'))
+gnome = '--gnome' in sys.argv or '--gnome-native' in sys.argv
+policy = int(os.environ.get('DESKPORT_TEST_POLICY', '2' if gnome else '0'))
 auto_permission = '--auto-permission' in sys.argv
 post_delay = '--restore-eof-post-delay' in sys.argv or '--restore-eof-post-delay-short-grace' in sys.argv
 if '--inside' not in sys.argv:
@@ -124,6 +124,12 @@ if '--inside' not in sys.argv:
             assert not gnome
             for entry in applications.glob('*.desktop'): entry.unlink()
         env['DESKPORT_OUTPUT_PROBE'] = str(Path(tmp) / 'output-probe')
+        if '--gnome-native' in sys.argv:
+            sink = Path(tmp) / 'pipewire-video-sink'
+            flags = subprocess.check_output(['pkg-config', '--cflags', '--libs', 'libpipewire-0.3'], text=True).split()
+            subprocess.run([os.environ.get('CC', 'cc'), str(Path(__file__).resolve().parents[1] / 'tests/pipewire-video-sink.c'),
+                            '-o', str(sink), *flags], check=True)
+            env['DESKPORT_GNOME_VIDEO_SINK'] = str(sink)
         env['XDG_CURRENT_DESKTOP'] = 'GNOME' if gnome else 'KDE'
         pw_config = Path(shutil.which('pipewire')).resolve().parent.parent / 'share/pipewire'
         env['PIPEWIRE_CONFIG_DIR'] = str(pw_config)
@@ -141,7 +147,8 @@ if '--inside' not in sys.argv:
         bus_config = Path(tmp) / 'session-bus.conf'
         bus_config.write_text('<busconfig><type>session</type><listen>unix:tmpdir=/tmp</listen><auth>EXTERNAL</auth><policy context="default"><allow send_destination="*" eavesdrop="true"/><allow eavesdrop="true"/><allow own="*"/></policy></busconfig>')
         subprocess.run(['dbus-run-session', '--config-file=' + str(bus_config), '--', sys.executable, __file__, helper, '--inside'] + (['--auto-permission'] if auto_permission else []) + (['--gnome'] if gnome else []) + (['--disabled-output'] if '--disabled-output' in sys.argv else []) + (['--restore-failure'] if '--restore-failure' in sys.argv else []) + (['--restore-eof-retry'] if '--restore-eof-retry' in sys.argv else []) + (['--restore-eof-delay'] if '--restore-eof-delay' in sys.argv else []) + (['--restore-eof-post-delay'] if post_delay else []) + (['--restore-eof-post-delay-short-grace'] if '--restore-eof-post-delay-short-grace' in sys.argv else []),
-                       env=env, check=True, timeout=180)
+                       env=dict(env, DESKPORT_GNOME_NATIVE_TEST='1') if '--gnome-native' in sys.argv else env,
+                       check=True, timeout=600 if '--gnome-native' in sys.argv else 180)
     raise SystemExit(0)
 
 children = []
@@ -172,6 +179,13 @@ try:
             if ready.returncode == 0: break
             time.sleep(.1)
         assert ready.returncode == 0, ready.stderr
+        if os.environ.get('DESKPORT_GNOME_NATIVE_TEST') == '1':
+            native_work = Path(os.environ['XDG_RUNTIME_DIR']) / 'native-scenario'
+            native_work.mkdir()
+            subprocess.run([sys.executable, str(Path(__file__).with_name('test-gnome-display.py')), helper],
+                           cwd=native_work, env=dict(os.environ, DESKPORT_GNOME_TEST_SESSION='1', DESKPORT_GNOME_HEADLESS_TEST='1'),
+                           check=True, timeout=360)
+            raise SystemExit(0)
     def outputs():
         return {o['name']: {k:v for k,v in o.items() if k != 'id'} for o in json.loads(subprocess.check_output([os.environ['DESKPORT_OUTPUT_PROBE']], timeout=5))}
     def devices():

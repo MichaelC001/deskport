@@ -172,6 +172,7 @@ private:
     QByteArray m_Buffer;
     QString m_LinuxOutputName;
     bool m_LinuxGnome = false;
+    bool m_LinuxGnomePolicies = false;
     bool m_LinuxHyprland = false;
     bool m_LinuxHyprlandPolicies = false;
     bool m_LinuxHyprlandPolicyRequests = false;

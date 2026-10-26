@@ -19,6 +19,9 @@ def edit(name, old, new):
     changes[path] = original, source.replace(old, new, 1)
 
 edit('portalgrab.cpp', '// local includes', '#include <boost/property_tree/json_parser.hpp>\n#include <fstream>\n\n// local includes')
+edit('portalgrab.cpp', '    int pipewire_fd;', '''    // Owned-display capture bypasses the portal. An unopened portal must not
+    // close fd 0: after the first probe it may be a PipeWire loop wakeup fd.
+    int pipewire_fd = -1;''')
 edit('portalgrab.cpp', '      // Connect DBus portal session', '''      if (const char* path = std::getenv("DESKPORT_VIRTUAL_DISPLAY")) {
         // The parent owns the Mutter session and keeps its sizing consumer alive.
         // Re-read the atomically replaced descriptor after each resize/reconnect.

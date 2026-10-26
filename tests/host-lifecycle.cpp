@@ -428,6 +428,7 @@ private slots:
         QVERIFY(!QFile::exists(path));
         QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
         QCOMPARE(host.displayWidth(), 0);
+        QVERIFY(!host.displayPoliciesAvailable()); // Older GNOME helpers stay unadvertised.
         QFile config(dir.path() + "/sunshine.conf"); QVERIFY(config.open(QIODevice::ReadOnly));
         QVERIFY(config.readAll().contains("capture = portal\n"));
         QVERIFY(host.resizeDisplay(1920, 1080, 1, 7));
@@ -437,6 +438,48 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(!QFile::exists(path), 5000);
         QCOMPARE(host.displayWidth(), 0);
         QVERIFY(host.running()); QVERIFY(host.adaptiveDisplayAvailable());
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+#endif
+    }
+    void gnomePoliciesRequireNativeHelperOptIn() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux Mutter policy capability");
+#else
+        qputenv("DESKPORT_TEST_MODE", "gnome-policies");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QVERIFY(host.displayPoliciesAvailable());
+        QSignalSpy results(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1668, 2388, 2, 7, 1));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 5000);
+        QCOMPARE(host.displayWidth(), 1668);
+        QCOMPARE(host.displayScale(), 2);
+        QTRY_VERIFY_WITH_TIMEOUT(!host.displayWarning().isEmpty(), 5000);
+        QVERIFY(host.resizeDisplay(1920, 1080, 1, 8, 1));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 2, 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(host.displayWarning().isEmpty(), 5000);
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
+        QVERIFY(!host.displayPoliciesAvailable());
+#endif
+    }
+    void gnomeRecoveryMayExceedOrdinaryResizeDeadline() {
+#ifndef Q_OS_LINUX
+        QSKIP("Linux Mutter recovery deadline");
+#else
+        qputenv("DESKPORT_TEST_MODE", "gnome-slow");
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        host.start(1280, 720);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QSignalSpy results(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1668, 2388, 2, 7, 2));
+        QTRY_COMPARE_WITH_TIMEOUT(results.size(), 1, 9000);
+        QVERIFY2(results.at(0).at(3).toString().isEmpty(), qPrintable(results.at(0).at(3).toString()));
+        QCOMPARE(host.displayWidth(), 1668);
+        bool settled = false, ok = false;
+        host.settleSessionDisplay(this, [&](bool success) { ok = success; settled = true; });
+        QTRY_VERIFY_WITH_TIMEOUT(settled, 9000);
+        QVERIFY(ok);
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.running(), 5000);
 #endif
     }

@@ -132,6 +132,7 @@
           passthru = { };
         });
     in {
+      overlays.mutterStreamLifetime = import ./host/linux/mutter-stream-lifetime-overlay.nix;
       packages = forAllSystems (system: {
         default = packageFor system false;
         diagnostics = packageFor system true;
