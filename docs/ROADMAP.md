@@ -22,6 +22,30 @@ A complete portable package rebuild and live remote-shortcut acceptance remain
 untested. No release, installation, service restart or Nix activation is part of
 this change.
 
+## Responsive window actions while connecting — 2026-10-26
+
+The retained shell canvas now decides tray and global-shortcut toggles from its
+own native window focus, including child presentation surfaces. Previously the
+decision depended on a worker focus report that required the first video frame,
+so a connecting window could only be recalled instead of hidden.
+
+Count a pending connection before its deferred worker launch, and show the local
+canvas immediately on selection or recall, without waiting for IPC startup or a
+previous viewer's hide acknowledgement. Network setup continues in the worker;
+remote input still waits for the existing ownership handoff. Late readiness,
+hide acknowledgements and failures no longer reopen a hidden shell window.
+The tray device list remains available while a connection is pending.
+
+Validation: the new regression rejects the old implementation. On Linux x86_64,
+the session suite (11), UI suite (31), tray/lifecycle checks (4), native Nix build
+and isolated package smoke pass. Delayed authentication and hide replies, with
+no readiness or focus reports, leave menu actions and visibility responsive;
+the final fixture's longest UI heartbeat gap is 58 ms. Two real workers also
+pass 20 switches while connecting, independent cancellation and IPC-loss exit,
+without contacting a host. These checks do not certify native tray gestures,
+global shortcut activation, GPU setup latency or physical streaming on any
+platform. No deployed application or service is activated or restarted.
+
 ## Remote IME shortcuts in the retained canvas — 2026-10-26
 
 The shell-canvas migration introduced two input routing regressions: `5a91636c`

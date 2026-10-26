@@ -21,16 +21,19 @@ static int worker(QApplication& app) {
     bool presenting = false;
     const QString id=app.arguments().value(2);
     const auto mode=app.arguments().value(3);
+    const bool connecting = mode.startsWith("connecting-");
     auto send=[&](QJsonObject o) { socket.write(QJsonDocument(o).toJson(QJsonDocument::Compact)+'\n'); };
     QObject::connect(&socket,&QLocalSocket::connected,&app,[&] {
         send({{"token",qEnvironmentVariable("DESKPORT_SESSION_TOKEN")}});
-        send({{"type","ready"}}); send({{"type","connected"}});
+        if (!connecting) { send({{"type","ready"}}); send({{"type","connected"}}); }
     });
     QObject::connect(&socket,&QLocalSocket::readyRead,&app,[&] {
         buffer+=socket.readAll();
         while (buffer.contains('\n')) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
+            if (connecting && action == "initialize")
+                send({{"type","traffic"},{"received",1},{"sent",0}});
             if(mode=="shortcut-config" && (action=="initialize" || action=="shortcut")) {
                 const auto sequence = o.value(action=="initialize" ? "shortcutSequence" : "sequence").toString();
                 const bool enabled = o.value(action=="initialize" ? "shortcutEnabled" : "enabled").toBool();
@@ -46,6 +49,7 @@ static int worker(QApplication& app) {
                 send({{"type","shown"}});
                 if (mode.startsWith("activation")) send({{"type","traffic"},{"received",shortcutShows},{"sent",tokenShows}});
                 if (mode=="recover") send({{"type","traffic"},{"received",quietShows},{"sent",raisedShows}});
+                if (connecting) send({{"type","traffic"},{"received",1},{"sent",raisedShows+quietShows}});
                 // Models a transport restart under a retained window: an
                 // unsolicited hide acknowledgement, then a new ready viewer.
                 if (mode=="recover" && raisedShows==1 && quietShows==0)
@@ -64,16 +68,130 @@ static int worker(QApplication& app) {
                 send({{"type","traffic"},{"received",qRound(o.value("value").toDouble()*100)},{"sent",fullscreenRequests}});
             else if(action=="reconnect" && mode=="crash") QCoreApplication::exit(7);
             else if(action=="reconnect" && mode=="next") send({{"type","next"}}); // The viewer's chord.
+            else if(action=="reconnect" && connecting) {
+                // Finish a deliberately slow connection only when requested by
+                // the test, including after the shell was hidden by the user.
+                if (mode == "connecting-crash-slow") QCoreApplication::exit(7);
+                else { send({{"type","ready"}}); send({{"type","connected"}}); }
+            }
         }
     });
     QObject::connect(&socket,&QLocalSocket::disconnected,&app,&QCoreApplication::quit);
-    socket.connectToServer(qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT"));
+    if (connecting) QTimer::singleShot(500,&app,[&] { socket.connectToServer(qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT")); });
+    else socket.connectToServer(qEnvironmentVariable("DESKPORT_SESSION_ENDPOINT"));
     QTimer::singleShot(15000,&app,&QCoreApplication::quit);
     return app.exec();
 }
 class MultiSessionsTest : public QObject {
     Q_OBJECT
 private slots:
+    void connectingCanvasAndTrayStayResponsive() {
+        QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
+        QJsonObject records;
+        for (auto id : {"a","b"}) records[id]=QJsonObject{{"hostId",id},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        QWindow window; window.resize(900,600);
+        MultiSessions manager(&peers,cert,key); manager.setCanvasWindow(&window);
+        connect(&manager,&MultiSessions::changed,&host,[&] { host.updateSessionMenu(manager.sessions()); });
+        connect(&host,&HostManager::trayMenuAboutToShow,&manager,[&] { host.updateSessionMenu(manager.sessions()); });
+        connect(&host,&HostManager::showDevicesRequested,&manager,[&] { manager.showDevices(); window.show(); });
+        connect(&host,&HostManager::sessionSelected,&manager,&MultiSessions::select);
+        const auto visible = [&](QString id) {
+            for (auto item : manager.sessions()) if (item.toMap().value("id") == id) return item.toMap().value("visible").toBool();
+            return false;
+        };
+        int ticks=0; qint64 longestTick=0;
+        QElapsedTimer tick; tick.start();
+        QTimer heartbeat; heartbeat.setInterval(10);
+        connect(&heartbeat,&QTimer::timeout,this,[&] { ++ticks; longestTick=qMax(longestTick,tick.restart()); });
+        heartbeat.start();
+
+        manager.open("a","Connecting fixture","127.0.0.1","connecting-slow");
+        // No event loop turn, process or IPC handshake is needed to expose the
+        // connection UI, and it already counts as a busy session for recall.
+        QVERIFY(manager.busy());
+        QVERIFY(manager.canvasVisible());
+        QVERIFY(window.isVisible());
+        for (int i=0;i<3;++i) {
+            window.hide();
+            QVERIFY(!manager.canvasVisible());
+            QVERIFY(manager.recall());
+            QVERIFY(manager.canvasVisible());
+            QVERIFY(window.isVisible());
+        }
+        QTest::qWait(100);
+        QCOMPARE(manager.states().value("a").toString(),QString("starting"));
+        QVERIFY(manager.selectedTraffic().isEmpty()); // The worker has not authenticated yet.
+
+        QMenu* menu=nullptr; QAction* devices=nullptr;
+        for (auto widget : QApplication::topLevelWidgets()) if (auto candidate=qobject_cast<QMenu*>(widget)) {
+            for (auto action : candidate->actions()) if (action->text()==HostManager::tr("Open device list")) {
+                menu=candidate; devices=action;
+            }
+        }
+        QVERIFY(menu); QVERIFY(devices);
+        QSignalSpy menuShown(menu,&QMenu::aboutToShow);
+        menu->popup(QPoint(20,20));
+        QCOMPARE(menuShown.count(),1);
+        QVERIFY(menu->isVisible());
+        QTest::qWait(60);
+        QVERIFY(ticks>=5);
+        menu->hide(); devices->trigger();
+        QTRY_VERIFY_WITH_TIMEOUT(!manager.canvasVisible(),150);
+        QVERIFY(window.isVisible());
+        QCOMPARE(manager.states().value("a").toString(),QString("starting"));
+
+        // An authenticated worker that never sends readiness/focus still must
+        // not be needed for the shell's show/hide decisions.
+        QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),1);
+        QVERIFY(!manager.canvasVisible());
+        QVERIFY(manager.recall());
+        QVERIFY(window.isVisible());
+        QVERIFY(manager.canvasVisible());
+        QTRY_VERIFY(visible("a"));
+        QCOMPARE(manager.states().value("a").toString(),QString("starting"));
+        QVERIFY(!manager.viewerInFront());
+        window.hide();
+        QVERIFY(manager.recall());
+        QVERIFY(window.isVisible()); // A's hidden acknowledgement is still pending.
+        QVERIFY(manager.canvasVisible());
+        manager.showDevices(); window.hide();
+        QTest::qWait(400);
+        QVERIFY(!window.isVisible());
+        QVERIFY(!manager.canvasVisible());
+        manager.reconnect("a"); // A late ready/connected result stays in the background.
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("connected"));
+        QVERIFY(!window.isVisible());
+        QVERIFY(!manager.canvasVisible());
+
+        QVERIFY(manager.recall()); QTRY_VERIFY(visible("a"));
+        manager.open("b","Next connecting fixture","127.0.0.1","connecting-crash-slow");
+        // B is selected locally immediately; A retains input ownership until
+        // its delayed hide acknowledgement, and B has no IPC socket yet.
+        QCOMPARE(manager.selectedId(),QString("b"));
+        QVERIFY(window.isVisible()); QVERIFY(manager.canvasVisible());
+        QVERIFY(!visible("b"));
+        window.hide();
+        QVERIFY(manager.recall());
+        QVERIFY(window.isVisible()); QVERIFY(manager.canvasVisible());
+        QVERIFY(!visible("b"));
+        QTRY_VERIFY(visible("b"));
+        QVERIFY(!visible("a"));
+        QCOMPARE(manager.states().value("b").toString(),QString("starting"));
+        QVERIFY2(longestTick<150,qPrintable(QString("UI heartbeat gap while connecting: %1 ms").arg(longestTick)));
+        qInfo("UI heartbeat longest gap while connecting: %lld ms",static_cast<long long>(longestTick));
+        QSignalSpy devicesRequested(&manager,&MultiSessions::devicesRequested);
+        window.hide();
+        manager.reconnect("b"); // Failure before the delayed hidden acknowledgement.
+        QTRY_COMPARE(manager.states().value("b").toString(),QString("error"));
+        QCOMPARE(devicesRequested.count(),0);
+        QVERIFY(!window.isVisible()); QVERIFY(!manager.canvasVisible());
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
+    }
     void presentingCanvasPreservesWindowState() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
         const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");
