@@ -1,3 +1,34 @@
+## GNOME 49–51 guarded display compatibility — 2026-10-26
+
+The development branch adds guarded Mutter extension, primary-only and
+matching-mode mirror policies, an independent recovery guardian, and retained
+recovery journals. Output admission now waits for DisplayConfig publication and
+matches the complete monitor identity, allowing recycled connector names without
+selecting another client's output. The host supervisor allows GNOME's longer
+restoration deadline and reports physical-policy degradation after foreign
+virtual-output hotplug.
+
+Repeated real capture probes exposed an unopened portal object closing fd 0.
+After descriptor reuse this closed PipeWire's wakeup descriptor and hung encoder
+probe teardown. Initialize the portal descriptor to -1; both vendored revisions
+now pass a compiled regression whose unpatched negative control fails.
+
+Source `59b8e324` passes all 28 native policy/capture/recovery checks on each of
+GNOME 49.4 and 50.4, and 30 normal-workflow checks in the full GNOME 51.0 VM.
+Host lifecycle passes 47 tests, control binding passes 172 tests, and shared-core
+checks pass. Managed Nix run `gnome-compat-final02` builds the complete desktop
+application and passes isolated executable/desktop-identity/CLI startup checks
+with unchanged source and the pinned core. These are development checks, not
+publication or activation.
+
+Two failures remain explicitly outside the pass: GNOME 50.1's full-VM stress
+scenario loses its compositor connection, and forcibly stopping PipeWire on
+GNOME 51.0 causes the compositor itself to receive SIGSEGV. DeskPort retains the
+recovery checkpoint but cannot restore through an unavailable compositor.
+Mirroring still requires matching physical pixels/scales; physical GPU and
+production stream-input acceptance remain open. See the complete
+[versioned GNOME evidence](GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26).
+
 ## Desktop 0.7.5 final package verification — 2026-10-25
 
 The final source `5c4b2f2e` passes Linux build, Windows source and display-contract

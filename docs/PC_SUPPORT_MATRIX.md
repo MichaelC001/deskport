@@ -12,6 +12,10 @@ manual text and UI catalogs; display arithmetic and wire contracts are unchanged
 This review updates the source inventory, without advancing historical package,
 hardware or hosted-CI evidence to the newer revision.
 
+The GNOME display row was updated separately on 2026-10-26 against `59b8e324`
+and core `505ae0cc`; its versioned evidence is recorded below. Other rows retain
+their original review scope.
+
 This page is the current PC scope index. Dated release notes and roadmap entries
 retain their original environment and result. A later implementation supersedes
 an old limitation without retroactively completing its acceptance checklist.
@@ -36,7 +40,7 @@ promotes a historical partial pass into current end-to-end acceptance.
 | Feature | macOS arm64 | Linux x86_64 | Windows x64 | Remaining acceptance / explicit boundary |
 | --- | --- | --- | --- | --- |
 | Viewer, host and mutual binding | Implemented in full package | Implemented in native/Nix/AppImage host packages; Flatpak viewer only | Implemented in full installation; portable viewer does not install the sharing broker | Test exact installed endpoints in both directions; binding success is not video/input success. Client-only binding remains an explicit mode. See [binding](PEER_BINDING.md). |
-| Adaptive workspace and physical layout | Owned virtual display; exclusive/mirror/extended policy adapters | KWin policies; Mutter extended output; guarded Hyprland policies; preconfigured X11 dummy extension at 1x | Owned VDD; exclusive/mirror/extended policies | Real hardware, compositor/version, hotplug, multi-monitor restoration and client resize/input mapping remain combination-specific. See [display policies](SESSION_DISPLAY.md) and [Linux backends](LINUX_ADAPTIVE_DISPLAY.md). |
+| Adaptive workspace and physical layout | Owned virtual display; exclusive/mirror/extended policy adapters | KWin policies; guarded Mutter extension/primary-only/matching-mode mirror; guarded Hyprland policies; preconfigured X11 dummy extension at 1x | Owned VDD; exclusive/mirror/extended policies | Real hardware, compositor/version, hotplug, multi-monitor restoration and client resize/input mapping remain combination-specific. See [display policies](SESSION_DISPLAY.md), [GNOME evidence](#evidence-gnome-49-51) and [Linux backends](LINUX_ADAPTIVE_DISPLAY.md). |
 | Workspace scale / DPI | Native 1x/2x backing | Native 1x/2x when compositor accepts | **Implemented and partially accepted:** owned VDD 100%/200%, observed window DPI and recovery; mirror preserves physical DPI | [windows-dpi](#evidence-windows-dpi) covers a private package, including old-client 1x fallback. Do not reopen DPI as missing code or apply it to physical outputs. |
 | Background transport, hide/recall and input release | Implemented | Implemented; Wayland shortcut interception depends on compositor | Implemented | Hidden viewers release input; presented/background audio and clipboard ownership depend on session policy. Route-change recovery, sleep/wake, long sessions and real key/button release need exact-package checks. See [desktop UX](DESKTOP_UX.md) and [lifecycle](SESSION_LIFECYCLE.md). |
 | Login startup and service lifetime | Opt-in per-user supervisor at graphical login | User service/autostart or foreground CLI in a suitable graphical session | HKCU login startup; full installer owns automatic SYSTEM **display broker**; GUI/host stay ordinary user | [windows-broker](#evidence-windows-broker) and [windows-dpi](#evidence-windows-dpi) record signed-in sharing without repeated UAC. Cold boot, logout/session change and full upgrade/rollback/uninstall matrix remain pending for current packages. Service auto-start is implemented; reboot acceptance is separate. |
@@ -147,6 +151,17 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Feature / actual result | Virtual output resize/scale, software capture, EOF/crash cleanup. Recorded pass: twelve mode/scale changes per backend and capture probes |
 | Limits / pending | Historical incomplete provenance. Does not qualify current compositor versions, physical GPU encoding, input or hotplug. |
 | References | [source 1](../docs/LINUX_ADAPTIVE_DISPLAY.md#validation) |
+
+### Evidence gnome-49-51
+
+| Field | Record |
+| --- | --- |
+| Date / tested source | 2026-10-26; `59b8e324`, shared core `505ae0cc` unchanged. |
+| Package / installed identity | Development helper and patched Nix Sunshine; no published package or user activation. Binary SHA-256 identities are recorded in the linked checkpoint. |
+| Environment | Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktop with software graphics. |
+| Feature / actual result | PASS: 28/28 headless checks on each of 49.4 and 50.4, 30/30 normal-workflow VM checks on 51.0. All policies, owned capture, 20 repeated leases, abnormal owner/guardian termination and hotplug recovery. |
+| Limits / pending | GNOME 50.1 full-VM stress remains FAIL. GNOME 51.0 crashes on forced PipeWire service loss; automatic compositor recovery remains FAIL. Mirror requires matching physical modes/scales. No physical GPU, production transport input, HDR/audio/clipboard or latency acceptance. |
+| References | [GNOME checkpoint and test boundaries](GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26) |
 
 ### Evidence linux-hyprland
 
