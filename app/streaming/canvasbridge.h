@@ -19,6 +19,8 @@ bool requested();
 void registerWindow(SDL_Window* window);
 bool owns(SDL_Window* window);
 void synchronize(SDL_Window* window);
+// Restore owned text envelopes after SDL polling and before visibility checks.
+bool decodeTextEvent(SDL_Event& event);
 Uint32 flags(SDL_Window* window);
 Uint32 mouseState(int* x, int* y);
 QSize pixels();

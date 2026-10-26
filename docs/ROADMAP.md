@@ -4321,3 +4321,9 @@ embedded-surface case. An explicit, marker-guarded input test profile isolates
 settings, pairing copies, diagnostics, workers and activation endpoints while
 disabling host startup and browser access. Six-direction live acceptance remains
 pending; fixture success is not remote input acceptance.
+
+The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
+a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
+user-event envelopes, decoded before visibility/input dispatch. Queue flushes
+require no heap cleanup. The native SDL2 adapter fixture passes on macOS; Linux
+compatibility and live text acceptance are checked separately.

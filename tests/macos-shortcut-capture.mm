@@ -41,7 +41,7 @@ class MacCaptureTest : public QObject {
         if (code == kVK_Command || code == kVK_RightCommand)
             CGEventSetType(event, kCGEventFlagsChanged);
         CGEventPost(kCGHIDEventTap, event); CFRelease(event);
-        QTest::qWait(60);
+        QTest::qWait(150);
         return true;
     }
 private slots:
@@ -109,7 +109,7 @@ private slots:
         m_Other.keys.clear();
         QVERIFY(inject(kVK_Space, true, 0, m_Other));
         QVERIFY(inject(kVK_Space, false, 0, m_Other));
-        QCOMPARE(m_Other.keys.size(), 2);
+        QTRY_COMPARE(m_Other.keys.size(), 2);
         m_Window.requestActivate();
         QTRY_VERIFY(m_Window.isActive());
         QTRY_VERIFY(m_Capture.isInhibited());

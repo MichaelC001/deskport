@@ -17,6 +17,9 @@ bool releasePending = false;
 quint64 questionId = 0;
 int questionAnswer = -1;
 constexpr const char* CanvasTag = "deskport-shell-canvas";
+constexpr int CanvasTextCode = 0x44505458;
+constexpr size_t TextPayloadSize = sizeof(SDL_UserEvent::data1) + sizeof(SDL_UserEvent::data2);
+static_assert(TextPayloadSize >= 5 && TextPayloadSize <= SDL_TEXTINPUTEVENT_TEXT_SIZE);
 int bounded(const QJsonObject& object, const char* key, int maximum) {
     const auto value = object.value(key).toDouble(-1);
     return std::isfinite(value) && value >= 0 && value <= maximum ? int(value) : -1;
@@ -103,6 +106,17 @@ void CanvasBridge::input(const QJsonObject& event) {
     }
     pendingInput.enqueue(event);
 }
+bool CanvasBridge::decodeTextEvent(SDL_Event& event) {
+    if (event.type != SDL_USEREVENT || event.user.code != CanvasTextCode) return false;
+    SDL_Event text{};
+    text.type = SDL_TEXTINPUT;
+    text.text.windowID = event.user.windowID;
+    text.text.timestamp = event.user.timestamp;
+    SDL_memcpy(text.text.text, &event.user.data1, TextPayloadSize);
+    text.text.text[TextPayloadSize - 1] = '\0';
+    event = text;
+    return true;
+}
 void CanvasBridge::synchronize(SDL_Window* window) {
     if (!owns(window)) return;
     QJsonObject state; QQueue<QJsonObject> input; bool release;
@@ -155,14 +169,18 @@ void CanvasBridge::synchronize(SDL_Window* window) {
             QByteArray chunk;
             const auto flush = [&] {
                 if (chunk.isEmpty()) return;
-                SDL_Event commit{}; commit.type = SDL_TEXTINPUT;
-                commit.text.windowID = SDL_GetWindowID(window); commit.text.timestamp = SDL_GetTicks();
-                SDL_strlcpy(commit.text.text, chunk.constData(), sizeof(commit.text.text));
+                // sdl2-compat 2.32.68 rejects pushed SDL_TEXTINPUT events and
+                // forwards a null event to SDL3. Carry owned inline bytes in a
+                // user event instead; no allocation can leak on queue flushes.
+                SDL_Event commit{}; commit.type = SDL_USEREVENT;
+                commit.user.code = CanvasTextCode;
+                commit.user.windowID = SDL_GetWindowID(window); commit.user.timestamp = SDL_GetTicks();
+                SDL_memcpy(&commit.user.data1, chunk.constData(), size_t(chunk.size()));
                 SDL_PushEvent(&commit); chunk.clear();
             };
             for (char32_t scalar : text.toUcs4()) {
                 const auto encoded = QString::fromUcs4(&scalar, 1).toUtf8();
-                if (chunk.size() + encoded.size() > 31) flush();
+                if (size_t(chunk.size() + encoded.size()) >= TextPayloadSize) flush();
                 chunk += encoded;
             }
             flush(); continue;

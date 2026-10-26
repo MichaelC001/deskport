@@ -2840,6 +2840,7 @@ void Session::execInternal()
             continue;
         }
 #endif
+        CanvasBridge::decodeTextEvent(event);
         // Background viewers keep media/transport alive but cannot forward
         // physical input, including globally delivered controller events.
         if (!m_ViewerRequested && ((event.type >= SDL_KEYDOWN && event.type <= SDL_MOUSEWHEEL) ||

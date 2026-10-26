@@ -7,11 +7,16 @@
 
 static std::vector<SDL_Event> events() {
     std::vector<SDL_Event> result; SDL_Event event;
-    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0) result.push_back(event);
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT) > 0) {
+        CanvasBridge::decodeTextEvent(event);
+        result.push_back(event);
+    }
     return result;
 }
 int main(int argc, char** argv) {
     QCoreApplication app(argc, argv);
+    SDL_Event unrelated{}; unrelated.type = SDL_USEREVENT; unrelated.user.code = 106;
+    assert(!CanvasBridge::decodeTextEvent(unrelated) && unrelated.user.code == 106);
     assert(CanvasKey::windows(0x1e) == SDL_SCANCODE_A);
     assert(CanvasKey::windows(0x11d) == SDL_SCANCODE_RCTRL);
     assert(CanvasKey::windows(0x11c) == SDL_SCANCODE_KP_ENTER);
