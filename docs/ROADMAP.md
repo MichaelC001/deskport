@@ -1,3 +1,39 @@
+## Remote IME shortcuts in the retained canvas — 2026-10-26
+
+The shell-canvas migration introduced two input routing regressions: `5a91636c`
+bound shortcut inhibition to the video subsurface, and `590078c4` unconditionally
+enabled local IME on the Qt Quick item. Wayland keyboard focus belongs to the
+shell root, while pointer focus can belong to the video subsurface. With remote
+IME selected, the local input method could consume Super+Space before it reached
+the Mac host despite the Always capture preference.
+
+Query and update local IME state on the focused Quick item as well as the native
+presentation window, and deliver local composition through either focus path only
+when opted in. Bind Wayland shortcut inhibition to the shell's keyboard surface;
+report capture only after the compositor's active notification and clear it on
+inactive/release. Keep pending requests distinct from effective inhibition and
+avoid a competing Qt keyboard grab on Wayland.
+
+Validation: the production-item regression fails on the old source (remote IME
+still enabled; local composition lost on the Quick-item path) and passes with the
+fix. Linux Nix build and package smoke, shared core, SDL local-text adapter, and
+global shortcut/lifecycle/portal tests pass. CI now runs the isolated canvas
+focus/IME regression. An authorized live KDE Wayland to macOS connection passed
+12 settled Super+Space toggles across windowed, fullscreen and restored-window
+states: the Mac input source changed and the Linux input source did not. With the
+viewer minimized and an isolated local text field focused, two toggles changed
+only the local input source. Native protocol evidence confirms inhibition on the
+keyboard root surface and release on focus loss. Keys were generated through an
+owned Linux uinput device; this does not certify every physical keyboard layout.
+One early restore sample arrived during the adaptive stream restart and did not
+switch either input source; all three post-ready restore samples passed.
+
+The broader existing canvas bridge fixture crashes while pushing synthetic
+SDL_TEXTINPUT through the locked SDL2-compat 2.32.68 / SDL3 3.4.10 runtime. Its
+bridge and test source are unchanged by this fix; do not count that fixture as
+passed or infer end-to-end local-IME acceptance from the Qt-item checks. No host,
+shared wire policy, installed application or Nix activation is changed here.
+
 ## Desktop 0.7.5 final package verification — 2026-10-25
 
 The final source `5c4b2f2e` passes Linux build, Windows source and display-contract

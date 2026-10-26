@@ -37,6 +37,7 @@ jobs:
           export TMPDIR="$(bash scripts/build-paths.sh checkout)/runs.noindex/ci-shortcut-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/linux-nix/tests"
           mkdir -p "$TMPDIR"
           nix develop -c python3 scripts/test-global-shortcut.py
+          nix develop -c python3 scripts/test-canvas-focus.py --output "$TMPDIR/canvas-focus"
           nix develop -c python3 scripts/test-transition-window.py
           if ! command -v Xvfb >/dev/null; then
             sudo apt-get update

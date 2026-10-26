@@ -48,7 +48,7 @@ int button(Qt::MouseButton value) {
 SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibitor(this) {
     setAcceptedMouseButtons(Qt::AllButtons); setAcceptHoverEvents(true);
     setActiveFocusOnTab(true);
-    setFlag(ItemAcceptsInputMethod);
+    setFlag(ItemAcceptsInputMethod, m_TextInput);
     m_Pointer = createCanvasPointer([this](qreal dx, qreal dy) {
         m_RelativeRemainder += QPointF(dx, dy);
         const QPoint delta(int(m_RelativeRemainder.x()), int(m_RelativeRemainder.y()));
@@ -57,7 +57,10 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
                                        {"dx",delta.x()},{"dy",delta.y()}});
     });
     connect(this, &SessionCanvas::relativePointerChanged, this, &SessionCanvas::refresh);
-    connect(this, &SessionCanvas::textInputChanged, this, [] { QGuiApplication::inputMethod()->update(Qt::ImEnabled); });
+    connect(this, &SessionCanvas::textInputChanged, this, [this] {
+        setFlag(ItemAcceptsInputMethod, m_TextInput);
+        QGuiApplication::inputMethod()->update(Qt::ImEnabled);
+    });
     connect(this, &SessionCanvas::cursorHiddenChanged, this, &SessionCanvas::refresh);
     m_ResizeTimer.setSingleShot(true); m_ResizeTimer.setInterval(120);
     connect(&m_ResizeTimer, &QTimer::timeout, this, [this] {
@@ -65,6 +68,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     });
     const auto attachWindow = [this](QQuickWindow* window) {
         if (m_Presentation) m_Presentation->detach();
+        m_Inhibitor.setWindow(nullptr);
         delete m_Surface; m_Surface = nullptr;
         if (window) {
 #if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
@@ -79,7 +83,10 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
             m_Surface->setSurfaceType(QSurface::VulkanSurface);
 #endif
             m_Surface->installEventFilter(this);
-            m_Inhibitor.setWindow(m_Surface);
+            // Wayland keyboard focus belongs to the shell's root surface;
+            // the video surface is a subsurface and only receives pointer focus.
+            m_Inhibitor.setWindow(QGuiApplication::platformName().startsWith("wayland")
+                                  ? static_cast<QWindow*>(window) : m_Surface);
             refresh();
             if (m_Presentation) m_Presentation->attach(m_Surface);
         }
@@ -124,6 +131,18 @@ void SessionCanvas::setPresentation(QObject* value) {
 void SessionCanvas::geometryChange(const QRectF& next, const QRectF& previous) {
     QQuickItem::geometryChange(next, previous); refresh();
 }
+QVariant SessionCanvas::inputMethodQuery(Qt::InputMethodQuery query) const {
+    // Qt Quick queries the focused item, not the embedded presentation window.
+    if (query == Qt::ImEnabled) return m_TextInput;
+    if (query == Qt::ImCursorRectangle) return QRect(0, 0, 1, 48);
+    return QQuickItem::inputMethodQuery(query);
+}
+void SessionCanvas::inputMethodEvent(QInputMethodEvent* event) {
+    if (m_Presentation) m_Presentation->preedit(m_TextInput ? event->preeditString().left(1024) : QString());
+    if (m_TextInput && !event->commitString().isEmpty())
+        emit input({{"type","text"},{"text",event->commitString().left(1024)}});
+    event->accept();
+}
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     if (watched != m_Surface) return QQuickItem::eventFilter(watched, event);
     switch (event->type()) {
@@ -134,11 +153,8 @@ bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
         event->accept(); return true;
     }
     case QEvent::InputMethod: {
-        auto inputMethod = static_cast<QInputMethodEvent*>(event);
-        if (m_Presentation) m_Presentation->preedit(m_TextInput ? inputMethod->preeditString().left(1024) : QString());
-        if (m_TextInput && !inputMethod->commitString().isEmpty())
-            emit input({{"type","text"},{"text",inputMethod->commitString().left(1024)}});
-        event->accept(); return true;
+        inputMethodEvent(static_cast<QInputMethodEvent*>(event));
+        return true;
     }
     case QEvent::KeyPress: keyPressEvent(static_cast<QKeyEvent*>(event)); return true;
     case QEvent::KeyRelease: keyReleaseEvent(static_cast<QKeyEvent*>(event)); return true;
@@ -180,7 +196,7 @@ void SessionCanvas::refresh() {
     if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
     m_Inhibitor.setEnabled(capture);
     if (!capture && m_Grabbed) { m_Surface->setKeyboardGrabEnabled(false); m_Grabbed = false; }
-    else if (capture && !m_Inhibitor.isInhibited() && !m_Grabbed) m_Grabbed = m_Surface->setKeyboardGrabEnabled(true);
+    else if (capture && !QGuiApplication::platformName().startsWith("wayland") && !m_Inhibitor.isInhibited() && !m_Grabbed) m_Grabbed = m_Surface->setKeyboardGrabEnabled(true);
     const QJsonObject state {{"width",int(width())},{"height",int(height())},{"scale",window()->devicePixelRatio()},
         {"visible",visible},{"focused",focused},{"hovered",m_Hovered},{"fullscreen",window()->windowState() == Qt::WindowFullScreen},
         {"grabbed",m_Inhibitor.isInhibited() || m_Grabbed},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"buttons",m_Buttons}};

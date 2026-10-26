@@ -9,11 +9,13 @@ public:
     bool start(QWindow* window) override {
         ++starts;
         target = window;
-        active = succeeds;
-        return active;
+        active = succeeds && autoActivate;
+        return succeeds;
     }
     void stop() override { active = false; target = nullptr; }
+    bool isActive() const override { return active; }
     bool succeeds = true;
+    bool autoActivate = true;
     bool active = false;
     int starts = 0;
     QWindow* target = nullptr;
@@ -108,6 +110,30 @@ private slots:
         recorder.setEnabled(true);
         QVERIFY(recorder.isInhibited());
         QVERIFY(fake->active);
+    }
+
+    void requestIsNotProofOfCompositorActivation() {
+        auto backend = std::make_unique<FakeRecorderInhibition>();
+        auto* fake = backend.get();
+        fake->autoActivate = false;
+        ShortcutRecorderInhibitor recorder(std::move(backend));
+        QWindow window;
+        window.show(); window.requestActivate();
+        QTRY_VERIFY(window.isActive());
+        recorder.setWindow(&window); recorder.setEnabled(true);
+        QCOMPARE(fake->starts, 1);
+        QVERIFY(!recorder.isInhibited());
+        recorder.setEnabled(true);
+        QCOMPARE(fake->starts, 1);
+        fake->active = true;
+        QVERIFY(recorder.isInhibited());
+        fake->active = false;
+        QVERIFY(!recorder.isInhibited());
+        recorder.setEnabled(true);
+        QCOMPARE(fake->starts, 1); // Respect compositor revocation; no forced regrab.
+        fake->active = true;
+        recorder.setEnabled(false);
+        QVERIFY(!recorder.isInhibited());
     }
 
     void nativeAdapterDoesNotConnectOnOffscreen() {
