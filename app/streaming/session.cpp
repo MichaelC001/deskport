@@ -179,7 +179,11 @@ void Session::clConnectionTerminated(int errorCode)
     QMutexLocker lock(&s_ActiveSessionLock);
     if (s_ActiveSession != session || s_ConnectionGeneration != generation) return;
     if (session->m_TerminationReported.exchange(true)) return;
-    if (!takenOver && errorCode != ML_ERROR_GRACEFUL_TERMINATION &&
+    // Sunshine also sends graceful EOF when its supervisor replaces a failed
+    // capture process. Only retry that EOF after authenticated control loss;
+    // an explicit session-ended/cancel remains non-retryable.
+    const bool captureRecovery = adaptive && adaptive->failed() && adaptive->retryable();
+    if (!takenOver && (errorCode != ML_ERROR_GRACEFUL_TERMINATION || captureRecovery) &&
         errorCode != ML_ERROR_PROTECTED_CONTENT && errorCode != ML_ERROR_FRAME_CONVERSION &&
         errorCode != ML_ERROR_UNEXPECTED_EARLY_TERMINATION)
         session->scheduleNetworkRecovery();

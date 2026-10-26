@@ -883,6 +883,7 @@ void HostManager::beginStop(const QString &status) {
     const auto generation = ++m_Generation;
     m_Starting = false;
     m_StopStatus = status;
+    emit sessionHostStopping(m_DesiredSharing && !m_ShuttingDown);
     setStatus(tr("Stopping sharing…"));
     for (auto process : {&m_Credentials, &m_Server}) {
         if (process->state() != QProcess::NotRunning) process->terminate();

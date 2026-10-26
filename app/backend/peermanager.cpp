@@ -141,6 +141,17 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
     m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && !m_Certificate.isNull() && !m_Key.isNull() &&
         (m_ClientOnly || ((m_SeamlessHost || m_Host->available()) && m_Host->prepareIdentity(cert, key)));
     connect(host, &HostManager::trustUpdated, this, &PeerManager::granted);
+    connect(host, &HostManager::sessionHostStopping, this, [this](bool recoverable) {
+        // A restarted media process cannot retain its reservation. Close the
+        // authenticated transport before media EOF; a retry must acquire the
+        // idle replacement normally, never inherit a stale lease or take over.
+        for (auto link : {m_SessionLink, m_DisplayLink, m_ClipboardLink}) {
+            if (!link || link->ended) continue;
+            if (recoverable && link->lifecycle && link->sessionAdmitted)
+                link->recovering = true; // No terminal session-ended message.
+            fail(link, tr("Control connection closed"));
+        }
+    });
     connect(host, &HostManager::caretChanged, this, [this](const QJsonObject& caret) {
         if (m_DisplayLink && m_DisplayLink->displayControl && m_DisplayLink->caretUpdates)
             send(m_DisplayLink, {{"type", DP_MESSAGE_TEXT_CARET}, {"caret", caret}});

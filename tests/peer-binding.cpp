@@ -540,7 +540,7 @@ private slots:
     }
     void sessionAdmission_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* name : {"recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder", "rate-live", "rate-recorded", "rate-legacy", "rate-intruder", "rate-invalid", "rate-saver-invalid", "rate-saver-conflict", "seamless-preflight-active-link"}) QTest::newRow(name) << QString(name);
+        for (const char* name : {"host-capture-loss", "host-explicit-stop", "recover-owner", "recover-before-eof", "recover-wrong-token", "recover-wrong-identity", "release-explicit", "client-window", "video-pause", "video-legacy", "video-stale", "video-intruder", "rate-live", "rate-recorded", "rate-legacy", "rate-intruder", "rate-invalid", "rate-saver-invalid", "rate-saver-conflict", "seamless-preflight-active-link"}) QTest::newRow(name) << QString(name);
         QFile fixtures(qEnvironmentVariable("TEST_CORE_SESSION_CASES"));
         QVERIFY(fixtures.open(QIODevice::ReadOnly));
         for (const auto& entry : QJsonDocument::fromJson(fixtures.readAll()).object()["scenarios"].toArray()) {
@@ -597,6 +597,37 @@ private slots:
             // pointer: a fresh approved connection can be admitted normally.
             connectPeer(incoming,"TEST_CERT_A","TEST_KEY_A");
             send(incoming,query); QVERIFY(receive(incoming)["admitted"].toBool());
+            incoming.abort(); host.stop(); return;
+        }
+        if (scenario.startsWith("host-")) {
+            auto lifecycleQuery = query; lifecycleQuery["sessionLifecycle"] = 1;
+            connectPeer(old,"TEST_CERT_A","TEST_KEY_A"); send(old,lifecycleQuery);
+            const auto admitted = receive(old); QVERIFY(admitted["admitted"].toBool());
+            const auto token = admitted["resumeToken"].toString(); QVERIFY(!token.isEmpty());
+            send(old,resize); QVERIFY(!receive(old).contains("error"));
+            QSignalSpy stopping(&host, &HostManager::sessionHostStopping);
+            if (scenario == "host-explicit-stop") host.stop();
+            else {
+                QFile pid(dir.path()+"/host/display-pid"); QVERIFY(pid.open(QIODevice::ReadOnly));
+                QCOMPARE(QProcess::execute("kill", {"-TERM", QString::fromUtf8(pid.readAll()).trimmed()}), 0);
+            }
+            QTRY_VERIFY_WITH_TIMEOUT(!stopping.isEmpty(), 5000);
+            QCOMPARE(stopping.first().first().toBool(), scenario == "host-capture-loss");
+            QTRY_COMPARE_WITH_TIMEOUT(old.state(), QAbstractSocket::UnconnectedState, 5000);
+            const auto final = QJsonDocument::fromJson(old.readAll().trimmed()).object();
+            if (scenario == "host-explicit-stop") {
+                QCOMPARE(final["type"].toString(), QString(DP_MESSAGE_SESSION_ENDED));
+                QTest::qWait(5500); QVERIFY(!host.running());
+            } else {
+                QVERIFY(final.isEmpty());
+                QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable() && state()["lease"].toString().isEmpty(), 12000);
+                connectPeer(incoming,"TEST_CERT_A","TEST_KEY_A");
+                lifecycleQuery["resumeToken"] = token;
+                send(incoming,lifecycleQuery); const auto recovered = receive(incoming);
+                QVERIFY(recovered["admitted"].toBool());
+                QVERIFY(recovered["resumeToken"].toString() != token);
+                QCOMPARE(state()["takeovers"].toInt(), 0);
+            }
             incoming.abort(); host.stop(); return;
         }
         if (scenario.startsWith("recover-") || scenario == "release-explicit") {
@@ -1342,7 +1373,7 @@ private slots:
     }
     void preparationFailureCodes_data() {
         QTest::addColumn<QString>("scenario");
-        for (const char* value : {"unauthorized", "busy", "stale", "unavailable", "display-failed", "legacy", "cancelled"})
+        for (const char* value : {"unauthorized", "busy", "stale", "unavailable", "display-failed", "legacy", "cancelled", "resume-unavailable", "resume-unauthorized"})
             QTest::newRow(value) << QString(value);
     }
     void preparationFailureCodes() {
@@ -1350,7 +1381,7 @@ private slots:
         const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
         ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
         QVERIFY(server.listen(QHostAddress::LocalHost, 0));
-        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"), 0, scenario.startsWith("resume-") ? "lease" : QString());
         auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280,720), 1); });
         QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
         QJsonObject meta{{"adaptiveDisplay",1},{"sessionTakeover",1},{"sessionTopology",1}};
@@ -1365,11 +1396,12 @@ private slots:
                 QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
                 auto request = server.messages.takeFirst();
                 server.send({{"type","display-result"},{"seq",request["seq"]},{"error","private.example.net /private/path"}});
-            } else server.send({{"type","session-result"},{"admitted",false},{"code",scenario},{"error","private.example.net"}});
+            } else server.send({{"type","session-result"},{"admitted",false},{"code",scenario.startsWith("resume-") ? scenario.mid(7) : scenario},{"error","private.example.net"}});
         }
         QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready, 5000);
         QVERIFY(!result.get());
-        QCOMPARE(channel.topologyError(), scenario == "legacy" ? QString("topology-unsupported") : scenario);
+        QCOMPARE(channel.topologyError(), scenario == "legacy" ? QString("topology-unsupported") : scenario.startsWith("resume-") ? scenario.mid(7) : scenario);
+        if (scenario.startsWith("resume-")) QCOMPARE(channel.retryable(), scenario == "resume-unavailable");
         QVERIFY(channel.admissionRequired());
     }
     void videoPauseNegotiation_data() {

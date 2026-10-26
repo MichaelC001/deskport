@@ -205,7 +205,13 @@ void AdaptiveDisplay::run() {
             }
             { QMutexLocker lock(&m_Mutex);
               if (admitted && m_Lifecycle) m_ResumeToken = state["resumeToken"].toString();
-              if (!admitted && !state.isEmpty()) m_Retryable = false;
+              // A supervisor may still be rebuilding capture during a bounded
+              // retry. Only an authenticated unavailable response is transient;
+              // denials, takeover prompts and malformed replies stay terminal.
+              if (!admitted && !state.isEmpty() &&
+                  !(state["type"].toString() == DP_MESSAGE_SESSION_RESULT &&
+                    state["code"].toString() == "unavailable" && !m_ResumeToken.isEmpty()))
+                  m_Retryable = false;
               if (!admitted && m_TopologyError != "cancelled") m_TopologyError = state.value("code").toString(state.value("busy").toBool() ? "busy" : "unavailable");
             }
             connected = connected && admitted;

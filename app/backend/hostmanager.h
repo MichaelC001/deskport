@@ -141,6 +141,9 @@ signals:
     void trustUpdated(bool success);
     void caretChanged(const QJsonObject& caret);
     void displayResized(int sequence, int width, int height, const QString& error);
+    // The supervisor is replacing its media/display processes, or stopping them
+    // explicitly. Notify controllers before Sunshine sends a graceful EOF.
+    void sessionHostStopping(bool recoverable);
 private:
     void sendTrustUpdate(const QJsonObject& body, qint64 deadline = 0);
     void managementRequest(const QString& path, const QJsonObject& body, QObject* context,
