@@ -1,3 +1,4 @@
+#include "../backend/inputtestprofile.h"
 #include "video/remotedecoder.h"
 #include "../backend/sessionfailure.h"
 #include "backend/diagnostics.h"
@@ -848,7 +849,7 @@ void Session::endForSystemSleep() {
 }
 void Session::initializeClipboard() {
     if (!m_Preferences->sharedClipboard || !m_Preferences->remoteInput) return;
-    const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
+    const auto peers = PeerStore::read(InputTestProfile::data() + "/binding/peers.json")["peers"].toObject();
     for (const auto& value : peers) {
         const auto peer = value.toObject();
         if (peer["hostId"].toString().compare(m_Computer->uuid, Qt::CaseInsensitive) ||
@@ -894,7 +895,7 @@ void Session::pumpTransitionWindow() {
 
 void Session::initializeAdaptiveDisplay(SDL_Window* window) {
     if (!m_AdaptiveDisplay) {
-        const auto peers = PeerStore::read(QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/binding/peers.json")["peers"].toObject();
+        const auto peers = PeerStore::read(InputTestProfile::data() + "/binding/peers.json")["peers"].toObject();
         for (const auto& value : peers) {
             const auto peer = value.toObject();
             if (peer["hostId"].toString().compare(m_Computer->uuid, Qt::CaseInsensitive) ||

@@ -4313,3 +4313,11 @@ execution. The macOS compiled canvas/IME fixture passed five checks, while its
 native event-tap fixture is prepared. The Windows/Linux/macOS cross-host input
 matrix remains pending; these checks do not establish remote IME acceptance.
 Published 0.7.6 assets and Latest remain unchanged during this follow-up.
+
+Native shortcut regression follow-up (2026-10-26): Windows native SendInput
+fixtures now pass 10 cases, including an embedded surface and focus loss with
+Win held. The Cocoa fixture requires a complete physical Command chord for its
+embedded-surface case. An explicit, marker-guarded input test profile isolates
+settings, pairing copies, diagnostics, workers and activation endpoints while
+disabling host startup and browser access. Six-direction live acceptance remains
+pending; fixture success is not remote input acceptance.

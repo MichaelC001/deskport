@@ -93,10 +93,15 @@ private slots:
         QTRY_VERIFY(child.isActive());
         m_Capture.setWindow(&child);
         QTRY_VERIFY(m_Capture.isInhibited());
+        QVERIFY(inject(kVK_Command, true, kCGEventFlagMaskCommand, child));
         QVERIFY(inject(kVK_Space, true, kCGEventFlagMaskCommand, child));
         QVERIFY(inject(kVK_Space, false, kCGEventFlagMaskCommand, child));
-        QCOMPARE(child.keys.size(), 2);
-        QVERIFY(child.keys[0].mods & Qt::ControlModifier);
+        QVERIFY(inject(kVK_Command, false, 0, child));
+        QList<InputWindow::Key> spaces;
+        for (const auto& key : child.keys) if (key.key == Qt::Key_Space) spaces.append(key);
+        QCOMPARE(spaces.size(), 2);
+        QVERIFY(spaces[0].down && !spaces[1].down);
+        QVERIFY(spaces[0].mods & Qt::ControlModifier);
         m_Capture.setWindow(&m_Window);
         m_Other.show(); m_Other.requestActivate();
         QTRY_VERIFY(m_Other.isActive());

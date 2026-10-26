@@ -1,3 +1,4 @@
+HEADERS += backend/inputtestprofile.h
 SOURCES += gui/canvasselftest.cpp
 SOURCES += gui/canvaspointer.cpp
 HEADERS += gui/canvaspointer.h

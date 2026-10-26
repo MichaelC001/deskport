@@ -1,3 +1,4 @@
+#include "../backend/inputtestprofile.h"
 #include "hostcontrol.h"
 #include "backend/hostmanager.h"
 #include "backend/peermanager.h"
@@ -257,7 +258,7 @@ bool isControlCommand(const QStringList& arguments) {
     return arguments.size() > 1 && QStringList{"status", "sharing", "devices", "config", "web"}.contains(arguments[1]);
 }
 QString socketName(const QString& directory) {
-    const auto path = directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) : directory;
+    const auto path = directory.isEmpty() ? (InputTestProfile::root().isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation) : InputTestProfile::root()) : directory;
     const auto hash = QString::fromLatin1(QCryptographicHash::hash(QDir(path).absolutePath().toUtf8(), QCryptographicHash::Sha256).toHex().left(32));
 #ifdef Q_OS_UNIX
     // Keep below sockaddr_un's macOS limit even for very long config paths.

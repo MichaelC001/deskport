@@ -1,3 +1,4 @@
+#include "inputtestprofile.h"
 #include "diagnostics.h"
 #include <QSettings>
 #include <QStandardPaths>
@@ -85,7 +86,7 @@ QByteArray zip(const QMap<QString, QByteArray>& files) {
 }
 Diagnostics& Diagnostics::instance() { static Diagnostics value; return value; }
 Diagnostics::Diagnostics(QObject* parent, const QString& directory) : QObject(parent),
-    m_Directory(directory.isEmpty() ? QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/diagnostics" : directory),
+    m_Directory(directory.isEmpty() ? InputTestProfile::data()+"/diagnostics" : directory),
     m_Run(QUuid::createUuid().toString(QUuid::WithoutBraces).remove('-')),
     m_Enabled(directory.isEmpty() && QSettings().value("diagnostics/enabled",true).toBool()) {
     // Each media worker has an independent run; never rotate the shell's log

@@ -1,3 +1,4 @@
+#include "backend/inputtestprofile.h"
 int runCanvasSelfTest(int argc, char** argv);
 // Qt owns the application entry point. This must precede every header that
 // can include SDL, including shortcut and session headers.
@@ -377,8 +378,24 @@ int main(int argc, char *argv[])
     QCoreApplication::setOrganizationDomain("deskport.keithxc.github.io");
     QCoreApplication::setApplicationName(isolatedSessionTest ? "DeskPortSessionTest" : "DeskPort");
 
+    const auto inputTestProfile = InputTestProfile::root();
+    if (!inputTestProfile.isEmpty()) {
+        if (!InputTestProfile::valid() || !QDir::setCurrent(inputTestProfile)) {
+            qCritical() << "Input test profile requires an absolute directory and .deskport-input-test marker";
+            return 2;
+        }
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, inputTestProfile + "/config");
+        QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, inputTestProfile + "/config");
+    }
+
     QStringList commandArguments;
     for (int i = 0; i < argc; ++i) commandArguments.append(QString::fromLocal8Bit(argv[i]));
+    if (!inputTestProfile.isEmpty() &&
+        (commandArguments.value(1) == "host" || DeskPortCli::isSetupCommand(commandArguments))) {
+        qCritical() << "Input test profiles are client-only";
+        return 2;
+    }
     const bool basicQuery = argc == 2 && (commandArguments[1] == "--version" || commandArguments[1] == "-v" ||
                                         commandArguments[1] == "--help" || commandArguments[1] == "-h");
     const int optionEnd = commandArguments.indexOf(QStringLiteral("--"));
@@ -416,7 +433,8 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
+    if (!inputTestProfile.isEmpty()) Path::initialize(true);
+    else if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::currentPath());
         QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QDir::currentPath());
@@ -784,7 +802,7 @@ int main(int argc, char *argv[])
     bool pendingActivation = false;
     instance.activate = [&] { pendingActivation = true; };
     if ((commandLineParserResult == GlobalCommandLineParser::NormalStartRequested ||
-         commandLineParserResult == GlobalCommandLineParser::StreamRequested) && !instance.start(QString(), !app.arguments().contains("--background"))) {
+         commandLineParserResult == GlobalCommandLineParser::StreamRequested) && !instance.start(inputTestProfile, !app.arguments().contains("--background"))) {
         if (!instance.delivered) qWarning() << "DeskPort is already starting or its activation endpoint is unavailable";
         return instance.delivered ? 0 : 1;
     }
@@ -945,7 +963,7 @@ int main(int argc, char *argv[])
     }
 
     MultiSessions* multiSessions = nullptr;
-    HostManager hostManager;
+    HostManager hostManager(nullptr, inputTestProfile.isEmpty() ? QString() : inputTestProfile + "/data/host");
 #ifdef Q_OS_WIN
     WindowsInstallShutdown installShutdown(hostManager);
     app.installNativeEventFilter(&installShutdown);
@@ -1027,10 +1045,12 @@ int main(int argc, char *argv[])
         timer->start(50);
     });
 #endif
-    PeerManager peerManager(&hostManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey());
-    DeskPortCli::ControlServer controlServer(&hostManager, &peerManager);
-    BrowserHost browserHost(&hostManager);
-    if (resident && !app.arguments().contains("--no-web-server")) browserHost.start();
+    PeerManager peerManager(&hostManager, IdentityManager::get()->getCertificate(), IdentityManager::get()->getPrivateKey(),
+        inputTestProfile.isEmpty() ? QString() : inputTestProfile + "/data/binding", 48991, QHostAddress::AnyIPv4,
+        inputTestProfile.isEmpty() ? PeerManager::Mode::PlatformDefault : PeerManager::Mode::ClientOnly);
+    DeskPortCli::ControlServer controlServer(&hostManager, &peerManager, nullptr, inputTestProfile);
+    BrowserHost browserHost(&hostManager, nullptr, inputTestProfile.isEmpty() ? QString() : inputTestProfile + "/data/browser");
+    if (resident && inputTestProfile.isEmpty() && !app.arguments().contains("--no-web-server")) browserHost.start();
     controlServer.setBrowserInfo([&browserHost] { return browserHost.localInfo(); });
     controlServer.setBrowserAuthenticator([&browserHost] { return browserHost.listening() ? browserHost.authenticatorUri() : QString(); },
                                     [&browserHost] { return browserHost.resetAuthenticator(); });
