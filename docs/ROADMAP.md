@@ -1,3 +1,33 @@
+## GNOME 51.1 native recovery and scaling — 2026-10-26
+
+Production source `21ab78c0` fixes stale-CRTC layout replay after capture loss,
+distinguishes recoverable host replacement from explicit session termination,
+and launches a fresh desktop when an authenticated replacement has no app to
+resume. The existing bounded retry and fresh admission rules remain in force;
+recovery cannot silently take over an occupied session.
+
+The complete GNOME Shell 51.1 / patched Mutter 51.1 desktop passes 72 checks
+in an isolated software-rendered QEMU/KVM guest. Nine 1x/2x, fractional-density
+and portrait configurations each pass three independent GTK click/text and
+coordinate-mapping checks. GNOME uses the same pinned workspace and desktop
+adjustment policy as KDE. Six native GameStream cases cover all three display
+policies under PipeWire stop/SIGKILL, keeping the original client and supervisor
+alive, rendering fresh frames, preserving the compositor and restoring the
+original local layout after shutdown.
+Two additional native recovery cases preserve the supported 150% and 80%
+desktop adjustments, bringing the valid native matrix to eight passing cases.
+The same production helper passes older-version regressions: 28 checks each
+on headless GNOME 49.4/50.4, 30 on the full 50.1 desktop, and 54 on patched 51.0.
+All owned test processes and VMs stopped, with immutable baselines verified.
+
+Managed Nix run `gnome511-reconnect03` builds the production tree and passes
+startup checks. Control binding passes 176 tests, host lifecycle passes 47,
+and the shared-core suite passes. No release or user-system activation was
+performed. The explicit Mutter lifetime patch is still required; installing
+DeskPort alone does not patch the compositor. This qualifies a software VM and
+native loopback transport, not physical GPU/network/input, audio, HDR or clipboard.
+See [versioned GNOME evidence](GNOME_DISPLAY.md#gnome-511-full-desktop-and-native-recovery-follow-up).
+
 ## GNOME recovery follow-up — 2026-10-26
 
 Source `4f37c146` resolves the two earlier failure investigations. GNOME 50.1's

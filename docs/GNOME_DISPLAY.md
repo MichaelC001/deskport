@@ -21,6 +21,24 @@ foreign virtual monitor prevents takeover policies. Outputs attached during
 a lease are preserved; if Mutter changes the physical policy, DeskPort reports
 a local-layout warning while retaining an independently verified workspace.
 
+## Scaling
+
+GNOME and KDE use the same pinned workspace policy and desktop-adjustment
+setting. Both native adapters accept 1x/2x backing scales; fractional client
+density is represented by a suitably sized 2x workspace rather than reducing
+the desktop raster and enlarging it. For example, the shared 125% and 150%
+client fixtures both produce a 3840x2160@2 workspace from their respective
+2400x1350 and 2880x1620 drawable sizes. The logical desktop is 1920x1080.
+
+Desktop adjustment retains that backing scale: larger values enlarge content
+by reducing workspace dimensions, while smaller values provide more workspace.
+Protocol bounds and four-pixel alignment still apply. At a fixed 1280x800@1
+base, 150% requests 856x536@1 and 80% requests 1600x1000@1. The configured
+adjustment is reapplied when a replacement capture session is admitted.
+Extension preserves physical scaling; takeover restores the saved physical
+mode/scale on release. Mirror still requires matching physical pixels and
+scale, so arbitrary zoom cannot silently change an unchanged mirrored monitor.
+
 ## Ownership and recovery
 
 PipeWire negotiation and DisplayConfig publication are asynchronous. Admission
@@ -37,6 +55,24 @@ retains the checkpoint for the next lease. Failed recovery retains the original
 checkpoint and reports a warning; it does not overwrite it with a degraded
 layout. GNOME cleanup has a separate timeout budget because monitor removal
 and restoration can exceed the ordinary resize deadline.
+
+After capture loss, the virtual CRTC may already have been destroyed while
+DisplayConfig still advertises its output until Mutter's next idle dispatch.
+DeskPort therefore skips pre-removal layout replay for a closed/failed stream;
+the guardian waits for monitor removal before restoring the physical layout.
+Reapplying the stale virtual monitor can crash Mutter's native renderer even
+with the separate stream-lifetime patch installed.
+
+The host supervisor closes authenticated controllers before replacing failed
+capture/media processes. This is a transient transport loss; an explicit stop
+still sends terminal `session-ended`. The native viewer retries graceful media
+EOF only when its authenticated control channel also failed and remains
+retryable. Temporary `unavailable` admission during an existing recovery can be
+retried within the existing deadline. A replacement host requires fresh idle
+admission: no stale lease is transferred and no automatic takeover is allowed.
+If that authenticated replacement reports that no application exists to resume,
+the viewer makes one launch attempt under its live admission and remaining
+recovery deadline. Other launch errors are not converted into a fresh launch.
 
 These are temporary session changes, not persistent monitor configuration.
 They require an unlocked, running GNOME Wayland user session and the advertised
@@ -61,9 +97,28 @@ The headless harness builds this consumer itself. It represents another client
 using ordinary RecordVirtual negotiation, including on GNOME 49 where the
 newer fixed-mode virtual-monitor fixture is unavailable.
 
+`scripts/test-gnome-reconnect.py` runs only in an explicitly owned lab VM. It
+seeds disposable certificate pins, launches the production host supervisor and
+native viewer, observes three sustained rendered-frame samples, interrupts the
+guest PipeWire service, then requires the same client and supervisor processes
+to render three new samples from a fresh capture identity. It also verifies
+unchanged compositor ownership and exact local layout restoration. Its fixed
+1280x800 loopback workspace avoids client-window feedback when both endpoints
+share one disposable desktop; the policy suite separately covers adaptation.
+This is native media/control recovery, not pairing-UI or physical-network input
+acceptance. Raw fixture logs and identities remain private run artifacts.
+
 The GTK input fixture checks Mutter's platform input path using guest-only
 synthetic text in a bounded child process. The controller writes `progress.json`
 after each check/request so a native toolkit abort cannot erase the last result.
+Full desktop tests first wait for the current Shell process's startup-complete
+journal message. D-Bus availability alone precedes Shell's input-blocking
+startup animation. The fixture uses an owned monitor stream for absolute pixel
+input, checks the resulting logical coordinates and window scale, and repeats
+click/text acceptance in three separate GTK processes. Add
+`--workspace-fixtures shared/deskport-core/fixtures/workspace.json` to exercise
+the standard, HiDPI, 125%/150% client-density and portrait cases against real
+Mutter outputs and software capture without duplicating workspace arithmetic.
 It does not qualify Sunshine transport input, physical GPUs,
 hardware encoders, HDR, audio, clipboard or end-to-end latency. See the
 [support matrix](PC_SUPPORT_MATRIX.md) for versioned evidence; release artifacts
@@ -71,8 +126,9 @@ and the user's activated version must be verified separately.
 
 ### Compatibility checkpoint — 2026-10-26
 
-Implementation source: `59b8e324` (including the guarded-policy adapter imported
-in `d495786f`), shared core unchanged at `505ae0ccd0a4ead4decb6eaba62585bf278e6dbe`.
+Original adapter source: `59b8e324` (including the guarded-policy adapter imported
+in `d495786f`); production recovery follow-up: `21ab78c0`, with fixture
+`1160e6dd`. Shared core is unchanged at `505ae0ccd0a4ead4decb6eaba62585bf278e6dbe`.
 
 | Runtime | Layer | Result |
 | --- | --- | --- |
@@ -82,9 +138,11 @@ in `d495786f`), shared core unchanged at `505ae0ccd0a4ead4decb6eaba62585bf278e6d
 | GNOME 50.1 / Ubuntu 26.04 | Full QEMU/KVM desktop, software graphics | PASS, 30 checks after fixing the GTK fixture lifetime; see the diagnosis below. The earlier failed reports remain retained. |
 | GNOME 51.0, distribution Mutter | Separate full VM, forced PipeWire loss | FAIL: confirmed compositor use-after-free; retained as the negative control. |
 | GNOME 51.0, patched Mutter `51.0-1ubuntu3` | Full QEMU/KVM desktop, software graphics | PASS, 54 checks: normal workflow plus service stop and SIGKILL in all three policies, restoration without compositor restart and fresh owned capture. |
-| Mutter 51.1 source | Compiled dispatcher regression | PASS for the lifetime fix; full GNOME 51.1 runtime remains untested. |
+| GNOME Shell 51.1 / patched Mutter 51.1 | Full QEMU/KVM desktop, software graphics | PASS, 72 checks: shared 1x/2x and fractional-density workspace cases, nine native scale/input configurations with three independent windows each, all display policies, physical restoration and six PipeWire-loss cases. |
+| GNOME 51.1 native client and host | GameStream over guest loopback | PASS, eight cases: stop/SIGKILL in all three policies plus 150%/80% desktop adjustment; same client/supervisor, fresh rendered frames and capture identity, unchanged compositor, exact shutdown restoration. |
+| Mutter 51.1 source | Compiled dispatcher regression | PASS for the lifetime fix: 1,000 closes; original source fails as the negative control. |
 
-The native helper tested above has SHA-256
+The original `59b8e324` native helper has SHA-256
 `6862dcf929211df4d6e3bb7501bb9d580d18545f1b8ce1699ab91045901a50a5`;
 the fixed Nix Sunshine executable has SHA-256
 `3670aaa1953fbd216c4ac961039102b8e8019eb408c05eb7f9a3bb324e8fb192`.
@@ -165,3 +223,72 @@ checks. Its clean snapshot `2aa8cd10` has the identical Git tree
 The build does not implicitly include or activate the compositor overlay.
 The final `4f37c146` harness was also rerun against private GNOME 49.4 and
 50.4 sessions: both passed all 28 checks and verified owned-process teardown.
+
+## GNOME 51.1 full-desktop and native recovery follow-up
+
+Lab run `20261026T073832Z-489ff23b` passes all 72 desktop checks and eight
+valid native streaming cases. The scale/input checks cover nine configurations
+and 27 independent GTK windows. The desktop-adjustment cases preserve
+856x536@1 at 150% and 1600x1000@1 at 80% before and after PipeWire recovery.
+Recovery timing includes three positive rendering samples after the fault and
+is not a first-frame latency measurement.
+
+The first batch used an invalid 0.75 adjustment in its last case and retained a
+nonzero batch exit. That value is absent from the shared KDE/GNOME catalog, so
+the client correctly fell back to 1.0. The failed fixture result is preserved;
+the corrected 0.8 case was rerun in the same owned desktop and passed. The
+separate corrected acceptance record includes only the eight supported cases.
+
+The same production helper was then regressed in the older full desktops:
+GNOME 50.1 passes 30 checks in run `20261026T075456Z-545916bc`, and patched
+GNOME 51.0 passes 54 in `20261026T075742Z-ddf14153`, including all six service-loss
+cases. The upstream compositor patch remains necessary for the 51 series.
+Private GNOME 49.4 and 50.4 regressions each pass 28 checks with the same
+production helper and updated harness; all owned child processes exited.
+Their initial setup failures (omitted probe protocol files and a Nix-expanded
+socket path longer than Unix permits) are retained separately from the final
+passing runs. All three full-desktop guests were stopped, teardown passed,
+and their immutable baseline hashes were unchanged.
+
+The full 51.1 desktop exposed a second compositor crash after the lifetime patch:
+the failed stream had already destroyed its virtual CRTC, but DisplayConfig
+still advertised that monitor. Replaying the layout during this interval reached
+`meta_renderer_native_create_view()` with the stale CRTC. Source `eb9a042f`
+defers restoration to the guardian after removal when capture has failed.
+The original failing VM and debugger evidence remain retained.
+
+Native loopback streaming then exposed two independent recovery gaps. Source
+`9f291046` closes authenticated control before the supervisor replaces media,
+preserves bounded retries for transient admission unavailability, and distinguishes
+capture-loss EOF from an explicit terminal stop. Source `21ab78c0` handles a fresh
+Sunshine process with no resumable application: its precise authenticated 503
+reply permits one launch under the new admission. Explicit stop, denied trust
+and occupied sessions still cannot trigger automatic takeover.
+
+Two fixture failures were also diagnosed without attributing them to DeskPort:
+starting monitor changes before Shell's startup animation completes can strand
+its transparent reactive cover pane over the desktop; the full-desktop harness
+now waits for the current Shell process's startup-complete journal record.
+Rapid synthetic PipeWire faults can exhaust systemd's five-starts-per-ten-seconds
+limit; independent injected faults now have a five-second interval. The test
+does not disable the unit protection or reset its failure counter.
+
+The managed Nix build `gnome511-reconnect03` built production source `21ab78c0`
+and passed executable, desktop-identity and isolated CLI startup checks. Its
+clean snapshot `ec50981b2973dc3fd7709f8c75b54cde1aeae029` has the identical tree
+`bb02c65cd5020692aff06edc95f38ac663dcb6f2`; shared core remains `505ae0cc`.
+The tested application launcher SHA-256 is
+`852f02b63eb08a3c5b9014c45ca8f8d7b86dd7429486ec597307ae8d20d84b39`, and
+the native display launcher SHA-256 is
+`29815fd807dddd56e9722555bfc655aeaf7869e61196b274f7c85455a8dc4ca8`.
+Control binding passes 176 tests, host lifecycle passes 47, and shared-core tests
+pass. The actual patched Mutter 51.1 dispatcher passes 1,000 close cycles;
+the original dispatcher remains a failing negative control.
+
+The 51.1 guest uses upstream GNOME Shell and Mutter source builds on an isolated
+Ubuntu 26.10 baseline, with the explicit Mutter lifetime patch. It is not a
+claim that the baseline distribution ships 51.1. The verified upstream tarball
+SHA-256 values are `c1eb08d9651a567ed5d9b2791371f1898e657cf45e75e1d88adefbab807977d6`
+(Shell) and `0d311d87901dbcb94518fb89304febe30852ce5d8a4befa9f87e85c68eceefde`
+(Mutter). No installed user desktop, published release or system activation is
+part of this acceptance.
