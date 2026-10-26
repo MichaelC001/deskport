@@ -12,6 +12,7 @@ struct Key {
 };
 class InputWindow final : public QWindow {
 public:
+    using QWindow::QWindow;
     QList<Key> keys;
     int nativeKeys = 0;
     bool event(QEvent* event) override {
@@ -41,7 +42,7 @@ class WindowsCaptureTest : public QObject {
     bool inject(WORD scan, bool down, InputWindow& target) {
         // Never inject into a personal window, even if the user changes focus
         // during the fixture. All foreground windows belong to this process.
-        if (GetForegroundWindow() != reinterpret_cast<HWND>(target.winId())) return false;
+        if (GetForegroundWindow() != GetAncestor(reinterpret_cast<HWND>(target.winId()), GA_ROOT)) return false;
         INPUT input {};
         input.type = INPUT_KEYBOARD;
         input.ki.wScan = scan & 0xff;
@@ -144,6 +145,40 @@ private slots:
         QTRY_VERIFY(m_Capture.isInhibited());
         m_Window.hide();
         QTRY_VERIFY(!m_Capture.isInhibited());
+    }
+    void embeddedCanvasSurfaceCaptures() {
+        m_Capture.setWindow(nullptr);
+        InputWindow child(&m_Window);
+        child.setFlags(Qt::FramelessWindowHint);
+        child.resize(300, 180); child.show(); child.requestActivate();
+        QTRY_VERIFY(child.isActive());
+        m_Capture.setWindow(&child);
+        QTRY_VERIFY(m_Capture.isInhibited());
+        QVERIFY(inject(0x15c, true, child));
+        QVERIFY(inject(0x39, true, child));
+        QVERIFY(inject(0x39, false, child));
+        QVERIFY(inject(0x15c, false, child));
+        QCOMPARE(child.keys.size(), 4);
+        QCOMPARE(child.keys[0].scan, quint32(0x15c));
+        QVERIFY(child.keys[1].modifiers & Qt::MetaModifier);
+        QCOMPARE(child.nativeKeys, 0);
+        m_Capture.setWindow(&m_Window);
+    }
+    void focusLossWhileWinHeldDoesNotLatch() {
+        QVERIFY(inject(0x15b, true, m_Window));
+        m_Other.show(); m_Other.requestActivate();
+        QTRY_VERIFY(m_Other.isActive());
+        QTRY_VERIFY(!m_Capture.isInhibited());
+        QVERIFY(inject(0x15b, false, m_Other));
+        QCOMPARE(GetForegroundWindow(), reinterpret_cast<HWND>(m_Other.winId()));
+        m_Window.requestActivate();
+        QTRY_VERIFY(m_Window.isActive());
+        QTRY_VERIFY(m_Capture.isInhibited());
+        m_Window.keys.clear();
+        QVERIFY(inject(0x39, true, m_Window));
+        QVERIFY(inject(0x39, false, m_Window));
+        QCOMPARE(m_Window.keys.size(), 2);
+        QVERIFY(!(m_Window.keys[0].modifiers & Qt::MetaModifier));
     }
     void cleanupTestCase() {
         m_Capture.setWindow(nullptr);

@@ -20,8 +20,9 @@ if sys.platform.startswith('linux'):
                 'app/backend/keyboard-shortcuts-inhibit-v1.c']
     extra = 'QT += gui-private\nPKGCONFIG += wayland-client sdl2\n'
 else:
+    sources += ['app/backend/shortcutrecorderinhibitor_mac.mm']
     sdl = root / 'libs/mac/Frameworks'
-    extra = f'QMAKE_CXXFLAGS += -F"{sdl}"\nINCLUDEPATH += "{sdl}/SDL2.framework/Headers"\nLIBS += -F"{sdl}" -framework SDL2\nQMAKE_RPATHDIR += "{sdl}"\n'
+    extra = f'QMAKE_CXXFLAGS += -F"{sdl}"\nINCLUDEPATH += "{sdl}/SDL2.framework/Headers"\nLIBS += -F"{sdl}" -framework SDL2 -framework Cocoa -framework ApplicationServices\nQMAKE_RPATHDIR += "{sdl}"\n'
 (work / 'test.pro').write_text('\n'.join([
     'QT += core gui quick testlib', 'CONFIG += console c++17 testcase link_pkgconfig',
     'CONFIG -= app_bundle', 'QMAKE_CXXFLAGS += -UNDEBUG', 'TARGET = canvas-focus-test',

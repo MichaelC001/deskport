@@ -39,6 +39,18 @@ def compile_test(work, name, sources, extra="", headers=()):
 
 
 def main():
+    inhibitor_sources = []
+    inhibitor_flags = ""
+    if sys.platform.startswith("linux"):
+        inhibitor_sources = ["app/backend/shortcutrecorderinhibitor_wayland.cpp",
+                             "app/backend/keyboard-shortcuts-inhibit-v1.c"]
+        inhibitor_flags = "QT += gui-private\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n"
+    elif sys.platform == "darwin":
+        inhibitor_sources = ["app/backend/shortcutrecorderinhibitor_mac.mm"]
+        inhibitor_flags = "LIBS += -framework Cocoa -framework ApplicationServices\n"
+    elif sys.platform == "win32":
+        inhibitor_sources = ["app/backend/shortcutrecorderinhibitor_windows.cpp"]
+        inhibitor_flags = "LIBS += -luser32\n"
     # The caller supplies a managed run's tests directory through TMPDIR.
     with tempfile.TemporaryDirectory(prefix="deskport-shortcut-") as temporary:
         work = Path(temporary)
@@ -47,10 +59,7 @@ def main():
         executable = compile_test(work, "global-shortcut", [
             "tests/global-shortcut.cpp", "app/backend/globalshortcut.cpp",
             "app/backend/shortcutrecorderinhibitor.cpp",
-        ] + (["app/backend/shortcutrecorderinhibitor_wayland.cpp",
-              "app/backend/keyboard-shortcuts-inhibit-v1.c"] if sys.platform.startswith("linux") else []),
-            "QT += gui-private\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n"
-            if sys.platform.startswith("linux") else "",
+        ] + inhibitor_sources, inhibitor_flags,
             headers=["app/backend/globalshortcut.h"])
         subprocess.run([str(executable)], env=env, check=True, timeout=30)
         for platform in ("offscreen", "minimal"):
@@ -59,10 +68,7 @@ def main():
 
         executable = compile_test(work, "shortcut-recorder-inhibitor", [
             "tests/shortcut-recorder-inhibitor.cpp", "app/backend/shortcutrecorderinhibitor.cpp",
-        ] + (["app/backend/shortcutrecorderinhibitor_wayland.cpp",
-              "app/backend/keyboard-shortcuts-inhibit-v1.c"] if sys.platform.startswith("linux") else []),
-            "QT += gui-private\nCONFIG += link_pkgconfig\nPKGCONFIG += wayland-client\n"
-            if sys.platform.startswith("linux") else "")
+        ] + inhibitor_sources, inhibitor_flags)
         subprocess.run([str(executable)], env=env, check=True, timeout=30)
 
         if sys.platform == "darwin":

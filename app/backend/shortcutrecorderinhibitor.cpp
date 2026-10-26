@@ -79,7 +79,7 @@ bool ShortcutRecorderInhibitor::eventFilter(QObject* watched, QEvent* event) {
     return false;
 }
 
-#if !defined(Q_OS_LINUX) && !defined(Q_OS_WIN)
+#if !defined(Q_OS_LINUX) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
 namespace {
 class NoShortcutRecorderInhibition final : public ShortcutRecorderInhibitionBackend {
     bool start(QWindow*) override { return false; }
