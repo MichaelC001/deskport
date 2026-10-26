@@ -145,12 +145,19 @@ class GnomeDisplay : public QObject {
 public:
     ~GnomeDisplay() override {
         shuttingDown = true;
-        if (recovery && recovery->state() == QProcess::Running) {
+        // A lost PipeWire stream may already have destroyed Mutter's virtual
+        // CRTC while DisplayConfig still advertises the output until its idle
+        // reload. Re-applying that stale output here can crash Mutter. The
+        // guardian's EOF path waits for observed removal before restoring.
+        const bool liveStream = !closed && !pwFailed.load();
+        if (!liveStream)
+            fprintf(stderr, "Mutter capture lost; waiting for monitor removal before layout recovery\n");
+        if (liveStream && recovery && recovery->state() == QProcess::Running) {
             // Re-enable physical outputs atomically before destroying the only
             // active virtual output. EOF repeats recovery after Mutter reflows.
             if (!guardCommand("restore", "restored")) fprintf(stderr, "Mutter pre-removal recovery remains pending\n");
         }
-        if ((!recovery || recovery->state() != QProcess::Running) && !baseline.isEmpty())
+        if (liveStream && (!recovery || recovery->state() != QProcess::Running) && !baseline.isEmpty())
             topology.restore(baseline, true);
         if (loop) pw_thread_loop_stop(loop);
         if (stream) pw_stream_destroy(stream);
