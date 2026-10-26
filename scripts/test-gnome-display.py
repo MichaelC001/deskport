@@ -61,6 +61,20 @@ foreign_children = []
 report = dict(gnome=subprocess.check_output([os.environ.get('DESKPORT_GNOME_SHELL','gnome-shell'),'--version'], text=True).strip(),
               baseline=baseline, checks=[], requests=[], passed=False, hardware_gpu=False, production_stream_input=False)
 
+def checkpoint():
+    # GDK terminates the process in C when the compositor disappears, bypassing
+    # Python's finally block. Keep the last completed check and pending request.
+    temporary=Path('progress.json.tmp')
+    temporary.write_text(json.dumps(report,indent=2)+'\n')
+    temporary.replace('progress.json')
+
+class Checks(list):
+    def append(self, value):
+        super().append(value)
+        checkpoint()
+report['checks']=Checks()
+checkpoint()
+
 def launch(expected=None):
     log = open(Path.cwd()/f'helper-{len(children)}.log','w')
     p = subprocess.Popen([helper,'1280','720'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -89,10 +103,14 @@ def receive(p):
         return response
 
 def request(p, policy, w, h, backing, active=True, seq=1):
+    report['pending_request']=dict(pid=p.pid,policy=policy,width=w,height=h,scale=backing,active=active,seq=seq)
+    checkpoint()
     p.stdin.write(json.dumps(dict(seq=seq,width=w,height=h,scale=backing,displayPolicy=policy,session=active))+'\n')
     p.stdin.flush()
     response=receive(p)
     report['requests'].append(dict(policy=policy,width=w,height=h,scale=backing,active=active,response=response))
+    report.pop('pending_request',None)
+    checkpoint()
     return response
 
 def restored(p):
@@ -179,7 +197,7 @@ def capture(identity,w,h,backing,missing=False):
     except (AssertionError,OSError,subprocess.TimeoutExpired) as error:
         report.setdefault('capture_failures',[]).append(str(error)[-12000:])
 
-def synthetic_input(owned):
+def input_fixture(owned):
     # Test Mutter's platform input path against a guest-only GTK window. This
     # deliberately does not claim Sunshine transport/uinput acceptance.
     os.environ.setdefault('GSK_RENDERER','cairo')
@@ -230,6 +248,22 @@ def synthetic_input(owned):
     finally:
         if session:remote('Stop')
         window.destroy();pump(.2)
+
+if '--input-fixture' in sys.argv:
+    input_fixture(sys.argv[sys.argv.index('--input-fixture')+1])
+    sys.exit(0)
+
+def synthetic_input(owned):
+    # GTK owns a Wayland connection and requires its event loop to keep running.
+    # Keep it in a bounded child so later blocking topology/capture stress cannot
+    # strand a dormant GTK connection or lose the controller's failure report.
+    directory=Path.cwd()/'input-fixture'
+    directory.mkdir(exist_ok=True)
+    result=subprocess.run([sys.executable,str(Path(__file__).resolve()),helper,'--input-fixture',owned],
+                          cwd=directory,capture_output=True,text=True,timeout=20)
+    report['input_fixture']=dict(returncode=result.returncode,stdout=result.stdout,stderr=result.stderr)
+    assert result.returncode==0,report['input_fixture']
+    report['checks'].append('Mutter platform input: synthetic GTK primary 2x window received click and typed fixture text')
 
 try:
     for policy in (2,1,0):
@@ -433,19 +467,37 @@ try:
     # Run compositor-wide dependency loss in its own fresh VM: on affected
     # Mutter versions it can make DisplayConfig unresponsive for the session.
     if '--pipewire-loss' in sys.argv:
-        p=launch();identity=request(p,1,width,height,scale)
-        verify(identity,1,width,height,scale)
-        try:
-            subprocess.run(['systemctl','--user','stop','pipewire.socket','pipewire.service'],check=True,timeout=20)
-            assert p.wait(timeout=20)!=0,'Loss of the PipeWire service must terminate the display owner'
-            report['checks'].append('guest PipeWire service death terminated the display owner')
-        finally:
-            subprocess.run(['systemctl','--user','start','pipewire.socket','pipewire.service','wireplumber.service'],check=True,timeout=20)
-        until(lambda:topology()==baseline)
-        report['checks'].append('guest PipeWire service death stopped the owner; physical recovery verified after service restart')
-        p=launch();verify(request(p,2,width,height,scale),2,width,height,scale)
-        p.stdin.close();restored(p)
-        report['checks'].append('new native lease after PipeWire service restart')
+        def compositor_owner():
+            return bus.call_sync('org.freedesktop.DBus','/org/freedesktop/DBus','org.freedesktop.DBus',
+                'GetNameOwner',GLib.Variant('(s)',('org.gnome.Mutter.DisplayConfig',)),None,
+                Gio.DBusCallFlags.NONE,5000,None).unpack()[0]
+        owner=compositor_owner()
+        for abrupt in (False,True):
+            for policy in (2,1,0):
+                p=launch();identity=request(p,policy,width,height,scale)
+                verify(identity,policy,width,height,scale)
+                mode='SIGKILL' if abrupt else 'service stop'
+                report['dependency_loss']=dict(policy=policy,mode=mode,compositor_owner=owner)
+                checkpoint()
+                try:
+                    if abrupt:
+                        subprocess.run(['systemctl','--user','stop','pipewire.socket'],check=True,timeout=20)
+                        subprocess.run(['systemctl','--user','kill','--signal=SIGKILL','--kill-whom=main','pipewire.service'],check=True,timeout=20)
+                    else:
+                        subprocess.run(['systemctl','--user','stop','pipewire.socket','pipewire.service'],check=True,timeout=20)
+                    assert p.wait(timeout=20)!=0,'Loss of the PipeWire service must terminate the display owner'
+                    report['checks'].append(f'policy-{policy}: PipeWire {mode} terminated the display owner')
+                finally:
+                    subprocess.run(['systemctl','--user','start','pipewire.socket','pipewire.service','wireplumber.service'],check=True,timeout=20)
+                until(lambda:topology()==baseline)
+                assert compositor_owner()==owner,'Recovery must not restart or replace the compositor'
+                assert not list((Path(os.environ['XDG_RUNTIME_DIR'])/'DeskPort').glob('mutter-*.json')),'Recovery journal must be verified and disarmed'
+                report['checks'].append(f'policy-{policy}: PipeWire {mode} restored physical layout without compositor restart')
+                p=launch();new=request(p,2,width,height,scale)
+                verify(new,2,width,height,scale)
+                capture(new,width,height,scale)
+                p.stdin.close();restored(p)
+                report['checks'].append(f'policy-{policy}: fresh native lease and capture after PipeWire {mode}')
     else:
         report['pipewire_service_loss']='UNTESTED in this run: use --pipewire-loss in a separate fresh VM'
     if report.get('capture_failures'):raise AssertionError('Sunshine capture failed; see capture_failures and native topology checks')
