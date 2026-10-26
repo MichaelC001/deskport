@@ -45,6 +45,10 @@
 
 ## Main features
 
+**0.7.6 release:** [release notes](docs/RELEASE_0.7.6.md) and
+[versioned downloads](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
+This stable release is intentionally not promoted to Latest during initial use.
+
 - **One desktop app for viewing and sharing.** Bundled Sunshine, device approval,
   independent credentials and settings; no separate Sunshine installation for the
   macOS, Windows and Linux host packages (not the viewer-only Flatpak).

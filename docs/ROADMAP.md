@@ -1,3 +1,13 @@
+## Desktop 0.7.6 release preparation — 2026-10-26
+
+Prepare all desktop package formats from the integrated GNOME recovery,
+remote-IME, connection-window and Linux keyboard-identity changes. Publish a
+stable versioned release while explicitly preserving the current GitHub Latest
+selection. Promotion follows a separate maintainer decision after initial use.
+Final package, CI, distribution and mynix build results are recorded in the
+release verification asset; preparation does not imply publication or activation.
+See [0.7.6 release notes](RELEASE_0.7.6.md).
+
 ## GNOME 51.1 native recovery and scaling — 2026-10-26
 
 Production source `21ab78c0` fixes stale-CRTC layout replay after capture loss,

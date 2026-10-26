@@ -69,7 +69,7 @@
         in pkgs.moonlight-qt.overrideAttrs (old: {
           pname = "deskport";
           buildInputs = (old.buildInputs or []) ++ [ pkgs.wayland pkgs.pipewire pkgs.qt6.qtwayland pkgs.libXrandr pkgs.libX11 ];
-          version = "0.7.5";
+          version = "0.7.6";
           src = pkgs.lib.cleanSourceWith {
             src = pkgs.lib.cleanSource self;
             # Documentation, CI edits and the vendored macOS prebuilts do not
