@@ -11,7 +11,7 @@ python3 "$repo/scripts/patch-host-network.py" "$source"
 python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
 python3 "$repo/scripts/patch-host-session-settings.py" "$source" --revert
 python3 "$repo/scripts/patch-host-smart-stream.py" "$source"
-for patch in session-settings session-takeover linux-display linux-keyboard; do
+for patch in session-settings session-takeover linux-display linux-keyboard linux-startup; do
     python3 "$repo/scripts/patch-host-$patch.py" "$source"
 done
 mkdir -p "$source/src/deskport/common"

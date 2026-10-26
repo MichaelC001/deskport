@@ -25,6 +25,9 @@ Promotion is a separate maintainer decision after initial use.
 - **Linux keyboard remappers:** identify the receiving virtual keyboard as
   `DeskPort Keyboard` in both Linux host backends, allowing receiver-side rules
   to select it independently of Sunshine.
+- **Linux host startup:** initialize GPU environment variables before starting
+  asynchronous logging, preventing a startup race with the logger's timezone
+  lookup on Ubuntu 24.04.
 
 The shared core remains `505ae0ccd0a4ead4decb6eaba62585bf278e6dbe`, with matching
 Git and Nix pins. Mobile clients and deferred Seamless work are outside this release.

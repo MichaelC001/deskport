@@ -1,5 +1,11 @@
 ## Desktop 0.7.6 release preparation — 2026-10-26
 
+Release qualification reproduced an intermittent Linux host startup crash on
+Ubuntu 24.04. Core dumps identify the asynchronous log formatter's timezone
+lookup racing Linux GPU environment initialization. Move those environment
+updates before logging starts; final Linux packages require a fresh build and
+repeated startup qualification before publication.
+
 Prepare all desktop package formats from the integrated GNOME recovery,
 remote-IME, connection-window and Linux keyboard-identity changes. Publish a
 stable versioned release while explicitly preserving the current GitHub Latest

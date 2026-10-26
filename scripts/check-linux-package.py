@@ -124,7 +124,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                     except (urllib.error.URLError, TimeoutError):
                         if server.poll() is not None or time.monotonic() >= deadline:
                             host_log.seek(0)
-                            raise AssertionError('Packaged session API unavailable: ' + host_log.read())
+                            raise AssertionError(f'Packaged session API unavailable (exit={server.poll()}): ' + host_log.read())
                         time.sleep(0.25)
                 private_libc = root / 'usr/libexec/sunshine/usr/shared/lib/libc.so.6'
                 if private_libc.exists():
