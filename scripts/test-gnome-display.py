@@ -18,6 +18,22 @@ signal.alarm(300)
 helper = str(Path(sys.argv[1]).resolve())
 bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
 
+if os.environ.get('DESKPORT_GNOME_HEADLESS_TEST') != '1' and '--input-fixture' not in sys.argv:
+    # DisplayConfig is exported before Shell finishes its startup animation.
+    # Changing outputs then can strand Shell's transparent reactive cover pane,
+    # making a focused test window accept keys but never pointer input.
+    shell_pid=bus.call_sync('org.freedesktop.DBus','/org/freedesktop/DBus',
+        'org.freedesktop.DBus','GetConnectionUnixProcessID',GLib.Variant('(s)',('org.gnome.Shell',)),
+        None,Gio.DBusCallFlags.NONE,5000,None).unpack()[0]
+    deadline=time.monotonic()+60
+    while True:
+        started=subprocess.run(['journalctl','--user','-b',f'_PID={shell_pid}',
+            'MESSAGE_ID=f3ea493c22934e26811cd62abe8e203a','-n','1','-o','json','--no-pager'],
+            capture_output=True,text=True,timeout=5)
+        if started.returncode==0 and started.stdout.strip().startswith('{'):break
+        assert time.monotonic()<deadline,'GNOME Shell startup animation did not complete'
+        time.sleep(.2)
+
 def call(method, params=None):
     return bus.call_sync('org.gnome.Mutter.DisplayConfig', '/org/gnome/Mutter/DisplayConfig',
                          'org.gnome.Mutter.DisplayConfig', method, params, None,
@@ -74,6 +90,14 @@ class Checks(list):
         checkpoint()
 report['checks']=Checks()
 checkpoint()
+
+scale_cases=[]
+if '--workspace-fixtures' in sys.argv:
+    fixtures=Path(sys.argv[sys.argv.index('--workspace-fixtures')+1])
+    names={'standard','retina','fractional','slight-density','portrait'}
+    scale_cases=[case for case in json.loads(fixtures.read_text()) if case['name'] in names]
+    assert len(scale_cases)==len(names),'Shared workspace fixture set is incomplete'
+    report['shared_workspace_cases']=scale_cases
 
 def launch(expected=None):
     log = open(Path.cwd()/f'helper-{len(children)}.log','w')
@@ -205,11 +229,19 @@ def input_fixture(owned):
     gi.require_version('Gtk','4.0')
     from gi.repository import Gtk, Gdk
     window=Gtk.Window(title='DeskPort synthetic input fixture')
-    entry=Gtk.Entry(); window.set_child(entry)
+    entry=Gtk.Entry()
+    box=Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    box.append(entry)
+    target=Gtk.Button(label='DeskPort synthetic pointer target');target.set_vexpand(True)
+    box.append(target);window.set_child(box)
     clicks=[]
     gesture=Gtk.GestureClick.new(); gesture.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
     gesture.connect('pressed',lambda _g,_n,x,y:clicks.append((x,y)))
     window.add_controller(gesture)
+    motions=[]
+    motion=Gtk.EventControllerMotion.new()
+    motion.connect('motion',lambda _m,x,y:motions.append((x,y)))
+    window.add_controller(motion)
     def pump(seconds):
         deadline=time.monotonic()+seconds
         context=GLib.MainContext.default()
@@ -222,14 +254,40 @@ def input_fixture(owned):
                              method,params,None,Gio.DBusCallFlags.NONE,5000,None).unpack()
     try:
         window.fullscreen();window.present();entry.grab_focus();pump(1)
+        deadline=time.monotonic()+5
+        while time.monotonic()<deadline and (not window.is_fullscreen() or not window.is_active()):pump(.05)
+        assert window.is_fullscreen() and window.is_active(),'Synthetic input window did not finish mapping'
         surface=window.get_surface()
         monitor=Gdk.Display.get_default().get_monitor_at_surface(surface)
         assert monitor.get_connector() == owned, monitor.get_connector()
+        output=topology()[owned]
+        expected=[round(v/output['scale']) for v in output['pixels']]
+        assert [window.get_width(),window.get_height()] == expected,expected
+        assert window.get_scale_factor() == output['scale'],output
         session=remote('CreateSession',path='/org/gnome/Mutter/RemoteDesktop',interface='org.gnome.Mutter.RemoteDesktop')[0]
+        session_id=remote('Get',GLib.Variant('(ss)',('org.gnome.Mutter.RemoteDesktop.Session','SessionId')),
+                          interface='org.freedesktop.DBus.Properties')[0]
+        def screencast(path,interface,method,params):
+            return bus.call_sync('org.gnome.Mutter.ScreenCast',path,interface,method,params,None,
+                                 Gio.DBusCallFlags.NONE,5000,None).unpack()[0]
+        cast=screencast('/org/gnome/Mutter/ScreenCast','org.gnome.Mutter.ScreenCast','CreateSession',
+                        GLib.Variant('(a{sv})',({'remote-desktop-session-id':GLib.Variant('s',session_id)},)))
+        stream=screencast(cast,'org.gnome.Mutter.ScreenCast.Session','RecordMonitor',
+                          GLib.Variant('(sa{sv})',(owned,{'cursor-mode':GLib.Variant('u',0)})))
         remote('Start')
-        remote('NotifyPointerMotionRelative',GLib.Variant('(dd)',(-10000.,-10000.)))
-        remote('NotifyPointerMotionRelative',GLib.Variant('(dd)',(120.,160.)))
+        # Use the owned stream's pixel coordinates, not an accelerated relative
+        # warp or the Shell's hot corners. Verify Mutter's 2x input transform.
+        pump(.2)
+        remote('NotifyPointerMotionAbsolute',GLib.Variant('(sdd)',(stream,output['pixels'][0]*.4,output['pixels'][1]*.6)))
+        pump(.2)
+        pointer=Gdk.Display.get_default().get_default_seat().get_pointer()
+        pointed,px,py=pointer.get_surface_at_position()
+        diagnostic=dict(logical=[window.get_width(),window.get_height()],
+                        scale=window.get_scale_factor(), pointer=[px,py],
+                        pointer_on_fixture=pointed==surface, motions=motions[-10:])
+        assert pointed==surface and abs(px-expected[0]*.4)<2 and abs(py-expected[1]*.6)<2,diagnostic
         remote('NotifyPointerButton',GLib.Variant('(ib)',(272,True)))
+        pump(.1)
         remote('NotifyPointerButton',GLib.Variant('(ib)',(272,False)))
         pump(.3);entry.grab_focus()
         deadline=time.monotonic()+5
@@ -243,8 +301,8 @@ def input_fixture(owned):
             pump(.03)
         deadline=time.monotonic()+5
         while time.monotonic()<deadline and entry.get_text() != 'deskport':pump(.05)
-        assert entry.get_text() == 'deskport' and clicks,(entry.get_text(),clicks)
-        report['checks'].append('Mutter platform input: synthetic GTK primary 2x window received click and typed fixture text')
+        assert entry.get_text() == 'deskport' and clicks,(entry.get_text(),clicks,diagnostic)
+        report['checks'].append('Mutter platform input: synthetic GTK window received pixel-mapped click and fixture text at verified native scale')
     finally:
         if session:remote('Stop')
         window.destroy();pump(.2)
@@ -259,11 +317,17 @@ def synthetic_input(owned):
     # strand a dormant GTK connection or lose the controller's failure report.
     directory=Path.cwd()/'input-fixture'
     directory.mkdir(exist_ok=True)
-    result=subprocess.run([sys.executable,str(Path(__file__).resolve()),helper,'--input-fixture',owned],
-                          cwd=directory,capture_output=True,text=True,timeout=20)
-    report['input_fixture']=dict(returncode=result.returncode,stdout=result.stdout,stderr=result.stderr)
-    assert result.returncode==0,report['input_fixture']
-    report['checks'].append('Mutter platform input: synthetic GTK primary 2x window received click and typed fixture text')
+    report['input_fixtures']=[]
+    for _ in range(3):
+        result=subprocess.run([sys.executable,str(Path(__file__).resolve()),helper,'--input-fixture',owned],
+                              cwd=directory,capture_output=True,text=True,timeout=20)
+        report['input_fixture']=dict(returncode=result.returncode,stdout=result.stdout,stderr=result.stderr)
+        report['input_fixtures'].append(report['input_fixture'])
+        assert result.returncode==0,report['input_fixture']
+    current=topology()[owned]
+    report.setdefault('native_scale_input',[]).append(dict(pixels=current['pixels'],
+        scale=current['scale'],logical=[round(v/current['scale']) for v in current['pixels']],repetitions=3))
+    report['checks'].append('Mutter platform input: three synthetic GTK windows received pixel-mapped clicks and fixture text at verified native scale')
 
 try:
     for policy in (2,1,0):
@@ -271,13 +335,17 @@ try:
         identity=request(p,policy,width,height,scale)
         owned=verify(identity,policy,width,height,scale)
         capture(identity,width,height,scale)
+        if policy==1 and scale_cases:synthetic_input(owned)
         if policy != 0:
-            for seq,(w,h,backing) in enumerate(((1668,2388,2),(1920,1080,1),(2560,1440,2)),2):
+            modes=[(1668,2388,2),(1920,1080,1),(2560,1440,2)]
+            modes.extend(tuple(case['qt']) for case in scale_cases)
+            for seq,(w,h,backing) in enumerate(modes,2):
                 reply=request(p,policy,w,h,backing,seq=seq)
                 reply.setdefault('outputName',owned)
                 assert verify(reply,policy,w,h,backing) == owned
                 capture(identity,w,h,backing)
-        if policy == 1:
+                if policy==1 and scale_cases:synthetic_input(owned)
+        if policy == 1 and not scale_cases:
             if os.environ.get('DESKPORT_GNOME_HEADLESS_TEST') == '1':
                 report['platform_input']='UNTESTED: headless fixture has no interactive desktop focus; use the full VM fixture'
             else:synthetic_input(owned)
