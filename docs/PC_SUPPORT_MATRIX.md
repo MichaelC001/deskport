@@ -15,6 +15,8 @@ hardware or hosted-CI evidence to the newer revision.
 The GNOME display row was updated separately on 2026-10-26 against `59b8e324`
 and core `505ae0cc`; its versioned evidence is recorded below. Other rows retain
 their original review scope.
+The recovery follow-up `4f37c146` corrects the 50.1 fixture diagnosis and adds an
+explicit Mutter 51 compositor patch; application installation alone does not apply it.
 
 This page is the current PC scope index. Dated release notes and roadmap entries
 retain their original environment and result. A later implementation supersedes
@@ -156,11 +158,11 @@ Generated from the reviewed register; recorded results are scoped to each row.
 
 | Field | Record |
 | --- | --- |
-| Date / tested source | 2026-10-26; `59b8e324`, shared core `505ae0cc` unchanged. |
-| Package / installed identity | Development helper and patched Nix Sunshine; no published package or user activation. Binary SHA-256 identities are recorded in the linked checkpoint. |
-| Environment | Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktop with software graphics. |
-| Feature / actual result | PASS: 28/28 headless checks on each of 49.4 and 50.4, 30/30 normal-workflow VM checks on 51.0. All policies, owned capture, 20 repeated leases, abnormal owner/guardian termination and hotplug recovery. |
-| Limits / pending | GNOME 50.1 full-VM stress remains FAIL. GNOME 51.0 crashes on forced PipeWire service loss; automatic compositor recovery remains FAIL. Mirror requires matching physical modes/scales. No physical GPU, production transport input, HDR/audio/clipboard or latency acceptance. |
+| Date / tested source | 2026-10-26; adapter `59b8e324`, recovery follow-up `4f37c146`, shared core `505ae0cc` unchanged. |
+| Package / installed identity | Development helper, patched Nix Sunshine and explicit Mutter source patch loaded only in the disposable 51.0 guest; no published package or user activation. Binary SHA-256 identities are recorded in the linked checkpoint. |
+| Environment | Private GNOME 49.4/50.4 headless sessions; Ubuntu 26.04 / GNOME 50.1 and Ubuntu 26.10 / GNOME 51.0 full QEMU/KVM desktops with software graphics. |
+| Feature / actual result | PASS: 28/28 headless checks on each of 49.4 and 50.4; 30/30 normal-workflow VM checks on 50.1 after isolating the GTK fixture; 54/54 on 51.0 with the explicit Mutter lifetime patch, including normal workflow, service stop/SIGKILL in all policies, restoration without compositor restart and fresh capture. |
+| Limits / pending | Unpatched GNOME 51.0 still crashes on PipeWire loss; DeskPort installation does not patch the system compositor. Mutter 51.1 has only compiled source-regression evidence. Mirror requires matching physical modes/scales. No physical GPU, production transport input, automatic client reconnect, HDR/audio/clipboard or latency acceptance. |
 | References | [GNOME checkpoint and test boundaries](GNOME_DISPLAY.md#compatibility-checkpoint--2026-10-26) |
 
 ### Evidence linux-hyprland

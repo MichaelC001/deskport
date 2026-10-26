@@ -1,3 +1,28 @@
+## GNOME recovery follow-up — 2026-10-26
+
+Source `4f37c146` resolves the two earlier failure investigations. GNOME 50.1's
+stress disconnect was a dormant GTK test connection: the controller stopped
+dispatching GTK events after its input window was destroyed. Isolate that check
+in a bounded child and retain incremental progress reports. The original Ubuntu
+26.04 baseline now passes all 30 checks; GNOME Shell did not crash in the traced
+negative control.
+
+GNOME 51.0's PipeWire-loss crash is a Mutter use-after-free. Retain the stream
+while its source emits `closed`, so source disposal can safely find the backend.
+The actual 51.0/51.1 dispatcher regression rejects the original code and passes
+1,000 closes with the source patch. A rebuilt Ubuntu `51.0-1ubuntu3` compositor
+passes 54 full-VM checks: normal workflow, orderly stop and SIGKILL in all three
+policies, physical recovery and fresh software capture without restarting Mutter.
+Managed Nix run `gnome-recovery-final02` builds the final DeskPort tree and
+passes executable, desktop-identity and isolated CLI startup checks.
+Final private GNOME 49.4 and 50.4 regressions each pass all 28 checks, with
+owned session teardown verified.
+
+The fix is delivered as an explicit compositor source patch and opt-in Nix
+overlay. It is not silently added to a DeskPort installation or activated on
+the user's machine. Full GNOME 51.1 runtime, hardware and automatic remote-client
+reconnection remain untested. See [GNOME recovery evidence](GNOME_DISPLAY.md).
+
 ## GNOME 49–51 guarded display compatibility — 2026-10-26
 
 The development branch adds guarded Mutter extension, primary-only and

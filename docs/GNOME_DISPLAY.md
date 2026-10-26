@@ -62,7 +62,9 @@ using ordinary RecordVirtual negotiation, including on GNOME 49 where the
 newer fixed-mode virtual-monitor fixture is unavailable.
 
 The GTK input fixture checks Mutter's platform input path using guest-only
-synthetic text. It does not qualify Sunshine transport input, physical GPUs,
+synthetic text in a bounded child process. The controller writes `progress.json`
+after each check/request so a native toolkit abort cannot erase the last result.
+It does not qualify Sunshine transport input, physical GPUs,
 hardware encoders, HDR, audio, clipboard or end-to-end latency. See the
 [support matrix](PC_SUPPORT_MATRIX.md) for versioned evidence; release artifacts
 and the user's activated version must be verified separately.
@@ -77,8 +79,10 @@ in `d495786f`), shared core unchanged at `505ae0ccd0a4ead4decb6eaba62585bf278e6d
 | GNOME 49.4 | Private headless Mutter/PipeWire session | PASS, 28 checks; all three policies, 11 capture/encoder probes, 20 alternating leases, EOF/SIGKILL, guardian recovery and foreign-output hotplug. Interactive input and unavailable physical 2x modes are explicitly untested. |
 | GNOME 50.4 | Private headless Mutter/PipeWire session | PASS, the same 28 checks and boundaries. |
 | GNOME 51.0 / Ubuntu 26.10 | Full QEMU/KVM desktop, software graphics | PASS, 30 checks; also guest GTK click/text input and restoration of a non-default physical 2x mode. |
-| GNOME 50.1 / Ubuntu 26.04 | Full QEMU/KVM desktop, software graphics | FAIL, the stress scenario lost its Wayland compositor connection. Earlier runs also recorded compositor timeouts during foreign-output hotplug. The 50.4 result must not be generalized to this older build. |
-| GNOME 51.0, forced PipeWire service loss | Separate full VM | FAIL for compositor recovery; see below. The normal workflow pass does not include this failure mode. |
+| GNOME 50.1 / Ubuntu 26.04 | Full QEMU/KVM desktop, software graphics | PASS, 30 checks after fixing the GTK fixture lifetime; see the diagnosis below. The earlier failed reports remain retained. |
+| GNOME 51.0, distribution Mutter | Separate full VM, forced PipeWire loss | FAIL: confirmed compositor use-after-free; retained as the negative control. |
+| GNOME 51.0, patched Mutter `51.0-1ubuntu3` | Full QEMU/KVM desktop, software graphics | PASS, 54 checks: normal workflow plus service stop and SIGKILL in all three policies, restoration without compositor restart and fresh owned capture. |
+| Mutter 51.1 source | Compiled dispatcher regression | PASS for the lifetime fix; full GNOME 51.1 runtime remains untested. |
 
 The native helper tested above has SHA-256
 `6862dcf929211df4d6e3bb7501bb9d580d18545f1b8ce1699ab91045901a50a5`;
@@ -99,9 +103,25 @@ vendored source archives. The old code closes a foreign fd 0; the patched code
 preserves it for 1,000 unused-portal lifetimes and still closes an opened portal's
 own fd. This test also verifies patch application twice and is included in Linux CI.
 
-## Compositor service failure
+## GNOME 50.1 stress diagnosis
 
-Stopping the guest PipeWire service during an active primary-only lease caused
+The original controller opened GTK for the input check, destroyed the window,
+then kept GTK's Wayland connection alive while running blocking capture and
+topology operations. Protocol tracing showed accumulated output add/remove
+events being dispatched later, and Mutter disconnected this client. A debugger
+attached before reproduction confirmed that GNOME Shell remained alive; the
+lost GTK connection was not evidence that Mutter had crashed.
+
+The GTK check now runs in a separate process that exits after its input and
+cleanup checks. The same unchanged Ubuntu 26.04 baseline then passed all 30
+checks, including 20 alternating leases and both foreign-output hotplug orders
+(lab run `20261026T033952Z-61f5da03`). This corrects the earlier interpretation;
+it does not turn that failed fixture run into a pass or alter its evidence.
+
+## Compositor service failure and source fix
+
+With the original distribution compositor, stopping the guest PipeWire service
+during an active primary-only lease caused
 GNOME Shell 51.0 itself to receive SIGSEGV in the Ubuntu 26.10 VM. The owner
 exited and retained the recovery journal, but DisplayConfig stopped responding;
 restarting PipeWire did not restore the desktop. This dependency-loss result is
@@ -109,3 +129,39 @@ a failed compositor recovery test, not a supported transparent reconnect path.
 DeskPort cannot apply a layout while Mutter is unavailable and does not restart
 the user's desktop session. Normal lease release, owner/guardian termination,
 and capture-process restart are tested separately from compositor/service loss.
+
+The follow-up debugger trace resolves the crash to
+`meta_stream_source_virtual_dispose()` after `pipewire_loop_source_dispatch()`
+emits `closed`. The signal handler can release the last stream reference before
+GLib releases its temporary source reference. Source disposal then follows a
+borrowed pointer into the freed stream. The included
+[Mutter patch and explicit integration instructions](../host/linux/patches/README.mutter.md)
+retain the stream across signal emission. A compiled test of the actual 51.0
+and 51.1 dispatchers fails with the original code and passes 1,000 close cycles
+with the patch. This is a compositor patch; a DeskPort-only update cannot apply it.
+
+Follow-up source `4f37c146` passed 54 checks in lab run
+`20261026T035448Z-f735cba7`. The patched compositor library was built from Ubuntu
+source package `51.0-1ubuntu3`; its SHA-256 is
+`c2f32176dd928ffcda3b0a63c92367b31e6102be034df811c0714809b3a51842`.
+The pristine source tarball SHA-256 is
+`5d28f3ae225692428fcafb96500d673f34328b698b86960c9c1460d0b1d983b3`.
+Only the disposable guest loaded this library. Baseline verification and VM
+teardown passed; no personal desktop was changed.
+
+The six loss cases cover extension, primary-only and matching-mode mirror under
+both orderly service stop and SIGKILL. Each verifies owner termination, unchanged
+Mutter D-Bus ownership, exact physical restoration, journal removal and a new
+lease with real software capture. This qualifies recovery and fresh capture,
+not uninterrupted transport or automatic client reconnection across service loss.
+The opt-in Nix overlay preserves existing patches and rejects versions other
+than the reviewed 51.0/51.1 sources. Its selection and system activation remain
+separate from building or installing DeskPort.
+
+Managed Nix run `gnome-recovery-final02` built the final DeskPort source
+`4f37c146` and passed executable, desktop-identity and isolated CLI startup
+checks. Its clean snapshot `2aa8cd10` has the identical Git tree
+`f2b52d8bc53cc6cfb4193a77694ce2d9cfe4ea26`, with core `505ae0cc` unchanged.
+The build does not implicitly include or activate the compositor overlay.
+The final `4f37c146` harness was also rerun against private GNOME 49.4 and
+50.4 sessions: both passed all 28 checks and verified owned-process teardown.
