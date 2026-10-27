@@ -47,7 +47,7 @@
 
 **0.7.6 release:** [release notes](docs/RELEASE_0.7.6.md) and
 [versioned downloads](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
-This stable release is intentionally not promoted to Latest during initial use.
+This stable release is marked Latest on GitHub.
 The current downloads include native Windows/macOS shortcut capture and the
 Linux-compatible text-input fix. They replace the earlier packages under the
 0.7.6 filenames containing only the version and platform; verify the current

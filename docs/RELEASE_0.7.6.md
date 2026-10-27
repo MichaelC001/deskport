@@ -1,13 +1,12 @@
 # DeskPort 0.7.6
 
 Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
-This is a stable release, intentionally published without changing GitHub Latest.
-Promotion is a separate maintainer decision after initial use.
+This stable release was promoted to GitHub Latest on 2026-10-27.
 
 ## Final packages — 2026-10-27
 
 The final downloads replace the earlier packages. Filenames contain only
-version 0.7.6 and the target platform. GitHub Latest remains v0.7.4.
+version 0.7.6 and the target platform.
 This replacement includes:
 
 - Native foreground-scoped Windows shell-shortcut capture, including left/right
@@ -111,7 +110,9 @@ and Linux DEB/RPM/Arch/AppImage/tar/Flatpak. Together with eight platform record
 and three aggregate records, these are the 21 current release assets, verified
 against GitHub server SHA-256 and byte size. The repaired installer bytes are
 unchanged by the filename correction; their records use the current names.
-GitHub Latest remains v0.7.4.
+GitHub Latest is v0.7.6 following maintainer approval on 2026-10-27.
+The package provenance and verification records retain their pre-promotion
+publication state; installer bytes and checksums are unchanged by promotion.
 
 Final native packages pass fresh-install and isolated CLI/QML/host API checks
 on Ubuntu 24.04, Debian 13, Fedora 44 and Arch rolling. The extracted final

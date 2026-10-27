@@ -6,8 +6,8 @@ macOS DMG/ZIP, Windows Setup/portable ZIP and Linux DEB/RPM/Arch/AppImage/tar/Fl
 The release has 21 current assets: ten installers, eight platform records and
 three aggregate records, verified against GitHub server SHA-256 and byte size.
 The tag points to corrected source `622946ed`; the replaced assets are removed
-from public downloads. GitHub Latest remains v0.7.4 pending a separate maintainer
-decision.
+from public downloads. The maintainer approved promotion to GitHub Latest on
+2026-10-27; the final installers and checksums are unchanged by promotion.
 
 macOS and Windows binaries retain source `77cf280c`; Linux and Nix use merged
 source `622946ed`. Only acceptance documentation differs between those source
@@ -32,8 +32,8 @@ activation remain manual.
 
 This records the initial release's validation scope. Its packages have been
 superseded by the corrected 2026-10-27 delivery above; original asset records are
-retained in local release history. Latest promotion and activation remain
-separate maintainer decisions.
+retained in local release history. Latest promotion and activation were deferred
+to separate maintainer decisions; see the current publication above.
 
 Linux source `06274045c9323f74f8776bcbeb50660848542393` moves GPU environment
 initialization before asynchronous logging. The reproduced Ubuntu 24.04 startup
@@ -4379,8 +4379,8 @@ keyboard text input on 2026-10-27. The exact endpoint and key-hold durations of
 that manual check were not recorded; this does not resolve the native-injection
 path discrepancy. Composed Unicode text, all keyboard layouts and every Linux
 compositor remain outside this acceptance. This follow-up preceded publication;
-the corrected package delivery is recorded at the top of this roadmap. Latest
-promotion remains a separate decision.
+the corrected package delivery and subsequent Latest promotion are recorded at
+the top of this roadmap.
 
 The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
 a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
