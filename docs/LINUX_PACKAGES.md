@@ -33,8 +33,8 @@ The historical 0.7.4 replacement used `r2` filenames while retaining version
 0.7.4. Its immutable release assets and verification records remain separate
 from 0.7.6.
 
-The corrected downloads use standard filenames without a revision suffix; the
-application version remains 0.7.6. Reinstall an existing 0.7.6 native package so
+Release filenames contain only the application version and target platform.
+The application version is 0.7.6. Reinstall an existing 0.7.6 native package so
 its payload is replaced. For RPM, use `sudo dnf reinstall ./PACKAGE.rpm` when 0.7.6 is already
 installed, and `sudo dnf install ./PACKAGE.rpm` for a fresh install or upgrade
 from an older version. DEB and Flatpak examples explicitly request reinstall.
@@ -47,9 +47,9 @@ GitHub Latest remains v0.7.4.
 | Format | Target | Install |
 | --- | --- | --- |
 | portable `.tar.gz` | x86_64, glibc 2.39+ | Extract `DeskPort-0.7.6-linux-x86_64.tar.gz` and run `DeskPort.AppDir/AppRun` |
-| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install --reinstall ./deskport_0.7.6-1_amd64.deb` |
-| `.rpm` | Fedora 44 | Existing 0.7.6: `sudo dnf reinstall ./deskport-0.7.6-1.x86_64.rpm`; fresh install or older version: use `dnf install` instead |
-| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst` |
+| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install --reinstall ./deskport_0.7.6_amd64.deb` |
+| `.rpm` | Fedora 44 | Existing 0.7.6: `sudo dnf reinstall ./deskport-0.7.6.x86_64.rpm`; fresh install or older version: use `dnf install` instead |
+| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.6-x86_64.pkg.tar.zst` |
 | `.AppImage` | x86_64 glibc desktops, private runtime included | Make executable, then open |
 | `.flatpak` | Distributions with Flatpak and Freedesktop Platform 25.08 | See below |
 | Nix | NixOS / Linux with Nix | `nix run --refresh github:keithxc/deskport/622946ed6cfc95dde08bebf99d7ee78327089e07` |
@@ -105,7 +105,7 @@ Do not use `yay -S deskport-bin` until this page confirms publication.
 For the existing release package:
 
 ```sh
-sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst
+sudo pacman -U ./deskport-0.7.6-x86_64.pkg.tar.zst
 ```
 
 The retained AUR candidate recipe targets historical version 0.6.3, not the

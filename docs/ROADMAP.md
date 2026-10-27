@@ -1,7 +1,7 @@
-## Desktop 0.7.6 corrected package delivery — 2026-10-27
+## Desktop 0.7.6 final package delivery — 2026-10-27
 
 The [0.7.6 release](RELEASE_0.7.6.md) replaces the earlier desktop packages with
-ten corrected installers under standard filenames without revision suffixes:
+ten final installers with filenames containing only the version and platform:
 macOS DMG/ZIP, Windows Setup/portable ZIP and Linux DEB/RPM/Arch/AppImage/tar/Flatpak.
 The release has 21 current assets: ten installers, eight platform records and
 three aggregate records, verified against GitHub server SHA-256 and byte size.

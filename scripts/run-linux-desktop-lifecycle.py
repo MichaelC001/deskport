@@ -95,9 +95,12 @@ def main():
                         verify_va_runtime_fix=args.verify_va_runtime_fix, packages=[],
                         routes=([] if args.no_appimage else ['appimage']) + ([args.native] if args.native else [])
                         + (['flatpak'] if args.flatpak else []))
-        patterns = dict(appimage='DeskPort-{v}-x86_64.AppImage', deb='deskport_{v}-1_amd64.deb',
-                        rpm='deskport-{v}-1.x86_64.rpm', arch='deskport-{v}-1-x86_64.pkg.tar.zst',
+        patterns = dict(appimage='DeskPort-{v}-x86_64.AppImage', deb='deskport_{v}_amd64.deb',
+                        rpm='deskport-{v}.x86_64.rpm', arch='deskport-{v}-x86_64.pkg.tar.zst',
                         flatpak='DeskPort-{v}-client-x86_64.flatpak')
+        legacy_patterns = dict(deb='deskport_{v}-1_amd64.deb',
+                               rpm='deskport-{v}-1.x86_64.rpm',
+                               arch='deskport-{v}-1-x86_64.pkg.tar.zst')
         bundle = output / 'lifecycle.tar.gz'
         # Packages are already compressed. A valid gzip envelope with level 0
         # avoids recompressing hundreds of MB while retaining the lab input type.
@@ -113,6 +116,12 @@ def main():
                         extension = '.pkg.tar.zst' if route == 'arch' else Path(name).suffix
                         name = name[:-len(extension)] + '-' + suffix + extension
                     path = directory / name
+                    if role == 'old' and not path.exists() and route in legacy_patterns:
+                        name = legacy_patterns[route].format(v=version)
+                        if suffix:
+                            extension = '.pkg.tar.zst' if route == 'arch' else Path(name).suffix
+                            name = name[:-len(extension)] + '-' + suffix + extension
+                        path = directory / name
                     assert path.is_file() and not path.is_symlink(), path
                     manifest['packages'].append(dict(name=path.name, sha256=digest(path), bytes=path.stat().st_size,
                         role=role, route=route, version=version))

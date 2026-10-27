@@ -76,9 +76,9 @@ for icon in sorted((appdir / 'usr/share/icons/hicolor').glob('*x*/apps/deskport.
                               'dst': '/' + str(icon.relative_to(appdir))})
 manifest = work / 'nfpm.json'
 manifest.write_text(json.dumps(config, indent=2) + '\n')
-for packager, name in [('deb', f'deskport_{version}-1_amd64.deb'),
-                       ('rpm', f'deskport-{version}-1.x86_64.rpm'),
-                       ('archlinux', f'deskport-{version}-1-x86_64.pkg.tar.zst')]:
+for packager, name in [('deb', f'deskport_{version}_amd64.deb'),
+                       ('rpm', f'deskport-{version}.x86_64.rpm'),
+                       ('archlinux', f'deskport-{version}-x86_64.pkg.tar.zst')]:
     if args.format and packager not in args.format:
         continue
     subprocess.run([str(cache / 'nfpm'), 'package', '--config', str(manifest),

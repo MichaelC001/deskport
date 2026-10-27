@@ -50,7 +50,8 @@
 This stable release is intentionally not promoted to Latest during initial use.
 The current downloads include native Windows/macOS shortcut capture and the
 Linux-compatible text-input fix. They replace the earlier packages under the
-standard 0.7.6 filenames; verify the current checksums before reinstalling.
+0.7.6 filenames containing only the version and platform; verify the current
+checksums before reinstalling.
 
 - **One desktop app for viewing and sharing.** Bundled Sunshine, device approval,
   independent credentials and settings; no separate Sunshine installation for the
@@ -239,14 +240,14 @@ and checksum before installation.
 <details>
 <summary><strong>Ubuntu 26.04 GNOME</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.6-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6-1_amd64.deb),
+Download [deskport_0.7.6_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6_amd64.deb),
 then open a terminal in the directory containing that file:
 
 ```sh
 curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS.txt &&
-awk '$2 == "deskport_0.7.6-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
+awk '$2 == "deskport_0.7.6_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install --reinstall ./deskport_0.7.6-1_amd64.deb &&
+sudo apt install --reinstall ./deskport_0.7.6_amd64.deb &&
 deskport
 ```
 
@@ -266,14 +267,14 @@ GNOME hosting depends on the installed Mutter/capture capabilities; see the
 <details>
 <summary><strong>Debian 13 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.6-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6-1_amd64.deb),
+Download [deskport_0.7.6_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6_amd64.deb),
 then open a terminal in its download directory:
 
 ```sh
 curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS.txt &&
-awk '$2 == "deskport_0.7.6-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
+awk '$2 == "deskport_0.7.6_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install --reinstall ./deskport_0.7.6-1_amd64.deb &&
+sudo apt install --reinstall ./deskport_0.7.6_amd64.deb &&
 deskport
 ```
 
@@ -291,16 +292,16 @@ before starting sharing.
 <details>
 <summary><strong>Fedora 44 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport-0.7.6-1.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1.x86_64.rpm),
+Download [deskport-0.7.6.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6.x86_64.rpm),
 then open a terminal in its download directory:
 
 ```sh
 curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.6-1.x86_64.rpm" { print }' SHA256SUMS.txt | sha256sum --check - &&
+awk '$2 == "deskport-0.7.6.x86_64.rpm" { print }' SHA256SUMS.txt | sha256sum --check - &&
 if [ "$(rpm -q --queryformat '%{VERSION}' deskport 2>/dev/null)" = 0.7.6 ]; then
-  sudo dnf reinstall ./deskport-0.7.6-1.x86_64.rpm
+  sudo dnf reinstall ./deskport-0.7.6.x86_64.rpm
 else
-  sudo dnf install ./deskport-0.7.6-1.x86_64.rpm
+  sudo dnf install ./deskport-0.7.6.x86_64.rpm
 fi &&
 deskport
 ```
@@ -318,13 +319,13 @@ For KDE hosting, also check the [compositor and input requirements](docs/LINUX_P
 <summary><strong>Arch Linux KDE</strong> — download, install, update and remove</summary>
 
 Complete your usual full Arch system update, then download
-[deskport-0.7.6-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1-x86_64.pkg.tar.zst).
+[deskport-0.7.6-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-x86_64.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
 curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.6-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst &&
+awk '$2 == "deskport-0.7.6-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.6-x86_64.pkg.tar.zst &&
 deskport
 ```
 
@@ -376,13 +377,13 @@ host-desktop integration. The Flatpak below provides viewing only.
 <summary><strong>Omarchy / Hyprland</strong> — local Arch package and hosting requirements</summary>
 
 Complete Omarchy's normal system update, then download
-[deskport-0.7.6-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1-x86_64.pkg.tar.zst).
+[deskport-0.7.6-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-x86_64.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
 curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.6-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst &&
+awk '$2 == "deskport-0.7.6-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.6-x86_64.pkg.tar.zst &&
 deskport
 ```
 

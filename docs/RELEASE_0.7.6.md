@@ -4,10 +4,10 @@ Desktop release for macOS Apple Silicon, Linux x86_64 and Windows x64.
 This is a stable release, intentionally published without changing GitHub Latest.
 Promotion is a separate maintainer decision after initial use.
 
-## Corrected packages — 2026-10-27
+## Final packages — 2026-10-27
 
-The current downloads replace the earlier packages using standard 0.7.6
-filenames without revision suffixes. GitHub Latest remains v0.7.4.
+The final downloads replace the earlier packages. Filenames contain only
+version 0.7.6 and the target platform. GitHub Latest remains v0.7.4.
 This replacement includes:
 
 - Native foreground-scoped Windows shell-shortcut capture, including left/right

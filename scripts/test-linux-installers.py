@@ -10,13 +10,13 @@ version = sys.argv[2]
 scripts = pathlib.Path(__file__).resolve().parent
 cases = [
     ('ubuntu-24.04', 'docker.io/library/ubuntu:24.04',
-     f'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 /packages/deskport_{version}-1_amd64.deb'),
+     f'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 /packages/deskport_{version}_amd64.deb'),
     ('debian-13', 'docker.io/library/debian:13',
-     f'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 /packages/deskport_{version}-1_amd64.deb'),
+     f'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 /packages/deskport_{version}_amd64.deb'),
     ('fedora-44', 'docker.io/library/fedora:44',
-     f'dnf install -y python3 /packages/deskport-{version}-1.x86_64.rpm'),
+     f'dnf install -y python3 /packages/deskport-{version}.x86_64.rpm'),
     ('arch', 'docker.io/library/archlinux:latest',
-     f'pacman -Syu --noconfirm python && pacman -U --noconfirm /packages/deskport-{version}-1-x86_64.pkg.tar.zst'),
+     f'pacman -Syu --noconfirm python && pacman -U --noconfirm /packages/deskport-{version}-x86_64.pkg.tar.zst'),
 ]
 results = []
 for name, image, install in cases:
