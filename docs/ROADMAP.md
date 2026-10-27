@@ -1,3 +1,29 @@
+## Desktop 0.7.6 keyboard r3 delivery — 2026-10-27
+
+The [0.7.6 release](RELEASE_0.7.6.md) adds all ten r3 desktop installers:
+macOS DMG/ZIP, Windows Setup/portable ZIP and Linux DEB/RPM/Arch/AppImage/tar/Flatpak.
+The 21 new installer/metadata/checksum files are verified against GitHub server
+SHA-256 and byte size. The original tag and 21 assets remain unchanged; GitHub
+Latest remains v0.7.4 pending a separate maintainer decision.
+
+macOS and Windows binaries retain source `77cf280c`; Linux and Nix use merged
+source `622946ed`. Only acceptance documentation differs between those source
+revisions. Native Windows/macOS shortcut capture and the bounded Linux-compatible
+text-event envelope are included; private timing instrumentation is excluded.
+
+All four native Linux package environments pass fresh installation and isolated
+startup/API checks. The final AppImage and portable tar payloads match the build
+and pass their scoped runtime checks; the exact Flatpak passes isolated 25.08
+runtime and crash/restart checks. Same-version package upgrades and desktop VMs
+were not repeated. Native input observations cover six directions at explicitly
+recorded source checkpoints, and the user confirmed normal Windows physical
+typing. The host Wi-Fi synthetic key-release issue remains unresolved; successful
+Ethernet checks do not qualify that path. See `VERIFICATION-r3.txt` for the exact
+package identities, corrected test prerequisites and remaining limits.
+
+The mynix update pins the r3 source and notarized macOS ZIP. Configuration builds
+prepare the update; installation, service restarts and activation remain manual.
+
 ## Desktop 0.7.6 stable release — 2026-10-26
 
 Published [v0.7.6](https://github.com/keithxc/deskport/releases/tag/v0.7.6)

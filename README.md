@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.5"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.5_stable-71e0c3"></a>
+  <a href="https://github.com/keithxc/deskport/releases/tag/v0.7.6"><img alt="Desktop release" src="https://img.shields.io/badge/desktop-0.7.6_r3-71e0c3"></a>
   <a href="https://apps.apple.com/us/app/deskport/id6812389978"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-iPhone%20%26%20iPad%20%C2%B7%20%244.99-0a84ff?logo=apple&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
 </p>
@@ -45,9 +45,11 @@
 
 ## Main features
 
-**0.7.6 release:** [release notes](docs/RELEASE_0.7.6.md) and
+**0.7.6 r3 release:** [release notes](docs/RELEASE_0.7.6.md) and
 [versioned downloads](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
 This stable release is intentionally not promoted to Latest during initial use.
+Choose the `keyboard-fix-r3` downloads for native Windows/macOS shortcut capture
+and the Linux-compatible text-input fix. The application version remains 0.7.6.
 
 - **One desktop app for viewing and sharing.** Bundled Sunshine, device approval,
   independent credentials and settings; no separate Sunshine installation for the
@@ -86,17 +88,17 @@ for the full-size image; these previews do not imply store or release availabili
 See the [PC implementation and acceptance matrix](docs/PC_SUPPORT_MATRIX.md)
 for current source versus installed-package scope, compositor capabilities,
 historical evidence and remaining native checks. Release availability below
-does not certify every feature on every GPU or OS session. The 0.7.5 release
+does not certify every feature on every GPU or OS session. The 0.7.6 release
 records exact package identities and validation limits in its verification report.
 
 | Platform | Role | Release status | Download |
 | --- | --- | --- | --- |
-| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.5 stable**; Developer ID signed and Apple notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-macos-arm64.dmg) |
-| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.5 stable**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.5) · [installation guide](docs/LINUX_PACKAGES.md) |
-| Linux x86_64 Flatpak | Viewer only | **0.7.5 stable**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.5) |
+| macOS Apple Silicon, macOS 26+ | Viewer + host + native virtual display | **0.7.6 r3**; Developer ID signed and Apple notarized | [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-macos-arm64-keyboard-fix-r3.dmg) |
+| Linux x86_64 | Viewer + host; adaptive workspace on capable KWin, Mutter and Hyprland hosts | **0.7.6 r3**: DEB, RPM, Arch, AppImage, portable archive and Nix | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.6) · [installation guide](docs/LINUX_PACKAGES.md) |
+| Linux x86_64 Flatpak | Viewer only | **0.7.6 r3**, Freedesktop Platform 25.08 | [Release](https://github.com/keithxc/deskport/releases/tag/v0.7.6) |
 | iPhone / iPad, iOS/iPadOS 15+ | Client only | App Store; newer builds tested separately in TestFlight | [App Store](https://apps.apple.com/us/app/deskport/id6812389978) |
 | Android 8.0+ | Client only | Development; physical-device checks, no public store release yet | Not yet available |
-| Windows x64 | Viewer + host + virtual display | **0.7.5 stable**; full installer hosts, portable ZIP views; application and installer unsigned | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-windows-x64-setup-full.exe) |
+| Windows x64 | Viewer + host + virtual display | **0.7.6 r3**; full installer hosts, portable ZIP views; application and installer unsigned | [Installer](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-windows-x64-setup-full-keyboard-fix-r3.exe) |
 | Linux ARM64 / Intel Mac | Not qualified | No verified release package | — |
 
 > **Windows antivirus notice:** Antivirus software may flag DeskPort's Windows helper components as a false positive.
@@ -114,21 +116,21 @@ A source definition or successful compilation alone is not a supported platform.
 
 ## Install
 
-**0.7.5 stable:** Download the package for your platform from the
-[0.7.5 release](https://github.com/keithxc/deskport/releases/tag/v0.7.5).
+**0.7.6 r3:** Download the package for your platform from the
+[0.7.6 release](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
 The device list, connection controls and remote desktop share one persistent
 window. Configure its global recall shortcut in Settings. See the
-[release notes](docs/RELEASE_0.7.5.md) for package checks and their limits.
+[release notes](docs/RELEASE_0.7.6.md) for package checks and their limits.
 
-**macOS:** Open the [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-macos-arm64.dmg),
+**macOS:** Open the [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-macos-arm64-keyboard-fix-r3.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
 Accessibility permissions to use host features. Nix and Homebrew are not required.
 
-**Linux:** Choose the [0.7.5 package](https://github.com/keithxc/deskport/releases/tag/v0.7.5)
+**Linux:** Choose the [0.7.6 package](https://github.com/keithxc/deskport/releases/tag/v0.7.6)
 for your system and follow the [distribution-specific steps below](#linux-installation-by-distribution),
 including the [host input requirements](docs/LINUX_PACKAGES.md#first-connection-and-hosting).
-With Nix: `nix run --refresh github:keithxc/deskport/v0.7.5`.
-Flatpak provides viewing only. The release includes [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.5/VERIFICATION.txt).
+With Nix: `nix run --refresh github:keithxc/deskport/622946ed6cfc95dde08bebf99d7ee78327089e07`.
+Flatpak provides viewing only. The release includes [SHA-256 checksums](https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt) and a [verification report](https://github.com/keithxc/deskport/releases/download/v0.7.6/VERIFICATION-r3.txt).
 
 **iPhone / iPad:** Install [DeskPort from the App Store](https://apps.apple.com/us/app/deskport/id6812389978).
 The mobile app is a paid, one-time purchase; see your storefront for current local
@@ -181,7 +183,7 @@ runtime; native packages retain their glibc 2.39 requirement.
 
 ### Linux installation by distribution
 
-These instructions target **x86_64** desktop systems and the **0.7.5**
+These instructions target **x86_64** desktop systems and the **0.7.6**
 release downloads. Native packages require glibc 2.39 or newer. These are upstream downloads rather than
 packages from a DeskPort distribution repository; install future releases by
 downloading and verifying the new package again.
@@ -213,15 +215,15 @@ display-helper's 6.6 minimum.
 
 | Distribution / desktop | Download route |
 | --- | --- |
-| Ubuntu 26.04 GNOME | 0.7.5 DEB or AppImage; GNOME capture/recovery gaps remain |
+| Ubuntu 26.04 GNOME | 0.7.6 DEB or AppImage; GNOME capture/recovery gaps remain |
 | Debian 13 KDE | DEB, installed with APT |
 | Fedora 44 KDE | RPM, installed with DNF |
 | Arch Linux KDE | Local Arch package, installed with `pacman -U` |
-| Bazzite KDE | 0.7.5 AppImage; historical 0.7.3 VM checks are scoped above |
+| Bazzite KDE | 0.7.6 AppImage; historical 0.7.3 VM checks are scoped above |
 | Omarchy / Hyprland | Local Arch package, installed with `pacman -U` |
 
 Open a terminal in your normal desktop session. Each command sequence verifies
-the exact downloaded filename against that release's `SHA256SUMS.txt` before
+the exact downloaded filename against that release's `SHA256SUMS-r3.txt` before
 installing it; the checksum must report that filename as `OK`. An absent checksum
 entry or a mismatch stops the sequence.
 Launch DeskPort as your ordinary user after installation.
@@ -229,21 +231,21 @@ Before an upgrade, stop sharing and fully quit the old DeskPort instance using
 its **Quit** action, such as the tray menu. Closing the window may only hide it.
 Launch the newly installed version afterwards so it runs the new binary.
 
-Upgrade from 0.7.5 using the package for your distribution below. Existing
+Upgrade from an earlier release or earlier 0.7.6 package using the downloads below. Existing
 DeskPort settings and pairing identities are retained. Verify the exact filename
 and checksum before installation.
 
 <details>
 <summary><strong>Ubuntu 26.04 GNOME</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.5-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.5/deskport_0.7.5-1_amd64.deb),
+Download [deskport_0.7.6-1_amd64-keyboard-fix-r3.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6-1_amd64-keyboard-fix-r3.deb),
 then open a terminal in the directory containing that file:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "deskport_0.7.5-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "deskport_0.7.6-1_amd64-keyboard-fix-r3.deb" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install --reinstall ./deskport_0.7.5-1_amd64.deb &&
+sudo apt install --reinstall ./deskport_0.7.6-1_amd64-keyboard-fix-r3.deb &&
 deskport
 ```
 
@@ -263,14 +265,14 @@ GNOME hosting depends on the installed Mutter/capture capabilities; see the
 <details>
 <summary><strong>Debian 13 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport_0.7.5-1_amd64.deb](https://github.com/keithxc/deskport/releases/download/v0.7.5/deskport_0.7.5-1_amd64.deb),
+Download [deskport_0.7.6-1_amd64-keyboard-fix-r3.deb](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport_0.7.6-1_amd64-keyboard-fix-r3.deb),
 then open a terminal in its download directory:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "deskport_0.7.5-1_amd64.deb" { print }' SHA256SUMS.txt | sha256sum --check - &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "deskport_0.7.6-1_amd64-keyboard-fix-r3.deb" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
 sudo apt update &&
-sudo apt install --reinstall ./deskport_0.7.5-1_amd64.deb &&
+sudo apt install --reinstall ./deskport_0.7.6-1_amd64-keyboard-fix-r3.deb &&
 deskport
 ```
 
@@ -288,13 +290,17 @@ before starting sharing.
 <details>
 <summary><strong>Fedora 44 KDE</strong> — download, install, update and remove</summary>
 
-Download [deskport-0.7.5-1.x86_64.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.5/deskport-0.7.5-1.x86_64.rpm),
+Download [deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm),
 then open a terminal in its download directory:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.5-1.x86_64.rpm" { print }' SHA256SUMS.txt | sha256sum --check - &&
-sudo dnf install ./deskport-0.7.5-1.x86_64.rpm &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
+if [ "$(rpm -q --queryformat '%{VERSION}' deskport 2>/dev/null)" = 0.7.6 ]; then
+  sudo dnf reinstall ./deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm
+else
+  sudo dnf install ./deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm
+fi &&
 deskport
 ```
 
@@ -311,13 +317,13 @@ For KDE hosting, also check the [compositor and input requirements](docs/LINUX_P
 <summary><strong>Arch Linux KDE</strong> — download, install, update and remove</summary>
 
 Complete your usual full Arch system update, then download
-[deskport-0.7.5-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.5/deskport-0.7.5-1-x86_64.pkg.tar.zst).
+[deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.5-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.5-1-x86_64.pkg.tar.zst &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst &&
 deskport
 ```
 
@@ -334,7 +340,7 @@ For KDE hosting, also check the [compositor and input requirements](docs/LINUX_P
 <summary><strong>Bazzite KDE</strong> — AppImage, startup and removal</summary>
 
 Download
-[DeskPort-0.7.5-x86_64.AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-x86_64.AppImage).
+[DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage).
 Stop sharing and use **Quit** to fully exit any older DeskPort instance; closing
 its window may leave it running. Save the new AppImage in a permanent location
 before enabling login startup:
@@ -342,11 +348,11 @@ before enabling login startup:
 ```sh
 mkdir -p "$HOME/Applications/DeskPort" &&
 cd "$HOME/Applications/DeskPort" &&
-curl --fail --location --output DeskPort-0.7.5-x86_64.AppImage https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-x86_64.AppImage &&
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "DeskPort-0.7.5-x86_64.AppImage" { print }' SHA256SUMS.txt | sha256sum --check - &&
-chmod +x DeskPort-0.7.5-x86_64.AppImage &&
-./DeskPort-0.7.5-x86_64.AppImage
+curl --fail --location --output DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
+chmod +x DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage &&
+./DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage
 ```
 
 Launch normally; no bundled libraries need to be removed or relocated. If login
@@ -369,13 +375,13 @@ host-desktop integration. The Flatpak below provides viewing only.
 <summary><strong>Omarchy / Hyprland</strong> — local Arch package and hosting requirements</summary>
 
 Complete Omarchy's normal system update, then download
-[deskport-0.7.5-1-x86_64.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.5/deskport-0.7.5-1-x86_64.pkg.tar.zst).
+[deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst](https://github.com/keithxc/deskport/releases/download/v0.7.6/deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst).
 Open a terminal in its download directory:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "deskport-0.7.5-1-x86_64.pkg.tar.zst" { print }' SHA256SUMS.txt | sha256sum --check - &&
-sudo pacman -U ./deskport-0.7.5-1-x86_64.pkg.tar.zst &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
+sudo pacman -U ./deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst &&
 deskport
 ```
 
@@ -399,13 +405,13 @@ a working stream.
 <details>
 <summary><strong>Flatpak alternative</strong> — viewing only, on systems with Flatpak configured</summary>
 
-Download [DeskPort-0.7.5-client-x86_64.flatpak](https://github.com/keithxc/deskport/releases/download/v0.7.5/DeskPort-0.7.5-client-x86_64.flatpak),
+Download [DeskPort-0.7.6-client-x86_64-keyboard-fix-r3.flatpak](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-client-x86_64-keyboard-fix-r3.flatpak),
 then open a terminal in its download directory:
 
 ```sh
-curl --fail --location --output SHA256SUMS.txt https://github.com/keithxc/deskport/releases/download/v0.7.5/SHA256SUMS.txt &&
-awk '$2 == "DeskPort-0.7.5-client-x86_64.flatpak" { print }' SHA256SUMS.txt | sha256sum --check - &&
-flatpak install --user --reinstall ./DeskPort-0.7.5-client-x86_64.flatpak &&
+curl --fail --location --output SHA256SUMS-r3.txt https://github.com/keithxc/deskport/releases/download/v0.7.6/SHA256SUMS-r3.txt &&
+awk '$2 == "DeskPort-0.7.6-client-x86_64-keyboard-fix-r3.flatpak" { print }' SHA256SUMS-r3.txt | sha256sum --check - &&
+flatpak install --user --reinstall ./DeskPort-0.7.6-client-x86_64-keyboard-fix-r3.flatpak &&
 flatpak run io.github.keithxc.DeskPort
 ```
 
@@ -430,8 +436,8 @@ in your home directory.
 
 | Channel | Status | Installation |
 | --- | --- | --- |
-| GitHub release packages | 0.7.5 stable | Download the package for your distribution above |
-| Upstream Nix flake | 0.7.5 stable | `nix run --refresh github:keithxc/deskport/v0.7.5` |
+| GitHub release packages | 0.7.6 r3 | Download the package for your distribution above |
+| Upstream Nix flake | 0.7.6 r3 | `nix run --refresh github:keithxc/deskport/622946ed6cfc95dde08bebf99d7ee78327089e07` |
 | AUR `deskport-bin` | Recipe tested; publication blocked by new-account registration pause | [Build the recipe locally](docs/LINUX_PACKAGES.md#arch-linux-and-aur) |
 | Nixpkgs `deskport` | [PR #572043](https://github.com/NixOS/nixpkgs/pull/572043) submitted for review; not merged | Use the upstream flake until inclusion |
 | Arch official repositories / Flathub | Not listed | Use the release downloads; Flatpak is viewer-only |
@@ -467,7 +473,7 @@ Sources: [Moonlight](https://moonlight-stream.org/),
 DeskPort's current platform limits are listed above; this table does not imply
 feature parity across every OS or a measured performance advantage.
 
-See the [0.7.5 release notes](docs/RELEASE_0.7.5.md),
+See the [0.7.6 release notes](docs/RELEASE_0.7.6.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux
