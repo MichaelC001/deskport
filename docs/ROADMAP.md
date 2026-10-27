@@ -4328,24 +4328,28 @@ The final check uses the uninstrumented r3 package client, whose executable hash
 matches its entry in the retained portable package. Both input sources return
 to their initial state.
 
-The host's Wi-Fi endpoint remains unreliable. An A-B-A endpoint comparison,
-using the same private diagnostic client and unchanged deployed host, produces
-29 extra letters through Wi-Fi, none through Ethernet, and 18 after returning
+Native-injection probes against the host's Wi-Fi endpoint remain unreliable.
+An A-B-A endpoint comparison, using the same private diagnostic client and
+unchanged deployed host, produces 29 extra letters through Wi-Fi, none through
+Ethernet, and 18 after returning
 to Wi-Fi. The final remote input-source shortcut also fails in the last Wi-Fi
 run; guarded local input restores it after disconnect. All three runs capture
 44 keyboard events and reach the initial socket send within 32 ms; maximum
 intervals from first socket acceptance to processed ACK are 1000, 16 and 625 ms
-respectively. The Windows client
-uses Wi-Fi throughout. This isolates a repeatable endpoint/path dependency,
-but does not identify the responsible network component or establish a
+respectively. The Windows client uses Wi-Fi throughout. This isolates a
+repeatable endpoint/path dependency, but does not identify the responsible
+network component or establish a
 transport-code fix. Private timing probes record no text or key codes and are
 not part of the delivery candidate.
 
 All six platform directions now have a successful guarded native-input check,
 with Windows-to-macOS acceptance conditional on the host's Ethernet endpoint.
-Physical-keyboard use, composed Unicode text, all keyboard layouts and every
-Linux compositor remain outside this acceptance. Published 0.7.6 assets and
-Latest remain unchanged in this follow-up.
+The user subsequently confirmed Windows r3 validation and normal physical
+keyboard text input on 2026-10-27. The exact endpoint and key-hold durations of
+that manual check were not recorded; this does not resolve the native-injection
+path discrepancy. Composed Unicode text, all keyboard layouts and every Linux
+compositor remain outside this acceptance. Published 0.7.6 assets and Latest
+remain unchanged in this follow-up.
 
 The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
 a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
