@@ -4,7 +4,7 @@ For full desktop VM install/upgrade/rollback/removal coverage and its limits,
 see [Linux desktop acceptance](LINUX_DESKTOP_ACCEPTANCE.md). Container package
 checks and AppImage GUI smoke do not establish that lifecycle matrix.
 
-DeskPort 0.7.6 r3 provides x86_64 Linux downloads for users who do not build from
+DeskPort 0.7.6 provides x86_64 Linux downloads for users who do not build from
 source. The AppImage and native packages contain the viewer, a separate Sunshine
 host tree, Qt and media libraries. The Flatpak is a **client-only** package. Linux remote video uses libplacebo
 and requires a working Vulkan driver; the device list remains available when
@@ -18,9 +18,9 @@ plugins and VA-API runtime support. Native packages and portable archives retain
 their glibc 2.39 minimum. Hardware encoding, decoding and virtual displays still
 depend on the host kernel, GPU drivers and compositor.
 
-Verify downloads with `SHA256SUMS-r3.txt` from the
+Verify downloads with `SHA256SUMS.txt` from the
 [release page](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
-Locked Nix consumers should use the exact source revision in `PROVENANCE-r3.json`.
+Locked Nix consumers should use the exact source revision in `PROVENANCE.json`.
 
 ## Upgrading
 
@@ -33,22 +33,23 @@ The historical 0.7.4 replacement used `r2` filenames while retaining version
 0.7.4. Its immutable release assets and verification records remain separate
 from 0.7.6.
 
-The replacement filenames contain `keyboard-fix-r3`; the application version
-remains 0.7.6. Reinstall an existing 0.7.6 native package so its payload is
-replaced. For RPM, use `sudo dnf reinstall ./PACKAGE.rpm` when 0.7.6 is already
+The corrected downloads use standard filenames without a revision suffix; the
+application version remains 0.7.6. Reinstall an existing 0.7.6 native package so
+its payload is replaced. For RPM, use `sudo dnf reinstall ./PACKAGE.rpm` when 0.7.6 is already
 installed, and `sudo dnf install ./PACKAGE.rpm` for a fresh install or upgrade
 from an older version. DEB and Flatpak examples explicitly request reinstall.
-The original tag and downloads remain available; Nix examples below pin the
-r3 commit instead of the original `v0.7.6` tag. GitHub Latest is unchanged.
+The earlier packages have been replaced. The corrected `v0.7.6` tag and the
+explicit Nix examples below use source `622946ed6cfc95dde08bebf99d7ee78327089e07`.
+GitHub Latest remains v0.7.4.
 
 ## Choose a download
 
 | Format | Target | Install |
 | --- | --- | --- |
-| portable `.tar.gz` | x86_64, glibc 2.39+ | Extract `DeskPort-0.7.6-linux-x86_64-keyboard-fix-r3.tar.gz` and run `DeskPort.AppDir/AppRun` |
-| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install --reinstall ./deskport_0.7.6-1_amd64-keyboard-fix-r3.deb` |
-| `.rpm` | Fedora 44 | Existing 0.7.6: `sudo dnf reinstall ./deskport-0.7.6-1.x86_64-keyboard-fix-r3.rpm`; fresh install or older version: use `dnf install` instead |
-| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst` |
+| portable `.tar.gz` | x86_64, glibc 2.39+ | Extract `DeskPort-0.7.6-linux-x86_64.tar.gz` and run `DeskPort.AppDir/AppRun` |
+| `.deb` | Ubuntu 24.04+, Debian 13+ | `sudo apt install --reinstall ./deskport_0.7.6-1_amd64.deb` |
+| `.rpm` | Fedora 44 | Existing 0.7.6: `sudo dnf reinstall ./deskport-0.7.6-1.x86_64.rpm`; fresh install or older version: use `dnf install` instead |
+| `.pkg.tar.zst` | Current Arch Linux | `sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst` |
 | `.AppImage` | x86_64 glibc desktops, private runtime included | Make executable, then open |
 | `.flatpak` | Distributions with Flatpak and Freedesktop Platform 25.08 | See below |
 | Nix | NixOS / Linux with Nix | `nix run --refresh github:keithxc/deskport/622946ed6cfc95dde08bebf99d7ee78327089e07` |
@@ -64,8 +65,8 @@ supported source/Nix build rather than the native glibc 2.39 binaries.
 For AppImage:
 
 ```sh
-chmod +x DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage
-./DeskPort-0.7.6-x86_64-keyboard-fix-r3.AppImage
+chmod +x DeskPort-0.7.6-x86_64.AppImage
+./DeskPort-0.7.6-x86_64.AppImage
 ```
 
 Keep the AppImage in a permanent location before enabling login startup. Moving
@@ -76,7 +77,7 @@ AppImage with an FHS environment. Desktop graphics drivers remain system-provide
 For Flatpak:
 
 ```sh
-flatpak install --user --reinstall ./DeskPort-0.7.6-client-x86_64-keyboard-fix-r3.flatpak
+flatpak install --user --reinstall ./DeskPort-0.7.6-client-x86_64.flatpak
 flatpak run io.github.keithxc.DeskPort
 ```
 
@@ -104,7 +105,7 @@ Do not use `yay -S deskport-bin` until this page confirms publication.
 For the existing release package:
 
 ```sh
-sudo pacman -U ./deskport-0.7.6-1-x86_64-keyboard-fix-r3.pkg.tar.zst
+sudo pacman -U ./deskport-0.7.6-1-x86_64.pkg.tar.zst
 ```
 
 The retained AUR candidate recipe targets historical version 0.6.3, not the
@@ -128,7 +129,7 @@ repositories. Future AUR publication will not enable `pacman -S deskport`.
 
 ## NixOS and Nix
 
-**Available now:** the upstream flake, pinned to the r3 source revision:
+**Available now:** the upstream flake, pinned to the corrected release source revision:
 
 ```sh
 nix run --refresh github:keithxc/deskport/622946ed6cfc95dde08bebf99d7ee78327089e07
@@ -271,8 +272,8 @@ Initialize the shared core with `git submodule update --init shared/deskport-cor
 then run:
 
 ```sh
-bash scripts/build.sh package --target linux-portable --run example-linux-r3 \
-  --format all --flatpak --asset-suffix keyboard-fix-r3
+bash scripts/build.sh package --target linux-portable --run example-linux-076 \
+  --format all --flatpak
 ```
 
 Choose a new run ID for each build. The [managed build workflow](BUILD_WORKFLOW.md)

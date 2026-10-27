@@ -1,10 +1,13 @@
-## Desktop 0.7.6 keyboard r3 delivery — 2026-10-27
+## Desktop 0.7.6 corrected package delivery — 2026-10-27
 
-The [0.7.6 release](RELEASE_0.7.6.md) adds all ten r3 desktop installers:
+The [0.7.6 release](RELEASE_0.7.6.md) replaces the earlier desktop packages with
+ten corrected installers under standard filenames without revision suffixes:
 macOS DMG/ZIP, Windows Setup/portable ZIP and Linux DEB/RPM/Arch/AppImage/tar/Flatpak.
-The 21 new installer/metadata/checksum files are verified against GitHub server
-SHA-256 and byte size. The original tag and 21 assets remain unchanged; GitHub
-Latest remains v0.7.4 pending a separate maintainer decision.
+The release has 21 current assets: ten installers, eight platform records and
+three aggregate records, verified against GitHub server SHA-256 and byte size.
+The tag points to corrected source `622946ed`; the replaced assets are removed
+from public downloads. GitHub Latest remains v0.7.4 pending a separate maintainer
+decision.
 
 macOS and Windows binaries retain source `77cf280c`; Linux and Nix use merged
 source `622946ed`. Only acceptance documentation differs between those source
@@ -18,18 +21,19 @@ runtime and crash/restart checks. Same-version package upgrades and desktop VMs
 were not repeated. Native input observations cover six directions at explicitly
 recorded source checkpoints, and the user confirmed normal Windows physical
 typing. The host Wi-Fi synthetic key-release issue remains unresolved; successful
-Ethernet checks do not qualify that path. See `VERIFICATION-r3.txt` for the exact
+Ethernet checks do not qualify that path. See `VERIFICATION.txt` for the exact
 package identities, corrected test prerequisites and remaining limits.
 
-The mynix update pins the r3 source and notarized macOS ZIP. Configuration builds
-prepare the update; installation, service restarts and activation remain manual.
+The mynix update pins the corrected source and notarized macOS ZIP.
+Configuration builds prepare the update; installation, service restarts and
+activation remain manual.
 
-## Desktop 0.7.6 stable release — 2026-10-26
+## Desktop 0.7.6 initial release validation — 2026-10-26 (historical)
 
-Published [v0.7.6](https://github.com/keithxc/deskport/releases/tag/v0.7.6)
-with 21 assets verified against GitHub server SHA-256 and byte size. The stable
-release deliberately leaves GitHub Latest unchanged; promotion remains a
-separate maintainer decision. Activation and live streaming acceptance are manual.
+This records the initial release's validation scope. Its packages have been
+superseded by the corrected 2026-10-27 delivery above; original asset records are
+retained in local release history. Latest promotion and activation remain
+separate maintainer decisions.
 
 Linux source `06274045c9323f74f8776bcbeb50660848542393` moves GPU environment
 initialization before asynchronous logging. The reproduced Ubuntu 24.04 startup
@@ -45,7 +49,7 @@ older KWin lacks host virtual-output protocols, and Omarchy retains the known
 virtual-output/fullscreen-restore limits (11/16 canvas stages). These limitations
 remain explicit, rather than being counted as full platform passes. All owned
 VMs were stopped and their baseline integrity verified.
-See [0.7.6 release notes](RELEASE_0.7.6.md) and its `VERIFICATION.txt` asset.
+See [0.7.6 release notes](RELEASE_0.7.6.md) for the current package scope.
 
 ## GNOME 51.1 native recovery and scaling — 2026-10-26
 
@@ -4374,8 +4378,9 @@ The user subsequently confirmed Windows r3 validation and normal physical
 keyboard text input on 2026-10-27. The exact endpoint and key-hold durations of
 that manual check were not recorded; this does not resolve the native-injection
 path discrepancy. Composed Unicode text, all keyboard layouts and every Linux
-compositor remain outside this acceptance. Published 0.7.6 assets and Latest
-remain unchanged in this follow-up.
+compositor remain outside this acceptance. This follow-up preceded publication;
+the corrected package delivery is recorded at the top of this roadmap. Latest
+promotion remains a separate decision.
 
 The Linux input adapter regression also exposed sdl2-compat 2.32.68 forwarding
 a null SDL3 event for pushed SDL_TEXTINPUT. Canvas text now uses bounded inline
