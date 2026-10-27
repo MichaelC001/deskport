@@ -78,12 +78,19 @@ checksums before reinstalling.
 
 ## Interface preview
 
-Screenshots from the current interface with synthetic demo devices. Click a panel
-for the full-size image; these previews do not imply store or release availability.
+DeskPort **0.7.6** running on macOS, captured on 2026-10-27 with the
+Simplified Chinese interface. Click a panel for the full-size image.
 
-| Devices and groups | Per-device screen settings | Built-in manual |
-| --- | --- | --- |
-| [![Devices and groups](docs/media/devices.png)](docs/media/devices.png) | [![Per-device screen settings](docs/media/device-settings.png)](docs/media/device-settings.png) | [![Built-in manual](docs/media/manual.png)](docs/media/manual.png) |
+[![DeskPort 0.7.6 device list on macOS](docs/media/devices-macos-076.jpg)](docs/media/devices-macos-076.jpg)
+
+The macOS client connected to a Windows 11 Pro test machine, showing
+Windows System Information:
+
+[![DeskPort macOS client displaying Windows 11 System Information](docs/media/windows-system-information-macos-076.jpg)](docs/media/windows-system-information-macos-076.jpg)
+
+| Appearance and keyboard shortcuts | Built-in manual |
+| --- | --- |
+| [![DeskPort 0.7.6 settings on macOS](docs/media/settings-macos-076.jpg)](docs/media/settings-macos-076.jpg) | [![DeskPort 0.7.6 built-in manual on macOS](docs/media/manual-macos-076.jpg)](docs/media/manual-macos-076.jpg) |
 
 ## Supported platforms
 
