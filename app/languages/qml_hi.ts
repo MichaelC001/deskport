@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: बंद करें, छोटा करें और ज़ूम बटन छिप जाते हैं और चित्र ऊपरी किनारे तक पहुंचता है। विंडो का आकार उसके किनारों से बदलें; टाइल करने के लिए Fn+Control+तीर कुंजियां या फ़ुल स्क्रीन का उपयोग करें।</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>डिफ़ॉल्ट रूप से बंद। रिमोट चित्र को अधिक जगह देने के लिए टाइटल बार और विंडो बटन छिपाता है। विंडो को नियंत्रित करने के लिए ट्रे आइकन या ग्लोबल शॉर्टकट का उपयोग करें। बदलाव तुरंत लागू होते हैं।</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Linux Wayland पर डिवाइस पेज भी बिना टाइटल बार के रहता है। अन्य प्लेटफ़ॉर्म पर उसका टाइटल बार बना रहता है।</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>विंडो खिसकाएं: Control+Command दबाए रखें और चित्र को खींचें। किनारों से आकार बदलें।</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>विंडो को अपने डेस्कटॉप के शॉर्टकट से खिसकाएं, जैसे KDE Plasma पर Meta दबाकर खींचना।</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>विंडो खिसकाने या उसका आकार बदलने के लिए यह विकल्प बंद करें।</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

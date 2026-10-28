@@ -10,6 +10,8 @@ public:
     using Motion = std::function<void(qreal, qreal)>;
     explicit CanvasPointer(Motion motion) : m_Motion(std::move(motion)) {}
     virtual void update(QWindow* window, bool enabled) = 0;
+    // A native window move must keep the cursor at the gesture's starting point.
+    virtual void releaseForWindowMove() { update(nullptr, false); }
 protected:
     Motion m_Motion;
 };

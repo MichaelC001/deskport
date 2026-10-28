@@ -7,24 +7,90 @@
 #include <QSignalSpy>
 #include <QTest>
 #include <SDL.h>
+#include <initializer_list>
 
 // Exercise the production Qt item and event routing without a renderer, host,
 // user settings, compositor shortcut registration or native input injection.
 struct SessionPresentation::Impl {};
 SessionPresentation::SessionPresentation(QObject* p) : QObject(p) {}
 SessionPresentation::~SessionPresentation() = default;
-bool SessionPresentation::ready() const { return false; }
+bool SessionPresentation::ready() const { return property("readyForTest").toBool(); }
 bool SessionPresentation::active() const { return false; }
 bool SessionPresentation::hasFrames() const { return false; }
 void SessionPresentation::attach(QWindow*) {}
 void SessionPresentation::detach() {}
 void SessionPresentation::resized(bool) {}
 void SessionPresentation::preedit(const QString&) {}
-std::unique_ptr<CanvasPointer> createCanvasPointer(CanvasPointer::Motion) { return {}; }
+static int pointerMoveReleases = 0;
+static bool pointerEnabled = false;
+class TestCanvasPointer final : public CanvasPointer {
+public:
+    using CanvasPointer::CanvasPointer;
+    void update(QWindow*, bool enabled) override { pointerEnabled = enabled; }
+    void releaseForWindowMove() override { ++pointerMoveReleases; pointerEnabled = false; }
+};
+std::unique_ptr<CanvasPointer> createCanvasPointer(CanvasPointer::Motion motion) {
+    return std::make_unique<TestCanvasPointer>(std::move(motion));
+}
 
 class CanvasFocusTest : public QObject {
     Q_OBJECT
 private slots:
+    void localWindowMoveReleasesFocusAndSuppressesInput() {
+        QQuickWindow window;
+        SessionPresentation presentation;
+        presentation.setProperty("readyForTest", true);
+        SessionCanvas canvas(window.contentItem());
+        canvas.setSize({640, 480});
+        canvas.setPresentation(&presentation);
+        canvas.setProperty("relativePointer", true);
+        canvas.setProperty("textInputEnabled", true);
+        window.show(); window.requestActivate(); canvas.forceActiveFocus();
+        QTRY_VERIFY(window.isActive() && canvas.hasActiveFocus());
+        auto surface = window.findChild<QWindow*>();
+        QVERIFY(surface);
+        QSignalSpy viewport(&canvas, &SessionCanvas::viewportChanged);
+        QSignalSpy input(&canvas, &SessionCanvas::input);
+        QMouseEvent down(QEvent::MouseButtonPress, QPointF(30, 40), QPointF(30, 40),
+                         Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(&canvas, &down);
+        QVERIFY(!viewport.isEmpty());
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), int(SDL_BUTTON_LMASK));
+        QVERIFY(pointerEnabled);
+        const int releases = pointerMoveReleases;
+        window.setProperty("deskportLocalWindowDrag", true);
+        // This boundary is synchronous even when AppKit's nested event loop
+        // does not run a Qt timer or consumes the modifier key releases.
+        QCOMPARE(pointerMoveReleases, releases + 1);
+        QVERIFY(!pointerEnabled);
+        QVERIFY(!viewport.last()[0].toJsonObject()["focused"].toBool());
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
+        input.clear();
+        for (QObject* target : {static_cast<QObject*>(&canvas), static_cast<QObject*>(surface)}) {
+            QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "a");
+            QMouseEvent motion(QEvent::MouseMove, QPointF(50, 60), QPointF(50, 60),
+                               Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+            QMouseEvent up(QEvent::MouseButtonRelease, QPointF(50, 60), QPointF(50, 60),
+                           Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+            QWheelEvent wheel(QPointF(50, 60), QPointF(50, 60), QPoint(), QPoint(0, 120),
+                              Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+            QInputMethodEvent text;
+            text.setCommitString("local gesture");
+            for (QEvent* event : std::initializer_list<QEvent*>{&key, &motion, &up, &wheel, &text})
+                QCoreApplication::sendEvent(target, event);
+        }
+        QCOMPARE(input.size(), 0);
+        QInputMethodQueryEvent query(Qt::ImEnabled);
+        QCoreApplication::sendEvent(surface, &query);
+        QVERIFY(!query.value(Qt::ImEnabled).toBool());
+        window.setProperty("deskportLocalWindowDrag", false);
+        QVERIFY(viewport.last()[0].toJsonObject()["focused"].toBool());
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
+        QVERIFY(pointerEnabled);
+        QKeyEvent normal(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "a");
+        QCoreApplication::sendEvent(&canvas, &normal);
+        QCOMPARE(input.size(), 2); // Physical key plus local text commit.
+    }
     void remoteModeDisablesImeOnBothFocusPaths() {
         QQuickWindow window;
         SessionCanvas canvas(window.contentItem());

@@ -29,11 +29,30 @@ ApplicationWindow {
     readonly property bool unifiedTitleBar: Qt.platform.os === "osx"
     // Right edge of the zoom button in points; MacTitleBar sets the real value.
     property real windowButtonsEnd: 79
-    // Optional: no title bar or frame while the remote picture is shown. Linux and
-    // Windows use a frameless window; macOS hides its chrome natively (MacTitleBar).
-    readonly property bool streamTitleBarHidden: canvasVisible && StreamingPreferences.hideStreamTitleBar
-    flags: unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint)
-                           : (streamTitleBarHidden ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window)
+    // Keep Wayland decorations stable across Devices/canvas transitions: some
+    // compositors retain a restored decoration when Qt removes it again.
+    readonly property bool keepWaylandFrameless: Qt.platform.os === "linux" &&
+        SystemProperties.isRunningWayland && !SystemProperties.isRunningXWayland
+    readonly property bool streamTitleBarHidden: StreamingPreferences.hideStreamTitleBar &&
+        (canvasVisible || keepWaylandFrameless)
+    // Native Wayland has a single imperative owner after initial creation.
+    // Binding flags to the preference would change decorations before the
+    // controlled refresh can save geometry and suspend local input.
+    flags: Qt.Window
+    Binding {
+        target: window; property: "flags"
+        when: !window.keepWaylandFrameless
+        value: window.unifiedTitleBar ? (Qt.Window | Qt.ExpandedClientAreaHint | Qt.NoTitleBarBackgroundHint)
+                                     : (window.streamTitleBarHidden ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window)
+    }
+    Connections {
+        target: StreamingPreferences
+        function onHideStreamTitleBarChanged() {
+            if (!window.keepWaylandFrameless) return
+            if (typeof sessionManager !== "undefined" && sessionManager.canvasEnabled)
+                sessionManager.setCanvasWindowFrameless(StreamingPreferences.hideStreamTitleBar)
+        }
+    }
     // The content, top bar included, starts at the very top instead of below the
     // title-bar safe area; the bar leaves room for the window buttons itself.
     onClosing: function(event) {
@@ -53,6 +72,8 @@ ApplicationWindow {
     color: ui.canvas
 
     Component.onCompleted: {
+        if (keepWaylandFrameless)
+            flags = StreamingPreferences.hideStreamTitleBar ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
         // Safe-area padding was added after Qt 6.4, used by the Linux package.
         // Set it dynamically so older Qt versions can still load this window.
         if ("topPadding" in window) {

@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: ปุ่มปิด ย่อ และซูมจะถูกซ่อน และภาพจะขยายถึงขอบบน ปรับขนาดหน้าต่างจากขอบ ใช้ Fn+Control+ปุ่มลูกศรเพื่อจัดเรียง หรือใช้โหมดเต็มหน้าจอ</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>ปิดไว้โดยค่าเริ่มต้น ซ่อนแถบชื่อเรื่องและปุ่มหน้าต่างเพื่อเพิ่มพื้นที่ให้ภาพระยะไกล ใช้ไอคอนในถาดระบบหรือปุ่มลัดส่วนกลางเพื่อควบคุมหน้าต่าง การเปลี่ยนแปลงมีผลทันที</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>บน Linux Wayland หน้าอุปกรณ์จะไม่มีแถบชื่อเรื่องด้วย ส่วนแพลตฟอร์มอื่นยังคงมีแถบชื่อเรื่องในหน้าอุปกรณ์</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>ย้ายหน้าต่าง: กด Control+Command ค้างไว้แล้วลากภาพ ปรับขนาดจากขอบหน้าต่าง</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>ย้ายหน้าต่างด้วยปุ่มลัดของเดสก์ท็อป เช่น กด Meta ค้างไว้แล้วลากบน KDE Plasma</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>หากต้องการย้ายหรือปรับขนาดหน้าต่าง ให้ปิดตัวเลือกนี้</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

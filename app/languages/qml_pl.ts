@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: przyciski zamykania, minimalizowania i powiększania są ukryte, a obraz sięga górnej krawędzi. Zmieniaj rozmiar okna za krawędzie; użyj Fn+Control+strzałek, aby je ułożyć, albo pełnego ekranu.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Domyślnie wyłączone. Ukrywa pasek tytułu i przyciski okna, aby dać więcej miejsca zdalnemu obrazowi. Do sterowania oknem użyj ikony w zasobniku lub globalnego skrótu. Zmiany są stosowane od razu.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>W Linux Wayland strona Urządzenia również pozostaje bez paska tytułu. Na innych platformach zachowuje pasek tytułu.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Przenoszenie okna: przytrzymaj Control+Command i przeciągnij obraz. Zmieniaj rozmiar za krawędzie.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Przenieś okno za pomocą skrótu swojego środowiska graficznego, np. Meta+przeciągnięcie w KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Aby przenieść okno lub zmienić jego rozmiar, wyłącz tę opcję.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

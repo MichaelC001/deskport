@@ -75,6 +75,8 @@ public:
     virtual bool adaptiveDisplayAvailable() const;
     bool virtualDisplayActive() const { return adaptiveDisplayAvailable() && m_DisplayWidth > 0 && m_DisplayHeight > 0; }
     bool displayPoliciesAvailable() const;
+    // Empty when accepted (including queued restoration), otherwise a fixed diagnostic code.
+    QString displayResizeRejection(int width, int height, int scale, int sequence, int policy = 0) const;
     virtual bool resizeDisplay(int width, int height, int scale, int sequence, int policy = 0);
     void restoreDisplay();
     virtual void settleSessionDisplay(QObject* context, std::function<void(bool)> completion);

@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: i pulsanti di chiusura, riduzione a icona e zoom sono nascosti e l'immagine arriva al bordo superiore. Ridimensiona la finestra dai bordi; usa Fn+Ctrl+frecce per affiancarla oppure lo schermo intero.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Disattivato per impostazione predefinita. Nasconde la barra del titolo e i pulsanti della finestra per dare più spazio all’immagine remota. Usa l’icona nell’area di notifica o la scorciatoia globale per controllare la finestra. Le modifiche si applicano subito.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Su Linux Wayland, anche la pagina Dispositivi rimane senza barra del titolo. Sulle altre piattaforme la mantiene.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Spostare la finestra: tieni premuto Control+Command e trascina l’immagine. Ridimensiona dai bordi.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Sposta la finestra con la scorciatoia del tuo ambiente desktop, ad esempio Meta+trascinamento su KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Per spostare o ridimensionare la finestra, disattiva questa opzione.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

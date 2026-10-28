@@ -1,4 +1,5 @@
 #include "sessionfailure.h"
+#include "diagnostics.h"
 #include "smalltcp.h"
 #include "../../shared/deskport-core/include/deskport/protocol.h"
 #include "peermanager.h"
@@ -897,9 +898,16 @@ void PeerManager::receive(Link* link, const QJsonObject& message) {
         const int policy = message.contains("displayPolicy") ? message["displayPolicy"].toInt(-1) : DP_DISPLAY_PRIMARY_MIRROR;
         const int seq = message["seq"].toInt();
         if ((!m_Host->displayPoliciesAvailable() && policy != 0) || !DPDisplayPolicyValid(policy) || (link->displayPolicy >= 0 && link->displayPolicy != policy)) {
+            Diagnostics::instance().record("display", "DeskPort failure stage=virtual-display code=policy-unsupported");
             send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Invalid or changed session display policy"}}); return;
         }
         if (seq <= 0 || link->displaySequence || !m_Host->resizeDisplay(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq, policy)) {
+            const QString reason = seq <= 0 ? QStringLiteral("topology-invalid") : link->displaySequence ? QStringLiteral("busy") :
+                m_Host->displayResizeRejection(message["width"].toInt(), message["height"].toInt(), message["scale"].toInt(), seq, policy);
+            // Keep the legacy wire reply; diagnostics retain only a fixed code,
+            // never helper output, peer addresses or other private error text.
+            Diagnostics::instance().record("display", "DeskPort failure stage=virtual-display code=" +
+                (reason.isEmpty() ? QStringLiteral("display-failed") : reason));
             send(link, {{"type", DP_MESSAGE_DISPLAY_RESULT}, {"seq", seq}, {"error", "Display size is invalid or the display is busy"}}); return;
         }
         link->clientWindow = message["clientWindow"].toInt() == DP_CLIENT_WINDOW_VERSION;

@@ -1406,14 +1406,22 @@ static constexpr int DisplayChangeTimeoutMs = 20000;
 #else
 static constexpr int DisplayChangeTimeoutMs = 5000;
 #endif
-bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, int policy) {
+QString HostManager::displayResizeRejection(int width, int height, int scale, int sequence, int policy) const {
 #ifdef Q_OS_LINUX
-    if (m_LinuxX11 && policy != 0) return false;
+    if (m_LinuxX11 && policy != 0) return QStringLiteral("policy-unsupported");
 #endif
-    if (policy < 0 || policy > 2 || !adaptiveDisplayAvailable() || !m_QueuedDisplayRequest.isEmpty() || sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
-        height < 360 || height > DeskPortDisplay::MaxHeight || width % 4 || height % 4 || (scale != 1 && scale != 2)) return false;
+    if (policy < 0 || policy > 2) return QStringLiteral("policy-unsupported");
+    if (!adaptiveDisplayAvailable()) return QStringLiteral("unavailable");
+    if (sequence == 0 || width < 640 || width > DeskPortDisplay::MaxWidth ||
+        height < 360 || height > DeskPortDisplay::MaxHeight || width % 4 || height % 4 ||
+        (scale != 1 && scale != 2)) return QStringLiteral("topology-invalid");
+    if (!m_QueuedDisplayRequest.isEmpty() || (m_DisplaySequence && (m_DisplaySequence > 0 || sequence < 0)))
+        return QStringLiteral("busy");
+    return {};
+}
+bool HostManager::resizeDisplay(int width, int height, int scale, int sequence, int policy) {
+    if (!displayResizeRejection(width, height, scale, sequence, policy).isEmpty()) return false;
     if (m_DisplaySequence) {
-        if (m_DisplaySequence > 0 || sequence < 0) return false;
         // Finish the previous session's restoration before a new client takes over.
         m_QueuedDisplayRequest = {{"width", width}, {"height", height}, {"scale", scale},
                                   {"seq", sequence}, {"policy", policy}};

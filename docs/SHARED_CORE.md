@@ -1,3 +1,12 @@
+## Hidden-title-bar window movement help — 2026-10-28
+
+Core `27caf8317b959da9c240dd5f8843b319d7fa74b7` adds five SettingsHome-only
+help strings with drafts in all 22 locales: macOS Control+Command+drag,
+Linux desktop movement shortcuts, the Windows limitation and the Wayland
+Devices-page behavior. The Qt catalog metadata includes the same entries.
+Git and Nix pin the same published tree; mobile pins and wire contracts are
+unchanged. Physical window movement remains a desktop adapter responsibility.
+
 ## Shortcut key chooser and KDE conflicts — 2026-10-24
 
 Core `505ae0ccd0a4ead4decb6eaba62585bf278e6dbe` adds the desktop key-chooser

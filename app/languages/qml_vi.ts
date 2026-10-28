@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: các nút đóng, thu nhỏ và phóng to bị ẩn và hình ảnh kéo tới mép trên. Đổi kích thước cửa sổ từ các cạnh; dùng Fn+Control+phím mũi tên để xếp lát, hoặc dùng toàn màn hình.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Tắt theo mặc định. Ẩn thanh tiêu đề và các nút cửa sổ để hình ảnh từ xa có thêm không gian. Dùng biểu tượng khay hoặc phím tắt toàn cục để điều khiển cửa sổ. Thay đổi có hiệu lực ngay.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Trên Linux Wayland, trang Thiết bị cũng luôn không có thanh tiêu đề. Trên các nền tảng khác, trang này vẫn giữ thanh tiêu đề.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Di chuyển cửa sổ: giữ Control+Command rồi kéo hình ảnh. Đổi kích thước từ các cạnh.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Di chuyển cửa sổ bằng phím tắt của môi trường desktop, chẳng hạn Meta+kéo trên KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Để di chuyển hoặc đổi kích thước cửa sổ, hãy tắt tùy chọn này.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

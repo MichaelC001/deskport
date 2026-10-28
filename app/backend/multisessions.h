@@ -39,6 +39,7 @@ public:
     QString selectedId() const { return m_Selected; }
     bool busy() const;
     void setCanvasWindow(QWindow* window);
+    Q_INVOKABLE void setCanvasWindowFrameless(bool frameless);
     bool canvasEnabled() const { return !m_CanvasWindow.isNull(); }
     bool canvasVisible() const { return canvasEnabled() && !m_Wanted.isEmpty(); }
     QVariantMap canvas() const;
@@ -115,6 +116,7 @@ private:
     void hide(Entry* entry);
     void ended(Entry* entry, const QString& error);
     QPointer<QWindow> m_CanvasWindow;
+    bool m_RefreshingCanvasFrame = false;
     Qt::WindowState m_CanvasRestoreState = Qt::WindowNoState;
     QJsonObject m_CanvasState {{"width",1120},{"height",704},{"scale",1.0}};
     QByteArray m_Certificate, m_Key;

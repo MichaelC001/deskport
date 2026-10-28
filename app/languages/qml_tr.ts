@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: kapatma, küçültme ve yakınlaştırma düğmeleri gizlenir ve görüntü üst kenara kadar uzanır. Pencereyi kenarlarından yeniden boyutlandırın; döşemek için Fn+Control+ok tuşlarını veya tam ekranı kullanın.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Varsayılan olarak kapalıdır. Uzak görüntüye daha fazla alan sağlamak için başlık çubuğunu ve pencere düğmelerini gizler. Pencereyi kontrol etmek için tepsi simgesini veya genel kısayolu kullanın. Değişiklikler hemen uygulanır.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Linux Wayland üzerinde Cihazlar sayfası da başlık çubuğu olmadan kalır. Diğer platformlarda başlık çubuğu korunur.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Pencereyi taşıma: Control+Command tuşlarını basılı tutup görüntüyü sürükleyin. Kenarlardan yeniden boyutlandırın.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Pencereyi masaüstünüzün kısayoluyla taşıyın; örneğin KDE Plasma üzerinde Meta+sürükle.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Pencereyi taşımak veya yeniden boyutlandırmak için bu seçeneği kapatın.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

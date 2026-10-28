@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: os botões de fechar, minimizar e zoom ficam ocultos e a imagem chega à borda superior. Redimensione a janela pelas bordas; use Fn+Control+setas para organizá-la lado a lado ou use a tela cheia.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Desativado por padrão. Oculta a barra de título e os botões da janela para dar mais espaço à imagem remota. Use o ícone da bandeja ou o atalho global para controlar a janela. As alterações são aplicadas imediatamente.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>No Linux Wayland, a página Dispositivos também fica sem barra de título. Nas outras plataformas, ela mantém a barra de título.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Mover a janela: mantenha Control+Command pressionados e arraste a imagem. Redimensione pelas bordas.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Mova a janela com o atalho do seu ambiente de trabalho, como Meta+arrastar no KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Para mover ou redimensionar a janela, desative esta opção.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

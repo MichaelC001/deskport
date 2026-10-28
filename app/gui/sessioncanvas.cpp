@@ -1,4 +1,5 @@
 #include <QInputMethodEvent>
+#include <QDynamicPropertyChangeEvent>
 #include <QInputMethodQueryEvent>
 #include <QInputMethod>
 #include <QGuiApplication>
@@ -50,6 +51,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
     setActiveFocusOnTab(true);
     setFlag(ItemAcceptsInputMethod, m_TextInput);
     m_Pointer = createCanvasPointer([this](qreal dx, qreal dy) {
+        if (m_LocalWindowDrag) return;
         m_RelativeRemainder += QPointF(dx, dy);
         const QPoint delta(int(m_RelativeRemainder.x()), int(m_RelativeRemainder.y()));
         m_RelativeRemainder -= delta;
@@ -67,6 +69,10 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
         if (isVisible() && m_Presentation) m_Presentation->resized();
     });
     const auto attachWindow = [this](QQuickWindow* window) {
+        if (m_RootWindow) m_RootWindow->removeEventFilter(this);
+        m_RootWindow = window;
+        m_LocalWindowDrag = window && window->property("deskportLocalWindowDrag").toBool();
+        if (window) window->installEventFilter(this);
         if (m_Presentation) m_Presentation->detach();
         m_Inhibitor.setWindow(nullptr);
         delete m_Surface; m_Surface = nullptr;
@@ -109,6 +115,7 @@ SessionCanvas::~SessionCanvas() {
     // already been destroyed. Disconnect callbacks before entering it.
     disconnect(this, nullptr, this, nullptr);
     m_Timer.stop(); m_ResizeTimer.stop();
+    if (m_RootWindow) m_RootWindow->removeEventFilter(this);
     m_Pointer.reset();
     if (m_Presentation) m_Presentation->detach();
     m_Inhibitor.setEnabled(false);
@@ -133,22 +140,35 @@ void SessionCanvas::geometryChange(const QRectF& next, const QRectF& previous) {
 }
 QVariant SessionCanvas::inputMethodQuery(Qt::InputMethodQuery query) const {
     // Qt Quick queries the focused item, not the embedded presentation window.
-    if (query == Qt::ImEnabled) return m_TextInput;
+    if (query == Qt::ImEnabled) return m_TextInput && !m_LocalWindowDrag;
     if (query == Qt::ImCursorRectangle) return QRect(0, 0, 1, 48);
     return QQuickItem::inputMethodQuery(query);
 }
 void SessionCanvas::inputMethodEvent(QInputMethodEvent* event) {
+    if (m_LocalWindowDrag) { event->accept(); return; }
     if (m_Presentation) m_Presentation->preedit(m_TextInput ? event->preeditString().left(1024) : QString());
     if (m_TextInput && !event->commitString().isEmpty())
         emit input({{"type","text"},{"text",event->commitString().left(1024)}});
     event->accept();
 }
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
+    if (watched == m_RootWindow && event->type() == QEvent::DynamicPropertyChange &&
+        static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName() == "deskportLocalWindowDrag") {
+        m_LocalWindowDrag = m_RootWindow->property("deskportLocalWindowDrag").toBool();
+        if (m_LocalWindowDrag) {
+            m_Buttons = 0;
+            m_RelativeRemainder = {};
+            if (m_Pointer) m_Pointer->releaseForWindowMove();
+            if (m_Presentation) m_Presentation->preedit({});
+        }
+        refresh();
+        QGuiApplication::inputMethod()->update(Qt::ImEnabled);
+    }
     if (watched != m_Surface) return QQuickItem::eventFilter(watched, event);
     switch (event->type()) {
     case QEvent::InputMethodQuery: {
         auto query = static_cast<QInputMethodQueryEvent*>(event);
-        query->setValue(Qt::ImEnabled, m_TextInput);
+        query->setValue(Qt::ImEnabled, m_TextInput && !m_LocalWindowDrag);
         query->setValue(Qt::ImCursorRectangle, QRect(0, 0, 1, 48));
         event->accept(); return true;
     }
@@ -188,9 +208,9 @@ void SessionCanvas::refresh() {
             if (resized && m_Presentation) m_ResizeTimer.start();
         }
         m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
-        m_Surface->setCursor(m_CursorHidden ? Qt::BlankCursor : Qt::ArrowCursor);
+        m_Surface->setCursor(m_CursorHidden && !m_LocalWindowDrag ? Qt::BlankCursor : Qt::ArrowCursor);
     }
-    const bool focused = visible && m_Presentation && m_Presentation->ready() &&
+    const bool focused = !m_LocalWindowDrag && visible && m_Presentation && m_Presentation->ready() &&
         ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
     if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
@@ -207,6 +227,7 @@ void SessionCanvas::refresh() {
     if (state != m_LastState) { m_LastState = state; emit viewportChanged(state); }
 }
 void SessionCanvas::key(QKeyEvent* event, bool down) {
+    if (m_LocalWindowDrag) { event->accept(); return; }
     auto key = symbol(event->key());
     const auto scan = CanvasKey::physical(*event, key);
     if (!key) key = SDL_GetKeyFromScancode(scan);
@@ -228,6 +249,7 @@ void SessionCanvas::key(QKeyEvent* event, bool down) {
 void SessionCanvas::keyPressEvent(QKeyEvent* event) { key(event, true); }
 void SessionCanvas::keyReleaseEvent(QKeyEvent* event) { key(event, false); }
 void SessionCanvas::mouse(QMouseEvent* event, bool down, bool isButton) {
+    if (m_LocalWindowDrag) { event->accept(); return; }
     if (down) { forceActiveFocus(); if (m_Surface) m_Surface->requestActivate(); }
     if (isButton && button(event->button())) {
         const int mask = SDL_BUTTON(button(event->button()));
@@ -245,10 +267,12 @@ void SessionCanvas::mouseMoveEvent(QMouseEvent* event) { mouse(event, false, fal
 void SessionCanvas::hoverEnterEvent(QHoverEvent* event) { m_Hovered = true; m_Mouse = position(event->position()); forceActiveFocus(); refresh(); }
 void SessionCanvas::hoverLeaveEvent(QHoverEvent*) { m_Hovered = false; refresh(); }
 void SessionCanvas::hoverMoveEvent(QHoverEvent* event) {
+    if (m_LocalWindowDrag) { event->accept(); return; }
     const auto old = m_Mouse; m_Mouse = position(event->position()); refresh();
     emit input({{"type","motion"},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"dx",m_Mouse.x()-old.x()},{"dy",m_Mouse.y()-old.y()}});
 }
 void SessionCanvas::wheelEvent(QWheelEvent* event) {
+    if (m_LocalWindowDrag) { event->accept(); return; }
     emit input({{"type","wheel"},{"x",event->angleDelta().x()/120.0},{"y",event->angleDelta().y()/120.0}}); event->accept();
 }
 void SessionCanvas::focusOutEvent(QFocusEvent* event) { QQuickItem::focusOutEvent(event); refresh(); }

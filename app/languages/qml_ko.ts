@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: 닫기, 최소화, 확대/축소 버튼이 숨겨지고 화면이 창 위쪽 끝까지 채워집니다. 창 가장자리로 크기를 조절하고, Fn+Control+화살표 키로 타일 배치하거나 전체 화면을 사용하세요.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>기본적으로 꺼져 있습니다. 제목 표시줄과 창 버튼을 숨겨 원격 화면에 더 넓은 공간을 제공합니다. 트레이 아이콘이나 전역 단축키로 창을 제어하세요. 변경 사항은 즉시 적용됩니다.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Linux Wayland에서는 기기 페이지에도 제목 표시줄이 표시되지 않습니다. 다른 플랫폼에서는 기기 페이지의 제목 표시줄이 유지됩니다.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>창 이동: Control+Command를 누른 채 화면을 드래그하세요. 가장자리에서 크기를 조절할 수 있습니다.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>KDE Plasma의 Meta+드래그와 같은 데스크톱 단축키로 창을 이동하세요.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>창을 이동하거나 크기를 조절하려면 이 옵션을 끄세요.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

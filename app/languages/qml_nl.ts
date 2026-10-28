@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: de knoppen voor sluiten, minimaliseren en zoomen zijn verborgen en het beeld loopt tot de bovenrand. Wijzig de grootte via de randen; gebruik Fn+Control+pijltoetsen om te tegelen, of volledig scherm.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Standaard uit. Verbergt de titelbalk en vensterknoppen om het externe beeld meer ruimte te geven. Gebruik het systeemvakpictogram of de globale sneltoets om het venster te bedienen. Wijzigingen worden direct toegepast.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Onder Linux Wayland blijft ook de pagina Apparaten zonder titelbalk. Op andere platforms behoudt deze pagina de titelbalk.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Venster verplaatsen: houd Control+Command ingedrukt en sleep het beeld. Wijzig de grootte via de randen.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Verplaats het venster met de sneltoets van uw desktopomgeving, zoals Meta+slepen onder KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Schakel deze optie uit om het venster te verplaatsen of de grootte te wijzigen.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

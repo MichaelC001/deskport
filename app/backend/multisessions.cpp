@@ -1,5 +1,7 @@
 #include <QGuiApplication>
 #include "multisessions.h"
+#include "windowframe.h"
+#include <QScopedValueRollback>
 #include "peermanager.h"
 #include "sessiongraph.h"
 #include "gui/hostlayout.h"
@@ -43,8 +45,25 @@ MultiSessions::~MultiSessions() {
 }
 void MultiSessions::setCanvasWindow(QWindow* window) {
     Q_ASSERT(!busy()); m_CanvasWindow = window;
-    if (window) connect(window, &QWindow::visibleChanged, this, [this](bool visible) { if (!visible) showDevices(); });
+    if (window) connect(window, &QWindow::visibleChanged, this, [this](bool visible) {
+        if (!visible && !m_RefreshingCanvasFrame) showDevices();
+    });
     emit changed(); emit canvasChanged();
+}
+void MultiSessions::setCanvasWindowFrameless(bool frameless) {
+    if (!m_CanvasWindow || m_RefreshingCanvasFrame ||
+        m_CanvasWindow->flags().testFlag(Qt::FramelessWindowHint) == frameless) return;
+    // QML calls this only for an explicit native-Wayland setting change. Send
+    // the normal loss-of-focus boundary before briefly replacing its surface;
+    // CanvasBridge retains that release even if focus returns in the same turn.
+    auto released = m_CanvasState;
+    released["visible"] = false; released["focused"] = false;
+    released["grabbed"] = false; released["buttons"] = 0;
+    updateCanvas(released);
+    QScopedValueRollback<bool> refreshing(m_RefreshingCanvasFrame, true);
+    WindowFrame::setFrameless(m_CanvasWindow, frameless);
+    // Do not pump events or defer re-showing: a later user hide must remain final.
+    // SessionCanvas publishes the actual new visibility/focus on its next update.
 }
 QObject* MultiSessions::presentation() const {
     // Devices hides the selected canvas; it does not end its presentation.
@@ -58,11 +77,28 @@ QVariantMap MultiSessions::canvas() const {
 }
 void MultiSessions::updateCanvas(QJsonObject state) {
     m_CanvasState = state;
-    if (auto entry = m_Entries.value(m_Wanted)) send(entry, {{"command","canvas-state"},{"state",state}});
+    if (auto entry = m_Entries.value(m_Wanted)) {
+        const bool releaseInput = !state["visible"].toBool() || !state["focused"].toBool();
+        if (releaseInput && entry->socket) {
+            // Native window moves can enter a platform tracking loop before Qt
+            // services its write notifier. Deliver the release without waiting.
+            entry->socket->flush();
+            if (entry->socket->bytesToWrite() >= 16384) {
+                // Never silently discard an input-release boundary under IPC
+                // backpressure. A wedged worker loses its session instead.
+                entry->error = tr("The desktop worker did not respond.");
+                entry->socket->abort();
+                if (entry->process) entry->process->kill();
+                return;
+            }
+        }
+        send(entry, {{"command","canvas-state"},{"state",state}});
+        if (releaseInput && entry->socket) entry->socket->flush();
+    }
 }
 void MultiSessions::canvasInput(QJsonObject event) {
     const auto entry = m_Entries.value(m_Wanted);
-    if (!m_CanvasWindow || !m_CanvasWindow->isVisible() || (!m_CanvasWindow->isActive() && !(QGuiApplication::focusWindow() && m_CanvasWindow->isAncestorOf(QGuiApplication::focusWindow()))) || !entry ||
+    if (m_RefreshingCanvasFrame || !m_CanvasWindow || !m_CanvasWindow->isVisible() || (!m_CanvasWindow->isActive() && !(QGuiApplication::focusWindow() && m_CanvasWindow->isAncestorOf(QGuiApplication::focusWindow()))) || !entry ||
         !entry->exposed || !m_Hiding.isEmpty() || entry->state != "connected") return;
     send(entry, {{"command","canvas-input"},{"epoch",double(m_Epoch)},{"event",event}});
 }

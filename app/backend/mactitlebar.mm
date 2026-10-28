@@ -9,6 +9,7 @@ MacTitleBar::MacTitleBar(QObject* parent) : QObject(parent) {}
 
 MacTitleBar::~MacTitleBar()
 {
+    setDragInputSuspended(false);
     if (m_Monitor) {
         [NSEvent removeMonitor:(id)m_Monitor];
         [(id)m_Monitor release];
@@ -36,6 +37,25 @@ bool MacTitleBar::isDragArea(const QPointF& point) const
         item = child;
     }
     return onBar;
+}
+
+bool MacTitleBar::isCanvasArea(const QPointF& point) const
+{
+    QQuickItem* item = m_Window ? m_Window->contentItem() : nullptr;
+    while (item) {
+        if (item->inherits("SessionCanvas")) return true;
+        const auto local = item->mapFromScene(point);
+        item = item->childAt(local.x(), local.y());
+    }
+    return false;
+}
+
+void MacTitleBar::setDragInputSuspended(bool suspended)
+{
+    m_DragInputSuspended = suspended;
+    // SessionCanvas observes this synchronously: release remote held keys and
+    // pointer capture before AppKit enters its nested window-drag event loop.
+    if (m_Window) m_Window->setProperty("deskportLocalWindowDrag", suspended);
 }
 
 void MacTitleBar::attach(QQuickWindow* window)
@@ -73,12 +93,34 @@ void MacTitleBar::attach(QQuickWindow* window)
                 updateChrome();
             }]];
     }
+    [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidResignKeyNotification
+        object:native queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+            if (!m_TrackingWindowDrag) setDragInputSuspended(false);
+        }]];
     m_FullscreenObservers = [observers retain];
-    connect(window, &QWindow::visibleChanged, this, [this] { updateChrome(); });
+    connect(window, &QWindow::visibleChanged, this, [this](bool visible) {
+        if (!visible && !m_TrackingWindowDrag) setDragInputSuspended(false);
+        updateChrome();
+    });
     updateChrome();
     // The drag must start from the original AppKit event, before Qt delivers it.
-    id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown handler:^NSEvent*(NSEvent* event) {
-        if (event.window != native || native.styleMask & NSWindowStyleMaskFullScreen) return event;
+    const auto dragModifiers = NSEventModifierFlagControl | NSEventModifierFlagCommand;
+    const auto shortcutModifiers = dragModifiers | NSEventModifierFlagOption | NSEventModifierFlagShift;
+    const auto mask = NSEventMaskLeftMouseDown | NSEventMaskLeftMouseDragged | NSEventMaskLeftMouseUp |
+                      NSEventMaskFlagsChanged | NSEventMaskMouseMoved | NSEventMaskKeyDown | NSEventMaskKeyUp;
+    id monitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask handler:^NSEvent*(NSEvent* event) {
+        if (event.window != native || !m_Window) return event;
+        // Native tracking can consume modifier releases. Read the current flags
+        // on the next local event too, and resume only after the chord is up.
+        if (m_DragInputSuspended && !m_TrackingWindowDrag && !(event.modifierFlags & dragModifiers))
+            setDragInputSuspended(false);
+        if (event.type != NSEventTypeLeftMouseDown) {
+            if (m_ConsumeDragTail && (event.type == NSEventTypeLeftMouseDragged || event.type == NSEventTypeLeftMouseUp))
+                return nil;
+            return event;
+        }
+        m_ConsumeDragTail = false;
+        if (m_FullscreenTransitioning || native.styleMask & NSWindowStyleMaskFullScreen) return event;
         const NSPoint location = event.locationInWindow;
         // The close, minimize and zoom buttons handle their own clicks.
         for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton}) {
@@ -86,6 +128,20 @@ void MacTitleBar::attach(QQuickWindow* window)
             if (button && !button.hidden && NSPointInRect(location, [button convertRect:button.bounds toView:nil])) return event;
         }
         const QPointF point(location.x, native.contentView.frame.size.height - location.y);
+        if (m_CanvasVisible && m_StreamTitleBarHidden &&
+            (event.modifierFlags & shortcutModifiers) == dragModifiers && isCanvasArea(point)) {
+            m_ConsumeDragTail = true;
+            m_TrackingWindowDrag = true;
+            setDragInputSuspended(true);
+            @try {
+                [native performWindowDragWithEvent:event];
+            } @finally {
+                m_TrackingWindowDrag = false;
+                if (!(NSEvent.modifierFlags & dragModifiers) || !native.keyWindow || !native.visible)
+                    setDragInputSuspended(false);
+            }
+            return nil;
+        }
         if (!isDragArea(point)) return event;
         if (event.clickCount == 2) {
             NSString* action = [NSUserDefaults.standardUserDefaults stringForKey:@"AppleActionOnDoubleClick"];
@@ -103,6 +159,7 @@ void MacTitleBar::setCanvasVisible(bool visible)
 {
     if (m_CanvasVisible == visible) return;
     m_CanvasVisible = visible;
+    if (!visible) setDragInputSuspended(false);
     updateChrome();
 }
 
@@ -110,6 +167,7 @@ void MacTitleBar::setStreamTitleBarHidden(bool hidden)
 {
     if (m_StreamTitleBarHidden == hidden) return;
     m_StreamTitleBarHidden = hidden;
+    if (!hidden) setDragInputSuspended(false);
     updateChrome();
 }
 

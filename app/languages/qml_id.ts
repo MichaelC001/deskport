@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: tombol tutup, perkecil, dan perbesar disembunyikan dan gambar mencapai tepi atas. Ubah ukuran jendela dari tepinya; gunakan Fn+Control+tombol panah untuk menata ubin, atau gunakan layar penuh.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Mati secara default. Menyembunyikan bilah judul dan tombol jendela agar gambar jarak jauh mendapat lebih banyak ruang. Gunakan ikon baki atau pintasan global untuk mengontrol jendela. Perubahan langsung diterapkan.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Di Linux Wayland, halaman Perangkat juga tetap tanpa bilah judul. Pada platform lain, halaman tersebut tetap memiliki bilah judul.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Pindahkan jendela: tahan Control+Command dan seret gambar. Ubah ukuran dari tepinya.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Pindahkan jendela dengan pintasan desktop Anda, seperti Meta+seret di KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Untuk memindahkan atau mengubah ukuran jendela, matikan opsi ini.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

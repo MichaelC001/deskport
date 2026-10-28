@@ -1404,6 +1404,98 @@ private slots:
         if (scenario.startsWith("resume-")) QCOMPARE(channel.retryable(), scenario == "resume-unavailable");
         QVERIFY(channel.admissionRequired());
     }
+    void adaptiveDisplayRetriesBusyRefusal_data() {
+        QTest::addColumn<QString>("scenario");
+        for (const char* scenario : {"recovers", "persistent", "cancelled", "policy-error", "helper-error", "wrong-sequence", "disconnected"})
+            QTest::newRow(scenario) << QString(scenario);
+    }
+    void adaptiveDisplayRetriesBusyRefusal() {
+        QFETCH(QString, scenario);
+        const auto aCert = credential("TEST_CERT_A"), bCert = credential("TEST_CERT_B");
+        ScriptedBindingHost server(bCert, credential("TEST_KEY_B"));
+        QVERIFY(server.listen(QHostAddress::LocalHost, 0));
+        AdaptiveDisplay channel("127.0.0.1", server.serverPort(), QSslCertificate(bCert), aCert, credential("TEST_KEY_A"));
+        std::atomic<int> progress {0};
+        auto result = std::async(std::launch::async, [&] { return channel.resize(QSize(1280, 720), 1, [&] { ++progress; }); });
+        QTRY_VERIFY_WITH_TIMEOUT(server.socket && server.socket->isEncrypted(), 5000);
+        server.send({{"type", "hello"}, {"meta", QJsonObject{{"adaptiveDisplay", 1}, {"sessionTakeover", 1}, {"sessionTopology", 1}}}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        QCOMPARE(server.messages.takeFirst()["type"].toString(), QString("session-status"));
+        server.send({{"type", "session-state"}, {"admitted", true}});
+        QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 5000);
+        const auto first = server.messages.takeFirst();
+        QCOMPARE(first["type"].toString(), QString("display-resize"));
+        QJsonObject refusal{{"type", "display-result"}, {"seq", first["seq"]},
+                            {"error", "Display size is invalid or the display is busy"}};
+        if (scenario == "policy-error") refusal["error"] = "Invalid or changed session display policy";
+        if (scenario == "helper-error") refusal["error"] = "Virtual display resize timed out";
+        if (scenario == "wrong-sequence") refusal["seq"] = first["seq"].toInt() + 1;
+        QElapsedTimer elapsed; elapsed.start();
+        server.send(refusal);
+        if (scenario == "cancelled") {
+            QTest::qWait(80); // The retry interval must be interruptible.
+            channel.cancel();
+            elapsed.restart();
+            QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready, 200);
+            QVERIFY(!result.get());
+            QCOMPARE(channel.topologyError(), QString("cancelled"));
+            QVERIFY(server.messages.isEmpty());
+            return;
+        }
+        if (scenario == "disconnected") {
+            QTest::qWait(80);
+            server.socket->abort();
+        }
+        int requests = 1, previousSequence = first["seq"].toInt();
+        auto answerRetries = [&] {
+            while (!server.messages.isEmpty()) {
+                const auto request = server.messages.takeFirst();
+                // No second admission or TLS connection is needed for a retry.
+                if (request["type"].toString() != "display-resize" || request["seq"].toInt() != previousSequence + 1 ||
+                    request["width"] != first["width"] || request["height"] != first["height"] || request["scale"] != first["scale"])
+                    return false;
+                previousSequence = request["seq"].toInt();
+                ++requests;
+                if (scenario == "recovers")
+                    server.send({{"type", "display-result"}, {"seq", request["seq"]}, {"width", 1280}, {"height", 720}});
+                else { refusal["seq"] = request["seq"]; server.send(refusal); }
+            }
+            return true;
+        };
+        bool validRetries = true;
+        QTRY_VERIFY_WITH_TIMEOUT((validRetries = answerRetries() && validRetries,
+            result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready), 5000);
+        QVERIFY(validRetries);
+        QCOMPARE(result.get(), scenario == "recovers");
+        if (scenario == "recovers") {
+            QCOMPARE(requests, 2);
+            QVERIFY(!channel.failed());
+            QCOMPARE(channel.negotiatedSize(), QSize(1280, 720));
+            QVERIFY(progress.load() >= 3); // Loading callbacks keep running during backoff.
+            QVERIFY(elapsed.elapsed() >= 250);
+            // The next resize gets a fresh retry budget on the same lease.
+            result = std::async(std::launch::async, [&] { return channel.resize(QSize(1600, 900), 1); });
+            QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 1500);
+            auto request = server.messages.takeFirst();
+            refusal["seq"] = request["seq"]; server.send(refusal);
+            QTRY_VERIFY_WITH_TIMEOUT(!server.messages.isEmpty(), 1500);
+            const auto retry = server.messages.takeFirst();
+            QCOMPARE(retry["seq"].toInt(), request["seq"].toInt() + 1);
+            QCOMPARE(retry["width"].toInt(), 1600); QCOMPARE(retry["height"].toInt(), 900);
+            server.send({{"type", "display-result"}, {"seq", retry["seq"]}, {"width", 1600}, {"height", 900}});
+            QTRY_VERIFY_WITH_TIMEOUT(result.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready, 1500);
+            QVERIFY(result.get());
+        } else if (scenario == "persistent") {
+            QVERIFY(requests >= 2 && requests <= 11);
+            QVERIFY(elapsed.elapsed() >= 2800 && elapsed.elapsed() < 4500);
+            QCOMPARE(channel.topologyError(), QString("display-failed"));
+            QVERIFY(!channel.retryable());
+        } else {
+            QCOMPARE(requests, 1);
+            QVERIFY(elapsed.elapsed() < 1500);
+            QCOMPARE(channel.topologyError(), scenario == "disconnected" ? QString("unavailable") : QString("display-failed"));
+        }
+    }
     void videoPauseNegotiation_data() {
         QTest::addColumn<QString>("scenario");
         for (const char* value : {"legacy", "supported", "error", "wrong-sequence", "disconnect", "timeout", "recovered"})

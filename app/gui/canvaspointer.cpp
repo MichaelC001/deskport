@@ -10,6 +10,7 @@ class WarpedPointer final : public CanvasPointer {
 public:
     using CanvasPointer::CanvasPointer;
     ~WarpedPointer() override { stop(); }
+    void releaseForWindowMove() override { stop(false); }
     void update(QWindow* window, bool enabled) override {
         if (!enabled || m_Window != window) stop();
         if (!enabled || !window || m_Window) return;
@@ -23,11 +24,11 @@ private:
         m_Center = QPoint(m_Window->width()/2, m_Window->height()/2);
         QCursor::setPos(m_Window->mapToGlobal(m_Center));
     }
-    void stop() {
+    void stop(bool restorePosition = true) {
         if (!m_Window) return;
         m_Window->removeEventFilter(this);
         m_Window->setMouseGrabEnabled(false);
-        QCursor::setPos(m_ReturnPosition);
+        if (restorePosition) QCursor::setPos(m_ReturnPosition);
         m_Window = nullptr;
     }
     bool eventFilter(QObject*, QEvent* event) override {

@@ -1,5 +1,6 @@
 #pragma once
 #include <QObject>
+#include <QPointer>
 class QQuickWindow;
 
 // macOS only: DeskPort's top bar replaces the title bar. The window content
@@ -13,7 +14,8 @@ class QQuickWindow;
 // returning to Devices restores the unified application bar on the same window.
 // With the optional hidden stream title bar, the canvas extends under a
 // transparent title bar without its buttons instead; the window stays titled, so
-// edge resizing, key status and native full screen keep working.
+// edge resizing, key status and native full screen keep working. Control+Command
+// dragging the canvas moves the local window without sending input remotely.
 class MacTitleBar : public QObject
 {
     Q_OBJECT
@@ -30,11 +32,16 @@ public:
 private:
     // True when the point (window coordinates) is on the bar but not on a control.
     bool isDragArea(const QPointF& point) const;
+    bool isCanvasArea(const QPointF& point) const;
+    void setDragInputSuspended(bool suspended);
     void updateChrome();
-    QQuickWindow* m_Window = nullptr;
+    QPointer<QQuickWindow> m_Window;
     void* m_Monitor = nullptr;
     void* m_FullscreenObservers = nullptr;
     bool m_FullscreenTransitioning = false;
     bool m_CanvasVisible = false;
     bool m_StreamTitleBarHidden = false;
+    bool m_TrackingWindowDrag = false;
+    bool m_DragInputSuspended = false;
+    bool m_ConsumeDragTail = false;
 };

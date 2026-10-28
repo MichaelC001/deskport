@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: تُخفى أزرار الإغلاق والتصغير والتكبير وتمتد الصورة إلى الحافة العلوية. غيّر حجم النافذة من حوافها، واستخدم Fn+Control+مفاتيح الأسهم لترتيبها متجانبة، أو استخدم ملء الشاشة.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>متوقف افتراضيًا. يُخفي شريط العنوان وأزرار النافذة لتوفير مساحة أكبر للصورة البعيدة. استخدم أيقونة شريط النظام أو الاختصار العام للتحكم في النافذة. تُطبَّق التغييرات فورًا.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>على Linux Wayland، تبقى صفحة الأجهزة أيضًا بلا شريط عنوان. وتحتفظ بشريط عنوانها على المنصات الأخرى.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>لنقل النافذة: اضغط باستمرار على Control+Command واسحب الصورة. غيّر الحجم من الحواف.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>انقل النافذة باستخدام اختصار سطح المكتب، مثل السحب مع الضغط على Meta في KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>لنقل النافذة أو تغيير حجمها، أوقف هذا الخيار.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

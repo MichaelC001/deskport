@@ -2329,6 +2329,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: кнопки закриття, згортання та масштабування приховано, зображення сягає верхнього краю. Змінюйте розмір вікна за краї; використовуйте Fn+Control+стрілки для мозаїчного розміщення або повноекранний режим.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Типово вимкнено. Приховує заголовок і кнопки вікна, щоб надати більше місця віддаленому зображенню. Для керування вікном використовуйте значок у треї або глобальне сполучення клавіш. Зміни застосовуються одразу.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>У Linux Wayland сторінка пристроїв також залишається без заголовка вікна. На інших платформах її заголовок зберігається.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Переміщення вікна: утримуйте Control+Command і перетягуйте зображення. Змінюйте розмір за краї.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Переміщуйте вікно за допомогою сполучення клавіш вашого середовища стільниці, наприклад перетягування з Meta в KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Щоб перемістити вікно або змінити його розмір, вимкніть цей параметр.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

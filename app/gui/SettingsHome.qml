@@ -9,6 +9,11 @@ UiPage {
     heading: qsTr("Make DeskPort your own.")
     readonly property var preferences: StreamingPreferences
     function save() { preferences.save() }
+    readonly property string windowDragHint: Qt.platform.os === "osx"
+        ? qsTr("Move the window: hold Control+Command and drag the picture. Resize from the edges.")
+        : Qt.platform.os === "windows"
+            ? qsTr("To move or resize the window, turn this option off.")
+            : qsTr("Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.")
 
     UiGroup {
         title: qsTr("Appearance")
@@ -83,6 +88,8 @@ UiPage {
             objectName: "hideStreamTitleBarSwitch"
             iconSource: "qrc:/res/ui/window.svg"
             title: qsTr("Hide title bar while viewing a remote desktop")
+            detail: page.windowDragHint
+            Accessible.description: detail
             infoAccessibleName: qsTr("About hiding the title bar")
             switchable: true; on: preferences.hideStreamTitleBar; divider: false
             onInfoClicked: titleBarPanel.open()
@@ -224,10 +231,9 @@ UiPage {
         objectName: "titleBarPanel"
         title: qsTr("Hide title bar while viewing a remote desktop")
         paragraphs: [
-            qsTr("Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately."),
-            Qt.platform.os === "osx" ? qsTr("macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.")
-                : Qt.platform.os === "windows" ? qsTr("Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.")
-                : qsTr("Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.")
+            qsTr("Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately."),
+            page.windowDragHint,
+            qsTr("On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.")
         ]
     }
     ReadingPanel {

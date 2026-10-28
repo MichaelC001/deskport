@@ -51,6 +51,8 @@ private:
     QPoint position(const QPointF& value) const;
     QPointer<SessionPresentation> m_Presentation;
     QWindow* m_Surface = nullptr;
+    QPointer<QQuickWindow> m_RootWindow;
+    bool m_LocalWindowDrag = false;
     QTimer m_ResizeTimer;
     int m_Buttons = 0;
     bool m_TextInput = false, m_CursorHidden = false;

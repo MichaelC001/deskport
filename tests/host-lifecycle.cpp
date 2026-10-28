@@ -284,6 +284,26 @@ private slots:
         host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(),5000);
         for (auto name : {"host.log","display.log","sunshine.log"}) QVERIFY(!QFile::exists(dir.filePath(name)));
     }
+    void displayRejectionReasons() {
+        QTemporaryDir dir; HostManager host(nullptr, dir.path());
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 1, 1), QString("unavailable"));
+        host.start(2560, 1440);
+        QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 1, 1, 3), QString("policy-unsupported"));
+        QCOMPARE(host.displayResizeRejection(1921, 1080, 1, 1), QString("topology-invalid"));
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 3, 1), QString("topology-invalid"));
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 1, 0), QString("topology-invalid"));
+        QVERIFY(host.displayResizeRejection(1920, 1080, 1, 1).isEmpty());
+        QSignalSpy result(&host, &HostManager::displayResized);
+        QVERIFY(host.resizeDisplay(1920, 1080, 1, 1));
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 1, 2), QString("busy"));
+        QVERIFY(!host.resizeDisplay(1920, 1080, 1, 2));
+        // Invalid input must not be diagnosed as a transient busy condition.
+        QCOMPARE(host.displayResizeRejection(1921, 1080, 1, 2), QString("topology-invalid"));
+        QTRY_COMPARE_WITH_TIMEOUT(result.size(), 1, 3000);
+        QVERIFY(host.displayResizeRejection(1920, 1080, 1, 2).isEmpty());
+        host.stop(); QTRY_VERIFY_WITH_TIMEOUT(!host.changing(), 5000);
+    }
     void reconnectWaitsForPendingRestore() {
         qputenv("DESKPORT_TEST_MODE", "restore-slow");
         QTemporaryDir dir; HostManager host(nullptr, dir.path());
@@ -291,7 +311,9 @@ private slots:
         QTRY_VERIFY_WITH_TIMEOUT(host.adaptiveDisplayAvailable(), 5000);
         QSignalSpy result(&host, &HostManager::displayResized);
         QVERIFY(host.resizeDisplay(1280, 720, 1, -1));
+        QVERIFY(host.displayResizeRejection(1920, 1080, 2, 7, 1).isEmpty());
         QVERIFY(host.resizeDisplay(1920, 1080, 2, 7, 1));
+        QCOMPARE(host.displayResizeRejection(1920, 1080, 2, 8, 1), QString("busy"));
         QVERIFY(!host.resizeDisplay(1920, 1080, 2, 8, 1));
         QTRY_COMPARE_WITH_TIMEOUT(result.size(), 2, 4000);
         QCOMPARE(result[0][0].toInt(), -1);

@@ -1,3 +1,31 @@
+## Window movement and display request recovery — 2026-10-28
+
+The hidden-title-bar setting now explains window movement directly below its
+switch and in its information panel. On macOS, Control+Command+drag moves the
+local window while remote input and pointer capture are suspended; releasing
+the chord restores input. Native fullscreen and ordinary remote clicks retain
+their existing behavior. Linux Wayland keeps the Devices page frameless too,
+avoiding decoration changes when returning to a retained remote canvas. An
+explicit setting change refreshes only the native surface while retaining the
+session, client size and window state; compositor placement remains authoritative.
+Windows still requires turning the option off to move or resize with the mouse.
+The five new help strings have machine-assisted drafts in all 22 core locales.
+
+Adaptive display preparation retries the older host's ambiguous busy/invalid
+refusal for up to three seconds, with cancellable 300 ms waits. Unrelated errors,
+transport loss and mismatched replies still fail immediately. Host diagnostics
+record fixed rejection categories without exposing message text. The host's
+existing restoration queue is retained; the earlier incident's exact rejection
+cause cannot be recovered from the old diagnostic record.
+
+Validation covers peer-binding refusal recovery/cancellation, host restoration,
+canvas input suspension, native macOS event routing, window geometry/state and
+worker IPC release while the UI event loop is paused. The isolated KWin test
+reproduced repeated decoration-toggle failure; native KWin verification of the
+fix and the Linux Nix build await the Linux build host. macOS and Windows
+packaging are tracked separately. Physical streaming, window movement and
+installed-version acceptance remain separate from these checks.
+
 ## Optional hidden title bar while viewing — 2026-10-28
 
 Reason: the user wants the remote picture to use the space of the window title
@@ -8,12 +36,13 @@ nothing changes unless it is turned on.
   (`ui/hideStreamTitleBar`, local to this computer). An information button opens
   a short explanation for the current platform. The tray's More menu has the same
   checkable item; both apply immediately and stay in sync.
-- Only the remote canvas is affected; the Devices page keeps its title bar.
+- The original implementation affected only the remote canvas; the follow-up
+  above keeps the Devices page frameless on native Linux Wayland as well.
 - Linux and Windows: `main.qml` adds `Qt.FramelessWindowHint` while the canvas is
   shown. On Wayland, Qt removes the xdg-decoration; turning it back on needs
   `zxdg_decoration_manager_v1` version 2 (KWin 6.8 on pk4 has it). Older
-  compositors restore the title bar only after the window is reopened, which the
-  explanation states. Windows frameless windows cannot be moved or resized with
+  compositors have decoration transition limitations. The follow-up above
+  avoids Devices/canvas transitions on native Wayland. Windows frameless windows cannot be moved or resized with
   the mouse.
 - macOS: `MacTitleBar` keeps the window titled and extends the canvas under a
   transparent title bar with the close, minimize and zoom buttons hidden, so edge

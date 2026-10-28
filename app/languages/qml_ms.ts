@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: butang tutup, kecilkan dan zum disembunyikan dan gambar mencapai tepi atas. Ubah saiz tetingkap dari tepinya; gunakan Fn+Control+kekunci anak panah untuk menjubin, atau gunakan skrin penuh.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Dimatikan secara lalai. Menyembunyikan bar tajuk dan butang tetingkap supaya gambar jauh mendapat lebih banyak ruang. Gunakan ikon dulang atau pintasan global untuk mengawal tetingkap. Perubahan berkuat kuasa serta-merta.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Pada Linux Wayland, halaman Peranti juga kekal tanpa bar tajuk. Pada platform lain, halaman itu mengekalkan bar tajuknya.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Alihkan tetingkap: tahan Control+Command dan seret gambar. Ubah saiz dari tepinya.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Alihkan tetingkap dengan pintasan desktop anda, seperti Meta+seret pada KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Untuk mengalih atau mengubah saiz tetingkap, matikan pilihan ini.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

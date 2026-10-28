@@ -35,7 +35,7 @@ bool AdaptiveDisplay::retryable() { QMutexLocker lock(&m_Mutex); return m_Retrya
 QString AdaptiveDisplay::warning() { QMutexLocker lock(&m_Mutex); return m_Warning; }
 QString AdaptiveDisplay::resumeToken() { QMutexLocker lock(&m_Mutex); return m_ResumeToken; }
 void AdaptiveDisplay::cancel() { QMutexLocker lock(&m_Mutex); m_TopologyError = "cancelled"; m_Failed = true; m_Retryable = false; requestInterruption(); m_Wake.wakeAll(); }
-void AdaptiveDisplay::release() { QMutexLocker lock(&m_Mutex); m_Release = true; requestInterruption(); }
+void AdaptiveDisplay::release() { QMutexLocker lock(&m_Mutex); m_Release = true; requestInterruption(); m_Wake.wakeAll(); }
 QSize AdaptiveDisplay::selectedSize(QSize requested) {
     QMutexLocker lock(&m_Mutex);
     if(m_Modes.isEmpty() || m_Modes.contains(requested))return requested;
@@ -226,6 +226,8 @@ void AdaptiveDisplay::run() {
     bool rateSaverSent = false;
     bool videoPaused = false;
     QElapsedTimer heartbeat; heartbeat.start();
+    QElapsedTimer resizeRetry;
+    constexpr int ResizeRetryMs = 3000, ResizeRetryIntervalMs = 300;
     while (connected && !isInterruptionRequested()) {
         QSize size; int scale; bool pending, fullScreen;
         { QMutexLocker lock(&m_Mutex); pending = m_Pending; size = m_Size; scale = m_Scale; fullScreen = m_FullScreen; }
@@ -235,16 +237,45 @@ void AdaptiveDisplay::run() {
             if (policySupported) request["displayPolicy"] = m_Policy;
             if (windowSupported) { request["clientWindow"] = DP_CLIENT_WINDOW_VERSION; request["clientFullScreen"] = fullScreen; }
             send(request);
-            const auto reply = receive();
-            connected = reply["type"].toString() == DP_MESSAGE_DISPLAY_RESULT && reply["seq"].toInt() == sequence &&
-                reply["width"].toInt() == size.width() && reply["height"].toInt() == size.height() && !reply.contains("error");
+            auto reply = receive();
+            connected = reply.value("type").toString() == DP_MESSAGE_DISPLAY_RESULT && reply.value("seq").toInt() == sequence &&
+                reply.value("width").toInt() == size.width() && reply.value("height").toInt() == size.height() && !reply.contains("error");
+            // Older hosts combine invalid-size and busy refusals in this exact
+            // reply. Our size and policy have already been validated. Retry that
+            // refusal only; helper failures, policy errors and malformed replies
+            // remain terminal. Keep the authenticated control lease throughout.
+            const bool refused = reply.value("type").toString() == DP_MESSAGE_DISPLAY_RESULT &&
+                reply.value("seq").toInt() == sequence &&
+                reply.value("error").toString() == "Display size is invalid or the display is busy";
+            if (refused && !resizeRetry.isValid()) resizeRetry.start();
+            if (!connected && refused && resizeRetry.elapsed() < ResizeRetryMs && !isInterruptionRequested()) {
+                qWarning() << "Adaptive display is busy; retrying the request";
+                QElapsedTimer interval; interval.start();
+                QMutexLocker lock(&m_Mutex);
+                // Cancellation/release wakes this worker immediately. Other work
+                // may wake it too, but must not turn the retry into a tight loop.
+                while (!isInterruptionRequested() && interval.elapsed() < ResizeRetryIntervalMs &&
+                       resizeRetry.elapsed() < ResizeRetryMs)
+                    m_Wake.wait(&m_Mutex, qMax(1, qMin(ResizeRetryIntervalMs - int(interval.elapsed()),
+                                                      ResizeRetryMs - int(resizeRetry.elapsed()))));
+                if (!isInterruptionRequested() && resizeRetry.elapsed() < ResizeRetryMs) {
+                    connected = socket.state() == QAbstractSocket::ConnectedState;
+                    if (connected) {
+                        heartbeat.restart();
+                        continue;
+                    }
+                    reply = {}; // The peer disconnected during the retry interval.
+                }
+            }
+            resizeRetry.invalidate();
             if (!connected) {
                 QMutexLocker lock(&m_Mutex);
-                m_TopologyError = reply.isEmpty() ? "unavailable" : "display-failed";
+                if (m_TopologyError != "cancelled")
+                    m_TopologyError = reply.isEmpty() ? "unavailable" : "display-failed";
                 if (!reply.isEmpty()) m_Retryable = false;
             }
-            if (!connected) qWarning() << "Adaptive display unavailable:" << reply["error"].toString();
-            { QMutexLocker lock(&m_Mutex); m_Warning = reply["warning"].toString().left(512); m_Result = connected; if (connected) m_NegotiatedSize = size; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
+            if (!connected) qWarning() << "Adaptive display unavailable:" << reply.value("error").toString();
+            { QMutexLocker lock(&m_Mutex); m_Warning = reply.value("warning").toString().left(512); m_Result = connected; if (connected) m_NegotiatedSize = size; m_Complete = true; m_Pending = false; m_Wake.wakeAll(); }
             heartbeat.restart();
         } else if (videoPauseSupported && [&] { QMutexLocker lock(&m_Mutex); return videoStateUnknown || m_VideoPaused != videoPaused; }()) {
             bool desired;

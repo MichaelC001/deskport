@@ -18,6 +18,7 @@ static int worker(QApplication& app) {
     QByteArray buffer;
     int fullscreenRequests = 0, raisedShows = 0, quietShows = 0;
     int shortcutShows = 0, tokenShows = 0;
+    int frameReleases = 0, frameHides = 0;
     bool presenting = false;
     const QString id=app.arguments().value(2);
     const auto mode=app.arguments().value(3);
@@ -32,6 +33,15 @@ static int worker(QApplication& app) {
         while (buffer.contains('\n')) {
             auto end=buffer.indexOf('\n'); auto o=QJsonDocument::fromJson(buffer.left(end)).object(); buffer.remove(0,end+1);
             const auto action=o.value("command").toString();
+            if (mode == "frame-refresh" && action == "canvas-state") {
+                const auto state = o.value("state").toObject();
+                if (state.contains("visible") && !state["visible"].toBool() && !state["focused"].toBool()) {
+                    ++frameReleases;
+                    const auto path = qEnvironmentVariable("DESKPORT_TEST_CANVAS_RELEASE_FILE");
+                    if (!path.isEmpty()) { QFile marker(path); if (marker.open(QIODevice::WriteOnly)) marker.write(QByteArray::number(frameReleases)); }
+                }
+                send({{"type", "traffic"}, {"received", frameReleases}, {"sent", frameHides}});
+            }
             if (connecting && action == "initialize")
                 send({{"type","traffic"},{"received",1},{"sent",0}});
             if(mode=="shortcut-config" && (action=="initialize" || action=="shortcut")) {
@@ -58,6 +68,7 @@ static int worker(QApplication& app) {
             else if(action=="fullscreen") { ++fullscreenRequests;
                 send({{"type","traffic"},{"received",0},{"sent",fullscreenRequests},{"tuningLimited",fullscreenRequests==1}}); }
             else if(action=="hide") {
+                if (mode == "frame-refresh") { ++frameHides; send({{"type", "traffic"}, {"received", frameReleases}, {"sent", frameHides}}); }
                 if (mode=="hung") continue;
                 // Models a busy background viewer: it only answers while presenting.
                 if (mode=="lazy" && !presenting) continue;
@@ -222,6 +233,56 @@ private slots:
         }
         manager.shutdown(); QTRY_VERIFY(!manager.busy());
         QVERIFY(!manager.presentation());
+    }
+    void explicitFrameRefreshRetainsCanvasAndReleasesInput() {
+        QTemporaryDir dir; HostManager host(nullptr, dir.path()+"/host");
+        const auto cert=credential("TEST_CERT_A"), key=credential("TEST_KEY_A");
+        const QJsonObject records{{"a", QJsonObject{{"hostId","a"},{"clientCert",QString::fromUtf8(credential("TEST_CERT_B"))},
+            {"bindingPort",48991},{"ready",true},{"granted",true}}}};
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        QWindow window; window.resize(900,600);
+        MultiSessions manager(&peers,cert,key); manager.setCanvasWindow(&window);
+        const auto releaseFile = dir.path()+"/input-released";
+        qputenv("DESKPORT_TEST_CANVAS_RELEASE_FILE", releaseFile.toUtf8());
+        manager.open("a","Fixture","127.0.0.1","frame-refresh");
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("connected"));
+        qunsetenv("DESKPORT_TEST_CANVAS_RELEASE_FILE");
+        const auto presentation=manager.presentation(); QVERIFY(presentation);
+        QJsonObject state{{"width",900},{"height",600},{"scale",1.0},{"visible",true},{"focused",true}};
+        manager.updateCanvas(state);
+        QTRY_VERIFY(manager.selectedTraffic().contains("received"));
+        const int initialReleases=manager.selectedTraffic().value("received").toInt();
+        for (int i=0; i<10; ++i) {
+            QFile::remove(releaseFile);
+            manager.setCanvasWindowFrameless(i % 2 == 0);
+            // Deliberately stop servicing the shell event loop, as AppKit does
+            // during a native drag. The independent worker must see release.
+            QElapsedTimer nativeLoop; nativeLoop.start();
+            while (!QFile::exists(releaseFile) && nativeLoop.elapsed() < 500) QThread::msleep(10);
+            QVERIFY(QFile::exists(releaseFile));
+            QCOMPARE(window.size(),QSize(900,600));
+            QVERIFY(window.isVisible()); QVERIFY(manager.canvasVisible());
+            QCOMPARE(manager.presentation(),presentation);
+            QCOMPARE(manager.selectedId(),QString("a"));
+            manager.updateCanvas(state); // The real canvas publishes this after re-exposure.
+            QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),initialReleases+i+1);
+            QCOMPARE(manager.selectedTraffic().value("sent").toInt(),0); // No worker hide/restart.
+        }
+        for (auto visibility : {QWindow::FullScreen,QWindow::Maximized,QWindow::Minimized}) {
+            window.setVisibility(visibility);
+            manager.setCanvasWindowFrameless(!window.flags().testFlag(Qt::FramelessWindowHint));
+            QCOMPARE(window.visibility(),visibility);
+            QCOMPARE(manager.presentation(),presentation);
+        }
+        window.hide();
+        QVERIFY(!manager.canvasVisible());
+        manager.setCanvasWindowFrameless(!window.flags().testFlag(Qt::FramelessWindowHint));
+        QVERIFY(!window.isVisible()); QVERIFY(!manager.canvasVisible());
+        QTest::qWait(150); // A frame refresh must not have a deferred re-show.
+        QVERIFY(!window.isVisible());
+        manager.shutdown(); QTRY_VERIFY(!manager.busy());
     }
     void shortcutConfigurationReachesNewAndExistingWorkers() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");

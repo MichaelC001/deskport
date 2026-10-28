@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: Die Tasten zum Schließen, Minimieren und Zoomen sind ausgeblendet, und das Bild reicht bis zum oberen Rand. Fenstergröße an den Rändern ändern; mit Fn+Control+Pfeiltasten kacheln oder den Vollbildmodus verwenden.</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>Standardmäßig aus. Blendet die Titelleiste und Fensterschaltflächen aus, damit das entfernte Bild mehr Platz hat. Verwenden Sie das Tray-Symbol oder das globale Tastenkürzel zur Fenstersteuerung. Änderungen gelten sofort.</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Unter Linux Wayland bleibt auch die Geräteseite ohne Titelleiste. Auf anderen Plattformen behält sie ihre Titelleiste.</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>Fenster verschieben: Control+Command gedrückt halten und das Bild ziehen. Die Größe lässt sich an den Rändern ändern.</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>Verschieben Sie das Fenster mit dem Tastenkürzel Ihrer Desktop-Umgebung, etwa Meta+Ziehen unter KDE Plasma.</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>Schalten Sie diese Option aus, um das Fenster zu verschieben oder seine Größe zu ändern.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

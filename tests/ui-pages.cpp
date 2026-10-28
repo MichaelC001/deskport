@@ -414,7 +414,7 @@ TestPreferences {
 })",QUrl()); return c.create();
         });
         qmlRegisterSingletonType<QObject>("SystemProperties",1,0,"SystemProperties",+[](QQmlEngine* engine,QJSEngine*) -> QObject* {
-            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property bool systemDark: false; property color systemAccent: \"#3269d7\"; property bool hasBrowser: false; property bool hasDesktopEnvironment: true; property bool isWow64: false; property bool hasHardwareAcceleration: true; property bool isRunningXWayland: false; property string unmappedGamepads: \"\"; property string friendlyNativeArchName: \"test\"; property string versionString: \"test\"; property int memorySamples: 0; function memoryUsage(pid) { memorySamples++; return {available: true, complete: true, client: 10485760, host: 0, helpers: 0, total: 10485760} } }",QUrl()); return c.create();
+            QQmlComponent c(engine); c.setData("import QtQuick 2.9; QtObject { property bool systemDark: false; property color systemAccent: \"#3269d7\"; property bool hasBrowser: false; property bool hasDesktopEnvironment: true; property bool isWow64: false; property bool hasHardwareAcceleration: true; property bool isRunningWayland: false; property bool isRunningXWayland: false; property string unmappedGamepads: \"\"; property string friendlyNativeArchName: \"test\"; property string versionString: \"test\"; property int memorySamples: 0; function memoryUsage(pid) { memorySamples++; return {available: true, complete: true, client: 10485760, host: 0, helpers: 0, total: 10485760} } }",QUrl()); return c.create();
         });
     }
     void continuationDuringNestedEventLoop() {
@@ -849,7 +849,10 @@ QtObject {
                 auto titleBarPanel=page->findChild<QObject*>("titleBarPanel"); QVERIFY(titleBarPanel);
                 QVERIFY(QMetaObject::invokeMethod(titleBarInfo,"clicked"));
                 QTRY_VERIFY(titleBarPanel->property("visible").toBool());
-                QCOMPARE(titleBarPanel->property("paragraphs").toList().size(),2);
+                QCOMPARE(titleBarPanel->property("paragraphs").toList().size(),3);
+                QVERIFY(!titleBar->property("detail").toString().isEmpty());
+                QCOMPARE(titleBarPanel->property("paragraphs").toList().at(1).toString(),
+                         titleBar->property("detail").toString());
                 QVERIFY(!prefs->property("hideStreamTitleBar").toBool());
                 QVERIFY(QMetaObject::invokeMethod(titleBarPanel,"close"));
                 QVERIFY(QMetaObject::invokeMethod(titleBar,"switched",Q_ARG(bool,true)));
@@ -1000,6 +1003,11 @@ QtObject {
         fixture.setData(R"(import QtQuick 2.9
 QtObject {
  property bool busy: true
+ property bool canvasEnabled: true
+ property var frameWindow: null
+ function setCanvasWindowFrameless(hidden) {
+   if (frameWindow) frameWindow.flags = hidden ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
+ }
  property bool canvasVisible: false
  property var canvas: ({})
  property var presentation: null
@@ -1038,6 +1046,7 @@ QtObject {
         QQmlComponent component(&engine,QUrl("qrc:/gui/main.qml"));
         QScopedPointer<QObject> root(component.create()); QVERIFY2(root,qPrintable(component.errorString()));
         auto window=qobject_cast<QQuickWindow*>(root.data()); QVERIFY(window);
+        manager->setProperty("frameWindow", QVariant::fromValue<QObject*>(window));
         window->resize(800,620); window->show(); QTest::qWait(100);
         QVERIFY(!findVisual(window->contentItem(),"sessionStrip"));
         QVERIFY(!findVisual(window->contentItem(),"sessionSelect-b"));
@@ -1077,6 +1086,38 @@ QtObject {
         }
         const QString shots=qEnvironmentVariable("DESKPORT_UI_SCREENSHOTS");
         if (!shots.isEmpty()) { QTest::qWait(250); QDir().mkpath(shots); QVERIFY(window->grabWindow().save(shots+"/multiple-sessions.png")); }
+#ifdef Q_OS_LINUX
+        QQmlComponent settingsAccess(&engine);
+        settingsAccess.setData(R"(import QtQuick 2.9
+import StreamingPreferences 1.0
+import SystemProperties 1.0
+QtObject {
+ property var prefs: StreamingPreferences
+ property var system: SystemProperties
+})", QUrl());
+        QScopedPointer<QObject> settings(settingsAccess.create()); QVERIFY(settings);
+        auto preferences = settings->property("prefs").value<QObject*>(); QVERIFY(preferences);
+        auto system = settings->property("system").value<QObject*>(); QVERIFY(system);
+        system->setProperty("isRunningWayland", true);
+        preferences->setProperty("hideStreamTitleBar", true);
+        QTRY_VERIFY(window->flags().testFlag(Qt::FramelessWindowHint));
+        const auto framelessRoot = window->winId();
+        for (int i = 0; i < 10; ++i) {
+            manager->setProperty("canvasVisible", i % 2 == 0);
+            QTRY_VERIFY(window->flags().testFlag(Qt::FramelessWindowHint));
+            QCOMPARE(window->winId(), framelessRoot);
+        }
+        // XWayland keeps the X11 behavior: only the remote canvas is frameless.
+        system->setProperty("isRunningXWayland", true);
+        QTRY_VERIFY(!window->flags().testFlag(Qt::FramelessWindowHint));
+        manager->setProperty("canvasVisible", true);
+        QTRY_VERIFY(window->flags().testFlag(Qt::FramelessWindowHint));
+        preferences->setProperty("hideStreamTitleBar", false);
+        QTRY_VERIFY(!window->flags().testFlag(Qt::FramelessWindowHint));
+        manager->setProperty("canvasVisible", false);
+        system->setProperty("isRunningWayland", false);
+        system->setProperty("isRunningXWayland", false);
+#endif
         // Connection progress and confirmation replace content in this same root.
         const auto nativeRoot = window->winId();
         auto topBar = findVisual(window->contentItem(), "topBar", true); QVERIFY(topBar);
@@ -2028,6 +2069,7 @@ Item {
         QQmlComponent component(&engine,QUrl::fromLocalFile(gui+"/SettingsHome.qml"));
         QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
         const QString english=page->property("heading").toString();
+        const QString englishDragHint=page->property("windowDragHint").toString();
         QCOMPARE(english,QString("Make DeskPort your own."));
         auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
         auto shortcut=page->findChild<QObject*>("globalShortcutSwitch"); QVERIFY(shortcut);
@@ -2044,6 +2086,7 @@ Item {
             QVERIFY(QCoreApplication::installTranslator(&translator));
             engine.retranslate();
             QVERIFY(page->property("heading").toString()!=english);
+            QVERIFY(page->property("windowDragHint").toString()!=englishDragHint);
             QCOMPARE(themeChoice->property("currentIndex").toInt(),0);
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Enable diagnostic logs").isEmpty());

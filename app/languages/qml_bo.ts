@@ -2324,6 +2324,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS: ཁ་རྒྱག་པ་དང་ཆུང་དུ་གཏོང་བ། ཆེ་རུ་གཏོང་བའི་མཐེབ་རྣམས་སྦས་ནས་པར་རིས་སྟེང་མཐའ་བར་སླེབས། སྒེའུ་ཁུང་གི་མཐའ་ནས་ཆེ་ཆུང་སྒྱུར། Fn+Control+མདའ་རྟགས་ཀྱིས་ཆ་སྒྲིག་བྱེད་པའམ་བརྙན་ཡོལ་ཧྲིལ་པོ་བེད་སྤྱོད་གནང་།</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>སྔོན་སྒྲིག་ཐོག་ཁ་རྒྱབ་ཡོད། རྒྱང་ཐག་གི་པར་རིས་ལ་ས་སྟོང་མང་བ་ཡོང་ཆེད་ཁ་བྱང་ཕྲ་རིང་དང་སྒེའུ་ཁུང་གི་མཐེབ་རྣམས་སྦས། སྒེའུ་ཁུང་ཚོད་འཛིན་བྱེད་པར་སྡེར་མའི་རྟགས་རིས་སམ་ཡོངས་ཁྱབ་མྱུར་མཐེབ་བེད་སྤྱོད་གནང་། བཟོ་བཅོས་འཕྲལ་དུ་ནུས་པ་ཐོན།</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Linux Wayland ཐོག་སྒྲིག་ཆས་ཤོག་ངོས་ལའང་ཁ་བྱང་ཕྲ་རིང་མེད་པར་གནས། སྟེགས་བུ་གཞན་ཐོག་དེའི་ཁ་བྱང་ཕྲ་རིང་ཉར།</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>སྒེའུ་ཁུང་སྤོ་བ། Control+Command མནན་ནས་པར་རིས་འདྲུད། མཐའ་ནས་ཆེ་ཆུང་སྒྱུར།</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>ཅོག་ངོས་ཀྱི་མྱུར་མཐེབ་ཀྱིས་སྒེའུ་ཁུང་སྤོ། དཔེར་ན་ KDE Plasma ཐོག་ Meta མནན་ནས་འདྲུད།</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>སྒེའུ་ཁུང་སྤོ་བའམ་ཆེ་ཆུང་སྒྱུར་དགོས་ན། འདེམས་ཚན་འདི་ཁ་རྒྱག་གནང་།</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

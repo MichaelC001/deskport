@@ -2332,6 +2332,26 @@
             <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
             <translation>macOS：閉じる、しまう、拡大/縮小ボタンが隠れ、画面がウィンドウの上端まで広がります。サイズは端から変更できます。Fn+Control+矢印キーでタイル配置するか、全画面表示を使います。</translation>
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation>既定ではオフです。タイトルバーとウィンドウボタンを隠して、リモート画面を広く表示します。ウィンドウの操作にはトレイアイコンまたはグローバルショートカットを使います。変更はすぐに適用されます。</translation>
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation>Linux Wayland では、デバイス画面にもタイトルバーが表示されません。他のプラットフォームではデバイス画面のタイトルバーは残ります。</translation>
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation>ウィンドウの移動：Control+Command を押しながら画面をドラッグします。サイズは端から変更できます。</translation>
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation>KDE Plasma の Meta+ドラッグなど、デスクトップのショートカットでウィンドウを移動します。</translation>
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation>ウィンドウを移動したりサイズを変更したりするには、この設定をオフにしてください。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>

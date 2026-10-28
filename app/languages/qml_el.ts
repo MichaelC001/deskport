@@ -1348,6 +1348,26 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation type="unfinished" />
         </message>
+        <message>
+            <source>Off by default. Hides the title bar and window buttons so the remote picture has more room. Use the tray icon or global shortcut for window controls. Changes apply immediately.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>On Linux Wayland, the Devices page also stays without a title bar. Other platforms keep its title bar.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Move the window: hold Control+Command and drag the picture. Resize from the edges.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
+            <source>To move or resize the window, turn this option off.</source>
+            <translation type="unfinished" />
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
