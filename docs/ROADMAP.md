@@ -8,6 +8,11 @@ their existing behavior. Linux Wayland keeps the Devices page frameless too,
 avoiding decoration changes when returning to a retained remote canvas. An
 explicit setting change refreshes only the native surface while retaining the
 session, client size and window state; compositor placement remains authoritative.
+Fullscreen and maximized Wayland windows keep their surface: a tracker installed
+before the initial show retains the normal client size, then restores it once at
+the native normal-state event, including a hide before that configure arrives.
+This path preserves the canvas input state because it does not hide or unfocus
+the window. It schedules no later resize, show or activation callback.
 Windows still requires turning the option off to move or resize with the mouse.
 The five new help strings have machine-assisted drafts in all 22 core locales.
 
@@ -20,9 +25,14 @@ cause cannot be recovered from the old diagnostic record.
 
 Validation covers peer-binding refusal recovery/cancellation, host restoration,
 canvas input suspension, native macOS event routing, window geometry/state and
-worker IPC release while the UI event loop is paused. The isolated KWin test
-reproduced repeated decoration-toggle failure; native KWin verification of the
-fix and the Linux Nix build await the Linux build host. macOS and Windows
+worker IPC release while the UI event loop is paused. Isolated KWin validation
+checks actual server frame/client geometry at 92 settled stages across both
+startup decoration modes, repeated setting/page changes, hide/recall, fullscreen
+and maximized restore. Focused native cases cover startup expanded states,
+minimize/restore sizing, hiding before configure and subsequent normal resizing.
+In this isolated Qt/KWin fixture, minimization checks preserve Qt's reported
+visibility; compositor-side minimized state has not been asserted.
+The Linux Nix build remains a separate package check. macOS and Windows
 packaging are tracked separately. Physical streaming, window movement and
 installed-version acceptance remain separate from these checks.
 

@@ -5,10 +5,12 @@
 #include <QLocalSocket>
 #include <QTimer>
 #include <QSettings>
+#include <QQuickWindow>
 #include "multisessions.h"
 #include "peermanager.h"
 #include "peerstore.h"
 #include "sessiongraph.h"
+#include "windowframe.h"
 static QByteArray credential(const char* name) { QFile f(qEnvironmentVariable(name)); if (!f.open(QIODevice::ReadOnly)) return {}; return f.readAll(); }
 
 // Real child processes and local sockets; synthetic media never contacts a host
@@ -242,12 +244,13 @@ private slots:
         QDir().mkpath(dir.path()+"/binding");
         QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",records}}));
         PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
-        QWindow window; window.resize(900,600);
+        QQuickWindow window; window.resize(900,600);
         MultiSessions manager(&peers,cert,key); manager.setCanvasWindow(&window);
         const auto releaseFile = dir.path()+"/input-released";
         qputenv("DESKPORT_TEST_CANVAS_RELEASE_FILE", releaseFile.toUtf8());
         manager.open("a","Fixture","127.0.0.1","frame-refresh");
         QTRY_COMPARE(manager.states().value("a").toString(),QString("connected"));
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
         qunsetenv("DESKPORT_TEST_CANVAS_RELEASE_FILE");
         const auto presentation=manager.presentation(); QVERIFY(presentation);
         QJsonObject state{{"width",900},{"height",600},{"scale",1.0},{"visible",true},{"focused",true}};
@@ -270,11 +273,34 @@ private slots:
             QTRY_COMPARE(manager.selectedTraffic().value("received").toInt(),initialReleases+i+1);
             QCOMPARE(manager.selectedTraffic().value("sent").toInt(),0); // No worker hide/restart.
         }
+        QTest::qWait(200); // Finish the last native surface configure.
         for (auto visibility : {QWindow::FullScreen,QWindow::Maximized,QWindow::Minimized}) {
+            window.showNormal();
+            QTest::qWait(200);
             window.setVisibility(visibility);
+            QTest::qWait(100);
+            const auto settledVisibility = window.visibility();
+            // This isolated Qt/KWin fixture does not always report minimized
+            // visibility; preserve the Qt state observed before the change.
+            if (!WindowFrame::nativeWayland() || visibility != QWindow::Minimized)
+                QCOMPARE(settledVisibility, visibility);
+            const bool keepsSurface = !WindowFrame::requiresSurfaceRefresh(&window);
+            if (WindowFrame::nativeWayland() && visibility != QWindow::Minimized)
+                QVERIFY(keepsSurface);
+            manager.updateCanvas(state);
+            QTest::qWait(80); // Drain the preceding state publication.
+            const int releases = manager.selectedTraffic().value("received").toInt();
+            QFile::remove(releaseFile);
             manager.setCanvasWindowFrameless(!window.flags().testFlag(Qt::FramelessWindowHint));
-            QCOMPARE(window.visibility(),visibility);
+            QCOMPARE(window.visibility(),settledVisibility);
             QCOMPARE(manager.presentation(),presentation);
+            if (keepsSurface) {
+                // A real canvas suppresses an unchanged viewport. No later
+                // publication is available to undo a spurious focus release.
+                QTest::qWait(150);
+                QVERIFY(!QFile::exists(releaseFile));
+                QCOMPARE(manager.selectedTraffic().value("received").toInt(), releases);
+            }
         }
         window.hide();
         QVERIFY(!manager.canvasVisible());

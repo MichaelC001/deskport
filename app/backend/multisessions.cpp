@@ -45,14 +45,25 @@ MultiSessions::~MultiSessions() {
 }
 void MultiSessions::setCanvasWindow(QWindow* window) {
     Q_ASSERT(!busy()); m_CanvasWindow = window;
+    trackCanvasWindowFrame(window);
     if (window) connect(window, &QWindow::visibleChanged, this, [this](bool visible) {
         if (!visible && !m_RefreshingCanvasFrame) showDevices();
     });
     emit changed(); emit canvasChanged();
 }
+void MultiSessions::trackCanvasWindowFrame(QWindow* window) {
+    WindowFrame::track(window);
+}
 void MultiSessions::setCanvasWindowFrameless(bool frameless) {
     if (!m_CanvasWindow || m_RefreshingCanvasFrame ||
         m_CanvasWindow->flags().testFlag(Qt::FramelessWindowHint) == frameless) return;
+    if (!WindowFrame::requiresSurfaceRefresh(m_CanvasWindow)) {
+        // This path keeps the canvas mapped and focused. Sending a release here
+        // could leave the worker unfocused because an unchanged canvas does not
+        // publish another viewport state.
+        WindowFrame::setFrameless(m_CanvasWindow, frameless);
+        return;
+    }
     // QML calls this only for an explicit native-Wayland setting change. Send
     // the normal loss-of-focus boundary before briefly replacing its surface;
     // CanvasBridge retains that release even if focus returns in the same turn.

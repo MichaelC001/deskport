@@ -39,6 +39,7 @@ public:
     QString selectedId() const { return m_Selected; }
     bool busy() const;
     void setCanvasWindow(QWindow* window);
+    Q_INVOKABLE void trackCanvasWindowFrame(QWindow* window);
     Q_INVOKABLE void setCanvasWindowFrameless(bool frameless);
     bool canvasEnabled() const { return !m_CanvasWindow.isNull(); }
     bool canvasVisible() const { return canvasEnabled() && !m_Wanted.isEmpty(); }

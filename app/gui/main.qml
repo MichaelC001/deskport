@@ -72,8 +72,10 @@ ApplicationWindow {
     color: ui.canvas
 
     Component.onCompleted: {
-        if (keepWaylandFrameless)
+        if (keepWaylandFrameless) {
+            sessionManager.trackCanvasWindowFrame(window)
             flags = StreamingPreferences.hideStreamTitleBar ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
+        }
         // Safe-area padding was added after Qt 6.4, used by the Linux package.
         // Set it dynamically so older Qt versions can still load this window.
         if ("topPadding" in window) {

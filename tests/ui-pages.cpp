@@ -1005,6 +1005,7 @@ QtObject {
  property bool busy: true
  property bool canvasEnabled: true
  property var frameWindow: null
+ function trackCanvasWindowFrame(window) { frameWindow = window }
  function setCanvasWindowFrameless(hidden) {
    if (frameWindow) frameWindow.flags = hidden ? (Qt.Window | Qt.FramelessWindowHint) : Qt.Window
  }
