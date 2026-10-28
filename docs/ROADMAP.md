@@ -17,13 +17,16 @@ page and fullscreen transitions cancel geometry changes and recover input state.
 Native fullscreen retains its resizable style during the transition. Exiting
 restores the saved outer frame after Qt's final style update, guarded against a
 later hide, mode change or new gesture; this avoids losing the hidden title bar's
-32-point height on return.
+32-point height on return. Fullscreen cycle generations keep an older queued
+completion from consuming a rapid re-entry's snapshot; re-entry retains the
+original frame until the pending correction is applied.
 
-The native suite passes 46 cases using actual NSWindow geometry and process-local
+The native suite passes 47 cases using actual NSWindow geometry and process-local
 NSEvents: four edges, four corners, interior movement, positive/negative origins,
 minimum/maximum clamps, reverse dragging, modifier release orders, cancellation,
 native Devices events, inactive-window first-click ownership and a real AppKit
-fullscreen/normal roundtrip. The production
+fullscreen/normal roundtrip, plus a rapid re-entry regression that reproduces
+a 64-point cumulative height loss on the previous implementation. The production
 canvas focus regression also covers suppression and directional cursor retention.
 Settings and its information panel explain both gestures using the shared core
 catalog. Physical pointer capture beyond the window, mixed-DPI monitors and

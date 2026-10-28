@@ -119,7 +119,10 @@ void MacTitleBar::attach(QQuickWindow* window)
         const bool exited = [name isEqualToString:NSWindowDidExitFullScreenNotification];
         [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name object:native
             queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
-                if (entering && m_CanvasVisible && m_StreamTitleBarHidden) {
+                if (starting) ++m_FullscreenGeneration;
+                if (entering && m_CanvasVisible && m_StreamTitleBarHidden && !m_FullscreenRestoreFrame.isValid()) {
+                    // A rapid re-entry can precede the previous exit's queued
+                    // correction. Keep its original frame until it is applied.
                     const NSRect frame = native.frame;
                     m_FullscreenRestoreFrame = QRectF(frame.origin.x, frame.origin.y, frame.size.width, frame.size.height);
                 }
@@ -130,7 +133,11 @@ void MacTitleBar::attach(QQuickWindow* window)
                 // Reapply the final policy after its fullscreen handler returns.
                 if (!starting) {
                     const auto gestureGeneration = m_GestureGeneration;
-                    QTimer::singleShot(0, this, [this, exited, gestureGeneration] {
+                    const auto fullscreenGeneration = m_FullscreenGeneration;
+                    QTimer::singleShot(0, this, [this, exited, gestureGeneration, fullscreenGeneration] {
+                        // An old completion must not consume the restore frame
+                        // captured by a newer fullscreen transition.
+                        if (fullscreenGeneration != m_FullscreenGeneration) return;
                         updateChrome();
                         if (!exited) return;
                         const auto saved = m_FullscreenRestoreFrame;
@@ -189,7 +196,10 @@ void MacTitleBar::attach(QQuickWindow* window)
             m_LocalGestureActive = false;
             m_ConsumeDragTail = false;
         }
-        if (event.type == NSEventTypeLeftMouseDown) ++m_GestureGeneration;
+        if (event.type == NSEventTypeLeftMouseDown) {
+            ++m_GestureGeneration;
+            if (bare) m_FullscreenRestoreFrame = {};
+        }
         const NSPoint location = event.locationInWindow;
         const NSRect bounds = [native convertRectFromScreen:native.frame];
         constexpr CGFloat resizeRim = 8.0;

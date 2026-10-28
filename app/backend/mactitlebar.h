@@ -50,6 +50,7 @@ private:
     QRectF m_GestureFrame;
     QRectF m_FullscreenRestoreFrame;
     quint64 m_GestureGeneration = 0;
+    quint64 m_FullscreenGeneration = 0;
     bool m_NativeResizable = true;
     bool m_NativeMovable = true;
     bool m_ResizingWindow = false;

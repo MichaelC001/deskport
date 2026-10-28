@@ -407,6 +407,30 @@ private slots:
         QCOMPARE(rectangle(f.native.frame), rectangle(changed));
         QVERIFY(!f.suspended());
     }
+    void staleFullscreenCallbackCannotEraseNewCycleSnapshot() {
+        Fixture f; QVERIFY(f.show());
+        const NSRect original = f.native.frame;
+        notify(NSWindowWillEnterFullScreenNotification, f.native);
+        // Qt restores content dimensions before our queued outer-frame fix.
+        // A new fullscreen request can arrive during this shortened state.
+        NSRect firstQtRestore = original; firstQtRestore.size.height -= 32;
+        notify(NSWindowDidExitFullScreenNotification, f.native);
+        [f.native setFrame:firstQtRestore display:YES];
+        QCOMPARE(rectangle(f.native.frame), rectangle(firstQtRestore));
+        // Start the second cycle before draining the first exit callback. It
+        // must preserve the pending original, not capture the shortened frame;
+        // the old callback must not clear the newer cycle's restore state.
+        notify(NSWindowWillEnterFullScreenNotification, f.native);
+        QTest::qWait(30);
+        notify(NSWindowWillExitFullScreenNotification, f.native);
+        NSRect secondQtRestore = firstQtRestore; secondQtRestore.size.height -= 32;
+        notify(NSWindowDidExitFullScreenNotification, f.native);
+        [f.native setFrame:secondQtRestore display:YES];
+        QTest::qWait(30);
+        QCOMPARE(rectangle(f.native.frame), rectangle(original));
+        QVERIFY(!(f.native.styleMask & NSWindowStyleMaskResizable));
+        QVERIFY(!f.native.movable); QVERIFY(!f.suspended());
+    }
 };
 QTEST_MAIN(MacWindowDragTest)
 #include "macos-window-drag.moc"
