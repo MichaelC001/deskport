@@ -573,7 +573,9 @@ int RtpvAddPacket(PRTP_VIDEO_QUEUE queue, PRTP_PACKET packet, int length, PRTPV_
     }
 
 #ifndef LC_FUZZING
-    if (isBefore16(nvPacket->frameIndex, queue->currentFrameNumber)) {
+    // DeskPort: frame indexes are 32-bit. A 16-bit window rejected every frame
+    // after a host advanced the index by more than 32767 (a long video pause).
+    if (isBefore32(nvPacket->frameIndex, queue->currentFrameNumber)) {
         // Reject frames behind our current frame number
         return RTPF_RET_REJECTED;
     }

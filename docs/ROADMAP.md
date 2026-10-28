@@ -1,3 +1,40 @@
+## Frozen picture after a long background pause — 2026-10-28
+
+Reason: on 2026-10-28 a pk4 → mm4 session stayed frozen after the viewer was
+recalled from the tray. The viewer had been hidden for about 37 minutes. During
+that time the host sent no video but kept encoding a still desktop at about
+15 fps. Its frame index therefore advanced by about 34,000. The viewer's RTP
+queue compared frame indexes in a 16-bit window, so every resumed frame looked
+older than the last one received and was silently rejected. No loss was
+reported, so no key frame was requested; only a manual reconnect recovered.
+Earlier pauses that day (2 and 29 minutes, about 1,900 and 27,000 frames)
+resumed normally.
+
+- Host (`scripts/patch-host-video-pause.py`): both encoder loops (async
+  VideoToolbox/FFmpeg and the synchronous Linux loop) skip encoding while the
+  viewer has video paused, so the frame index no longer advances. Captured
+  images are still converted, so the retained picture stays current. The first
+  frame after resume is a requested key frame encoded after the resume time,
+  which the existing send gate accepts. This also saves host CPU while the
+  viewer is in the background. `protocol/VIDEO_PAUSE.md` already allows
+  encoding to continue or stop; the wire contract is unchanged.
+- Viewer (`moonlight-common-c` `RtpVideoQueue.c`): frame indexes are compared
+  in 32 bits, matching their wire width. This protects older hosts that still
+  encode while paused.
+- Viewer (`app/streaming/resumewatchdog.h`): after a pause ends, no frame
+  reaching the decoder within 3 s requests a key frame, and none within 8 s
+  reconnects through the existing reconnect path. Both log a
+  `video resume recovery` diagnostics record.
+- Tests: `scripts/test-video-resume.py` drives the real RTP queue across
+  frame-index jumps of 34,033, 65,535, 70,000 and 2^31-1 (it fails on the old
+  16-bit check), and covers the watchdog timing.
+  `scripts/test-host-video-pause.py` applies the overlay to both pinned host
+  revisions. Neither is a live check: the fix still needs a real pause of more
+  than about 37 minutes on pk4 → mm4.
+- Not yet changed: the iPhone/iPad and Android clients vendor the same
+  `RtpVideoQueue.c` in the private client repository. Updated hosts protect them;
+  their own 32-bit fix belongs to that repository's vendor-patch workflow.
+
 ## Desktop 0.7.6 final package delivery — 2026-10-27
 
 The [0.7.6 release](RELEASE_0.7.6.md) replaces the earlier desktop packages with

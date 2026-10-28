@@ -3,6 +3,7 @@
 #include "../backend/sessionfailure.h"
 #include "backend/diagnostics.h"
 #include "connectionwait.h"
+#include "resumewatchdog.h"
 #include "resizetrace.h"
 #include <QElapsedTimer>
 #include <QHostInfo>
@@ -450,6 +451,7 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
 
+    ++s_ActiveSession->m_VideoUnitsSubmitted;
     if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
@@ -2763,6 +2765,7 @@ void Session::execInternal()
     // while. Hiding and showing it again in quick succession, such as repeated
     // tray clicks, then never waits for the stream to resume.
     QElapsedTimer viewerHidden;
+    ResumeWatchdog resumeWatchdog;
     for (;;) {
         CanvasBridge::synchronize(m_Window);
         if (CanvasBridge::owns(m_Window)) m_IsFullScreen = CanvasBridge::fullscreen();
@@ -2778,8 +2781,22 @@ void Session::execInternal()
 #endif
         if (m_ViewerRequested && !screenLocked) viewerHidden.invalidate();
         else if (!viewerHidden.isValid()) viewerHidden.start();
-        if (m_AdaptiveDisplay && LiHasVideoKeyFrame())
-            m_AdaptiveDisplay->setVideoPaused(viewerHidden.isValid() && viewerHidden.elapsed() >= 5000);
+        if (m_AdaptiveDisplay && LiHasVideoKeyFrame()) {
+            const bool paused = viewerHidden.isValid() && viewerHidden.elapsed() >= 5000;
+            m_AdaptiveDisplay->setVideoPaused(paused);
+            switch (resumeWatchdog.update(paused, m_VideoUnitsSubmitted, QDateTime::currentMSecsSinceEpoch())) {
+            case ResumeWatchdog::Action::RequestKeyFrame:
+                qWarning() << "DeskPort video resume recovery: no frame after resume; requesting a key frame";
+                LiRequestIdrFrame();
+                break;
+            case ResumeWatchdog::Action::Reconnect:
+                qWarning() << "DeskPort video resume recovery: still no frame; reconnecting";
+                requestReconnect();
+                break;
+            case ResumeWatchdog::Action::None:
+                break;
+            }
+        }
         if (m_AdaptiveDisplay && m_AdaptiveDisplay->takeRateFallback()) requestReconnect();
         if (m_Clipboard && m_ViewerRequested) {
             m_Clipboard->tick();

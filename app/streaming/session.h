@@ -375,6 +375,8 @@ private:
     SDL_Window* m_Window;
     IVideoDecoder* m_VideoDecoder;
     SDL_SpinLock m_DecoderLock;
+    // Decode units handed to the decoder; the resume watchdog reads it.
+    std::atomic<quint64> m_VideoUnitsSubmitted{0};
     bool m_AudioDisabled;
     bool m_AudioMuted;
     Uint32 m_FullScreenFlag;

@@ -69,6 +69,8 @@ jobs:
       - name: Smart streaming policy and translations
         run: |
           nix develop -c python3 scripts/test-smart-stream.py
+          nix develop -c python3 scripts/test-video-resume.py
+          nix develop -c python3 scripts/test-host-video-pause.py
           python3 scripts/test-translations.py
           python3 scripts/test-browser-translations.py
           nix develop -c python3 scripts/test-compiled-translations.py
