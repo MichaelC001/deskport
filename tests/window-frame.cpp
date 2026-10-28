@@ -77,6 +77,8 @@ private slots:
                     << fullscreen << frameless;
     }
     void startupExpandedRestoresClientSize() {
+        if (!WindowFrame::nativeWayland())
+            QSKIP("Startup restore-size tracking requires an owned native Wayland compositor.");
         QFETCH(bool, fullscreen);
         QFETCH(bool, initialFrameless);
         QQuickWindow window;
