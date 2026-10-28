@@ -149,6 +149,8 @@ public:
     Q_PROPERTY(int uiTheme MEMBER uiTheme NOTIFY uiThemeChanged)
     Q_PROPERTY(int uiAccent MEMBER uiAccent NOTIFY uiAccentChanged)
     Q_PROPERTY(bool showTraffic MEMBER showTraffic NOTIFY showTrafficChanged)
+    // Hide the window title bar while the remote picture is shown; off by default.
+    Q_PROPERTY(bool hideStreamTitleBar MEMBER hideStreamTitleBar NOTIFY hideStreamTitleBarChanged)
     Q_PROPERTY(bool globalShortcutEnabled MEMBER globalShortcutEnabled NOTIFY globalShortcutEnabledChanged)
     Q_PROPERTY(QString globalShortcutSequence MEMBER globalShortcutSequence NOTIFY globalShortcutSequenceChanged)
     Q_INVOKABLE QString shortcutFromKey(int key, int modifiers) const;
@@ -208,6 +210,7 @@ public:
     int uiTheme;
     int uiAccent;
     bool showTraffic;
+    bool hideStreamTitleBar;
     bool globalShortcutEnabled;
     QString globalShortcutSequence;
     bool dataSaver;
@@ -261,6 +264,7 @@ signals:
     void uiThemeChanged();
     void uiAccentChanged();
     void showTrafficChanged();
+    void hideStreamTitleBarChanged();
     void globalShortcutEnabledChanged();
     void globalShortcutSequenceChanged();
     void dataSaverChanged();

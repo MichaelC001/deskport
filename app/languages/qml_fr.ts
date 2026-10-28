@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Raccourci du bureau : %1. Gérez son affectation dans les paramètres du bureau.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Masquer la barre de titre pendant l'affichage d'un bureau distant</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>À propos du masquage de la barre de titre</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Désactivé par défaut. Une fois activé, la fenêtre du bureau distant n'a ni barre de titre ni boutons de fenêtre, et l'image distante occupe cet espace. La page Appareils conserve sa barre de titre. Utilisez l'icône de la zone de notification ou le raccourci global de la fenêtre pour afficher, masquer ou déconnecter. Les modifications s'appliquent immédiatement.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux : déplacez ou redimensionnez la fenêtre avec les raccourcis de votre bureau, par exemple Meta+glisser sous KDE Plasma. Les fenêtres en mosaïque ne sont pas concernées. Sur certains bureaux Wayland plus anciens, la barre de titre ne revient qu'après la réouverture de la fenêtre.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows : la fenêtre ne peut pas être déplacée ni redimensionnée à la souris. Désactivez cette option ou passez en plein écran pour changer sa taille.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS : les boutons de fermeture, de réduction et de zoom sont masqués et l'image atteint le bord supérieur. Redimensionnez la fenêtre par ses bords ; utilisez Fn+Contrôle+flèches pour la disposer en mosaïque, ou le plein écran.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>La taille minimale du bureau hôte limite la mise à l’échelle. Utilisez le plein écran ou une fenêtre plus grande.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Masquer la barre de titre pendant l'affichage d'un bureau distant</translation>
         </message>
     </context>
     <context>

@@ -106,6 +106,13 @@ void MacTitleBar::setCanvasVisible(bool visible)
     updateChrome();
 }
 
+void MacTitleBar::setStreamTitleBarHidden(bool hidden)
+{
+    if (m_StreamTitleBarHidden == hidden) return;
+    m_StreamTitleBarHidden = hidden;
+    updateChrome();
+}
+
 void MacTitleBar::updateChrome()
 {
     NSWindow* native = m_Window ? reinterpret_cast<NSView*>(m_Window->winId()).window : nil;
@@ -114,11 +121,19 @@ void MacTitleBar::updateChrome()
     // Devices use a unified application bar. Streaming uses only the normal
     // system title bar, outside the canvas, so no controls cover remote pixels.
     // Update the existing NSWindow rather than changing Qt flags/recreating it.
-    const auto style = m_CanvasVisible ? native.styleMask & ~NSWindowStyleMaskFullSizeContentView
-                                       : native.styleMask | NSWindowStyleMaskFullSizeContentView;
+    // Optionally the canvas covers the title bar too: transparent, no title and
+    // no buttons. Qt still receives clicks there, as on the Devices top bar.
+    const bool bare = m_CanvasVisible && m_StreamTitleBarHidden &&
+                      !m_FullscreenTransitioning && !isNativeFullscreen();
+    const bool systemBar = m_CanvasVisible && !bare;
+    const auto style = systemBar ? native.styleMask & ~NSWindowStyleMaskFullSizeContentView
+                                 : native.styleMask | NSWindowStyleMaskFullSizeContentView;
     if (native.styleMask != style) native.styleMask = style;
-    native.titleVisibility = m_CanvasVisible ? NSWindowTitleVisible : NSWindowTitleHidden;
-    native.titlebarAppearsTransparent = !m_CanvasVisible;
+    native.titleVisibility = systemBar ? NSWindowTitleVisible : NSWindowTitleHidden;
+    native.titlebarAppearsTransparent = !systemBar;
+    native.titlebarSeparatorStyle = bare ? NSTitlebarSeparatorStyleNone : NSTitlebarSeparatorStyleAutomatic;
+    for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton})
+        [native standardWindowButton:kind].hidden = bare;
     native.toolbar.visible = !m_CanvasVisible && !m_FullscreenTransitioning && !isNativeFullscreen();
     // AppKit can grow the frame when restoring the unified toolbar. A page
     // change must preserve the outer window size, otherwise recall negotiates

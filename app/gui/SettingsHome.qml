@@ -76,8 +76,17 @@ UiPage {
             objectName: "showTrafficSwitch"
             iconSource: "qrc:/res/ui/traffic.svg"
             title: qsTr("Show data usage in the top bar")
-            switchable: true; on: preferences.showTraffic; divider: false
+            switchable: true; on: preferences.showTraffic
             onSwitched: function(value) { preferences.showTraffic = value; save() }
+        }
+        UiRow {
+            objectName: "hideStreamTitleBarSwitch"
+            iconSource: "qrc:/res/ui/window.svg"
+            title: qsTr("Hide title bar while viewing a remote desktop")
+            infoAccessibleName: qsTr("About hiding the title bar")
+            switchable: true; on: preferences.hideStreamTitleBar; divider: false
+            onInfoClicked: titleBarPanel.open()
+            onSwitched: function(value) { preferences.hideStreamTitleBar = value; save() }
         }
     }
 
@@ -209,6 +218,17 @@ UiPage {
                 }
             }
         }
+    }
+    ReadingPanel {
+        id: titleBarPanel
+        objectName: "titleBarPanel"
+        title: qsTr("Hide title bar while viewing a remote desktop")
+        paragraphs: [
+            qsTr("Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately."),
+            Qt.platform.os === "osx" ? qsTr("macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.")
+                : Qt.platform.os === "windows" ? qsTr("Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.")
+                : qsTr("Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.")
+        ]
     }
     ReadingPanel {
         id: privacyPanel

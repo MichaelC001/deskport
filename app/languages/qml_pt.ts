@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Atalho do ambiente de trabalho: %1. Gerencie a associação nas configurações do ambiente.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ocultar a barra de título ao ver uma área de trabalho remota</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Sobre ocultar a barra de título</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Desativado por padrão. Quando ativado, a janela da área de trabalho remota não tem barra de título nem botões de janela, e a imagem remota usa esse espaço. A página Dispositivos mantém a barra de título. Use o ícone da bandeja ou o atalho global da janela para mostrar, ocultar ou desconectar. As alterações são aplicadas imediatamente.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: mova ou redimensione a janela com os atalhos da sua área de trabalho, como Meta+arrastar no KDE Plasma. Janelas lado a lado não são afetadas. Em alguns ambientes Wayland mais antigos, a barra de título só volta depois de reabrir a janela.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: a janela não pode ser movida nem redimensionada com o mouse. Desative esta opção ou use a tela cheia para mudar o tamanho.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: os botões de fechar, minimizar e zoom ficam ocultos e a imagem chega à borda superior. Redimensione a janela pelas bordas; use Fn+Control+setas para organizá-la lado a lado ou use a tela cheia.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>O tamanho mínimo da área de trabalho do anfitrião limita a escala. Use tela inteira ou uma janela maior.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ocultar a barra de título ao ver uma área de trabalho remota</translation>
         </message>
     </context>
     <context>

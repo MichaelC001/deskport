@@ -1,3 +1,31 @@
+## Optional hidden title bar while viewing — 2026-10-28
+
+Reason: the user wants the remote picture to use the space of the window title
+bar and to keep window control in the tray. The option is off by default, so
+nothing changes unless it is turned on.
+
+- Settings > Appearance has "Hide title bar while viewing a remote desktop"
+  (`ui/hideStreamTitleBar`, local to this computer). An information button opens
+  a short explanation for the current platform. The tray's More menu has the same
+  checkable item; both apply immediately and stay in sync.
+- Only the remote canvas is affected; the Devices page keeps its title bar.
+- Linux and Windows: `main.qml` adds `Qt.FramelessWindowHint` while the canvas is
+  shown. On Wayland, Qt removes the xdg-decoration; turning it back on needs
+  `zxdg_decoration_manager_v1` version 2 (KWin 6.8 on pk4 has it). Older
+  compositors restore the title bar only after the window is reopened, which the
+  explanation states. Windows frameless windows cannot be moved or resized with
+  the mouse.
+- macOS: `MacTitleBar` keeps the window titled and extends the canvas under a
+  transparent title bar with the close, minimize and zoom buttons hidden, so edge
+  resizing, key status and native full screen keep working. Qt receives clicks in
+  that strip, as on the Devices top bar.
+- Strings: six new rows in the shared core catalog with machine-assisted drafts
+  for all 21 translated locales (core `3b9a2d0`).
+- Validation: UI page checks (default off, information panel, switch), core i18n
+  and desktop catalog checks, a standalone macOS compile of `mactitlebar.mm`, and
+  the Linux Nix build. Not yet checked live: frameless behavior on KDE Wayland,
+  GNOME, Windows and macOS, and the adaptive resolution change when it is toggled.
+
 ## Frozen picture after a long background pause — 2026-10-28
 
 Reason: on 2026-10-28 a pk4 → mm4 session stayed frozen after the viewer was

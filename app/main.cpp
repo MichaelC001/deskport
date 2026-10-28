@@ -1074,6 +1074,19 @@ int main(int argc, char *argv[])
     QObject::connect(&hostManager, &HostManager::sessionSelected, &managedSessions, &MultiSessions::select);
     QObject::connect(&hostManager, &HostManager::sessionDisconnectRequested, &managedSessions, &MultiSessions::disconnectSession);
     QObject::connect(&hostManager, &HostManager::sessionReconnectRequested, &managedSessions, &MultiSessions::reconnect);
+    {
+        auto* preferences = StreamingPreferences::get();
+        QObject::connect(&hostManager, &HostManager::streamTitleBarToggled, preferences, [preferences](bool hidden) {
+            if (preferences->hideStreamTitleBar == hidden) return;
+            preferences->hideStreamTitleBar = hidden;
+            preferences->save();
+            emit preferences->hideStreamTitleBarChanged();
+        });
+        QObject::connect(preferences, &StreamingPreferences::hideStreamTitleBarChanged, &hostManager, [&hostManager, preferences] {
+            hostManager.setStreamTitleBarHidden(preferences->hideStreamTitleBar);
+        });
+        hostManager.setStreamTitleBarHidden(preferences->hideStreamTitleBar);
+    }
     QObject::connect(&hostManager, &HostManager::trayMenuAboutToShow, &managedSessions, [&] { hostManager.updateSessionMenu(managedSessions.sessions()); });
     QObject::connect(&peerManager, &PeerManager::deviceRemovalFinished, &managedSessions, [&managedSessions](QString id, bool success) {
         if (success) managedSessions.disconnectSession(id.toLower());
@@ -1375,6 +1388,11 @@ int main(int argc, char *argv[])
             macTitleBar.setCanvasVisible(managedSessions.canvasVisible());
         });
         macTitleBar.setCanvasVisible(managedSessions.canvasVisible());
+        auto* titleBarPreferences = StreamingPreferences::get();
+        QObject::connect(titleBarPreferences, &StreamingPreferences::hideStreamTitleBarChanged, &macTitleBar, [&, titleBarPreferences] {
+            macTitleBar.setStreamTitleBarHidden(titleBarPreferences->hideStreamTitleBar);
+        });
+        macTitleBar.setStreamTitleBarHidden(titleBarPreferences->hideStreamTitleBar);
 #endif
         if (pendingActivation) showDevices();
     }

@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Bureaubladsneltoets: %1. Beheer de toewijzing in de bureaubladinstellingen.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Titelbalk verbergen bij het bekijken van een extern bureaublad</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Over het verbergen van de titelbalk</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Standaard uit. Indien aan heeft het venster van het externe bureaublad geen titelbalk of vensterknoppen en gebruikt het externe beeld die ruimte. De pagina Apparaten behoudt de titelbalk. Gebruik het systeemvakpictogram of de globale venstersnelkoppeling om te tonen, te verbergen of de verbinding te verbreken. Wijzigingen worden direct toegepast.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: verplaats of wijzig de grootte van het venster met de sneltoetsen van je bureaublad, zoals Meta+slepen in KDE Plasma. Getegelde vensters veranderen niet. Op sommige oudere Wayland-bureaubladen komt de titelbalk pas terug nadat het venster opnieuw is geopend.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: het venster kan niet met de muis worden verplaatst of van grootte veranderd. Schakel deze optie uit of gebruik volledig scherm om de grootte te wijzigen.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: de knoppen voor sluiten, minimaliseren en zoomen zijn verborgen en het beeld loopt tot de bovenrand. Wijzig de grootte via de randen; gebruik Fn+Control+pijltoetsen om te tegelen, of volledig scherm.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>De minimale bureaubladgrootte van de host beperkt de schaal. Gebruik volledig scherm of een groter venster.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Titelbalk verbergen bij het bekijken van een extern bureaublad</translation>
         </message>
     </context>
     <context>

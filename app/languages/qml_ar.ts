@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>اختصار سطح المكتب: %1. أدر تعيينه في إعدادات سطح المكتب.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>إخفاء شريط العنوان أثناء عرض سطح مكتب بعيد</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>حول إخفاء شريط العنوان</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>متوقف افتراضيًا. عند تشغيله، لا تحتوي نافذة سطح المكتب البعيد على شريط عنوان أو أزرار نافذة، وتستخدم الصورة البعيدة تلك المساحة. تحتفظ صفحة الأجهزة بشريط العنوان. استخدم أيقونة شريط النظام أو اختصار النافذة العام للإظهار أو الإخفاء أو قطع الاتصال. تُطبَّق التغييرات فورًا.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: انقل النافذة أو غيّر حجمها باختصارات سطح المكتب، مثل Meta+السحب في KDE Plasma. لا تتأثر النوافذ المتجانبة. في بعض أسطح مكتب Wayland الأقدم، لا يعود شريط العنوان إلا بعد إعادة فتح النافذة.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: لا يمكن نقل النافذة أو تغيير حجمها بالفأرة. لتغيير حجمها، أوقف هذا الخيار أو استخدم ملء الشاشة.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: تُخفى أزرار الإغلاق والتصغير والتكبير وتمتد الصورة إلى الحافة العلوية. غيّر حجم النافذة من حوافها، واستخدم Fn+Control+مفاتيح الأسهم لترتيبها متجانبة، أو استخدم ملء الشاشة.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>يحد الحد الأدنى لحجم سطح مكتب المضيف من التحجيم. استخدم ملء الشاشة أو نافذة أكبر.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>إخفاء شريط العنوان أثناء عرض سطح مكتب بعيد</translation>
         </message>
     </context>
     <context>

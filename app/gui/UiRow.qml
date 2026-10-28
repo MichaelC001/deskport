@@ -5,7 +5,8 @@ import QtQuick.Layouts 1.3
 
 // One row of a settings group: icon tile, title with an optional explanation,
 // the current value, then a chevron or a switch. An editable value has its own
-// button; clicking the rest of a switch row emits switched().
+// button; clicking the rest of a switch row emits switched(). A row with an
+// infoAccessibleName shows an information button that emits infoClicked().
 ItemDelegate {
     id: row
     property url iconSource
@@ -24,8 +25,10 @@ ItemDelegate {
     property bool expanded: false
     // Whether the row draws its separator from the next row.
     property bool divider: true
+    property string infoAccessibleName
     signal switched(bool value)
     signal valueClicked()
+    signal infoClicked()
     width: parent ? parent.width : implicitWidth
     implicitHeight: Math.max(52, layout.implicitHeight + 20)
     leftPadding: 16; rightPadding: 14; topPadding: 10; bottomPadding: 10
@@ -91,6 +94,17 @@ ItemDelegate {
             Accessible.name: row.valueAccessibleName
             Accessible.description: row.value
             onClicked: row.valueClicked()
+        }
+        UiIconButton {
+            objectName: row.objectName.length > 0 ? row.objectName + "Info" : ""
+            visible: row.infoAccessibleName.length > 0
+            source: "qrc:/res/ui/info.svg"
+            implicitWidth: 32; implicitHeight: 32; iconSize: 18
+            Accessible.name: row.infoAccessibleName
+            ToolTip.visible: hovered
+            ToolTip.delay: 800
+            ToolTip.text: row.infoAccessibleName
+            onClicked: row.infoClicked()
         }
         Switch {
             visible: row.switchable

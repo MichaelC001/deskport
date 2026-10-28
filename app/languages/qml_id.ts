@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Pintasan desktop: %1. Kelola penetapannya di pengaturan desktop.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Sembunyikan bilah judul saat melihat desktop jarak jauh</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Tentang menyembunyikan bilah judul</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Mati secara default. Jika aktif, jendela desktop jarak jauh tidak memiliki bilah judul atau tombol jendela, dan gambar jarak jauh memakai ruang itu. Halaman Perangkat tetap memiliki bilah judul. Gunakan ikon baki atau pintasan jendela global untuk menampilkan, menyembunyikan, atau memutus koneksi. Perubahan langsung diterapkan.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: pindahkan atau ubah ukuran jendela dengan pintasan desktop Anda, misalnya Meta+seret di KDE Plasma. Jendela bertata ubin tidak terpengaruh. Pada beberapa desktop Wayland lama, bilah judul baru kembali setelah jendela dibuka ulang.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: jendela tidak dapat dipindahkan atau diubah ukurannya dengan mouse. Matikan opsi ini atau gunakan layar penuh untuk mengubah ukurannya.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: tombol tutup, perkecil, dan perbesar disembunyikan dan gambar mencapai tepi atas. Ubah ukuran jendela dari tepinya; gunakan Fn+Control+tombol panah untuk menata ubin, atau gunakan layar penuh.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Ukuran desktop minimum host membatasi skala. Gunakan layar penuh atau jendela yang lebih besar.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Sembunyikan bilah judul saat melihat desktop jarak jauh</translation>
         </message>
     </context>
     <context>

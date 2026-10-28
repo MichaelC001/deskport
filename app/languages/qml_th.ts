@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>ปุ่มลัดเดสก์ท็อป: %1 จัดการการกำหนดปุ่มในการตั้งค่าเดสก์ท็อป</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>ซ่อนแถบชื่อเรื่องขณะดูเดสก์ท็อประยะไกล</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>เกี่ยวกับการซ่อนแถบชื่อเรื่อง</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>ปิดไว้โดยค่าเริ่มต้น เมื่อเปิด หน้าต่างเดสก์ท็อประยะไกลจะไม่มีแถบชื่อเรื่องหรือปุ่มหน้าต่าง และภาพระยะไกลจะใช้พื้นที่นั้น หน้าอุปกรณ์ยังคงมีแถบชื่อเรื่อง ใช้ไอคอนในถาดระบบหรือทางลัดหน้าต่างส่วนกลางเพื่อแสดง ซ่อน หรือตัดการเชื่อมต่อ การเปลี่ยนแปลงมีผลทันที</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: ย้ายหรือปรับขนาดหน้าต่างด้วยทางลัดของเดสก์ท็อป เช่น Meta+ลากใน KDE Plasma หน้าต่างแบบเรียงต่อไม่ได้รับผลกระทบ บนเดสก์ท็อป Wayland รุ่นเก่าบางตัว แถบชื่อเรื่องจะกลับมาหลังจากเปิดหน้าต่างใหม่เท่านั้น</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: ไม่สามารถย้ายหรือปรับขนาดหน้าต่างด้วยเมาส์ได้ หากต้องการเปลี่ยนขนาด ให้ปิดตัวเลือกนี้หรือใช้โหมดเต็มหน้าจอ</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: ปุ่มปิด ย่อ และซูมจะถูกซ่อน และภาพจะขยายถึงขอบบน ปรับขนาดหน้าต่างจากขอบ ใช้ Fn+Control+ปุ่มลูกศรเพื่อจัดเรียง หรือใช้โหมดเต็มหน้าจอ</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>ขนาดเดสก์ท็อปขั้นต่ำของโฮสต์จำกัดการปรับขนาด ใช้แบบเต็มหน้าจอหรือหน้าต่างที่ใหญ่ขึ้น</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>ซ่อนแถบชื่อเรื่องขณะดูเดสก์ท็อประยะไกล</translation>
         </message>
     </context>
     <context>

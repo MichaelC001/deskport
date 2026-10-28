@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>ཅོག་ངོས་མྱུར་མཐེབ། %1 ཅོག་ངོས་སྒྲིག་འགོད་ནང་སྦྲེལ་བ་དོ་དམ་བྱེད།</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>རྒྱང་ཐག་ཅོག་ངོས་ལྟ་སྐབས་ཁ་བྱང་ཕྲ་རིང་སྦས།</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>ཁ་བྱང་ཕྲ་རིང་སྦས་པའི་སྐོར།</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>སྔོན་སྒྲིག་ཐོག་ཁ་རྒྱབ་ཡོད། ཁ་ཕྱེ་ན། རྒྱང་ཐག་ཅོག་ངོས་ཀྱི་སྒེའུ་ཁུང་ལ་ཁ་བྱང་ཕྲ་རིང་དང་སྒེའུ་ཁུང་གི་མཐེབ་མི་སྟོན། ས་སྟོང་དེ་རྒྱང་ཐག་གི་པར་རིས་ལ་སྤྱོད། སྒྲིག་ཆས་ཤོག་ངོས་ལ་ཁ་བྱང་ཕྲ་རིང་ཉར། སྟོན་པ་དང་སྦས་པ། འབྲེལ་མཐུད་གཅོད་པར་སྡེར་མའི་རྟགས་རིས་སམ་ཡོངས་ཁྱབ་སྒེའུ་ཁུང་མྱུར་མཐེབ་བེད་སྤྱོད་གནང་། བཟོ་བཅོས་འཕྲལ་དུ་ནུས་པ་ཐོན།</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: ཅོག་ངོས་ཀྱི་མྱུར་མཐེབ་ཀྱིས་སྒེའུ་ཁུང་སྤོ་བའམ་ཆེ་ཆུང་སྒྱུར། དཔེར་ན་ KDE Plasma ཐོག་ Meta+འདྲུད། ཆ་སྒྲིག་སྒེའུ་ཁུང་ལ་ཤུགས་རྐྱེན་མེད། Wayland ཅོག་ངོས་རྙིང་པ་ཁ་ཤས་ཐོག་སྒེའུ་ཁུང་བསྐྱར་དུ་ཕྱེ་རྗེས་ཁོ་ནར་ཁ་བྱང་ཕྲ་རིང་ཕྱིར་ཡོང་།</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: ཙི་གུས་སྒེའུ་ཁུང་སྤོ་བའམ་ཆེ་ཆུང་སྒྱུར་མི་ཐུབ། ཆེ་ཆུང་སྒྱུར་དགོས་ན་འདེམས་ཚན་འདི་ཁ་རྒྱག་པའམ་བརྙན་ཡོལ་ཧྲིལ་པོ་བེད་སྤྱོད་གནང་།</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: ཁ་རྒྱག་པ་དང་ཆུང་དུ་གཏོང་བ། ཆེ་རུ་གཏོང་བའི་མཐེབ་རྣམས་སྦས་ནས་པར་རིས་སྟེང་མཐའ་བར་སླེབས། སྒེའུ་ཁུང་གི་མཐའ་ནས་ཆེ་ཆུང་སྒྱུར། Fn+Control+མདའ་རྟགས་ཀྱིས་ཆ་སྒྲིག་བྱེད་པའམ་བརྙན་ཡོལ་ཧྲིལ་པོ་བེད་སྤྱོད་གནང་།</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>ཧོསཊི་གི་ཌེཀ་སི་ཊོབ་ཆུང་ཤོས་ཀྱི་ཚད་ཀྱིས་ཆེ་ཆུང་སྒྱུར་བ་ལ་ཚད་འཛིན་བྱེད། གསལ་གཞི་ཆ་ཚང་ཡང་ན་སྒེའུ་ཁུང་ཆེ་བ་བེད་སྤྱོད་བྱེད་དགོས།</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>རྒྱང་ཐག་ཅོག་ངོས་ལྟ་སྐབས་ཁ་བྱང་ཕྲ་རིང་སྦས།</translation>
         </message>
     </context>
     <context>

@@ -117,6 +117,8 @@ public:
     Q_INVOKABLE void requestExit();
     Q_INVOKABLE void requestRestart();
     void updateSessionMenu(const QVariantList& sessions);
+    // Mirrors the "hide title bar while viewing" preference in the tray menu.
+    void setStreamTitleBarHidden(bool hidden);
     void allowExit() { m_ExitRequested = true; }
     bool restarting() const { return m_RestartRequested; }
 
@@ -134,6 +136,7 @@ signals:
     void sessionSelected(QString id);
     void sessionDisconnectRequested(QString id);
     void sessionReconnectRequested(QString id);
+    void streamTitleBarToggled(bool hidden);
     // Emitted synchronously before the tray menu opens so it can be refreshed.
     void trayMenuAboutToShow();
     void changed();
@@ -201,6 +204,7 @@ private:
     QAction* m_SessionSeparator = nullptr;
     QAction* m_DisconnectSession = nullptr;
     QAction* m_ReconnectSession = nullptr;
+    QAction* m_StreamTitleBar = nullptr;
     QString m_CurrentSession;
     QVariantList m_PendingSessionRows;
     QString m_SessionMenuKey;

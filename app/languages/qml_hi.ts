@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>डेस्कटॉप शॉर्टकट: %1। इसका संयोजन डेस्कटॉप सेटिंग में बदलें।</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>रिमोट डेस्कटॉप देखते समय टाइटल बार छिपाएं</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>टाइटल बार छिपाने के बारे में</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>डिफ़ॉल्ट रूप से बंद। चालू होने पर रिमोट डेस्कटॉप विंडो में टाइटल बार या विंडो बटन नहीं होते, और वह जगह रिमोट चित्र को मिलती है। डिवाइस पेज का टाइटल बार बना रहता है। दिखाने, छिपाने या डिस्कनेक्ट करने के लिए ट्रे आइकन या ग्लोबल विंडो शॉर्टकट का उपयोग करें। बदलाव तुरंत लागू होते हैं।</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: विंडो को अपने डेस्कटॉप के शॉर्टकट से हिलाएं या उसका आकार बदलें, जैसे KDE Plasma पर Meta+ड्रैग। टाइल की गई विंडो पर असर नहीं पड़ता। कुछ पुराने Wayland डेस्कटॉप पर टाइटल बार विंडो दोबारा खोलने के बाद ही लौटता है।</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: विंडो को माउस से हिलाया या उसका आकार बदला नहीं जा सकता। आकार बदलने के लिए यह विकल्प बंद करें या फ़ुल स्क्रीन का उपयोग करें।</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: बंद करें, छोटा करें और ज़ूम बटन छिप जाते हैं और चित्र ऊपरी किनारे तक पहुंचता है। विंडो का आकार उसके किनारों से बदलें; टाइल करने के लिए Fn+Control+तीर कुंजियां या फ़ुल स्क्रीन का उपयोग करें।</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>होस्ट के न्यूनतम डेस्कटॉप आकार के कारण स्केलिंग सीमित है। पूर्ण स्क्रीन या बड़ी विंडो का उपयोग करें।</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>रिमोट डेस्कटॉप देखते समय टाइटल बार छिपाएं</translation>
         </message>
     </context>
     <context>

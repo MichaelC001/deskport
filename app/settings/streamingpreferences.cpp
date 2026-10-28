@@ -240,6 +240,7 @@ void StreamingPreferences::reload()
     uiTheme = settings.value("ui/uiTheme", 0).toInt();
     uiAccent = qBound(0, settings.value("ui/accent", 0).toInt(), 4);
     showTraffic = settings.value("ui/showTraffic", false).toBool();
+    hideStreamTitleBar = settings.value("ui/hideStreamTitleBar", false).toBool();
     globalShortcutEnabled = settings.value("ui/globalShortcutEnabled", true).toBool();
     globalShortcutSequence = ShortcutBinding::parse(settings.value("ui/globalShortcutSequence",
         ShortcutBinding::defaultSequence()).toString()).portable();
@@ -502,6 +503,7 @@ void StreamingPreferences::save()
     settings.setValue("ui/uiTheme", uiTheme);
     settings.setValue("ui/accent", uiAccent);
     settings.setValue("ui/showTraffic", showTraffic);
+    settings.setValue("ui/hideStreamTitleBar", hideStreamTitleBar);
     settings.setValue("ui/globalShortcutEnabled", globalShortcutEnabled);
     const auto shortcut = ShortcutBinding::parse(globalShortcutSequence).portable();
     settings.setValue("ui/globalShortcutSequence", shortcut.isEmpty() ? ShortcutBinding::defaultSequence() : shortcut);

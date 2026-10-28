@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Skrót pulpitu: %1. Zarządzaj przypisaniem w ustawieniach pulpitu.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ukryj pasek tytułu podczas oglądania zdalnego pulpitu</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Informacje o ukrywaniu paska tytułu</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Domyślnie wyłączone. Po włączeniu okno zdalnego pulpitu nie ma paska tytułu ani przycisków okna, a zdalny obraz zajmuje to miejsce. Strona Urządzenia zachowuje pasek tytułu. Aby pokazać, ukryć lub rozłączyć, użyj ikony w zasobniku lub globalnego skrótu okna. Zmiany są stosowane od razu.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: przenoś okno lub zmieniaj jego rozmiar skrótami pulpitu, np. Meta+przeciągnij w KDE Plasma. Okna kafelkowe nie są zmieniane. Na niektórych starszych pulpitach Wayland pasek tytułu wraca dopiero po ponownym otwarciu okna.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: okna nie można przenosić ani zmieniać jego rozmiaru myszą. Aby zmienić rozmiar, wyłącz tę opcję lub użyj pełnego ekranu.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: przyciski zamykania, minimalizowania i powiększania są ukryte, a obraz sięga górnej krawędzi. Zmieniaj rozmiar okna za krawędzie; użyj Fn+Control+strzałek, aby je ułożyć, albo pełnego ekranu.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Minimalny rozmiar pulpitu hosta ogranicza skalowanie. Użyj pełnego ekranu lub większego okna.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ukryj pasek tytułu podczas oglądania zdalnego pulpitu</translation>
         </message>
     </context>
     <context>

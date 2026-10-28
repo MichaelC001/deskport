@@ -2348,6 +2348,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>桌面快捷键：%1。可在桌面环境设置中管理绑定。</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>查看远程桌面时隐藏标题栏</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>关于隐藏标题栏</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>默认关闭。开启后，远程桌面窗口不显示标题栏和窗口按钮，这部分空间留给远端画面。设备页仍保留标题栏。显示、隐藏或断开请使用托盘图标或全局窗口快捷键。更改立即生效。</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux：用桌面环境的快捷操作移动或调整窗口，例如 KDE Plasma 上按住 Meta 拖动。平铺窗口不受影响。在部分较旧的 Wayland 桌面上，关闭此选项后需重新打开窗口才会恢复标题栏。</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows：窗口无法用鼠标移动或调整大小。如需改变大小，请关闭此选项或使用全屏。</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS：关闭、最小化和缩放按钮会隐藏，画面延伸到窗口顶端。可从窗口边缘调整大小；用 Fn+Control+方向键平铺窗口，或使用全屏。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3221,6 +3245,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>主机的最小桌面尺寸限制了缩放。请使用全屏或更大的窗口。</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>查看远程桌面时隐藏标题栏</translation>
         </message>
         <message>
             <source>Connections</source>

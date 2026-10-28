@@ -399,7 +399,7 @@ TestPreferences {
  property int displayPolicy: 0
  property double desktopAdjustment: 1.0
  property string deviceId: ""; property bool remoteAudio: true; property bool remoteInput: true
- property int uiAccent: 1; property bool showTraffic: true; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
+ property int uiAccent: 1; property bool showTraffic: true; property bool hideStreamTitleBar: false; property int uiTheme: 0; property bool compactDevices: true; property int uiDisplayMode: 0
  property bool globalShortcutEnabled: true
  property int language: 1; property int retranslations: 0
  function retranslate() { retranslations++; return true }
@@ -841,6 +841,20 @@ QtObject {
                 auto traffic=page->findChild<QObject*>("showTrafficSwitch"); QVERIFY(traffic);
                 QVERIFY(QMetaObject::invokeMethod(traffic,"switched",Q_ARG(bool,false)));
                 QVERIFY(!prefs->property("showTraffic").toBool());
+                // Off by default; the information button explains it without toggling it.
+                auto titleBar=page->findChild<QObject*>("hideStreamTitleBarSwitch"); QVERIFY(titleBar);
+                QVERIFY(!titleBar->property("on").toBool());
+                auto titleBarInfo=page->findChild<QObject*>("hideStreamTitleBarSwitchInfo"); QVERIFY(titleBarInfo);
+                QVERIFY(titleBarInfo->property("visible").toBool());
+                auto titleBarPanel=page->findChild<QObject*>("titleBarPanel"); QVERIFY(titleBarPanel);
+                QVERIFY(QMetaObject::invokeMethod(titleBarInfo,"clicked"));
+                QTRY_VERIFY(titleBarPanel->property("visible").toBool());
+                QCOMPARE(titleBarPanel->property("paragraphs").toList().size(),2);
+                QVERIFY(!prefs->property("hideStreamTitleBar").toBool());
+                QVERIFY(QMetaObject::invokeMethod(titleBarPanel,"close"));
+                QVERIFY(QMetaObject::invokeMethod(titleBar,"switched",Q_ARG(bool,true)));
+                QVERIFY(prefs->property("hideStreamTitleBar").toBool());
+                QTRY_VERIFY(titleBar->property("on").toBool());
                 QCOMPARE(prefs->property("bitrateKbps").toInt(),125000);
                 QObject* languages=page->findChild<QObject*>("languageChoice"); QVERIFY(languages);
                 QVERIFY(QMetaObject::invokeMethod(languages,"activated",Q_ARG(int,2)));

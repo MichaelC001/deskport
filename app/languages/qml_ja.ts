@@ -2308,6 +2308,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>デスクトップのショートカット：%1。割り当てはデスクトップ設定で管理できます。</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>リモートデスクトップ表示中はタイトルバーを隠す</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>タイトルバーを隠す設定について</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>既定ではオフです。オンにすると、リモートデスクトップのウィンドウにタイトルバーとウィンドウボタンが表示されず、その領域もリモート画面に使われます。デバイス画面のタイトルバーはそのままです。表示、非表示、切断にはトレイアイコンまたはグローバルウィンドウショートカットを使います。変更はすぐに適用されます。</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux：ウィンドウの移動やサイズ変更は、KDE Plasma の Meta+ドラッグなど、デスクトップのショートカットで行います。タイル配置のウィンドウには影響しません。一部の古い Wayland デスクトップでは、ウィンドウを開き直すまでタイトルバーが戻りません。</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows：マウスでウィンドウを移動したりサイズを変更したりできません。サイズを変えるには、この設定をオフにするか全画面表示を使います。</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS：閉じる、しまう、拡大/縮小ボタンが隠れ、画面がウィンドウの上端まで広がります。サイズは端から変更できます。Fn+Control+矢印キーでタイル配置するか、全画面表示を使います。</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3181,6 +3205,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>ホストの最小デスクトップサイズにより拡大率が制限されています。全画面表示か、より大きなウィンドウを使用してください。</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>リモートデスクトップ表示中はタイトルバーを隠す</translation>
         </message>
     </context>
     <context>

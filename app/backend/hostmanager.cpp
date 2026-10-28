@@ -416,6 +416,11 @@ HostManager::HostManager(QObject *parent, const QString &directory, bool interac
         const auto id = m_CurrentSession;
         if (!id.isEmpty()) later([this, id] { emit sessionReconnectRequested(id); });
     });
+    m_StreamTitleBar = more->addAction(tr("Hide title bar while viewing a remote desktop"));
+    m_StreamTitleBar->setCheckable(true);
+    connect(m_StreamTitleBar, &QAction::triggered, this, [this, later](bool hidden) {
+        later([this, hidden] { emit streamTitleBarToggled(hidden); });
+    });
     // Restarting from the tray is how a remote viewer picks up a version that a
     // package upgrade already wrote to disk: the running process keeps the old
     // binary until it exits, and a clean exit never comes back on its own.
@@ -486,6 +491,9 @@ void HostManager::showTrayMenu() {
     updateSessionMenu(m_PendingSessionRows);
 }
 #endif
+void HostManager::setStreamTitleBarHidden(bool hidden) {
+    if (m_StreamTitleBar) m_StreamTitleBar->setChecked(hidden);
+}
 void HostManager::updateSessionMenu(const QVariantList& sessions) {
     m_PendingSessionRows = sessions;
     if (m_NativeMenuTracking || m_Menu->isVisible()) {

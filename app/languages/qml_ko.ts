@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>데스크톱 단축키: %1. 데스크톱 설정에서 할당을 관리하세요.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>원격 데스크톱을 볼 때 제목 표시줄 숨기기</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>제목 표시줄 숨기기 정보</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>기본적으로 꺼져 있습니다. 켜면 원격 데스크톱 창에 제목 표시줄과 창 버튼이 표시되지 않고 그 공간을 원격 화면이 사용합니다. 기기 페이지의 제목 표시줄은 유지됩니다. 표시, 숨기기, 연결 끊기는 트레이 아이콘이나 전역 창 단축키를 사용하세요. 변경 사항은 즉시 적용됩니다.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: KDE Plasma의 Meta+드래그처럼 데스크톱 단축키로 창을 이동하거나 크기를 조절하세요. 타일 배치된 창은 영향을 받지 않습니다. 일부 오래된 Wayland 데스크톱에서는 창을 다시 열어야 제목 표시줄이 돌아옵니다.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: 마우스로 창을 이동하거나 크기를 조절할 수 없습니다. 크기를 바꾸려면 이 옵션을 끄거나 전체 화면을 사용하세요.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: 닫기, 최소화, 확대/축소 버튼이 숨겨지고 화면이 창 위쪽 끝까지 채워집니다. 창 가장자리로 크기를 조절하고, Fn+Control+화살표 키로 타일 배치하거나 전체 화면을 사용하세요.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>호스트의 최소 데스크톱 크기로 인해 배율이 제한됩니다. 전체 화면이나 더 큰 창을 사용하세요.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>원격 데스크톱을 볼 때 제목 표시줄 숨기기</translation>
         </message>
     </context>
     <context>

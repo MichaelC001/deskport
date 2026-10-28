@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Сполучення стільниці: %1. Змініть призначення в параметрах стільниці.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Приховувати заголовок вікна під час перегляду віддаленого робочого столу</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Про приховування заголовка вікна</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Типово вимкнено. Якщо ввімкнено, вікно віддаленого робочого столу не має заголовка та кнопок вікна, і цей простір займає віддалене зображення. Сторінка пристроїв зберігає заголовок. Щоб показати, приховати або від'єднатися, використовуйте значок у треї або глобальне сполучення клавіш вікна. Зміни застосовуються одразу.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: переміщуйте вікно та змінюйте його розмір сполученнями робочого столу, наприклад Meta+перетягування в KDE Plasma. Мозаїчних вікон це не стосується. У деяких старіших середовищах Wayland заголовок повертається лише після повторного відкриття вікна.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: вікно не можна переміщати чи змінювати його розмір мишею. Щоб змінити розмір, вимкніть цей параметр або скористайтеся повноекранним режимом.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: кнопки закриття, згортання та масштабування приховано, зображення сягає верхнього краю. Змінюйте розмір вікна за краї; використовуйте Fn+Control+стрілки для мозаїчного розміщення або повноекранний режим.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Мінімальний розмір робочого столу хоста обмежує масштаб. Використовуйте повноекранний режим або більше вікно.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Приховувати заголовок вікна під час перегляду віддаленого робочого столу</translation>
         </message>
     </context>
     <context>

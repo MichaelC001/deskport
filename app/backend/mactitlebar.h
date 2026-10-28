@@ -11,6 +11,9 @@ class QQuickWindow;
 // button zooms instead of entering full screen.
 // The remote canvas uses the standard system title bar outside its content;
 // returning to Devices restores the unified application bar on the same window.
+// With the optional hidden stream title bar, the canvas extends under a
+// transparent title bar without its buttons instead; the window stays titled, so
+// edge resizing, key status and native full screen keep working.
 class MacTitleBar : public QObject
 {
     Q_OBJECT
@@ -19,6 +22,7 @@ public:
     ~MacTitleBar() override;
     void attach(QQuickWindow* window);
     void setCanvasVisible(bool visible);
+    void setStreamTitleBarHidden(bool hidden);
     bool isNativeFullscreen() const;
     bool isToolbarVisible() const;
     bool isContentUnderTitleBar() const;
@@ -32,4 +36,5 @@ private:
     void* m_FullscreenObservers = nullptr;
     bool m_FullscreenTransitioning = false;
     bool m_CanvasVisible = false;
+    bool m_StreamTitleBarHidden = false;
 };

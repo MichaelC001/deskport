@@ -2300,6 +2300,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Desktop-Tastenkürzel: %1. Die Belegung lässt sich in den Desktop-Einstellungen verwalten.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Titelleiste beim Anzeigen eines entfernten Desktops ausblenden</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Über das Ausblenden der Titelleiste</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Standardmäßig aus. Wenn aktiviert, hat das Fenster des entfernten Desktops keine Titelleiste und keine Fensterschaltflächen, und das entfernte Bild nutzt diesen Platz. Die Geräteseite behält ihre Titelleiste. Zum Anzeigen, Ausblenden oder Trennen das Tray-Symbol oder das globale Fensterkürzel verwenden. Änderungen gelten sofort.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: Fenster mit den Kürzeln des Desktops verschieben oder skalieren, etwa Meta+Ziehen unter KDE Plasma. Gekachelte Fenster sind nicht betroffen. Auf einigen älteren Wayland-Desktops erscheint die Titelleiste erst wieder, nachdem das Fenster neu geöffnet wurde.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: Das Fenster lässt sich nicht mit der Maus verschieben oder skalieren. Zum Ändern der Größe diese Option ausschalten oder den Vollbildmodus verwenden.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: Die Tasten zum Schließen, Minimieren und Zoomen sind ausgeblendet, und das Bild reicht bis zum oberen Rand. Fenstergröße an den Rändern ändern; mit Fn+Control+Pfeiltasten kacheln oder den Vollbildmodus verwenden.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3173,6 +3197,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Die minimale Desktopgröße des Hosts begrenzt die Skalierung. Verwende den Vollbildmodus oder ein größeres Fenster.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Titelleiste beim Anzeigen eines entfernten Desktops ausblenden</translation>
         </message>
     </context>
     <context>

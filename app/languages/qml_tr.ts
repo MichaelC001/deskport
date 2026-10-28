@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Masaüstü kısayolu: %1. Atamasını masaüstü ayarlarından yönetin.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Uzak masaüstü görüntülenirken başlık çubuğunu gizle</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Başlık çubuğunu gizleme hakkında</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Varsayılan olarak kapalıdır. Açıldığında uzak masaüstü penceresinde başlık çubuğu ve pencere düğmeleri olmaz, bu alanı uzak görüntü kullanır. Cihazlar sayfası başlık çubuğunu korur. Göstermek, gizlemek veya bağlantıyı kesmek için tepsi simgesini ya da genel pencere kısayolunu kullanın. Değişiklikler hemen uygulanır.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: pencereyi masaüstünüzün kısayollarıyla taşıyın veya yeniden boyutlandırın; örneğin KDE Plasma'da Meta+sürükle. Döşenmiş pencereler etkilenmez. Bazı eski Wayland masaüstlerinde başlık çubuğu ancak pencere yeniden açıldıktan sonra geri gelir.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: pencere fareyle taşınamaz veya yeniden boyutlandırılamaz. Boyutunu değiştirmek için bu seçeneği kapatın veya tam ekranı kullanın.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: kapatma, küçültme ve yakınlaştırma düğmeleri gizlenir ve görüntü üst kenara kadar uzanır. Pencereyi kenarlarından yeniden boyutlandırın; döşemek için Fn+Control+ok tuşlarını veya tam ekranı kullanın.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Ana bilgisayarın minimum masaüstü boyutu ölçeklendirmeyi sınırlar. Tam ekran veya daha büyük bir pencere kullanın.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Uzak masaüstü görüntülenirken başlık çubuğunu gizle</translation>
         </message>
     </context>
     <context>

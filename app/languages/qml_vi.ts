@@ -2305,6 +2305,30 @@
             <source>Desktop shortcut: %1. Manage its binding in your desktop settings.</source>
             <translation>Phím tắt của môi trường màn hình: %1. Quản lý tổ hợp trong cài đặt môi trường màn hình.</translation>
         </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ẩn thanh tiêu đề khi xem màn hình từ xa</translation>
+        </message>
+        <message>
+            <source>About hiding the title bar</source>
+            <translation>Giới thiệu về việc ẩn thanh tiêu đề</translation>
+        </message>
+        <message>
+            <source>Off by default. When on, the remote desktop window has no title bar or window buttons, and the remote picture uses that space. The Devices page keeps its title bar. Use the tray icon or the global window shortcut to show, hide or disconnect. Changes apply immediately.</source>
+            <translation>Tắt theo mặc định. Khi bật, cửa sổ màn hình từ xa không có thanh tiêu đề hay nút cửa sổ, và hình ảnh từ xa dùng phần không gian đó. Trang Thiết bị vẫn giữ thanh tiêu đề. Dùng biểu tượng khay hoặc phím tắt cửa sổ toàn cục để hiện, ẩn hoặc ngắt kết nối. Thay đổi có hiệu lực ngay.</translation>
+        </message>
+        <message>
+            <source>Linux: move or resize the window with your desktop's shortcuts, such as Meta+drag on KDE Plasma. Tiled windows are unaffected. On some older Wayland desktops, the title bar returns only after the window is reopened.</source>
+            <translation>Linux: di chuyển hoặc đổi kích thước cửa sổ bằng phím tắt của môi trường desktop, ví dụ Meta+kéo trên KDE Plasma. Cửa sổ xếp lát không bị ảnh hưởng. Trên một số desktop Wayland cũ, thanh tiêu đề chỉ hiện lại sau khi mở lại cửa sổ.</translation>
+        </message>
+        <message>
+            <source>Windows: the window cannot be moved or resized with the mouse. Turn this off or use full screen to change its size.</source>
+            <translation>Windows: không thể di chuyển hay đổi kích thước cửa sổ bằng chuột. Hãy tắt tùy chọn này hoặc dùng toàn màn hình để đổi kích thước.</translation>
+        </message>
+        <message>
+            <source>macOS: the close, minimize and zoom buttons are hidden and the picture reaches the top edge. Resize the window from its edges; use Fn+Control+arrow keys to tile it, or use full screen.</source>
+            <translation>macOS: các nút đóng, thu nhỏ và phóng to bị ẩn và hình ảnh kéo tới mép trên. Đổi kích thước cửa sổ từ các cạnh; dùng Fn+Control+phím mũi tên để xếp lát, hoặc dùng toàn màn hình.</translation>
+        </message>
     </context>
     <context>
         <name>DeviceCard</name>
@@ -3178,6 +3202,10 @@
         <message>
             <source>The host's minimum desktop size limits scaling. Use full screen or a larger window.</source>
             <translation>Kích thước màn hình nền tối thiểu của máy chủ giới hạn tỷ lệ. Hãy dùng toàn màn hình hoặc cửa sổ lớn hơn.</translation>
+        </message>
+        <message>
+            <source>Hide title bar while viewing a remote desktop</source>
+            <translation>Ẩn thanh tiêu đề khi xem màn hình từ xa</translation>
         </message>
     </context>
     <context>
