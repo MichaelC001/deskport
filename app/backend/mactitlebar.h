@@ -42,6 +42,7 @@ private:
     bool m_CanvasVisible = false;
     bool m_StreamTitleBarHidden = false;
     bool m_TrackingWindowDrag = false;
+    bool m_ResizingWindow = false;
     bool m_DragInputSuspended = false;
     bool m_ConsumeDragTail = false;
 };

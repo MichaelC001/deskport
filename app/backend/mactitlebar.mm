@@ -54,7 +54,7 @@ void MacTitleBar::setDragInputSuspended(bool suspended)
 {
     m_DragInputSuspended = suspended;
     // SessionCanvas observes this synchronously: release remote held keys and
-    // pointer capture before AppKit enters its nested window-drag event loop.
+    // pointer capture before AppKit starts a local move or resize gesture.
     if (m_Window) m_Window->setProperty("deskportLocalWindowDrag", suspended);
 }
 
@@ -83,6 +83,16 @@ void MacTitleBar::attach(QQuickWindow* window)
     zoom.target = native;
     zoom.action = @selector(performZoom:);
     NSMutableArray* observers = [NSMutableArray array];
+    [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:NSWindowWillStartLiveResizeNotification
+        object:native queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+            m_ResizingWindow = true;
+            setDragInputSuspended(true);
+        }]];
+    [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidEndLiveResizeNotification
+        object:native queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
+            m_ResizingWindow = false;
+            if (!m_TrackingWindowDrag) setDragInputSuspended(false);
+        }]];
     for (NSString* name in @[NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
                               NSWindowDidEnterFullScreenNotification, NSWindowDidExitFullScreenNotification]) {
         const bool starting = [name isEqualToString:NSWindowWillEnterFullScreenNotification] ||
@@ -95,11 +105,17 @@ void MacTitleBar::attach(QQuickWindow* window)
     }
     [observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidResignKeyNotification
         object:native queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification*) {
-            if (!m_TrackingWindowDrag) setDragInputSuspended(false);
+            if (!m_TrackingWindowDrag) {
+                m_ResizingWindow = false;
+                setDragInputSuspended(false);
+            }
         }]];
     m_FullscreenObservers = [observers retain];
     connect(window, &QWindow::visibleChanged, this, [this](bool visible) {
-        if (!visible && !m_TrackingWindowDrag) setDragInputSuspended(false);
+        if (!visible) {
+            m_ResizingWindow = false;
+            if (!m_TrackingWindowDrag) setDragInputSuspended(false);
+        }
         updateChrome();
     });
     updateChrome();
@@ -112,7 +128,8 @@ void MacTitleBar::attach(QQuickWindow* window)
         if (event.window != native || !m_Window) return event;
         // Native tracking can consume modifier releases. Read the current flags
         // on the next local event too, and resume only after the chord is up.
-        if (m_DragInputSuspended && !m_TrackingWindowDrag && !(event.modifierFlags & dragModifiers))
+        if (m_DragInputSuspended && !m_TrackingWindowDrag && !m_ResizingWindow &&
+            !(event.modifierFlags & dragModifiers))
             setDragInputSuspended(false);
         if (event.type != NSEventTypeLeftMouseDown) {
             if (m_ConsumeDragTail && (event.type == NSEventTypeLeftMouseDragged || event.type == NSEventTypeLeftMouseUp))
@@ -122,6 +139,15 @@ void MacTitleBar::attach(QQuickWindow* window)
         m_ConsumeDragTail = false;
         if (m_FullscreenTransitioning || native.styleMask & NSWindowStyleMaskFullScreen) return event;
         const NSPoint location = event.locationInWindow;
+        // AppKit's resize rim overlaps our full-size content, including the
+        // unified top bar. Leave that press to native hit testing before either
+        // custom move gesture can turn a resize cursor into a window move.
+        // Both rectangles and events use window-base points, not screen pixels.
+        if (native.styleMask & NSWindowStyleMaskResizable) {
+            const NSRect bounds = [native convertRectFromScreen:native.frame];
+            constexpr CGFloat resizeRim = 8.0;
+            if (!NSPointInRect(location, NSInsetRect(bounds, resizeRim, resizeRim))) return event;
+        }
         // The close, minimize and zoom buttons handle their own clicks.
         for (NSWindowButton kind : {NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton}) {
             NSButton* button = [native standardWindowButton:kind];

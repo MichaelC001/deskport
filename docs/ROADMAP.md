@@ -1,3 +1,26 @@
+## macOS edge resize event ownership — 2026-10-28
+
+The custom Devices top-bar drag handler previously intercepted ordinary presses
+at the top resize edge, forcing a window move even when AppKit displayed a resize
+cursor. Both custom move gestures now leave an eight-point frame rim to AppKit,
+using window-base coordinates so screen position and Retina scaling do not alter
+the boundary. Interior top-bar dragging and Control+Command canvas dragging keep
+their existing behavior. Native live-resize notifications suspend remote input
+and pointer capture for the resize, then restore them at completion, hide or
+loss of key-window status. Modifier-free events cannot resume input mid-resize.
+
+The native event-routing regression fails on the previous implementation and
+passes with the fix. It covers ordinary presses at the Devices top edge/corners,
+all canvas edges/corners with and without the move chord, nonzero window origins,
+window buttons and the next resize after a local drag. This check exercises the
+local monitor boundary. Native notification and canvas focus regressions also
+cover input suspension and restoration. An isolated AppKit window exercised real
+resize tracking on all four edges and changed height/width from the top/right,
+with no content button events; the automation did not establish geometric
+changes from the left/bottom. Hidden-canvas pointer automation is limited by
+the tool's accessibility error. These checks do not claim connected remote-host
+or installed-version acceptance.
+
 ## Window movement and display request recovery — 2026-10-28
 
 The hidden-title-bar setting now explains window movement directly below its
