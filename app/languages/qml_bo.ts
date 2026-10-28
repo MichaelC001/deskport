@@ -2337,6 +2337,10 @@
             <translation>སྒེའུ་ཁུང་སྤོ་བ། Control+Command མནན་ནས་པར་རིས་འདྲུད། མཐའ་ནས་ཆེ་ཆུང་སྒྱུར།</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command མནན་བཞིན་དུ་པར་རིས་ཀྱི་ནང་དུ་འདྲུད་ན་སྒེའུ་ཁུང་སྤོ་ཐུབ། མཐའ་འམ་ཟུར་འདྲུད་ན་ཆེ་ཆུང་སྒྱུར་ཐུབ།</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>ཅོག་ངོས་ཀྱི་མྱུར་མཐེབ་ཀྱིས་སྒེའུ་ཁུང་སྤོ། དཔེར་ན་ KDE Plasma ཐོག་ Meta མནན་ནས་འདྲུད།</translation>
         </message>

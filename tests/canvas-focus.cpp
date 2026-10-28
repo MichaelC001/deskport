@@ -1,6 +1,7 @@
 #include "gui/sessioncanvas.h"
 #include "gui/canvaspointer.h"
 #include <QGuiApplication>
+#include <QCursor>
 #include <QInputMethodEvent>
 #include <QInputMethodQueryEvent>
 #include <QQuickWindow>
@@ -65,6 +66,10 @@ private slots:
         QVERIFY(!pointerEnabled);
         QVERIFY(!viewport.last()[0].toJsonObject()["focused"].toBool());
         QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
+        window.setProperty("deskportLocalWindowCursor", int(Qt::SizeBDiagCursor));
+        QCOMPARE(surface->cursor().shape(), Qt::SizeBDiagCursor);
+        QTest::qWait(35); // The regular canvas refresh must preserve the local resize cursor.
+        QCOMPARE(surface->cursor().shape(), Qt::SizeBDiagCursor);
         input.clear();
         for (QObject* target : {static_cast<QObject*>(&canvas), static_cast<QObject*>(surface)}) {
             QKeyEvent key(QEvent::KeyPress, Qt::Key_A, Qt::NoModifier, "a");
@@ -84,6 +89,7 @@ private slots:
         QCoreApplication::sendEvent(surface, &query);
         QVERIFY(!query.value(Qt::ImEnabled).toBool());
         window.setProperty("deskportLocalWindowDrag", false);
+        QCOMPARE(surface->cursor().shape(), Qt::ArrowCursor);
         QVERIFY(viewport.last()[0].toJsonObject()["focused"].toBool());
         QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
         QVERIFY(pointerEnabled);

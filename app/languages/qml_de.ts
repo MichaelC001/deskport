@@ -2337,6 +2337,10 @@
             <translation>Fenster verschieben: Control+Command gedrückt halten und das Bild ziehen. Die Größe lässt sich an den Rändern ändern.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command gedrückt halten: Im Bild ziehen, um das Fenster zu verschieben, oder an seinen Rändern oder Ecken ziehen, um die Größe zu ändern.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Verschieben Sie das Fenster mit dem Tastenkürzel Ihrer Desktop-Umgebung, etwa Meta+Ziehen unter KDE Plasma.</translation>
         </message>

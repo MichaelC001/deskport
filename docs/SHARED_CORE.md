@@ -1,3 +1,11 @@
+## macOS window movement and resizing help — 2026-10-28
+
+Core `866c09547cd47d4b26a0725374e70614cf2845db` adds SettingsHome help for
+Control+Command dragging: move inside the picture, resize at its edges or corners.
+The UI-only entry has drafts in all 22 locales and matching Qt catalog metadata.
+Desktop Git and Nix pin the same published tree. Mobile pins and wire contracts
+are unchanged; native gesture handling remains in the desktop adapter.
+
 ## Hidden-title-bar window movement help — 2026-10-28
 
 Core `27caf8317b959da9c240dd5f8843b319d7fa74b7` adds five SettingsHome-only

@@ -2337,6 +2337,10 @@
             <translation>창 이동: Control+Command를 누른 채 화면을 드래그하세요. 가장자리에서 크기를 조절할 수 있습니다.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command를 누른 채 화면 안쪽을 드래그하면 창이 이동하고, 가장자리나 모서리를 드래그하면 크기가 조절됩니다.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>KDE Plasma의 Meta+드래그와 같은 데스크톱 단축키로 창을 이동하세요.</translation>
         </message>

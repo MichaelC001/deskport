@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Test host supervision with fake children and loopback-only port reservations."""
+import json
 import os
 from pathlib import Path
 import shutil
@@ -218,6 +219,23 @@ macx {{
             else:
                 f.write('\nCONFIG += link_pkgconfig\nPKGCONFIG += sdl2\n')
     environment = dict(os.environ, QT_QPA_PLATFORM="offscreen", QT_QUICK_CONTROLS_STYLE="Material", QML_DISABLE_DISK_CACHE="1", XDG_CACHE_HOME=str(work / "cache"), XDG_CONFIG_HOME=str(work / "config"), XDG_DATA_HOME=str(work / "data"))
+    if "--ui" in sys.argv and not environment.get("DESKPORT_TRANSLATIONS_DIR"):
+        # Source-tree .qm files may belong to an older build. Exercise the
+        # current generated catalogs without changing those cached binaries.
+        catalogs = work / "translations"
+        catalogs.mkdir()
+        lrelease = os.environ.get("DESKPORT_LRELEASE") or shutil.which("lrelease")
+        if not lrelease:
+            qt_bins = subprocess.check_output([qmake, "-query", "QT_HOST_BINS"], text=True).strip()
+            lrelease = str(Path(qt_bins) / "lrelease")
+        languages = json.loads((root / "shared/deskport-core/i18n/languages.json").read_text())
+        for language in languages:
+            if language["qt"] == "en":
+                continue
+            name = "qml_" + language["qt"]
+            subprocess.run([lrelease, "-silent", str(root / "app/languages" / (name + ".ts")),
+                            "-qm", str(catalogs / (name + ".qm"))], check=True)
+        environment["DESKPORT_TRANSLATIONS_DIR"] = str(catalogs)
     if "--sessions" in sys.argv:
         # QLocalServer appends a UUID. Managed run paths can exceed macOS's
         # Unix socket limit; only socket files use this short shared directory.

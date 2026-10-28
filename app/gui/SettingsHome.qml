@@ -10,7 +10,7 @@ UiPage {
     readonly property var preferences: StreamingPreferences
     function save() { preferences.save() }
     readonly property string windowDragHint: Qt.platform.os === "osx"
-        ? qsTr("Move the window: hold Control+Command and drag the picture. Resize from the edges.")
+        ? qsTr("Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.")
         : Qt.platform.os === "windows"
             ? qsTr("To move or resize the window, turn this option off.")
             : qsTr("Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.")

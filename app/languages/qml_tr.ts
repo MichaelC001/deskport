@@ -2342,6 +2342,10 @@
             <translation>Pencereyi taşıma: Control+Command tuşlarını basılı tutup görüntüyü sürükleyin. Kenarlardan yeniden boyutlandırın.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command tuşlarını basılı tutun: pencereyi taşımak için görüntünün içini, boyutunu değiştirmek için kenarlarını veya köşelerini sürükleyin.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Pencereyi masaüstünüzün kısayoluyla taşıyın; örneğin KDE Plasma üzerinde Meta+sürükle.</translation>
         </message>

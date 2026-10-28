@@ -1672,7 +1672,8 @@ QtObject {
             window->resize(640,620); QTest::qWait(100);
             QVERIFY(!current->property("compact").toBool());
             QTranslator chinese;
-            QVERIFY(chinese.load(qEnvironmentVariable("TEST_GUI_DIR")+"/../languages/qml_zh_CN.qm"));
+            const auto catalogs=qEnvironmentVariable("DESKPORT_TRANSLATIONS_DIR",qEnvironmentVariable("TEST_GUI_DIR")+"/../languages");
+            QVERIFY(chinese.load(catalogs+"/qml_zh_CN.qm"));
             QVERIFY(QCoreApplication::installTranslator(&chinese)); engine.retranslate();
             QTest::qWait(100); QVERIFY(window->grabWindow().save(shots+"/devices-chinese-narrow.png"));
             {
@@ -2071,7 +2072,15 @@ Item {
         QScopedPointer<QObject> page(component.create()); QVERIFY2(page,qPrintable(component.errorString()));
         const QString english=page->property("heading").toString();
         const QString englishDragHint=page->property("windowDragHint").toString();
+        const QString macWindowDragHint=QStringLiteral("Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.");
         QCOMPARE(english,QString("Make DeskPort your own."));
+#ifdef Q_OS_MACOS
+        QCOMPARE(englishDragHint,macWindowDragHint);
+#elif defined(Q_OS_WIN)
+        QCOMPARE(englishDragHint,QString("To move or resize the window, turn this option off."));
+#else
+        QCOMPARE(englishDragHint,QString("Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma."));
+#endif
         auto themeChoice=page->findChild<QObject*>("themeChoice"); QVERIFY(themeChoice);
         auto shortcut=page->findChild<QObject*>("globalShortcutSwitch"); QVERIFY(shortcut);
         QVERIFY(shortcut->property("on").toBool());
@@ -2088,6 +2097,9 @@ Item {
             engine.retranslate();
             QVERIFY(page->property("heading").toString()!=english);
             QVERIFY(page->property("windowDragHint").toString()!=englishDragHint);
+            const auto localizedMacDragHint=translator.translate("SettingsHome",macWindowDragHint.toUtf8().constData());
+            QVERIFY(!localizedMacDragHint.isEmpty());
+            QVERIFY(localizedMacDragHint!=macWindowDragHint);
             QCOMPARE(themeChoice->property("currentIndex").toInt(),0);
             QVERIFY(!translator.translate("SettingsHome","Follow system").isEmpty());
             QVERIFY(!translator.translate("SettingsHome","Enable diagnostic logs").isEmpty());

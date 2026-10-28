@@ -2342,6 +2342,10 @@
             <translation>ย้ายหน้าต่าง: กด Control+Command ค้างไว้แล้วลากภาพ ปรับขนาดจากขอบหน้าต่าง</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>กด Control+Command ค้างไว้: ลากภายในภาพเพื่อย้ายหน้าต่าง หรือลากขอบหรือมุมเพื่อปรับขนาด</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>ย้ายหน้าต่างด้วยปุ่มลัดของเดสก์ท็อป เช่น กด Meta ค้างไว้แล้วลากบน KDE Plasma</translation>
         </message>

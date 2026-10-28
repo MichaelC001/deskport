@@ -2342,6 +2342,10 @@
             <translation>Di chuyển cửa sổ: giữ Control+Command rồi kéo hình ảnh. Đổi kích thước từ các cạnh.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Giữ Control+Command: kéo bên trong hình ảnh để di chuyển cửa sổ, hoặc kéo cạnh hay góc để đổi kích thước.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Di chuyển cửa sổ bằng phím tắt của môi trường desktop, chẳng hạn Meta+kéo trên KDE Plasma.</translation>
         </message>

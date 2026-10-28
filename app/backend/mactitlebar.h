@@ -1,6 +1,8 @@
 #pragma once
 #include <QObject>
 #include <QPointer>
+#include <QPointF>
+#include <QRectF>
 class QQuickWindow;
 
 // macOS only: DeskPort's top bar replaces the title bar. The window content
@@ -13,9 +15,9 @@ class QQuickWindow;
 // The remote canvas uses the standard system title bar outside its content;
 // returning to Devices restores the unified application bar on the same window.
 // With the optional hidden stream title bar, the canvas extends under a
-// transparent title bar without its buttons instead; the window stays titled, so
-// edge resizing, key status and native full screen keep working. Control+Command
-// dragging the canvas moves the local window without sending input remotely.
+// transparent title bar without its buttons instead. Control+Command reserves
+// local window gestures: drag inside to move, or an edge/corner to resize. Plain
+// pointer gestures belong to the remote canvas. Native full screen is retained.
 class MacTitleBar : public QObject
 {
     Q_OBJECT
@@ -34,6 +36,7 @@ private:
     bool isDragArea(const QPointF& point) const;
     bool isCanvasArea(const QPointF& point) const;
     void setDragInputSuspended(bool suspended);
+    void cancelWindowGesture(bool drainMouse = false);
     void updateChrome();
     QPointer<QQuickWindow> m_Window;
     void* m_Monitor = nullptr;
@@ -41,7 +44,14 @@ private:
     bool m_FullscreenTransitioning = false;
     bool m_CanvasVisible = false;
     bool m_StreamTitleBarHidden = false;
-    bool m_TrackingWindowDrag = false;
+    bool m_LocalGestureActive = false;
+    int m_GestureEdges = 0;
+    QPointF m_GestureOrigin;
+    QRectF m_GestureFrame;
+    QRectF m_FullscreenRestoreFrame;
+    quint64 m_GestureGeneration = 0;
+    bool m_NativeResizable = true;
+    bool m_NativeMovable = true;
     bool m_ResizingWindow = false;
     bool m_DragInputSuspended = false;
     bool m_ConsumeDragTail = false;

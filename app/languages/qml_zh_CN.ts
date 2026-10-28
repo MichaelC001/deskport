@@ -2385,6 +2385,10 @@
             <translation>移动窗口：按住 Control+Command 并拖动画面。从窗口边缘调整大小。</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>按住 Control+Command：拖动画面内部可移动窗口，拖动窗口边缘或四角可调整大小。</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>使用桌面环境的快捷操作移动窗口，例如在 KDE Plasma 上按住 Meta 拖动。</translation>
         </message>

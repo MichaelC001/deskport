@@ -2342,6 +2342,10 @@
             <translation>Spostare la finestra: tieni premuto Control+Command e trascina l’immagine. Ridimensiona dai bordi.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Tieni premuto Control+Command: trascina all’interno dell’immagine per spostare la finestra, oppure dai bordi o dagli angoli per ridimensionarla.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Sposta la finestra con la scorciatoia del tuo ambiente desktop, ad esempio Meta+trascinamento su KDE Plasma.</translation>
         </message>

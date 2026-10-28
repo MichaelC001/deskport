@@ -2345,6 +2345,10 @@
             <translation>ウィンドウの移動：Control+Command を押しながら画面をドラッグします。サイズは端から変更できます。</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command を押しながら、画面の内側をドラッグするとウィンドウが移動し、端や角をドラッグするとサイズが変わります。</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>KDE Plasma の Meta+ドラッグなど、デスクトップのショートカットでウィンドウを移動します。</translation>
         </message>

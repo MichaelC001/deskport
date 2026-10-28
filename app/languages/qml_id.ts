@@ -2337,6 +2337,10 @@
             <translation>Pindahkan jendela: tahan Control+Command dan seret gambar. Ubah ukuran dari tepinya.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Tahan Control+Command: seret di dalam gambar untuk memindahkan jendela, atau seret tepi atau sudutnya untuk mengubah ukuran.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Pindahkan jendela dengan pintasan desktop Anda, seperti Meta+seret di KDE Plasma.</translation>
         </message>

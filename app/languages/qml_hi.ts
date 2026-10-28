@@ -2342,6 +2342,10 @@
             <translation>विंडो खिसकाएं: Control+Command दबाए रखें और चित्र को खींचें। किनारों से आकार बदलें।</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Control+Command दबाए रखें: विंडो खिसकाने के लिए चित्र के अंदर खींचें, या उसका आकार बदलने के लिए किनारों या कोनों को खींचें।</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>विंडो को अपने डेस्कटॉप के शॉर्टकट से खिसकाएं, जैसे KDE Plasma पर Meta दबाकर खींचना।</translation>
         </message>

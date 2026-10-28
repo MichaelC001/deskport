@@ -2337,6 +2337,10 @@
             <translation>Mover la ventana: mantén pulsado Control+Command y arrastra la imagen. Cambia el tamaño desde los bordes.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Mantén pulsado Control+Command: arrastra dentro de la imagen para mover la ventana, o sus bordes o esquinas para cambiar su tamaño.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Mueve la ventana con el atajo de tu escritorio, como Meta+arrastrar en KDE Plasma.</translation>
         </message>

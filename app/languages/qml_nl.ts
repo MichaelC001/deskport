@@ -2342,6 +2342,10 @@
             <translation>Venster verplaatsen: houd Control+Command ingedrukt en sleep het beeld. Wijzig de grootte via de randen.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Houd Control+Command ingedrukt: sleep binnen het beeld om het venster te verplaatsen, of aan de randen of hoeken om de grootte te wijzigen.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Verplaats het venster met de sneltoets van uw desktopomgeving, zoals Meta+slepen onder KDE Plasma.</translation>
         </message>

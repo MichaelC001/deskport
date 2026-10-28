@@ -2342,6 +2342,10 @@
             <translation>Переміщення вікна: утримуйте Control+Command і перетягуйте зображення. Змінюйте розмір за краї.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Утримуйте Control+Command: перетягуйте всередині зображення, щоб перемістити вікно, або за його краї чи кути, щоб змінити розмір.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Переміщуйте вікно за допомогою сполучення клавіш вашого середовища стільниці, наприклад перетягування з Meta в KDE Plasma.</translation>
         </message>

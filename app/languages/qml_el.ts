@@ -1361,6 +1361,10 @@
             <translation type="unfinished" />
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation type="unfinished" />
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation type="unfinished" />
         </message>

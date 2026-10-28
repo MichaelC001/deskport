@@ -153,6 +153,10 @@ void SessionCanvas::inputMethodEvent(QInputMethodEvent* event) {
 }
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     if (watched == m_RootWindow && event->type() == QEvent::DynamicPropertyChange &&
+        static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName() == "deskportLocalWindowCursor") {
+        refresh();
+    }
+    if (watched == m_RootWindow && event->type() == QEvent::DynamicPropertyChange &&
         static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName() == "deskportLocalWindowDrag") {
         m_LocalWindowDrag = m_RootWindow->property("deskportLocalWindowDrag").toBool();
         if (m_LocalWindowDrag) {
@@ -208,7 +212,10 @@ void SessionCanvas::refresh() {
             if (resized && m_Presentation) m_ResizeTimer.start();
         }
         m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
-        m_Surface->setCursor(m_CursorHidden && !m_LocalWindowDrag ? Qt::BlankCursor : Qt::ArrowCursor);
+        const auto localCursor = window()->property("deskportLocalWindowCursor");
+        m_Surface->setCursor(m_LocalWindowDrag && localCursor.isValid()
+            ? Qt::CursorShape(localCursor.toInt())
+            : m_CursorHidden && !m_LocalWindowDrag ? Qt::BlankCursor : Qt::ArrowCursor);
     }
     const bool focused = !m_LocalWindowDrag && visible && m_Presentation && m_Presentation->ready() &&
         ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));

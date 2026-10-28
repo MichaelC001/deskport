@@ -2337,6 +2337,10 @@
             <translation>Alihkan tetingkap: tahan Control+Command dan seret gambar. Ubah saiz dari tepinya.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Tahan Control+Command: seret di dalam gambar untuk mengalihkan tetingkap, atau seret tepi atau bucunya untuk mengubah saiz.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Alihkan tetingkap dengan pintasan desktop anda, seperti Meta+seret pada KDE Plasma.</translation>
         </message>

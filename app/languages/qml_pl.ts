@@ -2342,6 +2342,10 @@
             <translation>Przenoszenie okna: przytrzymaj Control+Command i przeciągnij obraz. Zmieniaj rozmiar za krawędzie.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>Przytrzymaj Control+Command: przeciągnij wewnątrz obrazu, aby przesunąć okno, albo jego krawędzie lub rogi, aby zmienić rozmiar.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>Przenieś okno za pomocą skrótu swojego środowiska graficznego, np. Meta+przeciągnięcie w KDE Plasma.</translation>
         </message>

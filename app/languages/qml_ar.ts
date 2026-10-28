@@ -2337,6 +2337,10 @@
             <translation>لنقل النافذة: اضغط باستمرار على Control+Command واسحب الصورة. غيّر الحجم من الحواف.</translation>
         </message>
         <message>
+            <source>Hold Control+Command: drag inside the picture to move the window, or drag its edges or corners to resize it.</source>
+            <translation>اضغط باستمرار على Control+Command: اسحب داخل الصورة لنقل النافذة، أو اسحب حوافها أو زواياها لتغيير حجمها.</translation>
+        </message>
+        <message>
             <source>Move the window with your desktop shortcut, such as Meta+drag on KDE Plasma.</source>
             <translation>انقل النافذة باستخدام اختصار سطح المكتب، مثل السحب مع الضغط على Meta في KDE Plasma.</translation>
         </message>

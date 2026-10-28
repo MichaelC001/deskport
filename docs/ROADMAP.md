@@ -1,25 +1,33 @@
-## macOS edge resize event ownership — 2026-10-28
+## Explicit macOS window gestures — 2026-10-28
 
-The custom Devices top-bar drag handler previously intercepted ordinary presses
-at the top resize edge, forcing a window move even when AppKit displayed a resize
-cursor. Both custom move gestures now leave an eight-point frame rim to AppKit,
-using window-base coordinates so screen position and Retina scaling do not alter
-the boundary. Interior top-bar dragging and Control+Command canvas dragging keep
-their existing behavior. Native live-resize notifications suspend remote input
-and pointer capture for the resize, then restore them at completion, hide or
-loss of key-window status. Modifier-free events cannot resume input mid-resize.
+With the stream title bar hidden, Control+Command reserves local window control:
+drag inside the picture to move the window, or drag its eight-point edge/corner
+region to resize it. Ordinary pointer gestures belong to the remote canvas.
+Implicit AppKit movement and edge resizing are disabled in this mode, so a local
+window operation cannot compete with a remote drag. Devices and the visible
+system title bar retain their normal native controls.
 
-The native event-routing regression fails on the previous implementation and
-passes with the fix. It covers ordinary presses at the Devices top edge/corners,
-all canvas edges/corners with and without the move chord, nonzero window origins,
-window buttons and the next resize after a local drag. This check exercises the
-local monitor boundary. Native notification and canvas focus regressions also
-cover input suspension and restoration. An isolated AppKit window exercised real
-resize tracking on all four edges and changed height/width from the top/right,
-with no content button events; the automation did not establish geometric
-changes from the left/bottom. Hidden-canvas pointer automation is limited by
-the tool's accessibility error. These checks do not claim connected remote-host
-or installed-version acceptance.
+Each gesture uses the original outer frame and AppKit screen points. Resizing
+keeps the opposite edge fixed and clamps to the window's minimum/maximum size.
+The canvas preserves the directional resize cursor during its regular refresh.
+Remote input is released and suspended before local geometry changes. Losing a
+modifier stops movement immediately, while the owned mouse tail stays local;
+input resumes after its release and the reserved modifiers are up. Hide, focus,
+page and fullscreen transitions cancel geometry changes and recover input state.
+Native fullscreen retains its resizable style during the transition. Exiting
+restores the saved outer frame after Qt's final style update, guarded against a
+later hide, mode change or new gesture; this avoids losing the hidden title bar's
+32-point height on return.
+
+The native suite passes 46 cases using actual NSWindow geometry and process-local
+NSEvents: four edges, four corners, interior movement, positive/negative origins,
+minimum/maximum clamps, reverse dragging, modifier release orders, cancellation,
+native Devices events, inactive-window first-click ownership and a real AppKit
+fullscreen/normal roundtrip. The production
+canvas focus regression also covers suppression and directional cursor retention.
+Settings and its information panel explain both gestures using the shared core
+catalog. Physical pointer capture beyond the window, mixed-DPI monitors and
+connected remote input remain separate from these isolated checks.
 
 ## Window movement and display request recovery — 2026-10-28
 
@@ -78,9 +86,9 @@ nothing changes unless it is turned on.
   avoids Devices/canvas transitions on native Wayland. Windows frameless windows cannot be moved or resized with
   the mouse.
 - macOS: `MacTitleBar` keeps the window titled and extends the canvas under a
-  transparent title bar with the close, minimize and zoom buttons hidden, so edge
-  resizing, key status and native full screen keep working. Qt receives clicks in
-  that strip, as on the Devices top bar.
+  transparent title bar with the close, minimize and zoom buttons hidden. The
+  explicit Control+Command move/resize policy above supersedes the initial native
+  edge behavior; key status and native fullscreen remain available.
 - Strings: six new rows in the shared core catalog with machine-assisted drafts
   for all 21 translated locales (core `3b9a2d0`).
 - Validation: UI page checks (default off, information panel, switch), core i18n
