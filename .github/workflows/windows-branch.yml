@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           find winbuild/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
           python3 -m compileall -q winbuild/scripts
-          python3 winbuild/tests/test-build-paths.py
+          python3 winbuild/scripts/test-build-paths.py
           python3 winbuild/scripts/test-host-boost.py
           # A store-root rejection guard is valid; concrete store dependencies are not.
           if grep -R -nE --exclude-dir=__pycache__ '/nix/store/|/run/current-system' winbuild/scripts; then

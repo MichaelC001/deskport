@@ -30,7 +30,7 @@ jobs:
           python3 tests/test-build-workflow.py
           python3 tests/test-build-privacy.py
           python3 tests/test-source-export.py
-          python3 winbuild/tests/test-build-paths.py
+          python3 winbuild/scripts/test-build-paths.py
       - name: Shared core adapter contract
         run: nix develop -c python3 tests/test-core.py
       - name: Isolated global shortcut and window regressions

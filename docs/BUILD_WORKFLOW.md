@@ -228,7 +228,7 @@ python3 tests/test-build-paths.py
 python3 tests/test-prepare-host-source.py
 python3 tests/test-build-privacy.py
 python3 tests/test-source-export.py
-python3 winbuild/tests/test-build-paths.py
+python3 winbuild/scripts/test-build-paths.py
 python3 winbuild/scripts/test-host-boost.py
 ```
 
