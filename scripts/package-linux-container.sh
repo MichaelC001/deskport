@@ -41,7 +41,7 @@ for name,item in json.load(open(sys.argv[1])).items():
     path=pathlib.Path(sys.argv[2])/name
     def verified():
         return path.exists() and hashlib.sha256(path.read_bytes()).hexdigest()==item['sha256']
-    # Upstream "continuous" tags move; the mirror keeps the verified build.
+    # Upstream files can move or vanish; the mirror keeps the verified build.
     for url in [item['url']]+([item['mirror']] if 'mirror' in item else []):
         if verified():
             break

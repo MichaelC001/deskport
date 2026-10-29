@@ -11,7 +11,10 @@ stdenv.mkDerivation {
   pname = "deskport-ffmpeg-vulkan-cbs";
   version = "fb216b5-b672ae39";
   src = fetchurl {
-    url = "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/fb216b5facde2c97cb0ce2e75fb3228aa5ac21fa";
+    urls = [
+      "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/fb216b5facde2c97cb0ce2e75fb3228aa5ac21fa"
+      "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/FFmpeg-fb216b5facde2c97cb0ce2e75fb3228aa5ac21fa.tar.gz"
+    ];
     hash = "sha256-0ZSApY+GztaRPEHx9v7WnvRTg1KdHzSFQTRPMBrmcWU=";
   };
   patches = [

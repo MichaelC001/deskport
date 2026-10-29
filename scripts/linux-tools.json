@@ -21,30 +21,37 @@
   },
   "nfpm.tar.gz": {
     "url": "https://github.com/goreleaser/nfpm/releases/download/v2.47.0/nfpm_2.47.0_Linux_x86_64.tar.gz",
-    "sha256": "0660ca602b2d2d2ae4781a06c692b3eeb9d437ffea05b831d76e41f4a3188783"
+    "sha256": "0660ca602b2d2d2ae4781a06c692b3eeb9d437ffea05b831d76e41f4a3188783",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/nfpm_2.47.0_Linux_x86_64.tar.gz"
   },
   "sunshine.AppImage": {
     "url": "https://github.com/LizardByte/Sunshine/releases/download/v2026.906.222525/Sunshine_2026.906.222525_x86_64.AppImage",
-    "sha256": "a5db4ce988def0565a0da420185abbb9b3989f009ecbdafe78f223fe6f45e384"
+    "sha256": "a5db4ce988def0565a0da420185abbb9b3989f009ecbdafe78f223fe6f45e384",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/Sunshine_2026.906.222525_x86_64.AppImage"
   },
   "ffmpeg-pinned.tar.gz": {
     "url": "https://github.com/LizardByte/build-deps/releases/download/v2026.516.30821/Linux-x86_64-ffmpeg.tar.gz",
-    "sha256": "c32319fcc2867befe8ff3ae26b4d3a58378c3a9c1bfef9029c9969321c3bc6ec"
+    "sha256": "c32319fcc2867befe8ff3ae26b4d3a58378c3a9c1bfef9029c9969321c3bc6ec",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/LizardByte-Linux-x86_64-ffmpeg-v2026.516.30821.tar.gz"
   },
   "ffmpeg-source.tar.gz": {
     "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/fb216b5facde2c97cb0ce2e75fb3228aa5ac21fa",
-    "sha256": "d19480a58f86ced6913c41f1f6fed69ef45383529d1f348541344f301ae67165"
+    "sha256": "d19480a58f86ced6913c41f1f6fed69ef45383529d1f348541344f301ae67165",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/FFmpeg-fb216b5facde2c97cb0ce2e75fb3228aa5ac21fa.tar.gz"
   },
   "vulkan-headers.tar.gz": {
     "url": "https://codeload.github.com/KhronosGroup/Vulkan-Headers/tar.gz/refs/tags/vulkan-sdk-1.4.341.0",
-    "sha256": "d73bc5036b6556b741f6985ff600ca720308c5f2850e4a43ceb498bd3de069e7"
+    "sha256": "d73bc5036b6556b741f6985ff600ca720308c5f2850e4a43ceb498bd3de069e7",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/Vulkan-Headers-vulkan-sdk-1.4.341.0.tar.gz"
   },
   "sharun": {
     "url": "https://github.com/VHSgunzo/sharun/releases/download/v0.8.1/sharun-x86_64",
-    "sha256": "18d970f56eca2c527ffd3993b161b6bc340055129db14b394a77cb67d8bbfff9"
+    "sha256": "18d970f56eca2c527ffd3993b161b6bc340055129db14b394a77cb67d8bbfff9",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/sharun-x86_64-v0.8.1"
   },
   "libva-source.tar.bz2": {
     "url": "https://github.com/intel/libva/releases/download/2.23.0/libva-2.23.0.tar.bz2",
-    "sha256": "9ac190a87017bfd49743248f5df7cf3b18a99a9962175caf6bbe3f1ea41b6dbb"
+    "sha256": "9ac190a87017bfd49743248f5df7cf3b18a99a9962175caf6bbe3f1ea41b6dbb",
+    "mirror": "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/libva-2.23.0.tar.bz2"
   }
 }

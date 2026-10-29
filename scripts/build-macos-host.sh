@@ -108,7 +108,7 @@ fi
 # archive. Keep the known-compatible macOS archive content-addressed instead.
 if [ -z "${DESKPORT_FFMPEG_ROOT:-}" ]; then
     ffmpeg_manifest="$repo/host/vendor/sunshine-macos-ffmpeg.json"
-    ffmpeg_url=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["url"])' "$ffmpeg_manifest")
+    ffmpeg_urls=$(python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); print(m["url"]); print(m.get("mirror", ""))' "$ffmpeg_manifest")
     ffmpeg_sha256=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha256"])' "$ffmpeg_manifest")
     ffmpeg_root="$build_root/ffmpeg-$ffmpeg_sha256"
     if [ -n "${DESKPORT_RUN_ID:-}" ]; then
@@ -123,8 +123,14 @@ if [ -z "${DESKPORT_FFMPEG_ROOT:-}" ]; then
         }
         ffmpeg_stage=$(mktemp -d "$build_root/.ffmpeg.XXXXXX")
         trap 'rm -rf "$ffmpeg_stage"; rmdir "$ffmpeg_lock"' EXIT
-        /usr/bin/curl --fail --location --retry 3 --output "$ffmpeg_stage/ffmpeg.tar.gz" "$ffmpeg_url"
-        actual_ffmpeg_sha256=$(shasum -a 256 "$ffmpeg_stage/ffmpeg.tar.gz" | awk '{print $1}')
+        # Try upstream first, then the project mirror; both must match the lock.
+        actual_ffmpeg_sha256=
+        for ffmpeg_url in $ffmpeg_urls; do
+            rm -f "$ffmpeg_stage/ffmpeg.tar.gz"
+            /usr/bin/curl --fail --location --retry 3 --output "$ffmpeg_stage/ffmpeg.tar.gz" "$ffmpeg_url" || continue
+            actual_ffmpeg_sha256=$(shasum -a 256 "$ffmpeg_stage/ffmpeg.tar.gz" | awk '{print $1}')
+            [ "$actual_ffmpeg_sha256" = "$ffmpeg_sha256" ] && break
+        done
         if [ "$actual_ffmpeg_sha256" != "$ffmpeg_sha256" ]; then
             echo "Pinned macOS FFmpeg checksum mismatch" >&2
             exit 1

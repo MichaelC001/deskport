@@ -62,7 +62,10 @@
 let
   # Match the FFmpeg ABI used by DeskPort 0.6.3's vendored host.
   originalFFmpeg = fetchzip {
-    url = "https://github.com/LizardByte/build-deps/releases/download/v2026.516.30821/Linux-x86_64-ffmpeg.tar.gz";
+    urls = [
+      "https://github.com/LizardByte/build-deps/releases/download/v2026.516.30821/Linux-x86_64-ffmpeg.tar.gz"
+      "https://github.com/keithxc/deskport/releases/download/build-deps-2026.10/LizardByte-Linux-x86_64-ffmpeg-v2026.516.30821.tar.gz"
+    ];
     hash = "sha256-VT+4qP2FaizCoIBBbBkzbYw4YOvGhuBUoZxWL0IYVZo=";
   };
   ffmpegPrebuilt = callPackage ./ffmpeg.nix {
