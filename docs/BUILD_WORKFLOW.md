@@ -211,6 +211,15 @@ legacy outputs. Do not run `git clean -fdx` or delete whole build roots.
 The intended steady state is source checkouts plus reusable dependency caches
 and small release receipts, without a growing collection of installer copies.
 
+## Implementation
+
+`scripts/build.sh` runs `scripts/build-workflow.py`, a thin entry point for the
+`scripts/deskport_build/` package: `common` (constants, refusals, Git and file
+helpers), `runs` (layout, locks, records, budgets), `assets`, `package`
+(signing preflight, logged phases, packaging), `release` (GitHub upload and
+digest verification), `cleanup` and `cli`. Functions that tests replace are
+called through their module, so one replacement covers every caller.
+
 ## Validation
 
 ```sh

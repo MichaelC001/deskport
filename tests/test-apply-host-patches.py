@@ -2,7 +2,6 @@
 """Check host/series parsing, platform selection and the runner's actions."""
 import importlib.util
 from pathlib import Path
-import subprocess
 import sys
 import tempfile
 import unittest

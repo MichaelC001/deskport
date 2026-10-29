@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Adversarial tests for publication receipts and owned-run cleanup."""
 import argparse
-import importlib.util
 import io
 import json
 import os
@@ -10,15 +9,19 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 from contextlib import redirect_stderr, redirect_stdout
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("workflow", ROOT / "scripts/build-workflow.py")
-w = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(w)
+sys.path.insert(0, str(ROOT / "scripts"))
+from deskport_build import assets, cleanup, cli, common, package, release, runs  # noqa: E402
+
+# Call through one namespace; replace a function on the module that defines it.
+w = types.SimpleNamespace(**{name: value for module in (common, runs, assets, package, release, cleanup, cli)
+                             for name, value in vars(module).items() if not name.startswith("__")})
 TEST_ROOT = Path(subprocess.check_output(["bash", ROOT / "scripts/build-paths.sh", "checkout"]).decode().strip()) / "tests"
 TEST_ROOT.mkdir(parents=True, exist_ok=True)
 
@@ -53,8 +56,8 @@ class WorkflowTests(unittest.TestCase):
         w.write_json(self.paths["record"] / "github-receipt.json", {"repo": "owner/repo", "tag": "v1"})
 
     def remote_patches(self):
-        return patch.object(w, "release_metadata", return_value=self.release), patch.object(
-            w, "remote_hash", return_value=(w.digest(self.package), self.package.stat().st_size))
+        return patch.object(release, "release_metadata", return_value=self.release), patch.object(
+            release, "remote_hash", return_value=(w.digest(self.package), self.package.stat().st_size))
 
     def test_path_query_creates_nothing_and_ignores_output_override(self):
         root = self.base / "fresh"
@@ -109,7 +112,7 @@ class WorkflowTests(unittest.TestCase):
         relative = os.path.relpath(self.base / "signing.env", ROOT)
         (self.base / "signing.env").write_text("# private configuration\n")
         (self.base / "signing.env").chmod(0o600)
-        with patch.object(w, "ROOT", self.base), self.assertRaises(w.Refused):
+        with patch.object(common, "ROOT", self.base), self.assertRaises(w.Refused):
             w.local_signing({"DESKPORT_BUILD_ROOT": str(self.base / "outputs")}, relative)
 
     def test_cleanup_mount_root_is_refused(self):
@@ -127,18 +130,18 @@ class WorkflowTests(unittest.TestCase):
     def test_remote_replacement_or_missing_asset_refused(self):
         self.receipt()
         self.asset["digest"] = "sha256:" + "0" * 64
-        with patch.object(w, "release_metadata", return_value=self.release), patch.object(w, "remote_hash", return_value=("bad", 13)):
+        with patch.object(release, "release_metadata", return_value=self.release), patch.object(release, "remote_hash", return_value=("bad", 13)):
             with self.assertRaises(w.Refused):
                 w.clean(self.args, self.paths, self.record)
         self.release["assets"] = []
-        with patch.object(w, "release_metadata", return_value=self.release):
+        with patch.object(release, "release_metadata", return_value=self.release):
             with self.assertRaises(w.Refused):
                 w.verify_remote(self.args, self.paths, self.record)
         self.assertTrue(self.package.exists())
 
     def test_draft_not_completed_delivery(self):
         self.release["draft"] = True
-        with patch.object(w, "release_metadata", return_value=self.release), patch.object(w, "remote_hash") as download:
+        with patch.object(release, "release_metadata", return_value=self.release), patch.object(release, "remote_hash") as download:
             with self.assertRaises(w.Refused):
                 w.verify_remote(self.args, self.paths, self.record)
             download.assert_not_called()
@@ -163,7 +166,7 @@ class WorkflowTests(unittest.TestCase):
     def test_allocation_only_change_after_freeze_allows_cleanup(self):
         self.args.work_only = True
         self.record["trees"]["work"]["bytes"] -= 4096
-        with patch.object(w, "inactive"), patch.object(w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+        with patch.object(cleanup, "inactive"), patch.object(common, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
             w.clean(self.args, self.paths, self.record)
         self.assertFalse(self.paths["work"].exists())
         self.assertTrue(self.package.exists())
@@ -183,8 +186,8 @@ class WorkflowTests(unittest.TestCase):
                     current["bytes"] += 4096
             return current
 
-        with patch.object(w, "footprint", side_effect=allocation_settles), patch.object(w, "inactive"), patch.object(
-                w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+        with patch.object(common, "footprint", side_effect=allocation_settles), patch.object(cleanup, "inactive"), patch.object(
+                common, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
             w.clean(self.args, self.paths, self.record)
         self.assertGreater(calls, 1)
         self.assertFalse(self.paths["work"].exists())
@@ -201,8 +204,8 @@ class WorkflowTests(unittest.TestCase):
                 if calls > 1:
                     (path / "user-notes.txt").write_text("retain")
 
-        with patch.object(w, "inactive", side_effect=change_work_during_recheck), patch.object(
-                w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()), self.assertRaises(w.Refused):
+        with patch.object(cleanup, "inactive", side_effect=change_work_during_recheck), patch.object(
+                common, "git_state", return_value=self.source), redirect_stdout(io.StringIO()), self.assertRaises(w.Refused):
             w.clean(self.args, self.paths, self.record)
         self.assertEqual((self.paths["work"] / "user-notes.txt").read_text(), "retain")
         self.assertTrue(self.package.exists())
@@ -223,7 +226,7 @@ class WorkflowTests(unittest.TestCase):
         (self.paths["work"] / "scripts").symlink_to(ROOT / "scripts")
         w.freeze(self.paths, self.record)
         self.args.work_only = True
-        with patch.object(w, "inactive"), patch.object(w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+        with patch.object(cleanup, "inactive"), patch.object(common, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
             w.clean(self.args, self.paths, self.record)
         self.assertFalse(self.paths["work"].exists())
         self.assertTrue(self.package.exists())
@@ -235,7 +238,7 @@ class WorkflowTests(unittest.TestCase):
         (self.paths["work"] / "output").symlink_to(self.paths["dist"])
         w.freeze(self.paths, self.record)
         a, b = self.remote_patches()
-        with a, b as downloaded, patch.object(w, "inactive"), patch.object(w, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
+        with a, b as downloaded, patch.object(cleanup, "inactive"), patch.object(common, "git_state", return_value=self.source), redirect_stdout(io.StringIO()):
             w.clean(self.args, self.paths, self.record)
             downloaded.assert_not_called()
         self.assertFalse(self.paths["target"].exists())
@@ -245,7 +248,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_plan_does_not_delete(self):
         self.args.work_only, self.args.apply = True, False
-        with patch.object(w, "inactive"), redirect_stdout(io.StringIO()):
+        with patch.object(cleanup, "inactive"), redirect_stdout(io.StringIO()):
             w.clean(self.args, self.paths, self.record)
         self.assertTrue(self.paths["work"].exists())
 
@@ -264,7 +267,7 @@ class WorkflowTests(unittest.TestCase):
         names = {a["name"] for a in w.collect_assets(self.paths, "windows", "built")}
         self.assertEqual(names, {self.package.name})
         self.record["assets"].append(w.asset_info(self.paths, self.paths["dist"] / "DeskPort-1-source.tar.gz"))
-        with patch.object(w, "privacy"), patch.object(w.subprocess, "run") as upload:
+        with patch.object(common, "privacy"), patch.object(w.subprocess, "run") as upload:
             with self.assertRaises(w.Refused):
                 w.publish(self.args, self.paths, self.record)
             upload.assert_not_called()
@@ -272,7 +275,7 @@ class WorkflowTests(unittest.TestCase):
     def test_finishing_package_never_generates_source_or_relink_archives(self):
         self.args.target = "windows"
         self.record["status"] = "built"
-        with patch.object(w, "git_state", return_value=self.source), patch.object(w, "run_logged") as command:
+        with patch.object(common, "git_state", return_value=self.source), patch.object(package, "run_logged") as command:
             w.finish_package(self.args, self.paths, {}, self.record)
             command.assert_not_called()
         self.assertEqual(len(self.record["assets"]), 3)
@@ -282,7 +285,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertTrue(contents["source_url"].endswith(self.source["revision"]))
 
     def test_server_digest_verifies_without_downloading(self):
-        with patch.object(w, "release_metadata", return_value=self.release), patch.object(w, "remote_hash") as download:
+        with patch.object(release, "release_metadata", return_value=self.release), patch.object(release, "remote_hash") as download:
             receipt = w.verify_remote(self.args, self.paths, self.record)
             self.assertEqual(receipt["assets"][0]["verification"], "github-sha256")
             download.assert_not_called()
@@ -296,7 +299,7 @@ class WorkflowTests(unittest.TestCase):
                      "AppImage-runtime-sources.json", "build-packages.txt"]
         for name in originals:
             (self.paths["dist"] / name).write_bytes(name.encode())
-        with patch.object(w, "git_state", return_value=self.source):
+        with patch.object(common, "git_state", return_value=self.source):
             w.finish_package(self.args, self.paths, {}, self.record)
             first = list(self.record["assets"])
             w.finish_package(self.args, self.paths, {}, self.record)
@@ -325,7 +328,7 @@ class WorkflowTests(unittest.TestCase):
         destination.write_bytes(b"existing destination")
         self.args.target = "windows"
         self.record.update(status="built", asset_suffix="r2")
-        with patch.object(w, "git_state", return_value=self.source), self.assertRaises(w.Refused):
+        with patch.object(common, "git_state", return_value=self.source), self.assertRaises(w.Refused):
             w.finish_package(self.args, self.paths, {}, self.record)
         self.assertTrue(extra.exists())
         self.assertTrue(self.package.exists())
@@ -333,7 +336,7 @@ class WorkflowTests(unittest.TestCase):
         destination.unlink()
         generated = self.paths["dist"] / "SHA256SUMS-windows-r2.txt"
         generated.write_text("unrelated record")
-        with patch.object(w, "git_state", return_value=self.source), self.assertRaises(w.Refused):
+        with patch.object(common, "git_state", return_value=self.source), self.assertRaises(w.Refused):
             w.finish_package(self.args, self.paths, {}, self.record)
         self.assertTrue(extra.exists())
         self.assertTrue(self.package.exists())
@@ -341,7 +344,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_invalid_suffix_is_rejected_before_layout_or_run_creation(self):
         for value in ("", "../r2", "r.2", "-r2", "r 2", "r2/next", "a" * 33):
-            with patch.object(w, "layout") as layout, self.assertRaises(w.Refused):
+            with patch.object(runs, "layout") as layout, self.assertRaises(w.Refused):
                 w.main(["package", "--target", "windows", "--asset-suffix=" + value])
             layout.assert_not_called()
         paths, args = self.fresh_build()
@@ -362,9 +365,9 @@ class WorkflowTests(unittest.TestCase):
             (candidate / "DeskPort-test.dmg").write_bytes(b"signed and notarized dmg")
 
         command = ["notarize", "--target", "macos", "--run", "run"]
-        with patch.object(w, "layout", return_value=(self.paths, {})), patch.object(w, "host_check"), \
-                patch.object(w, "local_signing"), patch.object(w, "git_state", return_value=self.source), \
-                patch.object(w, "run_logged", side_effect=notarize) as native:
+        with patch.object(runs, "layout", return_value=(self.paths, {})), patch.object(package, "host_check"), \
+                patch.object(package, "local_signing"), patch.object(common, "git_state", return_value=self.source), \
+                patch.object(package, "run_logged", side_effect=notarize) as native:
             w.main(command)
             completed = w.read_record(self.paths, self.args)
             self.assertEqual(completed["asset_suffix"], "r2")
@@ -383,7 +386,7 @@ class WorkflowTests(unittest.TestCase):
     def test_missing_or_invalid_digest_keeps_files_without_implicit_download(self):
         for value in (None, "", "sha256:bad", "md5:" + "a" * 32):
             self.asset["digest"] = value
-            with patch.object(w, "release_metadata", return_value=self.release), patch.object(w, "remote_hash") as download:
+            with patch.object(release, "release_metadata", return_value=self.release), patch.object(release, "remote_hash") as download:
                 with self.assertRaises(w.Refused):
                     w.verify_remote(self.args, self.paths, self.record)
                 download.assert_not_called()
@@ -416,7 +419,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_publish_validates_all_inputs_before_first_upload(self):
         self.record["assets"].append(dict(path="missing-package.zip", name="DeskPort-test-extra.zip", size=1, sha256="bad"))
-        with patch.object(w, "privacy"), patch.object(w.subprocess, "run") as upload:
+        with patch.object(common, "privacy"), patch.object(w.subprocess, "run") as upload:
             with self.assertRaises(w.Refused):
                 w.publish(self.args, self.paths, self.record)
             upload.assert_not_called()
@@ -437,9 +440,9 @@ class WorkflowTests(unittest.TestCase):
 
     def test_invalid_jobs_leaves_no_unregistered_work(self):
         paths, args = self.fresh_build()
-        with patch.object(w, "host_check"), patch.object(w, "tool_check"), \
-                patch.object(w, "capacity"), patch.object(w, "privacy"), \
-                patch.object(w, "git_state", return_value=self.source):
+        with patch.object(package, "host_check"), patch.object(package, "tool_check"), \
+                patch.object(runs, "capacity"), patch.object(common, "privacy"), \
+                patch.object(common, "git_state", return_value=self.source):
             with self.assertRaises(w.Refused):
                 w.build(args, paths, {"DESKPORT_JOBS": "invalid"})
         self.assertFalse(paths["target"].exists())
@@ -469,11 +472,11 @@ class WorkflowTests(unittest.TestCase):
                 output.mkdir()
                 (output / f"DeskPort-{version}-client-x86_64.flatpak").write_bytes(b"flatpak")
 
-        with patch.object(w, "host_check"), patch.object(w, "tool_check"), \
-                patch.object(w, "capacity"), patch.object(w, "privacy"), \
-                patch.object(w, "git_state", return_value=self.source), \
+        with patch.object(package, "host_check"), patch.object(package, "tool_check"), \
+                patch.object(runs, "capacity"), patch.object(common, "privacy"), \
+                patch.object(common, "git_state", return_value=self.source), \
                 patch.object(w.shutil, "which", return_value="flatpak"), \
-                patch.object(w, "run_logged", side_effect=command), redirect_stdout(io.StringIO()):
+                patch.object(package, "run_logged", side_effect=command), redirect_stdout(io.StringIO()):
             w.build(args, paths, {})
         record = w.read_record(paths, args)
         names = {asset["name"] for asset in record["assets"]}
@@ -496,7 +499,7 @@ class WorkflowTests(unittest.TestCase):
         for arguments in (["package", "--target", "macos", "--format", "all"],
                           ["build", "--target", "linux-portable", "--format", "all"],
                           ["package", "--target", "linux-portable"]):
-            with patch.object(w, "layout") as layout, redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            with patch.object(runs, "layout") as layout, redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 w.main(arguments + ["--run", "invalid-flatpak", "--flatpak"])
             layout.assert_not_called()
 
@@ -538,17 +541,17 @@ class WorkflowTests(unittest.TestCase):
                 (temporary / "fixture").write_text("test data")
                 scratch.append(temporary)
 
-        with patch.object(w, "host_check"), patch.object(w, "tool_check"), \
-                patch.object(w, "capacity"), patch.object(w, "privacy"), \
-                patch.object(w, "git_state", return_value=self.source), \
-                patch.object(w, "run_logged", side_effect=command), redirect_stdout(io.StringIO()):
+        with patch.object(package, "host_check"), patch.object(package, "tool_check"), \
+                patch.object(runs, "capacity"), patch.object(common, "privacy"), \
+                patch.object(common, "git_state", return_value=self.source), \
+                patch.object(package, "run_logged", side_effect=command), redirect_stdout(io.StringIO()):
             w.build(args, paths, {})
             self.assertEqual(len(scratch), 1)
             self.assertFalse(scratch[0].exists())
             self.assertFalse(paths["dist"].exists())
             args.work_only, args.apply = True, True
             record = w.read_record(paths, args)
-            with patch.object(w, "inactive"):
+            with patch.object(cleanup, "inactive"):
                 w.clean(args, paths, record)
         self.assertFalse(paths["target"].exists())
         self.assertEqual((store / "application").read_bytes(), b"retained Nix result")
@@ -580,12 +583,12 @@ else: sys.exit(9)
         gh.chmod(0o755)
         self.args.target = "windows"
         self.record.update(status="built", asset_suffix="r2")
-        with patch.object(w, "git_state", return_value=self.source):
+        with patch.object(common, "git_state", return_value=self.source):
             w.finish_package(self.args, self.paths, {}, self.record)
         w.freeze(self.paths, self.record)
         with patch.dict(os.environ, {"PATH": str(fakebin) + os.pathsep + os.environ["PATH"], "DESKPORT_TEST_GITHUB": str(remote)}), \
-                patch.object(w, "privacy"), patch.object(w, "git_state", return_value=self.source), \
-                patch.object(w, "inactive"), redirect_stdout(io.StringIO()):
+                patch.object(common, "privacy"), patch.object(common, "git_state", return_value=self.source), \
+                patch.object(cleanup, "inactive"), redirect_stdout(io.StringIO()):
             w.publish(self.args, self.paths, self.record)
             receipt = json.loads((self.paths["record"] / "github-receipt.json").read_text())
             self.assertEqual(len(receipt["assets"]), 3)
