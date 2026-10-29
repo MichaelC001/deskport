@@ -1,14 +1,15 @@
 # PC implementation and acceptance matrix
 
-Reviewed 2026-10-24 against source `caf1906916174353aa0dce91f0bfa6d2bbaea107` and pinned core
-`b12d33c8811be6ee96efd45a0aeb14f775903ca1`. This is a source snapshot, not an installed version.
+Reviewed 2026-10-29 against source `7d1bdf3477b4227b3e5a002ed7941b4f6a93a2d4` and pinned core
+`866c09547cd47d4b26a0725374e70614cf2845db`. This is a source snapshot, not an installed version.
 Seven tested task branches are integrated with their scoped acceptance records;
 the remaining ten tasks retain explicit gates in [the integration ledger](PC_TASK_INTEGRATION.md).
 Historical package and hardware results retain their exact source identities.
 
-This snapshot includes the per-computer global window shortcut preference and
-expanded offline manual, plus locally configurable recall bindings. The core changes since the previous snapshot affect
-manual text and UI catalogs; display arithmetic and wire contracts are unchanged.
+This snapshot includes explicit Control+Command window movement and edge/corner
+resizing on the hidden macOS canvas, fullscreen geometry recovery, and the
+matching Settings help. The core follow-up adds UI catalog text; display arithmetic
+and wire contracts are unchanged. See the [window gesture checkpoint](ROADMAP.md#explicit-macos-window-gestures--2026-10-28).
 This review updates the source inventory, without advancing historical package,
 hardware or hosted-CI evidence to the newer revision.
 
