@@ -87,6 +87,13 @@ GridView {
     // Render backend state; every command names the device it belongs to.
     readonly property var sessionStates: typeof sessionManager !== "undefined" ? sessionManager.states : ({})
     function stateFor(hostId) { return sessionStates[hostId.toLowerCase()] || "" }
+    function errorFor(hostId) {
+        if (typeof sessionManager === "undefined") return ""
+        var rows = sessionManager.sessions
+        for (var i = 0; i < rows.length; ++i)
+            if (rows[i].id === hostId.toLowerCase()) return rows[i].error || ""
+        return ""
+    }
     function connected(hostId) {
         return typeof sessionManager !== "undefined" ? stateFor(hostId) === "connected"
             : sessionHostId.length > 0 && hostId === sessionHostId
@@ -234,6 +241,7 @@ GridView {
                         online: model.online; paired: model.paired; unknown: model.statusUnknown
                         activeSession: pcGrid.connected(model.hostId)
                         sessionState: pcGrid.stateFor(model.hostId)
+                        sessionError: pcGrid.errorFor(model.hostId)
                         bound: pcGrid.savedPeer(model.hostId) !== null
                         canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
                         inGroup: true
@@ -490,6 +498,7 @@ GridView {
             activeSession: pcGrid.connected(model.hostId)
             sessionState: pcGrid.stateFor(model.hostId)
             bound: !model.isGroup && !model.isAdd && pcGrid.savedPeer(model.hostId) !== null
+            sessionError: pcGrid.errorFor(model.hostId)
             canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
             inGroup: false
             onSettingsRequested: deviceSettingsDialog.openFor(model.hostId, model.name)

@@ -472,7 +472,8 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
     if (!testFrame) {
         m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats, params->presentationCallbacks);
         if (!m_Pacer->initialize(params->window, params->frameRate,
-                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)))) {
+                                 params->enableFramePacing || (params->enableVsync && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FORCE_PACING)),
+                                 params->presentationWindow)) {
             return false;
         }
     }
@@ -684,6 +685,7 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.renderedFrames += src.renderedFrames;
     dst.totalFrames += src.totalFrames;
     dst.networkDroppedFrames += src.networkDroppedFrames;
+    dst.localDroppedFrames += src.localDroppedFrames;
     dst.pacerDroppedFrames += src.pacerDroppedFrames;
     dst.totalReassemblyTime += src.totalReassemblyTime;
     dst.totalDecodeTime += src.totalDecodeTime;
@@ -823,7 +825,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
         ret = snprintf(&output[offset],
                        length - offset,
-                       "Incoming frame rate from network: %.2f FPS\n"
+                       "Frame rate at decoder: %.2f FPS\n"
                        "Decoding frame rate: %.2f FPS\n"
                        "Rendering frame rate: %.2f FPS\n",
                        stats.receivedFps,
@@ -864,13 +866,15 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
         ret = snprintf(&output[offset],
                        length - offset,
-                       "Frames dropped by your network connection: %.2f%%\n"
+                       "Frames dropped before the client transport: %.2f%%\n"
+                       "Frames dropped by local transport: %.2f%%\n"
                        "Frames dropped by presentation queue (timing / display): %.2f%%\n"
                        "Average network latency: %s\n"
                        "Average decoding time: %.2f ms\n"
                        "Average frame queue delay: %.2f ms\n"
                        "Average rendering time (including monitor V-sync latency): %.2f ms\n",
                        (float)stats.networkDroppedFrames / stats.totalFrames * 100,
+                       (float)stats.localDroppedFrames / stats.totalFrames * 100,
                        (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
                        rttString,
                        (float)stats.totalDecodeTime / stats.decodedFrames,
@@ -1795,12 +1799,18 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     if (!m_LastFrameNumber) {
         m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
         m_LastFrameNumber = du->frameNumber;
+        m_Source->networkFramesLost(0); // Establish the source's per-stream baseline.
     }
     else {
-        // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
-        m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
-        m_ActiveWndVideoStats.totalFrames += du->frameNumber - (m_LastFrameNumber + 1);
-        m_LastFrameNumber = du->frameNumber;
+        // Treat wrapped sequence numbers as forward progress, but do not turn
+        // duplicate or out-of-order frames into billions of dropped frames.
+        const uint32_t distance = uint32_t(du->frameNumber) - uint32_t(m_LastFrameNumber);
+        const uint32_t gap = distance > 1 && distance < 0x80000000u ? distance - 1 : 0;
+        const uint32_t network = m_Source->networkFramesLost(gap);
+        m_ActiveWndVideoStats.networkDroppedFrames += network;
+        m_ActiveWndVideoStats.localDroppedFrames += gap - network;
+        m_ActiveWndVideoStats.totalFrames += gap;
+        if (distance && distance < 0x80000000u) m_LastFrameNumber = du->frameNumber;
     }
 
     // Flip stats windows roughly every second

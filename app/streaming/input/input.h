@@ -4,6 +4,7 @@
 #include "backend/computermanager.h"
 
 #include <SDL.h>
+#include <QSet>
 #include "localtextinput.h"
 #include "streaming/shortcutstate.h"
 
@@ -227,6 +228,7 @@ private:
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
+    QSet<SDL_FingerID> m_CanvasFingers;
 
     static const int k_ButtonMap[];
 };

@@ -1,11 +1,13 @@
 #include "streaming/video/queuedframesource.h"
+#include "streaming/video/frameloss.h"
+#include "streaming/video/ffmpeg-renderers/pacer/pacingclock.h"
 #include <QCoreApplication>
 #include <cassert>
 #include <future>
 #include <iostream>
 #include <thread>
 
-static QByteArray packet(int number, bool idr = false, quint64 generation = 7) {
+static QByteArray packet(int number, bool idr = false, quint64 generation = 7, quint64 networkLoss = 0) {
     char sps[] = "parameter-set";
     char picture[] = "encoded-picture";
     LENTRY second{nullptr, picture, sizeof(picture), BUFFER_TYPE_PICDATA};
@@ -16,7 +18,7 @@ static QByteArray packet(int number, bool idr = false, quint64 generation = 7) {
     unit.receiveTimeMs = 100; unit.enqueueTimeMs = 105; unit.presentationTimeMs = 19;
     unit.hdrActive = true; unit.colorspace = COLORSPACE_REC_2020;
     unit.frameHostProcessingLatency = 28;
-    return EncodedVideoFrame::encode(unit, generation);
+    return EncodedVideoFrame::encode(unit, generation, networkLoss);
 }
 
 int main(int argc, char** argv) {
@@ -75,5 +77,50 @@ int main(int argc, char** argv) {
     source.stop();
     assert(waiting.wait_for(std::chrono::seconds(1)) == std::future_status::ready);
     assert(!waiting.get() && !push(10, true));
+    // Network-side counting precedes both bounded local queues. Reordering,
+    // duplicate frame numbers and 32-bit wrap must not inflate the count.
+    FrameLossCounter loss;
+    loss.observe(0xfffffffeu); loss.observe(1); // two missing around wrap
+    assert(loss.lost() == 2);
+    loss.observe(1); loss.observe(0); loss.observe(2);
+    assert(loss.lost() == 2);
+    loss.observe(5); assert(loss.lost() == 4);
+    // Frames skipped after a local rejection are not network loss.
+    loss.resynchronize(); loss.observe(9); assert(loss.lost() == 4);
+    loss.observe(10); assert(loss.lost() == 4);
+    loss.resynchronize(); loss.observe(5); loss.observe(5); assert(loss.lost() == 4);
+    auto withLoss = EncodedVideoFrame::decode(packet(5, true, 7, loss.lost()), 1000);
+    assert(withLoss && withLoss->networkFramesLost == 4);
+    assert(EncodedVideoFrame::encode(withLoss->unit, withLoss->generation, withLoss->networkFramesLost) == packet(5, true, 7, 4));
+    QueuedVideoSource accounting(7, [] {});
+    assert(accounting.push(EncodedVideoFrame::decode(packet(1, true, 7, 10), 1000)));
+    assert(accounting.poll(&handle, &unit));
+    assert(accounting.networkFramesLost(0) == 0); accounting.complete(handle, DR_OK);
+    // A 6-frame gap contains two lost before the local transport and four
+    // that were received by the worker but discarded locally.
+    assert(accounting.push(EncodedVideoFrame::decode(packet(8, true, 7, 12), 1000)));
+    assert(accounting.poll(&handle, &unit));
+    assert(accounting.networkFramesLost(6) == 2); accounting.complete(handle, DR_OK);
+    assert(accounting.push(EncodedVideoFrame::decode(packet(10, true, 7, 100), 1000)));
+    assert(accounting.poll(&handle, &unit));
+    assert(accounting.networkFramesLost(1) == 1); accounting.complete(handle, DR_OK);
+    // Loss reported ahead of a frame that closes no gap stays available.
+    QueuedVideoSource carry(7, [] {});
+    assert(carry.push(EncodedVideoFrame::decode(packet(1, true, 7, 0), 1000)));
+    assert(carry.poll(&handle, &unit) && carry.networkFramesLost(0) == 0); carry.complete(handle, DR_OK);
+    assert(carry.push(EncodedVideoFrame::decode(packet(2, true, 7, 3), 1000)));
+    assert(carry.poll(&handle, &unit) && carry.networkFramesLost(0) == 0); carry.complete(handle, DR_OK);
+    assert(carry.push(EncodedVideoFrame::decode(packet(6, true, 7, 3), 1000)));
+    assert(carry.poll(&handle, &unit) && carry.networkFramesLost(3) == 3); carry.complete(handle, DR_OK);
+    // Timer pacing advances from its previous deadline rather than introducing
+    // drift, and skips missed ticks after a stalled window or resume.
+    using Clock = PacingClock::Clock;
+    const auto start = Clock::time_point{};
+    PacingClock cadence(50, start);
+    assert(cadence.deadline() == start + std::chrono::milliseconds(20));
+    cadence.advance(start + std::chrono::milliseconds(21));
+    assert(cadence.deadline() == start + std::chrono::milliseconds(40));
+    cadence.advance(start + std::chrono::milliseconds(300));
+    assert(cadence.deadline() == start + std::chrono::milliseconds(320));
     std::cout << "PASS: owned encoded frames, malformed input, backpressure, generation isolation, wake and stop\n";
 }

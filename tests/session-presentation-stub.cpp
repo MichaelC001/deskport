@@ -8,6 +8,7 @@ SessionPresentation::~SessionPresentation() = default;
 bool SessionPresentation::ready() const { return false; }
 bool SessionPresentation::active() const { return false; }
 bool SessionPresentation::hasFrames() const { return false; }
+QString SessionPresentation::backdrop() const { return {}; }
 bool SessionPresentation::configure(const QJsonObject&) { return true; }
 void SessionPresentation::frame(QByteArray) {}
 void SessionPresentation::status(const QJsonObject&) {}

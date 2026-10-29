@@ -5,6 +5,9 @@
 #include <QInputMethodEvent>
 #include <QInputMethodQueryEvent>
 #include <QQuickWindow>
+#include <QTouchEvent>
+#include <QPointingDevice>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QSignalSpy>
 #include <QTest>
 #include <SDL.h>
@@ -18,16 +21,19 @@ SessionPresentation::~SessionPresentation() = default;
 bool SessionPresentation::ready() const { return property("readyForTest").toBool(); }
 bool SessionPresentation::active() const { return false; }
 bool SessionPresentation::hasFrames() const { return false; }
+QString SessionPresentation::backdrop() const { return {}; }
 void SessionPresentation::attach(QWindow*) {}
 void SessionPresentation::detach() {}
 void SessionPresentation::resized(bool) {}
 void SessionPresentation::preedit(const QString&) {}
 static int pointerMoveReleases = 0;
 static bool pointerEnabled = false;
+static QRect pointerConfined;
 class TestCanvasPointer final : public CanvasPointer {
 public:
     using CanvasPointer::CanvasPointer;
     void update(QWindow*, bool enabled) override { pointerEnabled = enabled; }
+    void confine(QWindow*, const QRect& region, bool enabled) override { pointerConfined = enabled ? region : QRect(); }
     void releaseForWindowMove() override { ++pointerMoveReleases; pointerEnabled = false; }
 };
 std::unique_ptr<CanvasPointer> createCanvasPointer(CanvasPointer::Motion motion) {
@@ -37,6 +43,64 @@ std::unique_ptr<CanvasPointer> createCanvasPointer(CanvasPointer::Motion motion)
 class CanvasFocusTest : public QObject {
     Q_OBJECT
 private slots:
+    void touchAndAbsolutePointerRouteThroughCanvas() {
+        QQuickWindow window;
+        SessionPresentation presentation;
+        presentation.setProperty("readyForTest", true);
+        SessionCanvas canvas(window.contentItem());
+        canvas.setSize({640, 480}); canvas.setPresentation(&presentation);
+        window.show(); window.requestActivate(); canvas.forceActiveFocus();
+        QTRY_VERIFY(window.isActive() && canvas.hasActiveFocus());
+        auto surface = window.findChild<QWindow*>();
+        QVERIFY(surface);
+        QSignalSpy input(&canvas, &SessionCanvas::input);
+        QPointingDevice touchscreen("fixture", 1, QInputDevice::DeviceType::TouchScreen,
+            QPointingDevice::PointerType::Finger, QInputDevice::Capability::Position, 5, 0);
+        // The public QEventPoint constructor sets scene/global coordinates but
+        // leaves the receiver-local position at zero. Platform delivery fills it.
+        auto point = QMutableEventPoint::withTimeStamp(1, 7, QEventPoint::State::Pressed,
+                                                       QPointF(160, 240), QPointF(160, 240), QPointF(160, 240));
+        QTouchEvent down(QEvent::TouchBegin, &touchscreen, Qt::NoModifier, {point});
+        QCoreApplication::sendEvent(surface, &down);
+        QVERIFY(down.isAccepted());
+        QCOMPARE(input.size(), 1);
+        auto touch = input.first().first().toJsonObject();
+        QCOMPARE(touch.value("type").toString(), QStringLiteral("touch"));
+        QCOMPARE(touch.value("phase").toString(), QStringLiteral("down"));
+        QCOMPARE(touch.value("id").toInt(), 0);
+        QCOMPARE(touch.value("x").toDouble(), 0.25);
+        QCOMPARE(touch.value("y").toDouble(), 0.5);
+        // Ever-increasing platform IDs map to small stable slots.
+        auto second = QMutableEventPoint::withTimeStamp(2, 700000, QEventPoint::State::Pressed,
+                                                        QPointF(320, 240), QPointF(320, 240), QPointF(320, 240));
+        auto held = QMutableEventPoint::withTimeStamp(2, 7, QEventPoint::State::Stationary,
+                                                      QPointF(160, 240), QPointF(160, 240), QPointF(160, 240));
+        QTouchEvent another(QEvent::TouchUpdate, &touchscreen, Qt::NoModifier, {held, second});
+        QCoreApplication::sendEvent(surface, &another);
+        QCOMPARE(input.size(), 2);
+        QCOMPARE(input.last().first().toJsonObject().value("id").toInt(), 1);
+        QTouchEvent cancel(QEvent::TouchCancel, &touchscreen);
+        QCoreApplication::sendEvent(surface, &cancel);
+        QCOMPARE(input.last().first().toJsonObject().value("type").toString(), QStringLiteral("touch-cancel"));
+        // A contact that starts before the canvas is focused is held until the
+        // focused viewport has been published, rather than losing its down.
+        presentation.setProperty("readyForTest", false);
+        QTest::qWait(35);
+        input.clear();
+        auto early = QMutableEventPoint::withTimeStamp(3, 9, QEventPoint::State::Pressed,
+                                                       QPointF(160, 240), QPointF(160, 240), QPointF(160, 240));
+        QTouchEvent earlyDown(QEvent::TouchBegin, &touchscreen, Qt::NoModifier, {early});
+        QCoreApplication::sendEvent(surface, &earlyDown);
+        QCOMPARE(input.size(), 0);
+        presentation.setProperty("readyForTest", true);
+        QTRY_COMPARE(input.size(), 1);
+        QCOMPARE(input.first().first().toJsonObject().value("phase").toString(), QStringLiteral("down"));
+        QTouchEvent earlyCancel(QEvent::TouchCancel, &touchscreen);
+        QCoreApplication::sendEvent(surface, &earlyCancel);
+        canvas.setProperty("pointerRegion", QJsonObject{{"x", 20}, {"y", 30}, {"width", 400}, {"height", 300}});
+        QCOMPARE(pointerConfined, QRect(20, 30, 400, 300));
+        canvas.setProperty("pointerRegion", QJsonObject{});
+    }
     void localWindowMoveReleasesFocusAndSuppressesInput() {
         QQuickWindow window;
         SessionPresentation presentation;

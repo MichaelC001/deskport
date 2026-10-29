@@ -14,7 +14,7 @@ TransitionWindow::TransitionWindow(SDL_Window* window, const QString& text, QIma
     SDL_SetWindowGrab(window, SDL_FALSE);
     SDL_ShowCursor(SDL_ENABLE);
     m_Label = text;
-    if (CanvasBridge::owns(window)) { CanvasBridge::label(text); return; }
+    if (CanvasBridge::owns(window)) { CanvasBridge::label(text); CanvasBridge::waiting(true); return; }
     if (qstrcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         m_Wayland = std::make_unique<WaylandLoading>(window);
     }

@@ -13,15 +13,16 @@ class EncodedVideoFrame final {
 public:
     static constexpr int MaxBytes = 32 * 1024 * 1024;
     static constexpr int MaxSegments = 4096;
-    static constexpr quint32 Magic = 0x44505631; // DPV1
+    static constexpr quint32 Magic = 0x44505632; // DPV2: carries network loss
     DECODE_UNIT unit{};
     quint64 generation = 0;
+    quint64 networkFramesLost = 0;
 
     EncodedVideoFrame() = default;
     EncodedVideoFrame(const EncodedVideoFrame&) = delete;
     EncodedVideoFrame& operator=(const EncodedVideoFrame&) = delete;
 
-    static QByteArray encode(const DECODE_UNIT& unit, quint64 generation) {
+    static QByteArray encode(const DECODE_UNIT& unit, quint64 generation, quint64 networkFramesLost = 0) {
         if (!generation || unit.fullLength <= 0 || unit.fullLength > MaxBytes ||
             (unit.frameType != FRAME_TYPE_IDR && unit.frameType != FRAME_TYPE_PFRAME)) return {};
         quint32 count = 0;
@@ -38,7 +39,7 @@ public:
         out.setVersion(QDataStream::Qt_5_15);
         const auto reassembly = unit.enqueueTimeMs >= unit.receiveTimeMs ?
             qMin<quint64>(unit.enqueueTimeMs - unit.receiveTimeMs, 60000) : 0;
-        out << Magic << generation << qint32(unit.frameNumber) << quint8(unit.frameType)
+        out << Magic << generation << networkFramesLost << qint32(unit.frameNumber) << quint8(unit.frameType)
             << quint16(unit.frameHostProcessingLatency) << quint32(reassembly)
             << quint32(unit.presentationTimeMs) << quint8(unit.hdrActive) << quint8(unit.colorspace)
             << quint32(unit.fullLength) << count;
@@ -58,7 +59,7 @@ public:
         qint32 number;
         quint8 type, hdr, colorspace;
         quint16 latency;
-        in >> magic >> frame->generation >> number >> type >> latency >> reassembly
+        in >> magic >> frame->generation >> frame->networkFramesLost >> number >> type >> latency >> reassembly
            >> presentation >> hdr >> colorspace >> size >> count;
         if (in.status() != QDataStream::Ok || magic != Magic || !frame->generation ||
             type > FRAME_TYPE_IDR || hdr > 1 || reassembly > 60000 || !size || size > MaxBytes ||

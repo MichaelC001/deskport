@@ -276,7 +276,8 @@ bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWid
 void SdlInputHandler::updatePointerRegionLock()
 {
     // Pointer region lock is irrelevant in relative mouse mode
-    if (SDL_GetRelativeMouseMode()) {
+    if (SDL_GetRelativeMouseMode() || (CanvasBridge::owns(m_Window) && !m_AbsoluteMouseMode)) {
+        if (CanvasBridge::owns(m_Window)) CanvasBridge::pointerRegion(false);
         return;
     }
 
@@ -285,7 +286,19 @@ void SdlInputHandler::updatePointerRegionLock()
     // have full control over it and we don't touch it anymore.
     if (!m_PointerRegionLockToggledByUser) {
         // Lock the pointer in true full-screen mode and leave it unlocked in other modes
-        m_PointerRegionLockActive = (CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+        m_PointerRegionLockActive = CanvasBridge::owns(m_Window) ? CanvasBridge::fullscreen() :
+            (CanvasBridge::flags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+    }
+
+    if (CanvasBridge::owns(m_Window)) {
+        SDL_Rect src{0, 0, m_StreamWidth, m_StreamHeight};
+        int width, height;
+        SDL_GetWindowSize(m_Window, &width, &height);
+        SDL_Rect dst{0, 0, width, height};
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+        CanvasBridge::pointerRegion(isCaptureActive() && m_PointerRegionLockActive,
+                                    dst.x, dst.y, dst.w, dst.h);
+        return;
     }
 
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.

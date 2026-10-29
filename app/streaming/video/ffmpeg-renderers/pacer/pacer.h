@@ -34,7 +34,7 @@ public:
 
     void submitFrame(AVFrame* frame);
 
-    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing);
+    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing, QWindow* presentationWindow = nullptr);
 
     void signalVsync();
 
@@ -72,6 +72,7 @@ private:
     std::thread m_SnapshotWorker;
     std::atomic<bool> m_SnapshotBusy{false};
     bool m_SnapshotReported = false;
+    Uint32 m_LastPresentationSnapshot = 0;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;
@@ -79,5 +80,6 @@ private:
     int m_DisplayFps;
     PVIDEO_STATS m_VideoStats;
     int m_RendererAttributes;
+    bool m_ClockPacing = false;
     VideoPresentationCallbacks m_Callbacks;
 };

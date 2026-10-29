@@ -168,14 +168,14 @@ void MultiSessions::open(QString id, QString name, QString address, QString app)
     if (!entry) { entry = new Entry; entry->id = id; m_Entries.insert(id, entry); }
     m_Order.removeAll(id); m_Order.append(id);
     entry->name = name; entry->address = address; entry->app = app;
-    entry->error.clear(); entry->state = "starting"; entry->fullscreenPending = false; entry->exposed = false;
+    entry->error.clear(); entry->stopError.clear(); entry->state = "starting"; entry->fullscreenPending = false; entry->exposed = false;
     entry->token = QUuid::createUuid().toString(QUuid::WithoutBraces);
     if (entry->videoSocket) { entry->videoSocket->abort(); entry->videoSocket = nullptr; }
     delete entry->presentation;
     entry->presentation = new SessionPresentation(this);
     connect(entry->presentation, &SessionPresentation::idrRequested, this, [this, entry] { send(entry, {{"command","video-idr"}}); });
     connect(entry->presentation, &SessionPresentation::failed, this, [this, entry](QString error) {
-        entry->error = error; disconnectSession(entry->id);
+        stopSession(entry, error);
     });
     select(id);
     emit devicesRequested(); emit changed();
@@ -209,7 +209,7 @@ void MultiSessions::launch(const QString& id) {
         }
     });
     connect(process, qOverload<int,QProcess::ExitStatus>(&QProcess::finished), this, [this,entry,process](int code,QProcess::ExitStatus status) {
-        ended(entry, entry->state == "stopping" ? QString() : !entry->error.isEmpty() ? entry->error :
+        ended(entry, !entry->stopError.isEmpty() ? entry->stopError : entry->state == "stopping" ? QString() : !entry->error.isEmpty() ? entry->error :
             (status == QProcess::NormalExit && code == 0 ? QString() : tr("The desktop worker stopped unexpectedly.")));
         entry->process = nullptr; process->deleteLater(); emit changed();
     });
@@ -303,6 +303,10 @@ void MultiSessions::acceptVideo() {
 }
 void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
     const auto type = message.value("type").toString();
+    // A worker may report a late connection error while shutdown is already in
+    // progress. It must not replace the original presentation failure or turn
+    // an explicit user disconnect into an error.
+    if (entry->state == "stopping" && (type == "connecting" || type == "connected" || type == "error")) return;
     if (type == "canvas") {
         const auto value = message.value("value").toObject();
         if (entry->presentation) entry->presentation->overlays(value.value("overlays").toObject());
@@ -311,6 +315,7 @@ void MultiSessions::receive(Entry* entry, const QJsonObject& message) {
                          {"label",value.value("label").toString().left(1024)},
                          {"waiting",value.value("waiting").toBool()},
                          {"relative",value.value("relative").toBool()},
+                         {"pointerRegion",value.value("pointerRegion").toObject()},
                          {"grab",value.value("grab").toBool()}, {"cursorHidden",value.value("cursorHidden").toBool()}};
         if (m_Wanted == entry->id) emit canvasChanged();
         return;
@@ -483,7 +488,14 @@ void MultiSessions::showDevices() {
 }
 void MultiSessions::disconnectSession(QString id) {
     auto entry = m_Entries.value(id.toLower()); if (!entry) return;
-    id = entry->id;
+    stopSession(entry, {});
+}
+void MultiSessions::stopSession(Entry* entry, const QString& error) {
+    const auto id = entry->id;
+    // A later disconnect or failure must not replace the reason that started
+    // this shutdown, nor re-arm the worker kill timer.
+    if (entry->state == "stopping" && entry->process) return;
+    entry->stopError = error;
     if (m_ActivationTarget == id) setActivationToken({});
     const bool leavingViewer = m_Wanted == id || m_Visible == id;
     entry->state = "stopping";
@@ -492,7 +504,7 @@ void MultiSessions::disconnectSession(QString id) {
     if (entry->process) {
         auto process = entry->process;
         QTimer::singleShot(7000, process, [entry,process] { if (entry->process == process && process->state() != QProcess::NotRunning) process->kill(); });
-    } else ended(entry, {});
+    } else ended(entry, entry->stopError);
     if (leavingViewer) emit devicesRequested();
     emit changed();
 }
@@ -526,6 +538,7 @@ void MultiSessions::ended(Entry* entry, const QString& error) {
     if (entry->videoSocket) { entry->videoSocket->abort(); entry->videoSocket=nullptr; }
     if (entry->presentation) entry->presentation->detach();
     entry->state=error.isEmpty() ? "disconnected" : "error"; entry->error=error;
+    entry->stopError.clear();
     const bool awaited = m_Hiding.remove(entry->id); entry->exposed=false;
     // A worker can exit before acknowledging hide. Its old visible record must
     // not reopen the shell after the user hid it or selected another desktop.

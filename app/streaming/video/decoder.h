@@ -5,11 +5,14 @@
 #include "settings/streamingpreferences.h"
 #include <functional>
 class QWindow;
+class QImage;
 
 struct VideoPresentationCallbacks {
     std::function<void()> frameReady;
     std::function<void()> firstFrame;
     std::function<void()> resetRequired;
+    // Runs on the snapshot worker; each presentation owns its own picture.
+    std::function<void(QImage)> snapshotReady;
 };
 
 #define SDL_CODE_FRAME_READY 0
@@ -22,6 +25,7 @@ typedef struct _VIDEO_STATS {
     uint32_t renderedFrames;
     uint32_t totalFrames;
     uint32_t networkDroppedFrames;
+    uint32_t localDroppedFrames;
     uint32_t pacerDroppedFrames;
     uint16_t minHostProcessingLatency;
     uint16_t maxHostProcessingLatency;

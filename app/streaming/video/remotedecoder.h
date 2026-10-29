@@ -1,5 +1,6 @@
 #pragma once
 #include "decoder.h"
+#include "frameloss.h"
 #include <QByteArray>
 #include <condition_variable>
 #include <deque>
@@ -33,4 +34,5 @@ private:
     int m_Colorspace = COLORSPACE_REC_601, m_ColorRange = COLOR_RANGE_LIMITED;
     int m_Bytes = 0;
     quint64 m_Generation = 0;
+    FrameLossCounter m_FrameLoss;
 };

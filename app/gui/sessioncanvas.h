@@ -2,6 +2,9 @@
 #include <QQuickItem>
 #include <QTimer>
 #include <QJsonObject>
+#include <QHash>
+#include <QList>
+#include <QElapsedTimer>
 #include "sessionpresentation.h"
 #include "canvaspointer.h"
 #include "backend/shortcutrecorderinhibitor.h"
@@ -14,6 +17,7 @@ class SessionCanvas : public QQuickItem {
     Q_PROPERTY(bool cursorHidden MEMBER m_CursorHidden NOTIFY cursorHiddenChanged)
     Q_PROPERTY(bool captureRequested MEMBER m_CaptureRequested NOTIFY captureRequestedChanged)
     Q_PROPERTY(bool relativePointer MEMBER m_RelativePointer NOTIFY relativePointerChanged)
+    Q_PROPERTY(QJsonObject pointerRegion MEMBER m_PointerRegion NOTIFY pointerRegionChanged)
 public:
     explicit SessionCanvas(QQuickItem* parent = nullptr);
     ~SessionCanvas() override;
@@ -25,6 +29,7 @@ signals:
     void frameReadyChanged();
     void captureRequestedChanged();
     void relativePointerChanged();
+    void pointerRegionChanged();
     void textInputChanged();
     void cursorHiddenChanged();
     void viewportChanged(QJsonObject state);
@@ -44,6 +49,7 @@ protected:
     void hoverMoveEvent(QHoverEvent* event) override;
     void wheelEvent(QWheelEvent* event) override;
     void focusOutEvent(QFocusEvent* event) override;
+    void touchEvent(QTouchEvent* event) override;
 private:
     void refresh();
     void key(QKeyEvent* event, bool down);
@@ -63,5 +69,13 @@ private:
     ShortcutRecorderInhibitor m_Inhibitor;
     std::unique_ptr<CanvasPointer> m_Pointer;
     bool m_RelativePointer = false;
+    QJsonObject m_PointerRegion;
     QPointF m_RelativeRemainder;
+    struct Touch { int slot; QPointF position; };
+    static constexpr int MaxTouches = 16, MaxPendingTouches = 64, PendingTouchMs = 500;
+    void touchInput(const QJsonObject& event);
+    void flushPendingTouches();
+    QHash<int, Touch> m_Touches;
+    QList<QJsonObject> m_PendingTouches;
+    QElapsedTimer m_PendingTouchAge;
 };

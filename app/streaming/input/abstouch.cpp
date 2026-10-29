@@ -1,4 +1,5 @@
 #include "input.h"
+#include "streaming/canvasbridge.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -160,7 +161,8 @@ void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     // dx and dy are deltas from the last touch event, not the first touch down.
 
     // Ignore touch down events with more than one finger
-    if (event->type == SDL_FINGERDOWN && SDL_GetNumTouchFingers(event->touchId) > 1) {
+    if (event->type == SDL_FINGERDOWN &&
+        (event->touchId == CanvasBridge::SyntheticTouchId ? m_NumFingersDown : SDL_GetNumTouchFingers(event->touchId)) > 1) {
         return;
     }
 

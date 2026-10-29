@@ -1,4 +1,5 @@
 #include "input.h"
+#include "streaming/canvasbridge.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -65,6 +66,11 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
                 fingerIndex = i;
                 break;
             }
+        }
+    }
+    else if (event->touchId == CanvasBridge::SyntheticTouchId) {
+        for (int i = 0; i < MAX_FINGERS; ++i) {
+            if (!m_TouchDownEvent[i].type) { fingerIndex = i; break; }
         }
     }
     else {
@@ -164,7 +170,8 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         }
     }
 
-    m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
+    if (event->touchId != CanvasBridge::SyntheticTouchId)
+        m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
 
     if (event->type == SDL_FINGERDOWN) {
         m_TouchDownEvent[fingerIndex] = *event;

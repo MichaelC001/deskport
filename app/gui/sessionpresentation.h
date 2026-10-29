@@ -11,12 +11,14 @@ class SessionPresentation : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
+    Q_PROPERTY(QString backdrop READ backdrop NOTIFY backdropChanged)
 public:
     explicit SessionPresentation(QObject* parent = nullptr);
     ~SessionPresentation() override;
     bool ready() const;
     bool active() const;
     bool hasFrames() const;
+    QString backdrop() const;
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
     void status(const QJsonObject& status);
@@ -29,6 +31,7 @@ public:
 signals:
     void readyChanged();
     void activeChanged();
+    void backdropChanged();
     void idrRequested();
     void failed(QString error);
 private:

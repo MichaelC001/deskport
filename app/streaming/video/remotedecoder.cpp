@@ -39,15 +39,26 @@ bool RemoteVideoDecoder::initialize(PDECODER_PARAMETERS params) {
     return m_Ready.wait_for(lock, std::chrono::seconds(15), [this] { return m_Initialized || m_Failed; }) && m_Initialized;
 }
 int RemoteVideoDecoder::submitDecodeUnit(PDECODE_UNIT unit) {
-    auto bytes = EncodedVideoFrame::encode(*unit, m_Generation);
-    if (bytes.isEmpty()) return DR_NEED_IDR;
+    quint64 networkLoss;
+    {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        if (m_Stopped || m_Failed) return DR_NEED_IDR;
+        m_FrameLoss.observe(uint32_t(unit->frameNumber));
+        networkLoss = m_FrameLoss.lost();
+    }
+    auto bytes = EncodedVideoFrame::encode(*unit, m_Generation, networkLoss);
+    if (bytes.isEmpty()) {
+        std::lock_guard<std::mutex> lock(m_Mutex);
+        m_FrameLoss.resynchronize();
+        return DR_NEED_IDR;
+    }
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
         if (m_Stopped || m_Failed) return DR_NEED_IDR;
         if (m_Queue.size() >= 3 || bytes.size() > 64 * 1024 * 1024 - m_Bytes) {
             m_Queue.clear(); m_Bytes = 0; m_NeedsIdr = true;
         }
-        if (m_NeedsIdr && unit->frameType != FRAME_TYPE_IDR) return DR_NEED_IDR;
+        if (m_NeedsIdr && unit->frameType != FRAME_TYPE_IDR) { m_FrameLoss.resynchronize(); return DR_NEED_IDR; }
         m_NeedsIdr = false;
         m_Bytes += bytes.size(); m_Queue.push_back(std::move(bytes));
     }

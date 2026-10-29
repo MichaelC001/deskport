@@ -57,6 +57,14 @@ public:
     QString status = "available", version = "0.4.6", notes = "Release notes", date = "2026-09-21", url = "https://github.com/keithxc/deskport/releases/tag/v0.4.6";
     Q_INVOKABLE void start() {}
 };
+class TestPresentation : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString backdrop MEMBER backdrop NOTIFY backdropChanged)
+public:
+    QString backdrop;
+signals:
+    void backdropChanged();
+};
 // QML wiring fixture; the native renderer is exercised by --canvas-self-test.
 class TestCanvas : public QQuickItem {
     Q_OBJECT
@@ -66,10 +74,12 @@ class TestCanvas : public QQuickItem {
     Q_PROPERTY(bool cursorHidden MEMBER cursorHidden)
     Q_PROPERTY(bool captureRequested MEMBER capture)
     Q_PROPERTY(bool relativePointer MEMBER relative)
+    Q_PROPERTY(QVariantMap pointerRegion MEMBER pointerRegion)
 public:
     using QQuickItem::QQuickItem;
     QObject* presentation = nullptr;
     bool ready = false, textInput = false, cursorHidden = false, capture = false, relative = false;
+    QVariantMap pointerRegion;
 signals:
     void readyChanged();
     void viewportChanged(QJsonObject state);
@@ -1028,6 +1038,11 @@ QtObject {
  function fullscreen(id) { fullscreenId=id }
  function setSecondState(state) { states={"device-a":"connected", "device-b":state} }
  property var sessions: [ {id:"device-a", name:"First desktop", state:"connected", selected:true, error:""}, {id:"device-b", name:"Second desktop", state:"connected", selected:false, error:""} ]
+ function setFirstError(message) {
+   states={"device-a":"error", "device-b":"connected"}
+   sessions=[{id:"device-a", name:"First desktop", state:"error", selected:true, error:message}, {id:"device-b", name:"Second desktop", state:"connected", selected:false, error:""}]
+ }
+ function restoreFirst() { states={"device-a":"connected", "device-b":"connected"} }
  function select(id) { selectedId=id }
  property int recalls: 0
  function recall() { recalls++; select(selectedId); return true }
@@ -1070,6 +1085,11 @@ QtObject {
             QCOMPARE(manager->property("selectedId").toString(), card == firstCard ? QString("device-a") : QString("device-b"));
         }
         auto firstPanel=first->findChild<QObject*>("devicePanel-device-a"); QVERIFY(firstPanel);
+        QVERIFY(QMetaObject::invokeMethod(manager.data(),"setFirstError",Q_ARG(QVariant,QString("Canvas fixture failed"))));
+        QTRY_COMPARE(firstPanel->property("sessionError").toString(),QString("Canvas fixture failed"));
+        auto failureLabel=firstPanel->findChild<QObject*>("panelSessionError"); QVERIFY(failureLabel);
+        QCOMPARE(failureLabel->property("text").toString(),QString("Canvas fixture failed"));
+        QVERIFY(QMetaObject::invokeMethod(manager.data(),"restoreFirst"));
         // A background card's actions must never affect the selected B session.
         QVERIFY(QMetaObject::invokeMethod(firstPanel,"reconnectRequested"));
         QCOMPARE(manager->property("reconnected").toString(),QString("device-a"));
@@ -1122,7 +1142,8 @@ QtObject {
         // Connection progress and confirmation replace content in this same root.
         const auto nativeRoot = window->winId();
         auto topBar = findVisual(window->contentItem(), "topBar", true); QVERIFY(topBar);
-        QObject retainedPresentation;
+        TestPresentation retainedPresentation;
+        retainedPresentation.backdrop = QStringLiteral("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==");
         manager->setProperty("presentation", QVariant::fromValue(&retainedPresentation));
         manager->setProperty("canvasVisible", true);
         QTRY_VERIFY(findVisual(window->contentItem(), "sessionCanvas", true));
@@ -1152,6 +1173,16 @@ QtObject {
         QVERIFY(retainedCanvas);
         retainedCanvas->setProperty("frameReady", true);
         QTRY_VERIFY(!findVisual(window->contentItem(), "canvasCancelConnection", true));
+        auto backdrop = findVisual(window->contentItem(), "canvasTransitionBackdrop");
+        QVERIFY(backdrop);
+        QVERIFY(!backdrop->isVisible());
+        manager->setProperty("canvas", QVariantMap{{"waiting",true}});
+        QTRY_VERIFY(backdrop->isVisible());
+        QTRY_VERIFY(findVisual(window->contentItem(), "canvasCancelConnection", true));
+        QVERIFY(backdrop->property("source").toUrl().toString().startsWith("data:image/png;base64,"));
+        QTRY_COMPARE(backdrop->property("status").toInt(), 1); // Image.Ready: the in-memory PNG decoded.
+        manager->setProperty("canvas", QVariantMap{});
+        QTRY_VERIFY(!backdrop->isVisible());
         manager->setProperty("canvasVisible", false);
         QTRY_VERIFY(!findVisual(window->contentItem(), "sessionCanvas", true));
         QVERIFY(retainedCanvas); // Hidden, not destroyed with its decoder.

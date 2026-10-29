@@ -1,13 +1,21 @@
 #include "sessionpresentation.h"
 #include <QThread>
+#include <QScreen>
+#include <QWindow>
+#include <QBuffer>
+#include <QImage>
 #include "streaming/video/queuedframesource.h"
 #include "streaming/video/ffmpeg.h"
 #include "streaming/video/videostatus.h"
 
 struct SessionPresentation::Impl {
     QPointer<QWindow> m_Canvas;
+    QPointer<QScreen> m_Screen;
     QJsonObject m_Config;
     QJsonObject m_Status;
+    QString m_Backdrop;
+    QImage m_BackdropImage;
+    bool m_BackdropEncoded = false;
     QSize m_SurfaceSize;
     SDL_Window* m_Probe = nullptr;
     Overlay::OverlayManager m_Overlays;
@@ -22,6 +30,16 @@ SessionPresentation::SessionPresentation(QObject* parent) : QObject(parent), m_I
 bool SessionPresentation::ready() const { return m_Impl->m_Ready; }
 bool SessionPresentation::active() const { return bool(m_Impl->m_Decoder); }
 bool SessionPresentation::hasFrames() const { return m_Impl->m_HasFrames; }
+QString SessionPresentation::backdrop() const {
+    if (!m_Impl->m_BackdropEncoded && !m_Impl->m_BackdropImage.isNull()) {
+        QByteArray bytes;
+        QBuffer buffer(&bytes);
+        if (buffer.open(QIODevice::WriteOnly) && m_Impl->m_BackdropImage.save(&buffer, "PNG"))
+            m_Impl->m_Backdrop = QStringLiteral("data:image/png;base64,") + QString::fromLatin1(bytes.toBase64());
+    }
+    m_Impl->m_BackdropEncoded = true;
+    return m_Impl->m_Backdrop;
+}
 void SessionPresentation::preedit(const QString& text) { m_Impl->m_Overlays.updateTextInput(text, 0, text.size()); }
 SessionPresentation::~SessionPresentation() { stop(); }
 void SessionPresentation::stop() {
@@ -44,7 +62,11 @@ bool SessionPresentation::configure(const QJsonObject& config) {
         width < 1 || width > 16384 || height < 1 || height > 16384 || fps < 1 || fps > 1000 ||
         !(format & (VIDEO_FORMAT_MASK_H264 | VIDEO_FORMAT_MASK_H265 | VIDEO_FORMAT_MASK_AV1))) return false;
     stop(); m_Impl->m_Config = config; m_Impl->m_Generation = quint64(generation); m_Impl->m_ResetAttempts = 0;
-    return !m_Impl->m_Canvas || m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1 || start();
+    if (m_Impl->m_Canvas && m_Impl->m_Canvas->width() > 0 && m_Impl->m_Canvas->height() > 0 && !start()) {
+        emit failed(tr("Unable to initialize the desktop canvas."));
+        return false;
+    }
+    return true;
 }
 void SessionPresentation::attach(QWindow* canvas) {
     if (m_Impl->m_Canvas == canvas) return;
@@ -58,7 +80,8 @@ void SessionPresentation::detach() { stop(); m_Impl->m_Canvas = nullptr; }
 void SessionPresentation::resized(bool force) {
     if (!m_Impl->m_Canvas || m_Impl->m_Config.isEmpty() ||
         m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1) return;
-    if (!force && active() && m_Impl->m_SurfaceSize == m_Impl->m_Canvas->size()) return;
+    if (!force && active() && m_Impl->m_SurfaceSize == m_Impl->m_Canvas->size() &&
+        m_Impl->m_Screen == m_Impl->m_Canvas->screen()) return;
     stop();
     if (!start()) emit failed(tr("Unable to resize the desktop canvas."));
 }
@@ -76,6 +99,7 @@ bool SessionPresentation::start() {
                               m_Impl->m_Canvas->width(), m_Impl->m_Canvas->height(), flags);
     if (!m_Impl->m_Probe) { stop(); return false; }
     m_Impl->m_SurfaceSize = m_Impl->m_Canvas->size();
+    m_Impl->m_Screen = m_Impl->m_Canvas->screen();
     const auto generation = ++m_Impl->m_PresentationGeneration;
     m_Impl->m_Source = std::make_unique<QueuedVideoSource>(m_Impl->m_Generation, [this, generation] {
         QMetaObject::invokeMethod(this, [this, generation] {
@@ -87,9 +111,13 @@ bool SessionPresentation::start() {
     params.width = m_Impl->m_Config.value("width").toInt(); params.height = m_Impl->m_Config.value("height").toInt();
     params.frameRate = m_Impl->m_Config.value("fps").toInt(); params.videoFormat = m_Impl->m_Config.value("format").toInt();
     params.enableVsync = m_Impl->m_Config.value("vsync").toBool();
-    // The visible renderer's swapchain paces presentation. A hidden SDL
-    // surface must never be used as the Wayland frame callback source.
-    params.enableFramePacing = false;
+    if (m_Impl->m_Canvas->screen() && m_Impl->m_Canvas->screen()->refreshRate() > 0 &&
+        m_Impl->m_Canvas->screen()->refreshRate() + 5 < params.frameRate) {
+        params.enableVsync = false;
+    }
+    // The pacer uses the visible canvas and its monotonic clock; it must not
+    // request Wayland frame callbacks from the hidden SDL capability probe.
+    params.enableFramePacing = params.enableVsync && m_Impl->m_Config.value("pacing").toBool();
     params.vds = StreamingPreferences::VideoDecoderSelection(m_Impl->m_Config.value("decoder").toInt());
     params.presentationCallbacks.frameReady = [this, generation] {
         QMetaObject::invokeMethod(this, [this, generation] {
@@ -98,6 +126,16 @@ bool SessionPresentation::start() {
     };
     params.presentationCallbacks.firstFrame = [this, generation] {
         QMetaObject::invokeMethod(this, [this, generation] { readyFrame(generation); }, Qt::QueuedConnection);
+    };
+    params.presentationCallbacks.snapshotReady = [this, generation](QImage image) {
+        // The picture stays in this session's memory and is never sent to the
+        // network worker. It is encoded only when the canvas shows it.
+        QMetaObject::invokeMethod(this, [this, generation, image = std::move(image)] {
+            if (generation != m_Impl->m_PresentationGeneration) return;
+            m_Impl->m_BackdropImage = image;
+            m_Impl->m_Backdrop.clear(); m_Impl->m_BackdropEncoded = false;
+            emit backdropChanged();
+        }, Qt::QueuedConnection);
     };
     params.presentationCallbacks.resetRequired = [this, generation] {
         QMetaObject::invokeMethod(this, [this, generation] {

@@ -24,7 +24,7 @@ else:
     sdl = root / 'libs/mac/Frameworks'
     extra = f'QMAKE_CXXFLAGS += -F"{sdl}"\nINCLUDEPATH += "{sdl}/SDL2.framework/Headers"\nLIBS += -F"{sdl}" -framework SDL2 -framework Cocoa -framework ApplicationServices\nQMAKE_RPATHDIR += "{sdl}"\n'
 (work / 'test.pro').write_text('\n'.join([
-    'QT += core gui quick testlib', 'CONFIG += console c++17 testcase link_pkgconfig',
+    'QT += core gui gui-private quick testlib', 'CONFIG += console c++17 testcase link_pkgconfig',
     'CONFIG -= app_bundle', 'QMAKE_CXXFLAGS += -UNDEBUG', 'TARGET = canvas-focus-test',
     f'INCLUDEPATH += "{root}/app"',
     'SOURCES += ' + ' '.join(f'"{root / s}"' for s in sources),

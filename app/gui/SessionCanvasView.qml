@@ -6,10 +6,28 @@ Rectangle {
     id: canvasPage
     readonly property var question: sessionManager.canvas.question || ({})
     readonly property bool asking: question.id !== undefined
+    // Only a shown backdrop reads the picture, which encodes it on demand.
+    readonly property bool showBackdrop: !asking && (!sessionCanvas.frameReady || sessionManager.canvas.waiting === true)
     color: "#101216"
+    Image {
+        objectName: "canvasTransitionBackdrop"
+        anchors.fill: parent
+        source: canvasPage.showBackdrop && sessionManager.presentation && sessionManager.presentation.backdrop !== undefined
+                ? sessionManager.presentation.backdrop : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: false
+        visible: canvasPage.showBackdrop
+    }
+    Rectangle {
+        anchors.fill: parent
+        color: "#5a101216"
+        visible: canvasPage.showBackdrop
+    }
     SessionCanvas {
         id: sessionCanvas
         objectName: "sessionCanvas"
+        property bool transitionWaiting: sessionManager.canvas.waiting === true
         anchors.fill: parent
         visible: !canvasPage.asking
         presentation: sessionManager.presentation
@@ -17,13 +35,14 @@ Rectangle {
         cursorHidden: sessionManager.canvas.cursorHidden === true
         captureRequested: sessionManager.canvas.grab === true
         relativePointer: sessionManager.canvas.relative === true
+        pointerRegion: sessionManager.canvas.pointerRegion || ({})
         onViewportChanged: function(state) { sessionManager.updateCanvas(state) }
         onInput: function(event) { sessionManager.canvasInput(event) }
     }
     Column {
         anchors.centerIn: parent
         spacing: 16
-        visible: !canvasPage.asking && (!sessionCanvas.frameReady || sessionManager.canvas.waiting === true)
+        visible: canvasPage.showBackdrop
         BusyIndicator { anchors.horizontalCenter: parent.horizontalCenter; running: parent.visible }
         Label {
             anchors.horizontalCenter: parent.horizontalCenter

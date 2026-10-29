@@ -1,5 +1,8 @@
+#include <QScreen>
+#include <QWindow>
 #include "../../../resizetrace.h"
 #include "pacer.h"
+#include "pacingclock.h"
 #include "streaming/streamutils.h"
 #include "streaming/streamsnapshot.h"
 
@@ -20,6 +23,7 @@ extern "C" {
 #endif
 
 #include <SDL_syswm.h>
+#include <chrono>
 
 // Limit the number of queued frames to prevent excessive memory consumption
 // if the V-Sync source or renderer is blocked for a while. It's important
@@ -119,6 +123,26 @@ int Pacer::vsyncThread(void *context)
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 #endif
 
+    if (me->m_ClockPacing) {
+        // The visible Qt canvas owns presentation. A frame callback from the
+        // hidden SDL proxy can never be relied on (notably on Wayland). Pace
+        // with a monotonic clock; the visible swapchain still controls V-sync.
+        using Clock = PacingClock::Clock;
+        PacingClock clock(me->m_DisplayFps, Clock::now());
+        while (!me->m_Stopping) {
+            me->m_FrameQueueLock.lock();
+            while (!me->m_Stopping && Clock::now() < clock.deadline()) {
+                const auto remaining = clock.deadline() - Clock::now();
+                const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(remaining + std::chrono::microseconds(999)).count();
+                me->m_VsyncSignalled.wait(&me->m_FrameQueueLock, static_cast<unsigned long>(SDL_max(1LL, ms)));
+            }
+            me->m_FrameQueueLock.unlock();
+            if (me->m_Stopping) break;
+            me->handleVsync(1000 / me->m_DisplayFps);
+            clock.advance(Clock::now());
+        }
+        return 0;
+    }
     bool async = me->m_VsyncSource->isAsync();
     while (!me->m_Stopping) {
         if (async) {
@@ -270,13 +294,20 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
     enqueueFrameForRenderingAndUnlock(m_PacingQueue.dequeue());
 }
 
-bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
+bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing, QWindow* presentationWindow)
 {
     m_MaxVideoFps = maxVideoFps;
-    m_DisplayFps = StreamUtils::getDisplayRefreshRate(window);
+    const auto screen = presentationWindow ? presentationWindow->screen() : nullptr;
+    const auto refresh = screen ? screen->refreshRate() : 0;
+    m_DisplayFps = refresh >= 20 && refresh <= 1000 ? qRound(refresh) : StreamUtils::getDisplayRefreshRate(window);
     m_RendererAttributes = m_VsyncRenderer->getRendererAttributes();
 
-    if (enablePacing) {
+    if (enablePacing && presentationWindow) {
+        m_ClockPacing = true;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Canvas frame pacing: monotonic %d Hz with %d FPS stream", m_DisplayFps, m_MaxVideoFps);
+    }
+    else if (enablePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Frame pacing: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
@@ -328,8 +359,12 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     m_DisplayFps, m_MaxVideoFps);
     }
 
-    if (m_VsyncSource != nullptr) {
+    if (m_VsyncSource != nullptr || m_ClockPacing) {
         m_VsyncThread = SDL_CreateThread(Pacer::vsyncThread, "PacerVsync", this);
+        if (!m_VsyncThread) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to start pacing thread: %s", SDL_GetError());
+            return false;
+        }
     }
 
     if (m_VsyncRenderer->isRenderThreadSupported()) {
@@ -393,13 +428,18 @@ void Pacer::captureSnapshot(AVFrame* frame, bool report)
     if (m_SnapshotWorker.joinable()) m_SnapshotWorker.join();
     AVFrame* copy = av_frame_clone(frame);
     if (!copy) return;
-    StreamSnapshot::captured(SDL_GetTicks());
+    if (m_Callbacks.snapshotReady) m_LastPresentationSnapshot = SDL_GetTicks();
+    else StreamSnapshot::captured(SDL_GetTicks());
     m_SnapshotBusy = true;
     // Periodic captures stay silent after the first one of a stream.
     report = report || !m_SnapshotReported;
     m_SnapshotReported = true;
     m_SnapshotWorker = std::thread([this, copy, report]() mutable {
-        StreamSnapshot::store(snapshotImage(copy, report));
+        QImage image = snapshotImage(copy, report);
+        if (m_Callbacks.snapshotReady) {
+            if (!image.isNull()) StreamSnapshot::blur(image);
+            m_Callbacks.snapshotReady(std::move(image));
+        } else StreamSnapshot::store(std::move(image));
         av_frame_free(&copy);
         m_SnapshotBusy = false;
     });
@@ -412,7 +452,14 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
 
     bool snapshotRequested = false;
-    if (!m_Callbacks.firstFrame && !m_SnapshotBusy && StreamSnapshot::due(beforeRender, &snapshotRequested)) captureSnapshot(frame, snapshotRequested);
+    if (!m_SnapshotBusy) {
+        if (m_Callbacks.snapshotReady) {
+            if (!m_LastPresentationSnapshot || Uint32(beforeRender - m_LastPresentationSnapshot) >= StreamSnapshot::IntervalMs)
+                captureSnapshot(frame, false);
+        } else if (!m_Callbacks.firstFrame && StreamSnapshot::due(beforeRender, &snapshotRequested)) {
+            captureSnapshot(frame, snapshotRequested);
+        }
+    }
 
     // Render it
     const int submittedWidth = frame->width, submittedHeight = frame->height;
@@ -488,7 +535,7 @@ void Pacer::submitFrame(AVFrame* frame)
 
     // Queue the frame and possibly wake up the render thread
     m_FrameQueueLock.lock();
-    if (m_VsyncSource != nullptr) {
+    if (m_VsyncSource != nullptr || m_ClockPacing) {
         dropFrameForEnqueue(m_PacingQueue);
         m_PacingQueue.enqueue(frame);
         m_FrameQueueLock.unlock();

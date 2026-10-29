@@ -19,6 +19,7 @@ NavigableDialog {
     property bool unknown: false
     property bool activeSession: false
     property string sessionState: ""
+    property string sessionError: ""
     readonly property string sessionStatus: sessionState === "starting" ? qsTranslate("main", "Connecting…")
         : sessionState === "stopping" ? qsTranslate("main", "Disconnecting…")
         : sessionState === "error" ? qsTranslate("main", "Failed") : ""
@@ -94,6 +95,13 @@ NavigableDialog {
             width: scroller.availableWidth - 32
             x: 16
             spacing: 16
+            Label {
+                objectName: "panelSessionError"
+                visible: panel.sessionState === "error" && panel.sessionError.length > 0
+                Layout.fillWidth: true
+                text: panel.sessionError; textFormat: Text.PlainText
+                color: ui.text; wrapMode: Text.Wrap
+            }
             UiGroup {
                 footnote: !panel.online && !panel.unknown && !panel.activeSession
                           ? qsTr("Make sure DeskPort or the host is running on %1 and that both devices can reach each other. Refresh in the top bar checks again.").arg(panel.deviceName) : ""

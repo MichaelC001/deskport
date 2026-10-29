@@ -2231,6 +2231,8 @@ void Session::execInternal()
     m_Window = m_TransitionWindow->takeWindow();
     m_TransitionWindow.reset();
 
+    if (CanvasBridge::owns(m_Window)) CanvasBridge::waiting(false);
+
     m_InputHandler->setWindow(m_Window);
 
     // This must be called before entering full-screen mode on Windows
@@ -2404,6 +2406,10 @@ void Session::execInternal()
         }
 #endif
         CanvasBridge::decodeTextEvent(event);
+        if (CanvasBridge::isTouchCancel(event)) {
+            m_InputHandler->releaseRemoteInput();
+            continue;
+        }
         // Background viewers keep media/transport alive but cannot forward
         // physical input, including globally delivered controller events.
         if (!m_ViewerRequested && ((event.type >= SDL_KEYDOWN && event.type <= SDL_MOUSEWHEEL) ||
@@ -2704,7 +2710,7 @@ void Session::execInternal()
                 // than the display.
                 int displayHz = StreamUtils::getDisplayRefreshRate(m_Window);
                 bool enableVsync = m_Preferences->enableVsync;
-                if (displayHz + 5 < m_StreamConfig.fps) {
+                if (!CanvasBridge::enabled() && displayHz + 5 < m_StreamConfig.fps) {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "Disabling V-sync because refresh rate limit exceeded");
                     enableVsync = false;

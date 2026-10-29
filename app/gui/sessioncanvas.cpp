@@ -12,7 +12,11 @@
 #include <QMouseEvent>
 #include <QHoverEvent>
 #include <QWheelEvent>
+#include <QTouchEvent>
+#include <QPointingDevice>
 #include <SDL.h>
+#include <algorithm>
+#include <utility>
 
 namespace {
 SDL_Keycode symbol(int key) {
@@ -48,6 +52,7 @@ int button(Qt::MouseButton value) {
 }
 SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibitor(this) {
     setAcceptedMouseButtons(Qt::AllButtons); setAcceptHoverEvents(true);
+    setAcceptTouchEvents(true);
     setActiveFocusOnTab(true);
     setFlag(ItemAcceptsInputMethod, m_TextInput);
     m_Pointer = createCanvasPointer([this](qreal dx, qreal dy) {
@@ -59,6 +64,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
                                        {"dx",delta.x()},{"dy",delta.y()}});
     });
     connect(this, &SessionCanvas::relativePointerChanged, this, &SessionCanvas::refresh);
+    connect(this, &SessionCanvas::pointerRegionChanged, this, &SessionCanvas::refresh);
     connect(this, &SessionCanvas::textInputChanged, this, [this] {
         setFlag(ItemAcceptsInputMethod, m_TextInput);
         QGuiApplication::inputMethod()->update(Qt::ImEnabled);
@@ -84,6 +90,9 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
             connect(window, &QWindow::windowStateChanged, this, &SessionCanvas::refresh, Qt::UniqueConnection);
 #endif
             m_Surface = new QWindow(window);
+            connect(m_Surface, &QWindow::screenChanged, this, [this] {
+                if (isVisible()) m_ResizeTimer.start();
+            });
             m_Surface->setFlags(Qt::FramelessWindowHint);
 #ifdef Q_OS_LINUX
             m_Surface->setSurfaceType(QSurface::VulkanSurface);
@@ -161,6 +170,7 @@ bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
         m_LocalWindowDrag = m_RootWindow->property("deskportLocalWindowDrag").toBool();
         if (m_LocalWindowDrag) {
             m_Buttons = 0;
+            m_Touches.clear(); m_PendingTouches.clear();
             m_RelativeRemainder = {};
             if (m_Pointer) m_Pointer->releaseForWindowMove();
             if (m_Presentation) m_Presentation->preedit({});
@@ -186,6 +196,10 @@ bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
     case QEvent::MouseButtonRelease: mouseReleaseEvent(static_cast<QMouseEvent*>(event)); return true;
     case QEvent::MouseMove: mouseMoveEvent(static_cast<QMouseEvent*>(event)); return true;
     case QEvent::Wheel: wheelEvent(static_cast<QWheelEvent*>(event)); return true;
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    case QEvent::TouchCancel: touchEvent(static_cast<QTouchEvent*>(event)); return event->isAccepted();
     case QEvent::Enter: m_Hovered = true; refresh(); break;
     case QEvent::Leave: m_Hovered = false; refresh(); break;
     case QEvent::FocusIn: forceActiveFocus(); refresh(); break;
@@ -211,7 +225,8 @@ void SessionCanvas::refresh() {
             m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), size));
             if (resized && m_Presentation) m_ResizeTimer.start();
         }
-        m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames());
+        m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames() &&
+                              !property("transitionWaiting").toBool());
         const auto localCursor = window()->property("deskportLocalWindowCursor");
         m_Surface->setCursor(m_LocalWindowDrag && localCursor.isValid()
             ? Qt::CursorShape(localCursor.toInt())
@@ -220,7 +235,13 @@ void SessionCanvas::refresh() {
     const bool focused = !m_LocalWindowDrag && visible && m_Presentation && m_Presentation->ready() &&
         ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
-    if (m_Pointer) m_Pointer->update(m_Surface, focused && m_RelativePointer && m_Hovered);
+    if (m_Pointer) {
+        const QRect region(m_PointerRegion.value("x").toInt(), m_PointerRegion.value("y").toInt(),
+                           m_PointerRegion.value("width").toInt(), m_PointerRegion.value("height").toInt());
+        if (focused && m_Hovered && m_RelativePointer) m_Pointer->update(m_Surface, true);
+        else if (focused && m_Hovered && region.isValid()) m_Pointer->confine(m_Surface, region, true);
+        else m_Pointer->update(nullptr, false);
+    }
     m_Inhibitor.setEnabled(capture);
     if (!capture && m_Grabbed) { m_Surface->setKeyboardGrabEnabled(false); m_Grabbed = false; }
 #ifndef Q_OS_WIN
@@ -232,6 +253,7 @@ void SessionCanvas::refresh() {
         {"visible",visible},{"focused",focused},{"hovered",m_Hovered},{"fullscreen",window()->windowState() == Qt::WindowFullScreen},
         {"grabbed",m_Inhibitor.isInhibited() || m_Grabbed},{"x",m_Mouse.x()},{"y",m_Mouse.y()},{"buttons",m_Buttons}};
     if (state != m_LastState) { m_LastState = state; emit viewportChanged(state); }
+    flushPendingTouches();
 }
 void SessionCanvas::key(QKeyEvent* event, bool down) {
     if (m_LocalWindowDrag) { event->accept(); return; }
@@ -282,4 +304,59 @@ void SessionCanvas::wheelEvent(QWheelEvent* event) {
     if (m_LocalWindowDrag) { event->accept(); return; }
     emit input({{"type","wheel"},{"x",event->angleDelta().x()/120.0},{"y",event->angleDelta().y()/120.0}}); event->accept();
 }
-void SessionCanvas::focusOutEvent(QFocusEvent* event) { QQuickItem::focusOutEvent(event); refresh(); }
+void SessionCanvas::touchEvent(QTouchEvent* event) {
+    if (!event->pointingDevice() || event->pointingDevice()->type() != QInputDevice::DeviceType::TouchScreen) { event->ignore(); return; }
+    if (m_LocalWindowDrag || width() <= 0 || height() <= 0) { m_Touches.clear(); m_PendingTouches.clear(); event->accept(); return; }
+    if (event->type() == QEvent::TouchCancel) {
+        if (!m_Touches.isEmpty()) emit input({{"type", "touch-cancel"}});
+        m_Touches.clear(); m_PendingTouches.clear(); event->accept(); return;
+    }
+    if (event->type() == QEvent::TouchBegin) {
+        forceActiveFocus(); if (m_Surface) m_Surface->requestActivate();
+        m_Hovered = true; refresh();
+    }
+    for (const auto& point : event->points()) {
+        const auto state = point.state();
+        if (state == QEventPoint::State::Stationary) continue;
+        const QPointF current(qBound(0.0, point.position().x() / width(), 1.0),
+                              qBound(0.0, point.position().y() / height(), 1.0));
+        QString phase;
+        if (state == QEventPoint::State::Pressed) phase = "down";
+        else if (state == QEventPoint::State::Updated) phase = "move";
+        else if (state == QEventPoint::State::Released) phase = "up";
+        else continue;
+        // Platform touch IDs can be ever-increasing sequence numbers. Send a
+        // small slot that stays stable for the lifetime of each contact.
+        auto touch = m_Touches.find(point.id());
+        if (phase == "down") {
+            if (touch != m_Touches.end()) continue;
+            int slot = 0;
+            while (std::any_of(m_Touches.cbegin(), m_Touches.cend(), [slot](const Touch& t) { return t.slot == slot; })) slot++;
+            if (slot >= MaxTouches) continue;
+            touch = m_Touches.insert(point.id(), {slot, current});
+        } else if (touch == m_Touches.end()) continue;
+        const auto previous = touch->position;
+        touchInput({{"type", "touch"}, {"phase", phase}, {"id", touch->slot},
+                    {"x", current.x()}, {"y", current.y()}, {"dx", current.x() - previous.x()},
+                    {"dy", current.y() - previous.y()}, {"pressure", qBound(0.0, double(point.pressure()), 1.0)}});
+        if (phase == "up") m_Touches.erase(touch); else touch->position = current;
+    }
+    event->accept();
+}
+void SessionCanvas::touchInput(const QJsonObject& event) {
+    // The first contact on an inactive window arrives before activation. The
+    // worker ignores unfocused input, so hold the gesture briefly instead of
+    // losing its down event and with it every following move and release.
+    if (m_LastState.value("focused").toBool() && m_PendingTouches.isEmpty()) { emit input(event); return; }
+    if (m_PendingTouches.isEmpty()) m_PendingTouchAge.start();
+    if (m_PendingTouches.size() < MaxPendingTouches) m_PendingTouches.append(event);
+    flushPendingTouches();
+}
+void SessionCanvas::flushPendingTouches() {
+    if (m_PendingTouches.isEmpty()) return;
+    if (m_PendingTouchAge.elapsed() > PendingTouchMs) { m_PendingTouches.clear(); return; }
+    if (!m_LastState.value("focused").toBool()) return;
+    const auto pending = std::exchange(m_PendingTouches, {});
+    for (const auto& event : pending) emit input(event);
+}
+void SessionCanvas::focusOutEvent(QFocusEvent* event) { m_Touches.clear(); m_PendingTouches.clear(); QQuickItem::focusOutEvent(event); refresh(); }

@@ -1,3 +1,27 @@
+## Retained canvas recovery and input follow-up — 2026-10-29
+
+The retained canvas keeps a per-session, in-memory blurred recent frame behind
+automatic reconnect and display-resize progress. SDR capture runs on the existing
+snapshot worker; unavailable frames and HDR fall back to a plain background.
+The visible video surface is hidden while that transition is shown, and returning
+to Devices retains the session's own image without mixing it with other sessions.
+
+An input queue overflow releases held input, discards its backlog and resumes
+only after that release boundary. Touchscreen points and cancellation now reach
+the existing direct-touch or trackpad adapters, and absolute pointer confinement
+targets the visible canvas. Presentation failures survive worker shutdown and
+are shown in device details. Canvas frame pacing uses a monotonic worker clock
+instead of the hidden SDL Wayland surface; screen changes refresh the visible
+screen's rate. Stream statistics distinguish frame gaps before local transport
+from local-queue drops. A pre-transport gap is not proof of physical packet loss,
+and the reported decoding time does not include local IPC waiting.
+
+On Linux, isolated encoded-video, input-bridge, canvas focus/touch, worker
+lifecycle, UI page and desktop-state regressions pass. These fixtures do not
+establish physical touch, pointer confinement, display timing, HDR capture or
+live-host streaming acceptance. macOS and Windows behavior require their native
+builds and checks; no installed application or service is changed by this work.
+
 ## Explicit macOS window gestures — 2026-10-28
 
 With the stream title bar hidden, Control+Command reserves local window control:

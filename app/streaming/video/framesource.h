@@ -16,6 +16,9 @@ public:
     virtual bool hdrMetadata(PSS_HDR_METADATA metadata) = 0;
     virtual bool hdrActive() = 0;
     virtual bool rtt(uint32_t* latency, uint32_t* variance) = 0;
+    // Classify a gap at this decoder input. Direct Moonlight input has no
+    // intervening application transport; queued sources override this.
+    virtual uint32_t networkFramesLost(uint32_t gap) { return gap; }
 };
 
 // Compatibility adapter for the single-session command-line worker.

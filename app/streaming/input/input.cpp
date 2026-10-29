@@ -298,6 +298,19 @@ void SdlInputHandler::raiseAllKeys()
 
 void SdlInputHandler::releaseRemoteInput(bool cancelText)
 {
+    if (CanvasBridge::owns(m_Window)) {
+        if (!m_CanvasFingers.isEmpty() && m_AbsoluteTouchMode && (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS))
+            LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL_ALL, 0, 0, 0, 0, 0, 0, LI_ROT_UNKNOWN);
+        if (!m_CanvasFingers.isEmpty() || m_DragButton || m_LongPressTimer || m_LeftButtonReleaseTimer || m_RightButtonReleaseTimer) {
+            SDL_RemoveTimer(m_LongPressTimer); SDL_RemoveTimer(m_DragTimer);
+            SDL_RemoveTimer(m_LeftButtonReleaseTimer); SDL_RemoveTimer(m_RightButtonReleaseTimer);
+            m_LongPressTimer = m_DragTimer = m_LeftButtonReleaseTimer = m_RightButtonReleaseTimer = 0;
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+        }
+        m_CanvasFingers.clear(); m_NumFingersDown = 0; m_DragButton = 0;
+        SDL_zero(m_TouchDownEvent); SDL_zero(m_LastTouchDownEvent); SDL_zero(m_LastTouchUpEvent);
+    }
     if (cancelText) m_LocalTextInput.setActive(false);
     raiseAllKeys();
     for (int button : m_ButtonsDown) LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, button);
@@ -452,6 +465,7 @@ void SdlInputHandler::setCaptureActive(bool active)
     if (CanvasBridge::owns(m_Window)) {
         m_FakeCaptureActive = active;
         if (!active) releaseRemoteInput();
+        updatePointerRegionLock();
         notifyPointerPosition();
         return;
     }
@@ -510,6 +524,18 @@ void SdlInputHandler::setCaptureActive(bool active)
 
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
+    if (event->touchId == CanvasBridge::SyntheticTouchId) {
+        if (!m_RemoteInputEnabled) return;
+        if (event->type == SDL_FINGERDOWN) {
+            if (m_CanvasFingers.contains(event->fingerId) || m_CanvasFingers.size() >= MAX_FINGERS) return;
+            m_CanvasFingers.insert(event->fingerId);
+        } else if (!m_CanvasFingers.contains(event->fingerId)) return;
+        if (event->type == SDL_FINGERUP) m_CanvasFingers.remove(event->fingerId);
+        m_NumFingersDown = m_CanvasFingers.size();
+        if (m_AbsoluteTouchMode) handleAbsoluteFingerEvent(event);
+        else handleRelativeFingerEvent(event);
+        return;
+    }
 #if SDL_VERSION_ATLEAST(2, 0, 10)
     if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
         // Ignore anything that isn't a touchscreen. We may get callbacks

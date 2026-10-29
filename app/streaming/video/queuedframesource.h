@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <algorithm>
 
 // One source per stream generation, one decode consumer. Backpressure discards
 // the whole dependent chain and waits for an IDR instead of decoding corrupt
@@ -103,16 +104,27 @@ public:
         std::lock_guard<std::mutex> lock(m_Mutex);
         *latency = m_Rtt; *variance = m_Variance; return m_Rtt != 0;
     }
+    uint32_t networkFramesLost(uint32_t gap) override {
+        if (!m_SeenLoss || m_CurrentLoss < m_PreviousLoss) { m_PreviousLoss = m_CurrentLoss; m_SeenLoss = true; }
+        // Consume only what this gap explains; loss reported ahead of a
+        // reordered or duplicate frame stays available for the next gap.
+        const auto lost = std::min<quint64>(gap, m_CurrentLoss - m_PreviousLoss);
+        m_PreviousLoss += lost;
+        return uint32_t(lost);
+    }
 private:
     bool take(VIDEO_FRAME_HANDLE* handle, PDECODE_UNIT* unit) {
         if (m_Frames.empty()) return false;
         auto frame = m_Frames.front().release(); m_Frames.pop_front();
+        m_CurrentLoss = frame->networkFramesLost;
         m_Bytes -= frame->unit.fullLength;
         *handle = frame; *unit = &frame->unit;
         return true;
     }
     static constexpr int MaxQueuedBytes = 64 * 1024 * 1024;
     const quint64 m_Generation;
+    quint64 m_CurrentLoss = 0, m_PreviousLoss = 0;
+    bool m_SeenLoss = false;
     const std::function<void()> m_RequestIdr;
     std::mutex m_Mutex;
     std::condition_variable m_Ready;

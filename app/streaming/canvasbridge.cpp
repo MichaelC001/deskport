@@ -14,10 +14,12 @@ QQueue<QJsonObject> pendingInput;
 constexpr int MaxWidth = 16384, MaxHeight = 16384;
 bool previousFocus = false, previousHover = false;
 bool releasePending = false;
+bool overflowPaused = false;
 quint64 questionId = 0;
 int questionAnswer = -1;
 constexpr const char* CanvasTag = "deskport-shell-canvas";
 constexpr int CanvasTextCode = 0x44505458;
+constexpr int CanvasTouchCancelCode = 0x44505443;
 constexpr size_t TextPayloadSize = sizeof(SDL_UserEvent::data1) + sizeof(SDL_UserEvent::data2);
 static_assert(TextPayloadSize >= 5 && TextPayloadSize <= SDL_TEXTINPUTEVENT_TEXT_SIZE);
 int bounded(const QJsonObject& object, const char* key, int maximum) {
@@ -91,17 +93,17 @@ Uint32 CanvasBridge::mouseState(int* x, int* y) {
 }
 void CanvasBridge::inputEnabled(bool enabled) {
     acceptsInput = enabled;
-    if (!enabled) { QMutexLocker lock(&stateMutex); pendingInput.clear(); releasePending = true; details["grab"] = false; }
+    if (!enabled) { QMutexLocker lock(&stateMutex); pendingInput.clear(); overflowPaused = false; releasePending = true; details["grab"] = false; }
 }
 void CanvasBridge::input(const QJsonObject& event) {
     if (!enabled() || !wanted || !acceptsInput) return;
     QMutexLocker lock(&stateMutex);
-    if (!viewport["visible"].toBool() || !viewport["focused"].toBool()) return;
+    if (overflowPaused || !viewport["visible"].toBool() || !viewport["focused"].toBool()) return;
     if (pendingInput.size() >= 256) {
         // Never replay a backlog after the user has released control.
-        pendingInput.clear(); acceptsInput = false;
+        pendingInput.clear(); overflowPaused = true;
         releasePending = true;
-        viewport["focused"] = false; details["grab"] = false;
+        details["grab"] = false;
         return;
     }
     pendingInput.enqueue(event);
@@ -117,10 +119,13 @@ bool CanvasBridge::decodeTextEvent(SDL_Event& event) {
     event = text;
     return true;
 }
+bool CanvasBridge::isTouchCancel(const SDL_Event& event) {
+    return event.type == SDL_USEREVENT && event.user.code == CanvasTouchCancelCode;
+}
 void CanvasBridge::synchronize(SDL_Window* window) {
     if (!owns(window)) return;
     QJsonObject state; QQueue<QJsonObject> input; bool release;
-    { QMutexLocker lock(&stateMutex); state = viewport; input.swap(pendingInput); release = releasePending; releasePending = false; }
+    { QMutexLocker lock(&stateMutex); state = viewport; input.swap(pendingInput); release = releasePending; releasePending = false; overflowPaused = false; }
     const int width = state["width"].toInt(1120), height = state["height"].toInt(704);
     int currentWidth, currentHeight; SDL_GetWindowSize(window, &currentWidth, &currentHeight);
     if (width != currentWidth || height != currentHeight) SDL_SetWindowSize(window, width, height);
@@ -163,6 +168,27 @@ void CanvasBridge::synchronize(SDL_Window* window) {
                 event.button.state = value["down"].toBool() ? SDL_PRESSED : SDL_RELEASED;
                 event.button.x = x; event.button.y = y;
             }
+        } else if (type == "touch") {
+            const int finger = bounded(value, "id", 65535);
+            const auto x = value.value("x").toDouble(-1), y = value.value("y").toDouble(-1);
+            const auto dx = value.value("dx").toDouble(), dy = value.value("dy").toDouble();
+            const auto pressure = value.value("pressure").toDouble(1);
+            const auto phase = value.value("phase").toString();
+            if (finger < 0 || !std::isfinite(x) || !std::isfinite(y) || !std::isfinite(dx) || !std::isfinite(dy) ||
+                !std::isfinite(pressure) || x < 0 || x > 1 || y < 0 || y > 1 ||
+                dx < -1 || dx > 1 || dy < -1 || dy > 1 || pressure < 0 || pressure > 1) continue;
+            if (phase == "down") event.type = SDL_FINGERDOWN;
+            else if (phase == "move") event.type = SDL_FINGERMOTION;
+            else if (phase == "up") event.type = SDL_FINGERUP;
+            else continue;
+            event.tfinger.touchId = SyntheticTouchId; event.tfinger.fingerId = finger + 1;
+            event.tfinger.timestamp = SDL_GetTicks();
+            event.tfinger.x = float(x); event.tfinger.y = float(y);
+            event.tfinger.dx = float(dx); event.tfinger.dy = float(dy); event.tfinger.pressure = float(pressure);
+            event.tfinger.windowID = SDL_GetWindowID(window);
+        } else if (type == "touch-cancel") {
+            event.type = SDL_USEREVENT; event.user.code = CanvasTouchCancelCode;
+            event.user.windowID = SDL_GetWindowID(window);
         } else if (type == "text") {
             const auto text = value["text"].toString();
             if (text.size() > 4096) continue;
@@ -196,6 +222,10 @@ void CanvasBridge::capture(bool grab, bool hidden, bool relative) {
     QMutexLocker lock(&stateMutex); details["grab"] = grab; details["cursorHidden"] = hidden;
     details["relative"] = relative;
 }
+void CanvasBridge::pointerRegion(bool enabled, int x, int y, int width, int height) {
+    QMutexLocker lock(&stateMutex);
+    details["pointerRegion"] = enabled ? QJsonObject{{"x", x}, {"y", y}, {"width", width}, {"height", height}} : QJsonObject{};
+}
 void CanvasBridge::overlay(int type, bool enabled, const QString& text) {
     QMutexLocker lock(&stateMutex);
     auto overlays = details["overlays"].toObject();
@@ -204,6 +234,7 @@ void CanvasBridge::overlay(int type, bool enabled, const QString& text) {
 }
 void CanvasBridge::textInput(bool enabled) { QMutexLocker lock(&stateMutex); details["textInput"] = enabled; }
 void CanvasBridge::label(const QString& text) { QMutexLocker lock(&stateMutex); details["label"] = text; }
+void CanvasBridge::waiting(bool value) { QMutexLocker lock(&stateMutex); details["waiting"] = value; }
 QJsonObject CanvasBridge::description() {
     QJsonObject result;
     { QMutexLocker lock(&stateMutex); result = details; }

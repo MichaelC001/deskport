@@ -23,7 +23,23 @@ public:
     }
     ~WaylandPointer() override { stop(); }
     void update(QWindow* window, bool enabled) override {
-        if (!enabled || m_Window != window) stop();
+        if (!enabled || m_Window != window || m_ConfineMode) stop();
+        begin(window, enabled);
+    }
+    void confine(QWindow* window, const QRect& region, bool enabled) override {
+        if (!enabled || m_Window != window || (m_Window && !m_ConfineMode)) stop();
+        const bool changed = m_Region != region;
+        m_ConfineMode = true; m_Region = region;
+        begin(window, enabled);
+        if (changed && m_Confined && m_Compositor) {
+            auto* nativeRegion = makeRegion();
+            zwp_confined_pointer_v1_set_region(m_Confined, nativeRegion);
+            wl_region_destroy(nativeRegion);
+            wl_display_flush(m_Display);
+        }
+    }
+private:
+    void begin(QWindow* window, bool enabled) {
         if (!enabled || !window || !window->handle() || m_Window) return;
 #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 #if QT_CONFIG(wayland)
@@ -49,7 +65,6 @@ public:
         m_Window = window; window->installEventFilter(this);
         m_Dispatch.start(); wl_display_flush(m_Display);
     }
-private:
     bool eventFilter(QObject*, QEvent* event) override {
         if (event->type() == QEvent::FocusOut || event->type() == QEvent::Hide ||
             (event->type() == QEvent::PlatformSurface && static_cast<QPlatformSurfaceEvent*>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed)) stop();
@@ -60,19 +75,41 @@ private:
         ++m_Generation; m_Dispatch.stop();
         if (m_Window) m_Window->removeEventFilter(this);
         if (m_Lock) zwp_locked_pointer_v1_destroy(m_Lock);
+        if (m_Confined) zwp_confined_pointer_v1_destroy(m_Confined);
         if (m_Relative) zwp_relative_pointer_v1_destroy(m_Relative);
         if (m_Constraints) zwp_pointer_constraints_v1_destroy(m_Constraints);
         if (m_Manager) zwp_relative_pointer_manager_v1_destroy(m_Manager);
+        if (m_Compositor) wl_compositor_destroy(m_Compositor);
         if (m_Registry) wl_registry_destroy(m_Registry);
         if (m_Queue) wl_event_queue_destroy(m_Queue);
         if (m_Display) wl_display_flush(m_Display);
         m_Window = nullptr; m_Display = nullptr; m_Pointer = nullptr; m_Surface = nullptr;
         m_Lock = nullptr; m_Relative = nullptr; m_Constraints = nullptr; m_Manager = nullptr;
+        m_Confined = nullptr; m_Compositor = nullptr; m_ConfineMode = false;
         m_Registry = nullptr; m_Queue = nullptr; m_Locked = false;
-        m_ManagerName = m_ConstraintsName = 0;
+        m_ManagerName = m_ConstraintsName = m_CompositorName = 0;
+    }
+    wl_region* makeRegion() {
+        auto* region = wl_compositor_create_region(m_Compositor);
+        wl_region_add(region, m_Region.x(), m_Region.y(), m_Region.width(), m_Region.height());
+        return region;
     }
     void request() {
-        if (!m_Manager || !m_Constraints || m_Lock) return;
+        if (!m_Constraints) return;
+        if (m_ConfineMode) {
+            if (!m_Compositor || m_Confined || !m_Region.isValid()) return;
+            auto* region = makeRegion();
+            m_Confined = zwp_pointer_constraints_v1_confine_pointer(m_Constraints, m_Surface, m_Pointer, region,
+                ZWP_POINTER_CONSTRAINTS_V1_LIFETIME_PERSISTENT);
+            static const zwp_confined_pointer_v1_listener listener {
+                [](void*, zwp_confined_pointer_v1*) {}, [](void*, zwp_confined_pointer_v1*) {}
+            };
+            zwp_confined_pointer_v1_add_listener(m_Confined, &listener, this);
+            wl_region_destroy(region);
+            wl_display_flush(m_Display);
+            return;
+        }
+        if (!m_Manager || m_Lock) return;
         m_Relative = zwp_relative_pointer_manager_v1_get_relative_pointer(m_Manager, m_Pointer);
         static const zwp_relative_pointer_v1_listener motionListener {motion};
         zwp_relative_pointer_v1_add_listener(m_Relative, &motionListener, this);
@@ -90,12 +127,15 @@ private:
         } else if (!self->m_Constraints && !std::strcmp(interface, zwp_pointer_constraints_v1_interface.name)) {
             self->m_Constraints = static_cast<zwp_pointer_constraints_v1*>(wl_registry_bind(registry, name, &zwp_pointer_constraints_v1_interface, 1));
             self->m_ConstraintsName = name;
+        } else if (!self->m_Compositor && !std::strcmp(interface, wl_compositor_interface.name)) {
+            self->m_Compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, name, &wl_compositor_interface, 1));
+            self->m_CompositorName = name;
         }
         self->request();
     }
     static void removed(void* data, wl_registry*, uint32_t name) {
         auto* self = static_cast<WaylandPointer*>(data);
-        if (name != self->m_ManagerName && name != self->m_ConstraintsName) return;
+        if (name != self->m_ManagerName && name != self->m_ConstraintsName && name != self->m_CompositorName) return;
         const auto generation = self->m_Generation;
         QTimer::singleShot(0, self, [self, generation] { if (generation == self->m_Generation) self->stop(); });
     }
@@ -116,8 +156,12 @@ private:
     zwp_pointer_constraints_v1* m_Constraints = nullptr;
     zwp_relative_pointer_v1* m_Relative = nullptr;
     zwp_locked_pointer_v1* m_Lock = nullptr;
+    zwp_confined_pointer_v1* m_Confined = nullptr;
+    wl_compositor* m_Compositor = nullptr;
+    QRect m_Region;
+    bool m_ConfineMode = false;
     bool m_Locked = false;
-    uint32_t m_ManagerName = 0, m_ConstraintsName = 0;
+    uint32_t m_ManagerName = 0, m_ConstraintsName = 0, m_CompositorName = 0;
     quint64 m_Generation = 0;
 };
 }

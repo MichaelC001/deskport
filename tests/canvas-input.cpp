@@ -56,10 +56,12 @@ int main(int argc, char** argv) {
     assert(received[1].window.event == SDL_WINDOWEVENT_FOCUS_GAINED);
     // A flooded queue must preserve this boundary even after a fresh viewport.
     for (int i = 0; i < 257; ++i) CanvasBridge::input(key);
+    CanvasBridge::input(key); // Input arriving before the release is discarded too.
     CanvasBridge::state(state); CanvasBridge::synchronize(window); received = events();
-    assert(received.size() == 2 && received[0].window.event == SDL_WINDOWEVENT_FOCUS_LOST);
-    CanvasBridge::input(key); CanvasBridge::synchronize(window); assert(events().empty());
-    CanvasBridge::inputEnabled(true);
+    assert(received.size() == 2 && received[0].window.event == SDL_WINDOWEVENT_FOCUS_LOST &&
+           received[1].window.event == SDL_WINDOWEVENT_FOCUS_GAINED);
+    CanvasBridge::input(key); CanvasBridge::synchronize(window); received = events();
+    assert(received.size() == 1 && received[0].type == SDL_KEYDOWN);
     const auto unicode = QString::fromUtf8("中文🙂中文🙂中文🙂中文🙂中文🙂中文🙂");
     CanvasBridge::input({{"type","text"},{"text",unicode}}); CanvasBridge::synchronize(window);
     QByteArray text;
@@ -69,6 +71,19 @@ int main(int argc, char** argv) {
         assert(QString::fromUtf8(chunk).toUtf8() == chunk); text += chunk;
     }
     assert(QString::fromUtf8(text) == unicode);
+    CanvasBridge::pointerRegion(true, 10, 20, 300, 200);
+    assert(CanvasBridge::description()["pointerRegion"].toObject()["width"].toInt() == 300);
+    CanvasBridge::pointerRegion(false);
+    assert(CanvasBridge::description()["pointerRegion"].toObject().isEmpty());
+    CanvasBridge::input({{"type","touch"},{"phase","down"},{"id",12},{"x",0.25},{"y",0.5},
+                         {"dx",0.0},{"dy",0.0},{"pressure",0.75}});
+    CanvasBridge::input({{"type","touch"},{"phase","move"},{"id",12},{"x",2.0},{"y",0.5}});
+    CanvasBridge::input({{"type","touch-cancel"}});
+    CanvasBridge::synchronize(window); received = events();
+    assert(received.size() == 2 && received[0].type == SDL_FINGERDOWN);
+    assert(received[0].tfinger.touchId == CanvasBridge::SyntheticTouchId && received[0].tfinger.fingerId == 13);
+    assert(received[0].tfinger.x == 0.25f && received[0].tfinger.pressure == 0.75f);
+    assert(CanvasBridge::isTouchCancel(received[1]));
     CanvasBridge::question("Title", "Body", "Cancel", "Continue");
     auto id = quint64(CanvasBridge::description()["question"].toObject()["id"].toDouble());
     CanvasBridge::answer(id + 1, 1); assert(CanvasBridge::takeAnswer() == -1);

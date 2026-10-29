@@ -76,7 +76,14 @@ static int worker(QApplication& app) {
                 if (mode=="lazy" && !presenting) continue;
                 presenting=false;
                 QTimer::singleShot(mode.endsWith("slow") ? 300 : 0,&app,[&,o] { send({{"type","hidden"},{"epoch",o.value("epoch")}}); });
-            } else if(action=="disconnect") QTimer::singleShot(0,&app,&QCoreApplication::quit);
+            } else if(action=="disconnect") {
+                if (mode == "error-on-disconnect") {
+                    send({{"type","connected"}});
+                    send({{"type","error"},{"message","Late worker error"}});
+                    socket.flush();
+                }
+                QTimer::singleShot(0,&app,&QCoreApplication::quit);
+            }
             else if(action=="tuning") // Echo the value; a tuning change never asks for a reconnect.
                 send({{"type","traffic"},{"received",qRound(o.value("value").toDouble()*100)},{"sent",fullscreenRequests}});
             else if(action=="reconnect" && mode=="crash") QCoreApplication::exit(7);
@@ -98,6 +105,31 @@ static int worker(QApplication& app) {
 class MultiSessionsTest : public QObject {
     Q_OBJECT
 private slots:
+    void presentationFailureSurvivesWorkerShutdown() {
+        QTemporaryDir dir;
+        const auto cert=credential("TEST_CERT_A"), key=credential("TEST_KEY_A"), remote=credential("TEST_CERT_B");
+        QDir().mkpath(dir.path()+"/binding");
+        QVERIFY(PeerStore::write(dir.path()+"/binding/peers.json",{{"version",1},{"peers",QJsonObject{
+            {"a",QJsonObject{{"hostId","a"},{"clientCert",QString::fromUtf8(remote)},
+                             {"bindingPort",48991},{"ready",true},{"granted",true}}}}}}));
+        HostManager host(nullptr,dir.path()+"/host");
+        PeerManager peers(&host,cert,key,dir.path()+"/binding",0,QHostAddress::LocalHost);
+        MultiSessions manager(&peers,cert,key);
+        manager.open("a","Fixture","127.0.0.1","error-on-disconnect");
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("connected"));
+        QVERIFY(manager.presentation());
+        QVERIFY(QMetaObject::invokeMethod(manager.presentation(), "failed", Qt::DirectConnection,
+                                          Q_ARG(QString, QStringLiteral("Canvas fixture failed"))));
+        // A disconnect while that shutdown is in progress keeps its reason.
+        manager.disconnectSession("a");
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("error"));
+        QCOMPARE(manager.sessions().first().toMap().value("error").toString(),QString("Canvas fixture failed"));
+        manager.open("a","Fixture","127.0.0.1","error-on-disconnect");
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("connected"));
+        manager.disconnectSession("a");
+        QTRY_COMPARE(manager.states().value("a").toString(),QString("disconnected"));
+        QVERIFY(manager.sessions().first().toMap().value("error").toString().isEmpty());
+    }
     void connectingCanvasAndTrayStayResponsive() {
         QTemporaryDir dir; HostManager host(nullptr,dir.path()+"/host");
         const auto cert=credential("TEST_CERT_A"),key=credential("TEST_KEY_A");

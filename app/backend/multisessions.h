@@ -87,7 +87,7 @@ signals:
     void shortcutRequested();
 private:
     struct Entry {
-        QString id, name, address, app, token, state = QStringLiteral("starting"), error;
+        QString id, name, address, app, token, state = QStringLiteral("starting"), error, stopError;
         QProcess* process = nullptr;
         QPointer<QLocalSocket> socket, videoSocket;
         SessionPresentation* presentation = nullptr;
@@ -115,6 +115,7 @@ private:
     // Raising is for user actions; background recovery presents quietly.
     void present(bool raise = true);
     void hide(Entry* entry);
+    void stopSession(Entry* entry, const QString& error);
     void ended(Entry* entry, const QString& error);
     QPointer<QWindow> m_CanvasWindow;
     bool m_RefreshingCanvasFrame = false;
