@@ -245,19 +245,19 @@ Flatpak is viewer only and has no browser entry.
 Run the isolated checks inside the locked development shell:
 
 ```sh
-python3 scripts/test-browser-gateway.py
-python3 scripts/test-browser-host.py
-python3 scripts/test-host-lifecycle.py --cli
+python3 tests/test-browser-gateway.py
+python3 tests/test-browser-host.py
+python3 tests/test-host-lifecycle.py --cli
 ```
 
-`scripts/test-browser-media.py` checks input serialization and the native
-WebRTC transport. `scripts/test-browser-client.mjs` exercises the embedded web
-client with encoded test media. `scripts/test-browser-native.py --help` lists
+`tests/test-browser-media.py` checks input serialization and the native
+WebRTC transport. `tests/test-browser-client.mjs` exercises the embedded web
+client with encoded test media. `tests/test-browser-native.py --help` lists
 the dependencies for the separate Linux Xvfb/PulseAudio capture fixture; it
 uses `scripts/build-browser-live-gateway.py` and a disposable Chromium profile.
-`scripts/test-browser-pairing-profile.py` uses an installed Chrome binary with a
+`tests/test-browser-pairing-profile.py` uses an installed Chrome binary with a
 new persistent profile and production HTTPS authentication, without a capture
-host. `scripts/test-browser-pairing.py` adds the isolated native capture fixture.
+host. `tests/test-browser-pairing.py` adds the isolated native capture fixture.
 Both restart the browser process and the gateway process, check profile isolation,
 and exercise forgetting and local revocation. All fixture state and evidence
 belong under the configured DeskPort build root.
@@ -331,17 +331,17 @@ WebRTC regression uses real encoded test media and a production transport test
 binary; neither fixture connects to a personal host or injects OS input.
 
 ```sh
-python3 scripts/test-browser-translations.py
+python3 tests/test-browser-translations.py
 # Headless fixtures use an isolated profile and no physical GUI session.
 # Reserve local-ui.lock for headed/physical GUI follow-ups; use the task ID.
 DESKPORT_PLAYWRIGHT_MODULE=/path/to/playwright-core \
 DESKPORT_TEST_CHROME=/path/to/chromium \
 DESKPORT_FRONTEND_TEST_OUTPUT=/resolved/deskport/build/run/evidence \
-node scripts/test-browser-i18n.mjs
+node tests/test-browser-i18n.mjs
 ```
 
 Core/adapter checks for this task use
-`scripts/test-core.py --skip-deferred-seamless` to respect the explicit exclusion
+`tests/test-core.py --skip-deferred-seamless` to respect the explicit exclusion
 of deferred Seamless validation. No Seamless experiment or implementation is
 part of this change.
 

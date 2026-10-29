@@ -1,7 +1,7 @@
 # Linux desktop package acceptance
 
 This is a full-VM lifecycle layer, separate from
-`scripts/test-linux-installers.py` (containers), a native Nix build, and physical
+`tests/test-linux-installers.py` (containers), a native Nix build, and physical
 GPU/streaming acceptance. Reuse the workspace `linux-distro-lab` installed desktop
 baselines. Start one guest at a time; keep its overlay, image and baseline hashes,
 package hashes, logs and teardown evidence.

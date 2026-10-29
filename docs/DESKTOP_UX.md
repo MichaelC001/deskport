@@ -73,18 +73,18 @@ text falls back to English. Regional Chinese system locales select the appropria
 Simplified or Traditional catalog, including Traditional Chinese for Hong Kong.
 
 Translation sources are `app/languages/qml_*.ts`; keep their compiled `.qm` files in
-sync with `lrelease app/languages/*.ts`. Run `python3 scripts/test-translations.py`
-and `python3 scripts/test-host-lifecycle.py --ui` (inside `nix develop` on Linux).
+sync with `lrelease app/languages/*.ts`. Run `python3 tests/test-translations.py`
+and `python3 tests/test-host-lifecycle.py --ui` (inside `nix develop` on Linux).
 The UI test changes language selection without changing stream preferences and
 loads each primary catalog for live QML retranslation and English restoration.
 Community review of terminology and native-language layout remains welcome.
 
 ## Validation
 
-- macOS: `python3 scripts/test-host-lifecycle.py --ui`, `--binding`, and the default
+- macOS: `python3 tests/test-host-lifecycle.py --ui`, `--binding`, and the default
   host lifecycle suite, plus signed package validation and native window review.
 - Linux: `nix build`, the packaged CLI smoke check, and
-  `nix develop --command python3 scripts/test-host-lifecycle.py --ui`.
+  `nix develop --command python3 tests/test-host-lifecycle.py --ui`.
 - Manual acceptance: review both desktop layouts, tab/keyboard navigation, actual
   OS app-drop support, recipient approval, and picture/input in both directions.
   Keep independent remote-access services available during acceptance.

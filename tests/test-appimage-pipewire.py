@@ -9,7 +9,7 @@ import sys
 sys.dont_write_bytecode = True
 
 spec = importlib.util.spec_from_file_location('runtime',
-    Path(__file__).with_name('bundle-appimage-runtime.py'))
+    Path(__file__).resolve().parents[1].joinpath('scripts', 'bundle-appimage-runtime.py'))
 runtime = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(runtime)
 

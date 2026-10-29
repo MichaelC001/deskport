@@ -69,7 +69,7 @@ if not args.inside:
     with tempfile.TemporaryDirectory(prefix='hyprland-live-', dir=test_root) as tmp, short_workspace(tmp) as work:
         helper = str(Path(args.helper).resolve()) if args.helper else str(work / 'helper')
         if not args.helper:
-            subprocess.run([sys.executable, str(root / 'scripts/test-hyprland-display.py'), '--build-only', helper], check=True)
+            subprocess.run([sys.executable, str(root / 'tests/test-hyprland-display.py'), '--build-only', helper], check=True)
         for name in ['runtime', 'config', 'data', 'cache']:
             (work / name).mkdir(mode=0o700)
         env = dict(os.environ, XDG_RUNTIME_DIR=str(work / 'runtime'), XDG_CONFIG_HOME=str(work / 'config'),

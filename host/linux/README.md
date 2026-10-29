@@ -27,7 +27,7 @@ remapper is stopped, the uinput keyboard sends the original keys directly.
 Mouse, gamepad, key-code translation, release handling and non-Linux hosts
 retain their existing behavior. No peer protocol or shared-core pin changes.
 
-`scripts/test-host-linux-keyboard.py` checks both vendored backends without
+`tests/test-host-linux-keyboard.py` checks both vendored backends without
 creating input devices. After activating a build, confirm the receiving
 remapper selects `DeskPort Keyboard`, then check application shortcuts,
 modifier release after disconnect and reconnection on the actual desktop.

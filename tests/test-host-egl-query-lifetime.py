@@ -15,7 +15,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-egl-query-') as tmp:
         member=next(m for m in archive if m.name.endswith('/src/platform/linux/pipewire.cpp'))
         path.write_bytes(archive.extractfile(member).read())
     for _ in range(2):
-        subprocess.run(['python3',str(root/'scripts/patch-host-egl-query-lifetime.py'),tmp],check=True)
+        subprocess.run(['python3',str(root/'host/overlays/patch-host-egl-query-lifetime.py'),tmp],check=True)
     text=path.read_text()
     prefix=text[text.index('    int get_dmabuf_modifiers() {'):text.index('      auto egl_display = egl::make_display(query_display->get());')]
     preamble=r'''

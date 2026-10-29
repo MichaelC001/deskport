@@ -11,7 +11,7 @@ import sys
 import tempfile
 from unittest.mock import patch
 
-script = Path(__file__).with_name('appimage-source-index.py')
+script = Path(__file__).resolve().parents[1].joinpath('scripts', 'appimage-source-index.py')
 digest = 'a' * 64
 valid = (f'Source: fixture\nVersion: 1:2.3-4\nChecksums-Sha256:\n'
          f' {digest} 42 fixture_2.3.orig.tar.xz\n').encode()

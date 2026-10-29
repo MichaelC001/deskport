@@ -88,7 +88,7 @@ all input and do not establish physical pointer/keyboard acceptance.
 
 ## Reproducible isolated checks
 
-`scripts/test-x11-display.py /path/to/deskport-display` starts a private, TCP-disabled
+`tests/test-x11-display.py /path/to/deskport-display` starts a private, TCP-disabled
 Xorg server using a test-local config and an already available dummy module. It
 uses Xorg's `-displayfd`, never the current user's DISPLAY. Set
 `DESKPORT_X11_MODULE_PATH` to the dummy and Xorg module directories, and

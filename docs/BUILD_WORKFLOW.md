@@ -214,12 +214,12 @@ and small release receipts, without a growing collection of installer copies.
 ## Validation
 
 ```sh
-python3 scripts/test-build-workflow.py
-python3 scripts/test-build-paths.py
-python3 scripts/test-prepare-host-source.py
-python3 scripts/test-build-privacy.py
-python3 scripts/test-source-export.py
-python3 winbuild/scripts/test-build-paths.py
+python3 tests/test-build-workflow.py
+python3 tests/test-build-paths.py
+python3 tests/test-prepare-host-source.py
+python3 tests/test-build-privacy.py
+python3 tests/test-source-export.py
+python3 winbuild/tests/test-build-paths.py
 python3 winbuild/scripts/test-host-boost.py
 ```
 

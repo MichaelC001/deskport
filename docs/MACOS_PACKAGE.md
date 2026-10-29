@@ -276,7 +276,7 @@ replace it with the upstream `latest` URL: that mutable archive can add static
 library dependencies without a corresponding change to the pinned host source.
 macOS dependency relocation preserves libraries with the same basename when
 their contents differ and rewrites each consumer to its exact source ABI. Run
-`python3 scripts/test-fix-macos-dependencies.py` after changing relocation.
+`python3 tests/test-fix-macos-dependencies.py` after changing relocation.
 Links are not the only build-machine dependency. Apple's libiconv as built by
 Nix loads its converter modules and `csmapper` tables from absolute
 `/nix/store` paths at run time, so on any other Mac every conversion failed and
@@ -308,7 +308,7 @@ macOS Nix derivation or a complete source rebuild of those media dependencies.
 ```sh
 DESKPORT_SIGN_IDENTITY='your local signing identity' \
   nix develop -c bash scripts/package-macos.sh
-nix develop -c python3 scripts/test-host-lifecycle.py --ui
+nix develop -c python3 tests/test-host-lifecycle.py --ui
 ```
 
 Since 2026-10-03, generated files default to `$HOME/mygit/build/deskport` to keep
@@ -394,7 +394,7 @@ checking an updated application while another remote-access service is in use.
 
 ## Safe development validation
 
-Run `python3 scripts/test-host-lifecycle.py` with native Qt available to exercise
+Run `python3 tests/test-host-lifecycle.py` with native Qt available to exercise
 startup cancellation, failure cleanup, retries and forced termination. This harness
 uses fake helper/host executables, temporary state and loopback-only TCP/UDP
 reservations; it does not create a virtual display, pair a device or start Sunshine.

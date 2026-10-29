@@ -55,7 +55,7 @@ configuration and no connections to personal devices.
 `scripts/check-linux-package.py APPDIR 0.6.4` and
 `xvfb-run -a python3 scripts/check-appimage-runtime.py APPDIR`.
 For the isolated KDE regression, use the locked devShell and
-`scripts/test-linux-display.py APPDIR/usr/libexec/deskport-display --auto-permission`.
+`tests/test-linux-display.py APPDIR/usr/libexec/deskport-display --auto-permission`.
 
 ## Remaining limits
 

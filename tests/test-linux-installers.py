@@ -7,7 +7,7 @@ import sys
 
 work = pathlib.Path(sys.argv[1]).resolve()
 version = sys.argv[2]
-scripts = pathlib.Path(__file__).resolve().parent
+scripts = pathlib.Path(__file__).resolve().parents[1] / 'scripts'
 cases = [
     ('ubuntu-24.04', 'docker.io/library/ubuntu:24.04',
      f'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 /packages/deskport_{version}_amd64.deb'),

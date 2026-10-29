@@ -90,17 +90,17 @@ user account.
 
 ## Verification
 
-- `nix develop -c python3 scripts/test-diagnostics.py`: privacy fixtures, default
+- `nix develop -c python3 tests/test-diagnostics.py`: privacy fixtures, default
   off, live toggling, partial lines, stable timing fields, rotation, retention,
   symlinks, injected fields, export failures and no-upload URL interception;
   Python's independent ZIP reader verifies CRCs and the archive allowlist.
-- `nix develop -c python3 scripts/test-host-lifecycle.py`: supervised child
+- `nix develop -c python3 tests/test-host-lifecycle.py`: supervised child
   processes, null-device configuration, no raw log files and toggling without
   restarting sharing, alongside existing lifecycle cases.
-- `nix develop -c python3 scripts/test-host-lifecycle.py --ui`: actual QML switch
+- `nix develop -c python3 tests/test-host-lifecycle.py --ui`: actual QML switch
   clicks, local archive generation and intercepted URL handling; synthetic light,
   dark and narrow settings screenshots. No personal hosts or private screens.
-- `python3 scripts/test-translations.py`: seven existing UI language catalogs.
+- `python3 tests/test-translations.py`: seven existing UI language catalogs.
 
 Development builds and these isolated checks do not constitute live-stream,
 Windows runtime or mobile acceptance. Deployment and package publishing remain

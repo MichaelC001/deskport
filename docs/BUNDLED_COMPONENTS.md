@@ -91,7 +91,7 @@ nlohmann/json (MIT); submodule revisions are verified before building. Their
 license texts ship in the packages, and the exact source is attached to each
 release as `libdatachannel-0.24.1-source.tar.gz`.
 DeskPort's transport adapter and host overlay are in `host/browser/` and
-`scripts/patch-host-browser.py`. No upstream library source is modified by this
+`host/overlays/patch-host-browser.py`. No upstream library source is modified by this
 integration. The adapter reuses the host's existing capture, encoders and input
 implementation.
 
@@ -210,6 +210,6 @@ replaceable in the viewer's `usr/lib` directory. Runtime manifests and
 for the installed library and all corresponding materials. They distinguish it
 from unmodified Ubuntu runtime binaries with the same upstream version.
 
-See `scripts/test-appimage-graphics.py` for offline selection/fallback checks and
+See `tests/test-appimage-graphics.py` for offline selection/fallback checks and
 `tests/va-runtime-probe.c` / `tests/vaapi-codec-probe.c` for explicit synthetic
 GPU validation. This selection is not a claim of universal GPU/vendor support.

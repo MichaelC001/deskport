@@ -75,7 +75,7 @@ Prepare these files under `~/Library/DeskPortVM.noindex/input`:
 - `DeskPort.zip`: the published, notarized ARM64 ZIP.
 - `package.sha256`: expected SHA-256 followed by two spaces and `DeskPort.zip`.
 - `expected-version.txt`: the expected package version.
-- `test.sh`: a copy of `scripts/test-macos-vm-guest.sh`.
+- `test.sh`: a copy of `tests/test-macos-vm-guest.sh`.
 
 For a complete start → test → shutdown cycle, run:
 

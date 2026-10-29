@@ -77,7 +77,7 @@ authenticated virtual-display transport is a separate missing adapter.
 
 ## Verification
 
-`scripts/test-session-topology.py` runs the production macOS topology header against
+`tests/test-session-topology.py` runs the production macOS topology header against
 an isolated in-memory display service with ASan/UBSan. It covers all three modes,
 snapshot retention, initially disabled screens, hotplug, unavailable enablement,
 failed restoration and recovery from the persisted journal. It never configures

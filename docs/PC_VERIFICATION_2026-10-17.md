@@ -68,7 +68,7 @@ project build root. Never shorten a path by reusing the user's configuration.
 short_tmp=$(mktemp -d "$(bash scripts/build-paths.sh root)/p17.XXXXXX")
 trap 'rmdir "$short_tmp"' EXIT
 TMPDIR="$short_tmp" taskset -c 0-3 nice -n 15 \
-  python3 scripts/test-host-cli.py "$PACKAGE/bin/deskport"
+  python3 tests/test-host-cli.py "$PACKAGE/bin/deskport"
 ```
 
 The fixture supplies its own HOME/XDG directories, certificates and loopback

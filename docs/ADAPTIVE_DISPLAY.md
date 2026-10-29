@@ -69,13 +69,13 @@ native Sunshine service and its configuration are not managed by this feature.
 
 ## Validation
 
-- `python3 scripts/test-host-lifecycle.py`: isolated helper rejection/timeout and
+- `python3 tests/test-host-lifecycle.py`: isolated helper rejection/timeout and
   existing lifecycle/port coexistence checks.
-- `python3 scripts/test-host-lifecycle.py --binding`: loopback TLS certificate
+- `python3 tests/test-host-lifecycle.py --binding`: loopback TLS certificate
   pinning, unknown device rejection, exclusive resize control and transfer.
-- `python3 scripts/test-host-lifecycle.py --ui`: settings and actual stream-page
+- `python3 tests/test-host-lifecycle.py --ui`: settings and actual stream-page
   replacement without dropping navigation or starting a quit request.
-- `python3 scripts/test-translations.py`: catalogs in the pinned shared registry;
+- `python3 tests/test-translations.py`: catalogs in the pinned shared registry;
   the historical eight-language count is not a current platform limit.
 - Signed macOS packaging and `nix build`: endpoint integration.
 
@@ -181,10 +181,10 @@ and raw provider output is not copied into diagnostics.
   A client's last local pointer/touch position remains the fallback; it must not
   be presented as a verified insertion point.
 
-Run `python3 scripts/test-text-caret.py` in the Linux devShell for an isolated
+Run `python3 tests/test-text-caret.py` in the Linux devShell for an isolated
 D-Bus fixture (no desktop session or personal content). It checks discovery,
 movement, cached focus, inactive/hidden focus, normalized coordinates, timeout,
-output bounds and stop/restart behavior. `scripts/test-host-lifecycle.py --binding`
+output bounds and stop/restart behavior. `tests/test-host-lifecycle.py --binding`
 checks the existing opt-in lease forwarding contract. Actual Windows UIA/Win32,
 KDE/GNOME applications, IME candidates and mixed-DPI screens remain live acceptance
 checks. A successful helper build is not that acceptance.

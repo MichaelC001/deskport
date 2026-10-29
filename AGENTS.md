@@ -44,7 +44,7 @@
 - Shared workspace policy and display contracts belong in the pinned
   `shared/deskport-core`, not a second local implementation. Read
   `docs/SHARED_CORE.md` before changing policy or wire behavior; update the Git and
-  Nix pins together and run `scripts/test-core.py` plus the affected adapter tests.
+  Nix pins together and run `tests/test-core.py` plus the affected adapter tests.
 - Prefer the locked project devShell for macOS build dependencies; run packaging
   through `nix develop`. See `docs/MACOS_PACKAGE.md` for commands and validation.
   Keep Apple's SDK/compiler/signing and pinned upstream media prebuilts in place.

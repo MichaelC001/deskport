@@ -14,20 +14,20 @@ availability on a real KDE Wayland/macOS pair.
 Run with the repository's Qt dependencies and isolated state:
 
 - `nix build`
-- `python3 scripts/test-host-lifecycle.py --clipboard`: generated certificates,
+- `python3 tests/test-host-lifecycle.py --clipboard`: generated certificates,
   loopback TLS and an offscreen in-memory clipboard; 100 exchanges in each
   direction, Unicode/multiline text, echo suppression, conflict ordering,
   1 MiB boundary, unsupported formats, wrong pin, unknown client, exclusive
   session, disabled sharing and reconnect without replay. Also drives the production
   client synchronizer against an isolated SDL dummy clipboard.
-- `python3 scripts/test-host-lifecycle.py --service`: generated startup files,
+- `python3 tests/test-host-lifecycle.py --service`: generated startup files,
   ordinary quit versus explicit exit, failed-child recovery with stable
   credentials, and explicit stop cancelling recovery. Works on macOS/Linux.
-- `python3 scripts/test-host-lifecycle.py`: macOS helper lifecycle regressions.
-- `python3 scripts/test-host-lifecycle.py --ui`: settings and navigation checks.
-- `python3 scripts/test-desktop-state.py`
-- `python3 scripts/test-transition-window.py`: isolated hide/recall/disconnect.
-- `python3 scripts/test-translations.py`
+- `python3 tests/test-host-lifecycle.py`: macOS helper lifecycle regressions.
+- `python3 tests/test-host-lifecycle.py --ui`: settings and navigation checks.
+- `python3 tests/test-desktop-state.py`
+- `python3 tests/test-transition-window.py`: isolated hide/recall/disconnect.
+- `python3 tests/test-translations.py`
 
 ## Recorded verification (2026-09-11)
 

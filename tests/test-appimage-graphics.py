@@ -26,7 +26,7 @@ class GraphicsRuntime(unittest.TestCase):
             (self.system / name).touch()
         (self.dri / 'radeonsi_drv_video.so').touch()
         self.script = self.root / 'graphics.sh'
-        text = Path(__file__).with_name('appimage-graphics-env.sh').read_text()
+        text = Path(__file__).resolve().parents[1].joinpath('scripts', 'appimage-graphics-env.sh').read_text()
         text = text.replace('dp_tools=/run/current-system/sw/bin:/usr/bin:/bin:/usr/sbin:/sbin',
                             'dp_tools=' + shlex.quote(str(self.tools) + ':/usr/bin:/bin'))
         self.script.write_text(text)

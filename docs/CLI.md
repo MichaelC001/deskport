@@ -279,11 +279,11 @@ Run these from the repository with its locked toolchain:
 
 ```sh
 nix build
-nix develop -c python3 scripts/test-host-lifecycle.py --cli
-nix develop -c python3 scripts/test-host-lifecycle.py --service
-nix develop -c python3 scripts/test-host-setup.py
-nix develop -c python3 scripts/test-hyprland-display.py
-python3 scripts/test-host-cli.py result/bin/deskport
+nix develop -c python3 tests/test-host-lifecycle.py --cli
+nix develop -c python3 tests/test-host-lifecycle.py --service
+nix develop -c python3 tests/test-host-setup.py
+nix develop -c python3 tests/test-hyprland-display.py
+python3 tests/test-host-cli.py result/bin/deskport
 ```
 
 On 2026-10-05, the final Linux Nix package passed the display-free CLI fixture,
@@ -296,7 +296,7 @@ For a real isolated compositor test, make matching `Hyprland`, `hyprctl`,
 
 ```sh
 DESKPORT_TEST_HOST="$PWD/result/libexec/deskport-host" \
-  nix develop -c python3 scripts/test-hyprland-display-live.py \
+  nix develop -c python3 tests/test-hyprland-display-live.py \
   --helper "$PWD/result/libexec/deskport-display" --lua
 ```
 

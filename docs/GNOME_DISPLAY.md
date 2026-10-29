@@ -81,11 +81,11 @@ versions are not implied.
 
 ## Validation
 
-`scripts/test-linux-display.py HELPER --gnome` runs an owned headless compositor
+`tests/test-linux-display.py HELPER --gnome` runs an owned headless compositor
 with private D-Bus, PipeWire and configuration. Add `--gnome-native` to run the
 full policy/recovery scenario there; use Python with PyGObject and the GTK 4/Gio
 typelibs available. This headless route explicitly leaves interactive focus/input
-and unavailable physical modes untested. `scripts/test-gnome-display.py`
+and unavailable physical modes untested. `tests/test-gnome-display.py`
 runs in a disposable full GNOME VM with `DESKPORT_GNOME_TEST_SESSION=1` and
 checks all policies, 1x/2x scaling, portrait/landscape, repeated leases, native
 software capture, abnormal owner/guardian exits, pending recovery, foreign
@@ -97,7 +97,7 @@ The headless harness builds this consumer itself. It represents another client
 using ordinary RecordVirtual negotiation, including on GNOME 49 where the
 newer fixed-mode virtual-monitor fixture is unavailable.
 
-`scripts/test-gnome-reconnect.py` runs only in an explicitly owned lab VM. It
+`tests/test-gnome-reconnect.py` runs only in an explicitly owned lab VM. It
 seeds disposable certificate pins, launches the production host supervisor and
 native viewer, observes three sustained rendered-frame samples, interrupts the
 guest PipeWire service, then requires the same client and supervisor processes

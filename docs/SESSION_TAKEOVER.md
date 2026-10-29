@@ -79,7 +79,7 @@ retains its existing restart behavior and is separate from granting a binding.
 This is a bundled local adapter API; peer binding/session wire messages do not
 change and no new shared-core negotiation is introduced.
 
-On Linux, run `scripts/test-host-live-trust.py /absolute/path/to/built/sunshine` for disposable
+On Linux, run `tests/test-host-live-trust.py /absolute/path/to/built/sunshine` for disposable
 loopback TLS, admission-lease preservation, persistence and authorization checks.
 The test never launches video and does not establish active-stream acceptance.
 

@@ -84,9 +84,9 @@ int main() {
             if not patched:
                 assert result.returncode != 0 and b'dummy images retained' in result.stderr, result.stderr
         exercise(False)
-        for _ in range(2): subprocess.run(['python3',str(root/'scripts/patch-host-pipewire-memory.py'),str(target)],check=True)
+        for _ in range(2): subprocess.run(['python3',str(root/'host/overlays/patch-host-pipewire-memory.py'),str(target)],check=True)
         if '--diagnostics' in sys.argv:
             for _ in range(2):
-                subprocess.run(['python3',str(root/'scripts/patch-host-memory-diagnostics.py'),str(target),str(root/'host/common/memorydiagnostics.h')],check=True)
+                subprocess.run(['python3',str(root/'host/overlays/patch-host-memory-diagnostics.py'),str(target),str(root/'host/common/memorydiagnostics.h')],check=True)
         exercise(True)
         print(f'PASS {archive}: original leaks; 5000 patched reuse/destruction/borrowed-buffer/FD cycles with allocation accounting and sanitizers')

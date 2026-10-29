@@ -131,9 +131,9 @@ References: [Windows effective desktop minimum](https://learn.microsoft.com/en-u
 Pass new output directories under the checkout build root:
 
 ```sh
-python3 scripts/test-windows-display-service.py --output-directory "$POLICY_TEST_OUTPUT"
+python3 tests/test-windows-display-service.py --output-directory "$POLICY_TEST_OUTPUT"
 # After Windows cross-building the actual helpers:
-python3 scripts/test-windows-display-service-build.py \
+python3 tests/test-windows-display-service-build.py \
   --helpers "$WINDOWS_HELPERS" --display-helper "$DISPLAY_HELPER_EXE" \
   --output-directory "$NEW_FIXTURE_OUTPUT"
 ```

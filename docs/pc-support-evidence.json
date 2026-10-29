@@ -240,7 +240,7 @@
       "limits": "No GPU, physical streaming/input/audio/clipboard/IME/HDR or native Windows/macOS acceptance; Seamless not run. Same binary passed after using a short isolated TMPDIR inside the build root; long TMPDIR support remains unaccepted.",
       "references": [
         "docs/PC_VERIFICATION_2026-10-17.md#observed-results",
-        "scripts/test-host-cli.py"
+        "tests/test-host-cli.py"
       ],
       "package_sha256": "4acdb72971703c2f05e5f752681c968714653fba72d92148a2c1c7a9f8b2814d",
       "package_hash_unknown_reason": ""

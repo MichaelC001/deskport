@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           find winbuild/scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
           python3 -m compileall -q winbuild/scripts
-          python3 winbuild/scripts/test-build-paths.py
+          python3 winbuild/tests/test-build-paths.py
           python3 winbuild/scripts/test-host-boost.py
           # A store-root rejection guard is valid; concrete store dependencies are not.
           if grep -R -nE --exclude-dir=__pycache__ '/nix/store/|/run/current-system' winbuild/scripts; then
@@ -41,10 +41,10 @@ jobs:
 
       - name: Shared smart-stream regressions
         run: |
-          python3 scripts/test-smart-stream.py
-          python3 scripts/test-host-network.py
+          python3 tests/test-smart-stream.py
+          python3 tests/test-host-network.py
 
       - name: Translation consistency
         run: |
-          python3 scripts/test-translations.py
-          python3 scripts/test-browser-translations.py
+          python3 tests/test-translations.py
+          python3 tests/test-browser-translations.py

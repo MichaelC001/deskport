@@ -377,14 +377,14 @@ cmake --build "$DESKPORT_CHECKOUT_BUILD_ROOT/seamless/core"
 ctest --test-dir "$DESKPORT_CHECKOUT_BUILD_ROOT/seamless/core" \
   --output-on-failure
 
-nix develop -c python3 scripts/test-core.py
-nix develop -c python3 scripts/test-seamless-host-manager.py
-nix develop -c python3 scripts/test-host-lifecycle.py --binding
+nix develop -c python3 tests/test-core.py
+nix develop -c python3 tests/test-seamless-host-manager.py
+nix develop -c python3 tests/test-host-lifecycle.py --binding
 ```
 
-`scripts/test-core.py` now invokes the shared-core Seamless protocol fixture in
+`tests/test-core.py` now invokes the shared-core Seamless protocol fixture in
 addition to the session graph, catalog, and workspace adapter checks.
-`scripts/test-seamless-host-manager.py` builds an isolated fake-sidecar regression
+`tests/test-seamless-host-manager.py` builds an isolated fake-sidecar regression
 that checks bounded JSON handling and exact-child teardown. Neither test exercises
 QtWaylandCompositor or a native Linux display stack.
 

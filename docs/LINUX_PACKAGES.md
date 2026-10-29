@@ -310,10 +310,10 @@ isolation and authenticated session API before producing packages. The API check
 also rejects unpaired admission and browser-origin/unauthenticated requests. nFPM creates the DEB/RPM/pacman metadata;
 the payload is shared, rather than rebuilding against each distribution's Qt.
 
-`scripts/test-linux-installers.py WORK_DIR VERSION` installs packages in clean
+`tests/test-linux-installers.py WORK_DIR VERSION` installs packages in clean
 Ubuntu, Debian, Fedora and Arch containers and runs the same isolated smoke check.
-`scripts/test-flatpak-singleinstance.py` checks session-bus ownership and crash
-recovery without the sandbox; `scripts/test-flatpak-package.py VERSION` repeats
+`tests/test-flatpak-singleinstance.py` checks session-bus ownership and crash
+recovery without the sandbox; `tests/test-flatpak-package.py VERSION` repeats
 GUI launch, duplicate activation and crash recovery inside the installed Flatpak
 with a private session bus and networking disabled. Set a private `FLATPAK_USER_DIR`
 for test installation.
@@ -324,7 +324,7 @@ headless installation/GUI checks do not establish those results.
 
 For the KDE portable-permission regression, build the unwrapped helper with
 `qmake /path/to/source/host/linux/linux.pro` in a separate build directory using the locked
-devShell, then run `python3 scripts/test-linux-display.py /absolute/path/to/deskport-display --auto-permission`.
+devShell, then run `python3 tests/test-linux-display.py /absolute/path/to/deskport-display --auto-permission`.
 This starts an isolated KWin/PipeWire/D-Bus session with permission checks enabled
 and no initial helper grant. It checks first-use recovery, grant reuse, changing
 mount paths, canonical paths, Unicode/space/quote handling, stale-entry cleanup,

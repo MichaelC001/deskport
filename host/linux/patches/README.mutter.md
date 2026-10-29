@@ -27,7 +27,7 @@ Run with a pristine reviewed Mutter source and a C compiler/GLib development
 environment. Put `TMPDIR` under the managed test output directory.
 
 ```sh
-python3 scripts/test-mutter-stream-lifetime.py /path/to/mutter/src/backends/meta-stream-source.c
+python3 tests/test-mutter-stream-lifetime.py /path/to/mutter/src/backends/meta-stream-source.c
 ```
 
 The test compiles the actual dispatcher against a GObject ownership fixture.
@@ -36,7 +36,7 @@ close cycles and ordinary non-closing dispatches. It has been run against both
 51.0 and 51.1 sources. Native service-loss acceptance is a separate gate:
 
 ```sh
-DESKPORT_GNOME_TEST_SESSION=1 python3 scripts/test-gnome-display.py /path/to/deskport-display --pipewire-loss
+DESKPORT_GNOME_TEST_SESSION=1 python3 tests/test-gnome-display.py /path/to/deskport-display --pipewire-loss
 ```
 
 Run the latter only in an owned disposable desktop VM. It stops and kills that

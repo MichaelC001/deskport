@@ -4,7 +4,7 @@ from pathlib import Path
 import shutil
 import sys
 
-root = Path(__file__).resolve().parents[1]
+root = Path(__file__).resolve().parents[2]
 target = Path(sys.argv[1])
 header = target/'src/deskport/windows/reusable-device-pool.h'
 header.parent.mkdir(parents=True, exist_ok=True)

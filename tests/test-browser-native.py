@@ -209,10 +209,10 @@ for frame in range(10000):
         'code':ready['code'],'chromium':str(args.chromium),'outputDir':str(output),
         'controlSocket':str(control_path)}))
     driver_env = dict(environment,DESKPORT_PLAYWRIGHT_MODULE=str(args.playwright_module))
-    driver = spawn('browser-driver',[args.node,args.driver or repo/'scripts/test-browser-native.mjs','--fixture',browser_fixture],env=driver_env)
+    driver = spawn('browser-driver',[args.node,args.driver or repo/'tests/test-browser-native.mjs','--fixture',browser_fixture],env=driver_env)
     if driver.wait(timeout=300 if args.pairing_control else 100) != 0: raise RuntimeError('Browser driver failed; see browser-driver.log and its result JSON')
     if args.webkit_driver:
-        webkit = spawn('webkit-driver', [sys.executable,repo/'scripts/test-browser-pairing-webkit.py',
+        webkit = spawn('webkit-driver', [sys.executable,repo/'tests/test-browser-pairing-webkit.py',
             '--fixture',browser_fixture,'--webdriver',args.webkit_driver])
         summary['webkitPassed'] = webkit.wait(timeout=150) == 0
     # The browser Stop action must have cleared both capture/input and admission.

@@ -98,7 +98,7 @@ is skipped only for this owned-target path; actual capture still fails closed
 without a valid target. Both ScreenCaptureKit and AVFoundation initialization use
 the verified dimensions, and input retains the correct HiDPI factor.
 
-`scripts/test-macos-admitted-display.py --native HELPER` starts its consumer before
+`tests/test-macos-admitted-display.py --native HELPER` starts its consumer before
 the display exists, then checks 3824x2000@2 and 2560x1440@2 across create/remove
 cycles, including rejection of absent descriptors, mismatched bounds and removed
 displays. This regression passed; paired live streaming is a separate checkpoint.

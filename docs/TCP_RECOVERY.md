@@ -40,7 +40,7 @@ repair for UDP video loss.
 
 ## Validation
 
-`nix develop -c python3 scripts/test-small-tcp.py` compiles the production HTTP
+`nix develop -c python3 tests/test-small-tcp.py` compiles the production HTTP
 and TCP code. A separate synthetic TLS server records the kernel-negotiated MSS
 and withholds handshakes from large-MSS connections. Checks cover native blocking
 and asynchronous fallback, IPv4/IPv6, normal-path preference, certificate rejection

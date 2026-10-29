@@ -13,7 +13,7 @@ for archive in ('sunshine.tar.gz', 'sunshine-nix.tar.gz'):
         with tarfile.open(root / 'host/vendor' / archive) as tar:
             member = next(m for m in tar.getmembers() if m.name.endswith('src/network.cpp'))
             (target / 'src/network.cpp').write_bytes(tar.extractfile(member).read())
-        patch = ['python3', str(root / 'scripts/patch-host-network.py'), str(target)]
+        patch = ['python3', str(root / 'host/overlays/patch-host-network.py'), str(target)]
         subprocess.run(patch, check=True)
         source = (target / 'src/network.cpp').read_text()
         subprocess.run(patch, check=True)

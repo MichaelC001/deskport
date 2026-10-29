@@ -43,7 +43,7 @@ automatic physical-key replay, which would risk duplicates.
 
 ## Reproducible isolated checks
 
-Run `nix develop -c python3 scripts/test-local-text-input.py` for synthetic SDL
+Run `nix develop -c python3 tests/test-local-text-input.py` for synthetic SDL
 Chinese, Japanese, Korean, combining marks, supplementary Unicode, cancellation,
 wrong-window/stale rejection, command/AltGr routing and preedit-surface checks.
 This runs with dummy SDL video/offscreen Qt and never connects to a host.
@@ -53,7 +53,7 @@ For native input, reserve the shared host's GUI resource first, then run:
 
 ```sh
 DESKPORT_IME_TEST_LOG=/absolute/build/path/native-ime.log \
-  nix develop -c python3 scripts/test-local-text-input.py --native
+  nix develop -c python3 tests/test-local-text-input.py --native
 ```
 
 The disposable native SDL window uses the production IME adapter and font path,

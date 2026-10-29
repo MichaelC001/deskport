@@ -11,11 +11,11 @@ for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         if not (target / 'src').exists():
             target = next(p for p in target.iterdir() if (p / 'src').exists())
         for name in ('smart-stream', 'session-settings', 'session-takeover', 'linux-display', 'input-activity', 'sync-cadence', 'linux-cadence', 'pipewire-memory', 'encoder-policy', 'remote-rate'):
-            subprocess.run(['python3', str(root / f'scripts/patch-host-{name}.py'), str(target)], check=True)
-        subprocess.run(['python3', str(root / 'scripts/patch-host-encoder-policy.py'), str(target)], check=True)
-        subprocess.run(['python3', str(root / 'scripts/patch-host-remote-rate.py'), str(target)], check=True)
+            subprocess.run(['python3', str(root / f'host/overlays/patch-host-{name}.py'), str(target)], check=True)
+        subprocess.run(['python3', str(root / 'host/overlays/patch-host-encoder-policy.py'), str(target)], check=True)
+        subprocess.run(['python3', str(root / 'host/overlays/patch-host-remote-rate.py'), str(target)], check=True)
         for _ in range(2):
-            subprocess.run(['python3', str(root / 'scripts/patch-host-data-saver.py'), str(target)], check=True)
+            subprocess.run(['python3', str(root / 'host/overlays/patch-host-data-saver.py'), str(target)], check=True)
         stream = (target / 'src/stream.cpp').read_text()
         assert stream.count('deskport::remotePacketsPerMs(') == 1
         assert stream.count('event<int>("deskport_rtt")->raise(') == 1

@@ -20,7 +20,7 @@ class SeriesTest(unittest.TestCase):
         self.repo = Path(self.temp.name) / 'repo'
         self.source = Path(self.temp.name) / 'source'
         (self.repo / 'host').mkdir(parents=True)
-        (self.repo / 'scripts').mkdir()
+        (self.repo / 'host/overlays').mkdir()
         self.source.mkdir()
 
     def tearDown(self):
@@ -56,7 +56,7 @@ class SeriesTest(unittest.TestCase):
 
     def test_runs_copy_script_and_apply_in_order(self):
         (self.repo / 'host/a.h').write_text('header\n')
-        (self.repo / 'scripts/append.py').write_text(
+        (self.repo / 'host/overlays/append.py').write_text(
             'import sys, pathlib\np = pathlib.Path(sys.argv[1]) / "a.txt"\np.write_text(p.read_text() + "script\\n")\n')
         (self.source / 'a.txt').write_text('base\n')
         (self.repo / 'host/a.patch').write_text(

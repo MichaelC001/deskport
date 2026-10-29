@@ -263,7 +263,7 @@ Generated from the reviewed register; recorded results are scoped to each row.
 | Environment | isolated-fixture: Native NixOS x86_64; builder CPU 0-3 / nice 15 / four cores; private HOME/XDG and loopback TLS; no sharing or input |
 | Feature / actual result | Evidence validation, full package build, package identity and isolated local CLI. Observed pass: constrained Nix build, version/help/desktop identity/icon, short-TMPDIR CLI enrollment/config/ownership/revocation/SIGTERM; initial 131-byte socket-path setup was rejected before product assertions |
 | Limits / pending | No GPU, physical streaming/input/audio/clipboard/IME/HDR or native Windows/macOS acceptance; Seamless not run. Same binary passed after using a short isolated TMPDIR inside the build root; long TMPDIR support remains unaccepted. |
-| References | [source 1](../docs/PC_VERIFICATION_2026-10-17.md#observed-results) · [source 2](../scripts/test-host-cli.py) |
+| References | [source 1](../docs/PC_VERIFICATION_2026-10-17.md#observed-results) · [source 2](../tests/test-host-cli.py) |
 
 ### Evidence ipad-takeover
 

@@ -70,7 +70,7 @@ access for remote input. No root service or broad device permission is installed
 
 ## Validation
 
-`python3 scripts/test-host-lifecycle.py --binding` creates disposable certificates,
+`python3 tests/test-host-lifecycle.py --binding` creates disposable certificates,
 loopback TLS peers and fake host children. It checks approval gating, both-direction
 persistence, restart recovery, stale confirmation, rejection, disconnect, malformed
 and oversized messages, replay, changed endpoint keys, unrelated-state preservation,

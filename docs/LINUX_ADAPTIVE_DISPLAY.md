@@ -84,7 +84,7 @@ implement a GNOME login-screen service or automatic session login.
 ## Validation
 
 `nix build` builds both the client and helper plus the patched host. Run the real
-compositor tests with `nix develop -c python3 scripts/test-linux-display.py
+compositor tests with `nix develop -c python3 tests/test-linux-display.py
 /path/to/deskport-display`; add `--gnome` with `gnome-shell` available, or set
 `DESKPORT_GNOME_SHELL` to its executable. Tests create isolated D-Bus, Wayland,
 PipeWire, configuration and data directories; they do not connect to personal
@@ -105,13 +105,13 @@ The 0.3.6 Linux preview passed these capture checks and 12 successive mode/scale
 changes on both KWin 6.6.6 (permission checks enabled) and GNOME 50.4. Host
 lifecycle and binding suites each passed 27 tests; the UI suite passed 18 tests.
 
-`nix develop -c python3 scripts/test-host-lifecycle.py` checks host supervision,
+`nix develop -c python3 tests/test-host-lifecycle.py` checks host supervision,
 resize rejection/timeouts and capture-descriptor cleanup. `--binding` checks the
 existing authenticated control path. Hardware encoding, iPad rotation, text size,
 touch/mouse alignment and reconnect behavior still need real device acceptance.
 
-Hyprland has separate `scripts/test-hyprland-display.py` fixtures and
-`scripts/test-hyprland-display-live.py` isolated-compositor checks. The recorded
+Hyprland has separate `tests/test-hyprland-display.py` fixtures and
+`tests/test-hyprland-display-live.py` isolated-compositor checks. The recorded
 2026-10-03 run exercised real software capture/encoding, three modes and
 target-loss/crash cleanup. It did not establish physical Omarchy input/audio,
 GPU encoding, reconnect or reboot/logout acceptance. See [CLI verification](CLI.md#isolated-verification).

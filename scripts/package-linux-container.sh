@@ -121,7 +121,7 @@ python3 "$repo/scripts/bundle-appimage-runtime.py" "$appimage_dir" "$work/cache/
     --qt-wayland-prefix "$work/cache/qtwayland-6.4.2-runtime"
 mkdir -p "$work/build/appimage-runtime-test"
 TMPDIR="$work/build/appimage-runtime-test" PYTHONPYCACHEPREFIX="$work/cache/pycache" \
-    DESKPORT_TEST_SHARUN="$work/cache/sharun" python3 "$repo/scripts/test-appimage-runtime.py"
+    DESKPORT_TEST_SHARUN="$work/cache/sharun" python3 "$repo/tests/test-appimage-runtime.py"
 cp "$repo/packaging/SHARUN-LICENSE" "$appimage_dir/usr/share/doc/deskport/"
 # Exact source URLs and Ubuntu copyright notices accompany the runtime binaries.
 sed 's/^Types: deb$/Types: deb-src/' /etc/apt/sources.list.d/ubuntu.sources > /etc/apt/sources.list.d/deskport-source.sources

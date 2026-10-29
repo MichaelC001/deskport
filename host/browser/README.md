@@ -67,7 +67,7 @@ These safeguards do not establish hardware latency or long-session acceptance.
 
 ## Isolated validation
 
-Run `scripts/test-browser-media.py --rtc-prefix PREFIX --json-include JSON_INCLUDE`.
+Run `tests/test-browser-media.py --rtc-prefix PREFIX --json-include JSON_INCLUDE`.
 It compiles the production RTC adapter and tests real loopback ICE, DTLS, SRTP
 H.264/Opus, DataChannel and close behavior. Native input serialization tests validate
 bounds and UTF-8 without linking platform input. Tests do not capture the user's
@@ -76,7 +76,7 @@ mode for real browser decode validation with explicitly supplied AUD-delimited t
 media. Full Sunshine capture, hardware encoding, iPad Safari, display restoration,
 and physical keyboard/audio acceptance must be verified independently.
 
-`scripts/test-browser-native.py` runs full Sunshine capture/encoding through the
+`tests/test-browser-native.py` runs full Sunshine capture/encoding through the
 production HTTPS gateway and browser in an isolated Linux Xvfb/private PulseAudio
 fixture. Supply the host, fixture gateway, Chromium, PulseAudio, Node, OpenSSL and
 Playwright-core paths explicitly. It verifies dynamic decoded video, nonzero Opus
@@ -84,7 +84,7 @@ audio energy, stop/reconnect, and admission release. It disables native input an
 only terminates its own processes; it does not exercise a personal desktop,
 physical iPad, hardware encoder, or HostManager display restoration.
 
-For durable browser pairing, run `scripts/test-browser-pairing.py` with the same
+For durable browser pairing, run `tests/test-browser-pairing.py` with the same
 required paths as `test-browser-native.py`: `--host`, `--gateway`, `--chromium`,
 `--pulse-prefix`, `--node`, `--playwright-module`, and a fresh `--output` directory.
 `--openssl` overrides certificate generation and `--runtime-root` selects a short
@@ -96,7 +96,7 @@ responses are mocked. The automated browsers bypass certificate validation for
 the isolated self-signed HTTPS origin; system certificate trust is unchanged.
 The gateway still verifies the fixture Sunshine certificate.
 
-`scripts/test-browser-pairing-profile.py --gateway PATH --chromium PATH --node PATH
+`tests/test-browser-pairing-profile.py --gateway PATH --chromium PATH --node PATH
 --playwright-module PATH --output DIR` exercises an installed branded browser with
 a disposable persistent profile and real HTTPS gateway, without a capture host.
 It covers browser/gateway process restarts, temporary mode, forgetting, revocation,

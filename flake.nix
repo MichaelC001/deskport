@@ -19,8 +19,8 @@
               ./host/common
               ./host/browser
               ./host/linux/vulkan-driver-lifetime.h
-              (pkgs.lib.fileset.fileFilter (file: pkgs.lib.hasPrefix "patch-" file.name
-                || file.name == "apply-host-patches.py") ./scripts)
+              ./host/overlays
+              ./scripts/apply-host-patches.py
             ];
           };
           sessionHost = pkgs.sunshine.overrideAttrs (old: let
@@ -82,8 +82,8 @@
           nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.qt6.qttools ];
           preBuild = (old.preBuild or "") + ''
             python3 scripts/sync-translations.py --check
-            python3 scripts/test-browser-translations.py
-            python3 scripts/test-translations.py
+            python3 tests/test-browser-translations.py
+            python3 tests/test-translations.py
             python3 shared/deskport-core/tests/test_workspace.py --qt-header app/backend/workspaceresolution.h
           '';
           postInstall = (old.postInstall or "") + ''

@@ -11,7 +11,7 @@ earlier = ('smart-stream', 'session-settings', 'session-takeover', 'linux-displa
            'sync-cadence', 'linux-cadence', 'pipewire-memory', 'encoder-policy', 'remote-rate', 'data-saver')
 
 def patch(target, name, *extra):
-    subprocess.run(['python3', str(root / f'scripts/patch-host-{name}.py'), str(target), *extra], check=True)
+    subprocess.run(['python3', str(root / f'host/overlays/patch-host-{name}.py'), str(target), *extra], check=True)
 
 for archive in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
     with tempfile.TemporaryDirectory(prefix='deskport-video-pause-') as tmp:

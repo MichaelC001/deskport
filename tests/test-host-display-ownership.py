@@ -29,7 +29,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-display-owners-') as tmp:
     for patched in (False, True):
         if patched:
             for _ in range(2):
-                subprocess.run([sys.executable, str(root / 'scripts/patch-host-display-ownership.py'), str(target)], check=True)
+                subprocess.run([sys.executable, str(root / 'host/overlays/patch-host-display-ownership.py'), str(target)], check=True)
         h = (target / 'src/platform/linux/wayland.h').read_text()
         s = (target / 'src/platform/linux/wayland.cpp').read_text()
         owners = '\n'.join(block(s, start) for start in (

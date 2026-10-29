@@ -80,7 +80,7 @@ def package_test(arguments):
     results = LAB / 'results'; results.mkdir(exist_ok=True)
     (inputs / 'DESKPORT_VM_TEST_ONLY').write_text('Disposable VM inputs only.\n')
     shutil.copy2(package, inputs / 'DeskPort.zip')
-    shutil.copy2(ROOT / 'scripts/test-macos-vm-guest.sh', inputs / 'test.sh')
+    shutil.copy2(ROOT / 'tests/test-macos-vm-guest.sh', inputs / 'test.sh')
     (inputs / 'package.sha256').write_text(LOCK['package_sha256'] + '  DeskPort.zip\n')
     (inputs / 'expected-version.txt').write_text(version + '\n')
     subprocess.run(['xcrun', 'swiftc', '-O', '-target', 'arm64-apple-macos26.0',

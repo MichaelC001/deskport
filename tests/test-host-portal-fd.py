@@ -32,7 +32,7 @@ for vendor in ('sunshine-nix.tar.gz', 'sunshine.tar.gz'):
         for patched in (False, True):
             if patched:
                 for _ in range(2):
-                    subprocess.run([sys.executable, str(root / 'scripts/patch-host-linux-display.py'),
+                    subprocess.run([sys.executable, str(root / 'host/overlays/patch-host-linux-display.py'),
                                     str(target)], check=True)
             source = (target / 'src/platform/linux/portalgrab.cpp').read_text()
             declaration = re.search(r'^    int pipewire_fd[^;]*;', source, re.M).group()

@@ -18,7 +18,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-desktop-lifetime-') as tmp:
         member = next(m for m in archive.getmembers() if m.name.endswith('src/platform/windows/misc.cpp'))
         source.write_bytes(archive.extractfile(member).read())
     for _ in range(2):
-        subprocess.run(['python3', str(root/'scripts/patch-host-windows-desktop-lifetime.py'), str(target)], check=True)
+        subprocess.run(['python3', str(root/'host/overlays/patch-host-windows-desktop-lifetime.py'), str(target)], check=True)
     assert source.read_text().count('// DeskPort owned thread desktop lifetime') == 1
     (work / 'windows.h').write_text(r'''
 #pragma once

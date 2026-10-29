@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Link an isolated manager/model regression against a built macOS desktop app.
 
-Usage: nix develop -c python3 scripts/test-computer-removal.py BUILD_ROOT/app
+Usage: nix develop -c python3 tests/test-computer-removal.py BUILD_ROOT/app
 Build the desktop first. This reuses real production objects without replacing
 main.o or touching the built application. No hosts are polled or connected.
 """

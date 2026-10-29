@@ -98,9 +98,9 @@ its own rules to win.
 Run the fixture and core checks in the locked devShell:
 
 ```sh
-nix develop -c python3 scripts/test-hyprland-display.py
-nix develop -c python3 scripts/test-core.py
-nix develop -c python3 scripts/test-host-lifecycle.py -- hyprlandCapabilityAndHostDeath
+nix develop -c python3 tests/test-hyprland-display.py
+nix develop -c python3 tests/test-core.py
+nix develop -c python3 tests/test-host-lifecycle.py -- hyprlandCapabilityAndHostDeath
 nix build --no-link
 ```
 
@@ -109,7 +109,7 @@ matching `Hyprland`, `hyprctl`, `kwin_wayland` and `dbus-run-session` binaries:
 
 ```sh
 DESKPORT_TEST_HOST=/path/to/package/libexec/deskport-host \
-  python3 scripts/test-hyprland-display-live.py \
+  python3 tests/test-hyprland-display-live.py \
   --helper /path/to/package/libexec/deskport-display --lua
 ```
 

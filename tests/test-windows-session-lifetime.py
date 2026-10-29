@@ -14,8 +14,8 @@ with tempfile.TemporaryDirectory(prefix='deskport-session-lifetime-') as tmp:
             path=work/name; path.parent.mkdir(parents=True,exist_ok=True)
             path.write_bytes(arc.extractfile(member).read())
     for _ in range(2):
-        subprocess.run(['python3',str(root/'scripts/patch-host-windows-pointer-lifetime.py'),tmp],check=True)
-        subprocess.run(['python3',str(root/'scripts/patch-enet-windows-qos.py'),str(work/names[2])],check=True)
+        subprocess.run(['python3',str(root/'host/overlays/patch-host-windows-pointer-lifetime.py'),tmp],check=True)
+        subprocess.run(['python3',str(root/'host/overlays/patch-enet-windows-qos.py'),str(work/names[2])],check=True)
     header=(work/names[0]).read_text()
     structs=header[header.index('  struct input_context_t {'):header.index('  input_context_t &get_input_context')]
     cpp=(work/names[1]).read_text()

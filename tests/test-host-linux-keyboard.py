@@ -13,7 +13,7 @@ import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PATCH = ROOT / 'scripts/patch-host-linux-keyboard.py'
+PATCH = ROOT / 'host/overlays/patch-host-linux-keyboard.py'
 NIX_INPUT = 'src/platform/linux/input/inputtino_common.h'
 PORTABLE_INPUT = 'src/platform/virtualhid_input.cpp'
 PROFILES = 'third-party/libvirtualhid/src/core/profiles.cpp'

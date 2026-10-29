@@ -6,7 +6,7 @@
 #   PLATFORMS  "all" or a comma list of macos, linux, linux-nix,
 #              linux-portable, windows; "linux" selects both Linux builds,
 #              which start from different pinned host revisions
-#   script     run scripts/NAME with the remaining arguments
+#   script     run host/overlays/NAME with the remaining arguments
 #   apply      git apply PATCH inside DIR (relative to the source tree)
 #   apply-recount  the same with --recount, for patches whose final hunk
 #              line count drifted while the vendored source stayed unchanged

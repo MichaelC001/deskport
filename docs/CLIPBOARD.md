@@ -152,9 +152,9 @@ Run under the locked Linux devShell, with `TMPDIR` and Python cache below the
 checkout build root and the shared heavy-build lock held:
 
 ```sh
-nix develop -c python3 scripts/test-wayland-clipboard.py
-nix develop -c python3 scripts/test-clipboard-demand.py
-nix develop -c python3 scripts/test-wayland-clipboard.py --native-build "$FIXTURE_DIR"
+nix develop -c python3 tests/test-wayland-clipboard.py
+nix develop -c python3 tests/test-clipboard-demand.py
+nix develop -c python3 tests/test-wayland-clipboard.py --native-build "$FIXTURE_DIR"
 nix build --no-link --max-jobs 1 --cores 4
 ```
 

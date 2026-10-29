@@ -3,7 +3,7 @@
 
 Accepts the same arguments as test-browser-native.py. The fixture uses a private
 local control socket to restart/revoke only its own HTTPS gateway. Example:
-  python3 scripts/test-browser-pairing.py --help
+  python3 tests/test-browser-pairing.py --help
 All output, including private browser profiles, stays in --output.
 """
 from pathlib import Path

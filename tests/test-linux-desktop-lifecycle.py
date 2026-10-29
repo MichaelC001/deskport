@@ -421,7 +421,7 @@ def main():
                                 'QML2_IMPORT_PATH', 'LD_LIBRARY_PATH'):
                         media_env.pop(key, None)
                     media_env['PATH'] = ':'.join(str(Path(v).parent) for v in tools.values()) + ':' + media_env['PATH']
-                    command = [os.sys.executable, str(media_root / 'scripts/test-browser-native.py'),
+                    command = [os.sys.executable, str(media_root / 'tests/test-browser-native.py'),
                         '--host', str(Path(selected['APPDIR']) / 'usr/libexec/deskport-host'),
                         '--gateway', str(media_root / 'browser-live-gateway'),
                         '--chromium', tools['chromium'], '--pulse-prefix', str(Path(tools['pulseaudio']).parent.parent),

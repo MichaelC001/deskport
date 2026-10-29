@@ -24,27 +24,27 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
           python3 scripts/check-build-privacy.py
-          python3 scripts/test-build-paths.py
-          python3 scripts/test-prepare-host-source.py
-          python3 scripts/test-apply-host-patches.py
-          python3 scripts/test-build-workflow.py
-          python3 scripts/test-build-privacy.py
-          python3 scripts/test-source-export.py
-          python3 winbuild/scripts/test-build-paths.py
+          python3 tests/test-build-paths.py
+          python3 tests/test-prepare-host-source.py
+          python3 tests/test-apply-host-patches.py
+          python3 tests/test-build-workflow.py
+          python3 tests/test-build-privacy.py
+          python3 tests/test-source-export.py
+          python3 winbuild/tests/test-build-paths.py
       - name: Shared core adapter contract
-        run: nix develop -c python3 scripts/test-core.py
+        run: nix develop -c python3 tests/test-core.py
       - name: Isolated global shortcut and window regressions
         run: |
           export TMPDIR="$(bash scripts/build-paths.sh checkout)/runs.noindex/ci-shortcut-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/linux-nix/tests"
           mkdir -p "$TMPDIR"
-          nix develop -c python3 scripts/test-global-shortcut.py
-          nix develop -c python3 scripts/test-canvas-focus.py --output "$TMPDIR/canvas-focus"
-          nix develop -c python3 scripts/test-transition-window.py
+          nix develop -c python3 tests/test-global-shortcut.py
+          nix develop -c python3 tests/test-canvas-focus.py --output "$TMPDIR/canvas-focus"
+          nix develop -c python3 tests/test-transition-window.py
           if ! command -v Xvfb >/dev/null; then
             sudo apt-get update
             sudo apt-get install --yes xvfb
           fi
-          nix develop -c python3 scripts/test-window-activation-x11.py
+          nix develop -c python3 tests/test-window-activation-x11.py
       - name: Isolated Wayland clipboard regressions
         env:
           QT_QPA_PLATFORM: offscreen
@@ -52,42 +52,42 @@ jobs:
           DESKPORT_TEST_SYNTHETIC_SESSION: "0"
           JOBS: "4"
         run: |
-          nix develop -c python3 scripts/test-wayland-clipboard.py
-          nix develop -c python3 scripts/test-clipboard-demand.py
+          nix develop -c python3 tests/test-wayland-clipboard.py
+          nix develop -c python3 tests/test-clipboard-demand.py
       - name: Build
         run: bash scripts/build.sh build --target linux-nix --run ci --min-free-gib 5
       - name: Linux receiving keyboard identity
         run: |
           export TMPDIR="$(bash scripts/build-paths.sh checkout)/runs.noindex/ci-keyboard-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/linux-nix/tests"
           mkdir -p "$TMPDIR"
-          nix develop -c python3 scripts/test-host-linux-keyboard.py
+          nix develop -c python3 tests/test-host-linux-keyboard.py
       - name: Portable runtime regression checks
         run: |
-          python3 scripts/test-appimage-graphics.py
-          python3 scripts/test-appimage-pipewire.py
-          python3 scripts/test-appimage-qt-runtime.py
-          python3 scripts/test-appimage-source-index.py
+          python3 tests/test-appimage-graphics.py
+          python3 tests/test-appimage-pipewire.py
+          python3 tests/test-appimage-qt-runtime.py
+          python3 tests/test-appimage-source-index.py
       - name: Smart streaming policy and translations
         run: |
-          nix develop -c python3 scripts/test-smart-stream.py
-          nix develop -c python3 scripts/test-video-resume.py
-          nix develop -c python3 scripts/test-host-video-pause.py
-          python3 scripts/test-translations.py
-          python3 scripts/test-browser-translations.py
-          nix develop -c python3 scripts/test-compiled-translations.py
-          nix develop -c python3 scripts/test-host-pipewire-memory.py
-          nix develop -c python3 scripts/test-host-portal-fd.py
-          nix develop -c python3 scripts/test-host-display-ownership.py
-          nix develop -c python3 scripts/test-host-vulkan-lifetime.py
-          nix develop -c python3 scripts/test-process-memory.py
-          nix develop -c python3 scripts/test-memory-diagnostics-build.py
-          nix develop -c python3 scripts/test-host-windows-desktop-lifetime.py
-          nix develop -c python3 scripts/test-windows-session-lifetime.py
-          nix develop -c python3 scripts/test-pipewire-buffer-watch.py
-          nix develop -c python3 scripts/test-host-egl-query-lifetime.py
-          nix develop -c python3 scripts/test-host-pipewire-memory.py --diagnostics
-          nix develop -c python3 scripts/test-seamless-host-manager.py
-          nix develop -c python3 scripts/test-host-lifecycle.py --binding
+          nix develop -c python3 tests/test-smart-stream.py
+          nix develop -c python3 tests/test-video-resume.py
+          nix develop -c python3 tests/test-host-video-pause.py
+          python3 tests/test-translations.py
+          python3 tests/test-browser-translations.py
+          nix develop -c python3 tests/test-compiled-translations.py
+          nix develop -c python3 tests/test-host-pipewire-memory.py
+          nix develop -c python3 tests/test-host-portal-fd.py
+          nix develop -c python3 tests/test-host-display-ownership.py
+          nix develop -c python3 tests/test-host-vulkan-lifetime.py
+          nix develop -c python3 tests/test-process-memory.py
+          nix develop -c python3 tests/test-memory-diagnostics-build.py
+          nix develop -c python3 tests/test-host-windows-desktop-lifetime.py
+          nix develop -c python3 tests/test-windows-session-lifetime.py
+          nix develop -c python3 tests/test-pipewire-buffer-watch.py
+          nix develop -c python3 tests/test-host-egl-query-lifetime.py
+          nix develop -c python3 tests/test-host-pipewire-memory.py --diagnostics
+          nix develop -c python3 tests/test-seamless-host-manager.py
+          nix develop -c python3 tests/test-host-lifecycle.py --binding
 
       - name: VM disk guard checks (no virtual machine required)
-        run: python3 scripts/test-macos-vm-guard.py
+        run: python3 tests/test-macos-vm-guard.py

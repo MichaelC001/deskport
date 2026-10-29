@@ -11,6 +11,7 @@ REPO = Path(__file__).resolve().parents[1]
 PLATFORMS = {'macos', 'linux-nix', 'linux-portable', 'windows'}
 TAGS = PLATFORMS | {'linux'}
 ACTIONS = {'script', 'apply', 'apply-recount', 'copy'}
+OVERLAYS = 'host/overlays'
 
 
 def parse_series(path):
@@ -43,7 +44,7 @@ def plan(entries, platform, repo, source):
         arguments = [value.replace('{src}', str(source)).replace('{repo}', str(repo))
                      for value in arguments]
         if action == 'script':
-            inputs = [repo / 'scripts' / arguments[0]]
+            inputs = [repo / OVERLAYS / arguments[0]]
             inputs += [Path(value) for value in arguments[1:] if value.startswith(str(repo))]
         else:
             inputs = [repo / arguments[0 if action == 'copy' else 1]]
@@ -58,7 +59,7 @@ def run(steps, repo, source):
     for number, action, arguments in steps:
         print(f'[series {number}] {action} {" ".join(arguments)}', flush=True)
         if action == 'script':
-            subprocess.run([sys.executable, str(repo / 'scripts' / arguments[0]), *arguments[1:]],
+            subprocess.run([sys.executable, str(repo / OVERLAYS / arguments[0]), *arguments[1:]],
                            check=True)
         elif action in {'apply', 'apply-recount'}:
             recount = ['--recount'] if action == 'apply-recount' else []
@@ -76,7 +77,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--platform', choices=sorted(PLATFORMS), required=True)
     parser.add_argument('--repo', type=Path, default=REPO,
-                        help='Directory holding host/series, host/ inputs and scripts/')
+                        help='Directory holding host/series and the host/ inputs it names')
     parser.add_argument('--list', action='store_true', help='Print the steps without applying them')
     parser.add_argument('source', type=Path)
     options = parser.parse_args()

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Real HTTPS gateway + native host browser acceptance driver. Only use the isolated
 // Xvfb/Pulse fixture with forceInputDisabled enabled; never point this at a personal host.
-// Usage: node scripts/test-browser-native.mjs --fixture /path/to/browser.json
+// Usage: node tests/test-browser-native.mjs --fixture /path/to/browser.json
 // Fixture fields: url, code, chromium, outputDir. playwright-core is a test-only
 // dependency, resolved normally or through DESKPORT_PLAYWRIGHT_MODULE.
 import assert from 'node:assert/strict';

@@ -16,13 +16,13 @@ import time
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--helper', required=True)
 args = parser.parse_args()
-wrapper = [sys.executable, str(Path(__file__).with_name('macos-vm.py')), 'exec']
+wrapper = [sys.executable, str(Path(__file__).resolve().parents[1].joinpath('scripts', 'macos-vm.py')), 'exec']
 subprocess.run(wrapper + ['/bin/test', '-f', '/Volumes/My Shared Files/input/DESKPORT_VM_TEST_ONLY'], check=True)
 # Refuse to compete with the guest's installed sharing service.
 active = subprocess.run(wrapper + ['/usr/bin/pgrep', '-f', '/Applications/DeskPort.app/Contents/MacOS/DeskPort'], capture_output=True)
 if active.returncode == 0:
     raise SystemExit('Stop sharing in the test VM before running isolated helper tests')
-vm = runpy.run_path(str(Path(__file__).with_name('macos-vm.py')))
+vm = runpy.run_path(str(Path(__file__).resolve().parents[1].joinpath('scripts', 'macos-vm.py')))
 process = subprocess.Popen([str(vm['TART']), 'exec', '-i', vm['NAME'], args.helper, '2560', '1440'], env=vm['ENV'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 buffer = b''
 def response(sequence):

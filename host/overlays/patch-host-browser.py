@@ -16,7 +16,7 @@ args = [value for value in sys.argv[1:] if value != '--revert']
 if not args:
     raise SystemExit('usage: patch-host-browser.py SOURCE [HOST_BROWSER_DIR] [--revert]')
 root = Path(args[0]).resolve()
-assets = Path(args[1]).resolve() if len(args) > 1 else Path(__file__).resolve().parents[1] / 'host/browser'
+assets = Path(args[1]).resolve() if len(args) > 1 else Path(__file__).resolve().parents[2] / 'host/browser'
 marker = root / 'deskport-browser.patch'
 if marker.exists():
     subprocess.run(['git', 'apply', '--reverse', '--check', str(marker)], cwd=root, check=True)

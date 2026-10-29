@@ -2,9 +2,9 @@
 """Exercise bundled Qt Wayland across isolated KWin virtual-display sessions.
 
 Build the probe separately with the AppImage builder's Qt headers:
-  python3 scripts/test-appimage-display-session.py --build-probe /work/qt-screen-probe
+  python3 tests/test-appimage-display-session.py --build-probe /work/qt-screen-probe
 Run inside a distribution container/VM, with TMPDIR under the test output root:
-  python3 scripts/test-appimage-display-session.py /candidate --probe /work/qt-screen-probe \
+  python3 tests/test-appimage-display-session.py /candidate --probe /work/qt-screen-probe \
       --output-probe /work/output-probe --results /work/candidate-test
 
 The compositor and output probe use the distribution runtime. The persistent Qt
