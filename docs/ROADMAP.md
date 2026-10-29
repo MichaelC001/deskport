@@ -1,9 +1,19 @@
 ## Retained canvas recovery and input follow-up — 2026-10-29
 
+The KDE Wayland transition follow-up preloads the retained backdrop and keeps
+the Linux Vulkan video surface covered until the renderer submits a new frame.
+The cover provides a cancel action, while waiting or losing canvas geometry
+releases remote input. Same-screen Vulkan resizes preserve the decoder instead
+of rebuilding it before the adaptive display settles. Native compositor
+stacking, high-DPI input, and smooth live reconnects still require device
+validation; submission does not prove physical display scanout. Other desktop
+renderers retain their existing first-frame behavior.
+
 The retained canvas keeps a per-session, in-memory blurred recent frame behind
 automatic reconnect and display-resize progress. SDR capture runs on the existing
 snapshot worker; unavailable frames and HDR fall back to a plain background.
-The visible video surface is hidden while that transition is shown, and returning
+The video surface remains hidden during the worker's transition; the Linux
+Vulkan surface can then map behind the cover to submit its first frame. Returning
 to Devices retains the session's own image without mixing it with other sessions.
 
 An input queue overflow releases held input, discards its backlog and resumes

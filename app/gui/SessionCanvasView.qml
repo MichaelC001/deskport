@@ -6,13 +6,12 @@ Rectangle {
     id: canvasPage
     readonly property var question: sessionManager.canvas.question || ({})
     readonly property bool asking: question.id !== undefined
-    // Only a shown backdrop reads the picture, which encodes it on demand.
     readonly property bool showBackdrop: !asking && (!sessionCanvas.frameReady || sessionManager.canvas.waiting === true)
     color: "#101216"
     Image {
         objectName: "canvasTransitionBackdrop"
         anchors.fill: parent
-        source: canvasPage.showBackdrop && sessionManager.presentation && sessionManager.presentation.backdrop !== undefined
+        source: sessionManager.presentation && sessionManager.presentation.backdrop !== undefined
                 ? sessionManager.presentation.backdrop : ""
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
@@ -27,7 +26,9 @@ Rectangle {
     SessionCanvas {
         id: sessionCanvas
         objectName: "sessionCanvas"
-        property bool transitionWaiting: sessionManager.canvas.waiting === true
+        transitionWaiting: sessionManager.canvas.waiting === true
+        property string transitionLabel: sessionManager.canvas.label || qsTranslate("DesktopSegue", "Connecting to desktop…")
+        property string transitionCancelLabel: qsTranslate("StreamSegue", "Cancel connection")
         anchors.fill: parent
         visible: !canvasPage.asking
         presentation: sessionManager.presentation
@@ -38,6 +39,7 @@ Rectangle {
         pointerRegion: sessionManager.canvas.pointerRegion || ({})
         onViewportChanged: function(state) { sessionManager.updateCanvas(state) }
         onInput: function(event) { sessionManager.canvasInput(event) }
+        onTransitionCancelRequested: sessionManager.disconnectSession(sessionManager.selectedId)
     }
     Column {
         anchors.centerIn: parent

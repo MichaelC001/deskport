@@ -13,7 +13,7 @@ root = Path(__file__).resolve().parents[1]
 work = a.output.resolve()
 work.mkdir(parents=True, exist_ok=False)
 sources = ['tests/canvas-focus.cpp', 'app/gui/sessioncanvas.cpp',
-           'app/backend/shortcutrecorderinhibitor.cpp']
+           'app/backend/shortcutrecorderinhibitor.cpp', 'app/streaming/canvasbridge.cpp']
 extra = ''
 if sys.platform.startswith('linux'):
     sources += ['app/backend/shortcutrecorderinhibitor_wayland.cpp',

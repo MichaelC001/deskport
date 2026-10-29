@@ -3,6 +3,7 @@
 #include <QPointer>
 #include <QJsonObject>
 #include <QWindow>
+#include <QImage>
 #include <memory>
 
 // Presentation lifetime is independent of the network worker. Only the selected
@@ -19,6 +20,7 @@ public:
     bool active() const;
     bool hasFrames() const;
     QString backdrop() const;
+    QImage backdropImage() const;
     bool configure(const QJsonObject& config);
     void frame(QByteArray bytes);
     void status(const QJsonObject& status);

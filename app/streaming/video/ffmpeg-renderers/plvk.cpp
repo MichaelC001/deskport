@@ -447,11 +447,12 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         m_PresentationWindow = params->presentationWindow;
 #if QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
         m_EmbeddedSurfaceWorkaround = QGuiApplication::platformName().startsWith("wayland");
+        if (m_EmbeddedSurfaceWorkaround) m_RetainedFirstFrame = params->presentationCallbacks.firstFrame;
 #endif
         m_PresentationWindow->setVulkanInstance(m_QtInstance.get());
         m_PresentationWindow->create();
         m_VkSurface = QVulkanInstance::surfaceForWindow(m_PresentationWindow);
-        m_PresentationSize = m_PresentationWindow->size() * m_PresentationWindow->devicePixelRatio();
+        resizeEmbeddedPresentation(m_PresentationWindow->size() * m_PresentationWindow->devicePixelRatio());
         if (!m_VkSurface) return false;
     } else
 #endif
@@ -590,6 +591,15 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 }
 
 #ifdef Q_OS_LINUX
+bool PlVkRenderer::resizeEmbeddedPresentation(const QSize& pixels)
+{
+    if (!m_PresentationWindow || pixels.width() < 1 || pixels.height() < 1) return false;
+    // Publish both dimensions atomically: rendering normally runs off the Qt
+    // thread, whereas resize notifications are delivered on it.
+    m_PresentationPixels.store((uint64_t(uint32_t(pixels.width())) << 32) | uint32_t(pixels.height()));
+    return true;
+}
+
 bool PlVkRenderer::createSwapchain()
 {
     pl_vulkan_swapchain_params params = {};
@@ -608,8 +618,13 @@ void PlVkRenderer::queueRetainedPresentation()
 {
     QTimer::singleShot(0, this, [this] {
         if (m_SurfaceInvalidated) restorePresentationSurface();
-        if (m_LastPresentationFrame && m_PresentationWindow->isExposed())
+        if (m_LastPresentationFrame && m_PresentationWindow->isExposed()) {
             renderFrame(m_LastPresentationFrame);
+            if (m_LastFrameSubmitted && m_RetainedFirstFrame) {
+                auto firstFrame = std::move(m_RetainedFirstFrame);
+                firstFrame();
+            }
+        }
     });
 }
 
@@ -793,8 +808,9 @@ void PlVkRenderer::waitToRender()
     int vkDrawableW, vkDrawableH;
 #ifdef Q_OS_LINUX
     if (m_PresentationWindow) {
-        vkDrawableW = m_PresentationSize.width();
-        vkDrawableH = m_PresentationSize.height();
+        const uint64_t pixels = m_PresentationPixels.load();
+        vkDrawableW = int(pixels >> 32);
+        vkDrawableH = int(uint32_t(pixels));
     } else
 #endif
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
@@ -826,6 +842,7 @@ void PlVkRenderer::cleanupRenderContext()
 
 void PlVkRenderer::renderFrame(AVFrame *frame)
 {
+    m_LastFrameSubmitted = false;
 #ifdef Q_OS_LINUX
     if (m_EmbeddedSurfaceWorkaround) {
         Q_ASSERT(QThread::currentThread() == m_PresentationWindow->thread());
@@ -939,7 +956,8 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     // Render the video image and overlays into the swapchain buffer
     targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
-    if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
+    const bool rendered = pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params);
+    if (!rendered) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
         // NB: We must fallthrough to call pl_swapchain_submit_frame()
@@ -955,6 +973,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         requestReset(SDL_RENDER_TARGETS_RESET);
         goto UnmapExit;
     }
+    m_LastFrameSubmitted = rendered;
 
 #ifdef Q_OS_WIN32
     // On Windows, we swap buffers here instead of waitToRender()

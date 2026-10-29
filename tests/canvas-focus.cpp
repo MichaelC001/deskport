@@ -1,5 +1,6 @@
 #include "gui/sessioncanvas.h"
 #include "gui/canvaspointer.h"
+#include "streaming/canvasbridge.h"
 #include <QGuiApplication>
 #include <QCursor>
 #include <QInputMethodEvent>
@@ -20,8 +21,9 @@ SessionPresentation::SessionPresentation(QObject* p) : QObject(p) {}
 SessionPresentation::~SessionPresentation() = default;
 bool SessionPresentation::ready() const { return property("readyForTest").toBool(); }
 bool SessionPresentation::active() const { return false; }
-bool SessionPresentation::hasFrames() const { return false; }
+bool SessionPresentation::hasFrames() const { return property("framesForTest").toBool(); }
 QString SessionPresentation::backdrop() const { return {}; }
+QImage SessionPresentation::backdropImage() const { return {}; }
 void SessionPresentation::attach(QWindow*) {}
 void SessionPresentation::detach() {}
 void SessionPresentation::resized(bool) {}
@@ -43,6 +45,100 @@ std::unique_ptr<CanvasPointer> createCanvasPointer(CanvasPointer::Motion motion)
 class CanvasFocusTest : public QObject {
     Q_OBJECT
 private slots:
+#ifdef Q_OS_LINUX
+    void transitionCoverWaitsForTheFirstSubmittedFrame() {
+        QQuickWindow window;
+        SessionPresentation presentation;
+        SessionCanvas canvas(window.contentItem());
+        canvas.setProperty("transitionLabel", "Connecting to desktop…");
+        canvas.setProperty("transitionCancelLabel", "Cancel connection");
+        canvas.setSize({640, 480}); canvas.setPresentation(&presentation);
+        window.show(); window.requestActivate(); canvas.forceActiveFocus();
+        auto surface = window.findChild<QWindow*>("canvasVideoSurface");
+        auto cover = window.findChild<QWindow*>("canvasTransitionCover");
+        QVERIFY(surface); QVERIFY(cover);
+        QVERIFY(cover->flags().testFlag(Qt::WindowDoesNotAcceptFocus));
+        presentation.setProperty("framesForTest", true);
+        QVERIFY(QMetaObject::invokeMethod(&presentation, "activeChanged"));
+        QTRY_VERIFY(cover->isVisible());
+        QTRY_VERIFY(surface->isVisible());
+        QCOMPARE(cover->geometry(), surface->geometry());
+        canvas.setSize({500, 360});
+        QTRY_COMPARE(cover->size(), QSize(500, 360));
+        QCOMPARE(cover->geometry(), surface->geometry());
+        QSignalSpy cancel(&canvas, &SessionCanvas::transitionCancelRequested);
+        QTest::mouseClick(cover, Qt::LeftButton, Qt::NoModifier, QPoint(250, 220));
+        QCOMPARE(cancel.size(), 1);
+        QTest::keyClick(&window, Qt::Key_Escape);
+        QCOMPARE(cancel.size(), 2);
+        canvas.setSize({0, 0});
+        QTRY_VERIFY(!surface->isVisible() && !cover->isVisible());
+        canvas.setSize({500, 360});
+        QTRY_VERIFY(surface->isVisible() && cover->isVisible());
+        canvas.setVisible(false);
+        QTRY_VERIFY(!surface->isVisible() && !cover->isVisible());
+        canvas.setVisible(true);
+        QTRY_VERIFY(surface->isVisible() && cover->isVisible());
+        // The cover remains until the new decoder reports its first submission.
+        presentation.setProperty("readyForTest", true);
+        QVERIFY(QMetaObject::invokeMethod(&presentation, "readyChanged"));
+        QTRY_VERIFY(!cover->isVisible());
+        QVERIFY(surface->isVisible());
+        // Waiting hides both native children, exposing the QML loading page.
+        presentation.setProperty("readyForTest", false);
+        canvas.setProperty("transitionWaiting", true);
+        QVERIFY(QMetaObject::invokeMethod(&presentation, "readyChanged"));
+        QTRY_VERIFY(!surface->isVisible() && !cover->isVisible());
+        canvas.setProperty("transitionWaiting", false);
+        QTRY_VERIFY(surface->isVisible() && cover->isVisible());
+        canvas.setPresentation(nullptr);
+        QTRY_VERIFY(!surface->isVisible() && !cover->isVisible());
+    }
+#endif
+    void zeroSizeAndWaitingReleaseWorkerInput() {
+        SDL_SetMainReady();
+        QVERIFY(SDL_InitSubSystem(SDL_INIT_VIDEO) == 0);
+        SDL_Window* proxy = SDL_CreateWindow("canvas input fixture", 0, 0, 640, 480, SDL_WINDOW_HIDDEN);
+        QVERIFY(proxy);
+        QQuickWindow window;
+        SessionPresentation presentation;
+        presentation.setProperty("readyForTest", true);
+        SessionCanvas canvas(window.contentItem());
+        canvas.setSize({640, 480}); canvas.setPresentation(&presentation);
+        QSignalSpy viewport(&canvas, &SessionCanvas::viewportChanged);
+        QObject::connect(&canvas, &SessionCanvas::viewportChanged, &canvas, [](const QJsonObject& value) { CanvasBridge::state(value); });
+        window.show(); window.requestActivate(); canvas.forceActiveFocus();
+        QTRY_VERIFY(window.isActive() && canvas.hasActiveFocus());
+        QTRY_VERIFY(!viewport.isEmpty() && viewport.last()[0].toJsonObject()["focused"].toBool());
+        CanvasBridge::configure(viewport.last()[0].toJsonObject());
+        CanvasBridge::requested(true); CanvasBridge::inputEnabled(true); CanvasBridge::registerWindow(proxy);
+        SDL_Event event; while (SDL_PollEvent(&event)) {}
+        auto surface = window.findChild<QWindow*>("canvasVideoSurface"); QVERIFY(surface);
+        QMouseEvent down(QEvent::MouseButtonPress, QPointF(50, 50), QPointF(50, 50),
+                         Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QCoreApplication::sendEvent(surface, &down);
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 1);
+        canvas.setProperty("transitionWaiting", true);
+        QVERIFY(!viewport.last()[0].toJsonObject()["focused"].toBool());
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
+        CanvasBridge::synchronize(proxy);
+        bool focusLost = false;
+        while (SDL_PollEvent(&event)) if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) focusLost = true;
+        QVERIFY(focusLost);
+        canvas.setProperty("transitionWaiting", false);
+        QTRY_VERIFY(viewport.last()[0].toJsonObject()["focused"].toBool());
+        QCOMPARE(viewport.last()[0].toJsonObject()["buttons"].toInt(), 0);
+        canvas.setSize({0, 0});
+        QTRY_VERIFY(!viewport.last()[0].toJsonObject()["visible"].toBool());
+        QCOMPARE(viewport.last()[0].toJsonObject()["width"].toInt(), 640);
+        QCOMPARE(viewport.last()[0].toJsonObject()["height"].toInt(), 480);
+        CanvasBridge::synchronize(proxy);
+        QVERIFY(!(CanvasBridge::flags(proxy) & SDL_WINDOW_INPUT_FOCUS));
+        focusLost = false;
+        while (SDL_PollEvent(&event)) if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) focusLost = true;
+        QVERIFY(focusLost);
+        CanvasBridge::requested(false); SDL_DestroyWindow(proxy); SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    }
     void touchAndAbsolutePointerRouteThroughCanvas() {
         QQuickWindow window;
         SessionPresentation presentation;

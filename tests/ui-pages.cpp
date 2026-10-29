@@ -70,6 +70,7 @@ class TestCanvas : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(QObject* presentation MEMBER presentation)
     Q_PROPERTY(bool frameReady MEMBER ready NOTIFY readyChanged)
+    Q_PROPERTY(bool transitionWaiting MEMBER waiting)
     Q_PROPERTY(bool textInputEnabled MEMBER textInput)
     Q_PROPERTY(bool cursorHidden MEMBER cursorHidden)
     Q_PROPERTY(bool captureRequested MEMBER capture)
@@ -78,12 +79,13 @@ class TestCanvas : public QQuickItem {
 public:
     using QQuickItem::QQuickItem;
     QObject* presentation = nullptr;
-    bool ready = false, textInput = false, cursorHidden = false, capture = false, relative = false;
+    bool ready = false, waiting = false, textInput = false, cursorHidden = false, capture = false, relative = false;
     QVariantMap pointerRegion;
 signals:
     void readyChanged();
     void viewportChanged(QJsonObject state);
     void input(QJsonObject event);
+    void transitionCancelRequested();
 };
 class TestSession : public QObject {
     Q_OBJECT
@@ -1176,6 +1178,9 @@ QtObject {
         auto backdrop = findVisual(window->contentItem(), "canvasTransitionBackdrop");
         QVERIFY(backdrop);
         QVERIFY(!backdrop->isVisible());
+        // Prepare the picture while live video is still visible, so showing
+        // the reconnect overlay does not wait for PNG decode on the UI path.
+        QTRY_COMPARE(backdrop->property("status").toInt(), 1); // Image.Ready
         manager->setProperty("canvas", QVariantMap{{"waiting",true}});
         QTRY_VERIFY(backdrop->isVisible());
         QTRY_VERIFY(findVisual(window->contentItem(), "canvasCancelConnection", true));

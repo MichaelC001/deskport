@@ -464,7 +464,7 @@ void Pacer::renderFrame(AVFrame* frame)
     // Render it
     const int submittedWidth = frame->width, submittedHeight = frame->height;
     m_VsyncRenderer->renderFrame(frame);
-    if (m_FirstPresentation) {
+    if (m_FirstPresentation && m_VsyncRenderer->lastFrameSubmitted()) {
         // Renderer submission is observable here; physical scanout is not.
         deskportResizeStage("first-render-submit", submittedWidth, submittedHeight);
         m_FirstPresentation = false;

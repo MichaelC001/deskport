@@ -1921,6 +1921,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     return DR_OK;
 }
 
+bool FFmpegVideoDecoder::resizePresentation(const QSize& pixels)
+{
+    return m_FrontendRenderer && m_FrontendRenderer->resizeEmbeddedPresentation(pixels);
+}
+
 void FFmpegVideoDecoder::renderFrameOnMainThread()
 {
     m_Pacer->renderOnMainThread();

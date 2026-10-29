@@ -9,10 +9,13 @@
 #include "canvaspointer.h"
 #include "backend/shortcutrecorderinhibitor.h"
 
+class CanvasTransitionCover;
+
 class SessionCanvas : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(QObject* presentation READ presentation WRITE setPresentation NOTIFY presentationChanged)
     Q_PROPERTY(bool frameReady READ frameReady NOTIFY frameReadyChanged)
+    Q_PROPERTY(bool transitionWaiting MEMBER m_TransitionWaiting NOTIFY transitionWaitingChanged)
     Q_PROPERTY(bool textInputEnabled MEMBER m_TextInput NOTIFY textInputChanged)
     Q_PROPERTY(bool cursorHidden MEMBER m_CursorHidden NOTIFY cursorHiddenChanged)
     Q_PROPERTY(bool captureRequested MEMBER m_CaptureRequested NOTIFY captureRequestedChanged)
@@ -27,6 +30,7 @@ public:
 signals:
     void presentationChanged();
     void frameReadyChanged();
+    void transitionWaitingChanged();
     void captureRequestedChanged();
     void relativePointerChanged();
     void pointerRegionChanged();
@@ -34,6 +38,7 @@ signals:
     void cursorHiddenChanged();
     void viewportChanged(QJsonObject state);
     void input(QJsonObject event);
+    void transitionCancelRequested();
 protected:
     QVariant inputMethodQuery(Qt::InputMethodQuery query) const override;
     void inputMethodEvent(QInputMethodEvent* event) override;
@@ -57,8 +62,11 @@ private:
     QPoint position(const QPointF& value) const;
     QPointer<SessionPresentation> m_Presentation;
     QWindow* m_Surface = nullptr;
+    CanvasTransitionCover* m_TransitionCover = nullptr;
+    bool m_CoverRaised = false;
     QPointer<QQuickWindow> m_RootWindow;
     bool m_LocalWindowDrag = false;
+    bool m_TransitionWaiting = false;
     QTimer m_ResizeTimer;
     int m_Buttons = 0;
     bool m_TextInput = false, m_CursorHidden = false;

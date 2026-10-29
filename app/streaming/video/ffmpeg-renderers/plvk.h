@@ -2,6 +2,8 @@
 
 #include "renderer.h"
 #include <memory>
+#include <atomic>
+#include <cstdint>
 
 #ifdef Q_OS_WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -36,6 +38,8 @@ public:
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void waitToRender() override;
 #ifdef Q_OS_LINUX
+    bool lastFrameSubmitted() const override { return m_LastFrameSubmitted; }
+    bool resizeEmbeddedPresentation(const QSize& pixels) override;
     bool isRenderThreadSupported() override { return !m_EmbeddedSurfaceWorkaround; }
     bool eventFilter(QObject* watched, QEvent* event) override;
 #endif
@@ -75,8 +79,9 @@ private:
 #ifdef Q_OS_LINUX
     std::unique_ptr<QVulkanInstance> m_QtInstance;
     QWindow* m_PresentationWindow = nullptr;
-    QSize m_PresentationSize;
+    std::atomic<uint64_t> m_PresentationPixels{0};
     AVFrame* m_LastPresentationFrame = nullptr;
+    std::function<void()> m_RetainedFirstFrame;
     bool m_EmbeddedSurfaceWorkaround = false;
     bool m_SurfaceInvalidated = false;
     bool m_RecreatingSurface = false;
@@ -99,6 +104,7 @@ private:
     // Pending swapchain state shared between waitToRender(), renderFrame(), and cleanupRenderContext()
     pl_swapchain_frame m_SwapchainFrame = {};
     bool m_HasPendingSwapchainFrame = false;
+    bool m_LastFrameSubmitted = false;
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;

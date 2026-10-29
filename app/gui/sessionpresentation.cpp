@@ -15,7 +15,6 @@ struct SessionPresentation::Impl {
     QJsonObject m_Status;
     QString m_Backdrop;
     QImage m_BackdropImage;
-    bool m_BackdropEncoded = false;
     QSize m_SurfaceSize;
     SDL_Window* m_Probe = nullptr;
     Overlay::OverlayManager m_Overlays;
@@ -30,16 +29,8 @@ SessionPresentation::SessionPresentation(QObject* parent) : QObject(parent), m_I
 bool SessionPresentation::ready() const { return m_Impl->m_Ready; }
 bool SessionPresentation::active() const { return bool(m_Impl->m_Decoder); }
 bool SessionPresentation::hasFrames() const { return m_Impl->m_HasFrames; }
-QString SessionPresentation::backdrop() const {
-    if (!m_Impl->m_BackdropEncoded && !m_Impl->m_BackdropImage.isNull()) {
-        QByteArray bytes;
-        QBuffer buffer(&bytes);
-        if (buffer.open(QIODevice::WriteOnly) && m_Impl->m_BackdropImage.save(&buffer, "PNG"))
-            m_Impl->m_Backdrop = QStringLiteral("data:image/png;base64,") + QString::fromLatin1(bytes.toBase64());
-    }
-    m_Impl->m_BackdropEncoded = true;
-    return m_Impl->m_Backdrop;
-}
+QString SessionPresentation::backdrop() const { return m_Impl->m_Backdrop; }
+QImage SessionPresentation::backdropImage() const { return m_Impl->m_BackdropImage; }
 void SessionPresentation::preedit(const QString& text) { m_Impl->m_Overlays.updateTextInput(text, 0, text.size()); }
 SessionPresentation::~SessionPresentation() { stop(); }
 void SessionPresentation::stop() {
@@ -82,6 +73,13 @@ void SessionPresentation::resized(bool force) {
         m_Impl->m_Canvas->width() < 1 || m_Impl->m_Canvas->height() < 1) return;
     if (!force && active() && m_Impl->m_SurfaceSize == m_Impl->m_Canvas->size() &&
         m_Impl->m_Screen == m_Impl->m_Canvas->screen()) return;
+    // A renderer with a resizable embedded swapchain can preserve the decoder
+    // and its last picture while the worker settles an adaptive resize.
+    if (!force && m_Impl->m_Decoder && m_Impl->m_Screen == m_Impl->m_Canvas->screen() &&
+        m_Impl->m_Decoder->resizePresentation(m_Impl->m_Canvas->size() * m_Impl->m_Canvas->devicePixelRatio())) {
+        m_Impl->m_SurfaceSize = m_Impl->m_Canvas->size();
+        return;
+    }
     stop();
     if (!start()) emit failed(tr("Unable to resize the desktop canvas."));
 }
@@ -128,12 +126,20 @@ bool SessionPresentation::start() {
         QMetaObject::invokeMethod(this, [this, generation] { readyFrame(generation); }, Qt::QueuedConnection);
     };
     params.presentationCallbacks.snapshotReady = [this, generation](QImage image) {
-        // The picture stays in this session's memory and is never sent to the
-        // network worker. It is encoded only when the canvas shows it.
-        QMetaObject::invokeMethod(this, [this, generation, image = std::move(image)] {
+        // Prepare the small snapshot off the UI thread so QML can preload it
+        // before a reconnect, rather than decoding it during the transition.
+        // It stays in this session's memory and never reaches the worker.
+        QByteArray bytes;
+        if (!image.isNull()) {
+            QBuffer buffer(&bytes);
+            if (!buffer.open(QIODevice::WriteOnly) || !image.save(&buffer, "PNG")) bytes.clear();
+        }
+        const QString source = bytes.isEmpty() ? QString() :
+            QStringLiteral("data:image/png;base64,") + QString::fromLatin1(bytes.toBase64());
+        QMetaObject::invokeMethod(this, [this, generation, source, image = std::move(image)] {
             if (generation != m_Impl->m_PresentationGeneration) return;
+            m_Impl->m_Backdrop = source;
             m_Impl->m_BackdropImage = image;
-            m_Impl->m_Backdrop.clear(); m_Impl->m_BackdropEncoded = false;
             emit backdropChanged();
         }, Qt::QueuedConnection);
     };

@@ -136,6 +136,12 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
+    // Embedded renderers may resize their presentation surface without
+    // restarting the decoder. The size is in physical pixels.
+    virtual bool resizeEmbeddedPresentation(const QSize&) { return false; }
+    // Called on the render thread immediately after renderFrame(). Renderers
+    // which can reject a frame should report whether they submitted it.
+    virtual bool lastFrameSubmitted() const { return true; }
 
     enum class InitFailureReason
     {

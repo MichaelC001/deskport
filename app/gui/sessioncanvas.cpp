@@ -14,9 +14,91 @@
 #include <QWheelEvent>
 #include <QTouchEvent>
 #include <QPointingDevice>
+#include <QBackingStore>
+#include <QPainter>
+#include <QFontMetricsF>
+#include <QExposeEvent>
 #include <SDL.h>
 #include <algorithm>
 #include <utility>
+
+// The video uses a native child surface above Qt Quick. Keep an opaque,
+// sibling above it while the new surface receives its first
+// frame; a QML item cannot cover that native surface on Wayland.
+class CanvasTransitionCover final : public QWindow {
+public:
+    explicit CanvasTransitionCover(QWindow* parent, std::function<void()> exposed, std::function<void()> cancel)
+        : QWindow(parent), m_Store(this), m_Exposed(std::move(exposed)), m_Cancel(std::move(cancel)) {
+        setObjectName("canvasTransitionCover");
+        setFlags(Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus);
+        setSurfaceType(QSurface::RasterSurface);
+    }
+    bool prepare(const QRect& geometry, const QImage& image, const QString& label, const QString& cancelLabel) {
+        if (geometry != this->geometry()) { setGeometry(geometry); m_Painted = false; }
+        if (image.cacheKey() != m_Image.cacheKey()) { m_Image = image; m_Painted = false; }
+        if (m_Label != label || m_CancelLabel != cancelLabel) {
+            m_Label = label; m_CancelLabel = cancelLabel; m_Painted = false;
+        }
+        if (!isVisible()) { m_Painted = false; show(); }
+        if (isExposed() && !m_Painted) paint();
+        return m_Painted;
+    }
+    void dismiss() { if (isVisible()) hide(); m_Painted = false; m_Pressed = false; }
+protected:
+    void mousePressEvent(QMouseEvent* event) override {
+        m_Pressed = event->button() == Qt::LeftButton && cancelRect().contains(event->position());
+        event->accept();
+    }
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        const bool cancel = m_Pressed && event->button() == Qt::LeftButton && cancelRect().contains(event->position());
+        m_Pressed = false;
+        event->accept();
+        if (cancel && m_Cancel) m_Cancel();
+    }
+    void exposeEvent(QExposeEvent*) override {
+        if (!isExposed()) return;
+        paint();
+        // Avoid recursively changing native child visibility inside exposure.
+        if (m_Painted && m_Exposed) QTimer::singleShot(0, this, m_Exposed);
+    }
+private:
+    QRectF cancelRect() const {
+        const qreal buttonWidth = qMin(qreal(width()), qMax(qreal(80), QFontMetricsF(QGuiApplication::font()).horizontalAdvance(m_CancelLabel) + 28));
+        const qreal buttonHeight = qMin(40, height());
+        return QRectF((width() - buttonWidth) / 2, qMin(qreal(height()) - buttonHeight, height() / 2.0 + 20), buttonWidth, buttonHeight);
+    }
+    void paint() {
+        if (width() < 1 || height() < 1) return;
+        const QRegion region(QRect(QPoint(0, 0), size()));
+        m_Store.resize(size()); m_Store.beginPaint(region);
+        QPainter painter(m_Store.paintDevice());
+        painter.fillRect(QRect(QPoint(0, 0), size()), QColor("#101216"));
+        if (!m_Image.isNull()) {
+            const QSizeF scaled = QSizeF(m_Image.size()).scaled(size(), Qt::KeepAspectRatioByExpanding);
+            const QRectF target((width() - scaled.width()) / 2, (height() - scaled.height()) / 2,
+                                scaled.width(), scaled.height());
+            painter.setRenderHint(QPainter::SmoothPixmapTransform);
+            painter.drawImage(target, m_Image);
+            painter.fillRect(QRect(QPoint(0, 0), size()), QColor(16, 18, 22, 0x5a));
+        }
+        painter.setPen(QColor("#e6e9ee"));
+        painter.drawText(QRectF(8, height() / 2 - 36, qMax(0, width() - 16), 40), Qt::AlignCenter | Qt::TextSingleLine, m_Label);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setBrush(QColor("#262a30")); painter.setPen(QColor("#626871"));
+        painter.drawRoundedRect(cancelRect(), 10, 10);
+        painter.setPen(QColor("#e6e9ee"));
+        painter.drawText(cancelRect(), Qt::AlignCenter | Qt::TextSingleLine, m_CancelLabel);
+        painter.end(); m_Store.endPaint(); m_Store.flush(region);
+        m_Painted = true;
+    }
+    QBackingStore m_Store;
+    QImage m_Image;
+    std::function<void()> m_Exposed;
+    std::function<void()> m_Cancel;
+    QString m_Label, m_CancelLabel;
+    bool m_Painted = false;
+    bool m_Pressed = false;
+};
 
 namespace {
 SDL_Keycode symbol(int key) {
@@ -64,6 +146,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
                                        {"dx",delta.x()},{"dy",delta.y()}});
     });
     connect(this, &SessionCanvas::relativePointerChanged, this, &SessionCanvas::refresh);
+    connect(this, &SessionCanvas::transitionWaitingChanged, this, &SessionCanvas::refresh);
     connect(this, &SessionCanvas::pointerRegionChanged, this, &SessionCanvas::refresh);
     connect(this, &SessionCanvas::textInputChanged, this, [this] {
         setFlag(ItemAcceptsInputMethod, m_TextInput);
@@ -81,6 +164,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
         if (window) window->installEventFilter(this);
         if (m_Presentation) m_Presentation->detach();
         m_Inhibitor.setWindow(nullptr);
+        delete m_TransitionCover; m_TransitionCover = nullptr;
         delete m_Surface; m_Surface = nullptr;
         if (window) {
 #if defined(Q_OS_LINUX) && QT_VERSION < QT_VERSION_CHECK(6, 8, 0)
@@ -90,6 +174,7 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
             connect(window, &QWindow::windowStateChanged, this, &SessionCanvas::refresh, Qt::UniqueConnection);
 #endif
             m_Surface = new QWindow(window);
+            m_Surface->setObjectName("canvasVideoSurface");
             connect(m_Surface, &QWindow::screenChanged, this, [this] {
                 if (isVisible()) m_ResizeTimer.start();
             });
@@ -98,6 +183,12 @@ SessionCanvas::SessionCanvas(QQuickItem* parent) : QQuickItem(parent), m_Inhibit
             m_Surface->setSurfaceType(QSurface::VulkanSurface);
 #endif
             m_Surface->installEventFilter(this);
+#ifdef Q_OS_LINUX
+            // Native stacking differs on macOS and Windows. Keep their
+            // existing presentation path until separately verified there.
+            m_TransitionCover = new CanvasTransitionCover(window, [this] { refresh(); },
+                                                         [this] { emit transitionCancelRequested(); });
+#endif
             // Wayland keyboard focus belongs to the shell's root surface;
             // the video surface is a subsurface and only receives pointer focus.
             m_Inhibitor.setWindow(QGuiApplication::platformName().startsWith("wayland")
@@ -129,6 +220,7 @@ SessionCanvas::~SessionCanvas() {
     if (m_Presentation) m_Presentation->detach();
     m_Inhibitor.setEnabled(false);
     if (m_Grabbed && m_Surface) m_Surface->setKeyboardGrabEnabled(false);
+    delete m_TransitionCover; m_TransitionCover = nullptr;
     delete m_Surface; m_Surface = nullptr;
 }
 void SessionCanvas::setPresentation(QObject* value) {
@@ -138,8 +230,10 @@ void SessionCanvas::setPresentation(QObject* value) {
     if (m_Presentation) { disconnect(m_Presentation, nullptr, this, nullptr); m_Presentation->detach(); }
     m_Presentation = presentation;
     if (presentation) {
+        connect(presentation, &SessionPresentation::readyChanged, this, &SessionCanvas::refresh);
         connect(presentation, &SessionPresentation::readyChanged, this, &SessionCanvas::frameReadyChanged);
         connect(presentation, &SessionPresentation::activeChanged, this, &SessionCanvas::refresh);
+        connect(presentation, &SessionPresentation::backdropChanged, this, &SessionCanvas::refresh);
         if (m_Surface) presentation->attach(m_Surface);
     }
     emit presentationChanged(); emit frameReadyChanged(); refresh();
@@ -161,6 +255,17 @@ void SessionCanvas::inputMethodEvent(QInputMethodEvent* event) {
     event->accept();
 }
 bool SessionCanvas::eventFilter(QObject* watched, QEvent* event) {
+    // The native cover does not take keyboard focus. Escape must therefore be
+    // handled at the root window even when Qt Quick's focused item changed.
+    if (watched == m_RootWindow && isVisible() && m_Presentation &&
+        (!m_Presentation->ready() || property("transitionWaiting").toBool()) &&
+        (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)) {
+        auto keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_Escape) {
+            if (event->type() == QEvent::KeyPress && !keyEvent->isAutoRepeat()) emit transitionCancelRequested();
+            event->accept(); return true;
+        }
+    }
     if (watched == m_RootWindow && event->type() == QEvent::DynamicPropertyChange &&
         static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName() == "deskportLocalWindowCursor") {
         refresh();
@@ -213,7 +318,25 @@ QPoint SessionCanvas::position(const QPointF& point) const {
                   qBound(0, qRound(point.y()), qMax(0, int(height()) - 1)));
 }
 void SessionCanvas::refresh() {
-    if (!window() || width() < 1 || height() < 1) return;
+    if (!window() || width() < 1 || height() < 1) {
+        m_CoverRaised = false;
+        if (m_TransitionCover) m_TransitionCover->dismiss();
+        if (m_Surface) m_Surface->hide();
+        if (m_Pointer) m_Pointer->update(nullptr, false);
+        m_Inhibitor.setEnabled(false);
+        if (m_Grabbed && m_Surface) m_Surface->setKeyboardGrabEnabled(false);
+        m_Grabbed = false;
+        m_Buttons = 0; m_Touches.clear(); m_PendingTouches.clear();
+        auto state = m_LastState;
+        state["width"] = qMax(1, state.value("width").toInt());
+        state["height"] = qMax(1, state.value("height").toInt());
+        const double scale = state.value("scale").toDouble(1);
+        state["scale"] = scale >= 0.5 && scale <= 4 ? scale : 1;
+        state["visible"] = false; state["focused"] = false; state["grabbed"] = false;
+        state["hovered"] = false; state["buttons"] = 0;
+        if (state != m_LastState) { m_LastState = state; emit viewportChanged(state); }
+        return;
+    }
     const bool visible = isVisible() && window()->isVisible() && window()->windowState() != Qt::WindowMinimized;
     if (m_Surface) {
         // Devices can change the content geometry (notably macOS title bars).
@@ -225,15 +348,38 @@ void SessionCanvas::refresh() {
             m_Surface->setGeometry(QRect(mapToScene(QPointF()).toPoint(), size));
             if (resized && m_Presentation) m_ResizeTimer.start();
         }
-        m_Surface->setVisible(visible && m_Presentation && m_Presentation->hasFrames() &&
-                              !property("transitionWaiting").toBool());
+        const bool showVideo = visible && m_Presentation && m_Presentation->hasFrames() &&
+                               !property("transitionWaiting").toBool();
+        const bool coverVideo = showVideo && !m_Presentation->ready() && m_TransitionCover;
+        const bool videoWasVisible = m_Surface->isVisible();
+        bool coverReady = false;
+        if (coverVideo) {
+            coverReady = m_TransitionCover->prepare(m_Surface->geometry(), m_Presentation->backdropImage(),
+                property("transitionLabel").toString(), property("transitionCancelLabel").toString());
+        } else {
+            m_CoverRaised = false;
+            if (m_TransitionCover) m_TransitionCover->dismiss();
+        }
+        // Keep the real surface mapped so Vulkan/Metal can submit the first
+        // frame. Until the cover has a backing buffer, the QML loading page
+        // stays visible and cancellable behind the unmapped video surface.
+        m_Surface->setVisible(showVideo && (!coverVideo || coverReady));
+        if (!videoWasVisible && m_Surface->isVisible()) m_CoverRaised = false;
+        if (coverVideo && coverReady && !m_CoverRaised) {
+            m_TransitionCover->raise();
+            m_CoverRaised = true;
+        }
         const auto localCursor = window()->property("deskportLocalWindowCursor");
         m_Surface->setCursor(m_LocalWindowDrag && localCursor.isValid()
             ? Qt::CursorShape(localCursor.toInt())
             : m_CursorHidden && !m_LocalWindowDrag ? Qt::BlankCursor : Qt::ArrowCursor);
     }
-    const bool focused = !m_LocalWindowDrag && visible && m_Presentation && m_Presentation->ready() &&
+    const bool focused = !m_LocalWindowDrag && visible && !property("transitionWaiting").toBool() &&
+        m_Presentation && m_Presentation->ready() &&
         ((window()->isActive() && hasActiveFocus()) || (m_Surface && m_Surface->isActive()));
+    if (!focused && m_LastState.value("focused").toBool()) {
+        m_Buttons = 0; m_Touches.clear(); m_PendingTouches.clear();
+    }
     const bool capture = focused && m_Surface && m_Hovered && m_CaptureRequested;
     if (m_Pointer) {
         const QRect region(m_PointerRegion.value("x").toInt(), m_PointerRegion.value("y").toInt(),
@@ -275,8 +421,18 @@ void SessionCanvas::key(QKeyEvent* event, bool down) {
         emit input({{"type","text"},{"text",event->text().left(1024)}});
     event->accept();
 }
-void SessionCanvas::keyPressEvent(QKeyEvent* event) { key(event, true); }
-void SessionCanvas::keyReleaseEvent(QKeyEvent* event) { key(event, false); }
+void SessionCanvas::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape && m_Presentation &&
+        (!m_Presentation->ready() || property("transitionWaiting").toBool())) {
+        event->accept(); emit transitionCancelRequested(); return;
+    }
+    key(event, true);
+}
+void SessionCanvas::keyReleaseEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Escape && m_Presentation &&
+        (!m_Presentation->ready() || property("transitionWaiting").toBool())) { event->accept(); return; }
+    key(event, false);
+}
 void SessionCanvas::mouse(QMouseEvent* event, bool down, bool isButton) {
     if (m_LocalWindowDrag) { event->accept(); return; }
     if (down) { forceActiveFocus(); if (m_Surface) m_Surface->requestActivate(); }
