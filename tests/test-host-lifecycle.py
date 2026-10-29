@@ -181,7 +181,7 @@ else:
     for executable in (display, host):
         executable.chmod(0o700)
     binding = "--sessions" in sys.argv or "--binding" in sys.argv or "--ui" in sys.argv or "--clipboard" in sys.argv or "--cli" in sys.argv
-    extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
+    extra_sources = f'"{root}/app/backend/peermanager.cpp" "{root}/app/backend/peermanager-session.cpp" "{root}/app/backend/peermanager-devices.cpp" "{root}/app/backend/adaptivedisplay.cpp"' if binding else ""
     extra_headers = f'"{root}/app/backend/peermanager.h"' if binding else ""
     if "--cli" in sys.argv:
         extra_sources += f' "{root}/app/cli/hostcontrol.cpp" "{root}/third_party/qrcodegen/qrcodegen.cpp"'
@@ -202,7 +202,7 @@ CONFIG += console c++17 testcase
 CONFIG -= app_bundle
 TARGET = host-lifecycle-tests
 DESTDIR = "{macos}"
-SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
+SOURCES += "{root}/tests/{suite}.cpp" "{root}/app/backend/hostmanager.cpp" "{root}/app/backend/hostmanager-startup.cpp" "{root}/app/backend/hostmanager-trust.cpp" "{root}/app/backend/hostmanager-display.cpp" "{root}/app/backend/diagnostics.cpp" "{root}/app/backend/nvaddress.cpp" {extra_sources}
 HEADERS += "{root}/app/backend/diagnostics.h" "{root}/app/backend/hostmanager.h" {extra_headers}
 INCLUDEPATH += "{root}/app/backend" "{root}/app" "{root}/app/gui" "{root}/moonlight-common-c/moonlight-common-c/src"
 RESOURCES += "{work}/test-resources.qrc"
