@@ -5,6 +5,9 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import sys
+
+sys.dont_write_bytecode = True
 
 spec = importlib.util.spec_from_file_location('vm', Path(__file__).with_name('macos-vm.py'))
 vm = importlib.util.module_from_spec(spec)

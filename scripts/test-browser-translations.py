@@ -8,6 +8,8 @@ import re
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+
 ROOT = Path(__file__).resolve().parents[1]
 subprocess.run([sys.executable, str(ROOT/'scripts/sync-browser-translations.py'), '--check'], check=True)
 spec = importlib.util.spec_from_file_location('core_ui', ROOT/'shared/deskport-core/i18n/catalog.py')

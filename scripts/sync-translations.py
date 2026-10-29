@@ -4,6 +4,9 @@ import argparse
 import importlib.util
 from pathlib import Path
 import xml.etree.ElementTree as ET
+import sys
+
+sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('deskport_ui_catalog', ROOT/'shared/deskport-core/i18n/catalog.py')

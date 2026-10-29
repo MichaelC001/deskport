@@ -47,13 +47,13 @@ before_build:
 
 build_script:
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
+  - cmd: 'set DESKPORT_LEGACY_BUILD_ROOT=%APPVEYOR_BUILD_FOLDER%\build&& scripts\build-arch.bat Release'
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_arm64\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'scripts\generate-bundle.bat Release'
+  - cmd: 'set DESKPORT_LEGACY_BUILD_ROOT=%APPVEYOR_BUILD_FOLDER%\build&& scripts\build-arch.bat Release'
+  - cmd: 'set DESKPORT_LEGACY_BUILD_ROOT=%APPVEYOR_BUILD_FOLDER%\build&& scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/$QTDIR/macos/bin scripts/generate-dmg.sh Release'
+  - sh: '[ "$BUILD_TARGET" != macos ] || DESKPORT_LEGACY_BUILD_ROOT=$APPVEYOR_BUILD_FOLDER/build PATH=$PATH:$HOME/$QTDIR/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:

@@ -34,7 +34,9 @@ if /I "%BUILD_CONFIG%"=="debug" (
 
 set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 8b9d0d682ad9459e54f05a79694bc10f9876e297 /v
 
-set BUILD_ROOT=%cd%\build
+rem Default outside the source tree; CI may opt back in explicitly.
+if not defined DESKPORT_LEGACY_BUILD_ROOT set DESKPORT_LEGACY_BUILD_ROOT=%USERPROFILE%\mygit\build\deskport\legacy-windows
+set BUILD_ROOT=%DESKPORT_LEGACY_BUILD_ROOT%
 set SOURCE_ROOT=%cd%
 set BUILD_FOLDER=%BUILD_ROOT%\build-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%BUILD_CONFIG%

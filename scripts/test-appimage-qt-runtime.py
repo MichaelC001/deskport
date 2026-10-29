@@ -5,6 +5,9 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import sys
+
+sys.dont_write_bytecode = True
 
 
 spec = importlib.util.spec_from_file_location('runtime',

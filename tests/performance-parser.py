@@ -1,6 +1,9 @@
 import importlib.util
 from pathlib import Path
 import tempfile
+import sys
+
+sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location('measure', Path(__file__).resolve().parents[1] / 'scripts/measure-performance.py')
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 assert m.cpu_seconds('01:02.50') == 62.5

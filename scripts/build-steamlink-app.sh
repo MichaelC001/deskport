@@ -11,7 +11,12 @@ if [ "$STEAMLINK_SDK_PATH" == "" ]; then
   fail "You must set STEAMLINK_SDK_PATH to build for Steam Link"
 fi
 
-BUILD_ROOT=$PWD/build
+# Default outside the source tree; CI may opt back in explicitly.
+if [ -z "$DESKPORT_LEGACY_BUILD_ROOT" ]; then
+  source "$PWD/scripts/build-paths.sh" || fail "Cannot resolve the DeskPort build root"
+  DESKPORT_LEGACY_BUILD_ROOT=$DESKPORT_CHECKOUT_BUILD_ROOT/legacy-steamlink.noindex
+fi
+BUILD_ROOT=$DESKPORT_LEGACY_BUILD_ROOT
 SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
@@ -22,7 +27,7 @@ echo Cleaning output directories
 rm -rf $BUILD_FOLDER
 rm -rf $DEPLOY_FOLDER
 rm -rf $INSTALLER_FOLDER
-mkdir $BUILD_ROOT
+mkdir -p "$BUILD_ROOT"
 mkdir $BUILD_FOLDER
 mkdir $DEPLOY_FOLDER
 mkdir $INSTALLER_FOLDER

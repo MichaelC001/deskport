@@ -14,6 +14,8 @@ import sys
 import tempfile
 import unittest
 
+sys.dont_write_bytecode = True
+
 
 spec = importlib.util.spec_from_file_location('appimage_runtime',
     Path(__file__).with_name('bundle-appimage-runtime.py'))

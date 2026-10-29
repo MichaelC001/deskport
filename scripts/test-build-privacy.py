@@ -14,6 +14,8 @@ import tempfile
 import tarfile
 import zipfile
 
+sys.dont_write_bytecode = True
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/check-build-privacy.py"

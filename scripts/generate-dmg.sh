@@ -11,7 +11,12 @@ if [ "$BUILD_CONFIG" != "Debug" ] && [ "$BUILD_CONFIG" != "Release" ]; then
   fail "Invalid build configuration - expected 'Debug' or 'Release'"
 fi
 
-BUILD_ROOT=$PWD/build
+# Default outside the source tree; CI may opt back in explicitly.
+if [ -z "$DESKPORT_LEGACY_BUILD_ROOT" ]; then
+  source "$PWD/scripts/build-paths.sh" || fail "Cannot resolve the DeskPort build root"
+  DESKPORT_LEGACY_BUILD_ROOT=$DESKPORT_CHECKOUT_BUILD_ROOT/legacy-macos.noindex
+fi
+BUILD_ROOT=$DESKPORT_LEGACY_BUILD_ROOT
 SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
@@ -29,7 +34,7 @@ fi
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
 rm -rf $INSTALLER_FOLDER
-mkdir $BUILD_ROOT
+mkdir -p "$BUILD_ROOT"
 mkdir $BUILD_FOLDER
 mkdir $INSTALLER_FOLDER
 
