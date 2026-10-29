@@ -26,6 +26,7 @@ jobs:
           python3 scripts/check-build-privacy.py
           python3 scripts/test-build-paths.py
           python3 scripts/test-prepare-host-source.py
+          python3 scripts/test-apply-host-patches.py
           python3 scripts/test-build-workflow.py
           python3 scripts/test-build-privacy.py
           python3 scripts/test-source-export.py

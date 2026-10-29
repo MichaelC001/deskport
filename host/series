@@ -1,0 +1,90 @@
+# DeskPort host overlay series: the one ordered list of changes applied to the
+# vendored Sunshine source on every platform. scripts/apply-host-patches.py
+# reads it; each build only chooses its platform and supplies a fresh tree.
+#
+# Columns: PLATFORMS ACTION ARGUMENTS...
+#   PLATFORMS  "all" or a comma list of macos, linux, linux-nix,
+#              linux-portable, windows; "linux" selects both Linux builds,
+#              which start from different pinned host revisions
+#   script     run scripts/NAME with the remaining arguments
+#   apply      git apply PATCH inside DIR (relative to the source tree)
+#   apply-recount  the same with --recount, for patches whose final hunk
+#              line count drifted while the vendored source stayed unchanged
+#   copy       copy repository FILE to DESTINATION (a trailing / keeps the name)
+# Arguments expand {src} to the source tree and {repo} to this repository.
+# Order matters: later entries anchor on text that earlier ones introduce.
+
+# Platform build adaptations.
+windows        apply-recount  .                          host/windows/patches/sunshine-cross-build.patch
+windows        apply-recount  third-party/libvirtualhid  host/windows/patches/libvirtualhid-win32-only.patch
+windows        script  patch-host-windows-display.py           {src}
+windows        script  patch-host-windows-desktop-lifetime.py  {src}
+windows        script  patch-host-windows-pointer-lifetime.py  {src}
+windows        script  patch-enet-windows-qos.py               {src}/third-party/moonlight-common-c/enet/win32.c
+
+# Diagnostics and network robustness.
+all            script  patch-host-diagnostics.py  {src}
+all            script  patch-host-network.py      {src}
+
+# macOS virtual HID and capture fixes.
+macos          apply   third-party/libvirtualhid  host/macos/patches/libvirtualhid-target-display.patch
+macos          apply   third-party/libvirtualhid  host/macos/patches/libvirtualhid-smooth-drag.patch
+macos          apply   third-party/libvirtualhid  host/macos/patches/libvirtualhid-paced-scroll.patch
+macos          apply   .                          host/macos/patches/sunshine-capture-timeout.patch
+macos          apply   .                          host/macos/patches/sunshine-pkgconfig-link.patch
+
+# Smart streaming and the macOS ScreenCaptureKit capture path.
+all            script  patch-host-smart-stream.py  {src}
+macos          apply   .                          host/macos/patches/sunshine-smart-streaming.patch
+all            copy    host/common/smartstream.h  src/deskport/common/
+macos          copy    host/macos/pixelmatch.h    src/deskport/macos/
+macos          apply   .                          host/macos/patches/sunshine-screen-capture-kit.patch
+macos          copy    host/macos/screen-video.h       src/deskport/macos/
+macos          copy    host/macos/screen-video.m       src/deskport/macos/
+macos          copy    host/macos/admitted-display.h   src/deskport/macos/
+macos          copy    host/macos/admitted-display.h   third-party/libvirtualhid/src/platform/macos/deskport-admitted-display.h
+macos          copy    host/macos/scroll-pacer.h       third-party/libvirtualhid/src/platform/macos/deskport-scroll-pacer.h
+
+# Session ownership and settings.
+all            script  patch-host-session-settings.py  {src}
+all            script  patch-host-session-takeover.py  {src}
+
+# Linux display, keyboard and startup integration.
+linux          script  patch-host-linux-display.py   {src}
+linux          script  patch-host-linux-keyboard.py  {src}
+linux          script  patch-host-linux-startup.py   {src}
+
+# Encoder policy, input activity and frame cadence.
+all            copy    host/common/inputactivity.h  src/deskport/common/
+all            copy    host/common/framecadence.h   src/deskport/common/
+all            copy    host/common/encoderpolicy.h  src/deskport/common/
+macos,windows  script  patch-host-encoder-policy.py  {src}
+macos          script  patch-host-macos-lifecycle.py  {src}
+all            script  patch-host-input-activity.py  {src}
+all            script  patch-host-sync-cadence.py    {src}
+
+# Linux capture and driver lifetimes.
+linux          script  patch-host-linux-cadence.py        {src}
+linux          script  patch-host-pipewire-memory.py      {src}
+linux          script  patch-host-display-ownership.py    {src}
+linux          script  patch-host-egl-query-lifetime.py   {src}
+linux          script  patch-host-vulkan-lifetime.py      {src}  {repo}/host/linux/vulkan-driver-lifetime.h
+# Anchored on the Nix host revision; compiled only with
+# DESKPORT_ENABLE_MEMORY_DIAGNOSTICS=1 (the flake's memoryDiagnostics option).
+linux-nix      script  patch-host-memory-diagnostics.py   {src}  {repo}/host/common/memorydiagnostics.h
+linux          script  patch-host-encoder-policy.py       {src}
+
+# Rate control, data saver and video pause (after the input/cadence overlays).
+macos,linux    copy    host/common/ratecontrol.h  src/deskport/common/
+macos          copy    host/macos/vtbitrate.h     src/deskport/macos/
+macos,linux    script  patch-host-remote-rate.py  {src}
+macos,linux    script  patch-host-data-saver.py   {src}
+macos,linux    script  patch-host-video-pause.py  {src}
+macos,linux    script  patch-host-rate-api.py     {src}
+
+# Browser access: WebRTC transport over the existing capture and encoders.
+all            script  patch-host-browser.py  {src}  {repo}/host/browser
+
+# Toolchain compatibility for the portable build container (Ubuntu 24.04's
+# libstdc++ lacks ranges::to; only debug formatting changes).
+linux-portable apply   .                          host/linux/patches/sunshine-gcc13-log.patch

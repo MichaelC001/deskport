@@ -38,3 +38,14 @@ To track upstream locally:
 git remote add upstream https://github.com/moonlight-stream/moonlight-qt.git
 git fetch upstream
 ```
+
+## Host overlay series
+
+The vendored host source (`host/vendor/`) is never edited in place. Every
+DeskPort change to it is listed, in order, in `host/series`, and
+`scripts/apply-host-patches.py --platform PLATFORM SOURCE` applies that list to
+a freshly prepared tree. macOS, the Nix and portable Linux builds and Windows
+all call the same runner; the platform column decides which entries apply.
+Use `--list` to print one platform's steps. When adding an overlay, add one
+line at the point where its anchors exist and run
+`scripts/test-apply-host-patches.py` plus the overlay's own test.

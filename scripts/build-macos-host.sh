@@ -8,85 +8,8 @@ source_dir=$(deskport_output_path "${DESKPORT_HOST_SOURCE_DIR:-$DESKPORT_MACOS_B
 build_root="$DESKPORT_MACOS_BUILD_DIR"
 build_dir="$build_root/sunshine-vendored-build"
 python3 "$repo/scripts/prepare-host-source.py" "$source_dir"
-python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser" --revert
-python3 "$repo/scripts/patch-host-diagnostics.py" "$source_dir"
-python3 "$repo/scripts/patch-host-network.py" "$source_dir"
-hid="$source_dir/third-party/libvirtualhid"
-patch="$repo/host/macos/patches/libvirtualhid-target-display.patch"
-if git -C "$hid" apply --check "$patch"; then
-    git -C "$hid" apply "$patch"
-else
-    git -C "$hid" apply --reverse --check "$patch"
-fi
-# Absolute drags post HID events without a per-event cursor warp.
-drag_patch="$repo/host/macos/patches/libvirtualhid-smooth-drag.patch"
-if git -C "$hid" apply --check "$drag_patch"; then
-    git -C "$hid" apply "$drag_patch"
-else
-    git -C "$hid" apply --reverse --check "$drag_patch"
-fi
-# Pace large wheel deltas so one captured frame stays within motion search.
-scroll_patch="$repo/host/macos/patches/libvirtualhid-paced-scroll.patch"
-if git -C "$hid" apply --check "$scroll_patch"; then
-    git -C "$hid" apply "$scroll_patch"
-else
-    git -C "$hid" apply --reverse --check "$scroll_patch"
-fi
-python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir" --revert
-python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir" --revert
-python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir" --revert
-# Undo our final overlay before checking the earlier pinned patches on rebuilds.
-sck_patch="$repo/host/macos/patches/sunshine-screen-capture-kit.patch"
-if git -C "$source_dir" apply --reverse --check "$sck_patch" 2>/dev/null; then
-    git -C "$source_dir" apply --reverse "$sck_patch"
-fi
-# Bound the first-frame wait so a silent virtual display cannot hang /resume.
-capture_patch="$repo/host/macos/patches/sunshine-capture-timeout.patch"
-if git -C "$source_dir" apply --check "$capture_patch"; then
-    git -C "$source_dir" apply "$capture_patch"
-else
-    git -C "$source_dir" apply --reverse --check "$capture_patch"
-fi
-# Use pkg-config's resolved library path, not a Homebrew-only -l search.
-link_patch="$repo/host/macos/patches/sunshine-pkgconfig-link.patch"
-if git -C "$source_dir" apply --check "$link_patch"; then
-    git -C "$source_dir" apply "$link_patch"
-else
-    git -C "$source_dir" apply --reverse --check "$link_patch"
-fi
-python3 "$repo/scripts/patch-host-smart-stream.py" "$source_dir"
-smart_patch="$repo/host/macos/patches/sunshine-smart-streaming.patch"
-if git -C "$source_dir" apply --check "$smart_patch"; then
-    git -C "$source_dir" apply "$smart_patch"
-else
-    git -C "$source_dir" apply --reverse --check "$smart_patch"
-fi
-mkdir -p "$source_dir/src/deskport/common" "$source_dir/src/deskport/macos"
-cp "$repo/host/common/smartstream.h" "$source_dir/src/deskport/common/smartstream.h"
-cp "$repo/host/macos/pixelmatch.h" "$source_dir/src/deskport/macos/pixelmatch.h"
-git -C "$source_dir" apply --check "$sck_patch"
-git -C "$source_dir" apply "$sck_patch"
-cp "$repo/host/macos/screen-video.h" "$repo/host/macos/screen-video.m" "$source_dir/src/deskport/macos/"
-cp "$repo/host/macos/admitted-display.h" "$source_dir/src/deskport/macos/"
-cp "$repo/host/macos/admitted-display.h" "$hid/src/platform/macos/deskport-admitted-display.h"
-cp "$repo/host/macos/scroll-pacer.h" "$hid/src/platform/macos/deskport-scroll-pacer.h"
-python3 "$repo/scripts/patch-host-session-settings.py" "$source_dir"
-python3 "$repo/scripts/patch-host-session-takeover.py" "$source_dir"
-cp "$repo/host/common/encoderpolicy.h" "$source_dir/src/deskport/common/encoderpolicy.h"
-python3 "$repo/scripts/patch-host-encoder-policy.py" "$source_dir"
-python3 "$repo/scripts/patch-host-macos-lifecycle.py" "$source_dir"
-cp "$repo/host/common/inputactivity.h" "$source_dir/src/deskport/common/"
-python3 "$repo/scripts/patch-host-input-activity.py" "$source_dir"
-cp "$repo/host/common/framecadence.h" "$source_dir/src/deskport/common/"
-python3 "$repo/scripts/patch-host-sync-cadence.py" "$source_dir"
-# After the input/cadence overlays: it extends their congestion handling.
-cp "$repo/host/common/ratecontrol.h" "$source_dir/src/deskport/common/ratecontrol.h"
-cp "$repo/host/macos/vtbitrate.h" "$source_dir/src/deskport/macos/vtbitrate.h"
-python3 "$repo/scripts/patch-host-remote-rate.py" "$source_dir"
-python3 "$repo/scripts/patch-host-data-saver.py" "$source_dir"
-python3 "$repo/scripts/patch-host-video-pause.py" "$source_dir"
-python3 "$repo/scripts/patch-host-rate-api.py" "$source_dir"
-python3 "$repo/scripts/patch-host-browser.py" "$source_dir" "$repo/host/browser"
+# Every DeskPort host change is listed, in order, in host/series.
+python3 "$repo/scripts/apply-host-patches.py" --platform macos "$source_dir"
 sdk=$(xcrun --sdk macosx --show-sdk-path)
 pc="$build_root/host-pkgconfig"
 mkdir -p "$pc"

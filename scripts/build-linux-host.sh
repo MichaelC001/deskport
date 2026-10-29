@@ -5,36 +5,9 @@ repo=${DESKPORT_SOURCE:-/src}
 work=${DESKPORT_WORK:-/work}
 source="$work/cache/sunshine-vendored-source"
 python3 "$repo/scripts/prepare-host-source.py" "$source"
-python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser" --revert
-python3 "$repo/scripts/patch-host-diagnostics.py" "$source"
-python3 "$repo/scripts/patch-host-network.py" "$source"
-python3 "$repo/scripts/patch-host-session-takeover.py" "$source" --revert
-python3 "$repo/scripts/patch-host-session-settings.py" "$source" --revert
-python3 "$repo/scripts/patch-host-smart-stream.py" "$source"
-for patch in session-settings session-takeover linux-display linux-keyboard linux-startup; do
-    python3 "$repo/scripts/patch-host-$patch.py" "$source"
-done
-mkdir -p "$source/src/deskport/common"
-cp "$repo"/host/common/{smartstream,inputactivity,framecadence,encoderpolicy,ratecontrol}.h "$source/src/deskport/common/"
-for patch in input-activity sync-cadence linux-cadence pipewire-memory encoder-policy remote-rate data-saver; do
-    python3 "$repo/scripts/patch-host-$patch.py" "$source"
-done
-for patch in display-ownership egl-query-lifetime; do
-    python3 "$repo/scripts/patch-host-$patch.py" "$source"
-done
-python3 "$repo/scripts/patch-host-vulkan-lifetime.py" "$source" "$repo/host/linux/vulkan-driver-lifetime.h"
-python3 "$repo/scripts/patch-host-video-pause.py" "$source"
-python3 "$repo/scripts/patch-host-rate-api.py" "$source"
-# Browser access: WebRTC transport over the existing capture and encoders.
-python3 "$repo/scripts/patch-host-browser.py" "$source" "$repo/host/browser"
+# Every DeskPort host change is listed, in order, in host/series.
+python3 "$repo/scripts/apply-host-patches.py" --platform linux-portable "$source"
 datachannel=$(bash "$repo/scripts/build-linux-libdatachannel.sh" | tail -n 1)
-# Ubuntu 24.04's libstdc++ lacks ranges::to; only debug formatting changes.
-compatibility_patch="$repo/host/linux/patches/sunshine-gcc13-log.patch"
-if git -C "$source" apply --check "$compatibility_patch" 2>/dev/null; then
-    git -C "$source" apply "$compatibility_patch"
-else
-    git -C "$source" apply --reverse --check "$compatibility_patch"
-fi
 bash "$repo/scripts/build-linux-ffmpeg.sh"
 export BUILD_VERSION=2026.906.222525 BRANCH=deskport
 cmake -S "$source" -B "$work/host-build" -G Ninja \

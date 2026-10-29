@@ -12,6 +12,17 @@
       packageFor = system: memoryDiagnostics:
         let
           pkgs = import nixpkgs { inherit system; };
+          hostPatchInputs = pkgs.lib.fileset.toSource {
+            root = ./.;
+            fileset = pkgs.lib.fileset.unions [
+              ./host/series
+              ./host/common
+              ./host/browser
+              ./host/linux/vulkan-driver-lifetime.h
+              (pkgs.lib.fileset.fileFilter (file: pkgs.lib.hasPrefix "patch-" file.name
+                || file.name == "apply-host-patches.py") ./scripts)
+            ];
+          };
           sessionHost = pkgs.sunshine.overrideAttrs (old: let
             ffmpegFlag = "-DFFMPEG_PREPARED_BINARIES:STRING=";
             ffmpegFlags = builtins.filter (pkgs.lib.hasPrefix ffmpegFlag) old.cmakeFlags;
@@ -36,35 +47,11 @@
             '';
             buildInputs = (old.buildInputs or []) ++ [ pkgs.vulkan-headers pkgs.libdatachannel ];
             nativeBuildInputs = (old.nativeBuildInputs or []) ++ [ pkgs.python3 pkgs.git ];
+            # Every DeskPort host change is listed, in order, in host/series. Only
+            # the files it reads are inputs, so unrelated edits do not rebuild the host.
             postPatch = (old.postPatch or "") + ''
-              python3 ${./scripts/patch-host-diagnostics.py} .
-              python3 ${./scripts/patch-host-network.py} .
-              python3 ${./scripts/patch-host-smart-stream.py} .
-              python3 ${./scripts/patch-host-session-settings.py} .
-              python3 ${./scripts/patch-host-session-takeover.py} .
-              python3 ${./scripts/patch-host-linux-display.py} .
-              python3 ${./scripts/patch-host-linux-keyboard.py} .
-              python3 ${./scripts/patch-host-linux-startup.py} .
-              mkdir -p src/deskport/common
-              cp ${./host/common/smartstream.h} src/deskport/common/smartstream.h
-              cp ${./host/common/inputactivity.h} src/deskport/common/inputactivity.h
-              cp ${./host/common/framecadence.h} src/deskport/common/framecadence.h
-              python3 ${./scripts/patch-host-input-activity.py} .
-              python3 ${./scripts/patch-host-sync-cadence.py} .
-              python3 ${./scripts/patch-host-linux-cadence.py} .
-              python3 ${./scripts/patch-host-pipewire-memory.py} .
-              python3 ${./scripts/patch-host-display-ownership.py} .
-              python3 ${./scripts/patch-host-egl-query-lifetime.py} .
-              python3 ${./scripts/patch-host-vulkan-lifetime.py} . ${./host/linux/vulkan-driver-lifetime.h}
-              python3 ${./scripts/patch-host-memory-diagnostics.py} . ${./host/common/memorydiagnostics.h}
-              cp ${./host/common/encoderpolicy.h} src/deskport/common/encoderpolicy.h
-              python3 ${./scripts/patch-host-encoder-policy.py} .
-              cp ${./host/common/ratecontrol.h} src/deskport/common/ratecontrol.h
-              python3 ${./scripts/patch-host-remote-rate.py} .
-              python3 ${./scripts/patch-host-data-saver.py} .
-              python3 ${./scripts/patch-host-video-pause.py} .
-              python3 ${./scripts/patch-host-rate-api.py} .
-              python3 ${./scripts/patch-host-browser.py} . ${./host/browser}
+              python3 ${hostPatchInputs}/scripts/apply-host-patches.py \
+                --platform linux-nix --repo ${hostPatchInputs} .
             '';
           });
         in pkgs.moonlight-qt.overrideAttrs (old: {
