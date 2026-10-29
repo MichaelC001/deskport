@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -132,13 +132,13 @@ khoản, máy tính được lưu trữ, máy chủ chuyển tiếp hay đườn
 tính kiểu cũ bổ sung, chuyển ngôn ngữ trong trình duyệt, chia sẻ trong phiên Windows đã đăng nhập mà không phải qua
 UAC lặp lại, co giãn hệ thống cho màn hình ảo, sửa lỗi môi trường chạy Linux, không gian làm việc Hyprland/X11 có
 bảo vệ, phương án dự phòng cho bảng tạm Wayland, IME cục bộ tùy chọn và thẻ thiết bị hình vuông. Xem
-[ghi chú phát hành 0.7.3](../RELEASE_0.7.3.md) để biết phạm vi chính xác và các kiểm tra còn lại. Kiểm tra gói
+[ghi chú phát hành 0.7.3](../releases/RELEASE_0.7.3.md) để biết phạm vi chính xác và các kiểm tra còn lại. Kiểm tra gói
 chính xác bao gồm độ tin cậy phân phối trên macOS, nội dung gói Windows, CLI gốc và quét diệt virus có bảo vệ, cùng
 các tình huống môi trường chạy/gói trên Linux. Kết quả gốc và tích hợp trước đây giữ nguyên danh tính mã nguồn ban đầu.
 
 **0.7.2 ổn định (xác minh trước đây):** [bản phát hành máy tính](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 kết hợp các cải tiến về thay đổi kích thước, truyền phát từ xa, tiết kiệm dữ liệu và môi trường chạy Linux. 21 tệp
-gồm gói, mã nguồn tương ứng, tài liệu liên kết lại và hồ sơ xác minh. Xem [ghi chú phát hành 0.7.2](../RELEASE_0.7.2.md).
+gồm gói, mã nguồn tương ứng, tài liệu liên kết lại và hồ sơ xác minh. Xem [ghi chú phát hành 0.7.2](../releases/RELEASE_0.7.2.md).
 AppImage cuối cùng đã vượt qua kiểm tra trong máy ảo Bazzite KDE Wayland mới với khởi động FUSE bình thường, môi
 trường chạy trình xem/trình hỗ trợ/khôi phục khớp nhau và dọn dẹp đã được xác minh; nghiệm thu trên GPU thật và
 truyền phát thật vẫn tách riêng.
@@ -153,11 +153,11 @@ thể chứng minh rằng không có đầu vào từ xa nào được gửi. Xe
 **Các bản ứng viên trước:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 mang đến kết nối lại nhanh hơn khi đổi kích thước, chuyển cảnh làm mờ và kéo thả mượt hơn trên macOS;
 [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-bổ sung bản sửa AppImage cho Bazzite. [Ghi chú rc.1](../RELEASE_0.7.2-rc.1.md)
-và [ghi chú rc.2](../RELEASE_0.7.2-rc.2.md) giữ nguyên phạm vi xác minh trước đó.
+bổ sung bản sửa AppImage cho Bazzite. [Ghi chú rc.1](../releases/RELEASE_0.7.2-rc.1.md)
+và [ghi chú rc.2](../releases/RELEASE_0.7.2-rc.2.md) giữ nguyên phạm vi xác minh trước đó.
 
 **Truy cập qua trình duyệt:** máy chủ cung cấp màn hình từ xa qua HTTPS với mã đăng nhập 30 giây, ghép nối trình
-duyệt tùy chọn trong bảy ngày, kích thước thích ứng và toàn màn hình. Xem [ghi chú phát hành 0.7.1](../RELEASE_0.7.1.md)
+duyệt tùy chọn trong bảy ngày, kích thước thích ứng và toàn màn hình. Xem [ghi chú phát hành 0.7.1](../releases/RELEASE_0.7.1.md)
 và [hướng dẫn trình duyệt](../BROWSER_ACCESS.md). AppImage kèm môi trường glibc riêng; gói gốc vẫn yêu cầu glibc 2.39.
 
 ### Cài đặt Linux theo bản phân phối
@@ -171,7 +171,7 @@ AppImage 0.7.3 giữ các bản sửa về môi trường chạy di động, kh�
 backport nhỏ từ Qt Wayland 6.4.2. Backport này chỉ áp dụng cho AppImage; gói gốc và Flatpak giữ môi trường Qt cơ
 bản. AppImage **0.7.3** cuối cùng đã vượt qua khởi động FUSE bình thường và kiểm tra trình hỗ trợ/môi trường chạy
 trong máy ảo Bazzite KDE Wayland mới với SELinux Enforcing và đồ họa phần mềm. Điều này không xác minh GPU thật hay
-truyền phát thật; xem [phạm vi xác minh 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+truyền phát thật; xem [phạm vi xác minh 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Kết quả cài đặt, nâng cấp, quay lui, gỡ bỏ và giữ cấu hình trên máy ảo đầy đủ được theo dõi trong
 [ma trận vòng đời máy tính](../LINUX_DESKTOP_ACCEPTANCE.md). Kiểm thử khói GUI của AppImage không xác minh các
@@ -410,7 +410,7 @@ Nguồn: [Moonlight](https://moonlight-stream.org/),
 Giới hạn nền tảng hiện tại của DeskPort được liệt kê ở trên; bảng này không ngụ ý tính năng ngang bằng trên mọi hệ
 điều hành hay lợi thế hiệu năng đã đo.
 
-Xem [ghi chú phát hành 0.7.3](../RELEASE_0.7.3.md), [kiến trúc](../ARCHITECTURE.md) và [lộ trình](../ROADMAP.md).
+Xem [ghi chú phát hành 0.7.3](../releases/RELEASE_0.7.3.md), [kiến trúc](../ARCHITECTURE.md) và [lộ trình](../ROADMAP.md).
 
 ## Dựng và chạy trên Linux
 

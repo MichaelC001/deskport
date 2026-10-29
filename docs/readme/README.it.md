@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -140,7 +140,7 @@ insieme a ulteriori traduzioni desktop legacy, cambio della lingua nel browser,
 condivisione nelle sessioni Windows con utente connesso senza UAC ripetuti,
 scalabilità di sistema del display virtuale, riparazioni del runtime Linux, spazi di lavoro
 Hyprland/X11 protetti, fallback degli appunti Wayland, IME locale opzionale e schede dispositivo quadrate.
-Vedi le [note di rilascio 0.7.3](../RELEASE_0.7.3.md) per l'ambito esatto e i controlli rimanenti.
+Vedi le [note di rilascio 0.7.3](../releases/RELEASE_0.7.3.md) per l'ambito esatto e i controlli rimanenti.
 I controlli sui pacchetti esatti coprono l'attendibilità della distribuzione macOS, i payload Windows,
 la CLI nativa e la scansione antivirus protetta, oltre a scenari runtime/pacchetto Linux.
 I risultati nativi e di integrazione precedenti mantengono le loro identità di sorgente originali.
@@ -148,7 +148,7 @@ I risultati nativi e di integrazione precedenti mantengono le loro identità di 
 **0.7.2 stabile (verifica storica):** la [release desktop](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 riunisce miglioramenti a ridimensionamento, streaming remoto, risparmio dati e runtime Linux.
 I suoi 21 asset includono pacchetti, sorgenti corrispondenti, materiali di ricollegamento e
-registri di verifica. Vedi le [note di rilascio 0.7.2](../RELEASE_0.7.2.md).
+registri di verifica. Vedi le [note di rilascio 0.7.2](../releases/RELEASE_0.7.2.md).
 L'AppImage finale ha superato un controllo in una VM Bazzite KDE Wayland pulita con avvio FUSE
 normale, runtime viewer/helper/ripristino coerenti e pulizia verificata; l'accettazione con GPU
 fisica e streaming reale resta separata.
@@ -165,12 +165,12 @@ non sia stato trasmesso alcun input remoto. Vedi le note di rilascio per l'ambit
 **Candidati precedenti:** la [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 ha introdotto riconnessioni più rapide al ridimensionamento, transizioni sfocate e trascinamenti più fluidi su macOS;
 la [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-ha aggiunto le correzioni AppImage per Bazzite. Le loro [note rc.1](../RELEASE_0.7.2-rc.1.md)
-e [note rc.2](../RELEASE_0.7.2-rc.2.md) conservano l'ambito di validazione precedente.
+ha aggiunto le correzioni AppImage per Bazzite. Le loro [note rc.1](../releases/RELEASE_0.7.2-rc.1.md)
+e [note rc.2](../releases/RELEASE_0.7.2-rc.2.md) conservano l'ambito di validazione precedente.
 
 **Accesso dal browser:** gli host desktop offrono un desktop remoto HTTPS con un
 codice di accesso da 30 secondi, abbinamento opzionale del browser per sette giorni, dimensionamento
-adattivo e schermo intero. Vedi le [note di rilascio 0.7.1](../RELEASE_0.7.1.md) e la
+adattivo e schermo intero. Vedi le [note di rilascio 0.7.1](../releases/RELEASE_0.7.1.md) e la
 [guida al browser](../BROWSER_ACCESS.md). L'AppImage include un runtime glibc privato;
 i pacchetti nativi mantengono il requisito di glibc 2.39.
 
@@ -188,7 +188,7 @@ backport di Qt Wayland 6.4.2. Tale backport è specifico dell'AppImage; i pacche
 Flatpak mantengono il runtime Qt di base. L'AppImage finale **0.7.3** ha superato l'avvio FUSE
 normale e i controlli helper/runtime in una VM Bazzite KDE Wayland pulita con
 SELinux Enforcing e grafica software. Ciò non verifica una GPU fisica né lo streaming reale;
-vedi l'[ambito di verifica 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+vedi l'[ambito di verifica 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 I risultati di installazione, aggiornamento, rollback, rimozione e conservazione della configurazione
 in VM complete sono riportati nella [matrice del ciclo di vita desktop](../LINUX_DESKTOP_ACCEPTANCE.md).
@@ -454,7 +454,7 @@ Fonti: [Moonlight](https://moonlight-stream.org/),
 I limiti di piattaforma attuali di DeskPort sono elencati sopra; questa tabella non implica
 parità di funzionalità su ogni sistema operativo né un vantaggio prestazionale misurato.
 
-Vedi le [note di rilascio 0.7.3](../RELEASE_0.7.3.md),
+Vedi le [note di rilascio 0.7.3](../releases/RELEASE_0.7.3.md),
 l'[architettura](../ARCHITECTURE.md) e la [roadmap](../ROADMAP.md).
 
 ## Compilare ed eseguire su Linux

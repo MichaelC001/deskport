@@ -80,11 +80,11 @@ Mobile clients are distributed separately through their store workflow. No
 mobile source or development package is part of this desktop release. Seamless
 remains deferred: the isolated development branch and M3 worktree are excluded.
 The ten retained PC task branches in the
-[integration ledger](PC_TASK_INTEGRATION.md) are also outside this release.
+[integration ledger](../PC_TASK_INTEGRATION.md) are also outside this release.
 
 ## Validation boundary
 
-The [integration ledger](PC_TASK_INTEGRATION.md) records 13 passing targeted
+The [integration ledger](../PC_TASK_INTEGRATION.md) records 13 passing targeted
 groups for the combined source: shared-core/Qt adapters, localization,
 preferences, lifecycle (45), binding (172), Hyprland IPC, clipboard demand (8),
 private-bus portal (19), local IME, Linux VA runtime and support evidence. The
@@ -96,7 +96,7 @@ Historical scoped native results include Windows virtual-output DPI and signed-i
 sharing, local Cocoa/Win32 IME composition, isolated Linux X11 CJK composition,
 GNOME/Hyprland clipboard fixtures, Chromium browser localization/media fixtures,
 and Linux VM package/runtime scenarios. Each retains its tested source and
-package identity in the [PC support matrix](PC_SUPPORT_MATRIX.md) and linked
+package identity in the [PC support matrix](../PC_SUPPORT_MATRIX.md) and linked
 records. The [0.7.2 release notes](RELEASE_0.7.2.md) retain that release's
 published-package results without attributing them to this version.
 

@@ -21,4 +21,4 @@ client work is on its development branch and is not included in these desktop as
 Build and isolated regression checks cover profiles, lifecycle, clipboard policy,
 translations and native compilation. Live audio/input, reconnect continuity and
 per-device behavior still require verification after manually activating both ends.
-See [session settings](SESSION_SETTINGS.md) for the inventory and acceptance checklist.
+See [session settings](../SESSION_SETTINGS.md) for the inventory and acceptance checklist.

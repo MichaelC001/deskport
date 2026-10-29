@@ -45,7 +45,7 @@
 
 ## Main features
 
-**0.7.6 release:** [release notes](docs/RELEASE_0.7.6.md) and
+**0.7.6 release:** [release notes](docs/releases/RELEASE_0.7.6.md) and
 [versioned downloads](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
 This stable release is marked Latest on GitHub.
 The current downloads include native Windows/macOS shortcut capture and the
@@ -129,7 +129,7 @@ A source definition or successful compilation alone is not a supported platform.
 [0.7.6 release](https://github.com/keithxc/deskport/releases/tag/v0.7.6).
 The device list, connection controls and remote desktop share one persistent
 window. Configure its global recall shortcut in Settings. See the
-[release notes](docs/RELEASE_0.7.6.md) for package checks and their limits.
+[release notes](docs/releases/RELEASE_0.7.6.md) for package checks and their limits.
 
 **macOS:** Open the [DMG](https://github.com/keithxc/deskport/releases/download/v0.7.6/DeskPort-0.7.6-macos-arm64.dmg),
 drag DeskPort into Applications and open it. Grant Screen Recording and
@@ -156,7 +156,7 @@ catalog alongside additional desktop legacy translations, browser language
 switching, Windows signed-in sharing without repeated
 UAC, virtual-display system scaling, Linux runtime repairs, guarded Hyprland/X11
 workspaces, Wayland clipboard fallbacks, optional local IME and square device cards.
-See the [0.7.3 release notes](docs/RELEASE_0.7.3.md) for exact scope and remaining
+See the [0.7.3 release notes](docs/releases/RELEASE_0.7.3.md) for exact scope and remaining
 checks. Exact-package checks cover macOS distribution trust, Windows payloads,
 native CLI and protected antivirus scanning, and Linux runtime/package scenarios.
 Earlier native and integration results retain their original source identities.
@@ -164,7 +164,7 @@ Earlier native and integration results retain their original source identities.
 **0.7.2 stable (historical verification):** The [desktop release](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 combines resize, remote-streaming, data-saver and Linux runtime improvements.
 Its 21 assets include packages, corresponding sources, relinking materials and
-verification records. See the [0.7.2 release notes](docs/RELEASE_0.7.2.md).
+verification records. See the [0.7.2 release notes](docs/releases/RELEASE_0.7.2.md).
 The final AppImage passed a fresh Bazzite KDE Wayland VM check with normal FUSE
 startup, matching viewer/helper/recovery runtimes and verified cleanup; physical
 GPU and real streaming acceptance remain separate.
@@ -181,12 +181,12 @@ no remote input was transmitted. See the release notes for the exact scope.
 **Earlier candidates:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 introduced faster resize reconnects, blurred transitions and smoother macOS drags;
 [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-added the Bazzite AppImage fixes. Their [rc.1 notes](docs/RELEASE_0.7.2-rc.1.md)
-and [rc.2 notes](docs/RELEASE_0.7.2-rc.2.md) retain the earlier validation scope.
+added the Bazzite AppImage fixes. Their [rc.1 notes](docs/releases/RELEASE_0.7.2-rc.1.md)
+and [rc.2 notes](docs/releases/RELEASE_0.7.2-rc.2.md) retain the earlier validation scope.
 
 **Browser access:** Desktop hosts serve an HTTPS remote desktop with a
 30-second sign-in code, optional browser pairing for seven days, adaptive sizing
-and fullscreen. See the [0.7.1 release notes](docs/RELEASE_0.7.1.md) and
+and fullscreen. See the [0.7.1 release notes](docs/releases/RELEASE_0.7.1.md) and
 [browser guide](docs/BROWSER_ACCESS.md). The AppImage includes a private glibc
 runtime; native packages retain their glibc 2.39 requirement.
 
@@ -204,7 +204,7 @@ Wayland 6.4.2 backport. That backport is AppImage-specific; native packages and
 Flatpak retain their baseline Qt runtime. The final **0.7.3** AppImage passed normal
 FUSE startup and helper/runtime checks in a fresh Bazzite KDE Wayland VM with
 SELinux Enforcing and software graphics. This does not verify a physical GPU or
-real streaming; see the [0.7.3 verification scope](docs/RELEASE_0.7.3.md#validation-boundary).
+real streaming; see the [0.7.3 verification scope](docs/releases/RELEASE_0.7.3.md#validation-boundary).
 
 Full-VM installation, upgrade, rollback, removal and configuration-retention
 results are tracked in the [desktop lifecycle matrix](docs/LINUX_DESKTOP_ACCEPTANCE.md).
@@ -482,7 +482,7 @@ Sources: [Moonlight](https://moonlight-stream.org/),
 DeskPort's current platform limits are listed above; this table does not imply
 feature parity across every OS or a measured performance advantage.
 
-See the [0.7.6 release notes](docs/RELEASE_0.7.6.md),
+See the [0.7.6 release notes](docs/releases/RELEASE_0.7.6.md),
 [architecture](docs/ARCHITECTURE.md) and [roadmap](docs/ROADMAP.md).
 
 ## Build and run on Linux

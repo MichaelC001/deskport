@@ -41,4 +41,4 @@ nix build
 python3 scripts/deskport-smoke.py ./result
 ```
 
-See [macOS packaging](MACOS_PACKAGE.md) for the Apple Silicon build procedure.
+See [macOS packaging](../MACOS_PACKAGE.md) for the Apple Silicon build procedure.

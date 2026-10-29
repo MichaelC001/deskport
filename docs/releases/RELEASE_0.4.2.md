@@ -33,7 +33,7 @@ and display restoration; these are not a fresh-machine stable installer test.
 
 The known pending inbound TLS handshake limitation remains: on some Linux paths,
 background endpoint refresh can wait for the original handshake timeout despite
-the smaller-segment retry. See [TCP recovery](TCP_RECOVERY.md).
+the smaller-segment retry. See [TCP recovery](../TCP_RECOVERY.md).
 
 Adaptive resize reconnects video briefly. Real GPU, capture/input permissions,
 cross-device clipboard and long-session acceptance remain hardware-dependent.

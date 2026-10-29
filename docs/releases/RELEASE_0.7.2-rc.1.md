@@ -26,7 +26,7 @@ the stable release until device acceptance of this candidate is complete.
   in `winbuild/inputs.json` with upstream URLs and SHA-256, mirrored in the
   [`windows-build-inputs-1`](https://github.com/keithxc/deskport/releases/tag/windows-build-inputs-1)
   build-input release. `winbuild/scripts/bootstrap.sh` builds the installer from a
-  clean checkout; see [Windows development](WINDOWS_DEVELOPMENT.md).
+  clean checkout; see [Windows development](../WINDOWS_DEVELOPMENT.md).
 
 ## Downloads and scope
 

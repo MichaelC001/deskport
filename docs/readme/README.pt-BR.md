@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -130,15 +130,15 @@ host. Ambos os dispositivos precisam de um caminho de rede funcional: use uma LA
 o Tailscale. O DeskPort não oferece serviço de contas, desktops hospedados, relay
 nem túnel de rede. O pareamento legado por PIN do Sunshine continua disponível.
 
-**0.7.3 estável:** Esta versão traz um catálogo de interface compartilhado em 22 idiomas com troca de idioma no navegador e melhora o compartilhamento em sessões Windows com usuário conectado e o DPI das telas virtuais, o runtime Linux e a área de transferência Wayland, os espaços de trabalho Hyprland/X11 protegidos, o IME local opcional e os cartões quadrados de dispositivos. Consulte as mudanças e os limites de verificação nas [notas da versão 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 estável:** Esta versão traz um catálogo de interface compartilhado em 22 idiomas com troca de idioma no navegador e melhora o compartilhamento em sessões Windows com usuário conectado e o DPI das telas virtuais, o runtime Linux e a área de transferência Wayland, os espaços de trabalho Hyprland/X11 protegidos, o IME local opcional e os cartões quadrados de dispositivos. Consulte as mudanças e os limites de verificação nas [notas da versão 0.7.3](../releases/RELEASE_0.7.3.md).
 
 **Escopo da verificação de 0.7.3:** No Windows, passaram a comparação exata do conteúdo, as verificações PE e de CLI nativa e a análise do Defender sem detecções; instalação, conexão gráfica e streaming não foram testados. O AppImage final passou na VM Bazzite com FUSE normal e GPU por software. Na VM Ubuntu 26.04, o DEB de 0.7.2 reproduziu a falha de VA; o DEB final de 0.7.3 corrigiu a falha e passou pela atualização. A reversão reproduziu a falha da versão anterior; a desinstalação posterior preservou a configuração sintética de teste. A captura e a recuperação no GNOME continuam sem aceitação. Os resultados de contêineres/Flatpak e os demais limites estão no [relatório de verificação](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt); isso não representa validação completa em hardware físico.
 
-**Histórico: 0.7.2 estável:** A [versão para desktop](https://github.com/keithxc/deskport/releases/tag/v0.7.2) reúne melhorias de redimensionamento, streaming remoto, economia de dados e runtime Linux, e corrige problemas do AppImage no Bazzite/KDE Wayland. Veja as [notas da versão 0.7.2](../RELEASE_0.7.2.md); os passos de instalação por distribuição Linux estão no [README em inglês](../../README.md#linux-installation-by-distribution).
+**Histórico: 0.7.2 estável:** A [versão para desktop](https://github.com/keithxc/deskport/releases/tag/v0.7.2) reúne melhorias de redimensionamento, streaming remoto, economia de dados e runtime Linux, e corrige problemas do AppImage no Bazzite/KDE Wayland. Veja as [notas da versão 0.7.2](../releases/RELEASE_0.7.2.md); os passos de instalação por distribuição Linux estão no [README em inglês](../../README.md#linux-installation-by-distribution).
 
 **Acesso pelo navegador:** Os hosts de desktop servem uma área de trabalho remota HTTPS com um
 código de login de 30 segundos, pareamento opcional do navegador por sete dias, dimensionamento adaptativo
-e tela cheia. Veja as [notas da versão 0.7.1](../RELEASE_0.7.1.md) e o
+e tela cheia. Veja as [notas da versão 0.7.1](../releases/RELEASE_0.7.1.md) e o
 [guia do navegador](../BROWSER_ACCESS.md). O AppImage inclui um runtime glibc privado;
 os pacotes nativos mantêm o requisito de glibc 2.39.
 
@@ -183,7 +183,7 @@ Fontes: [Moonlight](https://moonlight-stream.org/),
 Os limites atuais de plataforma do DeskPort estão listados acima; esta tabela não implica
 paridade de recursos em todos os sistemas operacionais nem vantagem de desempenho medida.
 
-Veja as [notas da versão 0.7.3](../RELEASE_0.7.3.md),
+Veja as [notas da versão 0.7.3](../releases/RELEASE_0.7.3.md),
 a [arquitetura](../ARCHITECTURE.md) e o [roadmap](../ROADMAP.md).
 
 ## Compilar e executar no Linux

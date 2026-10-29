@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -137,14 +137,14 @@ tersedia.
 lama tambahan, penukaran bahasa dalam pelayar, perkongsian dalam sesi Windows yang telah log masuk tanpa UAC
 berulang, penskalaan sistem paparan maya, pembaikan masa jalan Linux, ruang kerja Hyprland/X11 yang dilindungi,
 sandaran papan keratan Wayland, IME setempat pilihan dan kad peranti segi empat sama. Lihat
-[nota keluaran 0.7.3](../RELEASE_0.7.3.md) untuk skop tepat dan semakan yang tinggal. Semakan pakej tepat
+[nota keluaran 0.7.3](../releases/RELEASE_0.7.3.md) untuk skop tepat dan semakan yang tinggal. Semakan pakej tepat
 merangkumi kepercayaan pengedaran macOS, muatan Windows, CLI asli dan imbasan antivirus yang dilindungi, serta
 senario masa jalan/pakej Linux. Keputusan asli dan integrasi terdahulu mengekalkan identiti sumber asalnya.
 
 **0.7.2 stabil (pengesahan sejarah):** [keluaran desktop](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 menggabungkan penambahbaikan saiz semula, penstriman jauh, penjimat data dan masa jalan Linux. 21 asetnya
 merangkumi pakej, sumber sepadan, bahan pemautan semula dan rekod pengesahan. Lihat
-[nota keluaran 0.7.2](../RELEASE_0.7.2.md). AppImage akhir lulus semakan dalam VM Bazzite KDE Wayland baharu
+[nota keluaran 0.7.2](../releases/RELEASE_0.7.2.md). AppImage akhir lulus semakan dalam VM Bazzite KDE Wayland baharu
 dengan permulaan FUSE biasa, masa jalan pemapar/pembantu/pemulihan yang sepadan dan pembersihan yang disahkan;
 penerimaan GPU fizikal dan penstriman sebenar kekal berasingan.
 
@@ -159,11 +159,11 @@ yang tepat.
 **Calon terdahulu:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 memperkenalkan sambungan semula yang lebih pantas semasa saiz semula, peralihan kabur dan seretan macOS yang lebih
 lancar; [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-menambah pembaikan AppImage untuk Bazzite. [Nota rc.1](../RELEASE_0.7.2-rc.1.md)
-dan [nota rc.2](../RELEASE_0.7.2-rc.2.md) mengekalkan skop pengesahan terdahulu.
+menambah pembaikan AppImage untuk Bazzite. [Nota rc.1](../releases/RELEASE_0.7.2-rc.1.md)
+dan [nota rc.2](../releases/RELEASE_0.7.2-rc.2.md) mengekalkan skop pengesahan terdahulu.
 
 **Akses pelayar:** hos desktop menyediakan desktop jauh HTTPS dengan kod log masuk 30 saat, pemasangan pelayar
-pilihan selama tujuh hari, saiz adaptif dan skrin penuh. Lihat [nota keluaran 0.7.1](../RELEASE_0.7.1.md) dan
+pilihan selama tujuh hari, saiz adaptif dan skrin penuh. Lihat [nota keluaran 0.7.1](../releases/RELEASE_0.7.1.md) dan
 [panduan pelayar](../BROWSER_ACCESS.md). AppImage menyertakan masa jalan glibc peribadi; pakej asli mengekalkan
 keperluan glibc 2.39.
 
@@ -178,7 +178,7 @@ permulaan semasa log masuk untuk Bazzite/KDE Wayland [isu #5](https://github.com
 termasuk backport kecil Qt Wayland 6.4.2. Backport itu khusus untuk AppImage; pakej asli dan Flatpak mengekalkan
 masa jalan Qt asas. AppImage akhir **0.7.3** lulus permulaan FUSE biasa dan semakan pembantu/masa jalan dalam VM
 Bazzite KDE Wayland baharu dengan SELinux Enforcing dan grafik perisian. Ini tidak mengesahkan GPU fizikal atau
-penstriman sebenar; lihat [skop pengesahan 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+penstriman sebenar; lihat [skop pengesahan 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Keputusan pemasangan, naik taraf, pengunduran, pembuangan dan pengekalan konfigurasi dalam VM penuh dijejaki
 dalam [matriks kitaran hayat desktop](../LINUX_DESKTOP_ACCEPTANCE.md). Ujian asap GUI AppImage tidak mengesahkan
@@ -430,7 +430,7 @@ Sumber: [Moonlight](https://moonlight-stream.org/),
 Had platform semasa DeskPort disenaraikan di atas; jadual ini tidak membayangkan kesamaan ciri pada setiap OS atau
 kelebihan prestasi yang diukur.
 
-Lihat [nota keluaran 0.7.3](../RELEASE_0.7.3.md), [seni bina](../ARCHITECTURE.md) dan [pelan hala tuju](../ROADMAP.md).
+Lihat [nota keluaran 0.7.3](../releases/RELEASE_0.7.3.md), [seni bina](../ARCHITECTURE.md) dan [pelan hala tuju](../ROADMAP.md).
 
 ## Bina dan jalankan di Linux
 

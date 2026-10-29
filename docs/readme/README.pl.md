@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -139,7 +139,7 @@ dodatkowymi starszymi tłumaczeniami aplikacji desktopowej, przełączanie języ
 udostępnianie w zalogowanych sesjach Windows bez powtarzanego UAC, systemowe skalowanie ekranu
 wirtualnego, naprawy środowiska Linuksa, chronione przestrzenie Hyprland/X11, rozwiązania zapasowe
 schowka Wayland, opcjonalny lokalny IME i kwadratowe karty urządzeń. Dokładny zakres i pozostałe testy
-opisują [informacje o wydaniu 0.7.3](../RELEASE_0.7.3.md). Testy dokładnych pakietów obejmują zaufanie
+opisują [informacje o wydaniu 0.7.3](../releases/RELEASE_0.7.3.md). Testy dokładnych pakietów obejmują zaufanie
 dystrybucji w macOS, zawartość pakietów Windows, natywne CLI i chronione skanowanie antywirusowe oraz
 scenariusze środowiska/pakietów Linuksa. Wcześniejsze wyniki natywne i integracyjne zachowują pierwotne
 tożsamości źródeł.
@@ -147,7 +147,7 @@ tożsamości źródeł.
 **0.7.2 stabilna (weryfikacja historyczna):** [wydanie desktopowe](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 łączy ulepszenia zmiany rozmiaru, zdalnego strumieniowania, oszczędzania danych i środowiska Linuksa.
 Jego 21 zasobów obejmuje pakiety, odpowiadające im źródła, materiały do ponownego linkowania i zapisy
-weryfikacji. Zobacz [informacje o wydaniu 0.7.2](../RELEASE_0.7.2.md).
+weryfikacji. Zobacz [informacje o wydaniu 0.7.2](../releases/RELEASE_0.7.2.md).
 Końcowy AppImage przeszedł test w świeżej maszynie wirtualnej Bazzite KDE Wayland z normalnym startem
 FUSE, zgodnymi środowiskami przeglądarki/pomocnika/odzyskiwania i zweryfikowanym sprzątaniem; akceptacja
 na fizycznym GPU i z prawdziwym strumieniowaniem pozostaje osobna.
@@ -163,12 +163,12 @@ może potwierdzić, że nie przesłano żadnego zdalnego sterowania. Dokładny z
 **Wcześniejsze kandydatki:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 wprowadziła szybsze ponowne łączenie przy zmianie rozmiaru, rozmyte przejścia i płynniejsze przeciąganie w macOS;
 [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-dodała poprawki AppImage dla Bazzite. Ich [notatki rc.1](../RELEASE_0.7.2-rc.1.md)
-i [notatki rc.2](../RELEASE_0.7.2-rc.2.md) zachowują wcześniejszy zakres walidacji.
+dodała poprawki AppImage dla Bazzite. Ich [notatki rc.1](../releases/RELEASE_0.7.2-rc.1.md)
+i [notatki rc.2](../releases/RELEASE_0.7.2-rc.2.md) zachowują wcześniejszy zakres walidacji.
 
 **Dostęp z przeglądarki:** hosty desktopowe udostępniają zdalny pulpit przez HTTPS z 30-sekundowym
 kodem logowania, opcjonalnym parowaniem przeglądarki na siedem dni, adaptacyjnym rozmiarem i trybem
-pełnoekranowym. Zobacz [informacje o wydaniu 0.7.1](../RELEASE_0.7.1.md) i
+pełnoekranowym. Zobacz [informacje o wydaniu 0.7.1](../releases/RELEASE_0.7.1.md) i
 [przewodnik po przeglądarce](../BROWSER_ACCESS.md). AppImage zawiera prywatne środowisko glibc;
 pakiety natywne nadal wymagają glibc 2.39.
 
@@ -184,7 +184,7 @@ uprawnień i uruchamiania po zalogowaniu dla Bazzite/KDE Wayland
 Backport dotyczy tylko AppImage; pakiety natywne i Flatpak zachowują bazowe środowisko Qt. Końcowy
 AppImage **0.7.3** przeszedł normalny start FUSE oraz testy pomocnika/środowiska w świeżej maszynie
 Bazzite KDE Wayland z SELinux Enforcing i grafiką programową. Nie weryfikuje to fizycznego GPU ani
-prawdziwego strumieniowania; zobacz [zakres weryfikacji 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+prawdziwego strumieniowania; zobacz [zakres weryfikacji 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Wyniki instalacji, aktualizacji, wycofania, usuwania i zachowania konfiguracji w pełnych maszynach
 wirtualnych są śledzone w [macierzy cyklu życia na pulpicie](../LINUX_DESKTOP_ACCEPTANCE.md).
@@ -441,7 +441,7 @@ się zmienić.
 Bieżące ograniczenia platform DeskPort opisano powyżej; ta tabela nie oznacza równości funkcji na każdym
 systemie ani zmierzonej przewagi wydajności.
 
-Zobacz [informacje o wydaniu 0.7.3](../RELEASE_0.7.3.md),
+Zobacz [informacje o wydaniu 0.7.3](../releases/RELEASE_0.7.3.md),
 [architekturę](../ARCHITECTURE.md) i [plan rozwoju](../ROADMAP.md).
 
 ## Kompilacja i uruchamianie w Linuksie

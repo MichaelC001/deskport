@@ -26,7 +26,7 @@ that exact revision pinned.
 See `SHA256SUMS.txt`, `PROVENANCE.json` and `VERIFICATION.txt` on the
 release for the current packages. The replaced assets and their records are
 no longer offered as release downloads. Reinstall an existing 0.7.6 package;
-see the [Linux installation guide](LINUX_PACKAGES.md) for each package manager.
+see the [Linux installation guide](../LINUX_PACKAGES.md) for each package manager.
 
 ## Changes since 0.7.5
 
@@ -67,7 +67,7 @@ Git and Nix pins. Mobile clients and deferred Seamless work are outside this rel
 - Linux x86_64 Flatpak: viewer only, using Freedesktop Platform 25.08.
 
 See [versioned assets](https://github.com/keithxc/deskport/releases/tag/v0.7.6)
-and the [Linux installation guide](LINUX_PACKAGES.md). Fully quit the previous
+and the [Linux installation guide](../LINUX_PACKAGES.md). Fully quit the previous
 application before upgrading. Existing settings and pairing identities remain.
 
 `SHA256SUMS.txt`, `PROVENANCE.json` and `VERIFICATION.txt` record exact packages,
@@ -79,8 +79,8 @@ archives are not generated.
 ## Validation boundary
 
 Final-package checks are recorded in `VERIFICATION.txt`. Earlier source and
-development-package checks in the [roadmap](ROADMAP.md) and
-[GNOME evidence](GNOME_DISPLAY.md) retain their original scope; they do not
+development-package checks in the [roadmap](../ROADMAP.md) and
+[GNOME evidence](../GNOME_DISPLAY.md) retain their original scope; they do not
 establish acceptance of every final 0.7.6 package.
 
 The GNOME recovery qualification uses an explicitly patched Mutter compositor

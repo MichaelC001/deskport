@@ -73,7 +73,7 @@ Fully quit the old application, verify the replacement filename against
 `SHA256SUMS-r2.txt`, and install the `r2` package. The displayed version remains
 0.7.4. On Linux, use APT `install --reinstall`, DNF `reinstall` when the earlier
 0.7.4 RPM is present, or Flatpak `install --reinstall`; see the exact commands
-in [Linux release packages](LINUX_PACKAGES.md#replacing-the-earlier-074).
+in [Linux release packages](../LINUX_PACKAGES.md#replacing-the-earlier-074).
 
 ## Replacement verification
 
@@ -124,7 +124,7 @@ staging checks apply only to their recorded source and package hashes.
 Compilation, mocked portal tests and registration alone do not establish real
 window activation or physical keyboard acceptance.
 
-The [PC support matrix](PC_SUPPORT_MATRIX.md) retains the separately scoped
+The [PC support matrix](../PC_SUPPORT_MATRIX.md) retains the separately scoped
 limits for Windows pre-login/secure desktop, GNOME capture/recovery, physical
 Hyprland/X11 behavior, native Wayland IME, broad browser/device coverage,
 long-session recovery, clipboard/audio quality, HDR and latency. The bounded

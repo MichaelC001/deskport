@@ -28,8 +28,8 @@ the remaining system dependencies. The AppImage retains its original file path
 for login startup. Flatpak uses session-bus ownership for window activation and
 recovers from forced termination without stale sandbox PID locks.
 
-See the [Linux installation guide](LINUX_PACKAGES.md) and
-[macOS guide](MACOS_PACKAGE.md) for commands and first-use permissions.
+See the [Linux installation guide](../LINUX_PACKAGES.md) and
+[macOS guide](../MACOS_PACKAGE.md) for commands and first-use permissions.
 Nix users can run `nix run github:keithxc/deskport/v0.2.0`.
 Verify release assets against `SHA256SUMS.txt`.
 
@@ -54,6 +54,6 @@ recorded for future work and is not implemented here. Future iOS/iPadOS/macOS
 store and Android client work remains separate.
 
 Source, build instructions and pinned dependencies are in this release's Git tag;
-see [bundled components](BUNDLED_COMPONENTS.md) for upstream source and notices.
+see [bundled components](../BUNDLED_COMPONENTS.md) for upstream source and notices.
 Existing 0.1.14 release assets remain unchanged. Publishing 0.2.0 does not replace
 any running installation.

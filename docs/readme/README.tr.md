@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -137,7 +137,7 @@ Eski Sunshine PIN eşleştirmesi kullanılmaya devam eder.
 arayüz kataloğu, tarayıcıda dil değiştirme, tekrarlanan UAC olmadan oturum açılmış Windows oturumlarında
 paylaşım, sanal ekran sistem ölçeklemesi, Linux çalışma zamanı onarımları, korumalı Hyprland/X11 çalışma
 alanları, Wayland pano yedekleri, isteğe bağlı yerel IME ve kare cihaz kartları getirir. Kesin kapsam ve
-kalan kontroller için [0.7.3 sürüm notlarına](../RELEASE_0.7.3.md) bakın. Kesin paket kontrolleri
+kalan kontroller için [0.7.3 sürüm notlarına](../releases/RELEASE_0.7.3.md) bakın. Kesin paket kontrolleri
 macOS dağıtım güvenini, Windows yüklerini, yerel CLI'yi ve korumalı antivirüs taramasını, ayrıca Linux
 çalışma zamanı/paket senaryolarını kapsar. Daha önceki yerel ve entegrasyon sonuçları özgün kaynak
 kimliklerini korur.
@@ -145,7 +145,7 @@ kimliklerini korur.
 **0.7.2 kararlı (geçmiş doğrulama):** [Masaüstü sürümü](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 yeniden boyutlandırma, uzak akış, veri tasarrufu ve Linux çalışma zamanı iyileştirmelerini birleştirir.
 21 varlığı paketleri, karşılık gelen kaynakları, yeniden bağlama materyallerini ve doğrulama kayıtlarını
-içerir. Bkz. [0.7.2 sürüm notları](../RELEASE_0.7.2.md).
+içerir. Bkz. [0.7.2 sürüm notları](../releases/RELEASE_0.7.2.md).
 Son AppImage, normal FUSE başlatma, eşleşen görüntüleyici/yardımcı/kurtarma çalışma zamanları ve doğrulanmış
 temizlikle yeni bir Bazzite KDE Wayland sanal makinesi kontrolünü geçti; fiziksel GPU ve gerçek akış kabulü
 ayrı kalır.
@@ -160,12 +160,12 @@ değildir ve tanılama, hiçbir uzak girdinin iletilmediğini kanıtlayamaz. Kes
 **Önceki adaylar:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 daha hızlı yeniden boyutlandırma bağlantıları, bulanık geçişler ve daha akıcı macOS sürüklemeleri getirdi;
 [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-Bazzite AppImage düzeltmelerini ekledi. [rc.1 notları](../RELEASE_0.7.2-rc.1.md)
-ve [rc.2 notları](../RELEASE_0.7.2-rc.2.md) önceki doğrulama kapsamını korur.
+Bazzite AppImage düzeltmelerini ekledi. [rc.1 notları](../releases/RELEASE_0.7.2-rc.1.md)
+ve [rc.2 notları](../releases/RELEASE_0.7.2-rc.2.md) önceki doğrulama kapsamını korur.
 
 **Tarayıcı erişimi:** Masaüstü ana bilgisayarları 30 saniyelik oturum kodu, isteğe bağlı yedi günlük
 tarayıcı eşleştirmesi, uyarlanabilir boyut ve tam ekranla HTTPS uzak masaüstü sunar.
-Bkz. [0.7.1 sürüm notları](../RELEASE_0.7.1.md) ve [tarayıcı kılavuzu](../BROWSER_ACCESS.md).
+Bkz. [0.7.1 sürüm notları](../releases/RELEASE_0.7.1.md) ve [tarayıcı kılavuzu](../BROWSER_ACCESS.md).
 AppImage özel bir glibc çalışma zamanı içerir; yerel paketler glibc 2.39 gereksinimini korur.
 
 ### Dağıtıma göre Linux kurulumu
@@ -180,7 +180,7 @@ düzeltmelerini, küçük Qt Wayland 6.4.2 geri aktarımı dahil korur. Bu geri 
 özgüdür; yerel paketler ve Flatpak temel Qt çalışma zamanını korur. Son **0.7.3** AppImage, SELinux
 Enforcing ve yazılım grafikleriyle yeni bir Bazzite KDE Wayland sanal makinesinde normal FUSE başlatma ve
 yardımcı/çalışma zamanı kontrollerini geçti. Bu, fiziksel GPU'yu veya gerçek akışı doğrulamaz; bkz.
-[0.7.3 doğrulama kapsamı](../RELEASE_0.7.3.md#validation-boundary).
+[0.7.3 doğrulama kapsamı](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Tam sanal makinede kurulum, yükseltme, geri alma, kaldırma ve yapılandırma koruma sonuçları
 [masaüstü yaşam döngüsü matrisinde](../LINUX_DESKTOP_ACCEPTANCE.md) izlenir.
@@ -436,7 +436,7 @@ Kaynaklar: [Moonlight](https://moonlight-stream.org/),
 DeskPort'un güncel platform sınırları yukarıda listelenmiştir; bu tablo her işletim sisteminde özellik
 eşitliği veya ölçülmüş bir performans üstünlüğü anlamına gelmez.
 
-Bkz. [0.7.3 sürüm notları](../RELEASE_0.7.3.md),
+Bkz. [0.7.3 sürüm notları](../releases/RELEASE_0.7.3.md),
 [mimari](../ARCHITECTURE.md) ve [yol haritası](../ROADMAP.md).
 
 ## Linux'ta derleme ve çalıştırma

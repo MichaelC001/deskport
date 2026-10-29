@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -138,7 +138,7 @@ Klassiek koppelen via Sunshine-pincode blijft beschikbaar.
 extra klassieke desktopvertalingen, taalwissel in de browser, delen in aangemelde Windows-sessies
 zonder herhaalde UAC, systeemschaling voor virtuele schermen, reparaties aan de Linux-runtime,
 beveiligde Hyprland/X11-werkruimten, terugvaloplossingen voor het Wayland-klembord, optionele lokale
-IME en vierkante apparaatkaarten. Zie de [releasenotes van 0.7.3](../RELEASE_0.7.3.md) voor de exacte
+IME en vierkante apparaatkaarten. Zie de [releasenotes van 0.7.3](../releases/RELEASE_0.7.3.md) voor de exacte
 reikwijdte en resterende controles. Controles op de exacte pakketten omvatten het distributievertrouwen
 op macOS, Windows-payloads, de native CLI en beschermde antivirusscans, en Linux-runtime/pakketscenario's.
 Eerdere native en integratieresultaten behouden hun oorspronkelijke bronidentiteit.
@@ -146,7 +146,7 @@ Eerdere native en integratieresultaten behouden hun oorspronkelijke bronidentite
 **0.7.2 stabiel (historische verificatie):** de [desktoprelease](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 combineert verbeteringen aan formaatwijziging, extern streamen, databesparing en Linux-runtime.
 De 21 assets omvatten pakketten, bijbehorende broncode, materiaal voor opnieuw linken en
-verificatiegegevens. Zie de [releasenotes van 0.7.2](../RELEASE_0.7.2.md).
+verificatiegegevens. Zie de [releasenotes van 0.7.2](../releases/RELEASE_0.7.2.md).
 De uiteindelijke AppImage doorstond een controle in een schone Bazzite KDE Wayland-VM met normale
 FUSE-start, overeenkomende viewer/helper/herstel-runtimes en geverifieerde opruiming; acceptatie op
 fysieke GPU en met echt streamen blijft apart.
@@ -162,12 +162,12 @@ dat er geen externe invoer is verzonden. Zie de releasenotes voor de exacte reik
 **Eerdere kandidaten:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 introduceerde snellere herverbinding bij formaatwijziging, vervaagde overgangen en soepeler slepen op macOS;
 [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-voegde de Bazzite AppImage-fixes toe. Hun [rc.1-notes](../RELEASE_0.7.2-rc.1.md)
-en [rc.2-notes](../RELEASE_0.7.2-rc.2.md) behouden de eerdere validatiereikwijdte.
+voegde de Bazzite AppImage-fixes toe. Hun [rc.1-notes](../releases/RELEASE_0.7.2-rc.1.md)
+en [rc.2-notes](../releases/RELEASE_0.7.2-rc.2.md) behouden de eerdere validatiereikwijdte.
 
 **Browsertoegang:** desktophosts bieden een HTTPS-extern bureaublad met een aanmeldcode van
 30 seconden, optionele browserkoppeling voor zeven dagen, adaptieve grootte en volledig scherm.
-Zie de [releasenotes van 0.7.1](../RELEASE_0.7.1.md) en de [browsergids](../BROWSER_ACCESS.md).
+Zie de [releasenotes van 0.7.1](../releases/RELEASE_0.7.1.md) en de [browsergids](../BROWSER_ACCESS.md).
 De AppImage bevat een eigen glibc-runtime; native pakketten behouden hun vereiste van glibc 2.39.
 
 ### Linux-installatie per distributie
@@ -183,7 +183,7 @@ machtigingen en starten bij aanmelden voor Bazzite/KDE Wayland
 Wayland 6.4.2. Die backport geldt alleen voor de AppImage; native pakketten en de Flatpak behouden hun
 basis-Qt-runtime. De uiteindelijke **0.7.3**-AppImage doorstond normale FUSE-start en helper/runtime-controles
 in een schone Bazzite KDE Wayland-VM met SELinux Enforcing en softwarematige graphics. Dit verifieert geen
-fysieke GPU of echt streamen; zie de [verificatiereikwijdte van 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+fysieke GPU of echt streamen; zie de [verificatiereikwijdte van 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Resultaten van installatie, upgrade, terugdraaien, verwijderen en behoud van configuratie in volledige
 VM's staan in de [levenscyclusmatrix voor desktops](../LINUX_DESKTOP_ACCEPTANCE.md).
@@ -447,7 +447,7 @@ Bronnen: [Moonlight](https://moonlight-stream.org/),
 De huidige platformgrenzen van DeskPort staan hierboven; deze tabel impliceert geen gelijke functies op
 elk besturingssysteem of een gemeten prestatievoordeel.
 
-Zie de [releasenotes van 0.7.3](../RELEASE_0.7.3.md),
+Zie de [releasenotes van 0.7.3](../releases/RELEASE_0.7.3.md),
 de [architectuur](../ARCHITECTURE.md) en de [roadmap](../ROADMAP.md).
 
 ## Bouwen en uitvoeren op Linux

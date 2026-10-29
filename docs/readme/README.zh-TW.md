@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -119,14 +119,14 @@ Flatpak 僅提供檢視功能。發布檔案附有 [SHA-256 檢查碼](https://g
 使用區域網路或你自己的 VPN（例如 Tailscale）。DeskPort 不提供帳號服務、代管桌面、中繼
 或網路通道。傳統的 Sunshine PIN 配對仍然可用。
 
-**0.7.3 正式版：** 本次整合了 22 種語言的共用介面目錄與瀏覽器語言切換、Windows 已登入工作階段的分享與虛擬顯示器 DPI、Linux 執行環境與 Wayland 剪貼簿、受保護的 Hyprland/X11 工作區、可選的本機輸入法，以及正方形裝置卡片的改進。 變更與驗證範圍請見 [0.7.3 版本說明](../RELEASE_0.7.3.md)。
+**0.7.3 正式版：** 本次整合了 22 種語言的共用介面目錄與瀏覽器語言切換、Windows 已登入工作階段的分享與虛擬顯示器 DPI、Linux 執行環境與 Wayland 剪貼簿、受保護的 Hyprland/X11 工作區、可選的本機輸入法，以及正方形裝置卡片的改進。 變更與驗證範圍請見 [0.7.3 版本說明](../releases/RELEASE_0.7.3.md)。
 
 **0.7.3 驗證範圍：** Windows 最終套件內容一致性、PE、原生 CLI 檢查通過，Defender 掃描零檢出；未進行安裝、GUI 連線或串流驗收。最終 AppImage 通過 Bazzite 虛擬機中的正常 FUSE 與軟體 GPU 檢查。Ubuntu 26.04 虛擬機重現了 0.7.2 DEB 的 VA 當機，並確認最終 0.7.3 DEB 已修正且升級通過。回復舊版重現了原有當機，隨後解除安裝仍保留了合成測試設定。GNOME 擷取與恢復仍未通過驗收。容器、Flatpak 結果及其他限制請見[驗證報告](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)；這些結果不代表完整的實體硬體驗收。
 
-**歷史版本：0.7.2 穩定版：** [桌面版本](https://github.com/keithxc/deskport/releases/tag/v0.7.2)整合了調整大小、遠端串流、省流量與 Linux 執行環境方面的改進，並修正了 Bazzite/KDE Wayland 上的 AppImage 問題。詳見 [0.7.2 版本說明](../RELEASE_0.7.2.md)；各 Linux 發行版的安裝步驟請見[英文 README](../../README.md#linux-installation-by-distribution)。
+**歷史版本：0.7.2 穩定版：** [桌面版本](https://github.com/keithxc/deskport/releases/tag/v0.7.2)整合了調整大小、遠端串流、省流量與 Linux 執行環境方面的改進，並修正了 Bazzite/KDE Wayland 上的 AppImage 問題。詳見 [0.7.2 版本說明](../releases/RELEASE_0.7.2.md)；各 Linux 發行版的安裝步驟請見[英文 README](../../README.md#linux-installation-by-distribution)。
 
 **瀏覽器存取：** 桌面主機提供 HTTPS 遠端桌面，支援 30 秒登入碼、可選的七天瀏覽器配對、
-自動調整大小與全螢幕。請參閱 [0.7.1 版本說明](../RELEASE_0.7.1.md)與
+自動調整大小與全螢幕。請參閱 [0.7.1 版本說明](../releases/RELEASE_0.7.1.md)與
 [瀏覽器使用指南](../BROWSER_ACCESS.md)。AppImage 內含私有的 glibc 執行環境；
 原生套件仍需要 glibc 2.39。
 
@@ -169,7 +169,7 @@ Flatpak 僅提供檢視功能。發布檔案附有 [SHA-256 檢查碼](https://g
 DeskPort 目前的平台限制列於上方；此表並不表示各作業系統的功能完全相同，
 也不代表經過量測的效能優勢。
 
-請參閱 [0.7.3 版本說明](../RELEASE_0.7.3.md)、
+請參閱 [0.7.3 版本說明](../releases/RELEASE_0.7.3.md)、
 [架構說明](../ARCHITECTURE.md)與[開發藍圖](../ROADMAP.md)。
 
 ## 在 Linux 上建置與執行

@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -130,15 +130,15 @@ Host. Beide Geräte benötigen eine funktionierende Netzwerkverbindung: Verwende
 Tailscale. DeskPort bietet keinen Kontodienst, keine gehosteten Desktops, kein Relay
 und keinen Netzwerktunnel. Das klassische Sunshine-PIN-Pairing bleibt verfügbar.
 
-**0.7.3 stabil:** Diese Version bringt einen gemeinsamen UI-Katalog mit 22 Sprachen und Sprachwechsel im Browser und verbessert die Freigabe in angemeldeten Windows-Sitzungen und die DPI-Einstellungen virtueller Anzeigen, die Linux-Laufzeit und Wayland-Zwischenablage, abgesicherte Hyprland/X11-Arbeitsbereiche, die optionale lokale IME sowie quadratische Gerätekarten. Änderungen und Prüfgrenzen stehen in den [Release Notes zu 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 stabil:** Diese Version bringt einen gemeinsamen UI-Katalog mit 22 Sprachen und Sprachwechsel im Browser und verbessert die Freigabe in angemeldeten Windows-Sitzungen und die DPI-Einstellungen virtueller Anzeigen, die Linux-Laufzeit und Wayland-Zwischenablage, abgesicherte Hyprland/X11-Arbeitsbereiche, die optionale lokale IME sowie quadratische Gerätekarten. Änderungen und Prüfgrenzen stehen in den [Release Notes zu 0.7.3](../releases/RELEASE_0.7.3.md).
 
 **Prüfumfang von 0.7.3:** Unter Windows bestanden der exakte Payload-Abgleich, PE- und native CLI-Prüfungen sowie der Defender-Scan ohne Funde; Installation, GUI-Verbindung und Streaming wurden nicht geprüft. Das endgültige AppImage bestand die Bazzite-VM-Prüfung mit regulärem FUSE und Software-GPU. In der Ubuntu-26.04-VM reproduzierte das DEB von 0.7.2 den VA-Absturz; das endgültige DEB von 0.7.3 behob ihn und bestand das Upgrade. Der Rollback reproduzierte den Absturz der alten Version; die anschließende Deinstallation erhielt die synthetische Testkonfiguration. GNOME-Aufnahme und -Wiederherstellung sind weiterhin nicht abgenommen. Container-/Flatpak-Ergebnisse und weitere Grenzen stehen im [Prüfbericht](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt); dies ist keine vollständige Prüfung auf physischer Hardware.
 
-**Historisch: 0.7.2 stabil:** Das [Desktop-Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) bündelt Verbesserungen bei Größenänderung, Remote-Streaming, Datensparmodus und Linux-Laufzeit und behebt AppImage-Probleme unter Bazzite/KDE Wayland. Details in den [Release Notes zu 0.7.2](../RELEASE_0.7.2.md); Installationsschritte je Linux-Distribution stehen in der [englischen README](../../README.md#linux-installation-by-distribution).
+**Historisch: 0.7.2 stabil:** Das [Desktop-Release](https://github.com/keithxc/deskport/releases/tag/v0.7.2) bündelt Verbesserungen bei Größenänderung, Remote-Streaming, Datensparmodus und Linux-Laufzeit und behebt AppImage-Probleme unter Bazzite/KDE Wayland. Details in den [Release Notes zu 0.7.2](../releases/RELEASE_0.7.2.md); Installationsschritte je Linux-Distribution stehen in der [englischen README](../../README.md#linux-installation-by-distribution).
 
 **Browserzugriff:** Desktop-Hosts stellen einen HTTPS-Remote-Desktop bereit, mit einem
 30-Sekunden-Anmeldecode, optionalem Browser-Pairing für sieben Tage, adaptiver Größenanpassung
-und Vollbild. Siehe die [Release Notes zu 0.7.1](../RELEASE_0.7.1.md) und die
+und Vollbild. Siehe die [Release Notes zu 0.7.1](../releases/RELEASE_0.7.1.md) und die
 [Browser-Anleitung](../BROWSER_ACCESS.md). Das AppImage enthält eine private glibc-Laufzeitumgebung;
 native Pakete behalten ihre Anforderung an glibc 2.39.
 
@@ -183,7 +183,7 @@ Quellen: [Moonlight](https://moonlight-stream.org/),
 Die aktuellen Plattformgrenzen von DeskPort sind oben aufgeführt; diese Tabelle impliziert weder
 Funktionsgleichheit auf allen Betriebssystemen noch einen gemessenen Leistungsvorteil.
 
-Siehe die [Release Notes zu 0.7.3](../RELEASE_0.7.3.md),
+Siehe die [Release Notes zu 0.7.3](../releases/RELEASE_0.7.3.md),
 die [Architektur](../ARCHITECTURE.md) und die [Roadmap](../ROADMAP.md).
 
 ## Unter Linux bauen und ausführen

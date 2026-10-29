@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -130,15 +130,15 @@ l'hôte. Les deux appareils ont besoin d'un chemin réseau fonctionnel : utilise
 Tailscale. DeskPort ne fournit ni service de compte, ni bureaux hébergés, ni relais,
 ni tunnel réseau. L'appairage historique par code PIN Sunshine reste disponible.
 
-**0.7.3 stable :** Cette version apporte un catalogue d’interface partagé en 22 langues avec changement de langue dans le navigateur et améliore le partage dans les sessions Windows ouvertes et le DPI des écrans virtuels, le runtime Linux et le presse-papiers Wayland, les espaces de travail Hyprland/X11 sécurisés, l’IME local optionnel et les cartes carrées des appareils. Les changements et limites de vérification figurent dans les [notes de version 0.7.3](../RELEASE_0.7.3.md).
+**0.7.3 stable :** Cette version apporte un catalogue d’interface partagé en 22 langues avec changement de langue dans le navigateur et améliore le partage dans les sessions Windows ouvertes et le DPI des écrans virtuels, le runtime Linux et le presse-papiers Wayland, les espaces de travail Hyprland/X11 sécurisés, l’IME local optionnel et les cartes carrées des appareils. Les changements et limites de vérification figurent dans les [notes de version 0.7.3](../releases/RELEASE_0.7.3.md).
 
 **Périmètre de vérification de 0.7.3 :** Sous Windows, la comparaison exacte du contenu, les contrôles PE et CLI native ainsi que l’analyse Defender sans détection ont réussi ; l’installation, la connexion graphique et le streaming n’ont pas été testés. L’AppImage final a passé les contrôles dans une VM Bazzite avec FUSE normal et GPU logiciel. Dans la VM Ubuntu 26.04, le DEB de 0.7.2 reproduisait le plantage VA ; le DEB final de 0.7.3 le corrige et a passé la mise à niveau. Le retour à la version précédente a reproduit son plantage ; la désinstallation qui a suivi a conservé la configuration synthétique de test. La capture et la récupération GNOME restent non validées. Les résultats des conteneurs/Flatpak et les autres limites figurent dans le [rapport de vérification](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt) ; cela ne constitue pas une validation complète sur matériel physique.
 
-**Historique : 0.7.2 stable :** La [version de bureau](https://github.com/keithxc/deskport/releases/tag/v0.7.2) regroupe des améliorations du redimensionnement, du streaming à distance, de l’économiseur de données et du runtime Linux, et corrige des problèmes de l’AppImage sous Bazzite/KDE Wayland. Voir les [notes de version 0.7.2](../RELEASE_0.7.2.md) ; les étapes d’installation par distribution Linux figurent dans le [README anglais](../../README.md#linux-installation-by-distribution).
+**Historique : 0.7.2 stable :** La [version de bureau](https://github.com/keithxc/deskport/releases/tag/v0.7.2) regroupe des améliorations du redimensionnement, du streaming à distance, de l’économiseur de données et du runtime Linux, et corrige des problèmes de l’AppImage sous Bazzite/KDE Wayland. Voir les [notes de version 0.7.2](../releases/RELEASE_0.7.2.md) ; les étapes d’installation par distribution Linux figurent dans le [README anglais](../../README.md#linux-installation-by-distribution).
 
 **Accès par navigateur :** Les hôtes de bureau servent un bureau distant HTTPS avec un
 code de connexion de 30 secondes, un appairage facultatif du navigateur pendant sept jours, un dimensionnement adaptatif
-et le plein écran. Voir les [notes de version 0.7.1](../RELEASE_0.7.1.md) et le
+et le plein écran. Voir les [notes de version 0.7.1](../releases/RELEASE_0.7.1.md) et le
 [guide du navigateur](../BROWSER_ACCESS.md). L'AppImage inclut un runtime glibc privé ;
 les paquets natifs conservent leur exigence de glibc 2.39.
 
@@ -183,7 +183,7 @@ Sources : [Moonlight](https://moonlight-stream.org/),
 Les limites de plateforme actuelles de DeskPort sont indiquées ci-dessus ; ce tableau n'implique ni
 une parité de fonctionnalités sur tous les systèmes, ni un avantage de performance mesuré.
 
-Voir les [notes de version 0.7.3](../RELEASE_0.7.3.md),
+Voir les [notes de version 0.7.3](../releases/RELEASE_0.7.3.md),
 l'[architecture](../ARCHITECTURE.md) et la [feuille de route](../ROADMAP.md).
 
 ## Compiler et exécuter sous Linux

@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -125,15 +125,15 @@ Flatpak は閲覧のみです。リリースには [SHA-256 チェックサム](
 DeskPort はアカウントサービス、ホスティング型デスクトップ、リレー、ネットワークトンネルを提供しません。
 従来の Sunshine PIN ペアリングも引き続き使えます。
 
-**0.7.3 正式版：** 22 言語の共有 UI カタログとブラウザーでの言語切り替え、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、保護付きの Hyprland/X11 ワークスペース、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../RELEASE_0.7.3.md)をご覧ください。
+**0.7.3 正式版：** 22 言語の共有 UI カタログとブラウザーでの言語切り替え、Windows のログイン済みセッションでの共有と仮想ディスプレイ DPI、Linux ランタイムと Wayland クリップボード、保護付きの Hyprland/X11 ワークスペース、任意で有効にできるローカル IME、正方形のデバイスカードを改善しています。 変更点と検証範囲は [0.7.3 リリースノート](../releases/RELEASE_0.7.3.md)をご覧ください。
 
 **0.7.3 の検証範囲：** Windows では最終パッケージ内容の一致、PE、ネイティブ CLI、Defender の検出ゼロを確認しました。インストール、GUI 接続、ストリーミングは未検証です。最終 AppImage は通常の FUSE とソフトウェア GPU を使う Bazzite VM の検証に合格しました。Ubuntu 26.04 VM では 0.7.2 の DEB で VA クラッシュを再現し、最終 0.7.3 DEB で修正を確認しました。アップグレードは合格しました。ロールバックでは旧版のクラッシュが再現され、その後のアンインストールでも合成テスト設定が保持されました。GNOME のキャプチャと復旧は未受け入れです。コンテナー・Flatpak の結果とその他の制限は[検証レポート](https://github.com/keithxc/deskport/releases/download/v0.7.3/VERIFICATION.txt)をご覧ください。これらは物理ハードウェア全体の動作確認を意味しません。
 
-**過去のリリース：0.7.2 安定版：** [デスクトップ版](https://github.com/keithxc/deskport/releases/tag/v0.7.2)は、リサイズ、リモートストリーミング、データセーバー、Linux ランタイムの改善をまとめ、Bazzite/KDE Wayland での AppImage の問題を修正しています。詳しくは [0.7.2 リリースノート](../RELEASE_0.7.2.md)を、Linux ディストリビューション別のインストール手順は[英語版 README](../../README.md#linux-installation-by-distribution)をご覧ください。
+**過去のリリース：0.7.2 安定版：** [デスクトップ版](https://github.com/keithxc/deskport/releases/tag/v0.7.2)は、リサイズ、リモートストリーミング、データセーバー、Linux ランタイムの改善をまとめ、Bazzite/KDE Wayland での AppImage の問題を修正しています。詳しくは [0.7.2 リリースノート](../releases/RELEASE_0.7.2.md)を、Linux ディストリビューション別のインストール手順は[英語版 README](../../README.md#linux-installation-by-distribution)をご覧ください。
 
 **ブラウザアクセス：** デスクトップホストは HTTPS のリモートデスクトップを提供し、
 30 秒のログインコード、オプションの 7 日間ブラウザペアリング、アダプティブなサイズ調整、
-全画面表示に対応しています。[0.7.1 リリースノート](../RELEASE_0.7.1.md)と
+全画面表示に対応しています。[0.7.1 リリースノート](../releases/RELEASE_0.7.1.md)と
 [ブラウザガイド](../BROWSER_ACCESS.md)を参照してください。AppImage にはプライベートな glibc ランタイムが含まれ、
 ネイティブパッケージは引き続き glibc 2.39 が必要です。
 
@@ -176,7 +176,7 @@ Nixpkgs に `pkgs.deskport` が加わるわけでもありません。ホスト�
 DeskPort の現在のプラットフォーム制限は上記のとおりです。この表はすべての OS での機能の同等性や、
 計測された性能面の優位性を意味するものではありません。
 
-[0.7.3 リリースノート](../RELEASE_0.7.3.md)、
+[0.7.3 リリースノート](../releases/RELEASE_0.7.3.md)、
 [アーキテクチャ](../ARCHITECTURE.md)、[ロードマップ](../ROADMAP.md)も参照してください。
 
 ## Linux でのビルドと実行

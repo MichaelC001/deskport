@@ -7,7 +7,7 @@
 > **Current desktop release: [0.7.4 (r2)](https://github.com/keithxc/deskport/releases/tag/v0.7.4).**
 > The translated package examples and verification history below still describe
 > 0.7.3. Use the [current installation guide](../../README.md#install) and
-> [0.7.4 release notes](../RELEASE_0.7.4.md) for the replacement downloads.
+> [0.7.4 release notes](../releases/RELEASE_0.7.4.md) for the replacement downloads.
 
 <p align="center">
   <a href="../../README.md">English</a> ·
@@ -135,7 +135,7 @@ layanan akun, desktop yang di-host, relay, atau terowongan jaringan. Pemasangan 
 desktop lama tambahan, pergantian bahasa di browser, berbagi di sesi Windows yang sudah masuk tanpa UAC
 berulang, penskalaan sistem layar virtual, perbaikan runtime Linux, ruang kerja Hyprland/X11 yang terlindungi,
 cadangan papan klip Wayland, IME lokal opsional, dan kartu perangkat persegi. Lihat
-[catatan rilis 0.7.3](../RELEASE_0.7.3.md) untuk cakupan tepat dan pemeriksaan yang tersisa. Pemeriksaan
+[catatan rilis 0.7.3](../releases/RELEASE_0.7.3.md) untuk cakupan tepat dan pemeriksaan yang tersisa. Pemeriksaan
 paket yang tepat mencakup kepercayaan distribusi macOS, muatan Windows, CLI native dan pemindaian antivirus
 terlindungi, serta skenario runtime/paket Linux. Hasil native dan integrasi sebelumnya mempertahankan identitas
 sumber aslinya.
@@ -143,7 +143,7 @@ sumber aslinya.
 **0.7.2 stabil (verifikasi historis):** [rilis desktop](https://github.com/keithxc/deskport/releases/tag/v0.7.2)
 menggabungkan peningkatan pengubahan ukuran, streaming jarak jauh, penghemat data, dan runtime Linux.
 21 aset di dalamnya mencakup paket, sumber terkait, materi penautan ulang, dan catatan verifikasi.
-Lihat [catatan rilis 0.7.2](../RELEASE_0.7.2.md). AppImage final lulus pemeriksaan di VM Bazzite KDE
+Lihat [catatan rilis 0.7.2](../releases/RELEASE_0.7.2.md). AppImage final lulus pemeriksaan di VM Bazzite KDE
 Wayland baru dengan startup FUSE normal, runtime penampil/pembantu/pemulihan yang cocok, dan pembersihan
 terverifikasi; penerimaan GPU fisik dan streaming nyata tetap terpisah.
 
@@ -158,11 +158,11 @@ jarak jauh yang terkirim. Lihat catatan rilis untuk cakupan tepatnya.
 **Kandidat sebelumnya:** [0.7.2-rc.1](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.1)
 menghadirkan penyambungan ulang yang lebih cepat saat mengubah ukuran, transisi buram, dan seret yang lebih
 mulus di macOS; [0.7.2-rc.2](https://github.com/keithxc/deskport/releases/tag/v0.7.2-rc.2)
-menambahkan perbaikan AppImage untuk Bazzite. [Catatan rc.1](../RELEASE_0.7.2-rc.1.md)
-dan [catatan rc.2](../RELEASE_0.7.2-rc.2.md) mempertahankan cakupan validasi sebelumnya.
+menambahkan perbaikan AppImage untuk Bazzite. [Catatan rc.1](../releases/RELEASE_0.7.2-rc.1.md)
+dan [catatan rc.2](../releases/RELEASE_0.7.2-rc.2.md) mempertahankan cakupan validasi sebelumnya.
 
 **Akses browser:** host desktop menyajikan desktop jarak jauh HTTPS dengan kode masuk 30 detik, pemasangan
-browser opsional selama tujuh hari, ukuran adaptif, dan layar penuh. Lihat [catatan rilis 0.7.1](../RELEASE_0.7.1.md)
+browser opsional selama tujuh hari, ukuran adaptif, dan layar penuh. Lihat [catatan rilis 0.7.1](../releases/RELEASE_0.7.1.md)
 dan [panduan browser](../BROWSER_ACCESS.md). AppImage menyertakan runtime glibc privat; paket native tetap
 memerlukan glibc 2.39.
 
@@ -177,7 +177,7 @@ mulai saat login untuk Bazzite/KDE Wayland [issue #5](https://github.com/keithxc
 termasuk backport kecil Qt Wayland 6.4.2. Backport itu khusus AppImage; paket native dan Flatpak
 mempertahankan runtime Qt dasar. AppImage final **0.7.3** lulus startup FUSE normal dan pemeriksaan
 pembantu/runtime di VM Bazzite KDE Wayland baru dengan SELinux Enforcing dan grafis perangkat lunak. Ini tidak
-memverifikasi GPU fisik atau streaming nyata; lihat [cakupan verifikasi 0.7.3](../RELEASE_0.7.3.md#validation-boundary).
+memverifikasi GPU fisik atau streaming nyata; lihat [cakupan verifikasi 0.7.3](../releases/RELEASE_0.7.3.md#validation-boundary).
 
 Hasil instalasi, peningkatan, rollback, penghapusan, dan pelestarian konfigurasi pada VM lengkap dicatat
 dalam [matriks siklus hidup desktop](../LINUX_DESKTOP_ACCEPTANCE.md). Uji asap GUI AppImage tidak
@@ -426,7 +426,7 @@ Sumber: [Moonlight](https://moonlight-stream.org/),
 Batasan platform DeskPort saat ini tercantum di atas; tabel ini tidak menyiratkan kesetaraan fitur di setiap OS
 atau keunggulan kinerja yang terukur.
 
-Lihat [catatan rilis 0.7.3](../RELEASE_0.7.3.md), [arsitektur](../ARCHITECTURE.md), dan [peta jalan](../ROADMAP.md).
+Lihat [catatan rilis 0.7.3](../releases/RELEASE_0.7.3.md), [arsitektur](../ARCHITECTURE.md), dan [peta jalan](../ROADMAP.md).
 
 ## Membangun dan menjalankan di Linux
 

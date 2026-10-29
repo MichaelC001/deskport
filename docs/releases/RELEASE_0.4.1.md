@@ -10,10 +10,10 @@ from another project's repository. Client and host behaviour is unchanged from
 - Vendored `moonlight-common-c` (and its nested `enet`), `qmdnsengine`,
   `SDL_GameControllerDB`, `libsoundio`, `h264bitstream` and the macOS prebuilt
   dependency tree `libs/mac`. Each keeps its upstream licence file; upstream
-  URLs and the exact commits are recorded in [VENDORED.md](VENDORED.md).
+  URLs and the exact commits are recorded in [VENDORED.md](../VENDORED.md).
 - Dropped `libs/windows` (252 MB). Every reference to it is inside a `win32:`
   project branch, and Windows is not part of the release matrix.
-  [`libs/VENDORED.md`](../libs/VENDORED.md) records the commit to restore from.
+  [`libs/VENDORED.md`](../../libs/VENDORED.md) records the commit to restore from.
 - The Nix flake no longer refetches `moonlight-stream/moonlight-qt` with
   `fetchSubmodules` to recover gitlink contents, and filters `libs` out of the
   Linux build source.

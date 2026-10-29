@@ -46,7 +46,7 @@ this desktop release.
   are unsigned; bundled driver signatures are checked separately.
 
 See the [release assets](https://github.com/keithxc/deskport/releases/tag/v0.7.5)
-and [Linux installation guide](LINUX_PACKAGES.md). Fully quit the previous
+and [Linux installation guide](../LINUX_PACKAGES.md). Fully quit the previous
 application before upgrading. Existing settings and pairing identities remain.
 
 `SHA256SUMS.txt`, `PROVENANCE.json` and `VERIFICATION.txt` identify the exact
@@ -88,7 +88,7 @@ executable changes affect Linux only.
   tested Hyprland guest. Package availability does not imply every host display
   policy or every Linux distribution is validated.
 
-The [PC support matrix](PC_SUPPORT_MATRIX.md) retains platform-specific limits,
+The [PC support matrix](../PC_SUPPORT_MATRIX.md) retains platform-specific limits,
 including GNOME capture/recovery, Windows secure desktop, native Wayland IME
 and broader hardware coverage. Updating mynix does not activate an installation;
 the user performs `rebuild switch` and subsequent live verification.

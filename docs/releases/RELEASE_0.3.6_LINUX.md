@@ -13,5 +13,5 @@ This preview targets the Nix Linux package. macOS remains on the published 0.3.5
 package, and no mobile client update is required. Other Linux desktops retain
 existing-screen portal capture without adaptive virtual modes.
 
-See [Linux adaptive workspace](LINUX_ADAPTIVE_DISPLAY.md) for dependencies,
+See [Linux adaptive workspace](../LINUX_ADAPTIVE_DISPLAY.md) for dependencies,
 validation and limitations. Real iPad video/input acceptance remains pending.

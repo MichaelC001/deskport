@@ -138,7 +138,7 @@ resumed normally.
 
 ## Desktop 0.7.6 final package delivery — 2026-10-27
 
-The [0.7.6 release](RELEASE_0.7.6.md) replaces the earlier desktop packages with
+The [0.7.6 release](releases/RELEASE_0.7.6.md) replaces the earlier desktop packages with
 ten final installers with filenames containing only the version and platform:
 macOS DMG/ZIP, Windows Setup/portable ZIP and Linux DEB/RPM/Arch/AppImage/tar/Flatpak.
 The release has 21 current assets: ten installers, eight platform records and
@@ -187,7 +187,7 @@ older KWin lacks host virtual-output protocols, and Omarchy retains the known
 virtual-output/fullscreen-restore limits (11/16 canvas stages). These limitations
 remain explicit, rather than being counted as full platform passes. All owned
 VMs were stopped and their baseline integrity verified.
-See [0.7.6 release notes](RELEASE_0.7.6.md) for the current package scope.
+See [0.7.6 release notes](releases/RELEASE_0.7.6.md) for the current package scope.
 
 ## GNOME 51.1 native recovery and scaling — 2026-10-26
 
@@ -377,7 +377,7 @@ acceptance or hide the failed result. Guest window rules are restored, all VMs
 are torn down and baseline hashes remain unchanged. GNOME, older KWin and
 Hyprland host-display limitations are also retained in the release record.
 
-See [0.7.5 validation details](RELEASE_0.7.5.md#validation-boundary). Publication,
+See [0.7.5 validation details](releases/RELEASE_0.7.5.md#validation-boundary). Publication,
 mynix delivery and user activation remain distinct from these package results.
 
 ## Linux release graphics verification — 2026-10-25
@@ -739,7 +739,7 @@ Retain checksums, provenance, dependency caches and current rollback evidence.
 Do not reuse a download URL for different package bytes. GitHub asset validation
 uses server SHA-256 and byte size without downloading installers again.
 Activation of mynix-managed systems remains manual.
-See [0.7.4 release notes](RELEASE_0.7.4.md).
+See [0.7.4 release notes](releases/RELEASE_0.7.4.md).
 
 Native KDE Wayland checks found that a portal can deliver the shortcut without
 an activation token: hidden-window recall worked, but a visible background
@@ -831,7 +831,7 @@ core `f34fc7b1524ce436185c4b085a903e6af4314790`: macOS arm64 DMG/ZIP,
 Windows x64 Setup/portable ZIP, Linux x86_64 DEB/RPM/Arch/AppImage/portable
 archive, viewer-only Flatpak and the Nix flake. Include corresponding public
 sources, relinking materials, package inventories and verification metadata.
-See [0.7.3 release notes](RELEASE_0.7.3.md) for changes and explicit limits.
+See [0.7.3 release notes](releases/RELEASE_0.7.3.md) for changes and explicit limits.
 
 Exact-package evidence includes macOS Developer ID/notarization/stapling and
 Gatekeeper, Windows payload/native CLI/protected Defender checks, the Bazzite
@@ -1233,7 +1233,7 @@ layout restored. The incident is not streaming acceptance, and diagnostics
 cannot establish that no remote input was transmitted. Additional Seamless
 supervisor/diagnostic development is excluded; experimental Seamless remains
 incomplete. Managed activation on other targets remains user-controlled.
-See the [release notes](RELEASE_0.7.2.md) and published verification records.
+See the [release notes](releases/RELEASE_0.7.2.md) and published verification records.
 
 ## Bazzite AppImage runtime and disconnect recovery — 2026-10-15
 
@@ -2145,7 +2145,7 @@ Reason: user-authorized macOS/Linux/Windows formal release. macOS notarization,
 Linux distro/Flatpak checks, Windows final-installer three protected runtime
 rounds and release CI passed. Public source/relink materials were scanned.
 Final-artifact physical streaming acceptance and Windows clipboard parity are
-not established by these package checks; see [release notes](RELEASE_0.6.0.md).
+not established by these package checks; see [release notes](releases/RELEASE_0.6.0.md).
 Mobile 2.0 is distributed separately; Apple build 19 is waiting for review.
 
 ## Deterministic host startup responsiveness check — 2026-09-21
@@ -2289,7 +2289,7 @@ mobile vendoring are separate; simulator results do not establish real streams.
 Reason: user-requested consolidation of desktop development into main and a full
 formal release. Includes confirmed takeover, desktop tuning, compact macOS sizing,
 dedicated-display recovery and the vendored dependency work. Refresh README feature,
-platform and comparison tables. See [release notes](RELEASE_0.4.2.md).
+platform and comparison tables. See [release notes](releases/RELEASE_0.4.2.md).
 
 Portable Linux packaging must compile the patched host, rather than bundle an
 unmodified upstream executable that lacks the session admission API. Installed
@@ -2327,7 +2327,7 @@ Side effects: `git archive` now yields a build-complete tree, so
 `scripts/git-archive-all.sh` and its GNU tar/Bash 5 requirement are gone, and the
 GPL corresponding-source tarball no longer depends on chasing submodule
 revisions. Version declarations bumped to 0.4.1 in `app/version.txt` and
-`flake.nix`; see [release notes](RELEASE_0.4.1.md).
+`flake.nix`; see [release notes](releases/RELEASE_0.4.1.md).
 
 Released for macOS arm64 and Nix/NixOS only. Client and host behaviour is
 unchanged from 0.4.0, so the 0.4.0 native Linux package matrix is not rebuilt.
@@ -2337,7 +2337,7 @@ unchanged from 0.4.0, so the 0.4.0 native Linux package matrix is not rebuilt.
 Reason: consolidate the adaptive-display core, per-device address editing, macOS
 mirror-mode/KDE lease recovery and the Linux TCP fallback prereleases (0.3.6–0.3.14)
 into main for a formal desktop release. Version declarations were bumped to 0.4.0
-in `app/version.txt` and `flake.nix`; see [release notes](RELEASE_0.4.0.md) for the
+in `app/version.txt` and `flake.nix`; see [release notes](releases/RELEASE_0.4.0.md) for the
 established macOS arm64 and Linux x86_64 package matrix.
 
 Published as stable `v0.4.0` from commit `6133f7e9`. The macOS arm64 DMG and ZIP
@@ -2815,7 +2815,7 @@ passed. Native editor acceptance remains pending.
   checks; this does not claim a long-duration streaming soak.
 
 Status: v0.1.0, first release, 2026-09-10. Unfinished capabilities and native
-acceptance limits are listed below. See [release notes](RELEASE_0.1.0.md).
+acceptance limits are listed below. See [release notes](releases/RELEASE_0.1.0.md).
 
 ## Product goal
 
@@ -3539,7 +3539,7 @@ No release, mynix update or deployed-service change is included in this slice.
 
 ## 2026-09-14 — 0.3.0 stable release
 
-User requested merging the session-settings branch into main and publishing the full existing Mac/Linux package matrix. Release verification is recorded in docs/RELEASE_0.3.0.md and the release verification asset; physical streaming acceptance remains separate.
+User requested merging the session-settings branch into main and publishing the full existing Mac/Linux package matrix. Release verification is recorded in docs/releases/RELEASE_0.3.0.md and the release verification asset; physical streaming acceptance remains separate.
 
 ## 2026-09-15 — disposable macOS VM verification
 
@@ -4426,7 +4426,7 @@ focus report says so.
 
 Reason: consolidate the resize, remote-rate, data-saver, input recovery and
 Linux AppImage improvements from the 0.7.2 candidates into the next full
-desktop release. See [0.7.2 release notes](RELEASE_0.7.2.md).
+desktop release. See [0.7.2 release notes](releases/RELEASE_0.7.2.md).
 
 The unfinished Seamless supervisor and local diagnostic changes remain on a
 separate development branch. Final desktop packages require their own exact

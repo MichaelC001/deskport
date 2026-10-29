@@ -31,7 +31,7 @@ Windows, Intel Mac, ARM Linux and mobile store packages are not part of the esta
 On affected Linux TCP paths, an earlier pending inbound TLS handshake can block
 the smaller-segment retry until the original handshake times out. Background
 endpoint refresh may fail while an existing stream remains active. Bounded
-handshake admission remains an open follow-up; see [TCP recovery](TCP_RECOVERY.md).
+handshake admission remains an open follow-up; see [TCP recovery](../TCP_RECOVERY.md).
 
 ## Verification boundaries
 
