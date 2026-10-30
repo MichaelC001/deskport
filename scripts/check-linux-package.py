@@ -102,13 +102,17 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
         subprocess.run([str(host), str(config), '--creds', 'package-check', 'isolated-test'],
                        env=env, cwd=state, capture_output=True, timeout=30, check=True)
         context = ssl._create_unverified_context()  # Isolated self-signed loopback server.
+        # The smoke server is loopback-only; inherited proxies may be unreachable
+        # in its network namespace and must never intercept these requests.
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                            urllib.request.HTTPSHandler(context=context))
         authorization = 'Basic ' + base64.b64encode(b'package-check:isolated-test').decode()
         def request_api(payload=None, extra_headers=None):
             headers = {'Authorization': authorization, 'Content-Type': 'application/json'}
             headers.update(extra_headers or {})
             request = urllib.request.Request('https://127.0.0.1:52990/api/deskport/sessions',
                 data=None if payload is None else json.dumps(payload).encode(), headers=headers)
-            with urllib.request.urlopen(request, context=context, timeout=2) as response:
+            with opener.open(request, timeout=2) as response:
                 return json.load(response)
         with (state / 'host-process.log').open('w+') as host_log:
             server = subprocess.Popen([str(host), str(config)], env=env, cwd=state,
@@ -141,7 +145,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 # Relative asset paths must work inside the relocated host tree.
                 page = urllib.request.Request('https://127.0.0.1:52990/',
                                               headers={'Authorization': authorization})
-                with urllib.request.urlopen(page, context=context, timeout=2) as response:
+                with opener.open(page, timeout=2) as response:
                     assert b'<html' in response.read().lower(), 'Host web assets unavailable'
                 rejected = request_api({'action': 'acquire', 'uuid': 'unpaired',
                     'lease': 'package-check', 'snapshot': snapshot['snapshot']})
@@ -150,7 +154,7 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
                 browser = urllib.request.Request('https://127.0.0.1:52990/api/deskport/browser',
                     data=json.dumps({'action': 'status', 'id': 'package-check-browser'}).encode(),
                     headers={'Authorization': authorization, 'Content-Type': 'application/json'})
-                with urllib.request.urlopen(browser, context=context, timeout=2) as response:
+                with opener.open(browser, timeout=2) as response:
                     answer = json.load(response)
                 assert answer.get('status') is False and answer.get('code') == 'not-found', answer
                 released = request_api({'action': 'release', 'lease': 'package-check'})

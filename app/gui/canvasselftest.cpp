@@ -127,7 +127,7 @@ int runCanvasSelfTest(int argc, char** argv) {
             const auto capabilities = selected->capabilities();
             canvas->setPresentation(nullptr);
             if (first.active() || second.active()) { fail("decoder survived detach"); return; }
-            printf("PASS: one persistent native root, 16 decoded presentation stages, resize, session switch, live hide/minimize/recall, native fullscreen/maximize/restore and decoder teardown; %s\n",
+            printf("PASS: one persistent Qt root and native window ID, 16 decoded presentation stages, resize, session switch, hide/minimize/remap, native fullscreen/maximize/restore and decoder teardown; %s\n",
                    QJsonDocument(capabilities).toJson(QJsonDocument::Compact).constData());
             result = 0; app.quit(); return;
         }
@@ -187,6 +187,10 @@ int runCanvasSelfTest(int argc, char** argv) {
         else if (stage % 3 == 1) window.showMinimized();
         QTimer::singleShot(250, &app, [&] {
             canvas->setPresentation(nullptr);
+            // Wayland has no unset-minimized request, and this isolated test
+            // has no user activation token. Remap its own minimized root
+            // before checking the next renderer's actual first submission.
+            if (QGuiApplication::platformName().startsWith("wayland") && stage % 3 == 1) window.hide();
             window.showNormal();
             window.resize(stage % 2 ? QSize(800, 520) : QSize(1040, 700));
             selected = stage % 2 ? &second : &first;

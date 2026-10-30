@@ -1,3 +1,19 @@
+## Linux canvas exposure and isolated recall — 2026-10-30
+
+The isolated canvas test now remaps its own minimized Wayland window before
+advancing. Wayland has no unset-minimized request, and the fixture has no user
+activation token. It retains the same Qt root and native window ID, while the
+Wayland surface may be recreated. This tests rendering after remapping, not
+taskbar, portal-token, focus or physical-input behavior. The diagnostic candidate
+with the existing production cover completed all 16 stages in Fedora KDE;
+final package validation remains pending. A proposed cover-remapping change
+was removed after that same-guest comparison did not establish its necessity.
+The renderer's actual first-submission gate and generation checks are unchanged.
+
+Linux package checks use a proxy-free opener for their fixed loopback API.
+They passed with deliberately unreachable proxy settings in a network-isolated
+container. No deployed service or system activation is part of these changes.
+
 ## Retained canvas recovery and input follow-up — 2026-10-29
 
 The KDE Wayland transition follow-up preloads the retained backdrop and keeps
