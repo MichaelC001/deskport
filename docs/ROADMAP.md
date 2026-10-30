@@ -14,15 +14,15 @@ The renderer's actual first-submission gate and generation checks are unchanged.
 
 Normal AppImage FUSE lifecycle, native package checks and isolated Flatpak 25.08
 checks are recorded in the release's `VERIFICATION-linux.txt`. All owned VM
-runs preserved their baselines and completed teardown. Latest remains 0.7.6
-until the operator finishes reviewing the rebuilt Linux packages. See the
+runs preserved their baselines and completed teardown. The release records
+capture the verification state before Latest promotion. See the
 [Linux review guide](releases/LINUX_0.7.7_REVIEW.md).
 
 Linux package checks use a proxy-free opener for their fixed loopback API.
 They passed with deliberately unreachable proxy settings in a network-isolated
 container. No deployed service or system activation is part of these changes.
-The check now sets every proxy variable to a closed loopback port itself, so
-a request outside that opener fails on every host. With the r2 packages it
+The check now points proxy variables to loopback port 9, which is closed in
+the isolated test environments, to catch requests outside that opener. It
 passed in Fedora KDE (RPM route) and Bazzite KDE (extracted AppImage) guests.
 The original 0.7.7 Linux assets were then withdrawn, and the rebuilt files
 were renamed from their `-r2` suffix to the standard file names; contents and

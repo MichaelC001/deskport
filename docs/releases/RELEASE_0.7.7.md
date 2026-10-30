@@ -55,3 +55,24 @@ mixed-DPI behavior, display timing, HDR, audio, latency or live streaming on
 every platform. Linux compositor capabilities and decoration behavior vary.
 Updating mynix prepares configuration builds; activation and live use remain
 manual.
+
+## Published artifacts and source
+
+The [release](https://github.com/keithxc/deskport/releases/tag/v0.7.7) contains
+22 assets. The Linux packages rebuilt from `1b559bf013d9dfbd8962af15dd63030293e858da`
+use standard filenames; their bytes match the tested packages originally named
+with an `-r2` suffix. The tag and macOS/Windows packages retain source
+`6bd3d80003b14df3f6a6fd0c5d287acb06ea5c58`. Shared core remains
+`866c09547cd47d4b26a0725374e70614cf2845db`.
+
+The complete `SHA256SUMS.txt` covers the other 21 assets. GitHub's server
+SHA-256 digests and sizes were checked against the package records; the small
+checksum, build, provenance and verification records were also read and checked.
+See [Linux verification](https://github.com/keithxc/deskport/releases/download/v0.7.7/VERIFICATION-linux.txt)
+and the [Linux review guide](LINUX_0.7.7_REVIEW.md) for the Debian virtual-display
+and Omarchy fullscreen-restore limitations.
+
+The verification and provenance attachments are snapshots made before Latest
+promotion. References to Latest 0.7.6 in those snapshots describe that earlier
+state; the release page records the subsequent promotion decision. No package
+changes are required to promote the verified release.

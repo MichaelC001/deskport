@@ -1,8 +1,7 @@
 # DeskPort 0.7.7 Linux review
 
 The rebuilt Linux packages are available under the [0.7.7 release](https://github.com/keithxc/deskport/releases/tag/v0.7.7).
-GitHub Latest remains **0.7.6**, pending the operator's review. The original
-Linux assets were withdrawn on 2026-10-30. The rebuilt files, first published
+The original Linux assets were withdrawn on 2026-10-30. The rebuilt files, first published
 with an `-r2` suffix, now use the standard file names; their contents and
 hashes are unchanged by the rename. macOS and Windows packages are unchanged.
 
@@ -37,9 +36,8 @@ Keep the AppImage at its permanent path before refreshing login startup.
 
 ## Other packages and evidence
 
-The application and native package version remain 0.7.7. A package downloaded
-before 2026-10-30 under the same file name is the withdrawn build; compare its
-hash with `SHA256SUMS.txt`. When replacing an installed 0.7.7 native package,
+The application and native package version remain 0.7.7. Earlier downloads under the same file name may be the withdrawn build;
+compare their hashes with `SHA256SUMS.txt`. When replacing an installed 0.7.7 native package,
 use the package manager's reinstall operation. Nix users can use source
 revision `1b559bf013d9dfbd8962af15dd63030293e858da` or a later main revision.
 
@@ -52,3 +50,7 @@ and Arch; Bazzite Flatpak and the corresponding native package checks also passe
 Debian's KWin 6.3 virtual display is unsupported. Omarchy retains the 11/16
 fullscreen-restore limit observed with the official 0.7.6 control. These limits
 are retained in the verification record; a full pass is not claimed for them.
+
+The attached verification and provenance records capture the state before
+Latest promotion. Their references to Latest 0.7.6 describe that snapshot;
+the release page records the subsequent promotion decision.
