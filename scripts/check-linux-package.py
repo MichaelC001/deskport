@@ -106,6 +106,12 @@ with tempfile.TemporaryDirectory(prefix='deskport-package-smoke-') as temporary:
         # in its network namespace and must never intercept these requests.
         opener = urllib.request.build_opener(urllib.request.ProxyHandler({}),
                                             urllib.request.HTTPSHandler(context=context))
+        # Point every proxy variable at a closed port, so a request that does
+        # not use the proxy-free opener fails on every host, not only behind one.
+        for key in ('http_proxy', 'https_proxy', 'all_proxy'):
+            os.environ[key] = os.environ[key.upper()] = 'http://127.0.0.1:9'
+        for key in ('no_proxy', 'NO_PROXY'):
+            os.environ.pop(key, None)
         authorization = 'Basic ' + base64.b64encode(b'package-check:isolated-test').decode()
         def request_api(payload=None, extra_headers=None):
             headers = {'Authorization': authorization, 'Content-Type': 'application/json'}
