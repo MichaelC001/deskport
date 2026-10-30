@@ -2,7 +2,9 @@
 
 Linux r2 is available under the [0.7.7 release](https://github.com/keithxc/deskport/releases/tag/v0.7.7).
 GitHub Latest remains **0.7.6**, pending the operator's review. The original
-assets and their hashes are retained; macOS and Windows packages are unchanged.
+Linux assets were removed from the release on 2026-10-30; the r2 files replace
+them. macOS and Windows packages and the original checksum, provenance and
+verification records are unchanged.
 
 The Linux r2 source is [`1b559bf0`](https://github.com/keithxc/deskport/tree/1b559bf013d9dfbd8962af15dd63030293e858da).
 The original tag identifies `6bd3d800`. The fix corrects the isolated Wayland

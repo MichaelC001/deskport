@@ -20,6 +20,10 @@ until the operator finishes reviewing r2. See the [r2 review guide](releases/LIN
 Linux package checks use a proxy-free opener for their fixed loopback API.
 They passed with deliberately unreachable proxy settings in a network-isolated
 container. No deployed service or system activation is part of these changes.
+The check now sets every proxy variable to a closed loopback port itself, so
+a request outside that opener fails on every host. With the r2 packages it
+passed in Fedora KDE (RPM route) and Bazzite KDE (extracted AppImage) guests.
+The original 0.7.7 Linux assets were then removed from the release in favor of r2.
 
 ## Retained canvas recovery and input follow-up — 2026-10-29
 
