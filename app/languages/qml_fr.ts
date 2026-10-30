@@ -2906,6 +2906,10 @@
             <translation>Le nom de domaine est conservé tel quel et résolu à chaque connexion.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Une adresse par ligne. Elles sont essayées dans l’ordre ; placez une adresse du réseau local en premier pour la privilégier.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Port de l’hôte</translation>
         </message>

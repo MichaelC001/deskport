@@ -2911,6 +2911,10 @@
             <translation>Tên miền được lưu dưới dạng đã nhập và được giải quyết lại khi kết nối.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Mỗi dòng một địa chỉ. Các địa chỉ được thử theo thứ tự; đặt địa chỉ mạng LAN lên đầu để ưu tiên.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Cổng máy chủ</translation>
         </message>

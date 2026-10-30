@@ -2954,6 +2954,10 @@
             <translation>保留输入的域名，每次连接时重新解析。</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>每行一个地址，按顺序尝试；把局域网地址放在最前面即可优先使用。</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>主机端口</translation>
         </message>

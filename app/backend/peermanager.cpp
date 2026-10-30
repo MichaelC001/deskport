@@ -6,6 +6,7 @@
 #include "peermanager-link.h"
 #include "sessiongraph.h"
 #include <QSysInfo>
+#include <QJsonArray>
 #include <QPointer>
 #include "peerstore.h"
 #include "pairinginvite.h"
@@ -77,8 +78,10 @@ PeerManager::PeerManager(HostManager* host, const QByteArray& cert, const QByteA
         if (!hostName.isEmpty()) {
             if (!peer.contains("resolvedAddress")) peer["resolvedAddress"] = peer["address"];
             peer["address"] = hostName;
-            it.value() = peer;
         }
+        // An older version may have changed "address" without the list.
+        if (peer.contains("addresses")) setPeerAddresses(peer, peerAddresses(peer));
+        it.value() = peer;
     }
     m_Healthy = ok && (saved.isEmpty() || (saved["version"].toInt() == 1 && saved["peers"].isObject())) && !m_Certificate.isNull() && !m_Key.isNull() &&
         (m_ClientOnly || ((m_SeamlessHost || m_Host->available()) && m_Host->prepareIdentity(cert, key)));
@@ -386,15 +389,16 @@ void PeerManager::attach(Link* link) {
         const auto address = link->socket->peerAddress().toString();
         for (auto it = m_Peers.begin(); it != m_Peers.end(); ++it) {
             const auto peer = it.value().toObject();
-            if (!link->incoming && (((peer["address"].toString() == address || peer["resolvedAddress"].toString() == address ||
-                 peer["address"].toString().compare(requestedHost(link->requestedAddress), Qt::CaseInsensitive) == 0) && peer["bindingPort"].toInt(48991) == link->socket->peerPort()) ||
+            const auto addresses = peerAddresses(peer);
+            if (!link->incoming && (((addresses.contains(address) || peer["resolvedAddress"].toString() == address ||
+                 addresses.contains(requestedHost(link->requestedAddress), Qt::CaseInsensitive)) && peer["bindingPort"].toInt(48991) == link->socket->peerPort()) ||
                  (!link->requestedAddress.isEmpty() && peer["requestedAddress"].toString() == link->requestedAddress)) &&
                     it.key() != link->fingerprint) {
                 fail(link, tr("This address has a different device key. Remove the old binding before replacing it.")); return;
             }
         }
         if (!link->incoming) SmallTcp::accepted(*link->socket,
-            link->endpointRefresh ? link->expectedPeer["address"].toString() : requestedHost(link->requestedAddress), link->socket->peerPort());
+            link->endpointRefresh ? link->refreshAddress : requestedHost(link->requestedAddress), link->socket->peerPort());
         if (link->incoming) {
             const auto meta = metadata();
             link->seamlessVersionAdvertised = meta[DP_SEAMLESS_CAPABILITY].toInt();
@@ -493,7 +497,9 @@ bool PeerManager::acceptMetadata(Link* link, const QJsonObject& metadata) {
         link->peer["name"] = previous["name"];
         link->peer["customName"] = true;
     }
-    link->peer["address"] = address;
+    // Rebinding replaces the primary endpoint but keeps locally configured fallbacks.
+    const QJsonObject merged{{"address", address}, {"addresses", QJsonArray::fromStringList(peerAddresses(previous).mid(1))}};
+    setPeerAddresses(link->peer, peerAddresses(merged));
     link->peer["requestedAddress"] = link->requestedAddress;
     link->peer["clientCert"] = QString::fromUtf8(link->socket->peerCertificate().toPem());
     return true;

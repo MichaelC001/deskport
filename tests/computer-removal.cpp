@@ -22,7 +22,10 @@ int main(int argc,char** argv) {
         QTemporaryDir dir;
         for (const auto action : {"remove","restart","readd"})
             check(QProcess::execute(QCoreApplication::applicationFilePath(),{action,dir.path()})==0,action);
-        std::puts("PASS: real manager and two models; offline removal, stale callbacks, settings cleanup and restart/rebind");
+        QTemporaryDir addressDir;
+        for (const auto action : {"addresses","addresses-restart"})
+            check(QProcess::execute(QCoreApplication::applicationFilePath(),{action,addressDir.path()})==0,action);
+        std::puts("PASS: real manager and two models; offline removal, stale callbacks, settings cleanup, restart/rebind and ordered fallback addresses");
         return 0;
     }
     QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,argv[2]);
@@ -33,6 +36,29 @@ int main(int argc,char** argv) {
     ComputerManager manager(prefs);
     ComputerModel first,second; first.initialize(&manager); second.initialize(&manager);
     const QString action=argv[1];
+    // Configured endpoints keep their order ahead of discovered ones and persist.
+    auto expectOrder=[&](const char* message) {
+        check(manager.getComputers().size()==1,"addressed host present");
+        const auto addresses=manager.getComputers().first()->uniqueAddresses();
+        check(addresses.size()>=3 && addresses[0]==NvAddress("192.0.2.1",48989) &&
+              addresses[1]==NvAddress("198.51.100.7",48989) && addresses[2]==NvAddress("desktop.example",48989),message);
+    };
+    if(action=="addresses") {
+        auto listed=peer; listed["addresses"]=QVariantList{"192.0.2.1","198.51.100.7","bad host","desktop.example","198.51.100.7"};
+        check(manager.addBoundHost(listed,true),"seed host with fallback addresses");
+        expectOrder("configured addresses tried first, in order, without duplicates or invalid names");
+        auto single=peer; single["address"]="192.0.2.1";
+        check(manager.addBoundHost(single),"edit back to one address");
+        check(manager.getComputers().first()->alternateAddresses.isEmpty(),"removed fallbacks are forgotten");
+        check(manager.addBoundHost(listed),"restore fallback addresses");
+        QThreadPool::globalInstance()->waitForDone();
+        return 0;
+    }
+    if(action=="addresses-restart") {
+        expectOrder("fallback addresses persist across restart");
+        QThreadPool::globalInstance()->waitForDone();
+        return 0;
+    }
     if(action=="remove") {
         check(manager.addBoundHost(peer,true),"seed offline host");
         check(manager.getComputers().size()==1,"host imported");

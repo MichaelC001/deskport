@@ -1,3 +1,11 @@
+## Fallback address editor hint — 2026-10-30
+
+Core `f54beef6f2f9007aa8a4092d1864fc08bb8f7698` adds one BindView-only string
+explaining the one-address-per-line, in-order fallback list, with drafts in all
+22 locales and matching Qt catalog metadata. Desktop Git and Nix pin the same
+published tree. Mobile pins and wire contracts are unchanged; address ordering,
+probing and storage stay in the desktop adapter.
+
 ## macOS window movement and resizing help — 2026-10-28
 
 Core `866c09547cd47d4b26a0725374e70614cf2845db` adds SettingsHome help for

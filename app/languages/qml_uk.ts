@@ -2911,6 +2911,10 @@
             <translation>Доменне ім’я зберігається у такому вигляді, як воно було введене, і знову вирішується під час підключення.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>По одній адресі в рядку. Вони перевіряються по черзі; поставте адресу локальної мережі першою, щоб надати їй перевагу.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Порт хоста</translation>
         </message>

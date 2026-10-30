@@ -2911,6 +2911,10 @@
             <translation>Een domeinnaam wordt opgeslagen zoals ingevoerd en bij het verbinden weer opgelost.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Eén adres per regel. Ze worden op volgorde geprobeerd; zet een LAN-adres bovenaan om het voorrang te geven.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Host-poort</translation>
         </message>

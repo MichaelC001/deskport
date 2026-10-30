@@ -2911,6 +2911,10 @@
             <translation>Доменное имя сохраняется в том виде, в каком оно было введено, и снова разрешается при подключении.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>По одному адресу в строке. Они проверяются по порядку; поставьте адрес локальной сети первым, чтобы он был в приоритете.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Хост-порт</translation>
         </message>

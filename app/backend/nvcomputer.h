@@ -106,6 +106,8 @@ public:
     NvAddress remoteAddress;
     NvAddress ipv6Address;
     NvAddress manualAddress;
+    // Further configured endpoints, tried in order after manualAddress.
+    QVector<NvAddress> alternateAddresses;
     QByteArray macAddress;
     QString name;
     QString operatingSystem;

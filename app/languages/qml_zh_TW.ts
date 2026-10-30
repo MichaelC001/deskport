@@ -2934,6 +2934,10 @@
             <translation>保留輸入的網域名稱，每次連線時重新解析。</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>每行一個位址，依序嘗試；把區域網路位址放在最前面即可優先使用。</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>主機連接埠</translation>
         </message>

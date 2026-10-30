@@ -6,6 +6,7 @@
 #include "clipboard/process.h"
 #include <QCryptographicHash>
 #include <QHostAddress>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QSslCertificate>
@@ -31,6 +32,23 @@ inline QString dnsName(const QString& value) {
         "^(?=.{1,253}$)[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\\.?$"));
     return QHostAddress(name).isNull() && syntax.match(name).hasMatch() ? name : QString();
 }
+// A saved host's endpoints in connection order. "address" stays the first
+// entry so older versions keep working; "addresses" holds the full list.
+inline QStringList peerAddresses(const QJsonObject& peer) {
+    QStringList result;
+    const auto primary = peer["address"].toString();
+    if (!primary.isEmpty()) result.append(primary);
+    for (const auto& value : peer["addresses"].toArray()) {
+        const auto address = value.toString().trimmed();
+        if (!address.isEmpty() && !result.contains(address, Qt::CaseInsensitive)) result.append(address);
+    }
+    return result;
+}
+inline void setPeerAddresses(QJsonObject& peer, const QStringList& addresses) {
+    peer["address"] = addresses.value(0);
+    if (addresses.size() > 1) peer["addresses"] = QJsonArray::fromStringList(addresses);
+    else peer.remove("addresses");
+}
 }
 
 struct PeerManager::Link : QObject {
@@ -41,6 +59,7 @@ struct PeerManager::Link : QObject {
     QString transaction, fingerprint, requestedAddress;
     bool incoming = false, requested = false, accepted = false;
     bool endpointRefresh = false;
+    QString refreshAddress;
     QString expectedFingerprint;
     QJsonObject expectedPeer;
     int displayPolicy = -1;

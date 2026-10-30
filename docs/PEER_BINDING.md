@@ -91,6 +91,11 @@ continue to use the observed peer IP; a remote display name is not a DNS name.
 Pinned certificates and host identities still govern authentication. DNS must
 still provide a working route; retaining a name does not bypass a broken proxy.
 
+Since 2026-10-30 a device may keep an ordered list of fallback addresses
+(`addresses`, with `address` as its first entry). Polling tries all of them at once
+and uses the highest-priority endpoint that answers with the pinned host identity.
+A remote device's key still decides trust; extra addresses only add routes.
+
 ## Automatic streaming endpoint refresh (2026-09-13)
 
 Approved peers negotiate `endpointRefresh: 1` in the existing TLS hello, then use

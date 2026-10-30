@@ -1,3 +1,25 @@
+## Ordered fallback addresses and live edits — 2026-10-30
+
+A saved device may list up to eight domain names or IP addresses, one per line.
+They share the device's host and binding ports and are tried in the listed order,
+ahead of discovered and last-used endpoints, so a LAN address listed first wins
+whenever it is reachable. Host polling probes every endpoint concurrently and keeps
+the highest-priority answer, so an unreachable LAN entry costs one fast-fail
+timeout instead of one per address. Endpoint refresh rotates through every
+(device, address) pair. `peers.json` keeps `address` as the first entry and adds
+`addresses` only when there is more than one, so older versions still connect;
+a list changed by an older version is re-anchored on its `address` at load.
+Rebinding replaces the primary entry and keeps the local fallbacks.
+
+Editing a device no longer requires closing other connections. Only binding,
+trust, revocation and removal transactions block edits; host-side display and
+clipboard control channels do not. Open sessions keep their established
+connection and the next connection uses the new list; nothing reconnects
+automatically. Per-address ports and moving a live session to another address
+are deferred. Validated by the binding and UI suites, the macOS build and the
+real-manager address-order/persistence regression; concurrent probing against
+live hosts and LAN/WAN switching on mm4 and pk4 have not been checked yet.
+
 ## Linux canvas exposure and isolated recall — 2026-10-30
 
 The isolated canvas test now remaps its own minimized Wayland window before

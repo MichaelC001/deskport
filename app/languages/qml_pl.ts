@@ -2911,6 +2911,10 @@
             <translation>Nazwa domeny zostanie zapisana jako wprowadzona i ponownie rozwiązana podczas łączenia.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Jeden adres w wierszu. Adresy są próbowane po kolei; umieść adres sieci lokalnej na początku, aby miał pierwszeństwo.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Port hosta</translation>
         </message>

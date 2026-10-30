@@ -2911,6 +2911,10 @@
             <translation>Un nome di dominio viene salvato come inserito e risolto nuovamente durante la connessione.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Un indirizzo per riga. Vengono provati in ordine; metti per primo un indirizzo della rete locale per preferirlo.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Porta host</translation>
         </message>

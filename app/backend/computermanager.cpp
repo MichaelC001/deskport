@@ -12,11 +12,13 @@
 #include <Limelight.h>
 #include <QtEndian>
 
+#include <QSharedPointer>
 #include <QThread>
 #include <QThreadPool>
 #include <QCoreApplication>
 
 #include <random>
+#include <vector>
 
 #define SER_HOSTS "hosts"
 #define SER_HOSTS_BACKUP "hostsbackup"
@@ -48,7 +50,9 @@ public:
     }
 
 private:
-    bool tryPollComputer(NvAddress address, bool& changed)
+    // Probes one endpoint without touching shared state, so several endpoints
+    // can be checked concurrently.
+    QSharedPointer<NvComputer> probeComputer(NvAddress address)
     {
         NvHTTP http(address, 0, m_Computer->serverCert);
 
@@ -56,19 +60,47 @@ private:
         try {
             serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NVLL_NONE, true);
         } catch (...) {
-            return false;
+            return {};
         }
 
-        NvComputer newState(http, serverInfo);
+        auto newState = QSharedPointer<NvComputer>::create(http, serverInfo);
 
         // Ensure the machine that responded is the one we intended to contact
-        if (m_Computer->uuid != newState.uuid) {
-            qInfo() << "Found unexpected PC" << newState.name << "looking for" << m_Computer->name;
-            return false;
+        if (m_Computer->uuid != newState->uuid) {
+            qInfo() << "Found unexpected PC" << newState->name << "looking for" << m_Computer->name;
+            return {};
         }
+        return newState;
+    }
 
-        changed = m_Computer->update(newState);
-        return true;
+    // Checks every endpoint at once and keeps the highest-priority one that
+    // answered, so an unreachable LAN entry costs one timeout, not one per
+    // address, while still winning whenever it is reachable.
+    bool pollAddresses(const QVector<NvAddress>& addresses, bool& changed)
+    {
+        std::vector<QSharedPointer<NvComputer>> results(addresses.size());
+        if (addresses.size() == 1) {
+            results[0] = probeComputer(addresses[0]);
+        } else {
+            QVector<QThread*> probes;
+            for (int i = 0; i < addresses.size(); i++) {
+                probes.append(QThread::create([this, &results, &addresses, i] {
+                    results[i] = probeComputer(addresses[i]);
+                }));
+                probes.last()->start();
+            }
+            for (auto probe : probes) {
+                probe->wait();
+                delete probe;
+            }
+        }
+        for (const auto& result : results) {
+            if (result) {
+                changed = m_Computer->update(*result);
+                return true;
+            }
+        }
+        return false;
     }
 
     bool updateAppList(bool& changed)
@@ -100,18 +132,15 @@ private:
             bool online = false;
             bool wasOnline = m_Computer->state == NvComputer::CS_ONLINE;
             for (int i = 0; i < (wasOnline ? TRIES_BEFORE_OFFLINING : 1) && !online; i++) {
-                for (auto& address : m_Computer->uniqueAddresses()) {
-                    if (isInterruptionRequested()) {
-                        return;
-                    }
+                if (isInterruptionRequested()) {
+                    return;
+                }
 
-                    if (tryPollComputer(address, stateChanged)) {
-                        if (!wasOnline) {
-                            qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
-                        }
-                        online = true;
-                        break;
+                if (pollAddresses(m_Computer->uniqueAddresses(), stateChanged)) {
+                    if (!wasOnline) {
+                        qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
                     }
+                    online = true;
                 }
             }
 
@@ -1047,10 +1076,21 @@ bool ComputerManager::addBoundHost(QVariantMap peer, bool explicitAdd, bool sess
     const int port = peer.value("hostPort").toInt();
     const QSslCertificate certificate(peer.value("hostCert").toString().toUtf8());
     // Match the URL-based HTTP transport: bound endpoints may be DNS names.
-    QUrl endpoint;
-    endpoint.setScheme("https");
-    endpoint.setHost(address);
-    if (uuid.isEmpty() || !endpoint.isValid() || endpoint.host().isEmpty() || port < 1024 || port > 65514 || certificate.isNull()) return false;
+    auto validHost = [](const QString& host) {
+        QUrl endpoint;
+        endpoint.setScheme("https");
+        endpoint.setHost(host);
+        return endpoint.isValid() && !endpoint.host().isEmpty();
+    };
+    if (uuid.isEmpty() || !validHost(address) || port < 1024 || port > 65514 || certificate.isNull()) return false;
+    // Further configured endpoints share the ports and are tried in order.
+    QVector<NvAddress> alternates;
+    for (const auto& value : peer.value("addresses").toList()) {
+        const QString alternate = value.toString();
+        const NvAddress candidate(alternate, quint16(port));
+        if (alternate.compare(address, Qt::CaseInsensitive) != 0 && validHost(alternate) && !alternates.contains(candidate))
+            alternates.append(candidate);
+    }
     NvComputer* host;
     {
         QWriteLocker lock(&m_Lock);
@@ -1061,12 +1101,19 @@ bool ComputerManager::addBoundHost(QVariantMap peer, bool explicitAdd, bool sess
             // A binding must not silently replace an unrelated pinned host identity.
             if (!host->serverCert.isNull() && host->serverCert != certificate) return false;
             host->manualAddress = NvAddress(address, quint16(port));
+            host->alternateAddresses = alternates;
+            // Forget a last-used endpoint the user removed; discovered ones stay.
+            const auto active = host->activeAddress;
+            if (!active.isNull() && active != host->manualAddress && !alternates.contains(active) &&
+                    active != host->localAddress && active != host->remoteAddress && active != host->ipv6Address)
+                host->activeAddress = NvAddress();
             host->name = peer.value("name").toString(); host->hasCustomName = true;
             host->serverCert = certificate;
         } else {
             host = new NvComputer();
             host->name = peer.value("name").toString(); host->hasCustomName = true; host->uuid = uuid;
             host->manualAddress = NvAddress(address, quint16(port));
+            host->alternateAddresses = alternates;
             host->serverCert = certificate;
             host->state = NvComputer::CS_UNKNOWN; host->pairState = NvComputer::PS_UNKNOWN;
             host->isSupportedServerVersion = true; host->externalPort = quint16(port);

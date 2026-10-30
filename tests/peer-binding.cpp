@@ -6,6 +6,7 @@
 #include <QTemporaryDir>
 #include <QHostInfo>
 #include <QSignalSpy>
+#include <QJsonArray>
 #include <QPointer>
 #include <QSslSocket>
 #include <QQmlEngine>
@@ -1274,6 +1275,42 @@ private slots:
         QCOMPARE(peer["hostCert"].toString(), QString("pinned"));
         QVERIFY(manager.editPeer("saved", "IPv6 desktop", "2001:db8::1", 48989, 48991));
         QCOMPARE(manager.peers().first().toMap()["requestedAddress"].toString(), QString("[2001:db8::1]:48991"));
+        QVERIFY(!manager.peers().first().toMap().contains("addresses"));
+    }
+    void fallbackAddressesKeepOrderAndCompatibility() {
+        QTemporaryDir dir;
+        const QString path = dir.path()+"/binding";
+        QVERIFY(QDir().mkpath(path));
+        const auto cert = credential("TEST_CERT_A"), key = credential("TEST_KEY_A");
+        // An older version changed only "address"; the list follows it on load.
+        QVERIFY(PeerStore::write(path+"/peers.json", {{"version", 1}, {"peers", QJsonObject{
+            {"saved", QJsonObject{{"address", "192.0.2.9"}, {"addresses", QJsonArray{"192.0.2.1", "desktop.example"}},
+                {"name", "old"}, {"ready", true}, {"granted", true}, {"hostPort", 48989},
+                {"hostCert", "pinned"}, {"clientCert", "client"}, {"hostId", "stable"}}}}}}));
+        {
+            HostManager host(nullptr, dir.path()+"/host");
+            PeerManager manager(&host,cert,key,path,0,QHostAddress::LocalHost);
+            QCOMPARE(manager.peers().first().toMap()["addresses"].toStringList(),
+                     QStringList({"192.0.2.9", "192.0.2.1", "desktop.example"}));
+            QSignalSpy updated(&manager,&PeerManager::peerBound);
+            QVERIFY(manager.editPeer("saved", "Desktop", " 192.0.2.1\n[2001:db8::1]\n\nDesktop.example, desktop.EXAMPLE ", 48989, 48991));
+            QCOMPARE(updated.size(), 1);
+            const auto bound = updated.first().first().toMap();
+            QCOMPARE(bound["address"].toString(), QString("192.0.2.1"));
+            QCOMPARE(bound["addresses"].toStringList(), QStringList({"192.0.2.1", "2001:db8::1", "Desktop.example"}));
+            QCOMPARE(bound["requestedAddress"].toString(), QString("192.0.2.1:48991"));
+            const auto saved = PeerStore::read(path+"/peers.json");
+            QVERIFY(!manager.editPeer("saved", "Desktop", "192.0.2.1\nhttps://host/path", 48989, 48991));
+            QVERIFY(!manager.editPeer("saved", "Desktop", " \n ", 48989, 48991));
+            QVERIFY(!manager.editPeer("saved", "Desktop", "a1 a2 a3 a4 a5 a6 a7 a8 a9", 48989, 48991));
+            QCOMPARE(PeerStore::read(path+"/peers.json"), saved);
+        }
+        HostManager host(nullptr, dir.path()+"/host");
+        PeerManager manager(&host,cert,key,path,0,QHostAddress::LocalHost);
+        QCOMPARE(manager.peers().first().toMap()["addresses"].toStringList(),
+                 QStringList({"192.0.2.1", "2001:db8::1", "Desktop.example"}));
+        QVERIFY(manager.editPeer("saved", "Desktop", "desktop.example", 48989, 48991));
+        QVERIFY(!manager.peers().first().toMap().contains("addresses"));
     }
     void fractionalOutputScale() {
         QCOMPARE(DeskPortDisplay::scaleForOutput({2880, 1620}, {1920, 1080}, 2.0), 1.5);

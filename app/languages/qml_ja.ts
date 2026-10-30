@@ -2914,6 +2914,10 @@
             <translation>ドメイン名は入力どおりに保存され、接続時に再解決されます。</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>1 行に 1 つのアドレスを入力します。上から順に試行されるため、LAN のアドレスを優先するには先頭に置いてください。</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>ホストポート</translation>
         </message>

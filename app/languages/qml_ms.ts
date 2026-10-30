@@ -2906,6 +2906,10 @@
             <translation>Nama domain disimpan seperti yang dimasukkan dan diselesaikan semula apabila menyambung.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Satu alamat bagi setiap baris. Alamat dicuba mengikut urutan; letakkan alamat LAN di hadapan untuk mengutamakannya.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Pelabuhan hos</translation>
         </message>

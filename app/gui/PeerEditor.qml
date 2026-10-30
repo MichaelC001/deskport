@@ -10,7 +10,7 @@ NavigableDialog {
         fingerprint = peer.fingerprint
         // The shown name is changed with "Set alias"; the binding name is kept.
         peerName = peer.name
-        deviceAddress.text = peer.address
+        deviceAddress.text = (peer.addresses && peer.addresses.length ? peer.addresses : [peer.address]).join("\n")
         hostPort.value = peer.hostPort || 48989
         bindingPort.value = peer.bindingPort || 48991
         advancedPorts.checked = false
@@ -23,7 +23,12 @@ NavigableDialog {
     contentItem: ColumnLayout {
         spacing: 10
         Label { text: qsTranslate("BindView", "Domain name or IP address"); color: ui.text }
-        TextField { id: deviceAddress; objectName: "editPeerAddress"; Layout.fillWidth: true; placeholderText: qsTranslate("BindView", "Computer name or IP, without port") }
+        TextArea {
+            id: deviceAddress; objectName: "editPeerAddress"; Layout.fillWidth: true
+            wrapMode: TextEdit.NoWrap; selectByMouse: true
+            placeholderText: qsTranslate("BindView", "Computer name or IP, without port")
+        }
+        Label { text: qsTranslate("BindView", "Enter one address per line. They are tried in order; put a LAN address first to prefer it."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         Label { text: qsTranslate("BindView", "A domain name is saved as entered and resolved again when connecting."); color: ui.muted; font.pixelSize: ui.small; wrapMode: Text.WordWrap; Layout.fillWidth: true }
         CheckBox { id: advancedPorts; text: qsTranslate("BindView", "Advanced port overrides"); checked: false }
         Label { text: qsTranslate("BindView", "Host port"); color: ui.text; visible: advancedPorts.checked }

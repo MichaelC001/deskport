@@ -2911,6 +2911,10 @@
             <translation>एक डोमेन नाम दर्ज के रूप में सहेजा जाता है और कनेक्ट होने पर फिर से हल किया जाता है।</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>प्रति पंक्ति एक पता दर्ज करें। इन्हें क्रम से आज़माया जाता है; LAN पते को प्राथमिकता देने के लिए उसे सबसे ऊपर रखें।</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>मेज़बान बंदरगाह</translation>
         </message>

@@ -16,6 +16,7 @@
 #define SER_REMOTEPORT "remoteport"
 #define SER_MANUALADDR "manualaddress"
 #define SER_MANUALPORT "manualport"
+#define SER_ALTADDRS "alternateaddresses"
 #define SER_IPV6ADDR "ipv6address"
 #define SER_IPV6PORT "ipv6port"
 #define SER_APPLIST "apps"
@@ -38,6 +39,14 @@ NvComputer::NvComputer(QSettings& settings)
                                   settings.value(SER_IPV6PORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->manualAddress = NvAddress(settings.value(SER_MANUALADDR).toString(),
                                     settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
+    int alternateCount = settings.beginReadArray(SER_ALTADDRS);
+    for (int i = 0; i < alternateCount; i++) {
+        settings.setArrayIndex(i);
+        NvAddress alternate(settings.value(SER_MANUALADDR).toString(),
+                            settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
+        if (!alternate.isNull()) this->alternateAddresses.append(alternate);
+    }
+    settings.endArray();
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
     this->isNvidiaServerSoftware = settings.value(SER_NVIDIASOFTWARE).toBool();
 
@@ -92,6 +101,16 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     settings.setValue(SER_IPV6PORT, ipv6Address.port());
     settings.setValue(SER_MANUALADDR, manualAddress.address());
     settings.setValue(SER_MANUALPORT, manualAddress.port());
+    settings.remove(SER_ALTADDRS);
+    if (!alternateAddresses.isEmpty()) {
+        settings.beginWriteArray(SER_ALTADDRS);
+        for (int i = 0; i < alternateAddresses.count(); i++) {
+            settings.setArrayIndex(i);
+            settings.setValue(SER_MANUALADDR, alternateAddresses[i].address());
+            settings.setValue(SER_MANUALPORT, alternateAddresses[i].port());
+        }
+        settings.endArray();
+    }
     settings.setValue(SER_SRVCERT, serverCert.toPem());
     settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
 
@@ -117,6 +136,7 @@ bool NvComputer::isEqualSerialized(const NvComputer &that) const
            this->remoteAddress == that.remoteAddress &&
            this->ipv6Address == that.ipv6Address &&
            this->manualAddress == that.manualAddress &&
+           this->alternateAddresses == that.alternateAddresses &&
            this->serverCert == that.serverCert &&
            this->isNvidiaServerSoftware == that.isNvidiaServerSoftware &&
            this->appList == that.appList;
@@ -485,9 +505,11 @@ QVector<NvAddress> NvComputer::uniqueAddresses() const
     QReadLocker readLocker(&lock);
     QVector<NvAddress> uniqueAddressList;
 
-    // An explicitly configured endpoint takes precedence over cached discovery
-    // and last-session IPs, so DNS corrections take effect on the next poll.
+    // Explicitly configured endpoints take precedence, in the user's order, over
+    // cached discovery and last-session IPs, so DNS corrections take effect on
+    // the next poll and a LAN entry listed first wins whenever it is reachable.
     uniqueAddressList.append(manualAddress);
+    uniqueAddressList += alternateAddresses;
     uniqueAddressList.append(activeAddress);
     uniqueAddressList.append(localAddress);
     uniqueAddressList.append(remoteAddress);

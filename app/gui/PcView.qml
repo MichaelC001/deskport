@@ -243,7 +243,7 @@ GridView {
                         sessionState: pcGrid.stateFor(model.hostId)
                         sessionError: pcGrid.errorFor(model.hostId)
                         bound: pcGrid.savedPeer(model.hostId) !== null
-                        canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
+                        canChangeAddress: typeof peerManager !== "undefined" && !peerManager.busy
                         inGroup: true
                         onSettingsRequested: deviceSettingsDialog.openFor(model.hostId, model.name)
                         onChangeAddressRequested: peerEditor.edit(pcGrid.savedPeer(model.hostId))
@@ -499,7 +499,7 @@ GridView {
             sessionState: pcGrid.stateFor(model.hostId)
             bound: !model.isGroup && !model.isAdd && pcGrid.savedPeer(model.hostId) !== null
             sessionError: pcGrid.errorFor(model.hostId)
-            canChangeAddress: !pcGrid.controlCenterForActiveSession && (typeof peerManager !== "undefined" && !peerManager.busy)
+            canChangeAddress: typeof peerManager !== "undefined" && !peerManager.busy
             inGroup: false
             onSettingsRequested: deviceSettingsDialog.openFor(model.hostId, model.name)
             onChangeAddressRequested: peerEditor.edit(pcGrid.savedPeer(model.hostId))

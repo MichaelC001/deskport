@@ -2906,6 +2906,10 @@
             <translation>Der Domainname wird wie eingegeben gespeichert und beim Verbinden erneut aufgelöst.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Eine Adresse pro Zeile. Sie werden der Reihe nach versucht; setzen Sie eine LAN-Adresse an den Anfang, um sie zu bevorzugen.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Host-Port</translation>
         </message>

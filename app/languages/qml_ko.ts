@@ -2906,6 +2906,10 @@
             <translation>입력한 도메인 이름을 저장하고 연결할 때 다시 확인합니다.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>한 줄에 주소 하나씩 입력하세요. 순서대로 시도하므로 LAN 주소를 우선하려면 맨 앞에 두세요.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>호스트 포트</translation>
         </message>

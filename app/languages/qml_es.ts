@@ -2906,6 +2906,10 @@
             <translation>El dominio se guarda tal como se introduce y se resuelve en cada conexión.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Una dirección por línea. Se prueban en orden; ponga primero una dirección de la red local para darle preferencia.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Puerto del anfitrión</translation>
         </message>

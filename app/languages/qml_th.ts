@@ -2911,6 +2911,10 @@
             <translation>ชื่อโดเมนจะถูกบันทึกตามที่ป้อนและแก้ไขอีกครั้งเมื่อทำการเชื่อมต่อ</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>ใส่ที่อยู่บรรทัดละหนึ่งรายการ ระบบจะลองตามลำดับ ให้วางที่อยู่ LAN ไว้แรกสุดเพื่อใช้ก่อน</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>พอร์ตโฮสต์</translation>
         </message>

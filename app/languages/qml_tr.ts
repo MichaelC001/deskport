@@ -2911,6 +2911,10 @@
             <translation>Bir alan adı girildiği gibi kaydedilir ve bağlantı sırasında tekrar çözümlenir.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>Her satıra bir adres girin. Sırayla denenir; öncelik vermek için yerel ağ adresini en başa koyun.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>Ana bilgisayar bağlantı noktası</translation>
         </message>

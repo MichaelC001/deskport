@@ -127,7 +127,7 @@ public:
 QJsonObject device(const QVariantMap& peer) {
     // Never serialize peer metadata wholesale: it contains certificates.
     QJsonObject result;
-    for (const char* key : {"name", "hostId", "fingerprint", "role", "address", "bindingPort", "ready", "granted"}) {
+    for (const char* key : {"name", "hostId", "fingerprint", "role", "address", "addresses", "bindingPort", "ready", "granted"}) {
         const auto found = peer.constFind(QString::fromLatin1(key));
         if (found != peer.constEnd()) result[QString::fromLatin1(key)] = QJsonValue::fromVariant(*found);
     }

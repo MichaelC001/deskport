@@ -2906,6 +2906,10 @@
             <translation>དྲ་རྒྱའི་མིང་དེ་བཙུགས་པ་ལྟར་ཉར་ཚགས་བྱེད་པ་དང་མཐུད་སྐབས་ཡང་བསྐྱར་ཐག་གཅོད་བྱེད།</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>ཐིག་ཕྲེང་རེར་ཁ་བྱང་གཅིག་འབྲི། གོ་རིམ་ལྟར་ཚོད་ལྟ་བྱེད། ས་གནས་དྲ་བའི་ཁ་བྱང་སྔོན་ལ་བཞག་ན་དེ་སྔོན་ལ་བེད་སྤྱོད་བྱེད།</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>གཙོ་གཉེར་མཐུད་ཁ།</translation>
         </message>

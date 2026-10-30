@@ -2906,6 +2906,10 @@
             <translation>يتم حفظ اسم المجال كما تم إدخاله وحله مرة أخرى عند الاتصال.</translation>
         </message>
         <message>
+            <source>Enter one address per line. They are tried in order; put a LAN address first to prefer it.</source>
+            <translation>أدخل عنوانًا واحدًا في كل سطر. تتم تجربتها بالترتيب؛ ضع عنوان الشبكة المحلية أولًا لتفضيله.</translation>
+        </message>
+        <message>
             <source>Host port</source>
             <translation>منفذ المضيف</translation>
         </message>
